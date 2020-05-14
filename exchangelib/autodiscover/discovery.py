@@ -26,7 +26,20 @@ def discover(email, credentials=None, auth_type=None, retry_policy=None):
     ).discover()
 
 
-SrvRecord = namedtuple('SrvRecord', ('priority', 'weight', 'port', 'srv'))
+class SrvRecord:
+    """A container for autodiscover-related SRV records in DNS
+    """
+    def __init__(self, priority, weight, port, srv):
+        self.priority = priority
+        self.weight = weight
+        self.port = port
+        self.srv = srv
+
+    def __eq__(self, other):
+        for k in self.__dict__.keys():
+            if getattr(self, k) != getattr(other, k):
+                return False
+        return True
 
 
 class Autodiscovery:
