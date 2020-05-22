@@ -28,8 +28,11 @@ class CredentialsTest(TimedTestCase):
             Credentials('XXX', 'YYY'),
             OAuth2Credentials('XXX', 'YYY', 'ZZZZ'),
             OAuth2Credentials('XXX', 'YYY', 'ZZZZ', identity=Identity('AAA')),
-            OAuth2AuthorizationCodeCredentials(),
-            OAuth2AuthorizationCodeCredentials('WWW', 'XXX', 'YYY', {'access_token': 'ZZZ'}),
+            OAuth2AuthorizationCodeCredentials(client_id='WWW', client_secret='XXX'),
+            OAuth2AuthorizationCodeCredentials(
+                client_id='WWW', client_secret='XXX', authorization_code='YYY', access_token={'access_token': 'ZZZ'},
+                tenant_id='ZZZ', identity=Identity('AAA')
+            ),
         ):
             with self.subTest(o=o):
                 pickled_o = pickle.dumps(o)
