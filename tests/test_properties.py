@@ -21,8 +21,8 @@ class PropertiesTest(TimedTestCase):
                 with self.subTest(cls=cls):
                     if not isclass(cls) or not issubclass(cls, EWSElement):
                         continue
-                    # Assert that all FIELDS names are unique on the model. Also assert that the class defines __slots__,
-                    # that all fields are mentioned in __slots__ and that __slots__ is unique.
+                    # Assert that all FIELDS names are unique on the model. Also assert that the class defines
+                    # __slots__, that all fields are mentioned in __slots__ and that __slots__ is unique.
                     field_names = set()
                     all_slots = tuple(chain(*(getattr(c, '__slots__', ()) for c in cls.__mro__)))
                     self.assertEqual(len(all_slots), len(set(all_slots)),

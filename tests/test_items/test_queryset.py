@@ -277,7 +277,7 @@ class ItemQuerySetTest(BaseItemTest):
             item.subject = 'Subj %s' % i
             del item.attachments[:]
             items.append(item)
-        ids = self.test_folder.bulk_create(items=items)
+        self.test_folder.bulk_create(items=items)
         qs = self.test_folder.filter(categories__contains=self.categories).only('subject').order_by('subject')
 
         # Test positive index

@@ -297,9 +297,9 @@ class EWSService(metaclass=abc.ABCMeta):
         if detail is not None:
             code, msg = None, ''
             if detail.find('{%s}ResponseCode' % ENS) is not None:
-                code = get_xml_attr(detail, '{%s}ResponseCode' % ENS)
+                code = get_xml_attr(detail, '{%s}ResponseCode' % ENS).strip()
             if detail.find('{%s}Message' % ENS) is not None:
-                msg = get_xml_attr(detail, '{%s}Message' % ENS)
+                msg = get_xml_attr(detail, '{%s}Message' % ENS).strip()
             msg_xml = detail.find('{%s}MessageXml' % TNS)  # Crazy. Here, it's in the TNS namespace
             if code == 'ErrorServerBusy':
                 back_off = None

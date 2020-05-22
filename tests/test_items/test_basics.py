@@ -354,7 +354,9 @@ class CommonItemTest(BaseItemTest):
                     # Set a string long enough to not be handled by FindItems
                     f.max_length = 4000
                     if f.is_list:
-                        setattr(item, f.name, [get_random_string(f.max_length) for _ in range(len(getattr(item, f.name)))])
+                        setattr(
+                            item, f.name, [get_random_string(f.max_length) for _ in range(len(getattr(item, f.name)))]
+                        )
                     else:
                         setattr(item, f.name, get_random_string(f.max_length))
                     try:

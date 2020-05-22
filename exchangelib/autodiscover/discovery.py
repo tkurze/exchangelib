@@ -1,4 +1,3 @@
-from collections import namedtuple
 import logging
 import time
 from urllib.parse import urlparse

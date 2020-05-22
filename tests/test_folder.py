@@ -91,7 +91,8 @@ class FolderTest(EWSTest):
         for f in self.account.root.walk():
             with self.subTest(f=f):
                 if isinstance(f, (
-                        Messages, DeletedItems, AllContacts, MyContactsExtended, Sharing, Favorites, SyncIssues, MyContacts
+                        Messages, DeletedItems, AllContacts, MyContactsExtended, Sharing, Favorites, SyncIssues,
+                        MyContacts
                 )):
                     self.assertEqual(f.folder_class, 'IPF.Note')
                 elif isinstance(f, GALContacts):

@@ -3,7 +3,7 @@ from collections import namedtuple
 import requests
 import requests_mock
 
-from exchangelib import DELEGATE, IMPERSONATION
+from exchangelib import DELEGATE
 from exchangelib.account import Identity
 from exchangelib.errors import UnauthorizedError
 from exchangelib.transport import wrap, get_auth_method_from_response, BASIC, NOAUTH, NTLM, DIGEST
@@ -118,7 +118,9 @@ class TransportTest(TimedTestCase):
                 ('smtp_address', 'SmtpAddress'),
         ):
             val = '%s@example.com' % attr
-            account = MockAccount(access_type=DELEGATE, identity=Identity(**{attr: val}), default_timezone=MockTZ('XXX'))
+            account = MockAccount(
+                access_type=DELEGATE, identity=Identity(**{attr: val}), default_timezone=MockTZ('XXX')
+            )
             wrapped = wrap(
                 content=content,
                 api_version=api_version,

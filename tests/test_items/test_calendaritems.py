@@ -164,7 +164,9 @@ class CalendarTest(CommonItemTest):
 
         # Test max_items
         self.assertEqual(
-            len([i for i in self.test_folder.view(start=item1.start, end=item2.end, max_items=9999) if self.match_cat(i)]),
+            len([
+                i for i in self.test_folder.view(start=item1.start, end=item2.end, max_items=9999) if self.match_cat(i)
+            ]),
             2
         )
         self.assertEqual(

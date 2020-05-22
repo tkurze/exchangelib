@@ -33,8 +33,12 @@ class ServicesTest(EWSTest):
       <faultcode xmlns:a="http://schemas.microsoft.com/exchange/services/2006/types">a:ErrorServerBusy</faultcode>
       <faultstring xml:lang="en-US">The server cannot service this request right now. Try again later.</faultstring>
       <detail>
-        <e:ResponseCode xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">ErrorServerBusy</e:ResponseCode>
-        <e:Message xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">The server cannot service this request right now. Try again later.</e:Message>
+        <e:ResponseCode xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">
+          ErrorServerBusy
+        </e:ResponseCode>
+        <e:Message xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">
+          The server cannot service this request right now. Try again later.
+        </e:Message>
         <t:MessageXml xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
           <t:Value Name="BackOffMilliseconds">297749</t:Value>
         </t:MessageXml>
