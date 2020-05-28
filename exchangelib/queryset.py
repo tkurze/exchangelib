@@ -682,16 +682,20 @@ class QuerySet(SearchableMixIn):
 def _get_value_or_default(item, field_order):
     # Python can only sort values when <, > and = are implemented for the two types. Try as best we can to sort
     # items, even when the item may have a None value for the field in question, or when the item is an
-    # Exception. If the field to be sorted by does not have a default value, try creating an empty instance if the
-    # field value class. If that doesn't work, there's really nothing we can do about it; we'll raise an error. If
-    # it does, we sort all None values and exceptions as the default value.
-    default = field_order.field_path.field.default or field_order.field_path.field.value_cls()
+    # Exception. In that case, we calculate a default value and sort all None values and exceptions as the default
+    # value.
     if isinstance(item, Exception):
-        return default
+        return _default_field_value(field_order.field_path.field)
     val = field_order.field_path.get_value(item)
     if val is None:
-        return default
+        return _default_field_value(field_order.field_path.field)
     return val
+
+
+def _default_field_value(field):
+    # Returns the default value of a field. If the field does not have a default value, try creating an empty instance
+    # of the field value class. If that doesn't work, there's really nothing we can do about it; we'll raise an error.
+    return field.default or field.value_cls()
 
 
 def _rinse_item(i, fields_to_nullify):

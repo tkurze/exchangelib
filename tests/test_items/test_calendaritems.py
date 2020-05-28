@@ -130,6 +130,7 @@ class CalendarTest(CommonItemTest):
             categories=self.categories,
         )
         self.test_folder.bulk_create(items=[item1, item2])
+        qs = self.test_folder.view(start=item1.start, end=item2.end)
 
         # Test missing args
         with self.assertRaises(TypeError):
@@ -174,8 +175,21 @@ class CalendarTest(CommonItemTest):
             1
         )
 
+        # Test client-side ordering
+        self.assertListEqual(
+            [i.subject for i in qs.order_by('subject') if self.match_cat(i)], sorted([item1.subject, item2.subject])
+        )
+        # Test client-side ordering on a field with no default value and no default value_cls value
+        self.assertListEqual(
+            [i.start for i in qs.order_by('-start') if self.match_cat(i)], [item2.start, item1.start]
+        )
+        # Test client-side ordering on multiple fields. Intentionally sort first on a field where values are equal,
+        # to see that we can sort on the 2nd field.
+        self.assertListEqual(
+            [i.start for i in qs.order_by('categories', '-start') if self.match_cat(i)], [item2.start, item1.start]
+        )
+
         # Test chaining
-        qs = self.test_folder.view(start=item1.start, end=item2.end)
         self.assertTrue(qs.count() >= 2)
         with self.assertRaises(ErrorInvalidOperation):
             qs.filter(subject=item1.subject).count()  # EWS does not allow restrictions
