@@ -688,13 +688,10 @@ class TimeZoneField(FieldURIField):
         return self.default
 
     def to_xml(self, value, version):
-        return create_element(
-            self.request_tag(),
-            attrs=OrderedDict([
-                ('Id', value.ms_id),
-                ('Name', value.ms_name),
-            ])
-        )
+        attrs = OrderedDict([('Id', value.ms_id)])
+        if value.ms_name:
+            attrs['Name'] = value.ms_name
+        return create_element(self.request_tag(), attrs=attrs)
 
 
 class TextField(FieldURIField):
