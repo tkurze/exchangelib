@@ -19,6 +19,7 @@ install:
 - python -m ensurepip --upgrade
 # Install master branches of Cython and Cython-built packages if we are testing on nightly since the C API of
 # CPython changes often and fixes for Python nightly are slow to reach released versions.
+- if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install hg+https://foss.heptapod.net/pypy/cffi ; fi
 - if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/cython/cython.git ; fi
 - if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/lxml/lxml.git ; fi
 - if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/yaml/pyyaml.git ; fi
