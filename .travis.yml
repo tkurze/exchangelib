@@ -39,6 +39,5 @@ jobs:
       python: "3.8"
       os: linux
   allow_failures:
-    - python:
-      - "3.9-dev"
-      - "nightly"
+    - python: "3.9-dev"
+    - python: "nightly"
