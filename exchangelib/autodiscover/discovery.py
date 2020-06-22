@@ -26,8 +26,8 @@ def discover(email, credentials=None, auth_type=None, retry_policy=None):
 
 
 class SrvRecord:
-    """A container for autodiscover-related SRV records in DNS
-    """
+    """A container for autodiscover-related SRV records in DNS"""
+
     def __init__(self, priority, weight, port, srv):
         self.priority = priority
         self.weight = weight
@@ -66,6 +66,7 @@ class Autodiscovery:
 
     WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
     implementation, start by doing an official test at https://testconnectivity.microsoft.com
+
     """
 
     # When connecting to servers that may not be serving the correct endpoint, we should use a retry policy that does
@@ -76,8 +77,13 @@ class Autodiscovery:
 
     def __init__(self, email, credentials=None, auth_type=None, retry_policy=None):
         """
-        :param email: The email address to autodiscover
-        :param credentials: Credentials with authorization to make autodiscover lookups for this Account
+
+        Args:
+          email: The email address to autodiscover
+          credentials: Credentials with authorization to make autodiscover lookups for this Account (Default value = None)
+          auth_type:  (Default value = None)
+          retry_policy:  (Default value = None)
+
         """
         self.email = email
         self.credentials = credentials
@@ -195,6 +201,10 @@ class Autodiscovery:
         We only handle the HTTP 302 redirects here. We validate the URL received in the redirect response to ensure that
         it does not redirect to non-SSL endpoints or SSL endpoints with invalid certificates, and that the redirect is
         not circular. Finally, we should fail after 10 redirects.
+
+        Args:
+          url: 
+
         """
         if url.lower() in self._urls_visited:
             log.warning('We have already tried this URL: %s', url)
@@ -222,6 +232,11 @@ class Autodiscovery:
     def _get_unauthenticated_response(self, url, method='post'):
         """Get auth type by tasting headers from the server. Do POST requests be default. HEAD is too error prone, and
         some servers are set up to redirect to OWA on all requests except POST to the autodiscover endpoint.
+
+        Args:
+          url: 
+          method:  (Default value = 'post')
+
         """
         # We are connecting to untrusted servers here, so take necessary precautions.
         hostname = urlparse(url).netloc
@@ -275,6 +290,10 @@ class Autodiscovery:
 
     def _get_authenticated_response(self, protocol):
         """Get a response by using the credentials provided. We guess the auth type along the way.
+
+        Args:
+          protocol: 
+
         """
         # Redo the request with the correct auth
         data = Autodiscover.payload(email=self.email)
@@ -297,6 +316,10 @@ class Autodiscovery:
 
     def _attempt_response(self, url):
         """Returns a (is_valid_response, response) tuple
+
+        Args:
+          url: 
+
         """
         self._urls_visited.append(url.lower())
         log.debug('Attempting to get a valid response from %s', url)
@@ -344,6 +367,10 @@ class Autodiscovery:
         one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 2.
+
+        Args:
+          hostname: 
+
         """
         url = 'https://%s/Autodiscover/Autodiscover.xml' % hostname
         log.info('Step 1: Trying autodiscover on %r with email %r', url, self.email)
@@ -358,6 +385,10 @@ class Autodiscovery:
         and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 3.
+
+        Args:
+          hostname: 
+
         """
         url = 'https://autodiscover.%s/Autodiscover/Autodiscover.xml' % hostname
         log.info('Step 2: Trying autodiscover on %r with email %r', url, self.email)
@@ -379,6 +410,10 @@ class Autodiscovery:
                     * If the attempt fails, the client proceeds to step 4.
                 * If the redirection URL is not valid, the client proceeds to step 4.
             * If the GET request does not return a 302 redirect response, the client proceeds to step 4.
+
+        Args:
+          hostname: 
+
         """
         url = 'http://autodiscover.%s/Autodiscover/Autodiscover.xml' % hostname
         log.info('Step 3: Trying autodiscover on %r with email %r', url, self.email)
@@ -411,6 +446,10 @@ class Autodiscovery:
                     * If the attempt succeeds, the client proceeds to step 5.
                     * If the attempt fails, the client proceeds to step 6.
                 * If the redirection URL is not valid, the client proceeds to step 6.
+
+        Args:
+          hostname: 
+
         """
         dns_hostname = '_autodiscover._tcp.%s' % hostname
         log.info('Step 4: Trying autodiscover on %r with email %r', dns_hostname, self.email)
@@ -445,6 +484,10 @@ class Autodiscovery:
                   the Redirect element and then returns to step 1, using this new email address.
                 * If the value of the Action element is "Settings", the client has successfully received the requested
                   configuration settings for the specified user. The client does not need to proceed to step 6.
+
+        Args:
+          ad: 
+
         """
         log.info('Step 5: Checking response')
         if ad.response is None:
@@ -472,6 +515,7 @@ class Autodiscovery:
     def _step_6(self):
         """If the client cannot contact the Autodiscover service, the client should ask the user for the Exchange server
         name and use it to construct an Exchange EWS URL. The client should try to use this URL for future requests.
+
         """
         raise AutoDiscoverFailed(
             'All steps in the autodiscover protocol failed for email %r. If you think this is an error, consider doing '
@@ -487,7 +531,11 @@ def _get_srv_records(hostname):
         service = 8 100 443 webmail.example.com.
 
     The first three numbers in the service line are: priority, weight, port
-     """
+
+    Args:
+      hostname: 
+
+    """
     log.debug('Attempting to get SRV records for %s', hostname)
     resolver = dns.resolver.Resolver()
     resolver.timeout = AutodiscoverProtocol.TIMEOUT
@@ -512,6 +560,10 @@ def _get_srv_records(hostname):
 
 def _select_srv_host(srv_records):
     """Select the record with the highest priority, that also supports TLS
+
+    Args:
+      srv_records: 
+
     """
     best_record = None
     for srv_record in srv_records:

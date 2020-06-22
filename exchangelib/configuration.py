@@ -34,7 +34,9 @@ class Configuration:
     Finally, you can use 'retry_policy' to define a custom retry policy for handling server connection failures:
 
         config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
+
     """
+
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
                  retry_policy=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):

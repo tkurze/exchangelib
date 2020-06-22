@@ -3,9 +3,9 @@ from .common import EWSAccountService
 
 
 class SetUserOofSettings(EWSAccountService):
-    """
-    Set automatic replies for the specified mailbox.
+    """Set automatic replies for the specified mailbox.
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setuseroofsettings-operation
+
     """
     SERVICE_NAME = 'SetUserOofSettings'
 
