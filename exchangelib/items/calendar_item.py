@@ -336,8 +336,12 @@ class MeetingResponse(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingresponse"""
     ELEMENT_NAME = 'MeetingResponse'
     LOCAL_FIELDS = Fields(
+        AssociatedCalendarItemIdField('associated_calendar_item_id', field_uri='meeting:AssociatedCalendarItemId',
+                                      value_cls=AssociatedCalendarItemId),
         MailboxField('received_by', field_uri='message:ReceivedBy', is_read_only=True),
         MailboxField('received_representing', field_uri='message:ReceivedRepresenting', is_read_only=True),
+        DateTimeField('proposed_start', field_uri='meeting:ProposedStart', supported_from=EXCHANGE_2013),
+        DateTimeField('proposed_end', field_uri='meeting:ProposedEnd', supported_from=EXCHANGE_2013),
     )
     # FIELDS on this element are shuffled compared to other elements
     culture_idx = None
