@@ -25,7 +25,8 @@ class Pattern(EWSElement):
 
 
 class AbsoluteYearlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absoluteyearlyrecurrence"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absoluteyearlyrecurrence
+    """
     ELEMENT_NAME = 'AbsoluteYearlyRecurrence'
 
     FIELDS = Fields(
@@ -43,7 +44,8 @@ class AbsoluteYearlyPattern(Pattern):
 
 
 class RelativeYearlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativeyearlyrecurrence"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativeyearlyrecurrence
+    """
     ELEMENT_NAME = 'RelativeYearlyRecurrence'
 
     FIELDS = Fields(
@@ -69,7 +71,8 @@ class RelativeYearlyPattern(Pattern):
 
 
 class AbsoluteMonthlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutemonthlyrecurrence"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutemonthlyrecurrence
+    """
     ELEMENT_NAME = 'AbsoluteMonthlyRecurrence'
 
     FIELDS = Fields(
@@ -87,7 +90,8 @@ class AbsoluteMonthlyPattern(Pattern):
 
 
 class RelativeMonthlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativemonthlyrecurrence"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativemonthlyrecurrence
+    """
     ELEMENT_NAME = 'RelativeMonthlyRecurrence'
 
     FIELDS = Fields(
@@ -252,7 +256,8 @@ BOUNDARY_CLASSES = NoEndPattern, EndDatePattern, NumberedPattern
 
 
 class Recurrence(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-recurrencetype"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-recurrencetype
+    """
     ELEMENT_NAME = 'Recurrence'
 
     FIELDS = Fields(

@@ -26,7 +26,7 @@ class UploadItems(EWSAccountService, EWSPooledMixIn):
         call.
 
         Args:
-          items: 
+          items:
 
         """
         from ..properties import ParentFolderId

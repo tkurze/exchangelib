@@ -276,7 +276,7 @@ class Item(BaseItem):
         Adding attachments to an existing item will update the changekey of the item.
 
         Args:
-          attachments: 
+          attachments:
 
         """
         if not is_iterable(attachments, generators_allowed=True):
@@ -298,7 +298,7 @@ class Item(BaseItem):
         Removing attachments from an existing item will update the changekey of the item.
 
         Args:
-          attachments: 
+          attachments:
 
         """
         if not is_iterable(attachments, generators_allowed=True):

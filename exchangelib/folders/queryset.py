@@ -41,7 +41,7 @@ class FolderQuerySet:
         """Restrict the fields returned. 'name' and 'folder_class' are always returned.
 
         Args:
-          *args: 
+          *args:
 
         """
         from .base import Folder
@@ -63,7 +63,7 @@ class FolderQuerySet:
         """Specify the search depth (SHALLOW or DEEP)
 
         Args:
-          depth: 
+          depth:
 
         """
         new_qs = self._copy_self()
@@ -74,8 +74,8 @@ class FolderQuerySet:
         """
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
 
         """
@@ -101,8 +101,8 @@ class FolderQuerySet:
         """Add restrictions to the folder search
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
         """
         new_qs = self._copy_self()

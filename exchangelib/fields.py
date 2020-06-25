@@ -63,7 +63,7 @@ def split_field_path(field_path):
     """
 
     Args:
-      field_path: 
+      field_path:
 
     Returns:
       Examples:

@@ -109,8 +109,8 @@ def chunkify(iterable, chunksize):
     """Splits an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
 
     Args:
-      iterable: 
-      chunksize: 
+      iterable:
+      chunksize:
 
     """
     from .queryset import QuerySet
@@ -134,7 +134,7 @@ def peek(iterable):
     """Checks if an iterable is empty and returns status and the rewinded iterable
 
     Args:
-      iterable: 
+      iterable:
 
     """
     from .queryset import QuerySet
@@ -158,7 +158,7 @@ def xml_to_str(tree, encoding=None, xml_declaration=False):
     """Serialize an XML tree. Returns unicode if 'encoding' is None. Otherwise, we return encoded 'bytes'.
 
     Args:
-      tree: 
+      tree:
       encoding:  (Default value = None)
       xml_declaration:  (Default value = False)
 
@@ -492,7 +492,7 @@ def is_xml(text):
     """Helper function. Lightweight test if response is an XML doc
 
     Args:
-      text: 
+      text:
 
     """
     # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
@@ -530,7 +530,7 @@ class PrettyXmlHandler(logging.StreamHandler):
            * The log message args is a dict containing keys starting with 'xml_' and values as bytes
 
         Args:
-          record: 
+          record:
 
         """
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
@@ -693,11 +693,11 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
         https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-throttling-in-exchange
 
     Args:
-      protocol: 
-      session: 
-      url: 
-      headers: 
-      data: 
+      protocol:
+      session:
+      url:
+      headers:
+      data:
       allow_redirects:  (Default value = False)
       stream:  (Default value = False)
 

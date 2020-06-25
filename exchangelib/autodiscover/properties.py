@@ -310,7 +310,7 @@ class Autodiscover(EWSElement):
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/pox-autodiscover-response-for-exchange
 
         Args:
-          bytes_content: 
+          bytes_content:
 
         """
         if not is_xml(bytes_content):

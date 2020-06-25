@@ -110,7 +110,7 @@ class Build:
             * The next 15 bits contain the major build number
 
         Args:
-          s: 
+          s:
 
         """
         bin_s = '{:032b}'.format(int(s, 16))  # Convert string to 32-bit binary string
@@ -211,7 +211,7 @@ class Version:
         package supports, until we get a valid response.
 
         Args:
-          protocol: 
+          protocol:
           api_version_hint:  (Default value = None)
 
         """

@@ -202,7 +202,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
         because many folder classes have the same CONTAINER_CLASS.
 
         Args:
-          container_class: 
+          container_class:
 
         """
         from .known_folders import Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, \
@@ -314,7 +314,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
 
         Args:
           q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is non-null, we always return Persona objects. (Default value = ID_ONLY)
+          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+            non-null, we always return Persona objects. (Default value = ID_ONLY)
           depth: controls the whether to return soft-deleted items or not. (Default value = None)
           additional_fields: the extra properties we want on the return objects. Default is no properties.
           order_fields: the SortOrder fields, if any (Default value = None)
@@ -517,7 +518,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
         This is useful if the folder hierarchy contains a huge number of folders and you don't want to fetch them all
 
         Args:
-          other: 
+          other:
 
         """
         if other == '..':
@@ -611,7 +612,7 @@ class Folder(BaseFolder):
         """Gets the distinguished folder for this folder class
 
         Args:
-          root: 
+          root:
 
         """
         try:

@@ -80,7 +80,8 @@ class Autodiscovery:
 
         Args:
           email: The email address to autodiscover
-          credentials: Credentials with authorization to make autodiscover lookups for this Account (Default value = None)
+          credentials: Credentials with authorization to make autodiscover lookups for this Account
+            (Default value = None)
           auth_type:  (Default value = None)
           retry_policy:  (Default value = None)
 
@@ -203,7 +204,7 @@ class Autodiscovery:
         not circular. Finally, we should fail after 10 redirects.
 
         Args:
-          url: 
+          url:
 
         """
         if url.lower() in self._urls_visited:
@@ -234,7 +235,7 @@ class Autodiscovery:
         some servers are set up to redirect to OWA on all requests except POST to the autodiscover endpoint.
 
         Args:
-          url: 
+          url:
           method:  (Default value = 'post')
 
         """
@@ -292,7 +293,7 @@ class Autodiscovery:
         """Get a response by using the credentials provided. We guess the auth type along the way.
 
         Args:
-          protocol: 
+          protocol:
 
         """
         # Redo the request with the correct auth
@@ -318,7 +319,7 @@ class Autodiscovery:
         """Returns a (is_valid_response, response) tuple
 
         Args:
-          url: 
+          url:
 
         """
         self._urls_visited.append(url.lower())
@@ -369,7 +370,7 @@ class Autodiscovery:
             * If the Autodiscover attempt fails, the client proceeds to step 2.
 
         Args:
-          hostname: 
+          hostname:
 
         """
         url = 'https://%s/Autodiscover/Autodiscover.xml' % hostname
@@ -387,7 +388,7 @@ class Autodiscovery:
             * If the Autodiscover attempt fails, the client proceeds to step 3.
 
         Args:
-          hostname: 
+          hostname:
 
         """
         url = 'https://autodiscover.%s/Autodiscover/Autodiscover.xml' % hostname
@@ -412,7 +413,7 @@ class Autodiscovery:
             * If the GET request does not return a 302 redirect response, the client proceeds to step 4.
 
         Args:
-          hostname: 
+          hostname:
 
         """
         url = 'http://autodiscover.%s/Autodiscover/Autodiscover.xml' % hostname
@@ -448,7 +449,7 @@ class Autodiscovery:
                 * If the redirection URL is not valid, the client proceeds to step 6.
 
         Args:
-          hostname: 
+          hostname:
 
         """
         dns_hostname = '_autodiscover._tcp.%s' % hostname
@@ -486,7 +487,7 @@ class Autodiscovery:
                   configuration settings for the specified user. The client does not need to proceed to step 6.
 
         Args:
-          ad: 
+          ad:
 
         """
         log.info('Step 5: Checking response')
@@ -533,7 +534,7 @@ def _get_srv_records(hostname):
     The first three numbers in the service line are: priority, weight, port
 
     Args:
-      hostname: 
+      hostname:
 
     """
     log.debug('Attempting to get SRV records for %s', hostname)
@@ -562,7 +563,7 @@ def _select_srv_host(srv_records):
     """Select the record with the highest priority, that also supports TLS
 
     Args:
-      srv_records: 
+      srv_records:
 
     """
     best_record = None

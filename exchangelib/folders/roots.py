@@ -103,7 +103,7 @@ class RootOfHierarchy(BaseFolder):
         """Gets the distinguished folder for this folder class
 
         Args:
-          account: 
+          account:
 
         """
         if not cls.DISTINGUISHED_FOLDER_ID:
@@ -202,8 +202,8 @@ class RootOfHierarchy(BaseFolder):
         locale is a string, e.g. 'da_DK'
 
         Args:
-          folder_name: 
-          locale: 
+          folder_name:
+          locale:
 
         """
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETEABLE_FOLDERS:

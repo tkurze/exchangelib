@@ -15,11 +15,11 @@ class FindFolder(EWSFolderService, PagingEWSMixIn):
 
         Args:
           additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+          restriction: Restriction object that defines the filters for the query
           shape: The set of attributes to return
           depth: How deep in the folder structure to search for folders
           max_items: The maximum number of items to return
           offset: the offset relative to the first item in the item collection. Usually 0.
-          restriction: 
 
         Returns:
           XML elements for the matching folders

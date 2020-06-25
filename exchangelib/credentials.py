@@ -208,8 +208,10 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
     Args:
       client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
       client_secret: Secret associated with the OAuth application
-      s: authorization_code: Code obtained when authorizing the application to access an account. In combination with client_id and client_secret, will be used to obtain an access token.
-      access_token: Previously-obtained access token. If a token exists and the application will handle refreshing by itself (or opts not to handle it), this parameter alone is sufficient.
+      authorization_code: Code obtained when authorizing the application to access an account. In combination with
+        client_id and client_secret, will be used to obtain an access token.
+      access_token: Previously-obtained access token. If a token exists and the application will handle refreshing
+        by itself (or opts not to handle it), this parameter alone is sufficient.
       identity: An Identity object representing the account that these credentials are connected to.
 
     """

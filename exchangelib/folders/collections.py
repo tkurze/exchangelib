@@ -79,8 +79,8 @@ class FolderCollection(SearchableMixIn):
         string is not a postfix.
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
         """
         return QuerySet(self).filter(*args, **kwargs)
@@ -102,11 +102,11 @@ class FolderCollection(SearchableMixIn):
         'max_items' defines the maximum number of items returned in this view. Optional.
 
         Args:
-          start: 
-          end: 
+          start:
+          end:
           max_items:  (Default value = None)
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
         """
         qs = QuerySet(self).filter(*args, **kwargs)
@@ -141,9 +141,11 @@ class FolderCollection(SearchableMixIn):
 
         Args:
           q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null, we always return Item objects. (Default value = ID_ONLY)
+          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
+            we always return Item objects. (Default value = ID_ONLY)
           depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+            that complex fields can only be fetched with fetch() (i.e. the GetItem service).
           order_fields: the SortOrder fields, if any (Default value = None)
           calendar_view: a CalendarView instance, if any (Default value = None)
           page_size: the requested number of items per page (Default value = None)

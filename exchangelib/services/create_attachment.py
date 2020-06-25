@@ -3,7 +3,8 @@ from .common import EWSAccountService, to_item_id
 
 
 class CreateAttachment(EWSAccountService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation
+    """
     SERVICE_NAME = 'CreateAttachment'
     element_container_name = '{%s}Attachments' % MNS
 

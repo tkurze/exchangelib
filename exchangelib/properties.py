@@ -275,7 +275,7 @@ class EWSElement(metaclass=abc.ABCMeta):
         """
 
         Args:
-          version: 
+          version:
 
 
         """
@@ -294,8 +294,8 @@ class EWSElement(metaclass=abc.ABCMeta):
         valid for the given version.
 
         Args:
-          field: 
-          version: 
+          field:
+          version:
 
         """
         if not isinstance(version, Version):
@@ -319,8 +319,8 @@ class EWSElement(metaclass=abc.ABCMeta):
         """Insert a new field at the preferred place in the tuple and update the slots cache
 
         Args:
-          field: 
-          insert_after: 
+          field:
+          insert_after:
 
         """
         with cls._fields_lock:
@@ -335,7 +335,7 @@ class EWSElement(metaclass=abc.ABCMeta):
         """Remove the given field and and update the slots cache
 
         Args:
-          field: 
+          field:
 
         """
         with cls._fields_lock:
@@ -432,7 +432,8 @@ class RootItemId(ItemId):
 
 
 class AssociatedCalendarItemId(ItemId):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/associatedcalendaritemid"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/associatedcalendaritemid
+    """
     ELEMENT_NAME = 'AssociatedCalendarItemId'
 
     __slots__ = tuple()
@@ -752,7 +753,7 @@ class TimeZone(EWSElement):
         may be multiple matches. If so, we return a random timezone ID.
 
         Args:
-          timezones: A list of server timezones, as returned by list(account.protocol.get_timezones(return_full_timezone_data=True))
+          timezones: A list of server timezones, as returned by Protocol.get_timezones(return_full_timezone_data=True)
           for_year: return: A Microsoft timezone ID, as a string
 
         Returns:
@@ -1005,7 +1006,8 @@ class Room(Mailbox):
 
 
 class Member(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/member-ex15websvcsotherref"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/member-ex15websvcsotherref
+    """
     ELEMENT_NAME = 'Member'
 
     FIELDS = Fields(

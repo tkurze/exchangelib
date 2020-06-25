@@ -276,8 +276,8 @@ class EWSTimeZone:
         """localize() and normalize() have common code paths
 
         Args:
-          func: 
-          dt: 
+          func:
+          dt:
           is_dst:  (Default value = False)
 
         """

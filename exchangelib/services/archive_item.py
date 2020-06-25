@@ -13,7 +13,7 @@ class ArchiveItem(EWSAccountService, EWSPooledMixIn):
 
         Args:
           items: a list of (id, changekey) tuples or Item objects
-          to_folder: 
+          to_folder:
 
         Returns:
           None

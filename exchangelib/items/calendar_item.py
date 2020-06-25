@@ -124,7 +124,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         """
 
         Args:
-          index: 
+          index:
 
         Returns:
           is 1-based. No other field values are fetched from the server.

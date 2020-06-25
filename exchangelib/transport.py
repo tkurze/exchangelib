@@ -53,7 +53,7 @@ def extra_headers(primary_smtp_address):
     """Generate extra HTTP headers
 
     Args:
-      primary_smtp_address: 
+      primary_smtp_address:
 
     """
     if primary_smtp_address:
@@ -77,8 +77,8 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
 
     Args:
-      content: 
-      api_version: 
+      content:
+      api_version:
       account_to_impersonate:  (Default value = None)
       timezone:  (Default value = None)
 
@@ -120,8 +120,8 @@ def get_auth_instance(auth_type, **kwargs):
     """Returns an *Auth instance suitable for the requests package
 
     Args:
-      auth_type: 
-      **kwargs: 
+      auth_type:
+      **kwargs:
 
     """
     model = AUTH_TYPE_MAP[auth_type]

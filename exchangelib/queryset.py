@@ -445,8 +445,8 @@ class QuerySet(SearchableMixIn):
         """
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
 
         """
@@ -459,8 +459,8 @@ class QuerySet(SearchableMixIn):
         """
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
 
         """
@@ -479,7 +479,7 @@ class QuerySet(SearchableMixIn):
         """Fetch only the specified field names. All other item fields will be 'None'
 
         Args:
-          *args: 
+          *args:
 
         """
         try:
@@ -494,7 +494,7 @@ class QuerySet(SearchableMixIn):
         """
 
         Args:
-          *args: 
+          *args:
 
         Returns:
           in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
@@ -522,7 +522,7 @@ class QuerySet(SearchableMixIn):
         """
 
         Args:
-          *args: 
+          *args:
 
 
         """
@@ -539,8 +539,8 @@ class QuerySet(SearchableMixIn):
         """Return the values of the specified field names as lists. If called with flat=True and only one field name,
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
         Returns:
           Allow an arbitrary list of fields in *args, possibly ending with flat=True|False
@@ -564,7 +564,7 @@ class QuerySet(SearchableMixIn):
         """Specify the search depth (SHALLOW, ASSOCIATED or DEEP)
 
         Args:
-          depth: 
+          depth:
 
         """
         new_qs = self._copy_self()
@@ -590,8 +590,8 @@ class QuerySet(SearchableMixIn):
         """Assume the query will return exactly one item. Return that item
 
         Args:
-          *args: 
-          **kwargs: 
+          *args:
+          **kwargs:
 
         """
         if self.is_cached and not args and not kwargs:
@@ -651,7 +651,7 @@ class QuerySet(SearchableMixIn):
 
         Args:
           page_size:  (Default value = 1000)
-          **delete_kwargs: 
+          **delete_kwargs:
 
         """
         if self.is_cached:
@@ -673,7 +673,7 @@ class QuerySet(SearchableMixIn):
 
         Args:
           page_size:  (Default value = 1000)
-          **send_kwargs: 
+          **send_kwargs:
 
         """
         if self.is_cached:
@@ -694,9 +694,9 @@ class QuerySet(SearchableMixIn):
         to fetch and copy per request. We're only fetching the IDs, so keep it high
 
         Args:
-          to_folder: 
+          to_folder:
           page_size:  (Default value = 1000)
-          **copy_kwargs: 
+          **copy_kwargs:
 
         """
         if self.is_cached:
@@ -718,7 +718,7 @@ class QuerySet(SearchableMixIn):
         to fetch and move per request. We're only fetching the IDs, so keep it high
 
         Args:
-          to_folder: 
+          to_folder:
           page_size:  (Default value = 1000)
 
         """
@@ -740,7 +740,7 @@ class QuerySet(SearchableMixIn):
         to fetch and move per request. We're only fetching the IDs, so keep it high
 
         Args:
-          to_folder: 
+          to_folder:
           page_size:  (Default value = 1000)
 
         """

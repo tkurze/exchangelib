@@ -440,11 +440,13 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         """Returns free/busy information for a list of accounts
 
         Args:
-          accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.
+          accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
+            object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.
           start: The start datetime of the request
           end: The end datetime of the request
           merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
-          requested_view: The type of information returned. Possible values are defined in the FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')
+          requested_view: The type of information returned. Possible values are defined in the
+            FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')
 
         Returns:
           A generator of FreeBusyView objects
@@ -502,7 +504,8 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           names: A list of identifiers to query
           return_full_contact_data: If True, returns full contact data (Default value = False)
           search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
-          shape: return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items (Default value = None)
+          shape: return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact)
+            items (Default value = None)
 
         Returns:
           A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items

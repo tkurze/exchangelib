@@ -62,10 +62,10 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
         ). The last two are not supported yet.
 
         Args:
-          items: 
-          folder: 
-          message_disposition: 
-          send_meeting_invitations: 
+          items:
+          folder:
+          message_disposition:
+          send_meeting_invitations:
 
         """
         createitem = create_element(
