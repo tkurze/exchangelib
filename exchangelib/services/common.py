@@ -24,6 +24,33 @@ log = logging.getLogger(__name__)
 
 CHUNK_SIZE = 100  # A default chunk size for all services
 
+KNOWN_EXCEPTIONS = (
+    ErrorAccessDenied,
+    ErrorADUnavailable,
+    ErrorBatchProcessingStopped,
+    ErrorCannotDeleteObject,
+    ErrorConnectionFailed,
+    ErrorCreateItemAccessDenied,
+    ErrorExceededConnectionCount,
+    ErrorFolderNotFound,
+    ErrorImpersonateUserDenied,
+    ErrorImpersonationFailed,
+    ErrorInternalServerError,
+    ErrorInternalServerTransientError,
+    ErrorInvalidChangeKey,
+    ErrorInvalidLicense,
+    ErrorItemNotFound,
+    ErrorMailboxMoveInProgress,
+    ErrorMailboxStoreUnavailable,
+    ErrorNonExistentMailbox,
+    ErrorNoPublicFolderReplicaAvailable,
+    ErrorNoRespondingCASInDestinationSite,
+    ErrorQuotaExceeded,
+    ErrorTimeoutExpired,
+    RateLimitError,
+    UnauthorizedError,
+)
+
 
 class EWSService(metaclass=abc.ABCMeta):
     SERVICE_NAME = None  # The name of the SOAP service
@@ -77,44 +104,40 @@ class EWSService(metaclass=abc.ABCMeta):
             raise res[0]
         return res[0]
 
+    def _response_generator(self, payload):
+        # Send the request, get the response and do basic sanity checking on the SOAP XML
+        response = self._get_response_xml(payload=payload)
+        # Read the XML and throw any general EWS error messages
+        return self._get_elements_in_response(response=response)
+
     def _get_elements(self, payload):
         while True:
             try:
-                # Send the request, get the response and do basic sanity checking on the SOAP XML
-                response = self._get_response_xml(payload=payload)
-                # Read the XML and throw any general EWS error messages. Return a generator over the result elements
-                return self._get_elements_in_response(response=response)
+                # Create a generator over the response elements so exceptions in response elements are also raised
+                # here and can be handled.
+                for i in self._response_generator(payload=payload):
+                    yield i
+                return
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except (
-                    ErrorAccessDenied,
-                    ErrorADUnavailable,
-                    ErrorBatchProcessingStopped,
-                    ErrorCannotDeleteObject,
-                    ErrorConnectionFailed,
-                    ErrorCreateItemAccessDenied,
-                    ErrorExceededConnectionCount,
-                    ErrorFolderNotFound,
-                    ErrorImpersonateUserDenied,
-                    ErrorImpersonationFailed,
-                    ErrorInternalServerError,
-                    ErrorInternalServerTransientError,
-                    ErrorInvalidChangeKey,
-                    ErrorInvalidLicense,
-                    ErrorItemNotFound,
-                    ErrorMailboxMoveInProgress,
-                    ErrorMailboxStoreUnavailable,
-                    ErrorNonExistentMailbox,
-                    ErrorNoPublicFolderReplicaAvailable,
-                    ErrorNoRespondingCASInDestinationSite,
-                    ErrorQuotaExceeded,
-                    ErrorTimeoutExpired,
-                    RateLimitError,
-                    UnauthorizedError,
-            ):
+            except KNOWN_EXCEPTIONS:
                 # These are known and understood, and don't require a backtrace.
                 raise
+            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
+                # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
+                # often a symptom of sending too many requests.
+                #
+                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests. Start by lowering the
+                # session count. This is done by downstream code.
+                if isinstance(e, ErrorTimeoutExpired) and self.protocol.session_pool_size <= 1:
+                    # We're already as low as we can go, so downstream cannot limit the session count to put less load
+                    # on the server. We don't have a way of lowering the page size of requests from
+                    # this part of the code yet. Let the user handle this.
+                    raise e
+
+                # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
+                raise ErrorServerBusy('Reraised from %s(%s)' % (e.__class__.__name__, e))
             except Exception:
                 # This may run from a thread pool, which obfuscates the stack trace. Print trace immediately.
                 account = self.account if isinstance(self, EWSAccountService) else None
@@ -199,20 +222,6 @@ class EWSService(metaclass=abc.ABCMeta):
                 except SessionPoolMinSizeReached:
                     # We're already as low as we can go. Let the user handle this.
                     raise e
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
-                # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
-                # often a symptom of sending too many requests.
-                #
-                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests. Start by lowering the
-                # session count. This is done by downstream code.
-                if isinstance(e, ErrorTimeoutExpired) and self.protocol.session_pool_size <= 1:
-                    # We're already as low as we can go, so downstream cannot limit the session count to put less load
-                    # on the server. We don't have a way of lowering the page size of requests from
-                    # this part of the code yet. Let the user handle this.
-                    raise e
-
-                # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
-                raise ErrorServerBusy(msg='Reraised from %s(%s)' % (e.__class__.__name__, e), back_off=300)
             finally:
                 if not self.streaming:
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
@@ -278,7 +287,9 @@ class EWSService(metaclass=abc.ABCMeta):
         if response is None:
             fault = body.find('{%s}Fault' % SOAPNS)
             if fault is None:
-                raise SOAPError('Unknown SOAP response: %s' % xml_to_str(body))
+                raise SOAPError(
+                    'Unknown SOAP response (expected %s or Fault): %s' % (cls._response_tag(), xml_to_str(body))
+                )
             cls._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
         response_messages = response.find(cls._response_messages_tag())
         if response_messages is None:
@@ -430,6 +441,11 @@ class EWSFolderService(EWSAccountService):
 
 
 class PagingEWSMixIn(EWSService):
+    def _response_generator(self, payload):
+        response = self._get_response_xml(payload=payload)
+        # Collect a tuple of (rootfolder, next_offset) tuples
+        return (self._get_page(message) for message in response)
+
     def _paged_call(self, payload_func, max_items, **kwargs):
         if isinstance(self, EWSAccountService):
             log_prefix = 'EWS %s, account %s, service %s' % (
@@ -447,13 +463,7 @@ class PagingEWSMixIn(EWSService):
             log.debug('%s: Getting items at offset %s (max_items %s)', log_prefix, common_next_offset, max_items)
             kwargs['offset'] = common_next_offset
             payload = payload_func(**kwargs)
-            try:
-                response = self._get_response_xml(payload=payload)
-            except ErrorServerBusy as e:
-                self._handle_backoff(e)
-                continue
-            # Collect a tuple of (rootfolder, next_offset) tuples
-            parsed_pages = [self._get_page(message) for message in response]
+            parsed_pages = list(self._get_elements(payload=payload))
             if len(parsed_pages) != expected_message_count:
                 raise MalformedResponseError(
                     "Expected %s items in 'response', got %s" % (expected_message_count, len(parsed_pages))

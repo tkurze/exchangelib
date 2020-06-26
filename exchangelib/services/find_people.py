@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from ..errors import MalformedResponseError, ErrorServerBusy
+from ..errors import MalformedResponseError
 from ..util import create_element, set_xml_value, xml_to_str, MNS
 from .common import EWSAccountService, PagingEWSMixIn, create_shape_element
 
@@ -89,13 +89,8 @@ class FindPeople(EWSAccountService, PagingEWSMixIn):
             log.debug('EWS %s, account %s, service %s: Getting items at offset %s',
                       self.protocol.service_endpoint, self.account, self.SERVICE_NAME, item_count)
             kwargs['offset'] = item_count
-            try:
-                response = self._get_response_xml(payload=payload_func(**kwargs))
-            except ErrorServerBusy as e:
-                self._handle_backoff(e)
-                continue
-            # Collect a tuple of (rootfolder, total_items) tuples
-            parsed_pages = [self._get_page(message) for message in response]
+            payload = payload_func(**kwargs)
+            parsed_pages = list(self._get_elements(payload=payload))
             if len(parsed_pages) != 1:
                 # We can only query one folder, so there should only be one element in response
                 raise MalformedResponseError("Expected single item in 'response', got %s" % len(parsed_pages))

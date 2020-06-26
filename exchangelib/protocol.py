@@ -672,6 +672,9 @@ class FaultTolerance(RetryPolicy):
 
     """
 
+    # Back off 60 seconds if we didn't get an explicit suggested value
+    DEFAULT_BACKOFF = 60
+
     def __init__(self, max_wait=3600):
         self.max_wait = max_wait
         self._back_off_until = None
@@ -712,7 +715,7 @@ class FaultTolerance(RetryPolicy):
 
     def back_off(self, seconds):
         if seconds is None:
-            seconds = 60  # Back off 60 seconds if we didn't get an explicit suggested value
+            seconds = self.DEFAULT_BACKOFF
         value = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
         with self._back_off_lock:
             self._back_off_until = value

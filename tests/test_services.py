@@ -1,8 +1,10 @@
 import requests_mock
 
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
-    ErrorInvalidServerVersion, SOAPError
-from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames
+    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError
+from exchangelib.folders import FolderCollection
+from exchangelib.protocol import FaultTolerance
+from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder
 from exchangelib.util import create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
 
@@ -22,7 +24,7 @@ class ServicesTest(EWSTest):
             list(GetRooms(protocol=account.protocol).call('XXX'))
 
     def test_error_server_busy(self):
-        # Test that we can parse an ErrorServerBusy response
+        # Test that we can parse an exception response via SOAP body
         version = mock_version(build=EXCHANGE_2010)
         ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
         xml = b'''\
@@ -47,9 +49,57 @@ class ServicesTest(EWSTest):
   </s:Body>
 </s:Envelope>'''
         header, body = ws._get_soap_parts(response=MockResponse(xml))
-        with self.assertRaises(ErrorServerBusy) as cm:
-            ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
-        self.assertEqual(cm.exception.back_off, 297.749)
+        with self.assertRaises(ErrorServerBusy) as e:
+            ws._get_soap_messages(body=body)
+        self.assertEqual(e.exception.back_off, 297.749)  # Test that we correctly parse the BackOffMilliseconds value
+
+    @requests_mock.mock(real_http=True)
+    def test_error_too_many_objects_opened(self, m):
+        # Test that we can parse ErrorTooManyObjectsOpened via ResponseMessage and return
+        version = mock_version(build=EXCHANGE_2010)
+        protocol = mock_protocol(version=version, service_endpoint='example.com')
+        account = mock_account(version=version, protocol=protocol)
+        ws = FindFolder(account=account, folders=[None])
+        xml = b'''\
+<s:Envelope
+        xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Header>
+        <h:ServerVersionInfo
+                xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns="http://schemas.microsoft.com/exchange/services/2006/types" MajorVersion="15" MinorVersion="0"
+                MajorBuildNumber="1497" MinorBuildNumber="6" Version="V2_23"/>
+    </s:Header>
+    <s:Body
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <m:FindFolderResponse
+                xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:FindFolderResponseMessage ResponseClass="Error">
+                    <m:MessageText>Too many concurrent connections opened.</m:MessageText>
+                    <m:ResponseCode>ErrorTooManyObjectsOpened</m:ResponseCode>
+                    <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+                </m:FindFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:FindFolderResponse>
+    </s:Body>
+</s:Envelope>'''
+        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        # Just test that we can parse the error
+        with self.assertRaises(ErrorTooManyObjectsOpened):
+            list(ws._get_elements_in_response(response=ws._get_soap_messages(body=body)))
+
+        # Test that it gets converted to an ErrorServerBusy exception. This happens deep inside EWSService methods
+        # so it's easier to only mock the response.
+        self.account.root  # Needed to get past the GetFolder request
+        m.post(self.account.protocol.service_endpoint, content=xml)
+        self.account.protocol.config.retry_policy = FaultTolerance(max_wait=0)
+        with self.assertRaises(ErrorServerBusy) as e:
+            list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
+        self.assertEqual(e.exception.back_off, None)  # ErrorTooManyObjectsOpened has no BackOffMilliseconds value
 
     def test_soap_error(self):
         soap_xml = """\
@@ -152,7 +202,7 @@ class ServicesTest(EWSTest):
         # end up throwing ErrorInvalidServerVersion. We should make a more direct test.
         svc = ResolveNames(self.account.protocol)
         with self.assertRaises(ErrorInvalidServerVersion):
-            svc._get_elements(create_element('XXX'))
+            list(svc._get_elements(create_element('XXX')))
 
     @requests_mock.mock()
     def test_invalid_soap_response(self, m):
