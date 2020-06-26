@@ -149,7 +149,7 @@ class BaseProtocol:
 
     def _create_session_pool(self):
         # Create a pool to reuse sessions containing connections to the server
-        session_pool = LifoQueue(maxsize=self._session_pool_size)
+        session_pool = LifoQueue()
         for _ in range(self._session_pool_size):
             session_pool.put(self.create_session(), block=False)
         return session_pool
@@ -171,7 +171,7 @@ class BaseProtocol:
             if self._session_pool_size <= 1:
                 log.debug('Session pool size was decreased in another thread')
                 return
-            log.warning('Lowering session pool size from %s to %s', self._session_pool_size,
+            log.warning('Decreasing session pool size from %s to %s', self._session_pool_size,
                         self._session_pool_size - 1)
             self.get_session().close()
             self._session_pool_size -= 1
