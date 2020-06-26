@@ -119,6 +119,10 @@ class SessionPoolMinSizeReached(EWSError):
     pass
 
 
+class SessionPoolMaxSizeReached(EWSError):
+    pass
+
+
 class ResponseMessageError(TransportError):
     pass
 

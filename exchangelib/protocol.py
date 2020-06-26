@@ -17,7 +17,7 @@ from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient
 from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
-from .errors import TransportError, SessionPoolMinSizeReached
+from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached
 from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
@@ -157,6 +157,22 @@ class BaseProtocol:
     @property
     def session_pool_size(self):
         return self._session_pool_size
+
+    def increase_poolsize(self):
+        """Increases the session pool size. We increase by one session per call.
+        """
+        # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
+        # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
+        if self._session_pool_size == self.SESSION_POOLSIZE:
+            raise SessionPoolMaxSizeReached('Session pool size cannot be increased further')
+        with self._session_pool_lock:
+            if self._session_pool_size >= self.SESSION_POOLSIZE:
+                log.debug('Session pool size was increased in another thread')
+                return
+            log.warning('Increasing session pool size from %s to %s', self._session_pool_size,
+                        self._session_pool_size + 1)
+            self._session_pool.put(self.create_session(), block=False)
+            self._session_pool_size += 1
 
     def decrease_poolsize(self):
         """Decreases the session pool size in response to error messages from the server requesting to rate-limit
