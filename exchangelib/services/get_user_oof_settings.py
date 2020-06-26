@@ -21,15 +21,14 @@ class GetUserOofSettings(EWSAccountService):
     def _get_elements_in_response(self, response):
         # This service only returns one result, but 'response' is a list
         from ..settings import OofSettings
-        response = list(response)
         if len(response) != 1:
             raise ValueError("Expected 'response' length 1, got %s" % response)
-        msg = response[0]
-        container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
-        if isinstance(container_or_exc, (bool, Exception)):
-            # pylint: disable=raising-bad-type
-            raise container_or_exc
-        return OofSettings.from_xml(container_or_exc, account=self.account)
+        for msg in response:
+            container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
+            if isinstance(container_or_exc, (bool, Exception)):
+                # pylint: disable=raising-bad-type
+                raise container_or_exc
+            yield OofSettings.from_xml(container_or_exc, account=self.account)
 
     def _get_element_container(self, message, response_message=None, name=None):
         response_message = message.find('{%s}ResponseMessage' % MNS)
