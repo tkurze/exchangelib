@@ -28,7 +28,7 @@ install:
 - python -m pip install PyYAML requests_mock psutil coverage coveralls flake8
 
 script:
-- coverage run --source=exchangelib setup.py test
+- coverage run --source=exchangelib -m unittest
 
 after_success: coveralls
 
