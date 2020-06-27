@@ -325,7 +325,11 @@ class CommonItemTest(BaseItemTest):
                             if not matches and isinstance(f, BodyField):
                                 # The body field is particularly nasty in this area. Give up
                                 continue
-                    self.assertEqual(matches, 1, (f.name, val, kw))
+                    if f.is_list and not val and list(kw.keys())[0].endswith('__%s' % Q.LOOKUP_IN):
+                        # __in with an empty list returns an empty result
+                        self.assertEqual(matches, 0, (f.name, val, kw))
+                    else:
+                        self.assertEqual(matches, 1, (f.name, val, kw))
 
     def test_text_field_settings(self):
         # Test that the max_length and is_complex field settings are correctly set for text fields

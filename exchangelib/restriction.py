@@ -121,6 +121,10 @@ class Q:
                 if not is_iterable(value, generators_allowed=True):
                     raise ValueError("Value for lookup %r must be a list" % key)
                 children = [self.__class__(**{field_path: v}) for v in value]
+                if not children:
+                    # This is an '__in' operator with an empty value. We interpret it to mean "is foo contained in the
+                    # empty set?" which is always false. Mark this Q object as such.
+                    return [self.__class__(conn_type=self.NEVER)]
                 return [self.__class__(*children, conn_type=self.OR)]
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
