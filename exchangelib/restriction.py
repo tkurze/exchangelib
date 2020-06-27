@@ -1,5 +1,6 @@
 import base64
 from collections import OrderedDict
+from copy import copy
 import logging
 
 from .properties import InvalidField
@@ -16,7 +17,8 @@ class Q:
     AND = 'AND'
     OR = 'OR'
     NOT = 'NOT'
-    CONN_TYPES = {AND, OR, NOT}
+    NEVER = 'NEVER'  # This is not specified by EWS. We use it for queries that will never match, e.g. 'foo__in=()'
+    CONN_TYPES = {AND, OR, NOT, NEVER}
 
     # EWS Operators
     EQ = '=='
@@ -67,18 +69,6 @@ class Q:
         # Parsing of args and kwargs may require child elements
         self.children = []
 
-        # Remove any empty Q elements in args before proceeding
-        args = tuple(a for a in args if not (isinstance(a, self.__class__) and a.is_empty()))
-
-        # Check for query string, or Q object containing query string, as the only argument
-        if len(args) == 1 and not kwargs:
-            if isinstance(args[0], str):
-                self.query_string = args[0]
-                return
-            if isinstance(args[0], self.__class__) and args[0].query_string:
-                self.query_string = args[0].query_string
-                return
-
         # Parse args which must be Q objects
         for q in args:
             if not isinstance(q, self.__class__):
@@ -92,12 +82,40 @@ class Q:
         # Parse keyword args and extract the filter
         is_single_kwarg = len(args) == 0 and len(kwargs) == 1
         for key, value in kwargs.items():
-            children = self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg)
-            self.children.extend(children)
+            self.children.extend(
+                self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg)
+            )
 
-        if len(self.children) == 1 and self.field_path is None and self.conn_type != self.NOT:
-            # We only have one child and no expression on ourselves, so we are a no-op. Flatten by taking over the child
-            self._promote()
+        # Simplify this object
+        self.reduce()
+
+    def reduce(self):
+        """Simplify this object, if possible"""
+        self._reduce_children()
+        self._promote()
+
+    def _reduce_children(self):
+        """Looks at the children of this object and removes unnecessary items
+        """
+        children = self.children
+        if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
+            # We have at least one 'never' arg
+            if self.conn_type == self.AND:
+                # Remove all other args since nothing we AND together with a 'never' arg can change the result
+                children = [self.__class__(conn_type=self.NEVER),]
+            elif self.conn_type == self.OR:
+                # Remove all 'never' args because all other args will decide the result. Keep one 'never' arg in case
+                # all args are 'never' args.
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                if not children:
+                    children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.NOT:
+                # Let's interpret 'not never' to mean 'always'. Remove all 'never' args
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+
+        # Remove any empty Q elements in args before proceeding
+        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        self.children = children
 
     def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
         # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
@@ -167,7 +185,11 @@ class Q:
         return []
 
     def _promote(self):
-        # Flatten by taking over the only child
+        """When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
+        child."""
+        if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
+            return
+
         if len(self.children) != 1:
             raise ValueError('Can only flatten when child count is 1')
         if self.field_path is not None:
@@ -274,7 +296,12 @@ class Q:
         return not self.children
 
     def is_empty(self):
-        return self.is_leaf() and self.field_path is None and self.query_string is None
+        """Returns True if this object is without any restrictions at all"""
+        return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
+
+    def is_never(self):
+        """Returns True if this object has a restriction that will never match anything"""
+        return self.conn_type == self.NEVER
 
     def expr(self):
         if self.is_empty():
@@ -445,29 +472,26 @@ class Q:
         # ~ operator. If op has an inverse, change op. Else return a new Q with conn_type NOT
         if self.conn_type == self.NOT:
             # This is NOT NOT. Change to AND
-            self.conn_type = self.AND
-            if len(self.children) == 1 and self.field_path is None:
-                self._promote()
-            return self
+            new = copy(self)
+            new.conn_type = self.AND
+            new.reduce()
+            return new
         if self.is_leaf():
-            if self.op == self.EQ:
-                self.op = self.NE
-                return self
-            if self.op == self.NE:
-                self.op = self.EQ
-                return self
-            if self.op == self.GT:
-                self.op = self.LTE
-                return self
-            if self.op == self.GTE:
-                self.op = self.LT
-                return self
-            if self.op == self.LT:
-                self.op = self.GTE
-                return self
-            if self.op == self.LTE:
-                self.op = self.GT
-                return self
+            inverse_ops = {
+                self.EQ: self.NE,
+                self.NE: self.EQ,
+                self.GT: self.LTE,
+                self.GTE: self.LT,
+                self.LT: self.GTE,
+                self.LTE: self.GT,
+            }
+            try:
+                new = copy(self)
+                new.op = inverse_ops[self.op]
+                new.reduce()
+                return new
+            except KeyError:
+                pass
         return self.__class__(self, conn_type=self.NOT)
 
     def __eq__(self, other):
@@ -483,6 +507,8 @@ class Q:
         if self.is_leaf():
             if self.query_string:
                 return self.__class__.__name__ + '(%r)' % self.query_string
+            if self.is_never():
+                return self.__class__.__name__ + '(conn_type=%r)' % (self.conn_type)
             return self.__class__.__name__ + '(%s %s %r)' % (self.field_path, self.op, self.value)
         sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or ''))
         if self.conn_type == self.NOT or len(self.children) > 1:
