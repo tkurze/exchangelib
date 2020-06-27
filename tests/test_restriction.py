@@ -135,3 +135,34 @@ class RestrictionTest(TimedTestCase):
         with self.assertRaises(ValueError):
             # Invalid value
             Q(foo=None).clean(version=Version(build=EXCHANGE_2007))
+
+    def test_q_never(self):
+        # Tests Q with conn_type NEVER. This is for cases where the user makes queries that would return an empty
+        # result, but the server does not support this type of query. The only example so far is 'foo__in=[]' which
+        # should always match nothing.
+        self.assertEqual(Q(foo__in=[]), Q(conn_type=Q.NEVER))  # __in with empty sequence should translate to NEVER
+        self.assertTrue(Q(foo__in=[]).is_never())  # Test the flag
+        self.assertEqual(~Q(foo__in=[]), Q())  # Negation should translate to the no-op
+        self.assertTrue(~Q(foo__in=[]).is_empty())  # Negation should translate to a no-op
+
+        # Test in combination with AND and OR
+        self.assertEqual(Q(foo__in=[], bar='baz'), Q(conn_type=Q.NEVER))  # NEVER removes all other args
+        self.assertEqual(Q(foo__in=[]) & Q(bar='baz'), Q(conn_type=Q.NEVER))  # NEVER removes all other args
+        self.assertEqual(Q(foo__in=[]) | Q(bar='baz'), Q(bar='baz'))  # OR removes all 'never' args
+
+    def test_q_simplification(self):
+        self.assertEqual(Q(foo='bar') & Q(), Q(foo='bar'))
+        self.assertEqual(Q() & Q(foo='bar'), Q(foo='bar'))
+
+        self.assertEqual(Q('foo') & Q(), Q('foo'))
+        self.assertEqual(Q() & Q('foo'), Q('foo'))
+
+    def test_q_querystring(self):
+        self.assertEqual(Q('this is a QS').expr(), 'this is a QS')
+        self.assertEqual(Q(Q('this is a QS')), Q('this is a QS'))
+        self.assertEqual(Q(Q(Q(Q('this is a QS')))), Q('this is a QS'))
+
+        with self.assertRaises(ValueError):
+            Q('this is a QS') & Q(foo='bar')
+        with self.assertRaises(ValueError):
+            Q(5)

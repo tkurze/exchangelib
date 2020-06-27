@@ -402,3 +402,11 @@ class ItemQuerySetTest(BaseItemTest):
     def test_depth(self):
         self.assertGreaterEqual(self.test_folder.all().depth(ASSOCIATED).count(), 0)
         self.assertGreaterEqual(self.test_folder.all().depth(SHALLOW).count(), 0)
+
+    def test_empty_in_sequence(self):
+        # 'Q(foo_in=[])' should always match nothing. We interpret it to mean "is foo contained in the empty set?"
+        # which is always false.
+        item = self.get_test_item().save()
+        qs = self.test_folder.filter(categories__contains=self.categories)
+        self.assertEqual(qs.filter(subject__in=[item.subject]).count(), 1)
+        self.assertEqual(qs.filter(subject__in=[]).count(), 0)
