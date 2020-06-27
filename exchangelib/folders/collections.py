@@ -160,6 +160,9 @@ class FolderCollection(SearchableMixIn):
         if not self.folders:
             log.debug('Folder list is empty')
             return
+        if q.is_never():
+            log.debug('Query will never return results')
+            return
         if shape not in SHAPE_CHOICES:
             raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
         if depth is None:
@@ -281,6 +284,9 @@ class FolderCollection(SearchableMixIn):
         from .base import BaseFolder, Folder
         if not self.folders:
             log.debug('Folder list is empty')
+            return
+        if q is not None and q.is_never():
+            log.debug('Query will never return results')
             return
         if q is None or q.is_empty():
             restriction = None

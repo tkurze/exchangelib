@@ -60,7 +60,7 @@ class QuerySet(SearchableMixIn):
         if request_type not in self.REQUEST_TYPES:
             raise ValueError("'request_type' %r must be one of %s" % (request_type, self.REQUEST_TYPES))
         self.request_type = request_type
-        self.q = Q()  # Default to no restrictions. 'None' means 'return nothing'
+        self.q = Q()  # Default to no restrictions
         self.only_fields = None
         self.order_fields = None
         self.return_format = self.NONE
@@ -82,7 +82,7 @@ class QuerySet(SearchableMixIn):
         # items = list(qs)
         # new_qs = qs.exclude(bar='baz')  # This should work, and should fetch from the server
         #
-        if not isinstance(self.q, (type(None), Q)):
+        if not isinstance(self.q, Q):
             raise ValueError("self.q value '%s' must be None or a Q instance" % self.q)
         if not isinstance(self.only_fields, (type(None), tuple)):
             raise ValueError("self.only_fields value '%s' must be None or a tuple" % self.only_fields)
@@ -92,7 +92,7 @@ class QuerySet(SearchableMixIn):
             raise ValueError("self.return_value '%s' must be one of %s" % (self.return_format, self.RETURN_TYPES))
         # Only mutable objects need to be deepcopied. Folder should be the same object
         new_qs = self.__class__(self.folder_collection, request_type=self.request_type)
-        new_qs.q = None if self.q is None else deepcopy(self.q)
+        new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
         new_qs.order_fields = None if self.order_fields is None else deepcopy(self.order_fields)
         new_qs.return_format = self.return_format
@@ -278,7 +278,7 @@ class QuerySet(SearchableMixIn):
                 yield val
             return
 
-        if self.q is None:
+        if self.q.is_never():
             self._cache = []
             return
 
@@ -438,7 +438,7 @@ class QuerySet(SearchableMixIn):
     def none(self):
         """ """
         new_qs = self._copy_self()
-        new_qs.q = None
+        new_qs.q = Q(conn_type=Q.NEVER)
         return new_qs
 
     def filter(self, *args, **kwargs):
@@ -452,7 +452,7 @@ class QuerySet(SearchableMixIn):
         """
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
-        new_qs.q = q if new_qs.q is None else new_qs.q & q
+        new_qs.q = new_qs.q & q
         return new_qs
 
     def exclude(self, *args, **kwargs):
@@ -466,7 +466,7 @@ class QuerySet(SearchableMixIn):
         """
         new_qs = self._copy_self()
         q = ~Q(*args, **kwargs)
-        new_qs.q = q if new_qs.q is None else new_qs.q & q
+        new_qs.q = new_qs.q & q
         return new_qs
 
     def people(self):
@@ -579,7 +579,7 @@ class QuerySet(SearchableMixIn):
 
     def iterator(self):
         """ """
-        if self.q is None:
+        if self.q.is_never():
             return []
         if self.is_cached:
             return self._cache
