@@ -69,15 +69,16 @@ class Q:
         # Parsing of args and kwargs may require child elements
         self.children = []
 
-        # Parse args which must be Q objects
+        # Check for query string as the only argument
+        if not kwargs and len(args) == 1 and isinstance(args[0], str):
+            self.query_string = args[0]
+            args = ()
+
+        # Parse args which must now be Q objects
         for q in args:
             if not isinstance(q, self.__class__):
                 raise ValueError("Non-keyword arg %r must be a Q instance" % q)
-            if q.query_string:
-                raise ValueError(
-                    'A query string cannot be combined with other restrictions (args: %r, kwargs: %r)' % (args, kwargs)
-                )
-            self.children.append(q)
+        self.children.extend(args)
 
         # Parse keyword args and extract the filter
         is_single_kwarg = len(args) == 0 and len(kwargs) == 1
@@ -89,33 +90,8 @@ class Q:
         # Simplify this object
         self.reduce()
 
-    def reduce(self):
-        """Simplify this object, if possible"""
-        self._reduce_children()
-        self._promote()
-
-    def _reduce_children(self):
-        """Looks at the children of this object and removes unnecessary items
-        """
-        children = self.children
-        if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
-            # We have at least one 'never' arg
-            if self.conn_type == self.AND:
-                # Remove all other args since nothing we AND together with a 'never' arg can change the result
-                children = [self.__class__(conn_type=self.NEVER),]
-            elif self.conn_type == self.OR:
-                # Remove all 'never' args because all other args will decide the result. Keep one 'never' arg in case
-                # all args are 'never' args.
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
-                if not children:
-                    children = [self.__class__(conn_type=self.NEVER)]
-            elif self.conn_type == self.NOT:
-                # Let's interpret 'not never' to mean 'always'. Remove all 'never' args
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
-
-        # Remove any empty Q elements in args before proceeding
-        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
-        self.children = children
+        # Final sanity check
+        self._check_integrity()
 
     def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
         # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
@@ -184,16 +160,40 @@ class Q:
         self.value = value
         return []
 
+    def reduce(self):
+        """Simplify this object, if possible"""
+        self._reduce_children()
+        self._promote()
+
+    def _reduce_children(self):
+        """Looks at the children of this object and removes unnecessary items
+        """
+        children = self.children
+        if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
+            # We have at least one 'never' arg
+            if self.conn_type == self.AND:
+                # Remove all other args since nothing we AND together with a 'never' arg can change the result
+                children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.OR:
+                # Remove all 'never' args because all other args will decide the result. Keep one 'never' arg in case
+                # all args are 'never' args.
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                if not children:
+                    children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.NOT:
+                # Let's interpret 'not never' to mean 'always'. Remove all 'never' args
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+
+        # Remove any empty Q elements in args before proceeding
+        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        self.children = children
+
     def _promote(self):
         """When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
         child."""
         if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
             return
 
-        if len(self.children) != 1:
-            raise ValueError('Can only flatten when child count is 1')
-        if self.field_path is not None:
-            raise ValueError("Can only flatten when 'field_path' is not set")
         q = self.children[0]
         self.conn_type = q.conn_type
         self.field_path = q.field_path
@@ -306,6 +306,8 @@ class Q:
     def expr(self):
         if self.is_empty():
             return None
+        if self.is_never():
+            return self.NEVER
         if self.query_string:
             return self.query_string
         if self.is_leaf():
@@ -325,6 +327,7 @@ class Q:
 
     def to_xml(self, folders, version, applies_to):
         if self.query_string:
+            self._check_integrity()
             if version.build < EXCHANGE_2010:
                 raise NotImplementedError('QueryString filtering is only supported for Exchange 2010 servers and later')
             elem = create_element('m:QueryString')
@@ -341,6 +344,10 @@ class Q:
     def _check_integrity(self):
         if self.is_empty():
             return
+        if self.conn_type == self.NEVER:
+            if any([self.field_path, self.op, self.value, self.children]):
+                raise ValueError("'never' queries cannot be combined with other settings")
+            return
         if self.query_string:
             if any([self.field_path, self.op, self.value, self.children]):
                 raise ValueError('Query strings cannot be combined with other settings')
@@ -348,6 +355,11 @@ class Q:
         if self.conn_type not in self.CONN_TYPES:
             raise ValueError("'conn_type' %s must be one of %s" % (self.conn_type, self.CONN_TYPES))
         if not self.is_leaf():
+            for q in self.children:
+                if q.query_string and len(self.children) > 1:
+                    raise ValueError(
+                        'A query string cannot be combined with other restrictions'
+                    )
             return
         if not self.field_path:
             raise ValueError("'field_path' must be set")
@@ -417,6 +429,8 @@ class Q:
         self._check_integrity()
         if self.is_empty():
             return None
+        if self.is_never():
+            raise ValueError("EWS does not support 'never' queries")
         if self.is_leaf():
             elem = self._op_to_xml(self.op)
             field_path = self._get_field_path(folders, applies_to=applies_to, version=version)
