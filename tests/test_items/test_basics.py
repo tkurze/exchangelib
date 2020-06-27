@@ -595,7 +595,7 @@ class CommonItemTest(BaseItemTest):
             wipe_kwargs[f.name] = None
         for k, v in wipe_kwargs.items():
             setattr(item, k, v)
-        wipe_ids = self.account.bulk_update([(item, update_fieldnames), ])
+        wipe_ids = self.account.bulk_update([(item, update_fieldnames)])
         self.assertEqual(len(wipe_ids), 1)
         self.assertEqual(len(wipe_ids[0]), 2, wipe_ids)
         self.assertEqual(insert_ids[0].id, wipe_ids[0][0])  # ID should be the same
@@ -624,7 +624,7 @@ class CommonItemTest(BaseItemTest):
             # Test extern_id = None, which deletes the extended property entirely
             extern_id = None
             item.extern_id = extern_id
-            wipe2_ids = self.account.bulk_update([(item, ['extern_id']), ])
+            wipe2_ids = self.account.bulk_update([(item, ['extern_id'])])
             self.assertEqual(len(wipe2_ids), 1)
             self.assertEqual(len(wipe2_ids[0]), 2, wipe2_ids)
             self.assertEqual(insert_ids[0].id, wipe2_ids[0][0])  # ID must be the same

@@ -25,7 +25,7 @@ class UtilTest(EWSTest):
         self.assertEqual(list(chunkify(seq, chunksize=3)), [(1, 2, 3), (4, 6, 7), (9,)])
 
         seq = {1, 2, 3, 4, 5}
-        self.assertEqual(list(chunkify(seq, chunksize=2)), [[1, 2], [3, 4], [5, ]])
+        self.assertEqual(list(chunkify(seq, chunksize=2)), [[1, 2], [3, 4], [5]])
 
         seq = range(5)
         self.assertEqual(list(chunkify(seq, chunksize=2)), [range(0, 2), range(2, 4), range(4, 5)])
