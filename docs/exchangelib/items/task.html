@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.items.task API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.items.task</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from decimal import Decimal
+import logging
+
+from ..ewsdatetime import UTC_NOW
+from ..fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, Choice, \
+    CharField, TextListField
+from ..properties import Fields
+from .item import Item
+
+log = logging.getLogger(__name__)
+
+
+class Task(Item):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;Task&#39;
+    NOT_STARTED = &#39;NotStarted&#39;
+    COMPLETED = &#39;Completed&#39;
+    LOCAL_FIELDS = Fields(
+        IntegerField(&#39;actual_work&#39;, field_uri=&#39;task:ActualWork&#39;, min=0),
+        DateTimeField(&#39;assigned_time&#39;, field_uri=&#39;task:AssignedTime&#39;, is_read_only=True),
+        TextField(&#39;billing_information&#39;, field_uri=&#39;task:BillingInformation&#39;),
+        IntegerField(&#39;change_count&#39;, field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0),
+        TextListField(&#39;companies&#39;, field_uri=&#39;task:Companies&#39;),
+        # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
+        DateTimeField(&#39;complete_date&#39;, field_uri=&#39;task:CompleteDate&#39;, is_read_only=True),
+        TextListField(&#39;contacts&#39;, field_uri=&#39;task:Contacts&#39;),
+        ChoiceField(&#39;delegation_state&#39;, field_uri=&#39;task:DelegationState&#39;, choices={
+            Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
+        }, is_read_only=True),
+        CharField(&#39;delegator&#39;, field_uri=&#39;task:Delegator&#39;, is_read_only=True),
+        DateTimeField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
+        BooleanField(&#39;is_editable&#39;, field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True),
+        BooleanField(&#39;is_complete&#39;, field_uri=&#39;task:IsComplete&#39;, is_read_only=True),
+        BooleanField(&#39;is_recurring&#39;, field_uri=&#39;task:IsRecurring&#39;, is_read_only=True),
+        BooleanField(&#39;is_team_task&#39;, field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True),
+        TextField(&#39;mileage&#39;, field_uri=&#39;task:Mileage&#39;),
+        CharField(&#39;owner&#39;, field_uri=&#39;task:Owner&#39;, is_read_only=True),
+        DecimalField(&#39;percent_complete&#39;, field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
+                     min=Decimal(0), max=Decimal(100), is_searchable=False),
+        # Placeholder for Recurrence
+        DateTimeField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
+        ChoiceField(&#39;status&#39;, field_uri=&#39;task:Status&#39;, choices={
+            Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
+        }, is_required=True, is_searchable=False, default=NOT_STARTED),
+        CharField(&#39;status_description&#39;, field_uri=&#39;task:StatusDescription&#39;, is_read_only=True),
+        IntegerField(&#39;total_work&#39;, field_uri=&#39;task:TotalWork&#39;, min=0),
+    )
+    FIELDS = Item.FIELDS + LOCAL_FIELDS
+
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+    def clean(self, version=None):
+        # pylint: disable=access-member-before-definition
+        super().clean(version=version)
+        if self.due_date and self.start_date and self.due_date &lt; self.start_date:
+            log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
+                        self.due_date, self.start_date)
+            self.due_date = self.start_date
+        if self.complete_date:
+            if self.status != self.COMPLETED:
+                log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
+                            self.COMPLETED, self.status)
+                self.status = self.COMPLETED
+            now = UTC_NOW()
+            if (self.complete_date - now).total_seconds() &gt; 120:
+                # Reset complete_date values that are in the future
+                # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
+                log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
+                self.complete_date = now
+            if self.start_date and self.complete_date &lt; self.start_date:
+                log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
+                            self.complete_date, self.start_date)
+                self.complete_date = self.start_date
+        if self.percent_complete is not None:
+            if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
+                # percent_complete must be 100% if task is complete
+                log.warning(&#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                            self.COMPLETED, self.percent_complete)
+                self.percent_complete = Decimal(100)
+            elif self.status == self.NOT_STARTED and self.percent_complete != Decimal(0):
+                # percent_complete must be 0% if task is not started
+                log.warning(&#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                            self.NOT_STARTED, self.percent_complete)
+                self.percent_complete = Decimal(0)
+
+    def complete(self):
+        # pylint: disable=access-member-before-definition
+        # A helper method to mark a task as complete on the server
+        self.status = Task.COMPLETED
+        self.percent_complete = Decimal(100)
+        self.save()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="exchangelib.items.task.Task"><code class="flex name class">
+<span>class <span class="ident">Task</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Task(Item):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;Task&#39;
+    NOT_STARTED = &#39;NotStarted&#39;
+    COMPLETED = &#39;Completed&#39;
+    LOCAL_FIELDS = Fields(
+        IntegerField(&#39;actual_work&#39;, field_uri=&#39;task:ActualWork&#39;, min=0),
+        DateTimeField(&#39;assigned_time&#39;, field_uri=&#39;task:AssignedTime&#39;, is_read_only=True),
+        TextField(&#39;billing_information&#39;, field_uri=&#39;task:BillingInformation&#39;),
+        IntegerField(&#39;change_count&#39;, field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0),
+        TextListField(&#39;companies&#39;, field_uri=&#39;task:Companies&#39;),
+        # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
+        DateTimeField(&#39;complete_date&#39;, field_uri=&#39;task:CompleteDate&#39;, is_read_only=True),
+        TextListField(&#39;contacts&#39;, field_uri=&#39;task:Contacts&#39;),
+        ChoiceField(&#39;delegation_state&#39;, field_uri=&#39;task:DelegationState&#39;, choices={
+            Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
+        }, is_read_only=True),
+        CharField(&#39;delegator&#39;, field_uri=&#39;task:Delegator&#39;, is_read_only=True),
+        DateTimeField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
+        BooleanField(&#39;is_editable&#39;, field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True),
+        BooleanField(&#39;is_complete&#39;, field_uri=&#39;task:IsComplete&#39;, is_read_only=True),
+        BooleanField(&#39;is_recurring&#39;, field_uri=&#39;task:IsRecurring&#39;, is_read_only=True),
+        BooleanField(&#39;is_team_task&#39;, field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True),
+        TextField(&#39;mileage&#39;, field_uri=&#39;task:Mileage&#39;),
+        CharField(&#39;owner&#39;, field_uri=&#39;task:Owner&#39;, is_read_only=True),
+        DecimalField(&#39;percent_complete&#39;, field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
+                     min=Decimal(0), max=Decimal(100), is_searchable=False),
+        # Placeholder for Recurrence
+        DateTimeField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
+        ChoiceField(&#39;status&#39;, field_uri=&#39;task:Status&#39;, choices={
+            Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
+        }, is_required=True, is_searchable=False, default=NOT_STARTED),
+        CharField(&#39;status_description&#39;, field_uri=&#39;task:StatusDescription&#39;, is_read_only=True),
+        IntegerField(&#39;total_work&#39;, field_uri=&#39;task:TotalWork&#39;, min=0),
+    )
+    FIELDS = Item.FIELDS + LOCAL_FIELDS
+
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+    def clean(self, version=None):
+        # pylint: disable=access-member-before-definition
+        super().clean(version=version)
+        if self.due_date and self.start_date and self.due_date &lt; self.start_date:
+            log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
+                        self.due_date, self.start_date)
+            self.due_date = self.start_date
+        if self.complete_date:
+            if self.status != self.COMPLETED:
+                log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
+                            self.COMPLETED, self.status)
+                self.status = self.COMPLETED
+            now = UTC_NOW()
+            if (self.complete_date - now).total_seconds() &gt; 120:
+                # Reset complete_date values that are in the future
+                # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
+                log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
+                self.complete_date = now
+            if self.start_date and self.complete_date &lt; self.start_date:
+                log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
+                            self.complete_date, self.start_date)
+                self.complete_date = self.start_date
+        if self.percent_complete is not None:
+            if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
+                # percent_complete must be 100% if task is complete
+                log.warning(&#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                            self.COMPLETED, self.percent_complete)
+                self.percent_complete = Decimal(100)
+            elif self.status == self.NOT_STARTED and self.percent_complete != Decimal(0):
+                # percent_complete must be 0% if task is not started
+                log.warning(&#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                            self.NOT_STARTED, self.percent_complete)
+                self.percent_complete = Decimal(0)
+
+    def complete(self):
+        # pylint: disable=access-member-before-definition
+        # A helper method to mark a task as complete on the server
+        self.status = Task.COMPLETED
+        self.percent_complete = Decimal(100)
+        self.save()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.item.Item" href="item.html#exchangelib.items.item.Item">Item</a></li>
+<li><a title="exchangelib.items.base.BaseItem" href="base.html#exchangelib.items.base.BaseItem">BaseItem</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.items.task.Task.COMPLETED"><code class="name">var <span class="ident">COMPLETED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.task.Task.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.task.Task.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.task.Task.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.task.Task.NOT_STARTED"><code class="name">var <span class="ident">NOT_STARTED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.items.task.Task.actual_work"><code class="name">var <span class="ident">actual_work</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.assigned_time"><code class="name">var <span class="ident">assigned_time</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.billing_information"><code class="name">var <span class="ident">billing_information</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.change_count"><code class="name">var <span class="ident">change_count</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.companies"><code class="name">var <span class="ident">companies</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.complete_date"><code class="name">var <span class="ident">complete_date</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.contacts"><code class="name">var <span class="ident">contacts</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.delegation_state"><code class="name">var <span class="ident">delegation_state</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.delegator"><code class="name">var <span class="ident">delegator</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.due_date"><code class="name">var <span class="ident">due_date</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.is_complete"><code class="name">var <span class="ident">is_complete</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.is_editable"><code class="name">var <span class="ident">is_editable</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.is_recurring"><code class="name">var <span class="ident">is_recurring</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.is_team_task"><code class="name">var <span class="ident">is_team_task</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.mileage"><code class="name">var <span class="ident">mileage</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.owner"><code class="name">var <span class="ident">owner</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.percent_complete"><code class="name">var <span class="ident">percent_complete</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.start_date"><code class="name">var <span class="ident">start_date</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.status"><code class="name">var <span class="ident">status</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.status_description"><code class="name">var <span class="ident">status_description</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.task.Task.total_work"><code class="name">var <span class="ident">total_work</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.items.task.Task.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, version=None):
+    # pylint: disable=access-member-before-definition
+    super().clean(version=version)
+    if self.due_date and self.start_date and self.due_date &lt; self.start_date:
+        log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
+                    self.due_date, self.start_date)
+        self.due_date = self.start_date
+    if self.complete_date:
+        if self.status != self.COMPLETED:
+            log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
+                        self.COMPLETED, self.status)
+            self.status = self.COMPLETED
+        now = UTC_NOW()
+        if (self.complete_date - now).total_seconds() &gt; 120:
+            # Reset complete_date values that are in the future
+            # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
+            log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
+            self.complete_date = now
+        if self.start_date and self.complete_date &lt; self.start_date:
+            log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
+                        self.complete_date, self.start_date)
+            self.complete_date = self.start_date
+    if self.percent_complete is not None:
+        if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
+            # percent_complete must be 100% if task is complete
+            log.warning(&#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                        self.COMPLETED, self.percent_complete)
+            self.percent_complete = Decimal(100)
+        elif self.status == self.NOT_STARTED and self.percent_complete != Decimal(0):
+            # percent_complete must be 0% if task is not started
+            log.warning(&#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                        self.NOT_STARTED, self.percent_complete)
+            self.percent_complete = Decimal(0)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.items.task.Task.complete"><code class="name flex">
+<span>def <span class="ident">complete</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def complete(self):
+    # pylint: disable=access-member-before-definition
+    # A helper method to mark a task as complete on the server
+    self.status = Task.COMPLETED
+    self.percent_complete = Decimal(100)
+    self.save()</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.item.Item" href="item.html#exchangelib.items.item.Item">Item</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.item.Item.ID_ELEMENT_CLS" href="base.html#exchangelib.items.base.BaseItem.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.account" href="base.html#exchangelib.items.base.BaseItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.attach" href="item.html#exchangelib.items.item.Item.attach">attach</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.attachments" href="item.html#exchangelib.items.item.Item.attachments">attachments</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.body" href="item.html#exchangelib.items.item.Item.body">body</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.categories" href="item.html#exchangelib.items.item.Item.categories">categories</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.conversation_id" href="item.html#exchangelib.items.item.Item.conversation_id">conversation_id</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.culture" href="item.html#exchangelib.items.item.Item.culture">culture</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.datetime_created" href="item.html#exchangelib.items.item.Item.datetime_created">datetime_created</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.datetime_received" href="item.html#exchangelib.items.item.Item.datetime_received">datetime_received</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.datetime_sent" href="item.html#exchangelib.items.item.Item.datetime_sent">datetime_sent</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.deregister" href="base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.detach" href="item.html#exchangelib.items.item.Item.detach">detach</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.display_cc" href="item.html#exchangelib.items.item.Item.display_cc">display_cc</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.display_to" href="item.html#exchangelib.items.item.Item.display_to">display_to</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.effective_rights" href="item.html#exchangelib.items.item.Item.effective_rights">effective_rights</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.folder" href="base.html#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.has_attachments" href="item.html#exchangelib.items.item.Item.has_attachments">has_attachments</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.headers" href="item.html#exchangelib.items.item.Item.headers">headers</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.importance" href="item.html#exchangelib.items.item.Item.importance">importance</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.in_reply_to" href="item.html#exchangelib.items.item.Item.in_reply_to">in_reply_to</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.is_associated" href="item.html#exchangelib.items.item.Item.is_associated">is_associated</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.is_draft" href="item.html#exchangelib.items.item.Item.is_draft">is_draft</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.is_from_me" href="item.html#exchangelib.items.item.Item.is_from_me">is_from_me</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.is_resend" href="item.html#exchangelib.items.item.Item.is_resend">is_resend</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.is_submitted" href="item.html#exchangelib.items.item.Item.is_submitted">is_submitted</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.is_unmodified" href="item.html#exchangelib.items.item.Item.is_unmodified">is_unmodified</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.item_class" href="item.html#exchangelib.items.item.Item.item_class">item_class</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.last_modified_name" href="item.html#exchangelib.items.item.Item.last_modified_name">last_modified_name</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.last_modified_time" href="item.html#exchangelib.items.item.Item.last_modified_time">last_modified_time</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.mime_content" href="item.html#exchangelib.items.item.Item.mime_content">mime_content</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.parent_folder_id" href="item.html#exchangelib.items.item.Item.parent_folder_id">parent_folder_id</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.register" href="base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.reminder_due_by" href="item.html#exchangelib.items.item.Item.reminder_due_by">reminder_due_by</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.text_body" href="item.html#exchangelib.items.item.Item.text_body">text_body</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.unique_body" href="item.html#exchangelib.items.item.Item.unique_body">unique_body</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.web_client_edit_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_edit_form_query_string">web_client_edit_form_query_string</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.web_client_read_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_read_form_query_string">web_client_read_form_query_string</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib.items" href="index.html">exchangelib.items</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="exchangelib.items.task.Task" href="#exchangelib.items.task.Task">Task</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.items.task.Task.COMPLETED" href="#exchangelib.items.task.Task.COMPLETED">COMPLETED</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.ELEMENT_NAME" href="#exchangelib.items.task.Task.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.FIELDS" href="#exchangelib.items.task.Task.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.LOCAL_FIELDS" href="#exchangelib.items.task.Task.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.NOT_STARTED" href="#exchangelib.items.task.Task.NOT_STARTED">NOT_STARTED</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.actual_work" href="#exchangelib.items.task.Task.actual_work">actual_work</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.assigned_time" href="#exchangelib.items.task.Task.assigned_time">assigned_time</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.billing_information" href="#exchangelib.items.task.Task.billing_information">billing_information</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.change_count" href="#exchangelib.items.task.Task.change_count">change_count</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.clean" href="#exchangelib.items.task.Task.clean">clean</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.companies" href="#exchangelib.items.task.Task.companies">companies</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.complete" href="#exchangelib.items.task.Task.complete">complete</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.complete_date" href="#exchangelib.items.task.Task.complete_date">complete_date</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.contacts" href="#exchangelib.items.task.Task.contacts">contacts</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.delegation_state" href="#exchangelib.items.task.Task.delegation_state">delegation_state</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.delegator" href="#exchangelib.items.task.Task.delegator">delegator</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.due_date" href="#exchangelib.items.task.Task.due_date">due_date</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.is_complete" href="#exchangelib.items.task.Task.is_complete">is_complete</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.is_editable" href="#exchangelib.items.task.Task.is_editable">is_editable</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.is_recurring" href="#exchangelib.items.task.Task.is_recurring">is_recurring</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.is_team_task" href="#exchangelib.items.task.Task.is_team_task">is_team_task</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.mileage" href="#exchangelib.items.task.Task.mileage">mileage</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.owner" href="#exchangelib.items.task.Task.owner">owner</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.percent_complete" href="#exchangelib.items.task.Task.percent_complete">percent_complete</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.start_date" href="#exchangelib.items.task.Task.start_date">start_date</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.status" href="#exchangelib.items.task.Task.status">status</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.status_description" href="#exchangelib.items.task.Task.status_description">status_description</a></code></li>
+<li><code><a title="exchangelib.items.task.Task.total_work" href="#exchangelib.items.task.Task.total_work">total_work</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

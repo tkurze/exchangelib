@@ -1,0 +1,1278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.folders.collections API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.folders.collections</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import logging
+
+from cached_property import threaded_cached_property
+
+from ..fields import FieldPath
+from ..items import Item, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
+from ..properties import CalendarView, InvalidField
+from ..queryset import QuerySet, SearchableMixIn
+from ..restriction import Restriction
+from ..services import FindFolder, GetFolder, FindItem
+from ..util import require_account
+from .queryset import FOLDER_TRAVERSAL_CHOICES
+
+log = logging.getLogger(__name__)
+
+
+class FolderCollection(SearchableMixIn):
+    &#34;&#34;&#34;A class that implements an API for searching folders&#34;&#34;&#34;
+
+    # These fields are required in a FindFolder or GetFolder call to properly identify folder types
+    REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
+
+    def __init__(self, account, folders):
+        &#34;&#34;&#34;Implements a search API on a collection of folders
+
+        Args:
+          account: An Account object
+          folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
+
+        &#34;&#34;&#34;
+        self.account = account
+        self._folders = folders
+
+    @threaded_cached_property
+    def folders(self):
+        # Resolve the list of folders, in case it&#39;s a generator
+        return list(self._folders)
+
+    def __len__(self):
+        return len(self.folders)
+
+    def __iter__(self):
+        for f in self.folders:
+            yield f
+
+    def get(self, *args, **kwargs):
+        return QuerySet(self).get(*args, **kwargs)
+
+    def all(self):
+        return QuerySet(self).all()
+
+    def none(self):
+        return QuerySet(self).none()
+
+    def filter(self, *args, **kwargs):
+        &#34;&#34;&#34;Finds items in the folder(s).
+
+        Non-keyword args may be a list of Q instances.
+
+        Optional extra keyword arguments follow a Django-like QuerySet filter syntax (see
+           https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups).
+
+        We don&#39;t support &#39;__year&#39; and other date-related lookups. We also don&#39;t support &#39;__endswith&#39; or &#39;__iendswith&#39;.
+
+        We support the additional &#39;__not&#39; lookup in place of Django&#39;s exclude() for simple cases. For more complicated
+        cases you need to create a Q object and use ~Q().
+
+        Examples:
+
+            my_account.inbox.filter(datetime_received__gt=EWSDateTime(2016, 1, 1))
+            my_account.calendar.filter(start__range=(EWSDateTime(2016, 1, 1), EWSDateTime(2017, 1, 1)))
+            my_account.tasks.filter(subject=&#39;Hi mom&#39;)
+            my_account.tasks.filter(subject__not=&#39;Hi mom&#39;)
+            my_account.tasks.filter(subject__contains=&#39;Foo&#39;)
+            my_account.tasks.filter(subject__icontains=&#39;foo&#39;)
+
+        &#39;endswith&#39; and &#39;iendswith&#39; could be emulated by searching with &#39;contains&#39; or &#39;icontains&#39; and then
+        post-processing items. Fetch the field in question with additional_fields and remove items where the search
+        string is not a postfix.
+
+        Args:
+          *args:
+          **kwargs:
+
+        &#34;&#34;&#34;
+        return QuerySet(self).filter(*args, **kwargs)
+
+    def exclude(self, *args, **kwargs):
+        return QuerySet(self).exclude(*args, **kwargs)
+
+    def view(self, start, end, max_items=None, *args, **kwargs):
+        &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
+        only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+        CalendarItem occurrences as one would normally expect when presenting a calendar.
+
+        Supports the same semantics as filter, except for &#39;start&#39; and &#39;end&#39; keyword attributes which are both required
+        and behave differently than filter. Here, they denote the start and end of the timespan of the view. All items
+        the overlap the timespan are returned (items that end exactly on &#39;start&#39; are also returned, for some reason).
+
+        EWS does not allow combining CalendarView with search restrictions (filter and exclude).
+
+        &#39;max_items&#39; defines the maximum number of items returned in this view. Optional.
+
+        Args:
+          start:
+          end:
+          max_items:  (Default value = None)
+          *args:
+          **kwargs:
+
+        &#34;&#34;&#34;
+        qs = QuerySet(self).filter(*args, **kwargs)
+        qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
+        return qs
+
+    def allowed_item_fields(self):
+        # Return non-ID fields of all item classes allowed in this folder type
+        fields = set()
+        for item_model in self.supported_item_models:
+            fields.update(set(item_model.supported_fields(version=self.account.version)))
+        return fields
+
+    @property
+    def supported_item_models(self):
+        return tuple(item_model for folder in self.folders for item_model in folder.supported_item_models)
+
+    def validate_item_field(self, field, version):
+        # For each field, check if the field is valid for any of the item models supported by this folder
+        for item_model in self.supported_item_models:
+            try:
+                item_model.validate_field(field=field, version=version)
+                break
+            except InvalidField:
+                continue
+        else:
+            raise InvalidField(&#34;%r is not a valid field on %s&#34; % (field, self.supported_item_models))
+
+    def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                   calendar_view=None, page_size=None, max_items=None, offset=0):
+        &#34;&#34;&#34;Private method to call the FindItem service
+
+        Args:
+          q: a Q instance containing any restrictions
+          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
+            we always return Item objects. (Default value = ID_ONLY)
+          depth: controls the whether to return soft-deleted items or not. (Default value = None)
+          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+            that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+          order_fields: the SortOrder fields, if any (Default value = None)
+          calendar_view: a CalendarView instance, if any (Default value = None)
+          page_size: the requested number of items per page (Default value = None)
+          max_items: the max number of items to return (Default value = None)
+          offset: the offset relative to the first item in the item collection (Default value = 0)
+
+        Returns:
+          a generator for the returned item IDs or items
+
+        &#34;&#34;&#34;
+        from .base import BaseFolder
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if q.is_never():
+            log.debug(&#39;Query will never return results&#39;)
+            return
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+        if depth is None:
+            depth = self._get_default_item_traversal_depth()
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, ITEM_TRAVERSAL_CHOICES))
+        if additional_fields:
+            for f in additional_fields:
+                self.validate_item_field(field=f, version=self.account.version)
+                if f.field.is_complex:
+                    raise ValueError(&#34;find_items() does not support field &#39;%s&#39;. Use fetch() instead&#34; % f.field.name)
+        if calendar_view is not None and not isinstance(calendar_view, CalendarView):
+            raise ValueError(&#34;&#39;calendar_view&#39; %s must be a CalendarView instance&#34; % calendar_view)
+
+        # Build up any restrictions
+        if q.is_empty():
+            restriction = None
+            query_string = None
+        elif q.query_string:
+            restriction = None
+            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        else:
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = None
+        log.debug(
+            &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+            self.folders,
+            self.account,
+            shape,
+            depth,
+            additional_fields,
+            restriction.q if restriction else None,
+        )
+        items = FindItem(account=self.account, folders=self.folders, chunk_size=page_size).call(
+            additional_fields=additional_fields,
+            restriction=restriction,
+            order_fields=order_fields,
+            shape=shape,
+            query_string=query_string,
+            depth=depth,
+            calendar_view=calendar_view,
+            max_items=calendar_view.max_items if calendar_view else max_items,
+            offset=offset,
+        )
+        if shape == ID_ONLY and additional_fields is None:
+            for i in items:
+                yield i if isinstance(i, Exception) else Item.id_from_xml(i)
+        else:
+            for i in items:
+                if isinstance(i, Exception):
+                    yield i
+                else:
+                    yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)
+
+    def get_folder_fields(self, target_cls, is_complex=None):
+        return {
+            FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+            if is_complex is None or f.is_complex is is_complex
+        }
+
+    def _get_target_cls(self):
+        # We may have root folders that don&#39;t support the same set of fields as normal folders. If there is a mix of
+        # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
+        from .base import Folder
+        from .roots import RootOfHierarchy
+        has_roots = False
+        has_non_roots = False
+        for f in self.folders:
+            if isinstance(f, RootOfHierarchy):
+                if has_non_roots:
+                    raise ValueError(&#39;Cannot call GetFolder on a mix of folder types: {}&#39;.format(self.folders))
+                has_roots = True
+            else:
+                if has_roots:
+                    raise ValueError(&#39;Cannot call GetFolder on a mix of folder types: {}&#39;.format(self.folders))
+                has_non_roots = True
+        return RootOfHierarchy if has_roots else Folder
+
+    def _get_default_item_traversal_depth(self):
+        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
+        unique_depths = set(f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders)
+        if len(unique_depths) == 1:
+            return unique_depths.pop()
+        raise ValueError(
+            &#39;Folders in this collection do not have a common DEFAULT_ITEM_TRAVERSAL_DEPTH value. You need to &#39;
+            &#39;define an explicit traversal depth with QuerySet.depth() (values: %s)&#39; % unique_depths
+        )
+
+    def _get_default_folder_traversal_depth(self):
+        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
+        unique_depths = set(f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders)
+        if len(unique_depths) == 1:
+            return unique_depths.pop()
+        raise ValueError(
+            &#39;Folders in this collection do not have a common DEFAULT_FOLDER_TRAVERSAL_DEPTH value. You need to &#39;
+            &#39;define an explicit traversal depth with FolderQuerySet.depth() (values: %s)&#39; % unique_depths
+        )
+
+    def resolve(self):
+        # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
+        resolveable_folders = []
+        for f in self.folders:
+            if not f.get_folder_allowed:
+                log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+                yield f
+            else:
+                resolveable_folders.append(f)
+        # Fetch all properties for the remaining folders of folder IDs
+        additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
+        for f in self.__class__(account=self.account, folders=resolveable_folders).get_folders(
+                additional_fields=additional_fields
+        ):
+            yield f
+
+    @require_account
+    def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
+                     offset=0):
+        # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
+        from .base import BaseFolder, Folder
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if q is not None and q.is_never():
+            log.debug(&#39;Query will never return results&#39;)
+            return
+        if q is None or q.is_empty():
+            restriction = None
+        else:
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+        if depth is None:
+            depth = self._get_default_folder_traversal_depth()
+        if depth not in FOLDER_TRAVERSAL_CHOICES:
+            raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, FOLDER_TRAVERSAL_CHOICES))
+        if additional_fields is None:
+            # Default to all non-complex properties. Subfolders will always be of class Folder
+            additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
+        else:
+            for f in additional_fields:
+                if f.field.is_complex:
+                    raise ValueError(&#34;find_folders() does not support field &#39;%s&#39;. Use get_folders().&#34; % f.field.name)
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        for f in FindFolder(account=self.account, folders=self.folders, chunk_size=page_size).call(
+                additional_fields=additional_fields,
+                restriction=restriction,
+                shape=shape,
+                depth=depth,
+                max_items=max_items,
+                offset=offset,
+        ):
+            yield f
+
+    def get_folders(self, additional_fields=None):
+        # Expand folders with their full set of properties
+        from .base import BaseFolder
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if additional_fields is None:
+            # Default to all complex properties
+            additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=True)
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        for f in GetFolder(account=self.account).call(
+                folders=self.folders,
+                additional_fields=additional_fields,
+                shape=ID_ONLY,
+        ):
+            yield f</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="exchangelib.folders.collections.FolderCollection"><code class="flex name class">
+<span>class <span class="ident">FolderCollection</span></span>
+<span>(</span><span>account, folders)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A class that implements an API for searching folders</p>
+<p>Implements a search API on a collection of folders</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>account</code></strong></dt>
+<dd>An Account object</dd>
+<dt><strong><code>folders</code></strong></dt>
+<dd>An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FolderCollection(SearchableMixIn):
+    &#34;&#34;&#34;A class that implements an API for searching folders&#34;&#34;&#34;
+
+    # These fields are required in a FindFolder or GetFolder call to properly identify folder types
+    REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
+
+    def __init__(self, account, folders):
+        &#34;&#34;&#34;Implements a search API on a collection of folders
+
+        Args:
+          account: An Account object
+          folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
+
+        &#34;&#34;&#34;
+        self.account = account
+        self._folders = folders
+
+    @threaded_cached_property
+    def folders(self):
+        # Resolve the list of folders, in case it&#39;s a generator
+        return list(self._folders)
+
+    def __len__(self):
+        return len(self.folders)
+
+    def __iter__(self):
+        for f in self.folders:
+            yield f
+
+    def get(self, *args, **kwargs):
+        return QuerySet(self).get(*args, **kwargs)
+
+    def all(self):
+        return QuerySet(self).all()
+
+    def none(self):
+        return QuerySet(self).none()
+
+    def filter(self, *args, **kwargs):
+        &#34;&#34;&#34;Finds items in the folder(s).
+
+        Non-keyword args may be a list of Q instances.
+
+        Optional extra keyword arguments follow a Django-like QuerySet filter syntax (see
+           https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups).
+
+        We don&#39;t support &#39;__year&#39; and other date-related lookups. We also don&#39;t support &#39;__endswith&#39; or &#39;__iendswith&#39;.
+
+        We support the additional &#39;__not&#39; lookup in place of Django&#39;s exclude() for simple cases. For more complicated
+        cases you need to create a Q object and use ~Q().
+
+        Examples:
+
+            my_account.inbox.filter(datetime_received__gt=EWSDateTime(2016, 1, 1))
+            my_account.calendar.filter(start__range=(EWSDateTime(2016, 1, 1), EWSDateTime(2017, 1, 1)))
+            my_account.tasks.filter(subject=&#39;Hi mom&#39;)
+            my_account.tasks.filter(subject__not=&#39;Hi mom&#39;)
+            my_account.tasks.filter(subject__contains=&#39;Foo&#39;)
+            my_account.tasks.filter(subject__icontains=&#39;foo&#39;)
+
+        &#39;endswith&#39; and &#39;iendswith&#39; could be emulated by searching with &#39;contains&#39; or &#39;icontains&#39; and then
+        post-processing items. Fetch the field in question with additional_fields and remove items where the search
+        string is not a postfix.
+
+        Args:
+          *args:
+          **kwargs:
+
+        &#34;&#34;&#34;
+        return QuerySet(self).filter(*args, **kwargs)
+
+    def exclude(self, *args, **kwargs):
+        return QuerySet(self).exclude(*args, **kwargs)
+
+    def view(self, start, end, max_items=None, *args, **kwargs):
+        &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
+        only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+        CalendarItem occurrences as one would normally expect when presenting a calendar.
+
+        Supports the same semantics as filter, except for &#39;start&#39; and &#39;end&#39; keyword attributes which are both required
+        and behave differently than filter. Here, they denote the start and end of the timespan of the view. All items
+        the overlap the timespan are returned (items that end exactly on &#39;start&#39; are also returned, for some reason).
+
+        EWS does not allow combining CalendarView with search restrictions (filter and exclude).
+
+        &#39;max_items&#39; defines the maximum number of items returned in this view. Optional.
+
+        Args:
+          start:
+          end:
+          max_items:  (Default value = None)
+          *args:
+          **kwargs:
+
+        &#34;&#34;&#34;
+        qs = QuerySet(self).filter(*args, **kwargs)
+        qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
+        return qs
+
+    def allowed_item_fields(self):
+        # Return non-ID fields of all item classes allowed in this folder type
+        fields = set()
+        for item_model in self.supported_item_models:
+            fields.update(set(item_model.supported_fields(version=self.account.version)))
+        return fields
+
+    @property
+    def supported_item_models(self):
+        return tuple(item_model for folder in self.folders for item_model in folder.supported_item_models)
+
+    def validate_item_field(self, field, version):
+        # For each field, check if the field is valid for any of the item models supported by this folder
+        for item_model in self.supported_item_models:
+            try:
+                item_model.validate_field(field=field, version=version)
+                break
+            except InvalidField:
+                continue
+        else:
+            raise InvalidField(&#34;%r is not a valid field on %s&#34; % (field, self.supported_item_models))
+
+    def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                   calendar_view=None, page_size=None, max_items=None, offset=0):
+        &#34;&#34;&#34;Private method to call the FindItem service
+
+        Args:
+          q: a Q instance containing any restrictions
+          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
+            we always return Item objects. (Default value = ID_ONLY)
+          depth: controls the whether to return soft-deleted items or not. (Default value = None)
+          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+            that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+          order_fields: the SortOrder fields, if any (Default value = None)
+          calendar_view: a CalendarView instance, if any (Default value = None)
+          page_size: the requested number of items per page (Default value = None)
+          max_items: the max number of items to return (Default value = None)
+          offset: the offset relative to the first item in the item collection (Default value = 0)
+
+        Returns:
+          a generator for the returned item IDs or items
+
+        &#34;&#34;&#34;
+        from .base import BaseFolder
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if q.is_never():
+            log.debug(&#39;Query will never return results&#39;)
+            return
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+        if depth is None:
+            depth = self._get_default_item_traversal_depth()
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, ITEM_TRAVERSAL_CHOICES))
+        if additional_fields:
+            for f in additional_fields:
+                self.validate_item_field(field=f, version=self.account.version)
+                if f.field.is_complex:
+                    raise ValueError(&#34;find_items() does not support field &#39;%s&#39;. Use fetch() instead&#34; % f.field.name)
+        if calendar_view is not None and not isinstance(calendar_view, CalendarView):
+            raise ValueError(&#34;&#39;calendar_view&#39; %s must be a CalendarView instance&#34; % calendar_view)
+
+        # Build up any restrictions
+        if q.is_empty():
+            restriction = None
+            query_string = None
+        elif q.query_string:
+            restriction = None
+            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        else:
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = None
+        log.debug(
+            &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+            self.folders,
+            self.account,
+            shape,
+            depth,
+            additional_fields,
+            restriction.q if restriction else None,
+        )
+        items = FindItem(account=self.account, folders=self.folders, chunk_size=page_size).call(
+            additional_fields=additional_fields,
+            restriction=restriction,
+            order_fields=order_fields,
+            shape=shape,
+            query_string=query_string,
+            depth=depth,
+            calendar_view=calendar_view,
+            max_items=calendar_view.max_items if calendar_view else max_items,
+            offset=offset,
+        )
+        if shape == ID_ONLY and additional_fields is None:
+            for i in items:
+                yield i if isinstance(i, Exception) else Item.id_from_xml(i)
+        else:
+            for i in items:
+                if isinstance(i, Exception):
+                    yield i
+                else:
+                    yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)
+
+    def get_folder_fields(self, target_cls, is_complex=None):
+        return {
+            FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+            if is_complex is None or f.is_complex is is_complex
+        }
+
+    def _get_target_cls(self):
+        # We may have root folders that don&#39;t support the same set of fields as normal folders. If there is a mix of
+        # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
+        from .base import Folder
+        from .roots import RootOfHierarchy
+        has_roots = False
+        has_non_roots = False
+        for f in self.folders:
+            if isinstance(f, RootOfHierarchy):
+                if has_non_roots:
+                    raise ValueError(&#39;Cannot call GetFolder on a mix of folder types: {}&#39;.format(self.folders))
+                has_roots = True
+            else:
+                if has_roots:
+                    raise ValueError(&#39;Cannot call GetFolder on a mix of folder types: {}&#39;.format(self.folders))
+                has_non_roots = True
+        return RootOfHierarchy if has_roots else Folder
+
+    def _get_default_item_traversal_depth(self):
+        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
+        unique_depths = set(f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders)
+        if len(unique_depths) == 1:
+            return unique_depths.pop()
+        raise ValueError(
+            &#39;Folders in this collection do not have a common DEFAULT_ITEM_TRAVERSAL_DEPTH value. You need to &#39;
+            &#39;define an explicit traversal depth with QuerySet.depth() (values: %s)&#39; % unique_depths
+        )
+
+    def _get_default_folder_traversal_depth(self):
+        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
+        unique_depths = set(f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders)
+        if len(unique_depths) == 1:
+            return unique_depths.pop()
+        raise ValueError(
+            &#39;Folders in this collection do not have a common DEFAULT_FOLDER_TRAVERSAL_DEPTH value. You need to &#39;
+            &#39;define an explicit traversal depth with FolderQuerySet.depth() (values: %s)&#39; % unique_depths
+        )
+
+    def resolve(self):
+        # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
+        resolveable_folders = []
+        for f in self.folders:
+            if not f.get_folder_allowed:
+                log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+                yield f
+            else:
+                resolveable_folders.append(f)
+        # Fetch all properties for the remaining folders of folder IDs
+        additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
+        for f in self.__class__(account=self.account, folders=resolveable_folders).get_folders(
+                additional_fields=additional_fields
+        ):
+            yield f
+
+    @require_account
+    def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
+                     offset=0):
+        # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
+        from .base import BaseFolder, Folder
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if q is not None and q.is_never():
+            log.debug(&#39;Query will never return results&#39;)
+            return
+        if q is None or q.is_empty():
+            restriction = None
+        else:
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+        if depth is None:
+            depth = self._get_default_folder_traversal_depth()
+        if depth not in FOLDER_TRAVERSAL_CHOICES:
+            raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, FOLDER_TRAVERSAL_CHOICES))
+        if additional_fields is None:
+            # Default to all non-complex properties. Subfolders will always be of class Folder
+            additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
+        else:
+            for f in additional_fields:
+                if f.field.is_complex:
+                    raise ValueError(&#34;find_folders() does not support field &#39;%s&#39;. Use get_folders().&#34; % f.field.name)
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        for f in FindFolder(account=self.account, folders=self.folders, chunk_size=page_size).call(
+                additional_fields=additional_fields,
+                restriction=restriction,
+                shape=shape,
+                depth=depth,
+                max_items=max_items,
+                offset=offset,
+        ):
+            yield f
+
+    def get_folders(self, additional_fields=None):
+        # Expand folders with their full set of properties
+        from .base import BaseFolder
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if additional_fields is None:
+            # Default to all complex properties
+            additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=True)
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        for f in GetFolder(account=self.account).call(
+                folders=self.folders,
+                additional_fields=additional_fields,
+                shape=ID_ONLY,
+        ):
+            yield f</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.folders.collections.FolderCollection.REQUIRED_FOLDER_FIELDS"><code class="name">var <span class="ident">REQUIRED_FOLDER_FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.folders.collections.FolderCollection.folders"><code class="name">var <span class="ident">folders</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.supported_item_models"><code class="name">var <span class="ident">supported_item_models</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def supported_item_models(self):
+    return tuple(item_model for folder in self.folders for item_model in folder.supported_item_models)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.folders.collections.FolderCollection.all"><code class="name flex">
+<span>def <span class="ident">all</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def all(self):
+    return QuerySet(self).all()</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.allowed_item_fields"><code class="name flex">
+<span>def <span class="ident">allowed_item_fields</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def allowed_item_fields(self):
+    # Return non-ID fields of all item classes allowed in this folder type
+    fields = set()
+    for item_model in self.supported_item_models:
+        fields.update(set(item_model.supported_fields(version=self.account.version)))
+    return fields</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.exclude"><code class="name flex">
+<span>def <span class="ident">exclude</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exclude(self, *args, **kwargs):
+    return QuerySet(self).exclude(*args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Finds items in the folder(s).</p>
+<p>Non-keyword args may be a list of Q instances.</p>
+<p>Optional extra keyword arguments follow a Django-like QuerySet filter syntax (see
+<a href="https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups">https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups</a>).</p>
+<p>We don't support '__year' and other date-related lookups. We also don't support '__endswith' or '__iendswith'.</p>
+<p>We support the additional '__not' lookup in place of Django's exclude() for simple cases. For more complicated
+cases you need to create a Q object and use ~Q().</p>
+<h2 id="examples">Examples</h2>
+<p>my_account.inbox.filter(datetime_received__gt=EWSDateTime(2016, 1, 1))
+my_account.calendar.filter(start__range=(EWSDateTime(2016, 1, 1), EWSDateTime(2017, 1, 1)))
+my_account.tasks.filter(subject='Hi mom')
+my_account.tasks.filter(subject__not='Hi mom')
+my_account.tasks.filter(subject__contains='Foo')
+my_account.tasks.filter(subject__icontains='foo')</p>
+<p>'endswith' and 'iendswith' could be emulated by searching with 'contains' or 'icontains' and then
+post-processing items. Fetch the field in question with additional_fields and remove items where the search
+string is not a postfix.</p>
+<h2 id="args">Args</h2>
+<p><em>args:
+</em>*kwargs:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, *args, **kwargs):
+    &#34;&#34;&#34;Finds items in the folder(s).
+
+    Non-keyword args may be a list of Q instances.
+
+    Optional extra keyword arguments follow a Django-like QuerySet filter syntax (see
+       https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups).
+
+    We don&#39;t support &#39;__year&#39; and other date-related lookups. We also don&#39;t support &#39;__endswith&#39; or &#39;__iendswith&#39;.
+
+    We support the additional &#39;__not&#39; lookup in place of Django&#39;s exclude() for simple cases. For more complicated
+    cases you need to create a Q object and use ~Q().
+
+    Examples:
+
+        my_account.inbox.filter(datetime_received__gt=EWSDateTime(2016, 1, 1))
+        my_account.calendar.filter(start__range=(EWSDateTime(2016, 1, 1), EWSDateTime(2017, 1, 1)))
+        my_account.tasks.filter(subject=&#39;Hi mom&#39;)
+        my_account.tasks.filter(subject__not=&#39;Hi mom&#39;)
+        my_account.tasks.filter(subject__contains=&#39;Foo&#39;)
+        my_account.tasks.filter(subject__icontains=&#39;foo&#39;)
+
+    &#39;endswith&#39; and &#39;iendswith&#39; could be emulated by searching with &#39;contains&#39; or &#39;icontains&#39; and then
+    post-processing items. Fetch the field in question with additional_fields and remove items where the search
+    string is not a postfix.
+
+    Args:
+      *args:
+      **kwargs:
+
+    &#34;&#34;&#34;
+    return QuerySet(self).filter(*args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.find_folders"><code class="name flex">
+<span>def <span class="ident">find_folders</span></span>(<span>self, q=None, shape='IdOnly', depth=None, additional_fields=None, page_size=None, max_items=None, offset=0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_account
+def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
+                 offset=0):
+    # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
+    from .base import BaseFolder, Folder
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    if q is not None and q.is_never():
+        log.debug(&#39;Query will never return results&#39;)
+        return
+    if q is None or q.is_empty():
+        restriction = None
+    else:
+        restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
+    if shape not in SHAPE_CHOICES:
+        raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+    if depth is None:
+        depth = self._get_default_folder_traversal_depth()
+    if depth not in FOLDER_TRAVERSAL_CHOICES:
+        raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, FOLDER_TRAVERSAL_CHOICES))
+    if additional_fields is None:
+        # Default to all non-complex properties. Subfolders will always be of class Folder
+        additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
+    else:
+        for f in additional_fields:
+            if f.field.is_complex:
+                raise ValueError(&#34;find_folders() does not support field &#39;%s&#39;. Use get_folders().&#34; % f.field.name)
+
+    # Add required fields
+    additional_fields.update(
+        (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+    )
+
+    for f in FindFolder(account=self.account, folders=self.folders, chunk_size=page_size).call(
+            additional_fields=additional_fields,
+            restriction=restriction,
+            shape=shape,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
+    ):
+        yield f</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.find_items"><code class="name flex">
+<span>def <span class="ident">find_items</span></span>(<span>self, q, shape='IdOnly', depth=None, additional_fields=None, order_fields=None, calendar_view=None, page_size=None, max_items=None, offset=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Private method to call the FindItem service</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>q</code></strong></dt>
+<dd>a Q instance containing any restrictions</dd>
+<dt><strong><code>shape</code></strong></dt>
+<dd>controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
+we always return Item objects. (Default value = ID_ONLY)</dd>
+<dt><strong><code>depth</code></strong></dt>
+<dd>controls the whether to return soft-deleted items or not. (Default value = None)</dd>
+<dt><strong><code>additional_fields</code></strong></dt>
+<dd>the extra properties we want on the return objects. Default is no properties. Be aware
+that complex fields can only be fetched with fetch() (i.e. the GetItem service).</dd>
+<dt><strong><code>order_fields</code></strong></dt>
+<dd>the SortOrder fields, if any (Default value = None)</dd>
+<dt><strong><code>calendar_view</code></strong></dt>
+<dd>a CalendarView instance, if any (Default value = None)</dd>
+<dt><strong><code>page_size</code></strong></dt>
+<dd>the requested number of items per page (Default value = None)</dd>
+<dt><strong><code>max_items</code></strong></dt>
+<dd>the max number of items to return (Default value = None)</dd>
+<dt><strong><code>offset</code></strong></dt>
+<dd>the offset relative to the first item in the item collection (Default value = 0)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a generator for the returned item IDs or items</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+               calendar_view=None, page_size=None, max_items=None, offset=0):
+    &#34;&#34;&#34;Private method to call the FindItem service
+
+    Args:
+      q: a Q instance containing any restrictions
+      shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
+        we always return Item objects. (Default value = ID_ONLY)
+      depth: controls the whether to return soft-deleted items or not. (Default value = None)
+      additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+        that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+      order_fields: the SortOrder fields, if any (Default value = None)
+      calendar_view: a CalendarView instance, if any (Default value = None)
+      page_size: the requested number of items per page (Default value = None)
+      max_items: the max number of items to return (Default value = None)
+      offset: the offset relative to the first item in the item collection (Default value = 0)
+
+    Returns:
+      a generator for the returned item IDs or items
+
+    &#34;&#34;&#34;
+    from .base import BaseFolder
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    if q.is_never():
+        log.debug(&#39;Query will never return results&#39;)
+        return
+    if shape not in SHAPE_CHOICES:
+        raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+    if depth is None:
+        depth = self._get_default_item_traversal_depth()
+    if depth not in ITEM_TRAVERSAL_CHOICES:
+        raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, ITEM_TRAVERSAL_CHOICES))
+    if additional_fields:
+        for f in additional_fields:
+            self.validate_item_field(field=f, version=self.account.version)
+            if f.field.is_complex:
+                raise ValueError(&#34;find_items() does not support field &#39;%s&#39;. Use fetch() instead&#34; % f.field.name)
+    if calendar_view is not None and not isinstance(calendar_view, CalendarView):
+        raise ValueError(&#34;&#39;calendar_view&#39; %s must be a CalendarView instance&#34; % calendar_view)
+
+    # Build up any restrictions
+    if q.is_empty():
+        restriction = None
+        query_string = None
+    elif q.query_string:
+        restriction = None
+        query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+    else:
+        restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        query_string = None
+    log.debug(
+        &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+        self.folders,
+        self.account,
+        shape,
+        depth,
+        additional_fields,
+        restriction.q if restriction else None,
+    )
+    items = FindItem(account=self.account, folders=self.folders, chunk_size=page_size).call(
+        additional_fields=additional_fields,
+        restriction=restriction,
+        order_fields=order_fields,
+        shape=shape,
+        query_string=query_string,
+        depth=depth,
+        calendar_view=calendar_view,
+        max_items=calendar_view.max_items if calendar_view else max_items,
+        offset=offset,
+    )
+    if shape == ID_ONLY and additional_fields is None:
+        for i in items:
+            yield i if isinstance(i, Exception) else Item.id_from_xml(i)
+    else:
+        for i in items:
+            if isinstance(i, Exception):
+                yield i
+            else:
+                yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, *args, **kwargs):
+    return QuerySet(self).get(*args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.get_folder_fields"><code class="name flex">
+<span>def <span class="ident">get_folder_fields</span></span>(<span>self, target_cls, is_complex=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_folder_fields(self, target_cls, is_complex=None):
+    return {
+        FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+        if is_complex is None or f.is_complex is is_complex
+    }</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.get_folders"><code class="name flex">
+<span>def <span class="ident">get_folders</span></span>(<span>self, additional_fields=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_folders(self, additional_fields=None):
+    # Expand folders with their full set of properties
+    from .base import BaseFolder
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    if additional_fields is None:
+        # Default to all complex properties
+        additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=True)
+
+    # Add required fields
+    additional_fields.update(
+        (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+    )
+
+    for f in GetFolder(account=self.account).call(
+            folders=self.folders,
+            additional_fields=additional_fields,
+            shape=ID_ONLY,
+    ):
+        yield f</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.none"><code class="name flex">
+<span>def <span class="ident">none</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def none(self):
+    return QuerySet(self).none()</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.resolve"><code class="name flex">
+<span>def <span class="ident">resolve</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resolve(self):
+    # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
+    resolveable_folders = []
+    for f in self.folders:
+        if not f.get_folder_allowed:
+            log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+            yield f
+        else:
+            resolveable_folders.append(f)
+    # Fetch all properties for the remaining folders of folder IDs
+    additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
+    for f in self.__class__(account=self.account, folders=resolveable_folders).get_folders(
+            additional_fields=additional_fields
+    ):
+        yield f</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.validate_item_field"><code class="name flex">
+<span>def <span class="ident">validate_item_field</span></span>(<span>self, field, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_item_field(self, field, version):
+    # For each field, check if the field is valid for any of the item models supported by this folder
+    for item_model in self.supported_item_models:
+        try:
+            item_model.validate_field(field=field, version=version)
+            break
+        except InvalidField:
+            continue
+    else:
+        raise InvalidField(&#34;%r is not a valid field on %s&#34; % (field, self.supported_item_models))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.view"><code class="name flex">
+<span>def <span class="ident">view</span></span>(<span>self, start, end, max_items=None, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
+only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+CalendarItem occurrences as one would normally expect when presenting a calendar.</p>
+<p>Supports the same semantics as filter, except for 'start' and 'end' keyword attributes which are both required
+and behave differently than filter. Here, they denote the start and end of the timespan of the view. All items
+the overlap the timespan are returned (items that end exactly on 'start' are also returned, for some reason).</p>
+<p>EWS does not allow combining CalendarView with search restrictions (filter and exclude).</p>
+<p>'max_items' defines the maximum number of items returned in this view. Optional.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>start:</dt>
+<dt>end:</dt>
+<dt><strong><code>max_items</code></strong></dt>
+<dd>(Default value = None)</dd>
+</dl>
+<p><em>args:
+</em>*kwargs:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def view(self, start, end, max_items=None, *args, **kwargs):
+    &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
+    only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+    CalendarItem occurrences as one would normally expect when presenting a calendar.
+
+    Supports the same semantics as filter, except for &#39;start&#39; and &#39;end&#39; keyword attributes which are both required
+    and behave differently than filter. Here, they denote the start and end of the timespan of the view. All items
+    the overlap the timespan are returned (items that end exactly on &#39;start&#39; are also returned, for some reason).
+
+    EWS does not allow combining CalendarView with search restrictions (filter and exclude).
+
+    &#39;max_items&#39; defines the maximum number of items returned in this view. Optional.
+
+    Args:
+      start:
+      end:
+      max_items:  (Default value = None)
+      *args:
+      **kwargs:
+
+    &#34;&#34;&#34;
+    qs = QuerySet(self).filter(*args, **kwargs)
+    qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
+    return qs</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib.folders" href="index.html">exchangelib.folders</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="exchangelib.folders.collections.FolderCollection" href="#exchangelib.folders.collections.FolderCollection">FolderCollection</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.collections.FolderCollection.REQUIRED_FOLDER_FIELDS" href="#exchangelib.folders.collections.FolderCollection.REQUIRED_FOLDER_FIELDS">REQUIRED_FOLDER_FIELDS</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.all" href="#exchangelib.folders.collections.FolderCollection.all">all</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.allowed_item_fields" href="#exchangelib.folders.collections.FolderCollection.allowed_item_fields">allowed_item_fields</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.exclude" href="#exchangelib.folders.collections.FolderCollection.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.filter" href="#exchangelib.folders.collections.FolderCollection.filter">filter</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.find_folders" href="#exchangelib.folders.collections.FolderCollection.find_folders">find_folders</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.find_items" href="#exchangelib.folders.collections.FolderCollection.find_items">find_items</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.folders" href="#exchangelib.folders.collections.FolderCollection.folders">folders</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.get" href="#exchangelib.folders.collections.FolderCollection.get">get</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.get_folder_fields" href="#exchangelib.folders.collections.FolderCollection.get_folder_fields">get_folder_fields</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.get_folders" href="#exchangelib.folders.collections.FolderCollection.get_folders">get_folders</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.none" href="#exchangelib.folders.collections.FolderCollection.none">none</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.resolve" href="#exchangelib.folders.collections.FolderCollection.resolve">resolve</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.supported_item_models" href="#exchangelib.folders.collections.FolderCollection.supported_item_models">supported_item_models</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.validate_item_field" href="#exchangelib.folders.collections.FolderCollection.validate_item_field">validate_item_field</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.view" href="#exchangelib.folders.collections.FolderCollection.view">view</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

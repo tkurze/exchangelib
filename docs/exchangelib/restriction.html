@@ -1,0 +1,1668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.restriction API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.restriction</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import base64
+from collections import OrderedDict
+from copy import copy
+import logging
+
+from .properties import InvalidField
+from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
+from .version import EXCHANGE_2010
+
+log = logging.getLogger(__name__)
+
+
+class Q:
+    &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic.&#34;&#34;&#34;
+
+    # Connection types
+    AND = &#39;AND&#39;
+    OR = &#39;OR&#39;
+    NOT = &#39;NOT&#39;
+    NEVER = &#39;NEVER&#39;  # This is not specified by EWS. We use it for queries that will never match, e.g. &#39;foo__in=()&#39;
+    CONN_TYPES = {AND, OR, NOT, NEVER}
+
+    # EWS Operators
+    EQ = &#39;==&#39;
+    NE = &#39;!=&#39;
+    GT = &#39;&gt;&#39;
+    GTE = &#39;&gt;=&#39;
+    LT = &#39;&lt;&#39;
+    LTE = &#39;&lt;=&#39;
+    EXACT = &#39;exact&#39;
+    IEXACT = &#39;iexact&#39;
+    CONTAINS = &#39;contains&#39;
+    ICONTAINS = &#39;icontains&#39;
+    STARTSWITH = &#39;startswith&#39;
+    ISTARTSWITH = &#39;istartswith&#39;
+    EXISTS = &#39;exists&#39;
+    OP_TYPES = {EQ, NE, GT, GTE, LT, LTE, EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH, EXISTS}
+    CONTAINS_OPS = {EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH}
+
+    # Valid lookups
+    LOOKUP_RANGE = &#39;range&#39;
+    LOOKUP_IN = &#39;in&#39;
+    LOOKUP_NOT = &#39;not&#39;
+    LOOKUP_GT = &#39;gt&#39;
+    LOOKUP_GTE = &#39;gte&#39;
+    LOOKUP_LT = &#39;lt&#39;
+    LOOKUP_LTE = &#39;lte&#39;
+    LOOKUP_EXACT = &#39;exact&#39;
+    LOOKUP_IEXACT = &#39;iexact&#39;
+    LOOKUP_CONTAINS = &#39;contains&#39;
+    LOOKUP_ICONTAINS = &#39;icontains&#39;
+    LOOKUP_STARTSWITH = &#39;startswith&#39;
+    LOOKUP_ISTARTSWITH = &#39;istartswith&#39;
+    LOOKUP_EXISTS = &#39;exists&#39;
+    LOOKUP_TYPES = {LOOKUP_RANGE, LOOKUP_IN, LOOKUP_NOT, LOOKUP_GT, LOOKUP_GTE, LOOKUP_LT, LOOKUP_LTE, LOOKUP_EXACT,
+                    LOOKUP_IEXACT, LOOKUP_CONTAINS, LOOKUP_ICONTAINS, LOOKUP_STARTSWITH, LOOKUP_ISTARTSWITH,
+                    LOOKUP_EXISTS}
+
+    __slots__ = (&#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;)
+
+    def __init__(self, *args, **kwargs):
+        self.conn_type = kwargs.pop(&#39;conn_type&#39;, self.AND)
+
+        self.field_path = None  # Name of the field we want to filter on
+        self.op = None
+        self.value = None
+        self.query_string = None
+
+        # Parsing of args and kwargs may require child elements
+        self.children = []
+
+        # Check for query string as the only argument
+        if not kwargs and len(args) == 1 and isinstance(args[0], str):
+            self.query_string = args[0]
+            args = ()
+
+        # Parse args which must now be Q objects
+        for q in args:
+            if not isinstance(q, self.__class__):
+                raise ValueError(&#34;Non-keyword arg %r must be a Q instance&#34; % q)
+        self.children.extend(args)
+
+        # Parse keyword args and extract the filter
+        is_single_kwarg = len(args) == 0 and len(kwargs) == 1
+        for key, value in kwargs.items():
+            self.children.extend(
+                self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg)
+            )
+
+        # Simplify this object
+        self.reduce()
+
+        # Final sanity check
+        self._check_integrity()
+
+    def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
+        # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
+        # generate.
+        key_parts = key.rsplit(&#39;__&#39;, 1)
+        if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
+            # This is a kwarg with a lookup at the end
+            field_path, lookup = key_parts
+            if lookup == self.LOOKUP_EXISTS:
+                # value=True will fall through to further processing
+                if not value:
+                    return [~self.__class__(**{key: True})]
+
+            if lookup == self.LOOKUP_RANGE:
+                # EWS doesn&#39;t have a &#39;range&#39; operator. Emulate &#39;foo__range=(1, 2)&#39; as &#39;foo__gte=1 and foo__lte=2&#39;
+                # (both values inclusive).
+                if len(value) != 2:
+                    raise ValueError(&#34;Value of lookup &#39;%s&#39; must have exactly 2 elements&#34; % key)
+                return [
+                    self.__class__(**{&#39;%s__gte&#39; % field_path: value[0]}),
+                    self.__class__(**{&#39;%s__lte&#39; % field_path: value[1]}),
+                ]
+
+            if lookup == self.LOOKUP_IN:
+                # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
+                # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
+                if not is_iterable(value, generators_allowed=True):
+                    raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
+                children = [self.__class__(**{field_path: v}) for v in value]
+                if not children:
+                    # This is an &#39;__in&#39; operator with an empty value. We interpret it to mean &#34;is foo contained in the
+                    # empty set?&#34; which is always false. Mark this Q object as such.
+                    return [self.__class__(conn_type=self.NEVER)]
+                return [self.__class__(*children, conn_type=self.OR)]
+
+            # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
+            #
+            #     item:Categories == &#39;foo&#39; AND item:Categories == &#39;bar&#39; AND ...
+            #
+            #     item:Categories == &#39;foo&#39; OR item:Categories == &#39;bar&#39; OR ...
+            #
+            # The former returns items that have all these categories, but maybe also others. The latter returns
+            # items that have at least one of these categories. This translates to the &#39;contains&#39; and &#39;in&#39; lookups.
+            # Both versions are case-insensitive.
+            #
+            # Exact matching and case-sensitive or partial-string matching is not possible since that requires the
+            # &#39;Contains&#39; element which only supports matching on string elements, not arrays.
+            #
+            # Exact matching of categories (i.e. match [&#39;a&#39;, &#39;b&#39;] but not [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]) could be implemented by
+            # post-processing items by fetch the categories field unconditionally and removing the items that don&#39;t
+            # have an exact match.
+            if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
+                # &#39;__contains&#39; lookups on list field types
+                children = [self.__class__(**{field_path: v}) for v in value]
+                return [self.__class__(*children, conn_type=self.AND)]
+
+            try:
+                op = self._lookup_to_op(lookup)
+            except KeyError:
+                raise ValueError(&#34;Lookup &#39;%s&#39; is not supported (called as &#39;%s=%r&#39;)&#34; % (lookup, key, value))
+        else:
+            field_path, op = key, self.EQ
+
+        if not is_single_kwarg:
+            return [self.__class__(**{key: value})]
+
+        # This is a single-kwarg Q object with a lookup that requires a single value. Make this a leaf
+        self.field_path = field_path
+        self.op = op
+        self.value = value
+        return []
+
+    def reduce(self):
+        &#34;&#34;&#34;Simplify this object, if possible&#34;&#34;&#34;
+        self._reduce_children()
+        self._promote()
+
+    def _reduce_children(self):
+        &#34;&#34;&#34;Looks at the children of this object and removes unnecessary items
+        &#34;&#34;&#34;
+        children = self.children
+        if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
+            # We have at least one &#39;never&#39; arg
+            if self.conn_type == self.AND:
+                # Remove all other args since nothing we AND together with a &#39;never&#39; arg can change the result
+                children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.OR:
+                # Remove all &#39;never&#39; args because all other args will decide the result. Keep one &#39;never&#39; arg in case
+                # all args are &#39;never&#39; args.
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                if not children:
+                    children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.NOT:
+                # Let&#39;s interpret &#39;not never&#39; to mean &#39;always&#39;. Remove all &#39;never&#39; args
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+
+        # Remove any empty Q elements in args before proceeding
+        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        self.children = children
+
+    def _promote(self):
+        &#34;&#34;&#34;When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
+        child.&#34;&#34;&#34;
+        if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
+            return
+
+        q = self.children[0]
+        self.conn_type = q.conn_type
+        self.field_path = q.field_path
+        self.op = q.op
+        self.value = q.value
+        self.query_string = q.query_string
+        self.children = q.children
+
+    def clean(self, version):
+        # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        # validating. There&#39;s no reason to replicate much of that here.
+        from .folders import Folder
+        self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
+
+    @classmethod
+    def _lookup_to_op(cls, lookup):
+        return {
+            cls.LOOKUP_NOT: cls.NE,
+            cls.LOOKUP_GT: cls.GT,
+            cls.LOOKUP_GTE: cls.GTE,
+            cls.LOOKUP_LT: cls.LT,
+            cls.LOOKUP_LTE: cls.LTE,
+            cls.LOOKUP_EXACT: cls.EXACT,
+            cls.LOOKUP_IEXACT: cls.IEXACT,
+            cls.LOOKUP_CONTAINS: cls.CONTAINS,
+            cls.LOOKUP_ICONTAINS: cls.ICONTAINS,
+            cls.LOOKUP_STARTSWITH: cls.STARTSWITH,
+            cls.LOOKUP_ISTARTSWITH: cls.ISTARTSWITH,
+            cls.LOOKUP_EXISTS: cls.EXISTS,
+        }[lookup]
+
+    @classmethod
+    def _conn_to_xml(cls, conn_type):
+        xml_tag_map = {
+            cls.AND: &#39;t:And&#39;,
+            cls.OR: &#39;t:Or&#39;,
+            cls.NOT: &#39;t:Not&#39;,
+        }
+        return create_element(xml_tag_map[conn_type])
+
+    @classmethod
+    def _op_to_xml(cls, op):
+        xml_tag_map = {
+            cls.EQ: &#39;t:IsEqualTo&#39;,
+            cls.NE: &#39;t:IsNotEqualTo&#39;,
+            cls.GTE: &#39;t:IsGreaterThanOrEqualTo&#39;,
+            cls.LTE: &#39;t:IsLessThanOrEqualTo&#39;,
+            cls.LT: &#39;t:IsLessThan&#39;,
+            cls.GT: &#39;t:IsGreaterThan&#39;,
+            cls.EXISTS: &#39;t:Exists&#39;,
+        }
+        if op in xml_tag_map:
+            return create_element(xml_tag_map[op])
+        valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
+        if op not in valid_ops:
+            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (op, valid_ops))
+
+        # For description of Contains attribute values, see
+        #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
+        #
+        # Possible ContainmentMode values:
+        #     FullString, Prefixed, Substring, PrefixOnWords, ExactPhrase
+        # Django lookups have no equivalent of PrefixOnWords and ExactPhrase (and I&#39;m unsure how they actually
+        # work).
+        #
+        # EWS has no equivalent of &#39;__endswith&#39; or &#39;__iendswith&#39;. That could be emulated using &#39;__contains&#39; and
+        # &#39;__icontains&#39; and filtering results afterwards in Python. But it could be inefficient because we might be
+        # fetching and discarding a lot of non-matching items, plus we would need to always fetch the field we&#39;re
+        # matching on, to be able to do the filtering. I think it&#39;s better to leave this to the consumer, i.e.:
+        #
+        # items = [i for i in fld.filter(subject__contains=suffix) if i.subject.endswith(suffix)]
+        # items = [i for i in fld.filter(subject__icontains=suffix) if i.subject.lower().endswith(suffix.lower())]
+        #
+        # Possible ContainmentComparison values (there are more, but the rest are &#34;To be removed&#34;):
+        #     Exact, IgnoreCase, IgnoreNonSpacingCharacters, IgnoreCaseAndNonSpacingCharacters
+        # I&#39;m unsure about non-spacing characters, but as I read
+        #    https://en.wikipedia.org/wiki/Graphic_character#Spacing_and_non-spacing_characters
+        # we shouldn&#39;t ignore them (&#39;a&#39; would match both &#39;a&#39; and &#39;å&#39;, the latter having a non-spacing character).
+        if op in {cls.EXACT, cls.IEXACT}:
+            match_mode = &#39;FullString&#39;
+        elif op in (cls.CONTAINS, cls.ICONTAINS):
+            match_mode = &#39;Substring&#39;
+        elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
+            match_mode = &#39;Prefixed&#39;
+        else:
+            raise ValueError(&#39;Unsupported op: %s&#39; % op)
+        if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
+            compare_mode = &#39;IgnoreCase&#39;
+        else:
+            compare_mode = &#39;Exact&#39;
+        return create_element(
+            &#39;t:Contains&#39;,
+            attrs=OrderedDict([
+                (&#39;ContainmentMode&#39;, match_mode),
+                (&#39;ContainmentComparison&#39;, compare_mode),
+            ])
+        )
+
+    def is_leaf(self):
+        return not self.children
+
+    def is_empty(self):
+        &#34;&#34;&#34;Returns True if this object is without any restrictions at all&#34;&#34;&#34;
+        return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
+
+    def is_never(self):
+        &#34;&#34;&#34;Returns True if this object has a restriction that will never match anything&#34;&#34;&#34;
+        return self.conn_type == self.NEVER
+
+    def expr(self):
+        if self.is_empty():
+            return None
+        if self.is_never():
+            return self.NEVER
+        if self.query_string:
+            return self.query_string
+        if self.is_leaf():
+            expr = &#39;%s %s %r&#39; % (self.field_path, self.op, self.value)
+        else:
+            # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
+            expr = (&#39; %s &#39; % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else &#39;(%s)&#39; % c.expr())
+                for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
+            )
+        if self.conn_type == self.NOT:
+            # Add the NOT operator. Put children in parens if there is more than one child.
+            if self.is_leaf() or len(self.children) == 1:
+                return self.conn_type + &#39; %s&#39; % expr
+            return self.conn_type + &#39; (%s)&#39; % expr
+        return expr
+
+    def to_xml(self, folders, version, applies_to):
+        if self.query_string:
+            self._check_integrity()
+            if version.build &lt; EXCHANGE_2010:
+                raise NotImplementedError(&#39;QueryString filtering is only supported for Exchange 2010 servers and later&#39;)
+            elem = create_element(&#39;m:QueryString&#39;)
+            elem.text = self.query_string
+            return elem
+        # Translate this Q object to a valid Restriction XML tree
+        elem = self.xml_elem(folders=folders, version=version, applies_to=applies_to)
+        if elem is None:
+            return None
+        restriction = create_element(&#39;m:Restriction&#39;)
+        restriction.append(elem)
+        return restriction
+
+    def _check_integrity(self):
+        if self.is_empty():
+            return
+        if self.conn_type == self.NEVER:
+            if any([self.field_path, self.op, self.value, self.children]):
+                raise ValueError(&#34;&#39;never&#39; queries cannot be combined with other settings&#34;)
+            return
+        if self.query_string:
+            if any([self.field_path, self.op, self.value, self.children]):
+                raise ValueError(&#39;Query strings cannot be combined with other settings&#39;)
+            return
+        if self.conn_type not in self.CONN_TYPES:
+            raise ValueError(&#34;&#39;conn_type&#39; %s must be one of %s&#34; % (self.conn_type, self.CONN_TYPES))
+        if not self.is_leaf():
+            for q in self.children:
+                if q.query_string and len(self.children) &gt; 1:
+                    raise ValueError(
+                        &#39;A query string cannot be combined with other restrictions&#39;
+                    )
+            return
+        if not self.field_path:
+            raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
+        if self.op not in self.OP_TYPES:
+            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (self.op, self.OP_TYPES))
+        if self.op == self.EXISTS:
+            if self.value is not True:
+                raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
+        if self.value is None:
+            raise ValueError(&#39;Value for filter on field path &#34;%s&#34; cannot be None&#39; % self.field_path)
+        if is_iterable(self.value, generators_allowed=True):
+            raise ValueError(
+                &#39;Value %r for filter on field path &#34;%s&#34; must be a single value&#39; % (self.value, self.field_path)
+            )
+
+    def _validate_field_path(self, field_path, folder, applies_to, version):
+        from .indexed_properties import MultiFieldIndexedElement
+        if applies_to == Restriction.FOLDERS:
+            # This is a restriction on Folder fields
+            folder.validate_field(field=field_path.field, version=version)
+        else:
+            folder.validate_item_field(field=field_path.field, version=version)
+        if not field_path.field.is_searchable:
+            raise ValueError(&#34;EWS does not support filtering on field &#39;%s&#39;&#34; % field_path.field.name)
+        if field_path.subfield and not field_path.subfield.is_searchable:
+            raise ValueError(&#34;EWS does not support filtering on subfield &#39;%s&#39;&#34; % field_path.subfield.name)
+        if issubclass(field_path.field.value_cls, MultiFieldIndexedElement) and not field_path.subfield:
+            raise ValueError(&#34;Field path &#39;%s&#39; must contain a subfield&#34; % self.field_path)
+
+    def _get_field_path(self, folders, applies_to, version):
+        # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
+        from .fields import FieldPath
+        for folder in folders:
+            try:
+                if applies_to == Restriction.FOLDERS:
+                    # This is a restriction on Folder fields
+                    field = folder.get_field_by_fieldname(fieldname=self.field_path)
+                    field_path = FieldPath(field=field)
+                else:
+                    field_path = FieldPath.from_string(field_path=self.field_path, folder=folder)
+            except ValueError:
+                continue
+            self._validate_field_path(field_path=field_path, folder=folder, applies_to=applies_to, version=version)
+            break
+        else:
+            raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (self.field_path, folders))
+        return field_path
+
+    def _get_clean_value(self, field_path, version):
+        if self.op == self.EXISTS:
+            return None
+        clean_field = field_path.subfield if (field_path.subfield and field_path.label) else field_path.field
+        if clean_field.is_list:
+            # With __contains, we allow filtering by only one value even though the field is a list type
+            return clean_field.clean(value=[self.value], version=version)[0]
+        else:
+            return clean_field.clean(value=self.value, version=version)
+
+    def xml_elem(self, folders, version, applies_to):
+        # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
+        # return None.
+        from .indexed_properties import SingleFieldIndexedElement
+        from .extended_properties import ExtendedProperty
+        from .fields import DateTimeBackedDateField
+        # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
+        # This is done in _get_field_path() and _get_clean_value(), respectively.
+        self._check_integrity()
+        if self.is_empty():
+            return None
+        if self.is_never():
+            raise ValueError(&#34;EWS does not support &#39;never&#39; queries&#34;)
+        if self.is_leaf():
+            elem = self._op_to_xml(self.op)
+            field_path = self._get_field_path(folders, applies_to=applies_to, version=version)
+            clean_value = self._get_clean_value(field_path=field_path, version=version)
+            if issubclass(field_path.field.value_cls, ExtendedProperty) and field_path.field.value_cls.is_binary_type():
+                # We need to base64-encode binary data
+                clean_value = base64.b64encode(clean_value.value).decode(&#39;ascii&#39;)
+            elif issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
+                # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
+                # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
+                field_path.label = clean_value.label
+            elif isinstance(field_path.field, DateTimeBackedDateField):
+                # We need to convert to datetime
+                clean_value = field_path.field.date_to_datetime(clean_value)
+            elem.append(field_path.to_xml())
+            constant = create_element(&#39;t:Constant&#39;)
+            if self.op != self.EXISTS:
+                # Use .set() to not fill up the create_element() cache with unique values
+                constant.set(&#39;Value&#39;, value_to_xml_text(clean_value))
+                if self.op in self.CONTAINS_OPS:
+                    elem.append(constant)
+                else:
+                    uriorconst = create_element(&#39;t:FieldURIOrConstant&#39;)
+                    uriorconst.append(constant)
+                    elem.append(uriorconst)
+        elif len(self.children) == 1:
+            # We have only one child
+            elem = self.children[0].xml_elem(folders=folders, version=version, applies_to=applies_to)
+        else:
+            # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
+            elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
+            # Sort children by field name so we get stable output (for easier testing). Children should never be empty
+            for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;):
+                elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
+        if elem is None:
+            return None  # Should not be necessary, but play safe
+        if self.conn_type == self.NOT:
+            # Encapsulate everything in the NOT element
+            not_elem = self._conn_to_xml(self.conn_type)
+            not_elem.append(elem)
+            return not_elem
+        return elem
+
+    def __and__(self, other):
+        # &amp; operator. Return a new Q with two children and conn_type AND
+        return self.__class__(self, other, conn_type=self.AND)
+
+    def __or__(self, other):
+        # | operator. Return a new Q with two children and conn_type OR
+        return self.__class__(self, other, conn_type=self.OR)
+
+    def __invert__(self):
+        # ~ operator. If op has an inverse, change op. Else return a new Q with conn_type NOT
+        if self.conn_type == self.NOT:
+            # This is NOT NOT. Change to AND
+            new = copy(self)
+            new.conn_type = self.AND
+            new.reduce()
+            return new
+        if self.is_leaf():
+            inverse_ops = {
+                self.EQ: self.NE,
+                self.NE: self.EQ,
+                self.GT: self.LTE,
+                self.GTE: self.LT,
+                self.LT: self.GTE,
+                self.LTE: self.GT,
+            }
+            try:
+                new = copy(self)
+                new.op = inverse_ops[self.op]
+                new.reduce()
+                return new
+            except KeyError:
+                pass
+        return self.__class__(self, conn_type=self.NOT)
+
+    def __eq__(self, other):
+        return repr(self) == repr(other)
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __str__(self):
+        return self.expr() or &#39;Q()&#39;
+
+    def __repr__(self):
+        if self.is_leaf():
+            if self.query_string:
+                return self.__class__.__name__ + &#39;(%r)&#39; % self.query_string
+            if self.is_never():
+                return self.__class__.__name__ + &#39;(conn_type=%r)&#39; % (self.conn_type)
+            return self.__class__.__name__ + &#39;(%s %s %r)&#39; % (self.field_path, self.op, self.value)
+        sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#39;&#39;))
+        if self.conn_type == self.NOT or len(self.children) &gt; 1:
+            return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
+        return self.__class__.__name__ + repr(sorted_children)
+
+
+class Restriction:
+    &#34;&#34;&#34;Implements an EWS Restriction type.&#34;&#34;&#34;
+
+    # The type of item the restriction applies to
+    FOLDERS = &#39;folders&#39;
+    ITEMS = &#39;items&#39;
+    RESTRICTION_TYPES = (FOLDERS, ITEMS)
+
+    def __init__(self, q, folders, applies_to):
+        if not isinstance(q, Q):
+            raise ValueError(&#34;&#39;q&#39; value %r must be a Q instance&#34; % q)
+        if q.is_empty():
+            raise ValueError(&#34;Q object must not be empty&#34;)
+        from .folders import BaseFolder
+        for folder in folders:
+            if not isinstance(folder, BaseFolder):
+                raise ValueError(&#34;&#39;folder&#39; value %r must be a Folder instance&#34; % folder)
+        if applies_to not in self.RESTRICTION_TYPES:
+            raise ValueError(&#34;&#39;applies_to&#39; must be one of %s&#34; % (self.RESTRICTION_TYPES,))
+        self.q = q
+        self.folders = folders
+        self.applies_to = applies_to
+
+    def to_xml(self, version):
+        return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)
+
+    def __str__(self):
+        &#34;&#34;&#34;Prints the XML syntax tree&#34;&#34;&#34;
+        return xml_to_str(self.to_xml(version=self.folders[0].account.version))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="exchangelib.restriction.Q"><code class="flex name class">
+<span>class <span class="ident">Q</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Q:
+    &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic.&#34;&#34;&#34;
+
+    # Connection types
+    AND = &#39;AND&#39;
+    OR = &#39;OR&#39;
+    NOT = &#39;NOT&#39;
+    NEVER = &#39;NEVER&#39;  # This is not specified by EWS. We use it for queries that will never match, e.g. &#39;foo__in=()&#39;
+    CONN_TYPES = {AND, OR, NOT, NEVER}
+
+    # EWS Operators
+    EQ = &#39;==&#39;
+    NE = &#39;!=&#39;
+    GT = &#39;&gt;&#39;
+    GTE = &#39;&gt;=&#39;
+    LT = &#39;&lt;&#39;
+    LTE = &#39;&lt;=&#39;
+    EXACT = &#39;exact&#39;
+    IEXACT = &#39;iexact&#39;
+    CONTAINS = &#39;contains&#39;
+    ICONTAINS = &#39;icontains&#39;
+    STARTSWITH = &#39;startswith&#39;
+    ISTARTSWITH = &#39;istartswith&#39;
+    EXISTS = &#39;exists&#39;
+    OP_TYPES = {EQ, NE, GT, GTE, LT, LTE, EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH, EXISTS}
+    CONTAINS_OPS = {EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH}
+
+    # Valid lookups
+    LOOKUP_RANGE = &#39;range&#39;
+    LOOKUP_IN = &#39;in&#39;
+    LOOKUP_NOT = &#39;not&#39;
+    LOOKUP_GT = &#39;gt&#39;
+    LOOKUP_GTE = &#39;gte&#39;
+    LOOKUP_LT = &#39;lt&#39;
+    LOOKUP_LTE = &#39;lte&#39;
+    LOOKUP_EXACT = &#39;exact&#39;
+    LOOKUP_IEXACT = &#39;iexact&#39;
+    LOOKUP_CONTAINS = &#39;contains&#39;
+    LOOKUP_ICONTAINS = &#39;icontains&#39;
+    LOOKUP_STARTSWITH = &#39;startswith&#39;
+    LOOKUP_ISTARTSWITH = &#39;istartswith&#39;
+    LOOKUP_EXISTS = &#39;exists&#39;
+    LOOKUP_TYPES = {LOOKUP_RANGE, LOOKUP_IN, LOOKUP_NOT, LOOKUP_GT, LOOKUP_GTE, LOOKUP_LT, LOOKUP_LTE, LOOKUP_EXACT,
+                    LOOKUP_IEXACT, LOOKUP_CONTAINS, LOOKUP_ICONTAINS, LOOKUP_STARTSWITH, LOOKUP_ISTARTSWITH,
+                    LOOKUP_EXISTS}
+
+    __slots__ = (&#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;)
+
+    def __init__(self, *args, **kwargs):
+        self.conn_type = kwargs.pop(&#39;conn_type&#39;, self.AND)
+
+        self.field_path = None  # Name of the field we want to filter on
+        self.op = None
+        self.value = None
+        self.query_string = None
+
+        # Parsing of args and kwargs may require child elements
+        self.children = []
+
+        # Check for query string as the only argument
+        if not kwargs and len(args) == 1 and isinstance(args[0], str):
+            self.query_string = args[0]
+            args = ()
+
+        # Parse args which must now be Q objects
+        for q in args:
+            if not isinstance(q, self.__class__):
+                raise ValueError(&#34;Non-keyword arg %r must be a Q instance&#34; % q)
+        self.children.extend(args)
+
+        # Parse keyword args and extract the filter
+        is_single_kwarg = len(args) == 0 and len(kwargs) == 1
+        for key, value in kwargs.items():
+            self.children.extend(
+                self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg)
+            )
+
+        # Simplify this object
+        self.reduce()
+
+        # Final sanity check
+        self._check_integrity()
+
+    def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
+        # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
+        # generate.
+        key_parts = key.rsplit(&#39;__&#39;, 1)
+        if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
+            # This is a kwarg with a lookup at the end
+            field_path, lookup = key_parts
+            if lookup == self.LOOKUP_EXISTS:
+                # value=True will fall through to further processing
+                if not value:
+                    return [~self.__class__(**{key: True})]
+
+            if lookup == self.LOOKUP_RANGE:
+                # EWS doesn&#39;t have a &#39;range&#39; operator. Emulate &#39;foo__range=(1, 2)&#39; as &#39;foo__gte=1 and foo__lte=2&#39;
+                # (both values inclusive).
+                if len(value) != 2:
+                    raise ValueError(&#34;Value of lookup &#39;%s&#39; must have exactly 2 elements&#34; % key)
+                return [
+                    self.__class__(**{&#39;%s__gte&#39; % field_path: value[0]}),
+                    self.__class__(**{&#39;%s__lte&#39; % field_path: value[1]}),
+                ]
+
+            if lookup == self.LOOKUP_IN:
+                # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
+                # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
+                if not is_iterable(value, generators_allowed=True):
+                    raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
+                children = [self.__class__(**{field_path: v}) for v in value]
+                if not children:
+                    # This is an &#39;__in&#39; operator with an empty value. We interpret it to mean &#34;is foo contained in the
+                    # empty set?&#34; which is always false. Mark this Q object as such.
+                    return [self.__class__(conn_type=self.NEVER)]
+                return [self.__class__(*children, conn_type=self.OR)]
+
+            # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
+            #
+            #     item:Categories == &#39;foo&#39; AND item:Categories == &#39;bar&#39; AND ...
+            #
+            #     item:Categories == &#39;foo&#39; OR item:Categories == &#39;bar&#39; OR ...
+            #
+            # The former returns items that have all these categories, but maybe also others. The latter returns
+            # items that have at least one of these categories. This translates to the &#39;contains&#39; and &#39;in&#39; lookups.
+            # Both versions are case-insensitive.
+            #
+            # Exact matching and case-sensitive or partial-string matching is not possible since that requires the
+            # &#39;Contains&#39; element which only supports matching on string elements, not arrays.
+            #
+            # Exact matching of categories (i.e. match [&#39;a&#39;, &#39;b&#39;] but not [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]) could be implemented by
+            # post-processing items by fetch the categories field unconditionally and removing the items that don&#39;t
+            # have an exact match.
+            if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
+                # &#39;__contains&#39; lookups on list field types
+                children = [self.__class__(**{field_path: v}) for v in value]
+                return [self.__class__(*children, conn_type=self.AND)]
+
+            try:
+                op = self._lookup_to_op(lookup)
+            except KeyError:
+                raise ValueError(&#34;Lookup &#39;%s&#39; is not supported (called as &#39;%s=%r&#39;)&#34; % (lookup, key, value))
+        else:
+            field_path, op = key, self.EQ
+
+        if not is_single_kwarg:
+            return [self.__class__(**{key: value})]
+
+        # This is a single-kwarg Q object with a lookup that requires a single value. Make this a leaf
+        self.field_path = field_path
+        self.op = op
+        self.value = value
+        return []
+
+    def reduce(self):
+        &#34;&#34;&#34;Simplify this object, if possible&#34;&#34;&#34;
+        self._reduce_children()
+        self._promote()
+
+    def _reduce_children(self):
+        &#34;&#34;&#34;Looks at the children of this object and removes unnecessary items
+        &#34;&#34;&#34;
+        children = self.children
+        if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
+            # We have at least one &#39;never&#39; arg
+            if self.conn_type == self.AND:
+                # Remove all other args since nothing we AND together with a &#39;never&#39; arg can change the result
+                children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.OR:
+                # Remove all &#39;never&#39; args because all other args will decide the result. Keep one &#39;never&#39; arg in case
+                # all args are &#39;never&#39; args.
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                if not children:
+                    children = [self.__class__(conn_type=self.NEVER)]
+            elif self.conn_type == self.NOT:
+                # Let&#39;s interpret &#39;not never&#39; to mean &#39;always&#39;. Remove all &#39;never&#39; args
+                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+
+        # Remove any empty Q elements in args before proceeding
+        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        self.children = children
+
+    def _promote(self):
+        &#34;&#34;&#34;When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
+        child.&#34;&#34;&#34;
+        if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
+            return
+
+        q = self.children[0]
+        self.conn_type = q.conn_type
+        self.field_path = q.field_path
+        self.op = q.op
+        self.value = q.value
+        self.query_string = q.query_string
+        self.children = q.children
+
+    def clean(self, version):
+        # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        # validating. There&#39;s no reason to replicate much of that here.
+        from .folders import Folder
+        self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
+
+    @classmethod
+    def _lookup_to_op(cls, lookup):
+        return {
+            cls.LOOKUP_NOT: cls.NE,
+            cls.LOOKUP_GT: cls.GT,
+            cls.LOOKUP_GTE: cls.GTE,
+            cls.LOOKUP_LT: cls.LT,
+            cls.LOOKUP_LTE: cls.LTE,
+            cls.LOOKUP_EXACT: cls.EXACT,
+            cls.LOOKUP_IEXACT: cls.IEXACT,
+            cls.LOOKUP_CONTAINS: cls.CONTAINS,
+            cls.LOOKUP_ICONTAINS: cls.ICONTAINS,
+            cls.LOOKUP_STARTSWITH: cls.STARTSWITH,
+            cls.LOOKUP_ISTARTSWITH: cls.ISTARTSWITH,
+            cls.LOOKUP_EXISTS: cls.EXISTS,
+        }[lookup]
+
+    @classmethod
+    def _conn_to_xml(cls, conn_type):
+        xml_tag_map = {
+            cls.AND: &#39;t:And&#39;,
+            cls.OR: &#39;t:Or&#39;,
+            cls.NOT: &#39;t:Not&#39;,
+        }
+        return create_element(xml_tag_map[conn_type])
+
+    @classmethod
+    def _op_to_xml(cls, op):
+        xml_tag_map = {
+            cls.EQ: &#39;t:IsEqualTo&#39;,
+            cls.NE: &#39;t:IsNotEqualTo&#39;,
+            cls.GTE: &#39;t:IsGreaterThanOrEqualTo&#39;,
+            cls.LTE: &#39;t:IsLessThanOrEqualTo&#39;,
+            cls.LT: &#39;t:IsLessThan&#39;,
+            cls.GT: &#39;t:IsGreaterThan&#39;,
+            cls.EXISTS: &#39;t:Exists&#39;,
+        }
+        if op in xml_tag_map:
+            return create_element(xml_tag_map[op])
+        valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
+        if op not in valid_ops:
+            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (op, valid_ops))
+
+        # For description of Contains attribute values, see
+        #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
+        #
+        # Possible ContainmentMode values:
+        #     FullString, Prefixed, Substring, PrefixOnWords, ExactPhrase
+        # Django lookups have no equivalent of PrefixOnWords and ExactPhrase (and I&#39;m unsure how they actually
+        # work).
+        #
+        # EWS has no equivalent of &#39;__endswith&#39; or &#39;__iendswith&#39;. That could be emulated using &#39;__contains&#39; and
+        # &#39;__icontains&#39; and filtering results afterwards in Python. But it could be inefficient because we might be
+        # fetching and discarding a lot of non-matching items, plus we would need to always fetch the field we&#39;re
+        # matching on, to be able to do the filtering. I think it&#39;s better to leave this to the consumer, i.e.:
+        #
+        # items = [i for i in fld.filter(subject__contains=suffix) if i.subject.endswith(suffix)]
+        # items = [i for i in fld.filter(subject__icontains=suffix) if i.subject.lower().endswith(suffix.lower())]
+        #
+        # Possible ContainmentComparison values (there are more, but the rest are &#34;To be removed&#34;):
+        #     Exact, IgnoreCase, IgnoreNonSpacingCharacters, IgnoreCaseAndNonSpacingCharacters
+        # I&#39;m unsure about non-spacing characters, but as I read
+        #    https://en.wikipedia.org/wiki/Graphic_character#Spacing_and_non-spacing_characters
+        # we shouldn&#39;t ignore them (&#39;a&#39; would match both &#39;a&#39; and &#39;å&#39;, the latter having a non-spacing character).
+        if op in {cls.EXACT, cls.IEXACT}:
+            match_mode = &#39;FullString&#39;
+        elif op in (cls.CONTAINS, cls.ICONTAINS):
+            match_mode = &#39;Substring&#39;
+        elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
+            match_mode = &#39;Prefixed&#39;
+        else:
+            raise ValueError(&#39;Unsupported op: %s&#39; % op)
+        if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
+            compare_mode = &#39;IgnoreCase&#39;
+        else:
+            compare_mode = &#39;Exact&#39;
+        return create_element(
+            &#39;t:Contains&#39;,
+            attrs=OrderedDict([
+                (&#39;ContainmentMode&#39;, match_mode),
+                (&#39;ContainmentComparison&#39;, compare_mode),
+            ])
+        )
+
+    def is_leaf(self):
+        return not self.children
+
+    def is_empty(self):
+        &#34;&#34;&#34;Returns True if this object is without any restrictions at all&#34;&#34;&#34;
+        return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
+
+    def is_never(self):
+        &#34;&#34;&#34;Returns True if this object has a restriction that will never match anything&#34;&#34;&#34;
+        return self.conn_type == self.NEVER
+
+    def expr(self):
+        if self.is_empty():
+            return None
+        if self.is_never():
+            return self.NEVER
+        if self.query_string:
+            return self.query_string
+        if self.is_leaf():
+            expr = &#39;%s %s %r&#39; % (self.field_path, self.op, self.value)
+        else:
+            # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
+            expr = (&#39; %s &#39; % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else &#39;(%s)&#39; % c.expr())
+                for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
+            )
+        if self.conn_type == self.NOT:
+            # Add the NOT operator. Put children in parens if there is more than one child.
+            if self.is_leaf() or len(self.children) == 1:
+                return self.conn_type + &#39; %s&#39; % expr
+            return self.conn_type + &#39; (%s)&#39; % expr
+        return expr
+
+    def to_xml(self, folders, version, applies_to):
+        if self.query_string:
+            self._check_integrity()
+            if version.build &lt; EXCHANGE_2010:
+                raise NotImplementedError(&#39;QueryString filtering is only supported for Exchange 2010 servers and later&#39;)
+            elem = create_element(&#39;m:QueryString&#39;)
+            elem.text = self.query_string
+            return elem
+        # Translate this Q object to a valid Restriction XML tree
+        elem = self.xml_elem(folders=folders, version=version, applies_to=applies_to)
+        if elem is None:
+            return None
+        restriction = create_element(&#39;m:Restriction&#39;)
+        restriction.append(elem)
+        return restriction
+
+    def _check_integrity(self):
+        if self.is_empty():
+            return
+        if self.conn_type == self.NEVER:
+            if any([self.field_path, self.op, self.value, self.children]):
+                raise ValueError(&#34;&#39;never&#39; queries cannot be combined with other settings&#34;)
+            return
+        if self.query_string:
+            if any([self.field_path, self.op, self.value, self.children]):
+                raise ValueError(&#39;Query strings cannot be combined with other settings&#39;)
+            return
+        if self.conn_type not in self.CONN_TYPES:
+            raise ValueError(&#34;&#39;conn_type&#39; %s must be one of %s&#34; % (self.conn_type, self.CONN_TYPES))
+        if not self.is_leaf():
+            for q in self.children:
+                if q.query_string and len(self.children) &gt; 1:
+                    raise ValueError(
+                        &#39;A query string cannot be combined with other restrictions&#39;
+                    )
+            return
+        if not self.field_path:
+            raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
+        if self.op not in self.OP_TYPES:
+            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (self.op, self.OP_TYPES))
+        if self.op == self.EXISTS:
+            if self.value is not True:
+                raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
+        if self.value is None:
+            raise ValueError(&#39;Value for filter on field path &#34;%s&#34; cannot be None&#39; % self.field_path)
+        if is_iterable(self.value, generators_allowed=True):
+            raise ValueError(
+                &#39;Value %r for filter on field path &#34;%s&#34; must be a single value&#39; % (self.value, self.field_path)
+            )
+
+    def _validate_field_path(self, field_path, folder, applies_to, version):
+        from .indexed_properties import MultiFieldIndexedElement
+        if applies_to == Restriction.FOLDERS:
+            # This is a restriction on Folder fields
+            folder.validate_field(field=field_path.field, version=version)
+        else:
+            folder.validate_item_field(field=field_path.field, version=version)
+        if not field_path.field.is_searchable:
+            raise ValueError(&#34;EWS does not support filtering on field &#39;%s&#39;&#34; % field_path.field.name)
+        if field_path.subfield and not field_path.subfield.is_searchable:
+            raise ValueError(&#34;EWS does not support filtering on subfield &#39;%s&#39;&#34; % field_path.subfield.name)
+        if issubclass(field_path.field.value_cls, MultiFieldIndexedElement) and not field_path.subfield:
+            raise ValueError(&#34;Field path &#39;%s&#39; must contain a subfield&#34; % self.field_path)
+
+    def _get_field_path(self, folders, applies_to, version):
+        # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
+        from .fields import FieldPath
+        for folder in folders:
+            try:
+                if applies_to == Restriction.FOLDERS:
+                    # This is a restriction on Folder fields
+                    field = folder.get_field_by_fieldname(fieldname=self.field_path)
+                    field_path = FieldPath(field=field)
+                else:
+                    field_path = FieldPath.from_string(field_path=self.field_path, folder=folder)
+            except ValueError:
+                continue
+            self._validate_field_path(field_path=field_path, folder=folder, applies_to=applies_to, version=version)
+            break
+        else:
+            raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (self.field_path, folders))
+        return field_path
+
+    def _get_clean_value(self, field_path, version):
+        if self.op == self.EXISTS:
+            return None
+        clean_field = field_path.subfield if (field_path.subfield and field_path.label) else field_path.field
+        if clean_field.is_list:
+            # With __contains, we allow filtering by only one value even though the field is a list type
+            return clean_field.clean(value=[self.value], version=version)[0]
+        else:
+            return clean_field.clean(value=self.value, version=version)
+
+    def xml_elem(self, folders, version, applies_to):
+        # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
+        # return None.
+        from .indexed_properties import SingleFieldIndexedElement
+        from .extended_properties import ExtendedProperty
+        from .fields import DateTimeBackedDateField
+        # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
+        # This is done in _get_field_path() and _get_clean_value(), respectively.
+        self._check_integrity()
+        if self.is_empty():
+            return None
+        if self.is_never():
+            raise ValueError(&#34;EWS does not support &#39;never&#39; queries&#34;)
+        if self.is_leaf():
+            elem = self._op_to_xml(self.op)
+            field_path = self._get_field_path(folders, applies_to=applies_to, version=version)
+            clean_value = self._get_clean_value(field_path=field_path, version=version)
+            if issubclass(field_path.field.value_cls, ExtendedProperty) and field_path.field.value_cls.is_binary_type():
+                # We need to base64-encode binary data
+                clean_value = base64.b64encode(clean_value.value).decode(&#39;ascii&#39;)
+            elif issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
+                # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
+                # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
+                field_path.label = clean_value.label
+            elif isinstance(field_path.field, DateTimeBackedDateField):
+                # We need to convert to datetime
+                clean_value = field_path.field.date_to_datetime(clean_value)
+            elem.append(field_path.to_xml())
+            constant = create_element(&#39;t:Constant&#39;)
+            if self.op != self.EXISTS:
+                # Use .set() to not fill up the create_element() cache with unique values
+                constant.set(&#39;Value&#39;, value_to_xml_text(clean_value))
+                if self.op in self.CONTAINS_OPS:
+                    elem.append(constant)
+                else:
+                    uriorconst = create_element(&#39;t:FieldURIOrConstant&#39;)
+                    uriorconst.append(constant)
+                    elem.append(uriorconst)
+        elif len(self.children) == 1:
+            # We have only one child
+            elem = self.children[0].xml_elem(folders=folders, version=version, applies_to=applies_to)
+        else:
+            # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
+            elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
+            # Sort children by field name so we get stable output (for easier testing). Children should never be empty
+            for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;):
+                elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
+        if elem is None:
+            return None  # Should not be necessary, but play safe
+        if self.conn_type == self.NOT:
+            # Encapsulate everything in the NOT element
+            not_elem = self._conn_to_xml(self.conn_type)
+            not_elem.append(elem)
+            return not_elem
+        return elem
+
+    def __and__(self, other):
+        # &amp; operator. Return a new Q with two children and conn_type AND
+        return self.__class__(self, other, conn_type=self.AND)
+
+    def __or__(self, other):
+        # | operator. Return a new Q with two children and conn_type OR
+        return self.__class__(self, other, conn_type=self.OR)
+
+    def __invert__(self):
+        # ~ operator. If op has an inverse, change op. Else return a new Q with conn_type NOT
+        if self.conn_type == self.NOT:
+            # This is NOT NOT. Change to AND
+            new = copy(self)
+            new.conn_type = self.AND
+            new.reduce()
+            return new
+        if self.is_leaf():
+            inverse_ops = {
+                self.EQ: self.NE,
+                self.NE: self.EQ,
+                self.GT: self.LTE,
+                self.GTE: self.LT,
+                self.LT: self.GTE,
+                self.LTE: self.GT,
+            }
+            try:
+                new = copy(self)
+                new.op = inverse_ops[self.op]
+                new.reduce()
+                return new
+            except KeyError:
+                pass
+        return self.__class__(self, conn_type=self.NOT)
+
+    def __eq__(self, other):
+        return repr(self) == repr(other)
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __str__(self):
+        return self.expr() or &#39;Q()&#39;
+
+    def __repr__(self):
+        if self.is_leaf():
+            if self.query_string:
+                return self.__class__.__name__ + &#39;(%r)&#39; % self.query_string
+            if self.is_never():
+                return self.__class__.__name__ + &#39;(conn_type=%r)&#39; % (self.conn_type)
+            return self.__class__.__name__ + &#39;(%s %s %r)&#39; % (self.field_path, self.op, self.value)
+        sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#39;&#39;))
+        if self.conn_type == self.NOT or len(self.children) &gt; 1:
+            return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
+        return self.__class__.__name__ + repr(sorted_children)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.restriction.Q.AND"><code class="name">var <span class="ident">AND</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.CONN_TYPES"><code class="name">var <span class="ident">CONN_TYPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.CONTAINS"><code class="name">var <span class="ident">CONTAINS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.CONTAINS_OPS"><code class="name">var <span class="ident">CONTAINS_OPS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.EQ"><code class="name">var <span class="ident">EQ</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.EXACT"><code class="name">var <span class="ident">EXACT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.EXISTS"><code class="name">var <span class="ident">EXISTS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.GT"><code class="name">var <span class="ident">GT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.GTE"><code class="name">var <span class="ident">GTE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.ICONTAINS"><code class="name">var <span class="ident">ICONTAINS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.IEXACT"><code class="name">var <span class="ident">IEXACT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.ISTARTSWITH"><code class="name">var <span class="ident">ISTARTSWITH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_CONTAINS"><code class="name">var <span class="ident">LOOKUP_CONTAINS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_EXACT"><code class="name">var <span class="ident">LOOKUP_EXACT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_EXISTS"><code class="name">var <span class="ident">LOOKUP_EXISTS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_GT"><code class="name">var <span class="ident">LOOKUP_GT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_GTE"><code class="name">var <span class="ident">LOOKUP_GTE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_ICONTAINS"><code class="name">var <span class="ident">LOOKUP_ICONTAINS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_IEXACT"><code class="name">var <span class="ident">LOOKUP_IEXACT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_IN"><code class="name">var <span class="ident">LOOKUP_IN</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_ISTARTSWITH"><code class="name">var <span class="ident">LOOKUP_ISTARTSWITH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_LT"><code class="name">var <span class="ident">LOOKUP_LT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_LTE"><code class="name">var <span class="ident">LOOKUP_LTE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_NOT"><code class="name">var <span class="ident">LOOKUP_NOT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_RANGE"><code class="name">var <span class="ident">LOOKUP_RANGE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_STARTSWITH"><code class="name">var <span class="ident">LOOKUP_STARTSWITH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LOOKUP_TYPES"><code class="name">var <span class="ident">LOOKUP_TYPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LT"><code class="name">var <span class="ident">LT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.LTE"><code class="name">var <span class="ident">LTE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.NE"><code class="name">var <span class="ident">NE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.NEVER"><code class="name">var <span class="ident">NEVER</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.NOT"><code class="name">var <span class="ident">NOT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.OP_TYPES"><code class="name">var <span class="ident">OP_TYPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.OR"><code class="name">var <span class="ident">OR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Q.STARTSWITH"><code class="name">var <span class="ident">STARTSWITH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.restriction.Q.children"><code class="name">var <span class="ident">children</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.restriction.Q.conn_type"><code class="name">var <span class="ident">conn_type</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.restriction.Q.field_path"><code class="name">var <span class="ident">field_path</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.restriction.Q.op"><code class="name">var <span class="ident">op</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.restriction.Q.query_string"><code class="name">var <span class="ident">query_string</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.restriction.Q.value"><code class="name">var <span class="ident">value</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.restriction.Q.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, version):
+    # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+    # validating. There&#39;s no reason to replicate much of that here.
+    from .folders import Folder
+    self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.expr"><code class="name flex">
+<span>def <span class="ident">expr</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expr(self):
+    if self.is_empty():
+        return None
+    if self.is_never():
+        return self.NEVER
+    if self.query_string:
+        return self.query_string
+    if self.is_leaf():
+        expr = &#39;%s %s %r&#39; % (self.field_path, self.op, self.value)
+    else:
+        # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
+        expr = (&#39; %s &#39; % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
+            (c.expr() if c.is_leaf() or c.conn_type == self.NOT else &#39;(%s)&#39; % c.expr())
+            for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
+        )
+    if self.conn_type == self.NOT:
+        # Add the NOT operator. Put children in parens if there is more than one child.
+        if self.is_leaf() or len(self.children) == 1:
+            return self.conn_type + &#39; %s&#39; % expr
+        return self.conn_type + &#39; (%s)&#39; % expr
+    return expr</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.is_empty"><code class="name flex">
+<span>def <span class="ident">is_empty</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns True if this object is without any restrictions at all</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_empty(self):
+    &#34;&#34;&#34;Returns True if this object is without any restrictions at all&#34;&#34;&#34;
+    return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.is_leaf"><code class="name flex">
+<span>def <span class="ident">is_leaf</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_leaf(self):
+    return not self.children</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.is_never"><code class="name flex">
+<span>def <span class="ident">is_never</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns True if this object has a restriction that will never match anything</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_never(self):
+    &#34;&#34;&#34;Returns True if this object has a restriction that will never match anything&#34;&#34;&#34;
+    return self.conn_type == self.NEVER</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.reduce"><code class="name flex">
+<span>def <span class="ident">reduce</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Simplify this object, if possible</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reduce(self):
+    &#34;&#34;&#34;Simplify this object, if possible&#34;&#34;&#34;
+    self._reduce_children()
+    self._promote()</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.to_xml"><code class="name flex">
+<span>def <span class="ident">to_xml</span></span>(<span>self, folders, version, applies_to)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_xml(self, folders, version, applies_to):
+    if self.query_string:
+        self._check_integrity()
+        if version.build &lt; EXCHANGE_2010:
+            raise NotImplementedError(&#39;QueryString filtering is only supported for Exchange 2010 servers and later&#39;)
+        elem = create_element(&#39;m:QueryString&#39;)
+        elem.text = self.query_string
+        return elem
+    # Translate this Q object to a valid Restriction XML tree
+    elem = self.xml_elem(folders=folders, version=version, applies_to=applies_to)
+    if elem is None:
+        return None
+    restriction = create_element(&#39;m:Restriction&#39;)
+    restriction.append(elem)
+    return restriction</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.restriction.Q.xml_elem"><code class="name flex">
+<span>def <span class="ident">xml_elem</span></span>(<span>self, folders, version, applies_to)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def xml_elem(self, folders, version, applies_to):
+    # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
+    # return None.
+    from .indexed_properties import SingleFieldIndexedElement
+    from .extended_properties import ExtendedProperty
+    from .fields import DateTimeBackedDateField
+    # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
+    # This is done in _get_field_path() and _get_clean_value(), respectively.
+    self._check_integrity()
+    if self.is_empty():
+        return None
+    if self.is_never():
+        raise ValueError(&#34;EWS does not support &#39;never&#39; queries&#34;)
+    if self.is_leaf():
+        elem = self._op_to_xml(self.op)
+        field_path = self._get_field_path(folders, applies_to=applies_to, version=version)
+        clean_value = self._get_clean_value(field_path=field_path, version=version)
+        if issubclass(field_path.field.value_cls, ExtendedProperty) and field_path.field.value_cls.is_binary_type():
+            # We need to base64-encode binary data
+            clean_value = base64.b64encode(clean_value.value).decode(&#39;ascii&#39;)
+        elif issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
+            # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
+            # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
+            field_path.label = clean_value.label
+        elif isinstance(field_path.field, DateTimeBackedDateField):
+            # We need to convert to datetime
+            clean_value = field_path.field.date_to_datetime(clean_value)
+        elem.append(field_path.to_xml())
+        constant = create_element(&#39;t:Constant&#39;)
+        if self.op != self.EXISTS:
+            # Use .set() to not fill up the create_element() cache with unique values
+            constant.set(&#39;Value&#39;, value_to_xml_text(clean_value))
+            if self.op in self.CONTAINS_OPS:
+                elem.append(constant)
+            else:
+                uriorconst = create_element(&#39;t:FieldURIOrConstant&#39;)
+                uriorconst.append(constant)
+                elem.append(uriorconst)
+    elif len(self.children) == 1:
+        # We have only one child
+        elem = self.children[0].xml_elem(folders=folders, version=version, applies_to=applies_to)
+    else:
+        # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
+        elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
+        # Sort children by field name so we get stable output (for easier testing). Children should never be empty
+        for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;):
+            elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
+    if elem is None:
+        return None  # Should not be necessary, but play safe
+    if self.conn_type == self.NOT:
+        # Encapsulate everything in the NOT element
+        not_elem = self._conn_to_xml(self.conn_type)
+        not_elem.append(elem)
+        return not_elem
+    return elem</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.restriction.Restriction"><code class="flex name class">
+<span>class <span class="ident">Restriction</span></span>
+<span>(</span><span>q, folders, applies_to)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implements an EWS Restriction type.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Restriction:
+    &#34;&#34;&#34;Implements an EWS Restriction type.&#34;&#34;&#34;
+
+    # The type of item the restriction applies to
+    FOLDERS = &#39;folders&#39;
+    ITEMS = &#39;items&#39;
+    RESTRICTION_TYPES = (FOLDERS, ITEMS)
+
+    def __init__(self, q, folders, applies_to):
+        if not isinstance(q, Q):
+            raise ValueError(&#34;&#39;q&#39; value %r must be a Q instance&#34; % q)
+        if q.is_empty():
+            raise ValueError(&#34;Q object must not be empty&#34;)
+        from .folders import BaseFolder
+        for folder in folders:
+            if not isinstance(folder, BaseFolder):
+                raise ValueError(&#34;&#39;folder&#39; value %r must be a Folder instance&#34; % folder)
+        if applies_to not in self.RESTRICTION_TYPES:
+            raise ValueError(&#34;&#39;applies_to&#39; must be one of %s&#34; % (self.RESTRICTION_TYPES,))
+        self.q = q
+        self.folders = folders
+        self.applies_to = applies_to
+
+    def to_xml(self, version):
+        return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)
+
+    def __str__(self):
+        &#34;&#34;&#34;Prints the XML syntax tree&#34;&#34;&#34;
+        return xml_to_str(self.to_xml(version=self.folders[0].account.version))</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.restriction.Restriction.FOLDERS"><code class="name">var <span class="ident">FOLDERS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Restriction.ITEMS"><code class="name">var <span class="ident">ITEMS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.restriction.Restriction.RESTRICTION_TYPES"><code class="name">var <span class="ident">RESTRICTION_TYPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.restriction.Restriction.to_xml"><code class="name flex">
+<span>def <span class="ident">to_xml</span></span>(<span>self, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_xml(self, version):
+    return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib" href="index.html">exchangelib</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="exchangelib.restriction.Q" href="#exchangelib.restriction.Q">Q</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.restriction.Q.AND" href="#exchangelib.restriction.Q.AND">AND</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.CONN_TYPES" href="#exchangelib.restriction.Q.CONN_TYPES">CONN_TYPES</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.CONTAINS" href="#exchangelib.restriction.Q.CONTAINS">CONTAINS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.CONTAINS_OPS" href="#exchangelib.restriction.Q.CONTAINS_OPS">CONTAINS_OPS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.EQ" href="#exchangelib.restriction.Q.EQ">EQ</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.EXACT" href="#exchangelib.restriction.Q.EXACT">EXACT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.EXISTS" href="#exchangelib.restriction.Q.EXISTS">EXISTS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.GT" href="#exchangelib.restriction.Q.GT">GT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.GTE" href="#exchangelib.restriction.Q.GTE">GTE</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.ICONTAINS" href="#exchangelib.restriction.Q.ICONTAINS">ICONTAINS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.IEXACT" href="#exchangelib.restriction.Q.IEXACT">IEXACT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.ISTARTSWITH" href="#exchangelib.restriction.Q.ISTARTSWITH">ISTARTSWITH</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_CONTAINS" href="#exchangelib.restriction.Q.LOOKUP_CONTAINS">LOOKUP_CONTAINS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_EXACT" href="#exchangelib.restriction.Q.LOOKUP_EXACT">LOOKUP_EXACT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_EXISTS" href="#exchangelib.restriction.Q.LOOKUP_EXISTS">LOOKUP_EXISTS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_GT" href="#exchangelib.restriction.Q.LOOKUP_GT">LOOKUP_GT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_GTE" href="#exchangelib.restriction.Q.LOOKUP_GTE">LOOKUP_GTE</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_ICONTAINS" href="#exchangelib.restriction.Q.LOOKUP_ICONTAINS">LOOKUP_ICONTAINS</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_IEXACT" href="#exchangelib.restriction.Q.LOOKUP_IEXACT">LOOKUP_IEXACT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_IN" href="#exchangelib.restriction.Q.LOOKUP_IN">LOOKUP_IN</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_ISTARTSWITH" href="#exchangelib.restriction.Q.LOOKUP_ISTARTSWITH">LOOKUP_ISTARTSWITH</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_LT" href="#exchangelib.restriction.Q.LOOKUP_LT">LOOKUP_LT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_LTE" href="#exchangelib.restriction.Q.LOOKUP_LTE">LOOKUP_LTE</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_NOT" href="#exchangelib.restriction.Q.LOOKUP_NOT">LOOKUP_NOT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_RANGE" href="#exchangelib.restriction.Q.LOOKUP_RANGE">LOOKUP_RANGE</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_STARTSWITH" href="#exchangelib.restriction.Q.LOOKUP_STARTSWITH">LOOKUP_STARTSWITH</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LOOKUP_TYPES" href="#exchangelib.restriction.Q.LOOKUP_TYPES">LOOKUP_TYPES</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LT" href="#exchangelib.restriction.Q.LT">LT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.LTE" href="#exchangelib.restriction.Q.LTE">LTE</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.NE" href="#exchangelib.restriction.Q.NE">NE</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.NEVER" href="#exchangelib.restriction.Q.NEVER">NEVER</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.NOT" href="#exchangelib.restriction.Q.NOT">NOT</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.OP_TYPES" href="#exchangelib.restriction.Q.OP_TYPES">OP_TYPES</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.OR" href="#exchangelib.restriction.Q.OR">OR</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.STARTSWITH" href="#exchangelib.restriction.Q.STARTSWITH">STARTSWITH</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.children" href="#exchangelib.restriction.Q.children">children</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.clean" href="#exchangelib.restriction.Q.clean">clean</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.conn_type" href="#exchangelib.restriction.Q.conn_type">conn_type</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.expr" href="#exchangelib.restriction.Q.expr">expr</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.field_path" href="#exchangelib.restriction.Q.field_path">field_path</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.is_empty" href="#exchangelib.restriction.Q.is_empty">is_empty</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.is_leaf" href="#exchangelib.restriction.Q.is_leaf">is_leaf</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.is_never" href="#exchangelib.restriction.Q.is_never">is_never</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.op" href="#exchangelib.restriction.Q.op">op</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.query_string" href="#exchangelib.restriction.Q.query_string">query_string</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.reduce" href="#exchangelib.restriction.Q.reduce">reduce</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.to_xml" href="#exchangelib.restriction.Q.to_xml">to_xml</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.value" href="#exchangelib.restriction.Q.value">value</a></code></li>
+<li><code><a title="exchangelib.restriction.Q.xml_elem" href="#exchangelib.restriction.Q.xml_elem">xml_elem</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.restriction.Restriction" href="#exchangelib.restriction.Restriction">Restriction</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.restriction.Restriction.FOLDERS" href="#exchangelib.restriction.Restriction.FOLDERS">FOLDERS</a></code></li>
+<li><code><a title="exchangelib.restriction.Restriction.ITEMS" href="#exchangelib.restriction.Restriction.ITEMS">ITEMS</a></code></li>
+<li><code><a title="exchangelib.restriction.Restriction.RESTRICTION_TYPES" href="#exchangelib.restriction.Restriction.RESTRICTION_TYPES">RESTRICTION_TYPES</a></code></li>
+<li><code><a title="exchangelib.restriction.Restriction.to_xml" href="#exchangelib.restriction.Restriction.to_xml">to_xml</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

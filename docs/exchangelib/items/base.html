@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.items.base API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.items.base</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import logging
+
+from ..extended_properties import ExtendedProperty
+from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
+    CharField, IdElementField, AttachmentField
+from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, Fields
+from ..services import CreateItem
+from ..util import require_account
+from ..version import EXCHANGE_2007_SP1
+
+log = logging.getLogger(__name__)
+
+# Shape enums
+ID_ONLY = &#39;IdOnly&#39;
+DEFAULT = &#39;Default&#39;
+# AllProperties doesn&#39;t actually get all properties in FindItem, just the &#34;first-class&#34; ones. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/email-properties-and-elements-in-ews-in-exchange
+ALL_PROPERTIES = &#39;AllProperties&#39;
+SHAPE_CHOICES = (ID_ONLY, DEFAULT, ALL_PROPERTIES)
+
+# MessageDisposition values. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
+SAVE_ONLY = &#39;SaveOnly&#39;
+SEND_ONLY = &#39;SendOnly&#39;
+SEND_AND_SAVE_COPY = &#39;SendAndSaveCopy&#39;
+MESSAGE_DISPOSITION_CHOICES = (SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY)
+
+# SendMeetingInvitations values. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
+# SendMeetingInvitationsOrCancellations. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem
+# SendMeetingCancellations values. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
+SEND_TO_NONE = &#39;SendToNone&#39;
+SEND_ONLY_TO_ALL = &#39;SendOnlyToAll&#39;
+SEND_ONLY_TO_CHANGED = &#39;SendOnlyToChanged&#39;
+SEND_TO_ALL_AND_SAVE_COPY = &#39;SendToAllAndSaveCopy&#39;
+SEND_TO_CHANGED_AND_SAVE_COPY = &#39;SendToChangedAndSaveCopy&#39;
+SEND_MEETING_INVITATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_TO_ALL_AND_SAVE_COPY)
+SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_ONLY_TO_CHANGED,
+                                                      SEND_TO_ALL_AND_SAVE_COPY, SEND_TO_CHANGED_AND_SAVE_COPY)
+SEND_MEETING_CANCELLATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_TO_ALL_AND_SAVE_COPY)
+
+# AffectedTaskOccurrences values. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
+ALL_OCCURRENCIES = &#39;AllOccurrences&#39;
+SPECIFIED_OCCURRENCE_ONLY = &#39;SpecifiedOccurrenceOnly&#39;
+AFFECTED_TASK_OCCURRENCES_CHOICES = (ALL_OCCURRENCIES, SPECIFIED_OCCURRENCE_ONLY)
+
+# ConflictResolution values. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem
+NEVER_OVERWRITE = &#39;NeverOverwrite&#39;
+AUTO_RESOLVE = &#39;AutoResolve&#39;
+ALWAYS_OVERWRITE = &#39;AlwaysOverwrite&#39;
+CONFLICT_RESOLUTION_CHOICES = (NEVER_OVERWRITE, AUTO_RESOLVE, ALWAYS_OVERWRITE)
+
+# DeleteType values. See
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
+HARD_DELETE = &#39;HardDelete&#39;
+SOFT_DELETE = &#39;SoftDelete&#39;
+MOVE_TO_DELETED_ITEMS = &#39;MoveToDeletedItems&#39;
+DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
+
+
+class RegisterMixIn(IdChangeKeyMixIn):
+    &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically&#34;&#34;&#34;
+
+    # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
+    __slots__ = (&#39;__dict__&#39;,)
+
+    INSERT_AFTER_FIELD = None
+
+    @classmethod
+    def register(cls, attr_name, attr_cls):
+        &#34;&#34;&#34;Register a custom extended property in this item class so they can be accessed just like any other attribute
+
+        Args:
+          attr_name:
+          attr_cls:
+
+        &#34;&#34;&#34;
+        if not cls.INSERT_AFTER_FIELD:
+            raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
+        try:
+            cls.get_field_by_fieldname(attr_name)
+        except InvalidField:
+            pass
+        else:
+            raise ValueError(&#34;&#39;%s&#39; is already registered&#34; % attr_name)
+        if not issubclass(attr_cls, ExtendedProperty):
+            raise ValueError(&#34;%r must be a subclass of ExtendedProperty&#34; % attr_cls)
+        # Check if class attributes are properly defined
+        attr_cls.validate_cls()
+        # ExtendedProperty is not a real field, but a placeholder in the fields list. See
+        #   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item
+        #
+        # Find the correct index for the new extended property, and insert.
+        field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
+        cls.add_field(field, insert_after=cls.INSERT_AFTER_FIELD)
+
+    @classmethod
+    def deregister(cls, attr_name):
+        &#34;&#34;&#34;De-register an extended property that has been registered with register()
+
+        Args:
+          attr_name:
+
+        &#34;&#34;&#34;
+        try:
+            field = cls.get_field_by_fieldname(attr_name)
+        except InvalidField:
+            raise ValueError(&#34;&#39;%s&#39; is not registered&#34; % attr_name)
+        if not isinstance(field, ExtendedPropertyField):
+            raise ValueError(&#34;&#39;%s&#39; is not registered as an ExtendedProperty&#34; % attr_name)
+        cls.remove_field(field)
+
+
+class BaseItem(RegisterMixIn):
+    &#34;&#34;&#34;Base class for all other classes that implement EWS items&#34;&#34;&#34;
+    ID_ELEMENT_CLS = ItemId
+
+    FIELDS = Fields(
+        IdElementField(&#39;_id&#39;, field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;, &#39;folder&#39;)
+
+    def __init__(self, **kwargs):
+        # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
+        # &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
+        # we use folder.account.
+        from ..folders import BaseFolder
+        from ..account import Account
+        self.account = kwargs.pop(&#39;account&#39;, None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise ValueError(&#34;&#39;account&#39; %r must be an Account instance&#34; % self.account)
+        self.folder = kwargs.pop(&#39;folder&#39;, None)
+        if self.folder is not None:
+            if not isinstance(self.folder, BaseFolder):
+                raise ValueError(&#34;&#39;folder&#39; %r must be a Folder instance&#34; % self.folder)
+            if self.folder.account is not None:
+                if self.account is not None:
+                    # Make sure the account from kwargs matches the folder account
+                    if self.account != self.folder.account:
+                        raise ValueError(&#34;&#39;account&#39; does not match &#39;folder.account&#39;&#34;)
+                self.account = self.folder.account
+        super().__init__(**kwargs)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        item = super().from_xml(elem=elem, account=account)
+        item.account = account
+        return item
+
+    def to_id_xml(self, version):
+        return self._id.to_xml(version=version)
+
+
+class BaseReplyItem(EWSElement):
+    &#34;&#34;&#34;Base class for reply/forward elements that share the same fields&#34;&#34;&#34;
+    FIELDS = Fields(
+        CharField(&#39;subject&#39;, field_uri=&#39;Subject&#39;),
+        BodyField(&#39;body&#39;, field_uri=&#39;Body&#39;),  # Accepts and returns Body or HTMLBody instances
+        MailboxListField(&#39;to_recipients&#39;, field_uri=&#39;ToRecipients&#39;),
+        MailboxListField(&#39;cc_recipients&#39;, field_uri=&#39;CcRecipients&#39;),
+        MailboxListField(&#39;bcc_recipients&#39;, field_uri=&#39;BccRecipients&#39;),
+        BooleanField(&#39;is_read_receipt_requested&#39;, field_uri=&#39;IsReadReceiptRequested&#39;),
+        BooleanField(&#39;is_delivery_receipt_requested&#39;, field_uri=&#39;IsDeliveryReceiptRequested&#39;),
+        MailboxField(&#39;author&#39;, field_uri=&#39;From&#39;),
+        EWSElementField(&#39;reference_item_id&#39;, value_cls=ReferenceItemId),
+        BodyField(&#39;new_body&#39;, field_uri=&#39;NewBodyContent&#39;),  # Accepts and returns Body or HTMLBody instances
+        MailboxField(&#39;received_by&#39;, field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1),
+        MailboxField(&#39;received_by_representing&#39;, field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;,)
+
+    def __init__(self, **kwargs):
+        # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;save()&#39;
+        from ..account import Account
+        self.account = kwargs.pop(&#39;account&#39;, None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise ValueError(&#34;&#39;account&#39; %r must be an Account instance&#34; % self.account)
+        super().__init__(**kwargs)
+
+    @require_account
+    def send(self, save_copy=True, copy_to_folder=None):
+        from .calendar_item import CancelCalendarItem
+        if copy_to_folder:
+            if not save_copy:
+                raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+        message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
+        expect_result = True if isinstance(self, CancelCalendarItem) else False
+        res = CreateItem(account=self.account).get(
+            items=[self],
+            folder=copy_to_folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=SEND_TO_NONE,
+            expect_result=expect_result,
+        )
+        if res is None:
+            return
+        return BulkCreateResult.from_xml(elem=res, account=self)
+
+    @require_account
+    def save(self, folder):
+        &#34;&#34;&#34;save reply/forward and retrieve the item result for further modification,
+        you may want to use account.drafts as the folder.
+
+        Args:
+          folder:
+
+        &#34;&#34;&#34;
+        res = CreateItem(account=self.account).get(
+            items=[self],
+            folder=folder,
+            message_disposition=SAVE_ONLY,
+            send_meeting_invitations=SEND_TO_NONE,
+        )
+        return BulkCreateResult.from_xml(elem=res, account=self)
+
+
+class BulkCreateResult(BaseItem):
+    &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call&#34;&#34;&#34;
+    LOCAL_FIELDS = Fields(
+        AttachmentField(&#39;attachments&#39;, field_uri=&#39;item:Attachments&#39;),  # ItemAttachment or FileAttachment
+    )
+    FIELDS = BaseItem.FIELDS + LOCAL_FIELDS
+
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # pylint: disable=access-member-before-definition
+        if self.attachments is None:
+            self.attachments = []</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="exchangelib.items.base.BaseItem"><code class="flex name class">
+<span>class <span class="ident">BaseItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all other classes that implement EWS items</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseItem(RegisterMixIn):
+    &#34;&#34;&#34;Base class for all other classes that implement EWS items&#34;&#34;&#34;
+    ID_ELEMENT_CLS = ItemId
+
+    FIELDS = Fields(
+        IdElementField(&#39;_id&#39;, field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;, &#39;folder&#39;)
+
+    def __init__(self, **kwargs):
+        # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
+        # &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
+        # we use folder.account.
+        from ..folders import BaseFolder
+        from ..account import Account
+        self.account = kwargs.pop(&#39;account&#39;, None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise ValueError(&#34;&#39;account&#39; %r must be an Account instance&#34; % self.account)
+        self.folder = kwargs.pop(&#39;folder&#39;, None)
+        if self.folder is not None:
+            if not isinstance(self.folder, BaseFolder):
+                raise ValueError(&#34;&#39;folder&#39; %r must be a Folder instance&#34; % self.folder)
+            if self.folder.account is not None:
+                if self.account is not None:
+                    # Make sure the account from kwargs matches the folder account
+                    if self.account != self.folder.account:
+                        raise ValueError(&#34;&#39;account&#39; does not match &#39;folder.account&#39;&#34;)
+                self.account = self.folder.account
+        super().__init__(**kwargs)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        item = super().from_xml(elem=elem, account=account)
+        item.account = account
+        return item
+
+    def to_id_xml(self, version):
+        return self._id.to_xml(version=version)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.base.RegisterMixIn" href="#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.base.BulkCreateResult" href="#exchangelib.items.base.BulkCreateResult">BulkCreateResult</a></li>
+<li><a title="exchangelib.items.calendar_item.BaseMeetingReplyItem" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingReplyItem">BaseMeetingReplyItem</a></li>
+<li><a title="exchangelib.items.item.Item" href="item.html#exchangelib.items.item.Item">Item</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseItem.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.base.BaseItem.ID_ELEMENT_CLS"><code class="name">var <span class="ident">ID_ELEMENT_CLS</span></code></dt>
+<dd>
+<div class="desc"><p>'id' and 'changekey' are UUIDs generated by Exchange</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemid</a></p></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseItem.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    item = super().from_xml(elem=elem, account=account)
+    item.account = account
+    return item</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseItem.account"><code class="name">var <span class="ident">account</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseItem.folder"><code class="name">var <span class="ident">folder</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseItem.to_id_xml"><code class="name flex">
+<span>def <span class="ident">to_id_xml</span></span>(<span>self, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_id_xml(self, version):
+    return self._id.to_xml(version=version)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.base.RegisterMixIn" href="#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.base.RegisterMixIn.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.deregister" href="#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.register" href="#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem"><code class="flex name class">
+<span>class <span class="ident">BaseReplyItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for reply/forward elements that share the same fields</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseReplyItem(EWSElement):
+    &#34;&#34;&#34;Base class for reply/forward elements that share the same fields&#34;&#34;&#34;
+    FIELDS = Fields(
+        CharField(&#39;subject&#39;, field_uri=&#39;Subject&#39;),
+        BodyField(&#39;body&#39;, field_uri=&#39;Body&#39;),  # Accepts and returns Body or HTMLBody instances
+        MailboxListField(&#39;to_recipients&#39;, field_uri=&#39;ToRecipients&#39;),
+        MailboxListField(&#39;cc_recipients&#39;, field_uri=&#39;CcRecipients&#39;),
+        MailboxListField(&#39;bcc_recipients&#39;, field_uri=&#39;BccRecipients&#39;),
+        BooleanField(&#39;is_read_receipt_requested&#39;, field_uri=&#39;IsReadReceiptRequested&#39;),
+        BooleanField(&#39;is_delivery_receipt_requested&#39;, field_uri=&#39;IsDeliveryReceiptRequested&#39;),
+        MailboxField(&#39;author&#39;, field_uri=&#39;From&#39;),
+        EWSElementField(&#39;reference_item_id&#39;, value_cls=ReferenceItemId),
+        BodyField(&#39;new_body&#39;, field_uri=&#39;NewBodyContent&#39;),  # Accepts and returns Body or HTMLBody instances
+        MailboxField(&#39;received_by&#39;, field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1),
+        MailboxField(&#39;received_by_representing&#39;, field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;,)
+
+    def __init__(self, **kwargs):
+        # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;save()&#39;
+        from ..account import Account
+        self.account = kwargs.pop(&#39;account&#39;, None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise ValueError(&#34;&#39;account&#39; %r must be an Account instance&#34; % self.account)
+        super().__init__(**kwargs)
+
+    @require_account
+    def send(self, save_copy=True, copy_to_folder=None):
+        from .calendar_item import CancelCalendarItem
+        if copy_to_folder:
+            if not save_copy:
+                raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+        message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
+        expect_result = True if isinstance(self, CancelCalendarItem) else False
+        res = CreateItem(account=self.account).get(
+            items=[self],
+            folder=copy_to_folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=SEND_TO_NONE,
+            expect_result=expect_result,
+        )
+        if res is None:
+            return
+        return BulkCreateResult.from_xml(elem=res, account=self)
+
+    @require_account
+    def save(self, folder):
+        &#34;&#34;&#34;save reply/forward and retrieve the item result for further modification,
+        you may want to use account.drafts as the folder.
+
+        Args:
+          folder:
+
+        &#34;&#34;&#34;
+        res = CreateItem(account=self.account).get(
+            items=[self],
+            folder=folder,
+            message_disposition=SAVE_ONLY,
+            send_meeting_invitations=SEND_TO_NONE,
+        )
+        return BulkCreateResult.from_xml(elem=res, account=self)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.calendar_item.CancelCalendarItem" href="calendar_item.html#exchangelib.items.calendar_item.CancelCalendarItem">CancelCalendarItem</a></li>
+<li><a title="exchangelib.items.message.ForwardItem" href="message.html#exchangelib.items.message.ForwardItem">ForwardItem</a></li>
+<li><a title="exchangelib.items.message.ReplyAllToItem" href="message.html#exchangelib.items.message.ReplyAllToItem">ReplyAllToItem</a></li>
+<li><a title="exchangelib.items.message.ReplyToItem" href="message.html#exchangelib.items.message.ReplyToItem">ReplyToItem</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseReplyItem.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseReplyItem.account"><code class="name">var <span class="ident">account</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.author"><code class="name">var <span class="ident">author</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.bcc_recipients"><code class="name">var <span class="ident">bcc_recipients</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.body"><code class="name">var <span class="ident">body</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.cc_recipients"><code class="name">var <span class="ident">cc_recipients</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested"><code class="name">var <span class="ident">is_delivery_receipt_requested</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested"><code class="name">var <span class="ident">is_read_receipt_requested</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.new_body"><code class="name">var <span class="ident">new_body</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.received_by_representing"><code class="name">var <span class="ident">received_by_representing</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.reference_item_id"><code class="name">var <span class="ident">reference_item_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.subject"><code class="name">var <span class="ident">subject</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.to_recipients"><code class="name">var <span class="ident">to_recipients</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.items.base.BaseReplyItem.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, folder)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>save reply/forward and retrieve the item result for further modification,
+you may want to use account.drafts as the folder.</p>
+<h2 id="args">Args</h2>
+<p>folder:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_account
+def save(self, folder):
+    &#34;&#34;&#34;save reply/forward and retrieve the item result for further modification,
+    you may want to use account.drafts as the folder.
+
+    Args:
+      folder:
+
+    &#34;&#34;&#34;
+    res = CreateItem(account=self.account).get(
+        items=[self],
+        folder=folder,
+        message_disposition=SAVE_ONLY,
+        send_meeting_invitations=SEND_TO_NONE,
+    )
+    return BulkCreateResult.from_xml(elem=res, account=self)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.items.base.BaseReplyItem.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, save_copy=True, copy_to_folder=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_account
+def send(self, save_copy=True, copy_to_folder=None):
+    from .calendar_item import CancelCalendarItem
+    if copy_to_folder:
+        if not save_copy:
+            raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+    message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
+    expect_result = True if isinstance(self, CancelCalendarItem) else False
+    res = CreateItem(account=self.account).get(
+        items=[self],
+        folder=copy_to_folder,
+        message_disposition=message_disposition,
+        send_meeting_invitations=SEND_TO_NONE,
+        expect_result=expect_result,
+    )
+    if res is None:
+        return
+    return BulkCreateResult.from_xml(elem=res, account=self)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.items.base.BulkCreateResult"><code class="flex name class">
+<span>class <span class="ident">BulkCreateResult</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A dummy class to store return values from a CreateItem service call</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BulkCreateResult(BaseItem):
+    &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call&#34;&#34;&#34;
+    LOCAL_FIELDS = Fields(
+        AttachmentField(&#39;attachments&#39;, field_uri=&#39;item:Attachments&#39;),  # ItemAttachment or FileAttachment
+    )
+    FIELDS = BaseItem.FIELDS + LOCAL_FIELDS
+
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # pylint: disable=access-member-before-definition
+        if self.attachments is None:
+            self.attachments = []</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.base.BaseItem" href="#exchangelib.items.base.BaseItem">BaseItem</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.items.base.BulkCreateResult.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.base.BulkCreateResult.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.items.base.BulkCreateResult.attachments"><code class="name">var <span class="ident">attachments</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.base.BaseItem" href="#exchangelib.items.base.BaseItem">BaseItem</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.base.BaseItem.ID_ELEMENT_CLS" href="#exchangelib.items.base.BaseItem.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.account" href="#exchangelib.items.base.BaseItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.deregister" href="#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.folder" href="#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.register" href="#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.items.base.RegisterMixIn"><code class="flex name class">
+<span>class <span class="ident">RegisterMixIn</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for classes that can change their list of supported fields dynamically</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RegisterMixIn(IdChangeKeyMixIn):
+    &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically&#34;&#34;&#34;
+
+    # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
+    __slots__ = (&#39;__dict__&#39;,)
+
+    INSERT_AFTER_FIELD = None
+
+    @classmethod
+    def register(cls, attr_name, attr_cls):
+        &#34;&#34;&#34;Register a custom extended property in this item class so they can be accessed just like any other attribute
+
+        Args:
+          attr_name:
+          attr_cls:
+
+        &#34;&#34;&#34;
+        if not cls.INSERT_AFTER_FIELD:
+            raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
+        try:
+            cls.get_field_by_fieldname(attr_name)
+        except InvalidField:
+            pass
+        else:
+            raise ValueError(&#34;&#39;%s&#39; is already registered&#34; % attr_name)
+        if not issubclass(attr_cls, ExtendedProperty):
+            raise ValueError(&#34;%r must be a subclass of ExtendedProperty&#34; % attr_cls)
+        # Check if class attributes are properly defined
+        attr_cls.validate_cls()
+        # ExtendedProperty is not a real field, but a placeholder in the fields list. See
+        #   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item
+        #
+        # Find the correct index for the new extended property, and insert.
+        field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
+        cls.add_field(field, insert_after=cls.INSERT_AFTER_FIELD)
+
+    @classmethod
+    def deregister(cls, attr_name):
+        &#34;&#34;&#34;De-register an extended property that has been registered with register()
+
+        Args:
+          attr_name:
+
+        &#34;&#34;&#34;
+        try:
+            field = cls.get_field_by_fieldname(attr_name)
+        except InvalidField:
+            raise ValueError(&#34;&#39;%s&#39; is not registered&#34; % attr_name)
+        if not isinstance(field, ExtendedPropertyField):
+            raise ValueError(&#34;&#39;%s&#39; is not registered as an ExtendedProperty&#34; % attr_name)
+        cls.remove_field(field)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.base.BaseFolder" href="../folders/base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
+<li><a title="exchangelib.items.base.BaseItem" href="#exchangelib.items.base.BaseItem">BaseItem</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.items.base.RegisterMixIn.INSERT_AFTER_FIELD"><code class="name">var <span class="ident">INSERT_AFTER_FIELD</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.items.base.RegisterMixIn.deregister"><code class="name flex">
+<span>def <span class="ident">deregister</span></span>(<span>attr_name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>De-register an extended property that has been registered with register()</p>
+<h2 id="args">Args</h2>
+<p>attr_name:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def deregister(cls, attr_name):
+    &#34;&#34;&#34;De-register an extended property that has been registered with register()
+
+    Args:
+      attr_name:
+
+    &#34;&#34;&#34;
+    try:
+        field = cls.get_field_by_fieldname(attr_name)
+    except InvalidField:
+        raise ValueError(&#34;&#39;%s&#39; is not registered&#34; % attr_name)
+    if not isinstance(field, ExtendedPropertyField):
+        raise ValueError(&#34;&#39;%s&#39; is not registered as an ExtendedProperty&#34; % attr_name)
+    cls.remove_field(field)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.items.base.RegisterMixIn.register"><code class="name flex">
+<span>def <span class="ident">register</span></span>(<span>attr_name, attr_cls)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Register a custom extended property in this item class so they can be accessed just like any other attribute</p>
+<h2 id="args">Args</h2>
+<p>attr_name:
+attr_cls:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def register(cls, attr_name, attr_cls):
+    &#34;&#34;&#34;Register a custom extended property in this item class so they can be accessed just like any other attribute
+
+    Args:
+      attr_name:
+      attr_cls:
+
+    &#34;&#34;&#34;
+    if not cls.INSERT_AFTER_FIELD:
+        raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
+    try:
+        cls.get_field_by_fieldname(attr_name)
+    except InvalidField:
+        pass
+    else:
+        raise ValueError(&#34;&#39;%s&#39; is already registered&#34; % attr_name)
+    if not issubclass(attr_cls, ExtendedProperty):
+        raise ValueError(&#34;%r must be a subclass of ExtendedProperty&#34; % attr_cls)
+    # Check if class attributes are properly defined
+    attr_cls.validate_cls()
+    # ExtendedProperty is not a real field, but a placeholder in the fields list. See
+    #   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item
+    #
+    # Find the correct index for the new extended property, and insert.
+    field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
+    cls.add_field(field, insert_after=cls.INSERT_AFTER_FIELD)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.IdChangeKeyMixIn.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.IdChangeKeyMixIn.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.IdChangeKeyMixIn.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.IdChangeKeyMixIn.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib.items" href="index.html">exchangelib.items</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="exchangelib.items.base.BaseItem" href="#exchangelib.items.base.BaseItem">BaseItem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.items.base.BaseItem.FIELDS" href="#exchangelib.items.base.BaseItem.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.ID_ELEMENT_CLS" href="#exchangelib.items.base.BaseItem.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.account" href="#exchangelib.items.base.BaseItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.folder" href="#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.from_xml" href="#exchangelib.items.base.BaseItem.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseItem.to_id_xml" href="#exchangelib.items.base.BaseItem.to_id_xml">to_id_xml</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.items.base.BaseReplyItem" href="#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.items.base.BaseReplyItem.FIELDS" href="#exchangelib.items.base.BaseReplyItem.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.send" href="#exchangelib.items.base.BaseReplyItem.send">send</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.items.base.BulkCreateResult" href="#exchangelib.items.base.BulkCreateResult">BulkCreateResult</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.items.base.BulkCreateResult.FIELDS" href="#exchangelib.items.base.BulkCreateResult.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.items.base.BulkCreateResult.LOCAL_FIELDS" href="#exchangelib.items.base.BulkCreateResult.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
+<li><code><a title="exchangelib.items.base.BulkCreateResult.attachments" href="#exchangelib.items.base.BulkCreateResult.attachments">attachments</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.items.base.RegisterMixIn" href="#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.items.base.RegisterMixIn.INSERT_AFTER_FIELD" href="#exchangelib.items.base.RegisterMixIn.INSERT_AFTER_FIELD">INSERT_AFTER_FIELD</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.deregister" href="#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.items.base.RegisterMixIn.register" href="#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

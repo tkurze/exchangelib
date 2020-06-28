@@ -1,0 +1,2998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.account API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.account</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from locale import getlocale
+from logging import getLogger
+
+from cached_property import threaded_cached_property
+
+from .autodiscover import discover
+from .configuration import Configuration
+from .credentials import DELEGATE, IMPERSONATION, ACCESS_TYPES
+from .errors import UnknownTimeZone
+from .ewsdatetime import EWSTimeZone, UTC
+from .fields import FieldPath
+from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, ArchiveMsgFolderRoot, \
+    ArchiveRecoverableItemsDeletions, ArchiveRecoverableItemsPurges, ArchiveRecoverableItemsRoot, \
+    ArchiveRecoverableItemsVersions, ArchiveRoot, Calendar, Conflicts, Contacts, ConversationHistory, DeletedItems, \
+    Directory, Drafts, Favorites, IMContactList, Inbox, Journal, JunkEmail, LocalFailures, MsgFolderRoot, MyContacts, \
+    Notes, Outbox, PeopleConnect, PublicFoldersRoot, QuickContacts, RecipientCache, RecoverableItemsDeletions, \
+    RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Root, SearchFolders, SentItems, \
+    ServerFailures, SyncIssues, Tasks, ToDoSearch, VoiceMail
+from .items import Item, BulkCreateResult, HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
+from .properties import Mailbox, SendingAs
+from .protocol import Protocol
+from .queryset import QuerySet
+from .services import ExportItems, UploadItems, GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, SendItem, \
+    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate
+from .util import get_domain, peek
+
+log = getLogger(__name__)
+
+
+class Identity:
+    &#34;&#34;&#34;Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.&#34;&#34;&#34;
+
+    def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
+        &#34;&#34;&#34;
+
+        Args:
+          primary_smtp_address: The primary email address associated with the account (Default value = None)
+          smtp_address: The (non-)primary email address associated with the account (Default value = None)
+          upn:  (Default value = None)
+          sid:  (Default value = None)
+
+        &#34;&#34;&#34;
+        self.primary_smtp_address = primary_smtp_address
+        self.smtp_address = smtp_address
+        self.upn = upn
+        self.sid = sid
+
+    def __eq__(self, other):
+        for k in self.__dict__.keys():
+            if getattr(self, k) != getattr(other, k):
+                return False
+        return True
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __repr__(self):
+        return self.__class__.__name__ + repr((self.primary_smtp_address, self.smtp_address, self.upn, self.sid))
+
+
+class Account:
+    &#34;&#34;&#34;Models an Exchange server user account.&#34;&#34;&#34;
+
+    def __init__(self, primary_smtp_address, fullname=None, access_type=None, autodiscover=False, credentials=None,
+                 config=None, locale=None, default_timezone=None):
+        &#34;&#34;&#34;
+
+        Args:
+          primary_smtp_address: The primary email address associated with the account on the Exchange server
+          fullname: The full name of the account. Optional. (Default value = None)
+          access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
+            and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
+          autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+            (Default value = False)
+          credentials: A Credentials object containing valid credentials for this account. (Default value = None)
+          config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+            (Default value = None)
+          locale: The locale of the user, e.g. &#39;en_US&#39;. Defaults to the locale of the host, if available.
+          default_timezone: EWS may return some datetime values without timezone information. In this case, we will
+            assume values to be in the provided timezone. Defaults to the timezone of the host.
+
+        &#34;&#34;&#34;
+        if &#39;@&#39; not in primary_smtp_address:
+            raise ValueError(&#34;primary_smtp_address %r is not an email address&#34; % primary_smtp_address)
+        self.fullname = fullname
+        # Assume delegate access if individual credentials are provided. Else, assume service user with impersonation
+        self.access_type = access_type or (DELEGATE if credentials else IMPERSONATION)
+        if self.access_type not in ACCESS_TYPES:
+            raise ValueError(&#34;&#39;access_type&#39; %r must be one of %s&#34; % (self.access_type, ACCESS_TYPES))
+        try:
+            self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
+        except ValueError as e:
+            # getlocale() may throw ValueError if it fails to parse the system locale
+            log.warning(&#39;Failed to get locale (%s)&#39; % e)
+            self.locale = None
+        if not isinstance(self.locale, (type(None), str)):
+            raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
+        try:
+            self.default_timezone = default_timezone or EWSTimeZone.localzone()
+        except (ValueError, UnknownTimeZone) as e:
+            # There is no translation from local timezone name to Windows timezone name, or e failed to find the
+            # local timezone.
+            log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
+            self.default_timezone = UTC
+        if not isinstance(self.default_timezone, EWSTimeZone):
+            raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % self.default_timezone)
+        if not isinstance(config, (Configuration, type(None))):
+            raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
+        if autodiscover:
+            if config:
+                retry_policy, auth_type = config.retry_policy, config.auth_type
+                if not credentials:
+                    credentials = config.credentials
+            else:
+                retry_policy, auth_type = None, None
+            self.ad_response, self.protocol = discover(
+                email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
+            )
+            primary_smtp_address = self.ad_response.autodiscover_smtp_address
+        else:
+            if not config:
+                raise AttributeError(&#39;non-autodiscover requires a config&#39;)
+            primary_smtp_address = primary_smtp_address
+            self.ad_response = None
+            self.protocol = Protocol(config=config)
+
+        # Other ways of identifying the account can be added later
+        self.identity = Identity(primary_smtp_address=primary_smtp_address)
+
+        # We may need to override the default server version on a per-account basis because Microsoft may report one
+        # server version up-front but delegate account requests to an older backend server.
+        self.version = self.protocol.version
+        log.debug(&#39;Added account: %s&#39;, self)
+
+    @property
+    def primary_smtp_address(self):
+        return self.identity.primary_smtp_address
+
+    @threaded_cached_property
+    def admin_audit_logs(self):
+        return self.root.get_default_folder(AdminAuditLogs)
+
+    @threaded_cached_property
+    def archive_deleted_items(self):
+        return self.archive_root.get_default_folder(ArchiveDeletedItems)
+
+    @threaded_cached_property
+    def archive_inbox(self):
+        return self.archive_root.get_default_folder(ArchiveInbox)
+
+    @threaded_cached_property
+    def archive_msg_folder_root(self):
+        return self.archive_root.get_default_folder(ArchiveMsgFolderRoot)
+
+    @threaded_cached_property
+    def archive_recoverable_items_deletions(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsDeletions)
+
+    @threaded_cached_property
+    def archive_recoverable_items_purges(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsPurges)
+
+    @threaded_cached_property
+    def archive_recoverable_items_root(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsRoot)
+
+    @threaded_cached_property
+    def archive_recoverable_items_versions(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsVersions)
+
+    @threaded_cached_property
+    def archive_root(self):
+        return ArchiveRoot.get_distinguished(account=self)
+
+    @threaded_cached_property
+    def calendar(self):
+        # If the account contains a shared calendar from a different user, that calendar will be in the folder list.
+        # Attempt not to return one of those. An account may not always have a calendar called &#34;Calendar&#34;, but a
+        # Calendar folder with a localized name instead. Return that, if it&#39;s available, but always prefer any
+        # distinguished folder returned by the server.
+        return self.root.get_default_folder(Calendar)
+
+    @threaded_cached_property
+    def conflicts(self):
+        return self.root.get_default_folder(Conflicts)
+
+    @threaded_cached_property
+    def contacts(self):
+        return self.root.get_default_folder(Contacts)
+
+    @threaded_cached_property
+    def conversation_history(self):
+        return self.root.get_default_folder(ConversationHistory)
+
+    @threaded_cached_property
+    def directory(self):
+        return self.root.get_default_folder(Directory)
+
+    @threaded_cached_property
+    def drafts(self):
+        return self.root.get_default_folder(Drafts)
+
+    @threaded_cached_property
+    def favorites(self):
+        return self.root.get_default_folder(Favorites)
+
+    @threaded_cached_property
+    def im_contact_list(self):
+        return self.root.get_default_folder(IMContactList)
+
+    @threaded_cached_property
+    def inbox(self):
+        return self.root.get_default_folder(Inbox)
+
+    @threaded_cached_property
+    def journal(self):
+        return self.root.get_default_folder(Journal)
+
+    @threaded_cached_property
+    def junk(self):
+        return self.root.get_default_folder(JunkEmail)
+
+    @threaded_cached_property
+    def local_failures(self):
+        return self.root.get_default_folder(LocalFailures)
+
+    @threaded_cached_property
+    def msg_folder_root(self):
+        return self.root.get_default_folder(MsgFolderRoot)
+
+    @threaded_cached_property
+    def my_contacts(self):
+        return self.root.get_default_folder(MyContacts)
+
+    @threaded_cached_property
+    def notes(self):
+        return self.root.get_default_folder(Notes)
+
+    @threaded_cached_property
+    def outbox(self):
+        return self.root.get_default_folder(Outbox)
+
+    @threaded_cached_property
+    def people_connect(self):
+        return self.root.get_default_folder(PeopleConnect)
+
+    @threaded_cached_property
+    def public_folders_root(self):
+        return PublicFoldersRoot.get_distinguished(account=self)
+
+    @threaded_cached_property
+    def quick_contacts(self):
+        return self.root.get_default_folder(QuickContacts)
+
+    @threaded_cached_property
+    def recipient_cache(self):
+        return self.root.get_default_folder(RecipientCache)
+
+    @threaded_cached_property
+    def recoverable_items_deletions(self):
+        return self.root.get_default_folder(RecoverableItemsDeletions)
+
+    @threaded_cached_property
+    def recoverable_items_purges(self):
+        return self.root.get_default_folder(RecoverableItemsPurges)
+
+    @threaded_cached_property
+    def recoverable_items_root(self):
+        return self.root.get_default_folder(RecoverableItemsRoot)
+
+    @threaded_cached_property
+    def recoverable_items_versions(self):
+        return self.root.get_default_folder(RecoverableItemsVersions)
+
+    @threaded_cached_property
+    def root(self):
+        return Root.get_distinguished(account=self)
+
+    @threaded_cached_property
+    def search_folders(self):
+        return self.root.get_default_folder(SearchFolders)
+
+    @threaded_cached_property
+    def sent(self):
+        return self.root.get_default_folder(SentItems)
+
+    @threaded_cached_property
+    def server_failures(self):
+        return self.root.get_default_folder(ServerFailures)
+
+    @threaded_cached_property
+    def sync_issues(self):
+        return self.root.get_default_folder(SyncIssues)
+
+    @threaded_cached_property
+    def tasks(self):
+        return self.root.get_default_folder(Tasks)
+
+    @threaded_cached_property
+    def todo_search(self):
+        return self.root.get_default_folder(ToDoSearch)
+
+    @threaded_cached_property
+    def trash(self):
+        return self.root.get_default_folder(DeletedItems)
+
+    @threaded_cached_property
+    def voice_mail(self):
+        return self.root.get_default_folder(VoiceMail)
+
+    @property
+    def domain(self):
+        return get_domain(self.primary_smtp_address)
+
+    @property
+    def oof_settings(self):
+        # We don&#39;t want to cache this property because then we can&#39;t easily get updates. &#39;threaded_cached_property&#39;
+        # supports the &#39;del self.oof_settings&#39; syntax to invalidate the cache, but does not support custom setter
+        # methods. Having a non-cached service call here goes against the assumption that properties are cheap, but the
+        # alternative is to create get_oof_settings() and set_oof_settings(), and that&#39;s just too Java-ish for my taste.
+        return GetUserOofSettings(account=self).get(
+            mailbox=Mailbox(email_address=self.primary_smtp_address),
+        )
+
+    @oof_settings.setter
+    def oof_settings(self, value):
+        SetUserOofSettings(account=self).get(
+            oof_settings=value,
+            mailbox=Mailbox(email_address=self.primary_smtp_address),
+        )
+
+    def _consume_item_service(self, service_cls, items, chunk_size, kwargs):
+        # &#39;items&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `some_folder.filter(...).delete()`. In
+        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
+        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
+        if isinstance(items, QuerySet):
+            items = items.iterator()
+        is_empty, items = peek(items)
+        if is_empty:
+            # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+            # empty &#39;ids&#39; and return early.
+            return
+        kwargs[&#39;items&#39;] = items
+        for i in service_cls(account=self, chunk_size=chunk_size).call(**kwargs):
+            yield i
+
+    def export(self, items, chunk_size=None):
+        &#34;&#34;&#34;Return export strings of the given items
+
+        Args:
+          items: An iterable containing the Items we want to export
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list of strings, the exported representation of the object
+
+        &#34;&#34;&#34;
+        return list(
+            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+        )
+
+    def upload(self, data, chunk_size=None):
+        &#34;&#34;&#34;Adds objects retrieved from export into the given folders
+
+        Args:
+          data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+            exports.
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list of tuples with the new ids and changekeys
+
+          Example:
+          account.upload([(account.inbox, &#34;AABBCC...&#34;),
+          (account.inbox, &#34;XXYYZZ...&#34;),
+          (account.calendar, &#34;ABCXYZ...&#34;)])
+          -&gt; [(&#34;idA&#34;, &#34;changekey&#34;), (&#34;idB&#34;, &#34;changekey&#34;), (&#34;idC&#34;, &#34;changekey&#34;)]
+
+        &#34;&#34;&#34;
+        return list(
+            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+        )
+
+    def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
+                    chunk_size=None):
+        &#34;&#34;&#34;Creates new items in &#39;folder&#39;
+
+        Args:
+          folder: the folder to create the items in
+          items: an iterable of Item objects
+          message_disposition: only applicable to Message items. Possible values are specified in
+            MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+          send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+            SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+          BulkCreateResult objects are normal Item objects except they only contain the &#39;id&#39; and &#39;changekey&#39;
+          of the created item, and the &#39;id&#39; of any attachments that were also created.
+
+        &#34;&#34;&#34;
+        if isinstance(items, QuerySet):
+            # bulk_create() on a queryset does not make sense because it returns items that have already been created
+            raise ValueError(&#39;Cannot bulk create items from a QuerySet&#39;)
+        log.debug(
+            &#39;Adding items for %s (folder %s, message_disposition: %s, send_meeting_invitations: %s)&#39;,
+            self,
+            folder,
+            message_disposition,
+            send_meeting_invitations,
+        )
+        return list(
+            i if isinstance(i, Exception)
+            else BulkCreateResult.from_xml(elem=i, account=self)
+            for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+                folder=folder,
+                message_disposition=message_disposition,
+                send_meeting_invitations=send_meeting_invitations,
+            ))
+        )
+
+    def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
+                    send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
+                    chunk_size=None):
+        &#34;&#34;&#34;Bulk updates existing items
+
+        Args:
+          items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
+            containing the attributes on this Item object that we want to be updated.
+          conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+            (Default value = AUTO_RESOLVE)
+          message_disposition: only applicable to Message items. Possible values are specified in
+            MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+          send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+            specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
+          suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          a list of either (id, changekey) tuples or exception instances, in the same order as the input
+
+        &#34;&#34;&#34;
+        # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
+        # fact, it could be dangerous if the queryset contains an &#39;.only()&#39;. This would wipe out certain fields
+        # entirely.
+        if isinstance(items, QuerySet):
+            raise ValueError(&#39;Cannot bulk update on a queryset&#39;)
+        log.debug(
+            &#39;Updating items for %s (conflict_resolution %s, message_disposition: %s, send_meeting_invitations: %s)&#39;,
+            self,
+            conflict_resolution,
+            message_disposition,
+            send_meeting_invitations_or_cancellations,
+        )
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+                conflict_resolution=conflict_resolution,
+                message_disposition=message_disposition,
+                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+                suppress_read_receipts=suppress_read_receipts,
+            ))
+        )
+
+    def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
+                    affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+        &#34;&#34;&#34;Bulk deletes items.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+            (Default value = HARD_DELETE)
+          send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+            SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
+          affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+          suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          a list of either True or exception instances, in the same order as the input
+
+        &#34;&#34;&#34;
+        log.debug(
+            &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
+            self,
+            delete_type,
+            send_meeting_cancellations,
+            affected_task_occurrences,
+        )
+        return list(
+            self._consume_item_service(service_cls=DeleteItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                delete_type=delete_type,
+                send_meeting_cancellations=send_meeting_cancellations,
+                affected_task_occurrences=affected_task_occurrences,
+                suppress_read_receipts=suppress_read_receipts,
+            ))
+        )
+
+    def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
+        &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          save_copy: If true, saves a copy of the message (Default value = True)
+          copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          Status for each send operation, in the same order as the input
+
+        &#34;&#34;&#34;
+        if copy_to_folder and not save_copy:
+            raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+        if save_copy and not copy_to_folder:
+            copy_to_folder = self.sent  # &#39;Sent&#39; is default EWS behaviour
+        return list(
+            self._consume_item_service(service_cls=SendItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                saved_item_folder=copy_to_folder,
+            ))
+        )
+
+    def bulk_copy(self, ids, to_folder, chunk_size=None):
+        &#34;&#34;&#34;Copy items to another folder
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          to_folder: The destination folder of the copy operation
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          Status for each send operation, in the same order as the input
+
+        &#34;&#34;&#34;
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                to_folder=to_folder,
+            ))
+        )
+
+    def bulk_move(self, ids, to_folder, chunk_size=None):
+        &#34;&#34;&#34;Move items to another folder
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          to_folder: The destination folder of the copy operation
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
+          folder in a different mailbox, an empty list is returned.
+
+        &#34;&#34;&#34;
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                to_folder=to_folder,
+            ))
+        )
+
+    def bulk_archive(self, ids, to_folder, chunk_size=None):
+        &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
+        to work.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          to_folder: The destination folder of the archive operation
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list containing True or an exception instance in stable order of the requested items
+
+        &#34;&#34;&#34;
+        return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                to_folder=to_folder,
+            ))
+        )
+
+    def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
+        &#34;&#34;&#34;Fetch items by ID
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          folder: used for validating &#39;only_fields&#39; (Default value = None)
+          only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A generator of Item objects, in the same order as the input
+
+        &#34;&#34;&#34;
+        validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
+        # &#39;ids&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
+        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
+        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
+        if only_fields is None:
+            # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+            additional_fields = {
+                FieldPath(field=f) for f in validation_folder.allowed_item_fields(version=self.version)
+            }
+        else:
+            for field in only_fields:
+                validation_folder.validate_item_field(field=field, version=self.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
+                                 if not f.field.is_attribute}
+        # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
+        for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                additional_fields=additional_fields,
+                shape=ID_ONLY,
+        )):
+            if isinstance(i, Exception):
+                yield i
+            else:
+                item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
+                yield item
+
+    @property
+    def mail_tips(self):
+        &#34;&#34;&#34;See self.oof_settings about caching considerations&#34;&#34;&#34;
+        # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
+        return GetMailTips(protocol=self.protocol).get(
+            sending_as=SendingAs(email_address=self.primary_smtp_address),
+            recipients=[Mailbox(email_address=self.primary_smtp_address)],
+            mail_tips_requested=&#39;All&#39;,
+        )
+
+    @property
+    def delegates(self):
+        &#34;&#34;&#34;Returns a list of DelegateUser objects representing the delegates that are set on this account&#34;&#34;&#34;
+        return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))
+
+    def __str__(self):
+        txt = &#39;%s&#39; % self.primary_smtp_address
+        if self.fullname:
+            txt += &#39; (%s)&#39; % self.fullname
+        return txt</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="exchangelib.account.Account"><code class="flex name class">
+<span>class <span class="ident">Account</span></span>
+<span>(</span><span>primary_smtp_address, fullname=None, access_type=None, autodiscover=False, credentials=None, config=None, locale=None, default_timezone=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Models an Exchange server user account.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>primary_smtp_address</code></strong></dt>
+<dd>The primary email address associated with the account on the Exchange server</dd>
+<dt><strong><code>fullname</code></strong></dt>
+<dd>The full name of the account. Optional. (Default value = None)</dd>
+<dt><strong><code>access_type</code></strong></dt>
+<dd>The access type granted to 'credentials' for this account. Valid options are 'delegate'
+and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.</dd>
+<dt><strong><code>autodiscover</code></strong></dt>
+<dd>Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+(Default value = False)</dd>
+<dt><strong><code>credentials</code></strong></dt>
+<dd>A Credentials object containing valid credentials for this account. (Default value = None)</dd>
+<dt><strong><code>config</code></strong></dt>
+<dd>A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+(Default value = None)</dd>
+<dt><strong><code>locale</code></strong></dt>
+<dd>The locale of the user, e.g. 'en_US'. Defaults to the locale of the host, if available.</dd>
+<dt><strong><code>default_timezone</code></strong></dt>
+<dd>EWS may return some datetime values without timezone information. In this case, we will
+assume values to be in the provided timezone. Defaults to the timezone of the host.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Account:
+    &#34;&#34;&#34;Models an Exchange server user account.&#34;&#34;&#34;
+
+    def __init__(self, primary_smtp_address, fullname=None, access_type=None, autodiscover=False, credentials=None,
+                 config=None, locale=None, default_timezone=None):
+        &#34;&#34;&#34;
+
+        Args:
+          primary_smtp_address: The primary email address associated with the account on the Exchange server
+          fullname: The full name of the account. Optional. (Default value = None)
+          access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
+            and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
+          autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+            (Default value = False)
+          credentials: A Credentials object containing valid credentials for this account. (Default value = None)
+          config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+            (Default value = None)
+          locale: The locale of the user, e.g. &#39;en_US&#39;. Defaults to the locale of the host, if available.
+          default_timezone: EWS may return some datetime values without timezone information. In this case, we will
+            assume values to be in the provided timezone. Defaults to the timezone of the host.
+
+        &#34;&#34;&#34;
+        if &#39;@&#39; not in primary_smtp_address:
+            raise ValueError(&#34;primary_smtp_address %r is not an email address&#34; % primary_smtp_address)
+        self.fullname = fullname
+        # Assume delegate access if individual credentials are provided. Else, assume service user with impersonation
+        self.access_type = access_type or (DELEGATE if credentials else IMPERSONATION)
+        if self.access_type not in ACCESS_TYPES:
+            raise ValueError(&#34;&#39;access_type&#39; %r must be one of %s&#34; % (self.access_type, ACCESS_TYPES))
+        try:
+            self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
+        except ValueError as e:
+            # getlocale() may throw ValueError if it fails to parse the system locale
+            log.warning(&#39;Failed to get locale (%s)&#39; % e)
+            self.locale = None
+        if not isinstance(self.locale, (type(None), str)):
+            raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
+        try:
+            self.default_timezone = default_timezone or EWSTimeZone.localzone()
+        except (ValueError, UnknownTimeZone) as e:
+            # There is no translation from local timezone name to Windows timezone name, or e failed to find the
+            # local timezone.
+            log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
+            self.default_timezone = UTC
+        if not isinstance(self.default_timezone, EWSTimeZone):
+            raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % self.default_timezone)
+        if not isinstance(config, (Configuration, type(None))):
+            raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
+        if autodiscover:
+            if config:
+                retry_policy, auth_type = config.retry_policy, config.auth_type
+                if not credentials:
+                    credentials = config.credentials
+            else:
+                retry_policy, auth_type = None, None
+            self.ad_response, self.protocol = discover(
+                email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
+            )
+            primary_smtp_address = self.ad_response.autodiscover_smtp_address
+        else:
+            if not config:
+                raise AttributeError(&#39;non-autodiscover requires a config&#39;)
+            primary_smtp_address = primary_smtp_address
+            self.ad_response = None
+            self.protocol = Protocol(config=config)
+
+        # Other ways of identifying the account can be added later
+        self.identity = Identity(primary_smtp_address=primary_smtp_address)
+
+        # We may need to override the default server version on a per-account basis because Microsoft may report one
+        # server version up-front but delegate account requests to an older backend server.
+        self.version = self.protocol.version
+        log.debug(&#39;Added account: %s&#39;, self)
+
+    @property
+    def primary_smtp_address(self):
+        return self.identity.primary_smtp_address
+
+    @threaded_cached_property
+    def admin_audit_logs(self):
+        return self.root.get_default_folder(AdminAuditLogs)
+
+    @threaded_cached_property
+    def archive_deleted_items(self):
+        return self.archive_root.get_default_folder(ArchiveDeletedItems)
+
+    @threaded_cached_property
+    def archive_inbox(self):
+        return self.archive_root.get_default_folder(ArchiveInbox)
+
+    @threaded_cached_property
+    def archive_msg_folder_root(self):
+        return self.archive_root.get_default_folder(ArchiveMsgFolderRoot)
+
+    @threaded_cached_property
+    def archive_recoverable_items_deletions(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsDeletions)
+
+    @threaded_cached_property
+    def archive_recoverable_items_purges(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsPurges)
+
+    @threaded_cached_property
+    def archive_recoverable_items_root(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsRoot)
+
+    @threaded_cached_property
+    def archive_recoverable_items_versions(self):
+        return self.archive_root.get_default_folder(ArchiveRecoverableItemsVersions)
+
+    @threaded_cached_property
+    def archive_root(self):
+        return ArchiveRoot.get_distinguished(account=self)
+
+    @threaded_cached_property
+    def calendar(self):
+        # If the account contains a shared calendar from a different user, that calendar will be in the folder list.
+        # Attempt not to return one of those. An account may not always have a calendar called &#34;Calendar&#34;, but a
+        # Calendar folder with a localized name instead. Return that, if it&#39;s available, but always prefer any
+        # distinguished folder returned by the server.
+        return self.root.get_default_folder(Calendar)
+
+    @threaded_cached_property
+    def conflicts(self):
+        return self.root.get_default_folder(Conflicts)
+
+    @threaded_cached_property
+    def contacts(self):
+        return self.root.get_default_folder(Contacts)
+
+    @threaded_cached_property
+    def conversation_history(self):
+        return self.root.get_default_folder(ConversationHistory)
+
+    @threaded_cached_property
+    def directory(self):
+        return self.root.get_default_folder(Directory)
+
+    @threaded_cached_property
+    def drafts(self):
+        return self.root.get_default_folder(Drafts)
+
+    @threaded_cached_property
+    def favorites(self):
+        return self.root.get_default_folder(Favorites)
+
+    @threaded_cached_property
+    def im_contact_list(self):
+        return self.root.get_default_folder(IMContactList)
+
+    @threaded_cached_property
+    def inbox(self):
+        return self.root.get_default_folder(Inbox)
+
+    @threaded_cached_property
+    def journal(self):
+        return self.root.get_default_folder(Journal)
+
+    @threaded_cached_property
+    def junk(self):
+        return self.root.get_default_folder(JunkEmail)
+
+    @threaded_cached_property
+    def local_failures(self):
+        return self.root.get_default_folder(LocalFailures)
+
+    @threaded_cached_property
+    def msg_folder_root(self):
+        return self.root.get_default_folder(MsgFolderRoot)
+
+    @threaded_cached_property
+    def my_contacts(self):
+        return self.root.get_default_folder(MyContacts)
+
+    @threaded_cached_property
+    def notes(self):
+        return self.root.get_default_folder(Notes)
+
+    @threaded_cached_property
+    def outbox(self):
+        return self.root.get_default_folder(Outbox)
+
+    @threaded_cached_property
+    def people_connect(self):
+        return self.root.get_default_folder(PeopleConnect)
+
+    @threaded_cached_property
+    def public_folders_root(self):
+        return PublicFoldersRoot.get_distinguished(account=self)
+
+    @threaded_cached_property
+    def quick_contacts(self):
+        return self.root.get_default_folder(QuickContacts)
+
+    @threaded_cached_property
+    def recipient_cache(self):
+        return self.root.get_default_folder(RecipientCache)
+
+    @threaded_cached_property
+    def recoverable_items_deletions(self):
+        return self.root.get_default_folder(RecoverableItemsDeletions)
+
+    @threaded_cached_property
+    def recoverable_items_purges(self):
+        return self.root.get_default_folder(RecoverableItemsPurges)
+
+    @threaded_cached_property
+    def recoverable_items_root(self):
+        return self.root.get_default_folder(RecoverableItemsRoot)
+
+    @threaded_cached_property
+    def recoverable_items_versions(self):
+        return self.root.get_default_folder(RecoverableItemsVersions)
+
+    @threaded_cached_property
+    def root(self):
+        return Root.get_distinguished(account=self)
+
+    @threaded_cached_property
+    def search_folders(self):
+        return self.root.get_default_folder(SearchFolders)
+
+    @threaded_cached_property
+    def sent(self):
+        return self.root.get_default_folder(SentItems)
+
+    @threaded_cached_property
+    def server_failures(self):
+        return self.root.get_default_folder(ServerFailures)
+
+    @threaded_cached_property
+    def sync_issues(self):
+        return self.root.get_default_folder(SyncIssues)
+
+    @threaded_cached_property
+    def tasks(self):
+        return self.root.get_default_folder(Tasks)
+
+    @threaded_cached_property
+    def todo_search(self):
+        return self.root.get_default_folder(ToDoSearch)
+
+    @threaded_cached_property
+    def trash(self):
+        return self.root.get_default_folder(DeletedItems)
+
+    @threaded_cached_property
+    def voice_mail(self):
+        return self.root.get_default_folder(VoiceMail)
+
+    @property
+    def domain(self):
+        return get_domain(self.primary_smtp_address)
+
+    @property
+    def oof_settings(self):
+        # We don&#39;t want to cache this property because then we can&#39;t easily get updates. &#39;threaded_cached_property&#39;
+        # supports the &#39;del self.oof_settings&#39; syntax to invalidate the cache, but does not support custom setter
+        # methods. Having a non-cached service call here goes against the assumption that properties are cheap, but the
+        # alternative is to create get_oof_settings() and set_oof_settings(), and that&#39;s just too Java-ish for my taste.
+        return GetUserOofSettings(account=self).get(
+            mailbox=Mailbox(email_address=self.primary_smtp_address),
+        )
+
+    @oof_settings.setter
+    def oof_settings(self, value):
+        SetUserOofSettings(account=self).get(
+            oof_settings=value,
+            mailbox=Mailbox(email_address=self.primary_smtp_address),
+        )
+
+    def _consume_item_service(self, service_cls, items, chunk_size, kwargs):
+        # &#39;items&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `some_folder.filter(...).delete()`. In
+        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
+        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
+        if isinstance(items, QuerySet):
+            items = items.iterator()
+        is_empty, items = peek(items)
+        if is_empty:
+            # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+            # empty &#39;ids&#39; and return early.
+            return
+        kwargs[&#39;items&#39;] = items
+        for i in service_cls(account=self, chunk_size=chunk_size).call(**kwargs):
+            yield i
+
+    def export(self, items, chunk_size=None):
+        &#34;&#34;&#34;Return export strings of the given items
+
+        Args:
+          items: An iterable containing the Items we want to export
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list of strings, the exported representation of the object
+
+        &#34;&#34;&#34;
+        return list(
+            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+        )
+
+    def upload(self, data, chunk_size=None):
+        &#34;&#34;&#34;Adds objects retrieved from export into the given folders
+
+        Args:
+          data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+            exports.
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list of tuples with the new ids and changekeys
+
+          Example:
+          account.upload([(account.inbox, &#34;AABBCC...&#34;),
+          (account.inbox, &#34;XXYYZZ...&#34;),
+          (account.calendar, &#34;ABCXYZ...&#34;)])
+          -&gt; [(&#34;idA&#34;, &#34;changekey&#34;), (&#34;idB&#34;, &#34;changekey&#34;), (&#34;idC&#34;, &#34;changekey&#34;)]
+
+        &#34;&#34;&#34;
+        return list(
+            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+        )
+
+    def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
+                    chunk_size=None):
+        &#34;&#34;&#34;Creates new items in &#39;folder&#39;
+
+        Args:
+          folder: the folder to create the items in
+          items: an iterable of Item objects
+          message_disposition: only applicable to Message items. Possible values are specified in
+            MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+          send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+            SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+          BulkCreateResult objects are normal Item objects except they only contain the &#39;id&#39; and &#39;changekey&#39;
+          of the created item, and the &#39;id&#39; of any attachments that were also created.
+
+        &#34;&#34;&#34;
+        if isinstance(items, QuerySet):
+            # bulk_create() on a queryset does not make sense because it returns items that have already been created
+            raise ValueError(&#39;Cannot bulk create items from a QuerySet&#39;)
+        log.debug(
+            &#39;Adding items for %s (folder %s, message_disposition: %s, send_meeting_invitations: %s)&#39;,
+            self,
+            folder,
+            message_disposition,
+            send_meeting_invitations,
+        )
+        return list(
+            i if isinstance(i, Exception)
+            else BulkCreateResult.from_xml(elem=i, account=self)
+            for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+                folder=folder,
+                message_disposition=message_disposition,
+                send_meeting_invitations=send_meeting_invitations,
+            ))
+        )
+
+    def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
+                    send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
+                    chunk_size=None):
+        &#34;&#34;&#34;Bulk updates existing items
+
+        Args:
+          items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
+            containing the attributes on this Item object that we want to be updated.
+          conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+            (Default value = AUTO_RESOLVE)
+          message_disposition: only applicable to Message items. Possible values are specified in
+            MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+          send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+            specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
+          suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          a list of either (id, changekey) tuples or exception instances, in the same order as the input
+
+        &#34;&#34;&#34;
+        # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
+        # fact, it could be dangerous if the queryset contains an &#39;.only()&#39;. This would wipe out certain fields
+        # entirely.
+        if isinstance(items, QuerySet):
+            raise ValueError(&#39;Cannot bulk update on a queryset&#39;)
+        log.debug(
+            &#39;Updating items for %s (conflict_resolution %s, message_disposition: %s, send_meeting_invitations: %s)&#39;,
+            self,
+            conflict_resolution,
+            message_disposition,
+            send_meeting_invitations_or_cancellations,
+        )
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+                conflict_resolution=conflict_resolution,
+                message_disposition=message_disposition,
+                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+                suppress_read_receipts=suppress_read_receipts,
+            ))
+        )
+
+    def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
+                    affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+        &#34;&#34;&#34;Bulk deletes items.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+            (Default value = HARD_DELETE)
+          send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+            SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
+          affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+          suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          a list of either True or exception instances, in the same order as the input
+
+        &#34;&#34;&#34;
+        log.debug(
+            &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
+            self,
+            delete_type,
+            send_meeting_cancellations,
+            affected_task_occurrences,
+        )
+        return list(
+            self._consume_item_service(service_cls=DeleteItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                delete_type=delete_type,
+                send_meeting_cancellations=send_meeting_cancellations,
+                affected_task_occurrences=affected_task_occurrences,
+                suppress_read_receipts=suppress_read_receipts,
+            ))
+        )
+
+    def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
+        &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          save_copy: If true, saves a copy of the message (Default value = True)
+          copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          Status for each send operation, in the same order as the input
+
+        &#34;&#34;&#34;
+        if copy_to_folder and not save_copy:
+            raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+        if save_copy and not copy_to_folder:
+            copy_to_folder = self.sent  # &#39;Sent&#39; is default EWS behaviour
+        return list(
+            self._consume_item_service(service_cls=SendItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                saved_item_folder=copy_to_folder,
+            ))
+        )
+
+    def bulk_copy(self, ids, to_folder, chunk_size=None):
+        &#34;&#34;&#34;Copy items to another folder
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          to_folder: The destination folder of the copy operation
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          Status for each send operation, in the same order as the input
+
+        &#34;&#34;&#34;
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                to_folder=to_folder,
+            ))
+        )
+
+    def bulk_move(self, ids, to_folder, chunk_size=None):
+        &#34;&#34;&#34;Move items to another folder
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          to_folder: The destination folder of the copy operation
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
+          folder in a different mailbox, an empty list is returned.
+
+        &#34;&#34;&#34;
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                to_folder=to_folder,
+            ))
+        )
+
+    def bulk_archive(self, ids, to_folder, chunk_size=None):
+        &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
+        to work.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          to_folder: The destination folder of the archive operation
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list containing True or an exception instance in stable order of the requested items
+
+        &#34;&#34;&#34;
+        return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                to_folder=to_folder,
+            ))
+        )
+
+    def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
+        &#34;&#34;&#34;Fetch items by ID
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          folder: used for validating &#39;only_fields&#39; (Default value = None)
+          only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A generator of Item objects, in the same order as the input
+
+        &#34;&#34;&#34;
+        validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
+        # &#39;ids&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
+        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
+        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
+        if only_fields is None:
+            # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+            additional_fields = {
+                FieldPath(field=f) for f in validation_folder.allowed_item_fields(version=self.version)
+            }
+        else:
+            for field in only_fields:
+                validation_folder.validate_item_field(field=field, version=self.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
+                                 if not f.field.is_attribute}
+        # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
+        for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+                additional_fields=additional_fields,
+                shape=ID_ONLY,
+        )):
+            if isinstance(i, Exception):
+                yield i
+            else:
+                item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
+                yield item
+
+    @property
+    def mail_tips(self):
+        &#34;&#34;&#34;See self.oof_settings about caching considerations&#34;&#34;&#34;
+        # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
+        return GetMailTips(protocol=self.protocol).get(
+            sending_as=SendingAs(email_address=self.primary_smtp_address),
+            recipients=[Mailbox(email_address=self.primary_smtp_address)],
+            mail_tips_requested=&#39;All&#39;,
+        )
+
+    @property
+    def delegates(self):
+        &#34;&#34;&#34;Returns a list of DelegateUser objects representing the delegates that are set on this account&#34;&#34;&#34;
+        return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))
+
+    def __str__(self):
+        txt = &#39;%s&#39; % self.primary_smtp_address
+        if self.fullname:
+            txt += &#39; (%s)&#39; % self.fullname
+        return txt</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.account.Account.admin_audit_logs"><code class="name">var <span class="ident">admin_audit_logs</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_deleted_items"><code class="name">var <span class="ident">archive_deleted_items</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_inbox"><code class="name">var <span class="ident">archive_inbox</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_msg_folder_root"><code class="name">var <span class="ident">archive_msg_folder_root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_recoverable_items_deletions"><code class="name">var <span class="ident">archive_recoverable_items_deletions</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_recoverable_items_purges"><code class="name">var <span class="ident">archive_recoverable_items_purges</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_recoverable_items_root"><code class="name">var <span class="ident">archive_recoverable_items_root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_recoverable_items_versions"><code class="name">var <span class="ident">archive_recoverable_items_versions</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.archive_root"><code class="name">var <span class="ident">archive_root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.calendar"><code class="name">var <span class="ident">calendar</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.conflicts"><code class="name">var <span class="ident">conflicts</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.contacts"><code class="name">var <span class="ident">contacts</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.conversation_history"><code class="name">var <span class="ident">conversation_history</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.delegates"><code class="name">var <span class="ident">delegates</span></code></dt>
+<dd>
+<div class="desc"><p>Returns a list of DelegateUser objects representing the delegates that are set on this account</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def delegates(self):
+    &#34;&#34;&#34;Returns a list of DelegateUser objects representing the delegates that are set on this account&#34;&#34;&#34;
+    return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.directory"><code class="name">var <span class="ident">directory</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.domain"><code class="name">var <span class="ident">domain</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def domain(self):
+    return get_domain(self.primary_smtp_address)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.drafts"><code class="name">var <span class="ident">drafts</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.favorites"><code class="name">var <span class="ident">favorites</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.im_contact_list"><code class="name">var <span class="ident">im_contact_list</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.inbox"><code class="name">var <span class="ident">inbox</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.journal"><code class="name">var <span class="ident">journal</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.junk"><code class="name">var <span class="ident">junk</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.local_failures"><code class="name">var <span class="ident">local_failures</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.mail_tips"><code class="name">var <span class="ident">mail_tips</span></code></dt>
+<dd>
+<div class="desc"><p>See self.oof_settings about caching considerations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mail_tips(self):
+    &#34;&#34;&#34;See self.oof_settings about caching considerations&#34;&#34;&#34;
+    # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
+    return GetMailTips(protocol=self.protocol).get(
+        sending_as=SendingAs(email_address=self.primary_smtp_address),
+        recipients=[Mailbox(email_address=self.primary_smtp_address)],
+        mail_tips_requested=&#39;All&#39;,
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.msg_folder_root"><code class="name">var <span class="ident">msg_folder_root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.my_contacts"><code class="name">var <span class="ident">my_contacts</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.notes"><code class="name">var <span class="ident">notes</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.oof_settings"><code class="name">var <span class="ident">oof_settings</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def oof_settings(self):
+    # We don&#39;t want to cache this property because then we can&#39;t easily get updates. &#39;threaded_cached_property&#39;
+    # supports the &#39;del self.oof_settings&#39; syntax to invalidate the cache, but does not support custom setter
+    # methods. Having a non-cached service call here goes against the assumption that properties are cheap, but the
+    # alternative is to create get_oof_settings() and set_oof_settings(), and that&#39;s just too Java-ish for my taste.
+    return GetUserOofSettings(account=self).get(
+        mailbox=Mailbox(email_address=self.primary_smtp_address),
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.outbox"><code class="name">var <span class="ident">outbox</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.people_connect"><code class="name">var <span class="ident">people_connect</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.primary_smtp_address"><code class="name">var <span class="ident">primary_smtp_address</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def primary_smtp_address(self):
+    return self.identity.primary_smtp_address</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.public_folders_root"><code class="name">var <span class="ident">public_folders_root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.quick_contacts"><code class="name">var <span class="ident">quick_contacts</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.recipient_cache"><code class="name">var <span class="ident">recipient_cache</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.recoverable_items_deletions"><code class="name">var <span class="ident">recoverable_items_deletions</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.recoverable_items_purges"><code class="name">var <span class="ident">recoverable_items_purges</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.recoverable_items_root"><code class="name">var <span class="ident">recoverable_items_root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.recoverable_items_versions"><code class="name">var <span class="ident">recoverable_items_versions</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.root"><code class="name">var <span class="ident">root</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.search_folders"><code class="name">var <span class="ident">search_folders</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.sent"><code class="name">var <span class="ident">sent</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.server_failures"><code class="name">var <span class="ident">server_failures</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.sync_issues"><code class="name">var <span class="ident">sync_issues</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.tasks"><code class="name">var <span class="ident">tasks</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.todo_search"><code class="name">var <span class="ident">todo_search</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.trash"><code class="name">var <span class="ident">trash</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.voice_mail"><code class="name">var <span class="ident">voice_mail</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.account.Account.bulk_archive"><code class="name flex">
+<span>def <span class="ident">bulk_archive</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
+to work.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>to_folder</code></strong></dt>
+<dd>The destination folder of the archive operation</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list containing True or an exception instance in stable order of the requested items</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_archive(self, ids, to_folder, chunk_size=None):
+    &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
+    to work.
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      to_folder: The destination folder of the archive operation
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      A list containing True or an exception instance in stable order of the requested items
+
+    &#34;&#34;&#34;
+    return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.bulk_copy"><code class="name flex">
+<span>def <span class="ident">bulk_copy</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Copy items to another folder</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>to_folder</code></strong></dt>
+<dd>The destination folder of the copy operation</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Status for each send operation, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_copy(self, ids, to_folder, chunk_size=None):
+    &#34;&#34;&#34;Copy items to another folder
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      to_folder: The destination folder of the copy operation
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      Status for each send operation, in the same order as the input
+
+    &#34;&#34;&#34;
+    return list(
+        i if isinstance(i, Exception) else Item.id_from_xml(i)
+        for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.bulk_create"><code class="name flex">
+<span>def <span class="ident">bulk_create</span></span>(<span>self, folder, items, message_disposition='SaveOnly', send_meeting_invitations='SendToNone', chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates new items in 'folder'</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>folder</code></strong></dt>
+<dd>the folder to create the items in</dd>
+<dt><strong><code>items</code></strong></dt>
+<dd>an iterable of Item objects</dd>
+<dt><strong><code>message_disposition</code></strong></dt>
+<dd>only applicable to Message items. Possible values are specified in
+MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)</dd>
+<dt><strong><code>send_meeting_invitations</code></strong></dt>
+<dd>only applicable to CalendarItem items. Possible values are specified in
+SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+BulkCreateResult objects are normal Item objects except they only contain the 'id' and 'changekey'
+of the created item, and the 'id' of any attachments that were also created.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
+                chunk_size=None):
+    &#34;&#34;&#34;Creates new items in &#39;folder&#39;
+
+    Args:
+      folder: the folder to create the items in
+      items: an iterable of Item objects
+      message_disposition: only applicable to Message items. Possible values are specified in
+        MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+      send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+        SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+      BulkCreateResult objects are normal Item objects except they only contain the &#39;id&#39; and &#39;changekey&#39;
+      of the created item, and the &#39;id&#39; of any attachments that were also created.
+
+    &#34;&#34;&#34;
+    if isinstance(items, QuerySet):
+        # bulk_create() on a queryset does not make sense because it returns items that have already been created
+        raise ValueError(&#39;Cannot bulk create items from a QuerySet&#39;)
+    log.debug(
+        &#39;Adding items for %s (folder %s, message_disposition: %s, send_meeting_invitations: %s)&#39;,
+        self,
+        folder,
+        message_disposition,
+        send_meeting_invitations,
+    )
+    return list(
+        i if isinstance(i, Exception)
+        else BulkCreateResult.from_xml(elem=i, account=self)
+        for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            folder=folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=send_meeting_invitations,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.bulk_delete"><code class="name flex">
+<span>def <span class="ident">bulk_delete</span></span>(<span>self, ids, delete_type='HardDelete', send_meeting_cancellations='SendToNone', affected_task_occurrences='AllOccurrences', suppress_read_receipts=True, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Bulk deletes items.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>delete_type</code></strong></dt>
+<dd>the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+(Default value = HARD_DELETE)</dd>
+<dt><strong><code>send_meeting_cancellations</code></strong></dt>
+<dd>only applicable to CalendarItem. Possible values are specified in
+SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)</dd>
+<dt><strong><code>affected_task_occurrences</code></strong></dt>
+<dd>only applicable for recurring Task items. Possible values are specified in
+AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)</dd>
+<dt><strong><code>suppress_read_receipts</code></strong></dt>
+<dd>only supported from Exchange 2013. True or False. (Default value = True)</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a list of either True or exception instances, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
+                affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+    &#34;&#34;&#34;Bulk deletes items.
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+        (Default value = HARD_DELETE)
+      send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+        SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
+      affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+        AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+      suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      a list of either True or exception instances, in the same order as the input
+
+    &#34;&#34;&#34;
+    log.debug(
+        &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
+        self,
+        delete_type,
+        send_meeting_cancellations,
+        affected_task_occurrences,
+    )
+    return list(
+        self._consume_item_service(service_cls=DeleteItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            delete_type=delete_type,
+            send_meeting_cancellations=send_meeting_cancellations,
+            affected_task_occurrences=affected_task_occurrences,
+            suppress_read_receipts=suppress_read_receipts,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.bulk_move"><code class="name flex">
+<span>def <span class="ident">bulk_move</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Move items to another folder</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>to_folder</code></strong></dt>
+<dd>The destination folder of the copy operation</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The new IDs of the moved items, in the same order as the input. If 'to_folder' is a public folder or a
+folder in a different mailbox, an empty list is returned.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_move(self, ids, to_folder, chunk_size=None):
+    &#34;&#34;&#34;Move items to another folder
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      to_folder: The destination folder of the copy operation
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
+      folder in a different mailbox, an empty list is returned.
+
+    &#34;&#34;&#34;
+    return list(
+        i if isinstance(i, Exception) else Item.id_from_xml(i)
+        for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.bulk_send"><code class="name flex">
+<span>def <span class="ident">bulk_send</span></span>(<span>self, ids, save_copy=True, copy_to_folder=None, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send existing draft messages. If requested, save a copy in 'copy_to_folder'</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>save_copy</code></strong></dt>
+<dd>If true, saves a copy of the message (Default value = True)</dd>
+<dt><strong><code>copy_to_folder</code></strong></dt>
+<dd>If requested, save a copy of the message in this folder. Default is the Sent folder</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Status for each send operation, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
+    &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      save_copy: If true, saves a copy of the message (Default value = True)
+      copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      Status for each send operation, in the same order as the input
+
+    &#34;&#34;&#34;
+    if copy_to_folder and not save_copy:
+        raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+    if save_copy and not copy_to_folder:
+        copy_to_folder = self.sent  # &#39;Sent&#39; is default EWS behaviour
+    return list(
+        self._consume_item_service(service_cls=SendItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            saved_item_folder=copy_to_folder,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.bulk_update"><code class="name flex">
+<span>def <span class="ident">bulk_update</span></span>(<span>self, items, conflict_resolution='AutoResolve', message_disposition='SaveOnly', send_meeting_invitations_or_cancellations='SendToNone', suppress_read_receipts=True, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Bulk updates existing items</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>items</code></strong></dt>
+<dd>a list of (Item, fieldnames) tuples, where 'Item' is an Item object, and 'fieldnames' is a list
+containing the attributes on this Item object that we want to be updated.</dd>
+<dt><strong><code>conflict_resolution</code></strong></dt>
+<dd>Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+(Default value = AUTO_RESOLVE)</dd>
+<dt><strong><code>message_disposition</code></strong></dt>
+<dd>only applicable to Message items. Possible values are specified in
+MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)</dd>
+<dt><strong><code>send_meeting_invitations_or_cancellations</code></strong></dt>
+<dd>only applicable to CalendarItem items. Possible values are
+specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)</dd>
+<dt><strong><code>suppress_read_receipts</code></strong></dt>
+<dd>nly supported from Exchange 2013. True or False (Default value = True)</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a list of either (id, changekey) tuples or exception instances, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
+                send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
+                chunk_size=None):
+    &#34;&#34;&#34;Bulk updates existing items
+
+    Args:
+      items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
+        containing the attributes on this Item object that we want to be updated.
+      conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+        (Default value = AUTO_RESOLVE)
+      message_disposition: only applicable to Message items. Possible values are specified in
+        MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+      send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+        specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
+      suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      a list of either (id, changekey) tuples or exception instances, in the same order as the input
+
+    &#34;&#34;&#34;
+    # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
+    # fact, it could be dangerous if the queryset contains an &#39;.only()&#39;. This would wipe out certain fields
+    # entirely.
+    if isinstance(items, QuerySet):
+        raise ValueError(&#39;Cannot bulk update on a queryset&#39;)
+    log.debug(
+        &#39;Updating items for %s (conflict_resolution %s, message_disposition: %s, send_meeting_invitations: %s)&#39;,
+        self,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+    )
+    return list(
+        i if isinstance(i, Exception) else Item.id_from_xml(i)
+        for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        ))
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.export"><code class="name flex">
+<span>def <span class="ident">export</span></span>(<span>self, items, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return export strings of the given items</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>items</code></strong></dt>
+<dd>An iterable containing the Items we want to export</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list of strings, the exported representation of the object</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def export(self, items, chunk_size=None):
+    &#34;&#34;&#34;Return export strings of the given items
+
+    Args:
+      items: An iterable containing the Items we want to export
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      A list of strings, the exported representation of the object
+
+    &#34;&#34;&#34;
+    return list(
+        self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.fetch"><code class="name flex">
+<span>def <span class="ident">fetch</span></span>(<span>self, ids, folder=None, only_fields=None, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetch items by ID</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>folder</code></strong></dt>
+<dd>used for validating 'only_fields' (Default value = None)</dd>
+<dt><strong><code>only_fields</code></strong></dt>
+<dd>A list of string or FieldPath items specifying the fields to fetch. Default to all fields</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A generator of Item objects, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
+    &#34;&#34;&#34;Fetch items by ID
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      folder: used for validating &#39;only_fields&#39; (Default value = None)
+      only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      A generator of Item objects, in the same order as the input
+
+    &#34;&#34;&#34;
+    validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
+    # &#39;ids&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
+    # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
+    # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
+    if only_fields is None:
+        # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+        additional_fields = {
+            FieldPath(field=f) for f in validation_folder.allowed_item_fields(version=self.version)
+        }
+    else:
+        for field in only_fields:
+            validation_folder.validate_item_field(field=field, version=self.version)
+        # Remove ItemId and ChangeKey. We get them unconditionally
+        additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
+                             if not f.field.is_attribute}
+    # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
+    for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            additional_fields=additional_fields,
+            shape=ID_ONLY,
+    )):
+        if isinstance(i, Exception):
+            yield i
+        else:
+            item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
+            yield item</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.upload"><code class="name flex">
+<span>def <span class="ident">upload</span></span>(<span>self, data, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds objects retrieved from export into the given folders</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong></dt>
+<dd>An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+exports.</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list of tuples with the new ids and changekeys</p>
+<p>Example:
+account.upload([(account.inbox, "AABBCC&hellip;"),
+(account.inbox, "XXYYZZ&hellip;"),
+(account.calendar, "ABCXYZ&hellip;")])
+-&gt; [("idA", "changekey"), ("idB", "changekey"), ("idC", "changekey")]</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def upload(self, data, chunk_size=None):
+    &#34;&#34;&#34;Adds objects retrieved from export into the given folders
+
+    Args:
+      data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+        exports.
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      A list of tuples with the new ids and changekeys
+
+      Example:
+      account.upload([(account.inbox, &#34;AABBCC...&#34;),
+      (account.inbox, &#34;XXYYZZ...&#34;),
+      (account.calendar, &#34;ABCXYZ...&#34;)])
+      -&gt; [(&#34;idA&#34;, &#34;changekey&#34;), (&#34;idB&#34;, &#34;changekey&#34;), (&#34;idC&#34;, &#34;changekey&#34;)]
+
+    &#34;&#34;&#34;
+    return list(
+        self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+    )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.account.Identity"><code class="flex name class">
+<span>class <span class="ident">Identity</span></span>
+<span>(</span><span>primary_smtp_address=None, smtp_address=None, upn=None, sid=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>primary_smtp_address</code></strong></dt>
+<dd>The primary email address associated with the account (Default value = None)</dd>
+<dt><strong><code>smtp_address</code></strong></dt>
+<dd>The (non-)primary email address associated with the account (Default value = None)</dd>
+<dt><strong><code>upn</code></strong></dt>
+<dd>(Default value = None)</dd>
+<dt><strong><code>sid</code></strong></dt>
+<dd>(Default value = None)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Identity:
+    &#34;&#34;&#34;Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.&#34;&#34;&#34;
+
+    def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
+        &#34;&#34;&#34;
+
+        Args:
+          primary_smtp_address: The primary email address associated with the account (Default value = None)
+          smtp_address: The (non-)primary email address associated with the account (Default value = None)
+          upn:  (Default value = None)
+          sid:  (Default value = None)
+
+        &#34;&#34;&#34;
+        self.primary_smtp_address = primary_smtp_address
+        self.smtp_address = smtp_address
+        self.upn = upn
+        self.sid = sid
+
+    def __eq__(self, other):
+        for k in self.__dict__.keys():
+            if getattr(self, k) != getattr(other, k):
+                return False
+        return True
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __repr__(self):
+        return self.__class__.__name__ + repr((self.primary_smtp_address, self.smtp_address, self.upn, self.sid))</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib" href="index.html">exchangelib</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="exchangelib.account.Account" href="#exchangelib.account.Account">Account</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.account.Account.admin_audit_logs" href="#exchangelib.account.Account.admin_audit_logs">admin_audit_logs</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_deleted_items" href="#exchangelib.account.Account.archive_deleted_items">archive_deleted_items</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_inbox" href="#exchangelib.account.Account.archive_inbox">archive_inbox</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_msg_folder_root" href="#exchangelib.account.Account.archive_msg_folder_root">archive_msg_folder_root</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_recoverable_items_deletions" href="#exchangelib.account.Account.archive_recoverable_items_deletions">archive_recoverable_items_deletions</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_recoverable_items_purges" href="#exchangelib.account.Account.archive_recoverable_items_purges">archive_recoverable_items_purges</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_recoverable_items_root" href="#exchangelib.account.Account.archive_recoverable_items_root">archive_recoverable_items_root</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_recoverable_items_versions" href="#exchangelib.account.Account.archive_recoverable_items_versions">archive_recoverable_items_versions</a></code></li>
+<li><code><a title="exchangelib.account.Account.archive_root" href="#exchangelib.account.Account.archive_root">archive_root</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_archive" href="#exchangelib.account.Account.bulk_archive">bulk_archive</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_copy" href="#exchangelib.account.Account.bulk_copy">bulk_copy</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_create" href="#exchangelib.account.Account.bulk_create">bulk_create</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_delete" href="#exchangelib.account.Account.bulk_delete">bulk_delete</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_move" href="#exchangelib.account.Account.bulk_move">bulk_move</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_send" href="#exchangelib.account.Account.bulk_send">bulk_send</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_update" href="#exchangelib.account.Account.bulk_update">bulk_update</a></code></li>
+<li><code><a title="exchangelib.account.Account.calendar" href="#exchangelib.account.Account.calendar">calendar</a></code></li>
+<li><code><a title="exchangelib.account.Account.conflicts" href="#exchangelib.account.Account.conflicts">conflicts</a></code></li>
+<li><code><a title="exchangelib.account.Account.contacts" href="#exchangelib.account.Account.contacts">contacts</a></code></li>
+<li><code><a title="exchangelib.account.Account.conversation_history" href="#exchangelib.account.Account.conversation_history">conversation_history</a></code></li>
+<li><code><a title="exchangelib.account.Account.delegates" href="#exchangelib.account.Account.delegates">delegates</a></code></li>
+<li><code><a title="exchangelib.account.Account.directory" href="#exchangelib.account.Account.directory">directory</a></code></li>
+<li><code><a title="exchangelib.account.Account.domain" href="#exchangelib.account.Account.domain">domain</a></code></li>
+<li><code><a title="exchangelib.account.Account.drafts" href="#exchangelib.account.Account.drafts">drafts</a></code></li>
+<li><code><a title="exchangelib.account.Account.export" href="#exchangelib.account.Account.export">export</a></code></li>
+<li><code><a title="exchangelib.account.Account.favorites" href="#exchangelib.account.Account.favorites">favorites</a></code></li>
+<li><code><a title="exchangelib.account.Account.fetch" href="#exchangelib.account.Account.fetch">fetch</a></code></li>
+<li><code><a title="exchangelib.account.Account.im_contact_list" href="#exchangelib.account.Account.im_contact_list">im_contact_list</a></code></li>
+<li><code><a title="exchangelib.account.Account.inbox" href="#exchangelib.account.Account.inbox">inbox</a></code></li>
+<li><code><a title="exchangelib.account.Account.journal" href="#exchangelib.account.Account.journal">journal</a></code></li>
+<li><code><a title="exchangelib.account.Account.junk" href="#exchangelib.account.Account.junk">junk</a></code></li>
+<li><code><a title="exchangelib.account.Account.local_failures" href="#exchangelib.account.Account.local_failures">local_failures</a></code></li>
+<li><code><a title="exchangelib.account.Account.mail_tips" href="#exchangelib.account.Account.mail_tips">mail_tips</a></code></li>
+<li><code><a title="exchangelib.account.Account.msg_folder_root" href="#exchangelib.account.Account.msg_folder_root">msg_folder_root</a></code></li>
+<li><code><a title="exchangelib.account.Account.my_contacts" href="#exchangelib.account.Account.my_contacts">my_contacts</a></code></li>
+<li><code><a title="exchangelib.account.Account.notes" href="#exchangelib.account.Account.notes">notes</a></code></li>
+<li><code><a title="exchangelib.account.Account.oof_settings" href="#exchangelib.account.Account.oof_settings">oof_settings</a></code></li>
+<li><code><a title="exchangelib.account.Account.outbox" href="#exchangelib.account.Account.outbox">outbox</a></code></li>
+<li><code><a title="exchangelib.account.Account.people_connect" href="#exchangelib.account.Account.people_connect">people_connect</a></code></li>
+<li><code><a title="exchangelib.account.Account.primary_smtp_address" href="#exchangelib.account.Account.primary_smtp_address">primary_smtp_address</a></code></li>
+<li><code><a title="exchangelib.account.Account.public_folders_root" href="#exchangelib.account.Account.public_folders_root">public_folders_root</a></code></li>
+<li><code><a title="exchangelib.account.Account.quick_contacts" href="#exchangelib.account.Account.quick_contacts">quick_contacts</a></code></li>
+<li><code><a title="exchangelib.account.Account.recipient_cache" href="#exchangelib.account.Account.recipient_cache">recipient_cache</a></code></li>
+<li><code><a title="exchangelib.account.Account.recoverable_items_deletions" href="#exchangelib.account.Account.recoverable_items_deletions">recoverable_items_deletions</a></code></li>
+<li><code><a title="exchangelib.account.Account.recoverable_items_purges" href="#exchangelib.account.Account.recoverable_items_purges">recoverable_items_purges</a></code></li>
+<li><code><a title="exchangelib.account.Account.recoverable_items_root" href="#exchangelib.account.Account.recoverable_items_root">recoverable_items_root</a></code></li>
+<li><code><a title="exchangelib.account.Account.recoverable_items_versions" href="#exchangelib.account.Account.recoverable_items_versions">recoverable_items_versions</a></code></li>
+<li><code><a title="exchangelib.account.Account.root" href="#exchangelib.account.Account.root">root</a></code></li>
+<li><code><a title="exchangelib.account.Account.search_folders" href="#exchangelib.account.Account.search_folders">search_folders</a></code></li>
+<li><code><a title="exchangelib.account.Account.sent" href="#exchangelib.account.Account.sent">sent</a></code></li>
+<li><code><a title="exchangelib.account.Account.server_failures" href="#exchangelib.account.Account.server_failures">server_failures</a></code></li>
+<li><code><a title="exchangelib.account.Account.sync_issues" href="#exchangelib.account.Account.sync_issues">sync_issues</a></code></li>
+<li><code><a title="exchangelib.account.Account.tasks" href="#exchangelib.account.Account.tasks">tasks</a></code></li>
+<li><code><a title="exchangelib.account.Account.todo_search" href="#exchangelib.account.Account.todo_search">todo_search</a></code></li>
+<li><code><a title="exchangelib.account.Account.trash" href="#exchangelib.account.Account.trash">trash</a></code></li>
+<li><code><a title="exchangelib.account.Account.upload" href="#exchangelib.account.Account.upload">upload</a></code></li>
+<li><code><a title="exchangelib.account.Account.voice_mail" href="#exchangelib.account.Account.voice_mail">voice_mail</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.account.Identity" href="#exchangelib.account.Identity">Identity</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

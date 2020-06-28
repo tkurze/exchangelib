@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.winzone API documentation</title>
+<meta name="description" content="A dict to translate from pytz location name to Windows timezone name. Translations taken from
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.winzone</code></h1>
+</header>
+<section id="section-intro">
+<p>A dict to translate from pytz location name to Windows timezone name. Translations taken from
+<a href="http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml">http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a></p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34; A dict to translate from pytz location name to Windows timezone name. Translations taken from
+http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml &#34;&#34;&#34;
+import re
+
+import requests
+
+from .util import to_xml
+
+CLDR_WINZONE_URL = &#39;https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml&#39;
+DEFAULT_TERRITORY = &#39;001&#39;
+
+
+def generate_map(timeout=10):
+    &#34;&#34;&#34;Helper method to update the map if the CLDR database is updated
+
+    Args:
+      timeout:  (Default value = 10)
+
+    &#34;&#34;&#34;
+    r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
+    if r.status_code != 200:
+        raise ValueError(&#39;Unexpected response: %s&#39; % r)
+    tz_map = {}
+    for e in to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;).findall(&#39;mapZone&#39;):
+        for location in re.split(r&#39;\s+&#39;, e.get(&#39;type&#39;)):
+            if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
+                # Prefer default territory. This is so MS_TIMEZONE_TO_PYTZ_MAP maps from MS timezone ID back to the
+                # &#34;preferred&#34; region/location timezone name.
+                if not location:
+                    raise ValueError(&#39;Expected location&#39;)
+                tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
+    return tz_map
+
+
+# This map is generated irregularly from generate_map(). Do not edit manually - make corrections to
+# PYTZ_TO_MS_TIMEZONE_MAP instead. We provide this map to avoid hammering the CLDR_WINZONE_URL.
+#
+# This list was generated from CLDR_WINZONE_URL version 2019b.
+CLDR_TO_MS_TIMEZONE_MAP = {
+    &#39;Africa/Abidjan&#39;: (&#39;Greenwich Standard Time&#39;, &#39;CI&#39;),
+    &#39;Africa/Accra&#39;: (&#39;Greenwich Standard Time&#39;, &#39;GH&#39;),
+    &#39;Africa/Addis_Ababa&#39;: (&#39;E. Africa Standard Time&#39;, &#39;ET&#39;),
+    &#39;Africa/Algiers&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;DZ&#39;),
+    &#39;Africa/Asmera&#39;: (&#39;E. Africa Standard Time&#39;, &#39;ER&#39;),
+    &#39;Africa/Bamako&#39;: (&#39;Greenwich Standard Time&#39;, &#39;ML&#39;),
+    &#39;Africa/Bangui&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;CF&#39;),
+    &#39;Africa/Banjul&#39;: (&#39;Greenwich Standard Time&#39;, &#39;GM&#39;),
+    &#39;Africa/Bissau&#39;: (&#39;Greenwich Standard Time&#39;, &#39;GW&#39;),
+    &#39;Africa/Blantyre&#39;: (&#39;South Africa Standard Time&#39;, &#39;MW&#39;),
+    &#39;Africa/Brazzaville&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;CG&#39;),
+    &#39;Africa/Bujumbura&#39;: (&#39;South Africa Standard Time&#39;, &#39;BI&#39;),
+    &#39;Africa/Cairo&#39;: (&#39;Egypt Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Casablanca&#39;: (&#39;Morocco Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Ceuta&#39;: (&#39;Romance Standard Time&#39;, &#39;ES&#39;),
+    &#39;Africa/Conakry&#39;: (&#39;Greenwich Standard Time&#39;, &#39;GN&#39;),
+    &#39;Africa/Dakar&#39;: (&#39;Greenwich Standard Time&#39;, &#39;SN&#39;),
+    &#39;Africa/Dar_es_Salaam&#39;: (&#39;E. Africa Standard Time&#39;, &#39;TZ&#39;),
+    &#39;Africa/Djibouti&#39;: (&#39;E. Africa Standard Time&#39;, &#39;DJ&#39;),
+    &#39;Africa/Douala&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;CM&#39;),
+    &#39;Africa/El_Aaiun&#39;: (&#39;Morocco Standard Time&#39;, &#39;EH&#39;),
+    &#39;Africa/Freetown&#39;: (&#39;Greenwich Standard Time&#39;, &#39;SL&#39;),
+    &#39;Africa/Gaborone&#39;: (&#39;South Africa Standard Time&#39;, &#39;BW&#39;),
+    &#39;Africa/Harare&#39;: (&#39;South Africa Standard Time&#39;, &#39;ZW&#39;),
+    &#39;Africa/Johannesburg&#39;: (&#39;South Africa Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Juba&#39;: (&#39;E. Africa Standard Time&#39;, &#39;SS&#39;),
+    &#39;Africa/Kampala&#39;: (&#39;E. Africa Standard Time&#39;, &#39;UG&#39;),
+    &#39;Africa/Khartoum&#39;: (&#39;Sudan Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Kigali&#39;: (&#39;South Africa Standard Time&#39;, &#39;RW&#39;),
+    &#39;Africa/Kinshasa&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;CD&#39;),
+    &#39;Africa/Lagos&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Libreville&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;GA&#39;),
+    &#39;Africa/Lome&#39;: (&#39;Greenwich Standard Time&#39;, &#39;TG&#39;),
+    &#39;Africa/Luanda&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;AO&#39;),
+    &#39;Africa/Lubumbashi&#39;: (&#39;South Africa Standard Time&#39;, &#39;CD&#39;),
+    &#39;Africa/Lusaka&#39;: (&#39;South Africa Standard Time&#39;, &#39;ZM&#39;),
+    &#39;Africa/Malabo&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;GQ&#39;),
+    &#39;Africa/Maputo&#39;: (&#39;South Africa Standard Time&#39;, &#39;MZ&#39;),
+    &#39;Africa/Maseru&#39;: (&#39;South Africa Standard Time&#39;, &#39;LS&#39;),
+    &#39;Africa/Mbabane&#39;: (&#39;South Africa Standard Time&#39;, &#39;SZ&#39;),
+    &#39;Africa/Mogadishu&#39;: (&#39;E. Africa Standard Time&#39;, &#39;SO&#39;),
+    &#39;Africa/Monrovia&#39;: (&#39;Greenwich Standard Time&#39;, &#39;LR&#39;),
+    &#39;Africa/Nairobi&#39;: (&#39;E. Africa Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Ndjamena&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;TD&#39;),
+    &#39;Africa/Niamey&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;NE&#39;),
+    &#39;Africa/Nouakchott&#39;: (&#39;Greenwich Standard Time&#39;, &#39;MR&#39;),
+    &#39;Africa/Ouagadougou&#39;: (&#39;Greenwich Standard Time&#39;, &#39;BF&#39;),
+    &#39;Africa/Porto-Novo&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;BJ&#39;),
+    &#39;Africa/Sao_Tome&#39;: (&#39;Sao Tome Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Tripoli&#39;: (&#39;Libya Standard Time&#39;, &#39;001&#39;),
+    &#39;Africa/Tunis&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;TN&#39;),
+    &#39;Africa/Windhoek&#39;: (&#39;Namibia Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Adak&#39;: (&#39;Aleutian Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Anchorage&#39;: (&#39;Alaskan Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Anguilla&#39;: (&#39;SA Western Standard Time&#39;, &#39;AI&#39;),
+    &#39;America/Antigua&#39;: (&#39;SA Western Standard Time&#39;, &#39;AG&#39;),
+    &#39;America/Araguaina&#39;: (&#39;Tocantins Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Argentina/La_Rioja&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Argentina/Rio_Gallegos&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Argentina/Salta&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Argentina/San_Juan&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Argentina/San_Luis&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Argentina/Tucuman&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Argentina/Ushuaia&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Aruba&#39;: (&#39;SA Western Standard Time&#39;, &#39;AW&#39;),
+    &#39;America/Asuncion&#39;: (&#39;Paraguay Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Bahia&#39;: (&#39;Bahia Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Bahia_Banderas&#39;: (&#39;Central Standard Time (Mexico)&#39;, &#39;MX&#39;),
+    &#39;America/Barbados&#39;: (&#39;SA Western Standard Time&#39;, &#39;BB&#39;),
+    &#39;America/Belem&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Belize&#39;: (&#39;Central America Standard Time&#39;, &#39;BZ&#39;),
+    &#39;America/Blanc-Sablon&#39;: (&#39;SA Western Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Boa_Vista&#39;: (&#39;SA Western Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Bogota&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Boise&#39;: (&#39;Mountain Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Buenos_Aires&#39;: (&#39;Argentina Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Cambridge_Bay&#39;: (&#39;Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Campo_Grande&#39;: (&#39;Central Brazilian Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Cancun&#39;: (&#39;Eastern Standard Time (Mexico)&#39;, &#39;001&#39;),
+    &#39;America/Caracas&#39;: (&#39;Venezuela Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Catamarca&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Cayenne&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Cayman&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;KY&#39;),
+    &#39;America/Chicago&#39;: (&#39;Central Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Chihuahua&#39;: (&#39;Mountain Standard Time (Mexico)&#39;, &#39;001&#39;),
+    &#39;America/Coral_Harbour&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Cordoba&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Costa_Rica&#39;: (&#39;Central America Standard Time&#39;, &#39;CR&#39;),
+    &#39;America/Creston&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Cuiaba&#39;: (&#39;Central Brazilian Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Curacao&#39;: (&#39;SA Western Standard Time&#39;, &#39;CW&#39;),
+    &#39;America/Danmarkshavn&#39;: (&#39;UTC&#39;, &#39;GL&#39;),
+    &#39;America/Dawson&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Dawson_Creek&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Denver&#39;: (&#39;Mountain Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Detroit&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Dominica&#39;: (&#39;SA Western Standard Time&#39;, &#39;DM&#39;),
+    &#39;America/Edmonton&#39;: (&#39;Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Eirunepe&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/El_Salvador&#39;: (&#39;Central America Standard Time&#39;, &#39;SV&#39;),
+    &#39;America/Fort_Nelson&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Fortaleza&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Glace_Bay&#39;: (&#39;Atlantic Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Godthab&#39;: (&#39;Greenland Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Goose_Bay&#39;: (&#39;Atlantic Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Grand_Turk&#39;: (&#39;Turks And Caicos Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Grenada&#39;: (&#39;SA Western Standard Time&#39;, &#39;GD&#39;),
+    &#39;America/Guadeloupe&#39;: (&#39;SA Western Standard Time&#39;, &#39;GP&#39;),
+    &#39;America/Guatemala&#39;: (&#39;Central America Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Guayaquil&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;EC&#39;),
+    &#39;America/Guyana&#39;: (&#39;SA Western Standard Time&#39;, &#39;GY&#39;),
+    &#39;America/Halifax&#39;: (&#39;Atlantic Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Havana&#39;: (&#39;Cuba Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Hermosillo&#39;: (&#39;US Mountain Standard Time&#39;, &#39;MX&#39;),
+    &#39;America/Indiana/Knox&#39;: (&#39;Central Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indiana/Marengo&#39;: (&#39;US Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indiana/Petersburg&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indiana/Tell_City&#39;: (&#39;Central Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indiana/Vevay&#39;: (&#39;US Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indiana/Vincennes&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indiana/Winamac&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Indianapolis&#39;: (&#39;US Eastern Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Inuvik&#39;: (&#39;Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Iqaluit&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Jamaica&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;JM&#39;),
+    &#39;America/Jujuy&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Juneau&#39;: (&#39;Alaskan Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Kentucky/Monticello&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Kralendijk&#39;: (&#39;SA Western Standard Time&#39;, &#39;BQ&#39;),
+    &#39;America/La_Paz&#39;: (&#39;SA Western Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Lima&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;PE&#39;),
+    &#39;America/Los_Angeles&#39;: (&#39;Pacific Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Louisville&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Lower_Princes&#39;: (&#39;SA Western Standard Time&#39;, &#39;SX&#39;),
+    &#39;America/Maceio&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Managua&#39;: (&#39;Central America Standard Time&#39;, &#39;NI&#39;),
+    &#39;America/Manaus&#39;: (&#39;SA Western Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Marigot&#39;: (&#39;SA Western Standard Time&#39;, &#39;MF&#39;),
+    &#39;America/Martinique&#39;: (&#39;SA Western Standard Time&#39;, &#39;MQ&#39;),
+    &#39;America/Matamoros&#39;: (&#39;Central Standard Time&#39;, &#39;MX&#39;),
+    &#39;America/Mazatlan&#39;: (&#39;Mountain Standard Time (Mexico)&#39;, &#39;MX&#39;),
+    &#39;America/Mendoza&#39;: (&#39;Argentina Standard Time&#39;, &#39;AR&#39;),
+    &#39;America/Menominee&#39;: (&#39;Central Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Merida&#39;: (&#39;Central Standard Time (Mexico)&#39;, &#39;MX&#39;),
+    &#39;America/Metlakatla&#39;: (&#39;Alaskan Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Mexico_City&#39;: (&#39;Central Standard Time (Mexico)&#39;, &#39;001&#39;),
+    &#39;America/Miquelon&#39;: (&#39;Saint Pierre Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Moncton&#39;: (&#39;Atlantic Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Monterrey&#39;: (&#39;Central Standard Time (Mexico)&#39;, &#39;MX&#39;),
+    &#39;America/Montevideo&#39;: (&#39;Montevideo Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Montreal&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Montserrat&#39;: (&#39;SA Western Standard Time&#39;, &#39;MS&#39;),
+    &#39;America/Nassau&#39;: (&#39;Eastern Standard Time&#39;, &#39;BS&#39;),
+    &#39;America/New_York&#39;: (&#39;Eastern Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Nipigon&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Nome&#39;: (&#39;Alaskan Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Noronha&#39;: (&#39;UTC-02&#39;, &#39;BR&#39;),
+    &#39;America/North_Dakota/Beulah&#39;: (&#39;Central Standard Time&#39;, &#39;US&#39;),
+    &#39;America/North_Dakota/Center&#39;: (&#39;Central Standard Time&#39;, &#39;US&#39;),
+    &#39;America/North_Dakota/New_Salem&#39;: (&#39;Central Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Ojinaga&#39;: (&#39;Mountain Standard Time&#39;, &#39;MX&#39;),
+    &#39;America/Panama&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;PA&#39;),
+    &#39;America/Pangnirtung&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Paramaribo&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;SR&#39;),
+    &#39;America/Phoenix&#39;: (&#39;US Mountain Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Port-au-Prince&#39;: (&#39;Haiti Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Port_of_Spain&#39;: (&#39;SA Western Standard Time&#39;, &#39;TT&#39;),
+    &#39;America/Porto_Velho&#39;: (&#39;SA Western Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Puerto_Rico&#39;: (&#39;SA Western Standard Time&#39;, &#39;PR&#39;),
+    &#39;America/Punta_Arenas&#39;: (&#39;Magallanes Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Rainy_River&#39;: (&#39;Central Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Rankin_Inlet&#39;: (&#39;Central Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Recife&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Regina&#39;: (&#39;Canada Central Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Resolute&#39;: (&#39;Central Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Rio_Branco&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Santa_Isabel&#39;: (&#39;Pacific Standard Time (Mexico)&#39;, &#39;MX&#39;),
+    &#39;America/Santarem&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;BR&#39;),
+    &#39;America/Santiago&#39;: (&#39;Pacific SA Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Santo_Domingo&#39;: (&#39;SA Western Standard Time&#39;, &#39;DO&#39;),
+    &#39;America/Sao_Paulo&#39;: (&#39;E. South America Standard Time&#39;, &#39;001&#39;),
+    &#39;America/Scoresbysund&#39;: (&#39;Azores Standard Time&#39;, &#39;GL&#39;),
+    &#39;America/Sitka&#39;: (&#39;Alaskan Standard Time&#39;, &#39;US&#39;),
+    &#39;America/St_Barthelemy&#39;: (&#39;SA Western Standard Time&#39;, &#39;BL&#39;),
+    &#39;America/St_Johns&#39;: (&#39;Newfoundland Standard Time&#39;, &#39;001&#39;),
+    &#39;America/St_Kitts&#39;: (&#39;SA Western Standard Time&#39;, &#39;KN&#39;),
+    &#39;America/St_Lucia&#39;: (&#39;SA Western Standard Time&#39;, &#39;LC&#39;),
+    &#39;America/St_Thomas&#39;: (&#39;SA Western Standard Time&#39;, &#39;VI&#39;),
+    &#39;America/St_Vincent&#39;: (&#39;SA Western Standard Time&#39;, &#39;VC&#39;),
+    &#39;America/Swift_Current&#39;: (&#39;Canada Central Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Tegucigalpa&#39;: (&#39;Central America Standard Time&#39;, &#39;HN&#39;),
+    &#39;America/Thule&#39;: (&#39;Atlantic Standard Time&#39;, &#39;GL&#39;),
+    &#39;America/Thunder_Bay&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Tijuana&#39;: (&#39;Pacific Standard Time (Mexico)&#39;, &#39;001&#39;),
+    &#39;America/Toronto&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Tortola&#39;: (&#39;SA Western Standard Time&#39;, &#39;VG&#39;),
+    &#39;America/Vancouver&#39;: (&#39;Pacific Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Whitehorse&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Winnipeg&#39;: (&#39;Central Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Yakutat&#39;: (&#39;Alaskan Standard Time&#39;, &#39;US&#39;),
+    &#39;America/Yellowknife&#39;: (&#39;Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;Antarctica/Casey&#39;: (&#39;Singapore Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/Davis&#39;: (&#39;SE Asia Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/DumontDUrville&#39;: (&#39;West Pacific Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/Macquarie&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;AU&#39;),
+    &#39;Antarctica/Mawson&#39;: (&#39;West Asia Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/McMurdo&#39;: (&#39;New Zealand Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/Palmer&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/Rothera&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/Syowa&#39;: (&#39;E. Africa Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Antarctica/Vostok&#39;: (&#39;Central Asia Standard Time&#39;, &#39;AQ&#39;),
+    &#39;Arctic/Longyearbyen&#39;: (&#39;W. Europe Standard Time&#39;, &#39;SJ&#39;),
+    &#39;Asia/Aden&#39;: (&#39;Arab Standard Time&#39;, &#39;YE&#39;),
+    &#39;Asia/Almaty&#39;: (&#39;Central Asia Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Amman&#39;: (&#39;Jordan Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Anadyr&#39;: (&#39;Russia Time Zone 11&#39;, &#39;RU&#39;),
+    &#39;Asia/Aqtau&#39;: (&#39;West Asia Standard Time&#39;, &#39;KZ&#39;),
+    &#39;Asia/Aqtobe&#39;: (&#39;West Asia Standard Time&#39;, &#39;KZ&#39;),
+    &#39;Asia/Ashgabat&#39;: (&#39;West Asia Standard Time&#39;, &#39;TM&#39;),
+    &#39;Asia/Atyrau&#39;: (&#39;West Asia Standard Time&#39;, &#39;KZ&#39;),
+    &#39;Asia/Baghdad&#39;: (&#39;Arabic Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Bahrain&#39;: (&#39;Arab Standard Time&#39;, &#39;BH&#39;),
+    &#39;Asia/Baku&#39;: (&#39;Azerbaijan Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Bangkok&#39;: (&#39;SE Asia Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Barnaul&#39;: (&#39;Altai Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Beirut&#39;: (&#39;Middle East Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Bishkek&#39;: (&#39;Central Asia Standard Time&#39;, &#39;KG&#39;),
+    &#39;Asia/Brunei&#39;: (&#39;Singapore Standard Time&#39;, &#39;BN&#39;),
+    &#39;Asia/Calcutta&#39;: (&#39;India Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Chita&#39;: (&#39;Transbaikal Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Choibalsan&#39;: (&#39;Ulaanbaatar Standard Time&#39;, &#39;MN&#39;),
+    &#39;Asia/Colombo&#39;: (&#39;Sri Lanka Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Damascus&#39;: (&#39;Syria Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Dhaka&#39;: (&#39;Bangladesh Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Dili&#39;: (&#39;Tokyo Standard Time&#39;, &#39;TL&#39;),
+    &#39;Asia/Dubai&#39;: (&#39;Arabian Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Dushanbe&#39;: (&#39;West Asia Standard Time&#39;, &#39;TJ&#39;),
+    &#39;Asia/Famagusta&#39;: (&#39;GTB Standard Time&#39;, &#39;CY&#39;),
+    &#39;Asia/Gaza&#39;: (&#39;West Bank Standard Time&#39;, &#39;PS&#39;),
+    &#39;Asia/Hebron&#39;: (&#39;West Bank Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Hong_Kong&#39;: (&#39;China Standard Time&#39;, &#39;HK&#39;),
+    &#39;Asia/Hovd&#39;: (&#39;W. Mongolia Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Irkutsk&#39;: (&#39;North Asia East Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Jakarta&#39;: (&#39;SE Asia Standard Time&#39;, &#39;ID&#39;),
+    &#39;Asia/Jayapura&#39;: (&#39;Tokyo Standard Time&#39;, &#39;ID&#39;),
+    &#39;Asia/Jerusalem&#39;: (&#39;Israel Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Kabul&#39;: (&#39;Afghanistan Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Kamchatka&#39;: (&#39;Russia Time Zone 11&#39;, &#39;001&#39;),
+    &#39;Asia/Karachi&#39;: (&#39;Pakistan Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Katmandu&#39;: (&#39;Nepal Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Khandyga&#39;: (&#39;Yakutsk Standard Time&#39;, &#39;RU&#39;),
+    &#39;Asia/Krasnoyarsk&#39;: (&#39;North Asia Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Kuala_Lumpur&#39;: (&#39;Singapore Standard Time&#39;, &#39;MY&#39;),
+    &#39;Asia/Kuching&#39;: (&#39;Singapore Standard Time&#39;, &#39;MY&#39;),
+    &#39;Asia/Kuwait&#39;: (&#39;Arab Standard Time&#39;, &#39;KW&#39;),
+    &#39;Asia/Macau&#39;: (&#39;China Standard Time&#39;, &#39;MO&#39;),
+    &#39;Asia/Magadan&#39;: (&#39;Magadan Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Makassar&#39;: (&#39;Singapore Standard Time&#39;, &#39;ID&#39;),
+    &#39;Asia/Manila&#39;: (&#39;Singapore Standard Time&#39;, &#39;PH&#39;),
+    &#39;Asia/Muscat&#39;: (&#39;Arabian Standard Time&#39;, &#39;OM&#39;),
+    &#39;Asia/Nicosia&#39;: (&#39;GTB Standard Time&#39;, &#39;CY&#39;),
+    &#39;Asia/Novokuznetsk&#39;: (&#39;North Asia Standard Time&#39;, &#39;RU&#39;),
+    &#39;Asia/Novosibirsk&#39;: (&#39;N. Central Asia Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Omsk&#39;: (&#39;Omsk Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Oral&#39;: (&#39;West Asia Standard Time&#39;, &#39;KZ&#39;),
+    &#39;Asia/Phnom_Penh&#39;: (&#39;SE Asia Standard Time&#39;, &#39;KH&#39;),
+    &#39;Asia/Pontianak&#39;: (&#39;SE Asia Standard Time&#39;, &#39;ID&#39;),
+    &#39;Asia/Pyongyang&#39;: (&#39;North Korea Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Qatar&#39;: (&#39;Arab Standard Time&#39;, &#39;QA&#39;),
+    &#39;Asia/Qostanay&#39;: (&#39;Central Asia Standard Time&#39;, &#39;KZ&#39;),
+    &#39;Asia/Qyzylorda&#39;: (&#39;Qyzylorda Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Rangoon&#39;: (&#39;Myanmar Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Riyadh&#39;: (&#39;Arab Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Saigon&#39;: (&#39;SE Asia Standard Time&#39;, &#39;VN&#39;),
+    &#39;Asia/Sakhalin&#39;: (&#39;Sakhalin Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Samarkand&#39;: (&#39;West Asia Standard Time&#39;, &#39;UZ&#39;),
+    &#39;Asia/Seoul&#39;: (&#39;Korea Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Shanghai&#39;: (&#39;China Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Singapore&#39;: (&#39;Singapore Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Srednekolymsk&#39;: (&#39;Russia Time Zone 10&#39;, &#39;001&#39;),
+    &#39;Asia/Taipei&#39;: (&#39;Taipei Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Tashkent&#39;: (&#39;West Asia Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Tbilisi&#39;: (&#39;Georgian Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Tehran&#39;: (&#39;Iran Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Thimphu&#39;: (&#39;Bangladesh Standard Time&#39;, &#39;BT&#39;),
+    &#39;Asia/Tokyo&#39;: (&#39;Tokyo Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Tomsk&#39;: (&#39;Tomsk Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Ulaanbaatar&#39;: (&#39;Ulaanbaatar Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Urumqi&#39;: (&#39;Central Asia Standard Time&#39;, &#39;CN&#39;),
+    &#39;Asia/Ust-Nera&#39;: (&#39;Vladivostok Standard Time&#39;, &#39;RU&#39;),
+    &#39;Asia/Vientiane&#39;: (&#39;SE Asia Standard Time&#39;, &#39;LA&#39;),
+    &#39;Asia/Vladivostok&#39;: (&#39;Vladivostok Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Yakutsk&#39;: (&#39;Yakutsk Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Yekaterinburg&#39;: (&#39;Ekaterinburg Standard Time&#39;, &#39;001&#39;),
+    &#39;Asia/Yerevan&#39;: (&#39;Caucasus Standard Time&#39;, &#39;001&#39;),
+    &#39;Atlantic/Azores&#39;: (&#39;Azores Standard Time&#39;, &#39;001&#39;),
+    &#39;Atlantic/Bermuda&#39;: (&#39;Atlantic Standard Time&#39;, &#39;BM&#39;),
+    &#39;Atlantic/Canary&#39;: (&#39;GMT Standard Time&#39;, &#39;ES&#39;),
+    &#39;Atlantic/Cape_Verde&#39;: (&#39;Cape Verde Standard Time&#39;, &#39;001&#39;),
+    &#39;Atlantic/Faeroe&#39;: (&#39;GMT Standard Time&#39;, &#39;FO&#39;),
+    &#39;Atlantic/Madeira&#39;: (&#39;GMT Standard Time&#39;, &#39;PT&#39;),
+    &#39;Atlantic/Reykjavik&#39;: (&#39;Greenwich Standard Time&#39;, &#39;001&#39;),
+    &#39;Atlantic/South_Georgia&#39;: (&#39;UTC-02&#39;, &#39;GS&#39;),
+    &#39;Atlantic/St_Helena&#39;: (&#39;Greenwich Standard Time&#39;, &#39;SH&#39;),
+    &#39;Atlantic/Stanley&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;FK&#39;),
+    &#39;Australia/Adelaide&#39;: (&#39;Cen. Australia Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Brisbane&#39;: (&#39;E. Australia Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Broken_Hill&#39;: (&#39;Cen. Australia Standard Time&#39;, &#39;AU&#39;),
+    &#39;Australia/Currie&#39;: (&#39;Tasmania Standard Time&#39;, &#39;AU&#39;),
+    &#39;Australia/Darwin&#39;: (&#39;AUS Central Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Eucla&#39;: (&#39;Aus Central W. Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Hobart&#39;: (&#39;Tasmania Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Lindeman&#39;: (&#39;E. Australia Standard Time&#39;, &#39;AU&#39;),
+    &#39;Australia/Lord_Howe&#39;: (&#39;Lord Howe Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Melbourne&#39;: (&#39;AUS Eastern Standard Time&#39;, &#39;AU&#39;),
+    &#39;Australia/Perth&#39;: (&#39;W. Australia Standard Time&#39;, &#39;001&#39;),
+    &#39;Australia/Sydney&#39;: (&#39;AUS Eastern Standard Time&#39;, &#39;001&#39;),
+    &#39;CST6CDT&#39;: (&#39;Central Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;EST5EDT&#39;: (&#39;Eastern Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT&#39;: (&#39;UTC&#39;, &#39;001&#39;),
+    &#39;Etc/GMT+1&#39;: (&#39;Cape Verde Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+10&#39;: (&#39;Hawaiian Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+11&#39;: (&#39;UTC-11&#39;, &#39;001&#39;),
+    &#39;Etc/GMT+12&#39;: (&#39;Dateline Standard Time&#39;, &#39;001&#39;),
+    &#39;Etc/GMT+2&#39;: (&#39;UTC-02&#39;, &#39;001&#39;),
+    &#39;Etc/GMT+3&#39;: (&#39;SA Eastern Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+4&#39;: (&#39;SA Western Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+5&#39;: (&#39;SA Pacific Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+6&#39;: (&#39;Central America Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+7&#39;: (&#39;US Mountain Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT+8&#39;: (&#39;UTC-08&#39;, &#39;001&#39;),
+    &#39;Etc/GMT+9&#39;: (&#39;UTC-09&#39;, &#39;001&#39;),
+    &#39;Etc/GMT-1&#39;: (&#39;W. Central Africa Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-10&#39;: (&#39;West Pacific Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-11&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-12&#39;: (&#39;UTC+12&#39;, &#39;001&#39;),
+    &#39;Etc/GMT-13&#39;: (&#39;UTC+13&#39;, &#39;001&#39;),
+    &#39;Etc/GMT-14&#39;: (&#39;Line Islands Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-2&#39;: (&#39;South Africa Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-3&#39;: (&#39;E. Africa Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-4&#39;: (&#39;Arabian Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-5&#39;: (&#39;West Asia Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-6&#39;: (&#39;Central Asia Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-7&#39;: (&#39;SE Asia Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-8&#39;: (&#39;Singapore Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/GMT-9&#39;: (&#39;Tokyo Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Etc/UTC&#39;: (&#39;UTC&#39;, &#39;ZZ&#39;),
+    &#39;Europe/Amsterdam&#39;: (&#39;W. Europe Standard Time&#39;, &#39;NL&#39;),
+    &#39;Europe/Andorra&#39;: (&#39;W. Europe Standard Time&#39;, &#39;AD&#39;),
+    &#39;Europe/Astrakhan&#39;: (&#39;Astrakhan Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Athens&#39;: (&#39;GTB Standard Time&#39;, &#39;GR&#39;),
+    &#39;Europe/Belgrade&#39;: (&#39;Central Europe Standard Time&#39;, &#39;RS&#39;),
+    &#39;Europe/Berlin&#39;: (&#39;W. Europe Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Bratislava&#39;: (&#39;Central Europe Standard Time&#39;, &#39;SK&#39;),
+    &#39;Europe/Brussels&#39;: (&#39;Romance Standard Time&#39;, &#39;BE&#39;),
+    &#39;Europe/Bucharest&#39;: (&#39;GTB Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Budapest&#39;: (&#39;Central Europe Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Busingen&#39;: (&#39;W. Europe Standard Time&#39;, &#39;DE&#39;),
+    &#39;Europe/Chisinau&#39;: (&#39;E. Europe Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Copenhagen&#39;: (&#39;Romance Standard Time&#39;, &#39;DK&#39;),
+    &#39;Europe/Dublin&#39;: (&#39;GMT Standard Time&#39;, &#39;IE&#39;),
+    &#39;Europe/Gibraltar&#39;: (&#39;W. Europe Standard Time&#39;, &#39;GI&#39;),
+    &#39;Europe/Guernsey&#39;: (&#39;GMT Standard Time&#39;, &#39;GG&#39;),
+    &#39;Europe/Helsinki&#39;: (&#39;FLE Standard Time&#39;, &#39;FI&#39;),
+    &#39;Europe/Isle_of_Man&#39;: (&#39;GMT Standard Time&#39;, &#39;IM&#39;),
+    &#39;Europe/Istanbul&#39;: (&#39;Turkey Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Jersey&#39;: (&#39;GMT Standard Time&#39;, &#39;JE&#39;),
+    &#39;Europe/Kaliningrad&#39;: (&#39;Kaliningrad Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Kiev&#39;: (&#39;FLE Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Kirov&#39;: (&#39;Russian Standard Time&#39;, &#39;RU&#39;),
+    &#39;Europe/Lisbon&#39;: (&#39;GMT Standard Time&#39;, &#39;PT&#39;),
+    &#39;Europe/Ljubljana&#39;: (&#39;Central Europe Standard Time&#39;, &#39;SI&#39;),
+    &#39;Europe/London&#39;: (&#39;GMT Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Luxembourg&#39;: (&#39;W. Europe Standard Time&#39;, &#39;LU&#39;),
+    &#39;Europe/Madrid&#39;: (&#39;Romance Standard Time&#39;, &#39;ES&#39;),
+    &#39;Europe/Malta&#39;: (&#39;W. Europe Standard Time&#39;, &#39;MT&#39;),
+    &#39;Europe/Mariehamn&#39;: (&#39;FLE Standard Time&#39;, &#39;AX&#39;),
+    &#39;Europe/Minsk&#39;: (&#39;Belarus Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Monaco&#39;: (&#39;W. Europe Standard Time&#39;, &#39;MC&#39;),
+    &#39;Europe/Moscow&#39;: (&#39;Russian Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Oslo&#39;: (&#39;W. Europe Standard Time&#39;, &#39;NO&#39;),
+    &#39;Europe/Paris&#39;: (&#39;Romance Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Podgorica&#39;: (&#39;Central Europe Standard Time&#39;, &#39;ME&#39;),
+    &#39;Europe/Prague&#39;: (&#39;Central Europe Standard Time&#39;, &#39;CZ&#39;),
+    &#39;Europe/Riga&#39;: (&#39;FLE Standard Time&#39;, &#39;LV&#39;),
+    &#39;Europe/Rome&#39;: (&#39;W. Europe Standard Time&#39;, &#39;IT&#39;),
+    &#39;Europe/Samara&#39;: (&#39;Russia Time Zone 3&#39;, &#39;001&#39;),
+    &#39;Europe/San_Marino&#39;: (&#39;W. Europe Standard Time&#39;, &#39;SM&#39;),
+    &#39;Europe/Sarajevo&#39;: (&#39;Central European Standard Time&#39;, &#39;BA&#39;),
+    &#39;Europe/Saratov&#39;: (&#39;Saratov Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Simferopol&#39;: (&#39;Russian Standard Time&#39;, &#39;UA&#39;),
+    &#39;Europe/Skopje&#39;: (&#39;Central European Standard Time&#39;, &#39;MK&#39;),
+    &#39;Europe/Sofia&#39;: (&#39;FLE Standard Time&#39;, &#39;BG&#39;),
+    &#39;Europe/Stockholm&#39;: (&#39;W. Europe Standard Time&#39;, &#39;SE&#39;),
+    &#39;Europe/Tallinn&#39;: (&#39;FLE Standard Time&#39;, &#39;EE&#39;),
+    &#39;Europe/Tirane&#39;: (&#39;Central Europe Standard Time&#39;, &#39;AL&#39;),
+    &#39;Europe/Ulyanovsk&#39;: (&#39;Astrakhan Standard Time&#39;, &#39;RU&#39;),
+    &#39;Europe/Uzhgorod&#39;: (&#39;FLE Standard Time&#39;, &#39;UA&#39;),
+    &#39;Europe/Vaduz&#39;: (&#39;W. Europe Standard Time&#39;, &#39;LI&#39;),
+    &#39;Europe/Vatican&#39;: (&#39;W. Europe Standard Time&#39;, &#39;VA&#39;),
+    &#39;Europe/Vienna&#39;: (&#39;W. Europe Standard Time&#39;, &#39;AT&#39;),
+    &#39;Europe/Vilnius&#39;: (&#39;FLE Standard Time&#39;, &#39;LT&#39;),
+    &#39;Europe/Volgograd&#39;: (&#39;Volgograd Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Warsaw&#39;: (&#39;Central European Standard Time&#39;, &#39;001&#39;),
+    &#39;Europe/Zagreb&#39;: (&#39;Central European Standard Time&#39;, &#39;HR&#39;),
+    &#39;Europe/Zaporozhye&#39;: (&#39;FLE Standard Time&#39;, &#39;UA&#39;),
+    &#39;Europe/Zurich&#39;: (&#39;W. Europe Standard Time&#39;, &#39;CH&#39;),
+    &#39;Indian/Antananarivo&#39;: (&#39;E. Africa Standard Time&#39;, &#39;MG&#39;),
+    &#39;Indian/Chagos&#39;: (&#39;Central Asia Standard Time&#39;, &#39;IO&#39;),
+    &#39;Indian/Christmas&#39;: (&#39;SE Asia Standard Time&#39;, &#39;CX&#39;),
+    &#39;Indian/Cocos&#39;: (&#39;Myanmar Standard Time&#39;, &#39;CC&#39;),
+    &#39;Indian/Comoro&#39;: (&#39;E. Africa Standard Time&#39;, &#39;KM&#39;),
+    &#39;Indian/Kerguelen&#39;: (&#39;West Asia Standard Time&#39;, &#39;TF&#39;),
+    &#39;Indian/Mahe&#39;: (&#39;Mauritius Standard Time&#39;, &#39;SC&#39;),
+    &#39;Indian/Maldives&#39;: (&#39;West Asia Standard Time&#39;, &#39;MV&#39;),
+    &#39;Indian/Mauritius&#39;: (&#39;Mauritius Standard Time&#39;, &#39;001&#39;),
+    &#39;Indian/Mayotte&#39;: (&#39;E. Africa Standard Time&#39;, &#39;YT&#39;),
+    &#39;Indian/Reunion&#39;: (&#39;Mauritius Standard Time&#39;, &#39;RE&#39;),
+    &#39;MST7MDT&#39;: (&#39;Mountain Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;PST8PDT&#39;: (&#39;Pacific Standard Time&#39;, &#39;ZZ&#39;),
+    &#39;Pacific/Apia&#39;: (&#39;Samoa Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Auckland&#39;: (&#39;New Zealand Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Bougainville&#39;: (&#39;Bougainville Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Chatham&#39;: (&#39;Chatham Islands Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Easter&#39;: (&#39;Easter Island Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Efate&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;VU&#39;),
+    &#39;Pacific/Enderbury&#39;: (&#39;UTC+13&#39;, &#39;KI&#39;),
+    &#39;Pacific/Fakaofo&#39;: (&#39;UTC+13&#39;, &#39;TK&#39;),
+    &#39;Pacific/Fiji&#39;: (&#39;Fiji Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Funafuti&#39;: (&#39;UTC+12&#39;, &#39;TV&#39;),
+    &#39;Pacific/Galapagos&#39;: (&#39;Central America Standard Time&#39;, &#39;EC&#39;),
+    &#39;Pacific/Gambier&#39;: (&#39;UTC-09&#39;, &#39;PF&#39;),
+    &#39;Pacific/Guadalcanal&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Guam&#39;: (&#39;West Pacific Standard Time&#39;, &#39;GU&#39;),
+    &#39;Pacific/Honolulu&#39;: (&#39;Hawaiian Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Johnston&#39;: (&#39;Hawaiian Standard Time&#39;, &#39;UM&#39;),
+    &#39;Pacific/Kiritimati&#39;: (&#39;Line Islands Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Kosrae&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;FM&#39;),
+    &#39;Pacific/Kwajalein&#39;: (&#39;UTC+12&#39;, &#39;MH&#39;),
+    &#39;Pacific/Majuro&#39;: (&#39;UTC+12&#39;, &#39;MH&#39;),
+    &#39;Pacific/Marquesas&#39;: (&#39;Marquesas Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Midway&#39;: (&#39;UTC-11&#39;, &#39;UM&#39;),
+    &#39;Pacific/Nauru&#39;: (&#39;UTC+12&#39;, &#39;NR&#39;),
+    &#39;Pacific/Niue&#39;: (&#39;UTC-11&#39;, &#39;NU&#39;),
+    &#39;Pacific/Norfolk&#39;: (&#39;Norfolk Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Noumea&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;NC&#39;),
+    &#39;Pacific/Pago_Pago&#39;: (&#39;UTC-11&#39;, &#39;AS&#39;),
+    &#39;Pacific/Palau&#39;: (&#39;Tokyo Standard Time&#39;, &#39;PW&#39;),
+    &#39;Pacific/Pitcairn&#39;: (&#39;UTC-08&#39;, &#39;PN&#39;),
+    &#39;Pacific/Ponape&#39;: (&#39;Central Pacific Standard Time&#39;, &#39;FM&#39;),
+    &#39;Pacific/Port_Moresby&#39;: (&#39;West Pacific Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Rarotonga&#39;: (&#39;Hawaiian Standard Time&#39;, &#39;CK&#39;),
+    &#39;Pacific/Saipan&#39;: (&#39;West Pacific Standard Time&#39;, &#39;MP&#39;),
+    &#39;Pacific/Tahiti&#39;: (&#39;Hawaiian Standard Time&#39;, &#39;PF&#39;),
+    &#39;Pacific/Tarawa&#39;: (&#39;UTC+12&#39;, &#39;KI&#39;),
+    &#39;Pacific/Tongatapu&#39;: (&#39;Tonga Standard Time&#39;, &#39;001&#39;),
+    &#39;Pacific/Truk&#39;: (&#39;West Pacific Standard Time&#39;, &#39;FM&#39;),
+    &#39;Pacific/Wake&#39;: (&#39;UTC+12&#39;, &#39;UM&#39;),
+    &#39;Pacific/Wallis&#39;: (&#39;UTC+12&#39;, &#39;WF&#39;),
+}
+
+# Add timezone names used by pytz (which gets timezone names from
+# IANA) that are not found in the CLDR.
+# Use &#39;noterritory&#39; unless you want to override the standard mapping
+# (in which case, &#39;001&#39;).
+# TODO: A full list of the IANA names missing in CLDR can be found with:
+#
+#    sorted(set(pytz.all_timezones) - set(CLDR_TO_MS_TIMEZONE_MAP))
+#
+PYTZ_TO_MS_TIMEZONE_MAP = dict(
+    CLDR_TO_MS_TIMEZONE_MAP,
+    **{
+        &#39;Asia/Kolkata&#39;: (&#39;India Standard Time&#39;, &#39;noterritory&#39;),
+        &#39;GMT&#39;: (&#39;UTC&#39;, &#39;noterritory&#39;),
+        &#39;UTC&#39;: (&#39;UTC&#39;, &#39;noterritory&#39;),
+    }
+)
+
+# Reverse map from Microsoft timezone ID to pytz timezone name. Non-CLDR timezone ID&#39;s can be added here.
+MS_TIMEZONE_TO_PYTZ_MAP = dict(
+    {v[0]: k for k, v in PYTZ_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
+    **{
+        &#39;tzone://Microsoft/Utc&#39;: &#39;UTC&#39;,
+    }
+)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="exchangelib.winzone.generate_map"><code class="name flex">
+<span>def <span class="ident">generate_map</span></span>(<span>timeout=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper method to update the map if the CLDR database is updated</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timeout</code></strong></dt>
+<dd>(Default value = 10)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_map(timeout=10):
+    &#34;&#34;&#34;Helper method to update the map if the CLDR database is updated
+
+    Args:
+      timeout:  (Default value = 10)
+
+    &#34;&#34;&#34;
+    r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
+    if r.status_code != 200:
+        raise ValueError(&#39;Unexpected response: %s&#39; % r)
+    tz_map = {}
+    for e in to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;).findall(&#39;mapZone&#39;):
+        for location in re.split(r&#39;\s+&#39;, e.get(&#39;type&#39;)):
+            if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
+                # Prefer default territory. This is so MS_TIMEZONE_TO_PYTZ_MAP maps from MS timezone ID back to the
+                # &#34;preferred&#34; region/location timezone name.
+                if not location:
+                    raise ValueError(&#39;Expected location&#39;)
+                tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
+    return tz_map</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib" href="index.html">exchangelib</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="exchangelib.winzone.generate_map" href="#exchangelib.winzone.generate_map">generate_map</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

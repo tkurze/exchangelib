@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>exchangelib.attachments API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>exchangelib.attachments</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from io import BytesIO
+import logging
+import mimetypes
+
+from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
+    ItemField, IdField
+from .properties import RootItemId, EWSElement, Fields
+from .services import GetAttachment, CreateAttachment, DeleteAttachment
+
+log = logging.getLogger(__name__)
+
+
+class AttachmentId(EWSElement):
+    &#34;&#34;&#34;&#39;id&#39; and &#39;changekey&#39; are UUIDs generated by Exchange
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentid
+
+    &#34;&#34;&#34;
+    ELEMENT_NAME = &#39;AttachmentId&#39;
+
+    ID_ATTR = &#39;Id&#39;
+    ROOT_ID_ATTR = &#39;RootItemId&#39;
+    ROOT_CHANGEKEY_ATTR = &#39;RootItemChangeKey&#39;
+    FIELDS = Fields(
+        IdField(&#39;id&#39;, field_uri=ID_ATTR, is_required=True),
+        IdField(&#39;root_id&#39;, field_uri=ROOT_ID_ATTR),
+        IdField(&#39;root_changekey&#39;, field_uri=ROOT_CHANGEKEY_ATTR),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class Attachment(EWSElement):
+    &#34;&#34;&#34;Base class for FileAttachment and ItemAttachment&#34;&#34;&#34;
+    FIELDS = Fields(
+        EWSElementField(&#39;attachment_id&#39;, value_cls=AttachmentId),
+        TextField(&#39;name&#39;, field_uri=&#39;Name&#39;),
+        TextField(&#39;content_type&#39;, field_uri=&#39;ContentType&#39;),
+        TextField(&#39;content_id&#39;, field_uri=&#39;ContentId&#39;),
+        URIField(&#39;content_location&#39;, field_uri=&#39;ContentLocation&#39;),
+        IntegerField(&#39;size&#39;, field_uri=&#39;Size&#39;, is_read_only=True),  # Attachment size in bytes
+        DateTimeField(&#39;last_modified_time&#39;, field_uri=&#39;LastModifiedTime&#39;),
+        BooleanField(&#39;is_inline&#39;, field_uri=&#39;IsInline&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS) + (&#39;parent_item&#39;,)
+
+    def __init__(self, **kwargs):
+        self.parent_item = kwargs.pop(&#39;parent_item&#39;, None)
+        super().__init__(**kwargs)
+
+    def clean(self, version=None):
+        from .items import Item
+        if self.parent_item is not None and not isinstance(self.parent_item, Item):
+            raise ValueError(&#34;&#39;parent_item&#39; value %r must be an Item instance&#34; % self.parent_item)
+        # pylint: disable=access-member-before-definition
+        if self.content_type is None and self.name is not None:
+            self.content_type = mimetypes.guess_type(self.name)[0] or &#39;application/octet-stream&#39;
+        super().clean(version=version)
+
+    def attach(self):
+        # Adds this attachment to an item and updates the changekey of the parent item
+        if self.attachment_id:
+            raise ValueError(&#39;This attachment has already been created&#39;)
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
+        items = list(
+            i if isinstance(i, Exception) else self.from_xml(elem=i, account=self.parent_item.account)
+            for i in CreateAttachment(account=self.parent_item.account).call(parent_item=self.parent_item, items=[self])
+        )
+        if len(items) != 1:
+            raise ValueError(&#39;Expected single item, got %s&#39; % items)
+        root_item_id = items[0]
+        if isinstance(root_item_id, Exception):
+            raise root_item_id
+        attachment_id = root_item_id.attachment_id
+        if attachment_id.root_id != self.parent_item.id:
+            raise ValueError(&#34;&#39;root_id&#39; vs. &#39;id&#39; mismatch&#34;)
+        if attachment_id.root_changekey == self.parent_item.changekey:
+            raise ValueError(&#39;root_id changekey match&#39;)
+        self.parent_item.changekey = attachment_id.root_changekey
+        # EWS does not like receiving root_id and root_changekey on subsequent requests
+        attachment_id.root_id = None
+        attachment_id.root_changekey = None
+        self.attachment_id = attachment_id
+
+    def detach(self):
+        # Deletes an attachment remotely and updates the changekey of the parent item
+        if not self.attachment_id:
+            raise ValueError(&#39;This attachment has not been created&#39;)
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
+        items = list(
+            i if isinstance(i, Exception) else RootItemId.from_xml(elem=i, account=self.parent_item.account)
+            for i in DeleteAttachment(account=self.parent_item.account).call(items=[self.attachment_id])
+        )
+        if len(items) != 1:
+            raise ValueError(&#39;Expected single item, got %s&#39; % items)
+        root_item_id = items[0]
+        if isinstance(root_item_id, Exception):
+            raise root_item_id
+        if root_item_id.id != self.parent_item.id:
+            raise ValueError(&#34;&#39;root_item_id.id&#39; mismatch&#34;)
+        if root_item_id.changekey == self.parent_item.changekey:
+            raise ValueError(&#34;&#39;root_item_id.changekey&#39; match&#34;)
+        self.parent_item.changekey = root_item_id.changekey
+        self.parent_item = None
+        self.attachment_id = None
+
+    def __hash__(self):
+        if self.attachment_id:
+            return hash(self.attachment_id)
+        # Be careful to avoid recursion on the back-reference to the parent item
+        return hash(tuple(getattr(self, f) for f in self._slots_keys() if f != &#39;parent_item&#39;))
+
+    def __repr__(self):
+        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(
+            &#39;%s=%r&#39; % (f.name, getattr(self, f.name)) for f in self.FIELDS if f.name not in (&#39;_item&#39;, &#39;_content&#39;)
+        )
+
+
+class FileAttachment(Attachment):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;FileAttachment&#39;
+    FIELDS = Attachment.FIELDS + Fields(
+        BooleanField(&#39;is_contact_photo&#39;, field_uri=&#39;IsContactPhoto&#39;),
+        Base64Field(&#39;_content&#39;, field_uri=&#39;Content&#39;),
+    )
+
+    __slots__ = (&#39;is_contact_photo&#39;, &#39;_content&#39;, &#39;_fp&#39;)
+
+    def __init__(self, **kwargs):
+        kwargs[&#39;_content&#39;] = kwargs.pop(&#39;content&#39;, None)
+        super().__init__(**kwargs)
+        self._fp = None
+
+    @property
+    def fp(self):
+        # Return a file-like object for the content. This avoids creating multiple in-memory copies of the content.
+        if self._fp is None:
+            self._init_fp()
+        return self._fp
+
+    def _init_fp(self):
+        # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
+        # store the full attachment content in-memory.
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
+        self._fp = FileAttachmentIO(attachment=self)
+
+    @property
+    def content(self):
+        # Returns the attachment content. Stores a local copy of the content in case you want to upload the attachment
+        # again later.
+        if self.attachment_id is None:
+            return self._content
+        if self._content is not None:
+            return self._content
+        # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
+        with self.fp as fp:
+            self._content = fp.read()
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        # Replaces the attachment content
+        if not isinstance(value, bytes):
+            raise ValueError(&#34;&#39;value&#39; %r must be a bytes object&#34; % value)
+        self._content = value
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
+        kwargs[&#39;content&#39;] = kwargs.pop(&#39;_content&#39;)
+        cls._clear(elem)
+        return cls(**kwargs)
+
+    def to_xml(self, version):
+        self._content = self.content  # Make sure content is available, to avoid ErrorRequiredPropertyMissing
+        return super().to_xml(version=version)
+
+    def __getstate__(self):
+        # The fp does not need to be pickled
+        state = {k: getattr(self, k) for k in self._slots_keys()}
+        del state[&#39;_fp&#39;]
+        return state
+
+    def __setstate__(self, state):
+        # Restore the fp
+        for k in self._slots_keys():
+            setattr(self, k, state.get(k))
+        self._fp = None
+
+
+class ItemAttachment(Attachment):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ItemAttachment&#39;
+    # noinspection PyTypeChecker
+    FIELDS = Attachment.FIELDS + Fields(
+        ItemField(&#39;_item&#39;, field_uri=&#39;Item&#39;),
+    )
+
+    __slots__ = (&#39;_item&#39;,)
+
+    def __init__(self, **kwargs):
+        kwargs[&#39;_item&#39;] = kwargs.pop(&#39;item&#39;, None)
+        super().__init__(**kwargs)
+
+    @property
+    def item(self):
+        if self.attachment_id is None:
+            return self._item
+        if self._item is not None:
+            return self._item
+        # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
+        items = list(
+            i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
+            for i in GetAttachment(account=self.parent_item.account).call(
+                items=[self.attachment_id], include_mime_content=True)
+        )
+        if len(items) != 1:
+            raise ValueError(&#39;Expected single item, got %s&#39; % items)
+        attachment = items[0]
+        if isinstance(attachment, Exception):
+            raise attachment
+        if attachment.item is None:
+            raise ValueError(&#39;GetAttachment returned no item&#39;)
+        self._item = attachment.item
+        return self._item
+
+    @item.setter
+    def item(self, value):
+        from .items import Item
+        if not isinstance(value, Item):
+            raise ValueError(&#34;&#39;value&#39; %r must be an Item object&#34; % value)
+        self._item = value
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
+        kwargs[&#39;item&#39;] = kwargs.pop(&#39;_item&#39;)
+        cls._clear(elem)
+        return cls(**kwargs)
+
+
+class FileAttachmentIO(BytesIO):
+    def __init__(self, *args, **kwargs):
+        self._attachment = kwargs.pop(&#39;attachment&#39;)
+        super().__init__(*args, **kwargs)
+
+    def __enter__(self):
+        self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
+            attachment_id=self._attachment.attachment_id
+        )
+        self._overflow = b&#39;&#39;
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._stream = None
+        self._overflow = None
+
+    def read(self, size=-1):
+        if size &lt; 0:
+            # Return everything
+            return b&#39;&#39;.join(self._stream)
+        # Return only &#39;size&#39; bytes
+        buffer = [self._overflow]
+        read_size = len(self._overflow)
+        while True:
+            if read_size &gt;= size:
+                break
+            try:
+                next_chunk = next(self._stream)
+            except StopIteration:
+                break
+            buffer.append(next_chunk)
+            read_size += len(next_chunk)
+        res = b&#39;&#39;.join(buffer)
+        self._overflow = res[size:]
+        return res[:size]</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="exchangelib.attachments.Attachment"><code class="flex name class">
+<span>class <span class="ident">Attachment</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for FileAttachment and ItemAttachment</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Attachment(EWSElement):
+    &#34;&#34;&#34;Base class for FileAttachment and ItemAttachment&#34;&#34;&#34;
+    FIELDS = Fields(
+        EWSElementField(&#39;attachment_id&#39;, value_cls=AttachmentId),
+        TextField(&#39;name&#39;, field_uri=&#39;Name&#39;),
+        TextField(&#39;content_type&#39;, field_uri=&#39;ContentType&#39;),
+        TextField(&#39;content_id&#39;, field_uri=&#39;ContentId&#39;),
+        URIField(&#39;content_location&#39;, field_uri=&#39;ContentLocation&#39;),
+        IntegerField(&#39;size&#39;, field_uri=&#39;Size&#39;, is_read_only=True),  # Attachment size in bytes
+        DateTimeField(&#39;last_modified_time&#39;, field_uri=&#39;LastModifiedTime&#39;),
+        BooleanField(&#39;is_inline&#39;, field_uri=&#39;IsInline&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS) + (&#39;parent_item&#39;,)
+
+    def __init__(self, **kwargs):
+        self.parent_item = kwargs.pop(&#39;parent_item&#39;, None)
+        super().__init__(**kwargs)
+
+    def clean(self, version=None):
+        from .items import Item
+        if self.parent_item is not None and not isinstance(self.parent_item, Item):
+            raise ValueError(&#34;&#39;parent_item&#39; value %r must be an Item instance&#34; % self.parent_item)
+        # pylint: disable=access-member-before-definition
+        if self.content_type is None and self.name is not None:
+            self.content_type = mimetypes.guess_type(self.name)[0] or &#39;application/octet-stream&#39;
+        super().clean(version=version)
+
+    def attach(self):
+        # Adds this attachment to an item and updates the changekey of the parent item
+        if self.attachment_id:
+            raise ValueError(&#39;This attachment has already been created&#39;)
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
+        items = list(
+            i if isinstance(i, Exception) else self.from_xml(elem=i, account=self.parent_item.account)
+            for i in CreateAttachment(account=self.parent_item.account).call(parent_item=self.parent_item, items=[self])
+        )
+        if len(items) != 1:
+            raise ValueError(&#39;Expected single item, got %s&#39; % items)
+        root_item_id = items[0]
+        if isinstance(root_item_id, Exception):
+            raise root_item_id
+        attachment_id = root_item_id.attachment_id
+        if attachment_id.root_id != self.parent_item.id:
+            raise ValueError(&#34;&#39;root_id&#39; vs. &#39;id&#39; mismatch&#34;)
+        if attachment_id.root_changekey == self.parent_item.changekey:
+            raise ValueError(&#39;root_id changekey match&#39;)
+        self.parent_item.changekey = attachment_id.root_changekey
+        # EWS does not like receiving root_id and root_changekey on subsequent requests
+        attachment_id.root_id = None
+        attachment_id.root_changekey = None
+        self.attachment_id = attachment_id
+
+    def detach(self):
+        # Deletes an attachment remotely and updates the changekey of the parent item
+        if not self.attachment_id:
+            raise ValueError(&#39;This attachment has not been created&#39;)
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
+        items = list(
+            i if isinstance(i, Exception) else RootItemId.from_xml(elem=i, account=self.parent_item.account)
+            for i in DeleteAttachment(account=self.parent_item.account).call(items=[self.attachment_id])
+        )
+        if len(items) != 1:
+            raise ValueError(&#39;Expected single item, got %s&#39; % items)
+        root_item_id = items[0]
+        if isinstance(root_item_id, Exception):
+            raise root_item_id
+        if root_item_id.id != self.parent_item.id:
+            raise ValueError(&#34;&#39;root_item_id.id&#39; mismatch&#34;)
+        if root_item_id.changekey == self.parent_item.changekey:
+            raise ValueError(&#34;&#39;root_item_id.changekey&#39; match&#34;)
+        self.parent_item.changekey = root_item_id.changekey
+        self.parent_item = None
+        self.attachment_id = None
+
+    def __hash__(self):
+        if self.attachment_id:
+            return hash(self.attachment_id)
+        # Be careful to avoid recursion on the back-reference to the parent item
+        return hash(tuple(getattr(self, f) for f in self._slots_keys() if f != &#39;parent_item&#39;))
+
+    def __repr__(self):
+        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(
+            &#39;%s=%r&#39; % (f.name, getattr(self, f.name)) for f in self.FIELDS if f.name not in (&#39;_item&#39;, &#39;_content&#39;)
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.attachments.FileAttachment" href="#exchangelib.attachments.FileAttachment">FileAttachment</a></li>
+<li><a title="exchangelib.attachments.ItemAttachment" href="#exchangelib.attachments.ItemAttachment">ItemAttachment</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.attachments.Attachment.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.attachments.Attachment.attachment_id"><code class="name">var <span class="ident">attachment_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.content_id"><code class="name">var <span class="ident">content_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.content_location"><code class="name">var <span class="ident">content_location</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.content_type"><code class="name">var <span class="ident">content_type</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.is_inline"><code class="name">var <span class="ident">is_inline</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.last_modified_time"><code class="name">var <span class="ident">last_modified_time</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.parent_item"><code class="name">var <span class="ident">parent_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.Attachment.size"><code class="name">var <span class="ident">size</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.attachments.Attachment.attach"><code class="name flex">
+<span>def <span class="ident">attach</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def attach(self):
+    # Adds this attachment to an item and updates the changekey of the parent item
+    if self.attachment_id:
+        raise ValueError(&#39;This attachment has already been created&#39;)
+    if not self.parent_item or not self.parent_item.account:
+        raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
+    items = list(
+        i if isinstance(i, Exception) else self.from_xml(elem=i, account=self.parent_item.account)
+        for i in CreateAttachment(account=self.parent_item.account).call(parent_item=self.parent_item, items=[self])
+    )
+    if len(items) != 1:
+        raise ValueError(&#39;Expected single item, got %s&#39; % items)
+    root_item_id = items[0]
+    if isinstance(root_item_id, Exception):
+        raise root_item_id
+    attachment_id = root_item_id.attachment_id
+    if attachment_id.root_id != self.parent_item.id:
+        raise ValueError(&#34;&#39;root_id&#39; vs. &#39;id&#39; mismatch&#34;)
+    if attachment_id.root_changekey == self.parent_item.changekey:
+        raise ValueError(&#39;root_id changekey match&#39;)
+    self.parent_item.changekey = attachment_id.root_changekey
+    # EWS does not like receiving root_id and root_changekey on subsequent requests
+    attachment_id.root_id = None
+    attachment_id.root_changekey = None
+    self.attachment_id = attachment_id</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.attachments.Attachment.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, version=None):
+    from .items import Item
+    if self.parent_item is not None and not isinstance(self.parent_item, Item):
+        raise ValueError(&#34;&#39;parent_item&#39; value %r must be an Item instance&#34; % self.parent_item)
+    # pylint: disable=access-member-before-definition
+    if self.content_type is None and self.name is not None:
+        self.content_type = mimetypes.guess_type(self.name)[0] or &#39;application/octet-stream&#39;
+    super().clean(version=version)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.attachments.Attachment.detach"><code class="name flex">
+<span>def <span class="ident">detach</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def detach(self):
+    # Deletes an attachment remotely and updates the changekey of the parent item
+    if not self.attachment_id:
+        raise ValueError(&#39;This attachment has not been created&#39;)
+    if not self.parent_item or not self.parent_item.account:
+        raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
+    items = list(
+        i if isinstance(i, Exception) else RootItemId.from_xml(elem=i, account=self.parent_item.account)
+        for i in DeleteAttachment(account=self.parent_item.account).call(items=[self.attachment_id])
+    )
+    if len(items) != 1:
+        raise ValueError(&#39;Expected single item, got %s&#39; % items)
+    root_item_id = items[0]
+    if isinstance(root_item_id, Exception):
+        raise root_item_id
+    if root_item_id.id != self.parent_item.id:
+        raise ValueError(&#34;&#39;root_item_id.id&#39; mismatch&#34;)
+    if root_item_id.changekey == self.parent_item.changekey:
+        raise ValueError(&#34;&#39;root_item_id.changekey&#39; match&#34;)
+    self.parent_item.changekey = root_item_id.changekey
+    self.parent_item = None
+    self.attachment_id = None</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId"><code class="flex name class">
+<span>class <span class="ident">AttachmentId</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>'id' and 'changekey' are UUIDs generated by Exchange</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentid</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AttachmentId(EWSElement):
+    &#34;&#34;&#34;&#39;id&#39; and &#39;changekey&#39; are UUIDs generated by Exchange
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentid
+
+    &#34;&#34;&#34;
+    ELEMENT_NAME = &#39;AttachmentId&#39;
+
+    ID_ATTR = &#39;Id&#39;
+    ROOT_ID_ATTR = &#39;RootItemId&#39;
+    ROOT_CHANGEKEY_ATTR = &#39;RootItemChangeKey&#39;
+    FIELDS = Fields(
+        IdField(&#39;id&#39;, field_uri=ID_ATTR, is_required=True),
+        IdField(&#39;root_id&#39;, field_uri=ROOT_ID_ATTR),
+        IdField(&#39;root_changekey&#39;, field_uri=ROOT_CHANGEKEY_ATTR),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.attachments.AttachmentId.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId.ID_ATTR"><code class="name">var <span class="ident">ID_ATTR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId.ROOT_CHANGEKEY_ATTR"><code class="name">var <span class="ident">ROOT_CHANGEKEY_ATTR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId.ROOT_ID_ATTR"><code class="name">var <span class="ident">ROOT_ID_ATTR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.attachments.AttachmentId.id"><code class="name">var <span class="ident">id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId.root_changekey"><code class="name">var <span class="ident">root_changekey</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.attachments.AttachmentId.root_id"><code class="name">var <span class="ident">root_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.attachments.FileAttachment"><code class="flex name class">
+<span>class <span class="ident">FileAttachment</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FileAttachment(Attachment):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;FileAttachment&#39;
+    FIELDS = Attachment.FIELDS + Fields(
+        BooleanField(&#39;is_contact_photo&#39;, field_uri=&#39;IsContactPhoto&#39;),
+        Base64Field(&#39;_content&#39;, field_uri=&#39;Content&#39;),
+    )
+
+    __slots__ = (&#39;is_contact_photo&#39;, &#39;_content&#39;, &#39;_fp&#39;)
+
+    def __init__(self, **kwargs):
+        kwargs[&#39;_content&#39;] = kwargs.pop(&#39;content&#39;, None)
+        super().__init__(**kwargs)
+        self._fp = None
+
+    @property
+    def fp(self):
+        # Return a file-like object for the content. This avoids creating multiple in-memory copies of the content.
+        if self._fp is None:
+            self._init_fp()
+        return self._fp
+
+    def _init_fp(self):
+        # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
+        # store the full attachment content in-memory.
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
+        self._fp = FileAttachmentIO(attachment=self)
+
+    @property
+    def content(self):
+        # Returns the attachment content. Stores a local copy of the content in case you want to upload the attachment
+        # again later.
+        if self.attachment_id is None:
+            return self._content
+        if self._content is not None:
+            return self._content
+        # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
+        with self.fp as fp:
+            self._content = fp.read()
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        # Replaces the attachment content
+        if not isinstance(value, bytes):
+            raise ValueError(&#34;&#39;value&#39; %r must be a bytes object&#34; % value)
+        self._content = value
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
+        kwargs[&#39;content&#39;] = kwargs.pop(&#39;_content&#39;)
+        cls._clear(elem)
+        return cls(**kwargs)
+
+    def to_xml(self, version):
+        self._content = self.content  # Make sure content is available, to avoid ErrorRequiredPropertyMissing
+        return super().to_xml(version=version)
+
+    def __getstate__(self):
+        # The fp does not need to be pickled
+        state = {k: getattr(self, k) for k in self._slots_keys()}
+        del state[&#39;_fp&#39;]
+        return state
+
+    def __setstate__(self, state):
+        # Restore the fp
+        for k in self._slots_keys():
+            setattr(self, k, state.get(k))
+        self._fp = None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.attachments.Attachment" href="#exchangelib.attachments.Attachment">Attachment</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.attachments.FileAttachment.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.attachments.FileAttachment.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.attachments.FileAttachment.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
+    kwargs[&#39;content&#39;] = kwargs.pop(&#39;_content&#39;)
+    cls._clear(elem)
+    return cls(**kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.attachments.FileAttachment.content"><code class="name">var <span class="ident">content</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def content(self):
+    # Returns the attachment content. Stores a local copy of the content in case you want to upload the attachment
+    # again later.
+    if self.attachment_id is None:
+        return self._content
+    if self._content is not None:
+        return self._content
+    # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
+    with self.fp as fp:
+        self._content = fp.read()
+    return self._content</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.attachments.FileAttachment.fp"><code class="name">var <span class="ident">fp</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def fp(self):
+    # Return a file-like object for the content. This avoids creating multiple in-memory copies of the content.
+    if self._fp is None:
+        self._init_fp()
+    return self._fp</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.attachments.FileAttachment.is_contact_photo"><code class="name">var <span class="ident">is_contact_photo</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.attachments.FileAttachment.to_xml"><code class="name flex">
+<span>def <span class="ident">to_xml</span></span>(<span>self, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_xml(self, version):
+    self._content = self.content  # Make sure content is available, to avoid ErrorRequiredPropertyMissing
+    return super().to_xml(version=version)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.attachments.Attachment" href="#exchangelib.attachments.Attachment">Attachment</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.attachments.Attachment.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.attachment_id" href="#exchangelib.attachments.Attachment.attachment_id">attachment_id</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_id" href="#exchangelib.attachments.Attachment.content_id">content_id</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_location" href="#exchangelib.attachments.Attachment.content_location">content_location</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_type" href="#exchangelib.attachments.Attachment.content_type">content_type</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.is_inline" href="#exchangelib.attachments.Attachment.is_inline">is_inline</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.last_modified_time" href="#exchangelib.attachments.Attachment.last_modified_time">last_modified_time</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.name" href="#exchangelib.attachments.Attachment.name">name</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.parent_item" href="#exchangelib.attachments.Attachment.parent_item">parent_item</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.size" href="#exchangelib.attachments.Attachment.size">size</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.attachments.FileAttachmentIO"><code class="flex name class">
+<span>class <span class="ident">FileAttachmentIO</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Buffered I/O implementation using an in-memory bytes buffer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FileAttachmentIO(BytesIO):
+    def __init__(self, *args, **kwargs):
+        self._attachment = kwargs.pop(&#39;attachment&#39;)
+        super().__init__(*args, **kwargs)
+
+    def __enter__(self):
+        self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
+            attachment_id=self._attachment.attachment_id
+        )
+        self._overflow = b&#39;&#39;
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._stream = None
+        self._overflow = None
+
+    def read(self, size=-1):
+        if size &lt; 0:
+            # Return everything
+            return b&#39;&#39;.join(self._stream)
+        # Return only &#39;size&#39; bytes
+        buffer = [self._overflow]
+        read_size = len(self._overflow)
+        while True:
+            if read_size &gt;= size:
+                break
+            try:
+                next_chunk = next(self._stream)
+            except StopIteration:
+                break
+            buffer.append(next_chunk)
+            read_size += len(next_chunk)
+        res = b&#39;&#39;.join(buffer)
+        self._overflow = res[size:]
+        return res[:size]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>_io.BytesIO</li>
+<li>_io._BufferedIOBase</li>
+<li>_io._IOBase</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.attachments.FileAttachmentIO.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, size=-1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read at most size bytes, returned as a bytes object.</p>
+<p>If the size argument is negative, read until EOF is reached.
+Return an empty bytes object at EOF.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, size=-1):
+    if size &lt; 0:
+        # Return everything
+        return b&#39;&#39;.join(self._stream)
+    # Return only &#39;size&#39; bytes
+    buffer = [self._overflow]
+    read_size = len(self._overflow)
+    while True:
+        if read_size &gt;= size:
+            break
+        try:
+            next_chunk = next(self._stream)
+        except StopIteration:
+            break
+        buffer.append(next_chunk)
+        read_size += len(next_chunk)
+    res = b&#39;&#39;.join(buffer)
+    self._overflow = res[size:]
+    return res[:size]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.attachments.ItemAttachment"><code class="flex name class">
+<span>class <span class="ident">ItemAttachment</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ItemAttachment(Attachment):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ItemAttachment&#39;
+    # noinspection PyTypeChecker
+    FIELDS = Attachment.FIELDS + Fields(
+        ItemField(&#39;_item&#39;, field_uri=&#39;Item&#39;),
+    )
+
+    __slots__ = (&#39;_item&#39;,)
+
+    def __init__(self, **kwargs):
+        kwargs[&#39;_item&#39;] = kwargs.pop(&#39;item&#39;, None)
+        super().__init__(**kwargs)
+
+    @property
+    def item(self):
+        if self.attachment_id is None:
+            return self._item
+        if self._item is not None:
+            return self._item
+        # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
+        if not self.parent_item or not self.parent_item.account:
+            raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
+        items = list(
+            i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
+            for i in GetAttachment(account=self.parent_item.account).call(
+                items=[self.attachment_id], include_mime_content=True)
+        )
+        if len(items) != 1:
+            raise ValueError(&#39;Expected single item, got %s&#39; % items)
+        attachment = items[0]
+        if isinstance(attachment, Exception):
+            raise attachment
+        if attachment.item is None:
+            raise ValueError(&#39;GetAttachment returned no item&#39;)
+        self._item = attachment.item
+        return self._item
+
+    @item.setter
+    def item(self, value):
+        from .items import Item
+        if not isinstance(value, Item):
+            raise ValueError(&#34;&#39;value&#39; %r must be an Item object&#34; % value)
+        self._item = value
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
+        kwargs[&#39;item&#39;] = kwargs.pop(&#39;_item&#39;)
+        cls._clear(elem)
+        return cls(**kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.attachments.Attachment" href="#exchangelib.attachments.Attachment">Attachment</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.attachments.ItemAttachment.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.attachments.ItemAttachment.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.attachments.ItemAttachment.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
+    kwargs[&#39;item&#39;] = kwargs.pop(&#39;_item&#39;)
+    cls._clear(elem)
+    return cls(**kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.attachments.ItemAttachment.item"><code class="name">var <span class="ident">item</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def item(self):
+    if self.attachment_id is None:
+        return self._item
+    if self._item is not None:
+        return self._item
+    # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
+    if not self.parent_item or not self.parent_item.account:
+        raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
+    items = list(
+        i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
+        for i in GetAttachment(account=self.parent_item.account).call(
+            items=[self.attachment_id], include_mime_content=True)
+    )
+    if len(items) != 1:
+        raise ValueError(&#39;Expected single item, got %s&#39; % items)
+    attachment = items[0]
+    if isinstance(attachment, Exception):
+        raise attachment
+    if attachment.item is None:
+        raise ValueError(&#39;GetAttachment returned no item&#39;)
+    self._item = attachment.item
+    return self._item</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.attachments.Attachment" href="#exchangelib.attachments.Attachment">Attachment</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.attachments.Attachment.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.attachment_id" href="#exchangelib.attachments.Attachment.attachment_id">attachment_id</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_id" href="#exchangelib.attachments.Attachment.content_id">content_id</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_location" href="#exchangelib.attachments.Attachment.content_location">content_location</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_type" href="#exchangelib.attachments.Attachment.content_type">content_type</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.is_inline" href="#exchangelib.attachments.Attachment.is_inline">is_inline</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.last_modified_time" href="#exchangelib.attachments.Attachment.last_modified_time">last_modified_time</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.name" href="#exchangelib.attachments.Attachment.name">name</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.parent_item" href="#exchangelib.attachments.Attachment.parent_item">parent_item</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.size" href="#exchangelib.attachments.Attachment.size">size</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="exchangelib" href="index.html">exchangelib</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="exchangelib.attachments.Attachment" href="#exchangelib.attachments.Attachment">Attachment</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.attachments.Attachment.FIELDS" href="#exchangelib.attachments.Attachment.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.attach" href="#exchangelib.attachments.Attachment.attach">attach</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.attachment_id" href="#exchangelib.attachments.Attachment.attachment_id">attachment_id</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.clean" href="#exchangelib.attachments.Attachment.clean">clean</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_id" href="#exchangelib.attachments.Attachment.content_id">content_id</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_location" href="#exchangelib.attachments.Attachment.content_location">content_location</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.content_type" href="#exchangelib.attachments.Attachment.content_type">content_type</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.detach" href="#exchangelib.attachments.Attachment.detach">detach</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.is_inline" href="#exchangelib.attachments.Attachment.is_inline">is_inline</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.last_modified_time" href="#exchangelib.attachments.Attachment.last_modified_time">last_modified_time</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.name" href="#exchangelib.attachments.Attachment.name">name</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.parent_item" href="#exchangelib.attachments.Attachment.parent_item">parent_item</a></code></li>
+<li><code><a title="exchangelib.attachments.Attachment.size" href="#exchangelib.attachments.Attachment.size">size</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.attachments.AttachmentId" href="#exchangelib.attachments.AttachmentId">AttachmentId</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.attachments.AttachmentId.ELEMENT_NAME" href="#exchangelib.attachments.AttachmentId.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.FIELDS" href="#exchangelib.attachments.AttachmentId.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.ID_ATTR" href="#exchangelib.attachments.AttachmentId.ID_ATTR">ID_ATTR</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.ROOT_CHANGEKEY_ATTR" href="#exchangelib.attachments.AttachmentId.ROOT_CHANGEKEY_ATTR">ROOT_CHANGEKEY_ATTR</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.ROOT_ID_ATTR" href="#exchangelib.attachments.AttachmentId.ROOT_ID_ATTR">ROOT_ID_ATTR</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.id" href="#exchangelib.attachments.AttachmentId.id">id</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.root_changekey" href="#exchangelib.attachments.AttachmentId.root_changekey">root_changekey</a></code></li>
+<li><code><a title="exchangelib.attachments.AttachmentId.root_id" href="#exchangelib.attachments.AttachmentId.root_id">root_id</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.attachments.FileAttachment" href="#exchangelib.attachments.FileAttachment">FileAttachment</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.attachments.FileAttachment.ELEMENT_NAME" href="#exchangelib.attachments.FileAttachment.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachment.FIELDS" href="#exchangelib.attachments.FileAttachment.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachment.content" href="#exchangelib.attachments.FileAttachment.content">content</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachment.fp" href="#exchangelib.attachments.FileAttachment.fp">fp</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachment.from_xml" href="#exchangelib.attachments.FileAttachment.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachment.is_contact_photo" href="#exchangelib.attachments.FileAttachment.is_contact_photo">is_contact_photo</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachment.to_xml" href="#exchangelib.attachments.FileAttachment.to_xml">to_xml</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.attachments.FileAttachmentIO" href="#exchangelib.attachments.FileAttachmentIO">FileAttachmentIO</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.attachments.FileAttachmentIO.read" href="#exchangelib.attachments.FileAttachmentIO.read">read</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.attachments.ItemAttachment" href="#exchangelib.attachments.ItemAttachment">ItemAttachment</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.attachments.ItemAttachment.ELEMENT_NAME" href="#exchangelib.attachments.ItemAttachment.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.attachments.ItemAttachment.FIELDS" href="#exchangelib.attachments.ItemAttachment.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.attachments.ItemAttachment.from_xml" href="#exchangelib.attachments.ItemAttachment.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.attachments.ItemAttachment.item" href="#exchangelib.attachments.ItemAttachment.item">item</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>
