@@ -241,6 +241,53 @@ class GenericItemTest(CommonItemTest):
         finally:
             self.ITEM_CLASS.deregister('extern_id')
 
+    def test_order_by_with_empty_values(self):
+        # Test order_by() when some values are empty
+        test_items = []
+        for i in range(4):
+            item = self.get_test_item()
+            if i % 2 == 0:
+                item.subject = 'Subj %s' % i
+            else:
+                item.subject = None
+            test_items.append(item)
+        self.test_folder.bulk_create(items=test_items)
+        qs = QuerySet(
+            folder_collection=FolderCollection(account=self.account, folders=[self.test_folder])
+        ).filter(categories__contains=self.categories)
+        self.assertEqual(
+            [i for i in qs.order_by('subject').values_list('subject', flat=True)],
+            [None, None, 'Subj 0', 'Subj 2']
+        )
+        self.assertEqual(
+            [i for i in qs.order_by('-subject').values_list('subject', flat=True)],
+            ['Subj 2', 'Subj 0', None, None]
+        )
+
+    def test_order_by_on_list_field(self):
+        # Test order_by() on list fields where some values are empty
+        test_items = []
+        for i in range(4):
+            item = self.get_test_item()
+            item.subject = self.categories[0]  # Make sure we have something unique to filter on
+            if i % 2 == 0:
+                item.categories = ['Cat %s' % i]
+            else:
+                item.categories = []
+            test_items.append(item)
+        self.test_folder.bulk_create(items=test_items)
+        qs = QuerySet(
+            folder_collection=FolderCollection(account=self.account, folders=[self.test_folder])
+        ).filter(subject=self.categories[0])
+        self.assertEqual(
+            [i for i in qs.order_by('categories').values_list('categories', flat=True)],
+            [None, None, ['Cat 0'], ['Cat 2']]
+        )
+        self.assertEqual(
+            [i for i in qs.order_by('-categories').values_list('categories', flat=True)],
+            [['Cat 2'], ['Cat 0'], None, None]
+        )
+
     def test_finditems(self):
         now = UTC_NOW()
 

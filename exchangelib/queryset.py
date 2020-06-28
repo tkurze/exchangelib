@@ -780,7 +780,7 @@ def _get_value_or_default(item, field_order):
 def _default_field_value(field):
     # Returns the default value of a field. If the field does not have a default value, try creating an empty instance
     # of the field value class. If that doesn't work, there's really nothing we can do about it; we'll raise an error.
-    return field.default or field.value_cls()
+    return field.default or ([field.value_cls()] if field.is_list else field.value_cls())
 
 
 def _rinse_item(i, fields_to_nullify):
