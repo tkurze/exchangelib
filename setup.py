@@ -53,6 +53,11 @@ setup(
     test_suite='tests',
     zip_safe=False,
     url='https://github.com/ecederstrand/exchangelib',
+    project_urls={
+        "Bug Tracker": "https://github.com/ecederstrand/exchangelib/issues",
+        "Documentation": "https://ecederstrand.github.io/exchangelib/",
+        "Source Code": "https://github.com/ecederstrand/exchangelib",
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Topic :: Communications',
