@@ -115,18 +115,6 @@ class Q:
                     self.__class__(**{'%s__lte' % field_path: value[1]}),
                 ]
 
-            if lookup == self.LOOKUP_IN:
-                # EWS doesn't have an '__in' operator. Allow '__in' lookups on list and non-list field types,
-                # specifying a list value. We'll emulate it as a set of OR'ed exact matches.
-                if not is_iterable(value, generators_allowed=True):
-                    raise ValueError("Value for lookup %r must be a list" % key)
-                children = [self.__class__(**{field_path: v}) for v in value]
-                if not children:
-                    # This is an '__in' operator with an empty value. We interpret it to mean "is foo contained in the
-                    # empty set?" which is always false. Mark this Q object as such.
-                    return [self.__class__(conn_type=self.NEVER)]
-                return [self.__class__(*children, conn_type=self.OR)]
-
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
             #
             #     item:Categories == 'foo' AND item:Categories == 'bar' AND ...
@@ -134,8 +122,8 @@ class Q:
             #     item:Categories == 'foo' OR item:Categories == 'bar' OR ...
             #
             # The former returns items that have all these categories, but maybe also others. The latter returns
-            # items that have at least one of these categories. This translates to the 'contains' and 'in' lookups.
-            # Both versions are case-insensitive.
+            # items that have at least one of these categories. This translates to the 'contains' and 'in' lookups,
+            # respectively. Both versions are case-insensitive.
             #
             # Exact matching and case-sensitive or partial-string matching is not possible since that requires the
             # 'Contains' element which only supports matching on string elements, not arrays.
@@ -143,8 +131,24 @@ class Q:
             # Exact matching of categories (i.e. match ['a', 'b'] but not ['a', 'b', 'c']) could be implemented by
             # post-processing items by fetch the categories field unconditionally and removing the items that don't
             # have an exact match.
+            if lookup == self.LOOKUP_IN:
+                # EWS doesn't have an '__in' operator. Allow '__in' lookups on list and non-list field types,
+                # specifying a list value. We'll emulate it as a set of OR'ed exact matches.
+                if not is_iterable(value, generators_allowed=True):
+                    raise ValueError("Value for lookup %r must be a list" % key)
+                children = [self.__class__(**{field_path: v}) for v in value]
+                if not children:
+                    # This is an '__in' operator with an empty list as the value. We interpret it to mean "is foo
+                    # contained in the empty set?" which is always false. Mark this Q object as such.
+                    return [self.__class__(conn_type=self.NEVER)]
+                return [self.__class__(*children, conn_type=self.OR)]
+
             if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
-                # '__contains' lookups on list field types
+                # A '__contains' lookup with an list as the value ony makes sense for list fields, since exact match
+                # on multiple distinct values will always fail for single-value fields.
+                #
+                # An empty list as value is allowed. We interpret it to mean "are all values in the empty set contained
+                # in foo?" which is always true.
                 children = [self.__class__(**{field_path: v}) for v in value]
                 return [self.__class__(*children, conn_type=self.AND)]
 
@@ -417,7 +421,8 @@ class Q:
             return None
         clean_field = field_path.subfield if (field_path.subfield and field_path.label) else field_path.field
         if clean_field.is_list:
-            # With __contains, we allow filtering by only one value even though the field is a list type
+            # __contains and __in are implemented as multiple leaves, with one value per leaf. clean() on list fields
+            # only works on lists, so clean a one-element list.
             return clean_field.clean(value=[self.value], version=version)[0]
         else:
             return clean_field.clean(value=self.value, version=version)
