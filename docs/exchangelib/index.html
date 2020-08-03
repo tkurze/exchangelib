@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.3" />
+<meta name="generator" content="pdoc 0.8.4" />
 <title>exchangelib API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -44,7 +44,7 @@ from .restriction import Q
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;3.2.0&#39;
+__version__ = &#39;3.2.1&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -2550,7 +2550,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
     SESSION_POOLSIZE = 1
     # We want only 1 TCP connection per Session object. We may have lots of different credentials hitting the server and
     # each credential needs its own session (NTLM auth will only send credentials once and then secure the connection,
-    # so a connection can only handle requests for one credential). Having multiple connections ser Session could
+    # so a connection can only handle requests for one credential). Having multiple connections per Session could
     # quickly exhaust the maximum number of concurrent connections the Exchange server allows from one client.
     CONNECTIONS_PER_SESSION = 1
     # The number of times a session may be reused before creating a new session object. &#39;None&#39; means &#34;infinite&#34;.
@@ -9938,18 +9938,6 @@ def from_xml(cls, elem, account):
                     self.__class__(**{&#39;%s__lte&#39; % field_path: value[1]}),
                 ]
 
-            if lookup == self.LOOKUP_IN:
-                # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
-                # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
-                if not is_iterable(value, generators_allowed=True):
-                    raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
-                children = [self.__class__(**{field_path: v}) for v in value]
-                if not children:
-                    # This is an &#39;__in&#39; operator with an empty value. We interpret it to mean &#34;is foo contained in the
-                    # empty set?&#34; which is always false. Mark this Q object as such.
-                    return [self.__class__(conn_type=self.NEVER)]
-                return [self.__class__(*children, conn_type=self.OR)]
-
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
             #
             #     item:Categories == &#39;foo&#39; AND item:Categories == &#39;bar&#39; AND ...
@@ -9957,8 +9945,8 @@ def from_xml(cls, elem, account):
             #     item:Categories == &#39;foo&#39; OR item:Categories == &#39;bar&#39; OR ...
             #
             # The former returns items that have all these categories, but maybe also others. The latter returns
-            # items that have at least one of these categories. This translates to the &#39;contains&#39; and &#39;in&#39; lookups.
-            # Both versions are case-insensitive.
+            # items that have at least one of these categories. This translates to the &#39;contains&#39; and &#39;in&#39; lookups,
+            # respectively. Both versions are case-insensitive.
             #
             # Exact matching and case-sensitive or partial-string matching is not possible since that requires the
             # &#39;Contains&#39; element which only supports matching on string elements, not arrays.
@@ -9966,8 +9954,24 @@ def from_xml(cls, elem, account):
             # Exact matching of categories (i.e. match [&#39;a&#39;, &#39;b&#39;] but not [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]) could be implemented by
             # post-processing items by fetch the categories field unconditionally and removing the items that don&#39;t
             # have an exact match.
+            if lookup == self.LOOKUP_IN:
+                # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
+                # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
+                if not is_iterable(value, generators_allowed=True):
+                    raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
+                children = [self.__class__(**{field_path: v}) for v in value]
+                if not children:
+                    # This is an &#39;__in&#39; operator with an empty list as the value. We interpret it to mean &#34;is foo
+                    # contained in the empty set?&#34; which is always false. Mark this Q object as such.
+                    return [self.__class__(conn_type=self.NEVER)]
+                return [self.__class__(*children, conn_type=self.OR)]
+
             if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
-                # &#39;__contains&#39; lookups on list field types
+                # A &#39;__contains&#39; lookup with an list as the value ony makes sense for list fields, since exact match
+                # on multiple distinct values will always fail for single-value fields.
+                #
+                # An empty list as value is allowed. We interpret it to mean &#34;are all values in the empty set contained
+                # in foo?&#34; which is always true.
                 children = [self.__class__(**{field_path: v}) for v in value]
                 return [self.__class__(*children, conn_type=self.AND)]
 
@@ -10240,7 +10244,8 @@ def from_xml(cls, elem, account):
             return None
         clean_field = field_path.subfield if (field_path.subfield and field_path.label) else field_path.field
         if clean_field.is_list:
-            # With __contains, we allow filtering by only one value even though the field is a list type
+            # __contains and __in are implemented as multiple leaves, with one value per leaf. clean() on list fields
+            # only works on lists, so clean a one-element list.
             return clean_field.clean(value=[self.value], version=version)[0]
         else:
             return clean_field.clean(value=self.value, version=version)
@@ -12884,7 +12889,7 @@ def fullname(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
 </footer>
 </body>
 </html>
