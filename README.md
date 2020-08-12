@@ -9,9 +9,10 @@ exporting and uploading calendar, mailbox, task, contact and distribution list i
 
 [![image](https://img.shields.io/pypi/v/exchangelib.svg)](https://pypi.org/project/exchangelib/)
 [![image](https://img.shields.io/pypi/pyversions/exchangelib.svg)](https://pypi.org/project/exchangelib/)
-[![image](https://api.codacy.com/project/badge/Grade/5f805ad901054a889f4b99a82d6c1cb7)](https://www.codacy.com/app/ecederstrand/exchangelib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ecederstrand/exchangelib&amp;utm_campaign=Badge_Grade)
+[![image](https://api.codacy.com/project/badge/Grade/5f805ad901054a889f4b99a82d6c1cb7)](https://www.codacy.com/app/ecederstrand/exchangelib)
 [![image](https://api.travis-ci.com/ecederstrand/exchangelib.png)](http://travis-ci.com/ecederstrand/exchangelib)
 [![image](https://coveralls.io/repos/github/ecederstrand/exchangelib/badge.svg?branch=master)](https://coveralls.io/github/ecederstrand/exchangelib?branch=master)
+[![xscode](https://img.shields.io/badge/Available%20on-xs%3Acode-blue)](https://xscode.com/ecederstrand/exchangelib)
 
 
 ## Teaser
