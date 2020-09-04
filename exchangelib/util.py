@@ -766,6 +766,11 @@ Response data: %(xml_response)s
             except TokenExpiredError as e:
                 log.debug('Session %s thread %s: OAuth token expired; refreshing', session.session_id, thread_id)
                 r = DummyResponse(url=url, headers={'TokenExpiredError': e}, request_headers=headers, status_code=401)
+            except KeyError as e:
+                if e.args[0] != 'www-authenticate':
+                    raise
+                log.debug('Session %s thread %s: auth headers missing from %s', session.session_id, thread_id, url)
+                r = DummyResponse(url=url, headers={'KeyError': e}, request_headers=headers)
             finally:
                 log_vals.update(
                     retry=retry,
