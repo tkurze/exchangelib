@@ -272,9 +272,8 @@ class Autodiscovery:
                         self.INITIAL_RETRY_POLICY.back_off(self.RETRY_WAIT)
                         retry += 1
                         continue
-                    else:
-                        log.debug("Connection error on URL %s: %s", url, e)
-                        raise TransportError(str(e))
+                    log.debug("Connection error on URL %s: %s", url, e)
+                    raise TransportError(str(e))
         try:
             auth_type = get_auth_method_from_response(response=r)
         except UnauthorizedError:
