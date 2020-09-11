@@ -271,7 +271,7 @@ class Response(AutodiscoverBase):
         if 'EXCH' in protocols:
             return protocols['EXCH']
         # Neither type was found. Give up
-        raise ValueError('No valid protocols in response: %s' % self.account.protocols)
+        raise ValueError('No valid protocols in response: %s' % [str(p) for p in self.account.protocols])
 
 
 class ErrorResponse(EWSElement):
