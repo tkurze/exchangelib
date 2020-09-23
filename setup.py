@@ -49,7 +49,7 @@ setup(
     },
     packages=find_packages(exclude=('tests', 'tests.*')),
     tests_require=['PyYAML', 'requests_mock', 'psutil', 'flake8'],
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     test_suite='tests',
     zip_safe=False,
     url='https://github.com/ecederstrand/exchangelib',
