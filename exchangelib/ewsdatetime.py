@@ -237,6 +237,11 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         return cls(tz.zone)
 
     @classmethod
+    def from_dateutil(cls, tz):
+        key = '/'.join(tz._filename.split('/')[-2:])
+        return cls(key)
+
+    @classmethod
     def localzone(cls):
         try:
             tz = tzlocal.get_localzone()
