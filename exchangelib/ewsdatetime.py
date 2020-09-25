@@ -243,7 +243,8 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         except zoneinfo.ZoneInfoNotFoundError:
             # Older versions of tzlocal will raise a pytz exception. Let's not depend on pytz just for that.
             raise UnknownTimeZone("Failed to guess local timezone")
-        return cls(tz.zone)
+        # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
+        return cls(tz.key if hasattr(tz, 'key') else tz.zone)
 
     @classmethod
     def timezone(cls, location):
