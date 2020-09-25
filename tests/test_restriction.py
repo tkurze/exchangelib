@@ -15,9 +15,9 @@ class RestrictionTest(TimedTestCase):
         version = Version(build=EXCHANGE_2007)
         account = mock_account(version=version, protocol=mock_protocol(version=version, service_endpoint='example.com'))
         root = Root(account=account)
-        tz = EWSTimeZone.timezone('Europe/Copenhagen')
-        start = tz.localize(EWSDateTime(1950, 9, 26, 8, 0, 0))
-        end = tz.localize(EWSDateTime(2050, 9, 26, 11, 0, 0))
+        tz = EWSTimeZone('Europe/Copenhagen')
+        start = EWSDateTime(2020, 9, 26, 8, 0, 0, tzinfo=tz)
+        end = EWSDateTime(2020, 9, 26, 11, 0, 0, tzinfo=tz)
         result = '''\
 <m:Restriction xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
     <t:And xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
@@ -34,13 +34,13 @@ class RestrictionTest(TimedTestCase):
         <t:IsGreaterThan>
             <t:FieldURI FieldURI="calendar:End"/>
             <t:FieldURIOrConstant>
-                <t:Constant Value="1950-09-26T08:00:00+01:00"/>
+                <t:Constant Value="2020-09-26T08:00:00+02:00"/>
             </t:FieldURIOrConstant>
         </t:IsGreaterThan>
         <t:IsLessThan>
             <t:FieldURI FieldURI="calendar:Start"/>
             <t:FieldURIOrConstant>
-                <t:Constant Value="2050-09-26T11:00:00+01:00"/>
+                <t:Constant Value="2020-09-26T11:00:00+02:00"/>
             </t:FieldURIOrConstant>
         </t:IsLessThan>
     </t:And>

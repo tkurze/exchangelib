@@ -1,4 +1,4 @@
-""" A dict to translate from pytz location name to Windows timezone name. Translations taken from
+""" A dict to translate from IANA location name to Windows timezone name. Translations taken from
 http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml """
 import re
 
@@ -24,7 +24,7 @@ def generate_map(timeout=10):
     for e in to_xml(r.content).find('windowsZones').find('mapTimezones').findall('mapZone'):
         for location in re.split(r'\s+', e.get('type')):
             if e.get('territory') == DEFAULT_TERRITORY or location not in tz_map:
-                # Prefer default territory. This is so MS_TIMEZONE_TO_PYTZ_MAP maps from MS timezone ID back to the
+                # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
                 # "preferred" region/location timezone name.
                 if not location:
                     raise ValueError('Expected location')
@@ -33,7 +33,7 @@ def generate_map(timeout=10):
 
 
 # This map is generated irregularly from generate_map(). Do not edit manually - make corrections to
-# PYTZ_TO_MS_TIMEZONE_MAP instead. We provide this map to avoid hammering the CLDR_WINZONE_URL.
+# IANA_TO_MS_TIMEZONE_MAP instead. We provide this map to avoid hammering the CLDR_WINZONE_URL.
 #
 # This list was generated from CLDR_WINZONE_URL version 2019b.
 CLDR_TO_MS_TIMEZONE_MAP = {
@@ -498,15 +498,14 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'Pacific/Wallis': ('UTC+12', 'WF'),
 }
 
-# Add timezone names used by pytz (which gets timezone names from
-# IANA) that are not found in the CLDR.
+# Add timezone names used by IANA that are not found in the CLDR.
 # Use 'noterritory' unless you want to override the standard mapping
 # (in which case, '001').
 # TODO: A full list of the IANA names missing in CLDR can be found with:
 #
-#    sorted(set(pytz.all_timezones) - set(CLDR_TO_MS_TIMEZONE_MAP))
+#    sorted(set(zoneinfo.available_timezones()) - set(CLDR_TO_MS_TIMEZONE_MAP))
 #
-PYTZ_TO_MS_TIMEZONE_MAP = dict(
+IANA_TO_MS_TIMEZONE_MAP = dict(
     CLDR_TO_MS_TIMEZONE_MAP,
     **{
         'Asia/Kolkata': ('India Standard Time', 'noterritory'),
@@ -515,9 +514,9 @@ PYTZ_TO_MS_TIMEZONE_MAP = dict(
     }
 )
 
-# Reverse map from Microsoft timezone ID to pytz timezone name. Non-CLDR timezone ID's can be added here.
-MS_TIMEZONE_TO_PYTZ_MAP = dict(
-    {v[0]: k for k, v in PYTZ_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
+# Reverse map from Microsoft timezone ID to IANA timezone name. Non-CLDR timezone ID's can be added here.
+MS_TIMEZONE_TO_IANA_MAP = dict(
+    {v[0]: k for k, v in IANA_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
     **{
         'tzone://Microsoft/Utc': 'UTC',
     }

@@ -236,7 +236,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
             tz = self._meeting_timezone
         else:
             tz = getattr(self, '_%s_timezone' % field_name)
-        value = tz.localize(EWSDateTime.combine(value, datetime.time(0, 0)))
+        value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
         if field_name == 'end':
             value += datetime.timedelta(days=1)
         return value

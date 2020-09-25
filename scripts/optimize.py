@@ -21,7 +21,7 @@ except FileNotFoundError:
     raise
 
 categories = ['perftest']
-tz = EWSTimeZone.timezone('America/New_York')
+tz = EWSTimeZone('America/New_York')
 
 verify_ssl = settings.get('verify_ssl', True)
 if not verify_ssl:
@@ -43,8 +43,8 @@ account.calendar.filter(categories__contains=categories).delete()
 
 # Calendar item generator
 def generate_items(count):
-    start = tz.localize(EWSDateTime(2000, 3, 1, 8, 30, 0))
-    end = tz.localize(EWSDateTime(2000, 3, 1, 9, 15, 0))
+    start = EWSDateTime(2000, 3, 1, 8, 30, 0, tzinfo=tz)
+    end = EWSDateTime(2000, 3, 1, 9, 15, 0, tzinfo=tz)
     tpl_item = CalendarItem(
         start=start,
         end=end,

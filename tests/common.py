@@ -8,14 +8,17 @@ import time
 import unittest
 import unittest.util
 
-import pytz
 from yaml import safe_load
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 from exchangelib.account import Account
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
 from exchangelib.credentials import DELEGATE, Credentials
-from exchangelib.errors import UnknownTimeZone, AmbiguousTimeError, NonExistentTimeError
+from exchangelib.errors import UnknownTimeZone
 from exchangelib.ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, UTC
 from exchangelib.fields import BooleanField, IntegerField, DecimalField, TextField, EmailAddressField, URIField, \
     ChoiceField, BodyField, DateTimeField, Base64Field, PhoneNumberField, EmailAddressesField, TimeZoneField, \
@@ -87,7 +90,7 @@ class EWSTest(TimedTestCase):
             BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
         # Create an account shared by all tests
-        tz = EWSTimeZone.timezone('Europe/Copenhagen')
+        tz = EWSTimeZone('Europe/Copenhagen')
         cls.retry_policy = FaultTolerance(max_wait=600)
         config = Configuration(
             server=settings['server'],
@@ -225,7 +228,7 @@ class EWSTest(TimedTestCase):
         if isinstance(field, TimeZoneField):
             while True:
                 try:
-                    return EWSTimeZone.timezone(random.choice(pytz.all_timezones))
+                    return EWSTimeZone(random.choice(tuple(zoneinfo.available_timezones())))
                 except UnknownTimeZone:
                     pass
         if isinstance(field, PermissionSetField):
@@ -297,7 +300,7 @@ def get_random_email():
 
 # The timezone we're testing (CET/CEST) had a DST date change in 1996 (see
 # https://en.wikipedia.org/wiki/Summer_Time_in_Europe). The Microsoft timezone definition on the server
-# does not observe that, but pytz does. So random datetimes before 1996 will fail tests randomly.
+# does not observe that, but IANA does. So random datetimes before 1996 will fail tests randomly.
 def get_random_date(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1)):
     # Keep with a reasonable date range. A wider date range is unstable WRT timezones
     return EWSDate.fromordinal(random.randint(start_date.toordinal(), end_date.toordinal()))
@@ -306,14 +309,10 @@ def get_random_date(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1)
 def get_random_datetime(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1), tz=UTC):
     # Create a random datetime with minute precision. Both dates are inclusive.
     # Keep with a reasonable date range. A wider date range than the default values is unstable WRT timezones.
-    while True:
-        try:
-            random_date = get_random_date(start_date=start_date, end_date=end_date)
-            random_datetime = datetime.datetime.combine(random_date, datetime.time.min) \
-                + datetime.timedelta(minutes=random.randint(0, 60 * 24))
-            return tz.localize(EWSDateTime.from_datetime(random_datetime), is_dst=None)
-        except (AmbiguousTimeError, NonExistentTimeError):
-            pass
+    random_date = get_random_date(start_date=start_date, end_date=end_date)
+    random_datetime = datetime.datetime.combine(random_date, datetime.time.min) \
+        + datetime.timedelta(minutes=random.randint(0, 60 * 24))
+    return EWSDateTime.from_datetime(random_datetime).replace(tzinfo=tz)
 
 
 def get_random_datetime_range(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1), tz=UTC):
