@@ -39,7 +39,7 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD',
     keywords='ews exchange autodiscover microsoft outlook exchange-web-services o365 office365',
-    install_requires=['requests>=2.7', 'requests_ntlm>=0.2.0', 'dnspython>=1.14.0', 'pytz', 'lxml>3.0',
+    install_requires=['requests>=2.7', 'requests_ntlm>=0.2.0', 'dnspython>=2.0.0', 'pytz', 'lxml>3.0',
                       'cached_property', 'tzlocal', 'python-dateutil', 'pygments', 'defusedxml>=0.6.0',
                       'isodate', 'oauthlib', 'requests_oauthlib'],
     extras_require={

@@ -17,7 +17,6 @@ import xml.sax.handler  # nosec
 import lxml.etree  # nosec
 from defusedxml.expatreader import DefusedExpatParser
 from defusedxml.sax import _InputSource
-import dns.resolver
 import isodate
 from oauthlib.oauth2 import TokenExpiredError
 from pygments import highlight
@@ -610,17 +609,6 @@ def split_url(url):
     parsed_url = urlparse(url)
     # Use netloc instead of hostname since hostname is None if URL is relative
     return parsed_url.scheme == 'https', parsed_url.netloc.lower(), parsed_url.path
-
-
-def is_valid_hostname(hostname, timeout):
-    log.debug('Checking if %s can be looked up in DNS', hostname)
-    resolver = dns.resolver.Resolver()
-    resolver.timeout = timeout
-    try:
-        resolver.query(hostname)
-    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-        return False
-    return True
 
 
 def get_redirect_url(response, allow_relative=True, require_relative=False):
