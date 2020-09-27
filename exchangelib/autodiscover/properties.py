@@ -280,7 +280,9 @@ class Response(AutodiscoverBase):
             return protocols[Protocol.EXPR].ews_url
         if Protocol.EXCH in protocols:
             return protocols[Protocol.EXCH].ews_url
-        raise ValueError('No EWS URL found in any of the available protocols: %s' % [str(p) for p in self.account.protocols])
+        raise ValueError(
+            'No EWS URL found in any of the available protocols: %s' % [str(p) for p in self.account.protocols]
+        )
 
 
 class ErrorResponse(EWSElement):
