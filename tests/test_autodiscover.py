@@ -407,16 +407,17 @@ class AutodiscoverTest(EWSTest):
         self.assertEqual(ad_response.ews_url, 'https://redirected.example.com/EWS/Exchange.asmx')
 
     def test_get_srv_records(self):
-        from exchangelib.autodiscover.discovery import _get_srv_records, SrvRecord
+        from exchangelib.autodiscover.discovery import SrvRecord
+        ad = Autodiscovery('foo@example.com')
         # Unknown domain
-        self.assertEqual(_get_srv_records('example.XXXXX'), [])
+        self.assertEqual(ad._get_srv_records('example.XXXXX'), [])
         # No SRV record
-        self.assertEqual(_get_srv_records('example.com'), [])
+        self.assertEqual(ad._get_srv_records('example.com'), [])
         # Finding a real server that has a correct SRV record is not easy. Mock it
         _orig = dns.resolver.Resolver
 
         class _Mock1:
-            def query(self, hostname, cat):
+            def resolve(self, hostname, cat):
                 class A:
                     def to_text(self):
                         # Return a valid record
@@ -424,11 +425,12 @@ class AutodiscoverTest(EWSTest):
                 return [A()]
 
         dns.resolver.Resolver = _Mock1
+        del ad.resolver
         # Test a valid record
-        self.assertEqual(_get_srv_records('example.com.'), [SrvRecord(priority=1, weight=2, port=3, srv='example.com')])
+        self.assertEqual(ad._get_srv_records('example.com.'), [SrvRecord(priority=1, weight=2, port=3, srv='example.com')])
 
         class _Mock2:
-            def query(self, hostname, cat):
+            def resolve(self, hostname, cat):
                 class A:
                     def to_text(self):
                         # Return malformed data
@@ -436,9 +438,11 @@ class AutodiscoverTest(EWSTest):
                 return [A()]
 
         dns.resolver.Resolver = _Mock2
+        del ad.resolver
         # Test an invalid record
-        self.assertEqual(_get_srv_records('example.com'), [])
+        self.assertEqual(ad._get_srv_records('example.com'), [])
         dns.resolver.Resolver = _orig
+        del ad.resolver
 
     def test_select_srv_host(self):
         from exchangelib.autodiscover.discovery import _select_srv_host, SrvRecord

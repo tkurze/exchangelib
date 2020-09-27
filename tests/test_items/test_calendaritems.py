@@ -117,16 +117,16 @@ class CalendarTest(CommonItemTest):
             account=self.account,
             folder=self.test_folder,
             subject=get_random_string(16),
-            start=self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8)),
-            end=self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10)),
+            start=EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone),
+            end=EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone),
             categories=self.categories,
         )
         item2 = self.ITEM_CLASS(
             account=self.account,
             folder=self.test_folder,
             subject=get_random_string(16),
-            start=self.account.default_timezone.localize(EWSDateTime(2016, 2, 1, 8)),
-            end=self.account.default_timezone.localize(EWSDateTime(2016, 2, 1, 10)),
+            start=EWSDateTime(2016, 2, 1, 8, tzinfo=self.account.default_timezone),
+            end=EWSDateTime(2016, 2, 1, 10, tzinfo=self.account.default_timezone),
             categories=self.categories,
         )
         self.test_folder.bulk_create(items=[item1, item2])
@@ -203,8 +203,8 @@ class CalendarTest(CommonItemTest):
 
         # Create a master item with 4 daily occurrences from 8:00 to 10:00. 'start' and 'end' are values for the first
         # occurrence.
-        start = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10))
+        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -253,8 +253,8 @@ class CalendarTest(CommonItemTest):
 
     def test_change_occurrence(self):
         # Test that we can make changes to individual occurrences and see the effect on the master item.
-        start = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10))
+        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -295,8 +295,8 @@ class CalendarTest(CommonItemTest):
 
     def test_delete_occurrence(self):
         # Test that we can delete an occurrence and see the cange on the master item
-        start = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10))
+        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -328,8 +328,8 @@ class CalendarTest(CommonItemTest):
 
     def test_change_occurrence_via_index(self):
         # Test updating occurrences via occurrence index without knowing the ID of the occurrence.
-        start = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10))
+        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -365,8 +365,8 @@ class CalendarTest(CommonItemTest):
 
     def test_delete_occurrence_via_index(self):
         # Test deleting occurrences via occurrence index without knowing the ID of the occurrence.
-        start = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10))
+        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -393,8 +393,8 @@ class CalendarTest(CommonItemTest):
 
     def test_get_master_recurrence(self):
         # Test getting the master recurrence via an occurrence
-        start = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2016, 1, 1, 10))
+        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,

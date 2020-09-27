@@ -17,7 +17,6 @@ import xml.sax.handler  # nosec
 import lxml.etree  # nosec
 from defusedxml.expatreader import DefusedExpatParser
 from defusedxml.sax import _InputSource
-import dns.resolver
 import isodate
 from oauthlib.oauth2 import TokenExpiredError
 from pygments import highlight
@@ -488,18 +487,22 @@ def to_xml(bytes_content):
     return res
 
 
-def is_xml(text):
-    """Helper function. Lightweight test if response is an XML doc
+def is_xml(text, expected_prefix=b'<?xml'):
+    """Lightweight test if response is an XML doc. It's better to be fast than correct here.
 
     Args:
-      text:
+      text: The string to check
+      expected_prefix: What to search for in the start if the string
 
     """
     # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
+    prefix_len = len(expected_prefix)
     if text[:bom_len] == BOM_UTF8:
-        return text[bom_len:bom_len + 5] == b'<?xml'
-    return text[:5] == b'<?xml'
+        prefix = text[bom_len:bom_len + prefix_len]
+    else:
+        prefix = text[:prefix_len]
+    return prefix == expected_prefix
 
 
 class PrettyXmlHandler(logging.StreamHandler):
@@ -606,17 +609,6 @@ def split_url(url):
     parsed_url = urlparse(url)
     # Use netloc instead of hostname since hostname is None if URL is relative
     return parsed_url.scheme == 'https', parsed_url.netloc.lower(), parsed_url.path
-
-
-def is_valid_hostname(hostname, timeout):
-    log.debug('Checking if %s can be looked up in DNS', hostname)
-    resolver = dns.resolver.Resolver()
-    resolver.timeout = timeout
-    try:
-        resolver.query(hostname)
-    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-        return False
-    return True
 
 
 def get_redirect_url(response, allow_relative=True, require_relative=False):

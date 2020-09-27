@@ -280,7 +280,7 @@ class Response(AutodiscoverBase):
             return protocols[Protocol.EXPR].ews_url
         if Protocol.EXCH in protocols:
             return protocols[Protocol.EXCH].ews_url
-        raise ValueError('No EWS URL found in any of the valid protocols: %s' % self.account.protocols)
+        raise ValueError('No EWS URL found in any of the available protocols: %s' % [str(p) for p in self.account.protocols])
 
 
 class ErrorResponse(EWSElement):
@@ -322,7 +322,7 @@ class Autodiscover(EWSElement):
           bytes_content:
 
         """
-        if not is_xml(bytes_content):
+        if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b'<Autodiscover '):
             raise ValueError('Response is not XML: %s' % bytes_content)
         try:
             root = to_xml(bytes_content).getroot()

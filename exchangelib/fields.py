@@ -597,7 +597,7 @@ class DateTimeBackedDateField(FieldURIField):
         self._datetime_field = DateTimeField(*args, **kwargs)
 
     def date_to_datetime(self, value):
-        return UTC.localize(self._datetime_field.value_cls.combine(value, datetime.time(11, 59)))
+        return self._datetime_field.value_cls.combine(value, datetime.time(11, 59)).replace(tzinfo=UTC)
 
     def from_xml(self, elem, account):
         res = self._datetime_field.from_xml(elem=elem, account=account)
@@ -650,7 +650,7 @@ class DateTimeField(FieldURIField):
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
                         log.info('Found naive datetime %s on field %s. Assuming timezone %s', local_dt, self.name, tz)
-                        return tz.localize(local_dt)
+                        return local_dt.replace(tzinfo=tz)
                     # There's nothing we can do but return the naive date. It's better than assuming e.g. UTC.
                     log.warning('Returning naive datetime %s on field %s', local_dt, self.name)
                     return local_dt

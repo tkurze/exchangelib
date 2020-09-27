@@ -4,8 +4,6 @@ Stores errors specific to this package, and mirrors all the possible errors that
 """
 from urllib.parse import urlparse
 
-import pytz.exceptions
-
 
 class MultipleObjectsReturned(Exception):
     pass
@@ -104,14 +102,6 @@ class NaiveDateTimeNotAllowed(ValueError):
 
 
 class UnknownTimeZone(EWSError):
-    pass
-
-
-class AmbiguousTimeError(EWSError, pytz.exceptions.AmbiguousTimeError):
-    pass
-
-
-class NonExistentTimeError(EWSError, pytz.exceptions.NonExistentTimeError):
     pass
 
 

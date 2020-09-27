@@ -106,10 +106,10 @@ class ProtocolTest(EWSTest):
                                           for_year=2018)
 
     def test_get_free_busy_info(self):
-        tz = EWSTimeZone.timezone('Europe/Copenhagen')
+        tz = EWSTimeZone('Europe/Copenhagen')
         server_timezones = list(self.account.protocol.get_timezones(return_full_timezone_data=True))
-        start = tz.localize(EWSDateTime.now())
-        end = tz.localize(EWSDateTime.now() + datetime.timedelta(hours=6))
+        start = EWSDateTime.now(tz=tz)
+        end = EWSDateTime.now(tz=tz) + datetime.timedelta(hours=6)
         accounts = [(self.account, 'Organizer', False)]
 
         with self.assertRaises(ValueError):
@@ -394,22 +394,22 @@ class ProtocolTest(EWSTest):
             # Start must be before end
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=UTC.localize(EWSDateTime(2100, 12, 1)),
-                end=UTC.localize(EWSDateTime(2100, 11, 1)),
+                start=EWSDateTime(2100, 12, 1, tzinfo=UTC),
+                end=EWSDateTime(2100, 11, 1, tzinfo=UTC),
             ).clean(version=None)
         with self.assertRaises(ValueError):
             # End must be in the future
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=UTC.localize(EWSDateTime(2000, 11, 1)),
-                end=UTC.localize(EWSDateTime(2000, 12, 1)),
+                start=EWSDateTime(2000, 11, 1, tzinfo=UTC),
+                end=EWSDateTime(2000, 12, 1, tzinfo=UTC),
             ).clean(version=None)
         with self.assertRaises(ValueError):
             # Must have an internal and external reply
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=UTC.localize(EWSDateTime(2100, 11, 1)),
-                end=UTC.localize(EWSDateTime(2100, 12, 1)),
+                start=EWSDateTime(2100, 11, 1, tzinfo=UTC),
+                end=EWSDateTime(2100, 12, 1, tzinfo=UTC),
             ).clean(version=None)
 
     def test_convert_id(self):
@@ -424,8 +424,8 @@ class ProtocolTest(EWSTest):
 
     def test_sessionpool(self):
         # First, empty the calendar
-        start = self.account.default_timezone.localize(EWSDateTime(2011, 10, 12, 8))
-        end = self.account.default_timezone.localize(EWSDateTime(2011, 10, 12, 10))
+        start = EWSDateTime(2011, 10, 12, 8, tzinfo=self.account.default_timezone)
+        end = EWSDateTime(2011, 10, 12, 10, tzinfo=self.account.default_timezone)
         self.account.calendar.filter(start__lt=end, end__gt=start, categories__contains=self.categories).delete()
         items = []
         for i in range(75):

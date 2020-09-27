@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+HEAD
+----
+-   Switch `EWSTimeZone` to be implemented on top of the new `zoneinfo` module in Python 3.9 instead
+    of `pytz`. `backports.zoneinfo` is used for earlier versions of Python. This means that the
+    `ÈWSTimeZone` methods `timezone()`, `normalize()` and `localize()` methods are now deprecated.
+-   Add `EWSTimeZone.from_dateutil()` to support converting `dateutil` timezones to `EWSTimeZone`.
+-   Dropped support for Python 3.5 which is EOL per September 2020.
+
+
 3.2.1
 -----
 -   Fix bug leading to an exception in `CalendarItem.cancel()`.
@@ -24,7 +33,7 @@ Change Log
     and end values are inclusive; a one-day event starts and ends on the same `EWSDate` value.
 -   Add support for `RecurringMasterItemId` and `OccurrenceItemId` elements that allow to request
     the master recurrence from a `CalendarItem` occurrence, and to request a specific occurrence
-    from a `CalendarItem` master recurrence. `CalendarItem.master_recurrence()` and 
+    from a `CalendarItem` master recurrence. `CalendarItem.master_recurrence()` and
     `CalendarItem.occurrence(some_occurrence_index)` methods were added to aid this traversal.
     `some_occurrence_index` in the last method specifies which item in the list of occurrences to
     target; `CalendarItem.occurrence(3)` gets the third occurrence in the recurrence.

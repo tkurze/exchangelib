@@ -39,9 +39,10 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD',
     keywords='ews exchange autodiscover microsoft outlook exchange-web-services o365 office365',
-    install_requires=['requests>=2.7', 'requests_ntlm>=0.2.0', 'dnspython>=1.14.0', 'pytz', 'lxml>3.0',
+    install_requires=['requests>=2.7', 'requests_ntlm>=0.2.0', 'dnspython>=2.0.0', 'lxml>3.0',
                       'cached_property', 'tzlocal', 'python-dateutil', 'pygments', 'defusedxml>=0.6.0',
-                      'isodate', 'oauthlib', 'requests_oauthlib'],
+                      'isodate', 'oauthlib', 'requests_oauthlib', 'backports.zoneinfo;python_version<"3.9"',
+                      'tzdata'],
     extras_require={
         'kerberos': ['requests_kerberos'],
         'sspi': ['requests_negotiate_sspi'],  # Only for Win32 environments
@@ -49,7 +50,7 @@ setup(
     },
     packages=find_packages(exclude=('tests', 'tests.*')),
     tests_require=['PyYAML', 'requests_mock', 'psutil', 'flake8'],
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     test_suite='tests',
     zip_safe=False,
     url='https://github.com/ecederstrand/exchangelib',

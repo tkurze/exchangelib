@@ -2,6 +2,7 @@ import logging
 import time
 from urllib.parse import urlparse
 
+from cached_property import threaded_cached_property
 import dns.resolver
 
 from ..configuration import Configuration
@@ -10,7 +11,7 @@ from ..errors import AutoDiscoverFailed, AutoDiscoverCircularRedirect, Transport
 from ..protocol import Protocol, FailFast
 from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, OAUTH2, CREDENTIALS_REQUIRED
 from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, _may_retry_on_error, \
-    is_valid_hostname, DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
+    DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
 from ..version import Version
 from .cache import autodiscover_cache
 from .properties import Autodiscover
@@ -145,6 +146,12 @@ class Autodiscovery:
         domain = get_domain(self.email)
         return domain, self.credentials
 
+    @threaded_cached_property
+    def resolver(self):
+        resolver = dns.resolver.Resolver()
+        resolver.timeout = AutodiscoverProtocol.TIMEOUT
+        return resolver
+
     def _build_response(self, ad_response):
         ews_url = ad_response.ews_url
         if not ews_url:
@@ -241,7 +248,7 @@ class Autodiscovery:
         """
         # We are connecting to untrusted servers here, so take necessary precautions.
         hostname = urlparse(url).netloc
-        if not is_valid_hostname(hostname, timeout=AutodiscoverProtocol.TIMEOUT):
+        if not self._is_valid_hostname(hostname):
             # 'requests' is really bad at reporting that a hostname cannot be resolved. Let's check this separately.
             # Don't retry on DNS errors. They will most likely be persistent.
             raise TransportError('%r has no DNS entry' % hostname)
@@ -272,9 +279,8 @@ class Autodiscovery:
                         self.INITIAL_RETRY_POLICY.back_off(self.RETRY_WAIT)
                         retry += 1
                         continue
-                    else:
-                        log.debug("Connection error on URL %s: %s", url, e)
-                        raise TransportError(str(e))
+                    log.debug("Connection error on URL %s: %s", url, e)
+                    raise TransportError(str(e))
         try:
             auth_type = get_auth_method_from_response(response=r)
         except UnauthorizedError:
@@ -362,6 +368,47 @@ class Autodiscovery:
             except ValueError as e:
                 log.debug('Invalid response: %s', e)
         return False, None
+
+    def _is_valid_hostname(self, hostname):
+        log.debug('Checking if %s can be looked up in DNS', hostname)
+        try:
+            self.resolver.resolve(hostname)
+        except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+            return False
+        return True
+
+    def _get_srv_records(self, hostname):
+        """Send a DNS query for SRV entries for the hostname.
+
+        An SRV entry that has been formatted for autodiscovery will have the following format:
+
+            canonical name = mail.example.com.
+            service = 8 100 443 webmail.example.com.
+
+        The first three numbers in the service line are: priority, weight, port
+
+        Args:
+          hostname:
+
+        """
+        log.debug('Attempting to get SRV records for %s', hostname)
+        records = []
+        try:
+            answers = self.resolver.resolve('%s.' % hostname, 'SRV')
+        except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
+            log.debug('DNS lookup failure: %s', e)
+            return records
+        for rdata in answers:
+            try:
+                vals = rdata.to_text().strip().rstrip('.').split(' ')
+                # Raise ValueError if the first three are not ints, and IndexError if there are less than 4 values
+                priority, weight, port, srv = int(vals[0]), int(vals[1]), int(vals[2]), vals[3]
+                record = SrvRecord(priority=priority, weight=weight, port=port, srv=srv)
+                log.debug('Found SRV record %s ', record)
+                records.append(record)
+            except (ValueError, IndexError):
+                log.debug('Incompatible SRV record for %s (%s)', hostname, rdata.to_text())
+        return records
 
     def _step_1(self, hostname):
         """The client sends an Autodiscover request to https://example.com/autodiscover/autodiscover.xml and then does
@@ -454,7 +501,7 @@ class Autodiscovery:
         """
         dns_hostname = '_autodiscover._tcp.%s' % hostname
         log.info('Step 4: Trying autodiscover on %r with email %r', dns_hostname, self.email)
-        srv_records = _get_srv_records(dns_hostname)
+        srv_records = self._get_srv_records(dns_hostname)
         try:
             srv_host = _select_srv_host(srv_records)
         except ValueError:
@@ -521,42 +568,6 @@ class Autodiscovery:
         raise AutoDiscoverFailed(
             'All steps in the autodiscover protocol failed for email %r. If you think this is an error, consider doing '
             'an official test at https://testconnectivity.microsoft.com' % self.email)
-
-
-def _get_srv_records(hostname):
-    """Send a DNS query for SRV entries for the hostname.
-
-    An SRV entry that has been formatted for autodiscovery will have the following format:
-
-        canonical name = mail.example.com.
-        service = 8 100 443 webmail.example.com.
-
-    The first three numbers in the service line are: priority, weight, port
-
-    Args:
-      hostname:
-
-    """
-    log.debug('Attempting to get SRV records for %s', hostname)
-    resolver = dns.resolver.Resolver()
-    resolver.timeout = AutodiscoverProtocol.TIMEOUT
-    records = []
-    try:
-        answers = resolver.query('%s.' % hostname, 'SRV')
-    except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
-        log.debug('DNS lookup failure: %s', e)
-        return records
-    for rdata in answers:
-        try:
-            vals = rdata.to_text().strip().rstrip('.').split(' ')
-            # Raise ValueError if the first three are not ints, and IndexError if there are less than 4 values
-            priority, weight, port, srv = int(vals[0]), int(vals[1]), int(vals[2]), vals[3]
-            record = SrvRecord(priority=priority, weight=weight, port=port, srv=srv)
-            log.debug('Found SRV record %s ', record)
-            records.append(record)
-        except (ValueError, IndexError):
-            log.debug('Incompatible SRV record for %s (%s)', hostname, rdata.to_text())
-    return records
 
 
 def _select_srv_host(srv_records):

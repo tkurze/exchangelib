@@ -13,21 +13,21 @@ class TasksTest(CommonItemTest):
     ITEM_CLASS = Task
 
     def test_task_validation(self):
-        tz = EWSTimeZone.timezone('Europe/Copenhagen')
-        task = Task(due_date=tz.localize(EWSDateTime(2017, 1, 1)), start_date=tz.localize(EWSDateTime(2017, 2, 1)))
+        tz = EWSTimeZone('Europe/Copenhagen')
+        task = Task(due_date=EWSDateTime(2017, 1, 1, tzinfo=tz), start_date=EWSDateTime(2017, 2, 1, tzinfo=tz))
         task.clean()
         # We reset due date if it's before start date
-        self.assertEqual(task.due_date, tz.localize(EWSDateTime(2017, 2, 1)))
+        self.assertEqual(task.due_date, EWSDateTime(2017, 2, 1, tzinfo=tz))
         self.assertEqual(task.due_date, task.start_date)
 
-        task = Task(complete_date=tz.localize(EWSDateTime(2099, 1, 1)), status=Task.NOT_STARTED)
+        task = Task(complete_date=EWSDateTime(2099, 1, 1, tzinfo=tz), status=Task.NOT_STARTED)
         task.clean()
         # We reset status if complete_date is set
         self.assertEqual(task.status, Task.COMPLETED)
         # We also reset complete date to now() if it's in the future
         self.assertEqual(task.complete_date.date(), UTC_NOW().date())
 
-        task = Task(complete_date=tz.localize(EWSDateTime(2017, 1, 1)), start_date=tz.localize(EWSDateTime(2017, 2, 1)))
+        task = Task(complete_date=EWSDateTime(2017, 1, 1, tzinfo=tz), start_date=EWSDateTime(2017, 2, 1, tzinfo=tz))
         task.clean()
         # We also reset complete date to start_date if it's before start_date
         self.assertEqual(task.complete_date, task.start_date)
