@@ -347,7 +347,7 @@ class AutodiscoverTest(EWSTest):
         ])
         ad_response, p = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'redirected@%s' % self.domain)
-        self.assertEqual(ad_response.protocol.ews_url, 'https://redirected.%s/EWS/Exchange.asmx' % self.domain)
+        self.assertEqual(ad_response.ews_url, 'https://redirected.%s/EWS/Exchange.asmx' % self.domain)
 
         # Test that we catch circular redirects on the same domain with a primed cache. Just mock the endpoint to
         # return the same redirect response on every request.
@@ -404,7 +404,7 @@ class AutodiscoverTest(EWSTest):
         m.post('https://redirected.example.com/EWS/Exchange.asmx', status_code=200)
         ad_response, p = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.example.com')
-        self.assertEqual(ad_response.protocol.ews_url, 'https://redirected.example.com/EWS/Exchange.asmx')
+        self.assertEqual(ad_response.ews_url, 'https://redirected.example.com/EWS/Exchange.asmx')
 
     def test_get_srv_records(self):
         from exchangelib.autodiscover.discovery import _get_srv_records, SrvRecord
@@ -534,7 +534,7 @@ class AutodiscoverTest(EWSTest):
     </Response>
 </Autodiscover>'''
         self.assertEqual(
-            Autodiscover.from_bytes(xml).response.protocol.ews_url,
+            Autodiscover.from_bytes(xml).response.ews_url,
             'https://expr.example.com/EWS/Exchange.asmx'
         )
 
@@ -557,7 +557,7 @@ class AutodiscoverTest(EWSTest):
     </Response>
 </Autodiscover>'''
         self.assertEqual(
-            Autodiscover.from_bytes(xml).response.protocol.ews_url,
+            Autodiscover.from_bytes(xml).response.ews_url,
             'https://exch.example.com/EWS/Exchange.asmx'
         )
 
@@ -580,4 +580,4 @@ class AutodiscoverTest(EWSTest):
     </Response>
 </Autodiscover>'''
         with self.assertRaises(ValueError):
-            Autodiscover.from_bytes(xml).response.protocol
+            Autodiscover.from_bytes(xml).response.ews_url

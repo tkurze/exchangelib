@@ -264,17 +264,23 @@ class Response(AutodiscoverBase):
             return None
 
     @property
-    def protocol(self):
-        # There are three possible protocol types: EXCH, EXPR and WEB. EXPR is meant for EWS. See
-        # https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16
-        # We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.
-        protocols = {p.type: p for p in self.account.protocols}
-        if 'EXPR' in protocols:
-            return protocols['EXPR']
-        if 'EXCH' in protocols:
-            return protocols['EXCH']
-        # Neither type was found. Give up
-        raise ValueError('No valid protocols in response: %s' % self.account.protocols)
+    def ews_url(self):
+        """Return the EWS URL contained in the response
+
+        A response may contain a number of possible protocol types. EXPR is meant for EWS. See
+        https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16
+
+        We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.
+
+        Additionally, some responses may contain and EXPR with no EWS URL. In that case, return the URL from EXCH, if
+        available.
+        """
+        protocols = {p.type: p for p in self.account.protocols if p.ews_url}
+        if Protocol.EXPR in protocols:
+            return protocols[Protocol.EXPR].ews_url
+        if Protocol.EXCH in protocols:
+            return protocols[Protocol.EXCH].ews_url
+        raise ValueError('No EWS URL found in any of the valid protocols: %s' % self.account.protocols)
 
 
 class ErrorResponse(EWSElement):

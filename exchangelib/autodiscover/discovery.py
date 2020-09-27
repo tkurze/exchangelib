@@ -146,7 +146,7 @@ class Autodiscovery:
         return domain, self.credentials
 
     def _build_response(self, ad_response):
-        ews_url = ad_response.protocol.ews_url
+        ews_url = ad_response.ews_url
         if not ews_url:
             raise AutoDiscoverFailed("Response is missing an 'ews_url' value")
         if not ad_response.autodiscover_smtp_address:
