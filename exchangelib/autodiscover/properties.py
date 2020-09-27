@@ -38,6 +38,7 @@ class AddressBook(IntExtUrlBase):
 
 
 class MailStore(IntExtUrlBase):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailstore-pox"""
     ELEMENT_NAME = 'MailStore'
     __slots__ = tuple()
 
@@ -61,10 +62,13 @@ class SimpleProtocol(AutodiscoverBase):
 
     """
     ELEMENT_NAME = 'Protocol'
+    WEB = 'WEB'
+    EXCH = 'EXCH'
+    EXPR = 'EXPR'
+    EXHTTP = 'EXHTTP'
+    TYPES = (WEB, EXCH, EXPR, EXHTTP)
     FIELDS = Fields(
-        ChoiceField('type', field_uri='Type', choices={
-            Choice('WEB'), Choice('EXCH'), Choice('EXPR'), Choice('EXHTTP')
-        }, namespace=RNS),
+        ChoiceField('type', field_uri='Type', choices={Choice(c) for c in TYPES}, namespace=RNS),
         TextField('as_url', field_uri='ASUrl', namespace=RNS),
     )
     __slots__ = tuple(f.name for f in FIELDS)
@@ -72,7 +76,8 @@ class SimpleProtocol(AutodiscoverBase):
 
 class IntExtBase(AutodiscoverBase):
     FIELDS = Fields(
-        # TODO: 'OWAUrl' also has an AuthenticationMethod enum-style XML attribute
+        # TODO: 'OWAUrl' also has an AuthenticationMethod enum-style XML attribute with values:
+        # WindowsIntegrated, FBA, NTLM, Digest, Basic
         TextField('owa_url', field_uri='OWAUrl', namespace=RNS),
         EWSElementField('protocol', value_cls=SimpleProtocol),
     )
@@ -92,16 +97,14 @@ class External(IntExtBase):
     __slots__ = tuple()
 
 
-class Protocol(AutodiscoverBase):
+class Protocol(SimpleProtocol):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/protocol-pox"""
-    ELEMENT_NAME = 'Protocol'
-    TYPES = ('WEB', 'EXCH', 'EXPR', 'EXHTTP')
     FIELDS = Fields(
         # Attribute 'Type' is ignored here. Has a name conflict with the child element and does not seem useful.
         TextField('version', field_uri='Version', is_attribute=True, namespace=RNS),
-        ChoiceField('type', field_uri='Type', namespace=RNS, choices={Choice(p) for p in TYPES}),
-        TextField('internal', field_uri='Internal', namespace=RNS),
-        TextField('external', field_uri='External', namespace=RNS),
+        ChoiceField('type', field_uri='Type', namespace=RNS, choices={Choice(p) for p in SimpleProtocol.TYPES}),
+        EWSElementField('internal', field_uri='Internal', value_cls=Internal),
+        EWSElementField('external', field_uri='External', value_cls=External),
         IntegerField('ttl', field_uri='TTL', namespace=RNS, default=1),  # TTL for this autodiscover response, in hours
         TextField('server', field_uri='Server', namespace=RNS),
         TextField('server_dn', field_uri='ServerDN', namespace=RNS),
