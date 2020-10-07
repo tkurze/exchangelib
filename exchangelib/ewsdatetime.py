@@ -111,7 +111,9 @@ class EWSDateTime(datetime.datetime):
         return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=tz)
 
     def astimezone(self, tz=None):
-        t = super().astimezone(tz=tz)
+        if tz is None:
+            tz = EWSTimeZone.localzone()
+        t = super().astimezone(tz=tz).replace(tzinfo=tz)
         if isinstance(t, self.__class__):
             return t
         return self.from_datetime(t)  # We want to return EWSDateTime objects
@@ -149,8 +151,10 @@ class EWSDateTime(datetime.datetime):
         # This is probably a datetime value with timezone information. This comes in the form '+/-HH:MM' but the Python
         # strptime '%z' directive cannot yet handle full ISO8601 formatted timezone information (see
         # http://bugs.python.org/issue15873). Use the 'dateutil' package instead.
-        aware_dt = dateutil.parser.parse(date_string)
-        return aware_dt.astimezone(UTC)
+        aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+        if isinstance(aware_dt, cls):
+            return aware_dt
+        return cls.from_datetime(aware_dt)
 
     @classmethod
     def fromtimestamp(cls, t, tz=None):
