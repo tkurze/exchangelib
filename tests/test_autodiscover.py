@@ -223,11 +223,17 @@ class AutodiscoverTest(EWSTest):
         autodiscover_cache[key] = namedtuple('P', ['service_endpoint', 'auth_type', 'retry_policy'])(1, 'bar', 'baz')
         # Check that it exists. 'in' goes directly to the file
         self.assertTrue(key in autodiscover_cache)
-        # Destroy the backing cache file(s)
+
+        # Check that we can recover from a destroyed file
         for db_file in glob.glob(autodiscover_cache._storage_file + '*'):
             with open(db_file, 'w') as f:
                 f.write('XXX')
-        # Check that we can recover from a destroyed file and that the entry no longer exists
+        self.assertFalse(key in autodiscover_cache)
+
+        # Check that we can recover from an empty file
+        for db_file in glob.glob(autodiscover_cache._storage_file + '*'):
+            with open(db_file, 'wb') as f:
+                f.write(b'')
         self.assertFalse(key in autodiscover_cache)
 
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here

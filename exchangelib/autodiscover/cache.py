@@ -41,6 +41,12 @@ def shelve_open_with_failover(filename):
     # We don't know which file caused the error, so just delete them all.
     try:
         shelve_handle = shelve.open(filename)
+        # Try to actually use the shelve. Some implementations may allow opening the file but then throw
+        # errors on access.
+        _ = shelve_handle['']
+    except KeyError:
+         # The entry doesn't exist. This is expected.
+        pass
     except Exception as e:
         for f in glob.glob(filename + '*'):
             log.warning('Deleting invalid cache file %s (%r)', f, e)
