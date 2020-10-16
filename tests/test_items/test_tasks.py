@@ -15,7 +15,7 @@ class TasksTest(CommonItemTest):
     ITEM_CLASS = Task
 
     def test_task_validation(self):
-        tz = EWSTimeZone('Europe/Copenhagen')
+        tz = self.account.default_timezone
         task = Task(due_date=EWSDate(2017, 1, 1), start_date=EWSDate(2017, 2, 1))
         task.clean()
         # We reset due date if it's before start date
@@ -136,6 +136,6 @@ class TasksTest(CommonItemTest):
         master_item = self.get_item_by_id((master_item_id, None))
         self.assertEqual(master_item.change_count, 2)
         # The due date is the next occurrence after today
-        tz = EWSTimeZone('Europe/Copenhagen')
+        tz = self.account.default_timezone
         self.assertEqual(master_item.due_date, EWSDateTime.now(tz).date() + datetime.timedelta(days=1))
         self.assertEqual(master_item.recurrence.boundary.number, 3)  # One less

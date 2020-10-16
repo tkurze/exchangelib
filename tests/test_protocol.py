@@ -106,7 +106,7 @@ class ProtocolTest(EWSTest):
                                           for_year=2018)
 
     def test_get_free_busy_info(self):
-        tz = EWSTimeZone('Europe/Copenhagen')
+        tz = self.account.default_timezone
         server_timezones = list(self.account.protocol.get_timezones(return_full_timezone_data=True))
         start = EWSDateTime.now(tz=tz)
         end = EWSDateTime.now(tz=tz) + datetime.timedelta(hours=6)
@@ -366,7 +366,7 @@ class ProtocolTest(EWSTest):
         self.assertEqual(self.account.oof_settings, oof)
 
         # Scheduled duration must not be in the past
-        tz = EWSTimeZone('Europe/Copenhagen')
+        tz = self.account.default_timezone
         start, end = get_random_datetime_range(start_date=EWSDateTime.now(tz).date())
         oof = OofSettings(
             state=OofSettings.SCHEDULED,
