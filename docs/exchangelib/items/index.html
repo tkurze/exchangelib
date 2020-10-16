@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>exchangelib.items API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -424,15 +424,14 @@ def from_xml(cls, elem, account):
         AttendeesField(&#39;resources&#39;, field_uri=&#39;calendar:Resources&#39;, is_searchable=False),
         IntegerField(&#39;conflicting_meeting_count&#39;, field_uri=&#39;calendar:ConflictingMeetingCount&#39;, is_read_only=True),
         IntegerField(&#39;adjacent_meeting_count&#39;, field_uri=&#39;calendar:AdjacentMeetingCount&#39;, is_read_only=True),
-        # Placeholder for ConflictingMeetings
-        # Placeholder for AdjacentMeetings
+        EWSElementListField(&#39;conflicting_meetings&#39;, field_uri=&#39;calendar:ConflictingMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
+                            namespace=Item.NAMESPACE, is_read_only=True),
+        EWSElementListField(&#39;adjacent_meetings&#39;, field_uri=&#39;calendar:AdjacentMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
+                            namespace=Item.NAMESPACE, is_read_only=True),
         CharField(&#39;duration&#39;, field_uri=&#39;calendar:Duration&#39;, is_read_only=True),
         DateTimeField(&#39;appointment_reply_time&#39;, field_uri=&#39;calendar:AppointmentReplyTime&#39;, is_read_only=True),
         IntegerField(&#39;appointment_sequence_number&#39;, field_uri=&#39;calendar:AppointmentSequenceNumber&#39;, is_read_only=True),
-        # Placeholder for AppointmentState
-        # AppointmentState is an EnumListField-like field, but with bitmask values:
-        #    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
-        # We could probably subclass EnumListField to implement this field.
+        AppointmentStateField(&#39;appointment_state&#39;, field_uri=&#39;calendar:AppointmentState&#39;, is_read_only=True),
         RecurrenceField(&#39;recurrence&#39;, field_uri=&#39;calendar:Recurrence&#39;, is_searchable=False),
         OccurrenceField(&#39;first_occurrence&#39;, field_uri=&#39;calendar:FirstOccurrence&#39;, value_cls=FirstOccurrence,
                         is_read_only=True),
@@ -568,16 +567,23 @@ def from_xml(cls, elem, account):
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
+    def tz_field_for_field_name(self, field_name):
+        meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
+        if self.account.version.build &lt; EXCHANGE_2010:
+            return meeting_tz_field
+        if field_name == &#39;start&#39;:
+            return start_tz_field
+        elif field_name == &#39;end&#39;:
+            return end_tz_field
+        raise ValueError(&#39;Unsupported field_name&#39;)
+
     def date_to_datetime(self, field_name):
         # EWS always expects a datetime. If we have a date value, then convert it to datetime in the local
         # timezone. Additionally, if this the end field, add 1 day to the date. We could add 12 hours to both
         # start and end values and let EWS apply its logic, but that seems hacky.
         value = getattr(self, field_name)
-        if self.account.version.build &lt; EXCHANGE_2010:
-            tz = self._meeting_timezone
-        else:
-            tz = getattr(self, &#39;_%s_timezone&#39; % field_name)
-        value = tz.localize(EWSDateTime.combine(value, datetime.time(0, 0)))
+        tz = getattr(self, self.tz_field_for_field_name(field_name).name)
+        value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
         if field_name == &#39;end&#39;:
             value += datetime.timedelta(days=1)
         return value
@@ -681,6 +687,10 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.CalendarItem.adjacent_meetings"><code class="name">var <span class="ident">adjacent_meetings</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.CalendarItem.allow_new_time_proposal"><code class="name">var <span class="ident">allow_new_time_proposal</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -693,11 +703,19 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.CalendarItem.appointment_state"><code class="name">var <span class="ident">appointment_state</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.CalendarItem.conference_type"><code class="name">var <span class="ident">conference_type</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.items.CalendarItem.conflicting_meeting_count"><code class="name">var <span class="ident">conflicting_meeting_count</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.CalendarItem.conflicting_meetings"><code class="name">var <span class="ident">conflicting_meetings</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -902,11 +920,8 @@ def timezone_fields(cls):
     # timezone. Additionally, if this the end field, add 1 day to the date. We could add 12 hours to both
     # start and end values and let EWS apply its logic, but that seems hacky.
     value = getattr(self, field_name)
-    if self.account.version.build &lt; EXCHANGE_2010:
-        tz = self._meeting_timezone
-    else:
-        tz = getattr(self, &#39;_%s_timezone&#39; % field_name)
-    value = tz.localize(EWSDateTime.combine(value, datetime.time(0, 0)))
+    tz = getattr(self, self.tz_field_for_field_name(field_name).name)
+    value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
     if field_name == &#39;end&#39;:
         value += datetime.timedelta(days=1)
     return value</code></pre>
@@ -1004,6 +1019,26 @@ def timezone_fields(cls):
     return elem</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.items.CalendarItem.tz_field_for_field_name"><code class="name flex">
+<span>def <span class="ident">tz_field_for_field_name</span></span>(<span>self, field_name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tz_field_for_field_name(self, field_name):
+    meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
+    if self.account.version.build &lt; EXCHANGE_2010:
+        return meeting_tz_field
+    if field_name == &#39;start&#39;:
+        return start_tz_field
+    elif field_name == &#39;end&#39;:
+        return end_tz_field
+    raise ValueError(&#39;Unsupported field_name&#39;)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1047,6 +1082,7 @@ def timezone_fields(cls):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -1146,13 +1182,13 @@ def timezone_fields(cls):
         TextField(&#39;initials&#39;, field_uri=&#39;contacts:Initials&#39;),
         CharField(&#39;middle_name&#39;, field_uri=&#39;contacts:MiddleName&#39;),
         TextField(&#39;nickname&#39;, field_uri=&#39;contacts:Nickname&#39;),
-        # Placeholder for CompleteName
+        EWSElementField(&#39;complete_name&#39;, field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True),
         TextField(&#39;company_name&#39;, field_uri=&#39;contacts:CompanyName&#39;),
         EmailAddressesField(&#39;email_addresses&#39;, field_uri=&#39;contacts:EmailAddress&#39;),
         PhysicalAddressField(&#39;physical_addresses&#39;, field_uri=&#39;contacts:PhysicalAddress&#39;),
         PhoneNumberField(&#39;phone_numbers&#39;, field_uri=&#39;contacts:PhoneNumber&#39;),
         TextField(&#39;assistant_name&#39;, field_uri=&#39;contacts:AssistantName&#39;),
-        DateTimeBackedDateField(&#39;birthday&#39;, field_uri=&#39;contacts:Birthday&#39;),
+        DateTimeBackedDateField(&#39;birthday&#39;, field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59)),
         URIField(&#39;business_homepage&#39;, field_uri=&#39;contacts:BusinessHomePage&#39;),
         TextListField(&#39;children&#39;, field_uri=&#39;contacts:Children&#39;),
         TextListField(&#39;companies&#39;, field_uri=&#39;contacts:Companies&#39;, is_searchable=False),
@@ -1172,7 +1208,8 @@ def timezone_fields(cls):
         TextField(&#39;profession&#39;, field_uri=&#39;contacts:Profession&#39;),
         TextField(&#39;spouse_name&#39;, field_uri=&#39;contacts:SpouseName&#39;),
         CharField(&#39;surname&#39;, field_uri=&#39;contacts:Surname&#39;),
-        DateTimeBackedDateField(&#39;wedding_anniversary&#39;, field_uri=&#39;contacts:WeddingAnniversary&#39;),
+        DateTimeBackedDateField(&#39;wedding_anniversary&#39;, field_uri=&#39;contacts:WeddingAnniversary&#39;,
+                                default_time=datetime.time(11, 59)),
         BooleanField(&#39;has_picture&#39;, field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True),
         TextField(&#39;phonetic_full_name&#39;, field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2013,
                   is_read_only=True),
@@ -1188,11 +1225,15 @@ def timezone_fields(cls):
         # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
         # the &#39;has_picture&#39; field.
         Base64Field(&#39;photo&#39;, field_uri=&#39;contacts:Photo&#39;, is_read_only=True),
-        # Placeholder for UserSMIMECertificate
-        # Placeholder for MSExchangeCertificate
+        Base64Field(&#39;user_smime_certificate&#39;, field_uri=&#39;contacts:UserSMIMECertificate&#39;, is_read_only=True,
+                    supported_from=EXCHANGE_2010_SP2),
+        Base64Field(&#39;ms_exchange_certificate&#39;, field_uri=&#39;contacts:MSExchangeCertificate&#39;, is_read_only=True,
+                    supported_from=EXCHANGE_2010_SP2),
         TextField(&#39;directory_id&#39;, field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2013, is_read_only=True),
-        # Placeholder for ManagerMailbox
-        # Placeholder for DirectReports
+        CharField(&#39;manager_mailbox&#39;, field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
+                  is_read_only=True),
+        CharField(&#39;direct_reports&#39;, field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
+                  is_read_only=True),
     )
     FIELDS = Item.FIELDS + LOCAL_FIELDS
 
@@ -1247,11 +1288,19 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.Contact.complete_name"><code class="name">var <span class="ident">complete_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.Contact.contact_source"><code class="name">var <span class="ident">contact_source</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.items.Contact.department"><code class="name">var <span class="ident">department</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.Contact.direct_reports"><code class="name">var <span class="ident">direct_reports</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -1307,11 +1356,19 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.Contact.manager_mailbox"><code class="name">var <span class="ident">manager_mailbox</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.Contact.middle_name"><code class="name">var <span class="ident">middle_name</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.items.Contact.mileage"><code class="name">var <span class="ident">mileage</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.Contact.ms_exchange_certificate"><code class="name">var <span class="ident">ms_exchange_certificate</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -1367,6 +1424,10 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.Contact.user_smime_certificate"><code class="name">var <span class="ident">user_smime_certificate</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.Contact.wedding_anniversary"><code class="name">var <span class="ident">wedding_anniversary</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -1414,6 +1475,7 @@ def timezone_fields(cls):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -1600,6 +1662,7 @@ def timezone_fields(cls):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -1708,6 +1771,8 @@ def timezone_fields(cls):
         MessageHeaderField(&#39;headers&#39;, field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True),
         DateTimeField(&#39;datetime_sent&#39;, field_uri=&#39;item:DateTimeSent&#39;, is_read_only=True),
         DateTimeField(&#39;datetime_created&#39;, field_uri=&#39;item:DateTimeCreated&#39;, is_read_only=True),
+        EWSElementField(&#39;response_objects&#39;, field_uri=&#39;item:ResponseObjects&#39;, value_cls=ResponseObjects,
+                        is_read_only=True,),
         # Placeholder for ResponseObjects
         DateTimeField(&#39;reminder_due_by&#39;, field_uri=&#39;item:ReminderDueBy&#39;, is_required_after_save=True,
                       is_searchable=False),
@@ -1753,6 +1818,7 @@ def timezone_fields(cls):
             self.attachments = []
 
     def save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE):
+        from .task import Task
         if self.id:
             item_id, changekey = self._update(
                 update_fieldnames=update_fields,
@@ -1760,9 +1826,14 @@ def timezone_fields(cls):
                 conflict_resolution=conflict_resolution,
                 send_meeting_invitations=send_meeting_invitations
             )
-            if self.id != item_id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
+            if self.id != item_id \
+                    and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)) \
+                    and not isinstance(self, Task):
                 # When we update an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
                 # the ID of this item changes.
+                #
+                # When we update certain fields on a task, the ID may change. A full description is available at
+                # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation-task
                 raise ValueError(&#34;&#39;id&#39; mismatch in returned update response&#34;)
             # Don&#39;t check that changekeys are different. No-op saves will sometimes leave the changekey intact
             self._id = self.ID_ELEMENT_CLS(item_id, changekey)
@@ -2155,6 +2226,10 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.Item.response_objects"><code class="name">var <span class="ident">response_objects</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.Item.sensitivity"><code class="name">var <span class="ident">sensitivity</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -2441,6 +2516,7 @@ def refresh(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE):
+    from .task import Task
     if self.id:
         item_id, changekey = self._update(
             update_fieldnames=update_fields,
@@ -2448,9 +2524,14 @@ def refresh(self):
             conflict_resolution=conflict_resolution,
             send_meeting_invitations=send_meeting_invitations
         )
-        if self.id != item_id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
+        if self.id != item_id \
+                and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)) \
+                and not isinstance(self, Task):
             # When we update an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
             # the ID of this item changes.
+            #
+            # When we update certain fields on a task, the ID may change. A full description is available at
+            # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation-task
             raise ValueError(&#34;&#39;id&#39; mismatch in returned update response&#34;)
         # Don&#39;t check that changekeys are different. No-op saves will sometimes leave the changekey intact
         self._id = self.ID_ELEMENT_CLS(item_id, changekey)
@@ -2602,6 +2683,7 @@ def refresh(self):
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reply_to" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.reply_to">reply_to</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_type" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.response_type">response_type</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sender" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.sender">sender</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
@@ -2695,6 +2777,10 @@ def refresh(self):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.MeetingRequest.adjacent_meetings"><code class="name">var <span class="ident">adjacent_meetings</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.MeetingRequest.allow_new_time_proposal"><code class="name">var <span class="ident">allow_new_time_proposal</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -2707,11 +2793,19 @@ def refresh(self):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.MeetingRequest.appointment_state"><code class="name">var <span class="ident">appointment_state</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.MeetingRequest.conference_type"><code class="name">var <span class="ident">conference_type</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.items.MeetingRequest.conflicting_meeting_count"><code class="name">var <span class="ident">conflicting_meeting_count</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.conflicting_meetings"><code class="name">var <span class="ident">conflicting_meetings</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -2886,6 +2980,7 @@ def refresh(self):
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reply_to" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.reply_to">reply_to</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_type" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.response_type">response_type</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sender" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.sender">sender</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
@@ -3051,6 +3146,7 @@ def refresh(self):
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reply_to" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.reply_to">reply_to</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_type" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.response_type">response_type</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sender" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem.sender">sender</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
@@ -3104,7 +3200,8 @@ def refresh(self):
         MailboxListField(&#39;reply_to&#39;, field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False),
         MailboxField(&#39;received_by&#39;, field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True),
         MailboxField(&#39;received_representing&#39;, field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True),
-        # Placeholder for ReminderMessageData
+        EWSElementField(&#39;reminder_message_data&#39;, field_uri=&#39;message:ReminderMessageData&#39;,
+                        value_cls=ReminderMessageData, supported_from=EXCHANGE_2013_SP1, is_read_only=True),
     )
     FIELDS = Item.FIELDS + LOCAL_FIELDS
 
@@ -3286,6 +3383,10 @@ def refresh(self):
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.items.Message.references"><code class="name">var <span class="ident">references</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.items.Message.reminder_message_data"><code class="name">var <span class="ident">reminder_message_data</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -3509,6 +3610,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -3764,6 +3866,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -3898,6 +4001,10 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.PostReplyItem.reminder_message_data"><code class="name">var <span class="ident">reminder_message_data</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.PostReplyItem.reply_to"><code class="name">var <span class="ident">reply_to</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -3953,6 +4060,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -4265,7 +4373,7 @@ def register(cls, attr_name, attr_cls):
             Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
         }, is_read_only=True),
         CharField(&#39;delegator&#39;, field_uri=&#39;task:Delegator&#39;, is_read_only=True),
-        DateTimeField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
+        DateTimeBackedDateField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
         BooleanField(&#39;is_editable&#39;, field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True),
         BooleanField(&#39;is_complete&#39;, field_uri=&#39;task:IsComplete&#39;, is_read_only=True),
         BooleanField(&#39;is_recurring&#39;, field_uri=&#39;task:IsRecurring&#39;, is_read_only=True),
@@ -4274,8 +4382,8 @@ def register(cls, attr_name, attr_cls):
         CharField(&#39;owner&#39;, field_uri=&#39;task:Owner&#39;, is_read_only=True),
         DecimalField(&#39;percent_complete&#39;, field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
                      min=Decimal(0), max=Decimal(100), is_searchable=False),
-        # Placeholder for Recurrence
-        DateTimeField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
+        TaskRecurrenceField(&#39;recurrence&#39;, field_uri=&#39;task:Recurrence&#39;, is_searchable=False),
+        DateTimeBackedDateField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
         ChoiceField(&#39;status&#39;, field_uri=&#39;task:Status&#39;, choices={
             Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
         }, is_required=True, is_searchable=False, default=NOT_STARTED),
@@ -4304,10 +4412,10 @@ def register(cls, attr_name, attr_cls):
                 # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
                 log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
                 self.complete_date = now
-            if self.start_date and self.complete_date &lt; self.start_date:
+            if self.start_date and self.complete_date.date() &lt; self.start_date:
                 log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
                             self.complete_date, self.start_date)
-                self.complete_date = self.start_date
+                self.complete_date = EWSDateTime.combine(self.start_date, datetime.time(0, 0)).replace(tzinfo=UTC)
         if self.percent_complete is not None:
             if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
                 # percent_complete must be 100% if task is complete
@@ -4428,6 +4536,10 @@ def register(cls, attr_name, attr_cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.items.Task.recurrence"><code class="name">var <span class="ident">recurrence</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.items.Task.start_date"><code class="name">var <span class="ident">start_date</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -4474,10 +4586,10 @@ def register(cls, attr_name, attr_cls):
             # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
             log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
             self.complete_date = now
-        if self.start_date and self.complete_date &lt; self.start_date:
+        if self.start_date and self.complete_date.date() &lt; self.start_date:
             log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
                         self.complete_date, self.start_date)
-            self.complete_date = self.start_date
+            self.complete_date = EWSDateTime.combine(self.start_date, datetime.time(0, 0)).replace(tzinfo=UTC)
     if self.percent_complete is not None:
         if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
             # percent_complete must be 100% if task is complete
@@ -4551,6 +4663,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -4687,14 +4800,17 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.CalendarItem.FIELDS" href="#exchangelib.items.CalendarItem.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.LOCAL_FIELDS" href="#exchangelib.items.CalendarItem.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.adjacent_meeting_count" href="#exchangelib.items.CalendarItem.adjacent_meeting_count">adjacent_meeting_count</a></code></li>
+<li><code><a title="exchangelib.items.CalendarItem.adjacent_meetings" href="#exchangelib.items.CalendarItem.adjacent_meetings">adjacent_meetings</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.allow_new_time_proposal" href="#exchangelib.items.CalendarItem.allow_new_time_proposal">allow_new_time_proposal</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.appointment_reply_time" href="#exchangelib.items.CalendarItem.appointment_reply_time">appointment_reply_time</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.appointment_sequence_number" href="#exchangelib.items.CalendarItem.appointment_sequence_number">appointment_sequence_number</a></code></li>
+<li><code><a title="exchangelib.items.CalendarItem.appointment_state" href="#exchangelib.items.CalendarItem.appointment_state">appointment_state</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.cancel" href="#exchangelib.items.CalendarItem.cancel">cancel</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.clean" href="#exchangelib.items.CalendarItem.clean">clean</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.clean_timezone_fields" href="#exchangelib.items.CalendarItem.clean_timezone_fields">clean_timezone_fields</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.conference_type" href="#exchangelib.items.CalendarItem.conference_type">conference_type</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.conflicting_meeting_count" href="#exchangelib.items.CalendarItem.conflicting_meeting_count">conflicting_meeting_count</a></code></li>
+<li><code><a title="exchangelib.items.CalendarItem.conflicting_meetings" href="#exchangelib.items.CalendarItem.conflicting_meetings">conflicting_meetings</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.date_to_datetime" href="#exchangelib.items.CalendarItem.date_to_datetime">date_to_datetime</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.deleted_occurrences" href="#exchangelib.items.CalendarItem.deleted_occurrences">deleted_occurrences</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.duration" href="#exchangelib.items.CalendarItem.duration">duration</a></code></li>
@@ -4727,6 +4843,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.CalendarItem.timezone_fields" href="#exchangelib.items.CalendarItem.timezone_fields">timezone_fields</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.to_xml" href="#exchangelib.items.CalendarItem.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.type" href="#exchangelib.items.CalendarItem.type">type</a></code></li>
+<li><code><a title="exchangelib.items.CalendarItem.tz_field_for_field_name" href="#exchangelib.items.CalendarItem.tz_field_for_field_name">tz_field_for_field_name</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.uid" href="#exchangelib.items.CalendarItem.uid">uid</a></code></li>
 <li><code><a title="exchangelib.items.CalendarItem.when" href="#exchangelib.items.CalendarItem.when">when</a></code></li>
 </ul>
@@ -4750,8 +4867,10 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.Contact.children" href="#exchangelib.items.Contact.children">children</a></code></li>
 <li><code><a title="exchangelib.items.Contact.companies" href="#exchangelib.items.Contact.companies">companies</a></code></li>
 <li><code><a title="exchangelib.items.Contact.company_name" href="#exchangelib.items.Contact.company_name">company_name</a></code></li>
+<li><code><a title="exchangelib.items.Contact.complete_name" href="#exchangelib.items.Contact.complete_name">complete_name</a></code></li>
 <li><code><a title="exchangelib.items.Contact.contact_source" href="#exchangelib.items.Contact.contact_source">contact_source</a></code></li>
 <li><code><a title="exchangelib.items.Contact.department" href="#exchangelib.items.Contact.department">department</a></code></li>
+<li><code><a title="exchangelib.items.Contact.direct_reports" href="#exchangelib.items.Contact.direct_reports">direct_reports</a></code></li>
 <li><code><a title="exchangelib.items.Contact.directory_id" href="#exchangelib.items.Contact.directory_id">directory_id</a></code></li>
 <li><code><a title="exchangelib.items.Contact.display_name" href="#exchangelib.items.Contact.display_name">display_name</a></code></li>
 <li><code><a title="exchangelib.items.Contact.email_addresses" href="#exchangelib.items.Contact.email_addresses">email_addresses</a></code></li>
@@ -4765,8 +4884,10 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.Contact.initials" href="#exchangelib.items.Contact.initials">initials</a></code></li>
 <li><code><a title="exchangelib.items.Contact.job_title" href="#exchangelib.items.Contact.job_title">job_title</a></code></li>
 <li><code><a title="exchangelib.items.Contact.manager" href="#exchangelib.items.Contact.manager">manager</a></code></li>
+<li><code><a title="exchangelib.items.Contact.manager_mailbox" href="#exchangelib.items.Contact.manager_mailbox">manager_mailbox</a></code></li>
 <li><code><a title="exchangelib.items.Contact.middle_name" href="#exchangelib.items.Contact.middle_name">middle_name</a></code></li>
 <li><code><a title="exchangelib.items.Contact.mileage" href="#exchangelib.items.Contact.mileage">mileage</a></code></li>
+<li><code><a title="exchangelib.items.Contact.ms_exchange_certificate" href="#exchangelib.items.Contact.ms_exchange_certificate">ms_exchange_certificate</a></code></li>
 <li><code><a title="exchangelib.items.Contact.nickname" href="#exchangelib.items.Contact.nickname">nickname</a></code></li>
 <li><code><a title="exchangelib.items.Contact.notes" href="#exchangelib.items.Contact.notes">notes</a></code></li>
 <li><code><a title="exchangelib.items.Contact.office" href="#exchangelib.items.Contact.office">office</a></code></li>
@@ -4780,6 +4901,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.Contact.profession" href="#exchangelib.items.Contact.profession">profession</a></code></li>
 <li><code><a title="exchangelib.items.Contact.spouse_name" href="#exchangelib.items.Contact.spouse_name">spouse_name</a></code></li>
 <li><code><a title="exchangelib.items.Contact.surname" href="#exchangelib.items.Contact.surname">surname</a></code></li>
+<li><code><a title="exchangelib.items.Contact.user_smime_certificate" href="#exchangelib.items.Contact.user_smime_certificate">user_smime_certificate</a></code></li>
 <li><code><a title="exchangelib.items.Contact.wedding_anniversary" href="#exchangelib.items.Contact.wedding_anniversary">wedding_anniversary</a></code></li>
 </ul>
 </li>
@@ -4853,6 +4975,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.Item.reminder_due_by" href="#exchangelib.items.Item.reminder_due_by">reminder_due_by</a></code></li>
 <li><code><a title="exchangelib.items.Item.reminder_is_set" href="#exchangelib.items.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.Item.reminder_minutes_before_start" href="#exchangelib.items.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
+<li><code><a title="exchangelib.items.Item.response_objects" href="#exchangelib.items.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.Item.save" href="#exchangelib.items.Item.save">save</a></code></li>
 <li><code><a title="exchangelib.items.Item.sensitivity" href="#exchangelib.items.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.Item.size" href="#exchangelib.items.Item.size">size</a></code></li>
@@ -4877,11 +5000,14 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.MeetingRequest.FIELDS" href="#exchangelib.items.MeetingRequest.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.LOCAL_FIELDS" href="#exchangelib.items.MeetingRequest.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.adjacent_meeting_count" href="#exchangelib.items.MeetingRequest.adjacent_meeting_count">adjacent_meeting_count</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.adjacent_meetings" href="#exchangelib.items.MeetingRequest.adjacent_meetings">adjacent_meetings</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.allow_new_time_proposal" href="#exchangelib.items.MeetingRequest.allow_new_time_proposal">allow_new_time_proposal</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.appointment_reply_time" href="#exchangelib.items.MeetingRequest.appointment_reply_time">appointment_reply_time</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.appointment_sequence_number" href="#exchangelib.items.MeetingRequest.appointment_sequence_number">appointment_sequence_number</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.appointment_state" href="#exchangelib.items.MeetingRequest.appointment_state">appointment_state</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.conference_type" href="#exchangelib.items.MeetingRequest.conference_type">conference_type</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.conflicting_meeting_count" href="#exchangelib.items.MeetingRequest.conflicting_meeting_count">conflicting_meeting_count</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.conflicting_meetings" href="#exchangelib.items.MeetingRequest.conflicting_meetings">conflicting_meetings</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.culture_idx" href="#exchangelib.items.MeetingRequest.culture_idx">culture_idx</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.deleted_occurrences" href="#exchangelib.items.MeetingRequest.deleted_occurrences">deleted_occurrences</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.duration" href="#exchangelib.items.MeetingRequest.duration">duration</a></code></li>
@@ -4952,6 +5078,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.Message.received_by" href="#exchangelib.items.Message.received_by">received_by</a></code></li>
 <li><code><a title="exchangelib.items.Message.received_representing" href="#exchangelib.items.Message.received_representing">received_representing</a></code></li>
 <li><code><a title="exchangelib.items.Message.references" href="#exchangelib.items.Message.references">references</a></code></li>
+<li><code><a title="exchangelib.items.Message.reminder_message_data" href="#exchangelib.items.Message.reminder_message_data">reminder_message_data</a></code></li>
 <li><code><a title="exchangelib.items.Message.reply" href="#exchangelib.items.Message.reply">reply</a></code></li>
 <li><code><a title="exchangelib.items.Message.reply_all" href="#exchangelib.items.Message.reply_all">reply_all</a></code></li>
 <li><code><a title="exchangelib.items.Message.reply_to" href="#exchangelib.items.Message.reply_to">reply_to</a></code></li>
@@ -5021,6 +5148,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.PostReplyItem.received_by" href="#exchangelib.items.PostReplyItem.received_by">received_by</a></code></li>
 <li><code><a title="exchangelib.items.PostReplyItem.received_representing" href="#exchangelib.items.PostReplyItem.received_representing">received_representing</a></code></li>
 <li><code><a title="exchangelib.items.PostReplyItem.references" href="#exchangelib.items.PostReplyItem.references">references</a></code></li>
+<li><code><a title="exchangelib.items.PostReplyItem.reminder_message_data" href="#exchangelib.items.PostReplyItem.reminder_message_data">reminder_message_data</a></code></li>
 <li><code><a title="exchangelib.items.PostReplyItem.reply_to" href="#exchangelib.items.PostReplyItem.reply_to">reply_to</a></code></li>
 <li><code><a title="exchangelib.items.PostReplyItem.sender" href="#exchangelib.items.PostReplyItem.sender">sender</a></code></li>
 <li><code><a title="exchangelib.items.PostReplyItem.to_recipients" href="#exchangelib.items.PostReplyItem.to_recipients">to_recipients</a></code></li>
@@ -5073,6 +5201,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.Task.mileage" href="#exchangelib.items.Task.mileage">mileage</a></code></li>
 <li><code><a title="exchangelib.items.Task.owner" href="#exchangelib.items.Task.owner">owner</a></code></li>
 <li><code><a title="exchangelib.items.Task.percent_complete" href="#exchangelib.items.Task.percent_complete">percent_complete</a></code></li>
+<li><code><a title="exchangelib.items.Task.recurrence" href="#exchangelib.items.Task.recurrence">recurrence</a></code></li>
 <li><code><a title="exchangelib.items.Task.start_date" href="#exchangelib.items.Task.start_date">start_date</a></code></li>
 <li><code><a title="exchangelib.items.Task.status" href="#exchangelib.items.Task.status">status</a></code></li>
 <li><code><a title="exchangelib.items.Task.status_description" href="#exchangelib.items.Task.status_description">status_description</a></code></li>
@@ -5091,7 +5220,7 @@ def register(cls, attr_name, attr_cls):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>

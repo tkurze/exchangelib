@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>exchangelib API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -36,7 +36,7 @@ from .ewsdatetime import EWSDate, EWSDateTime, EWSTimeZone, UTC, UTC_NOW
 from .extended_properties import ExtendedProperty
 from .folders import Folder, RootOfHierarchy, FolderCollection, SHALLOW, DEEP
 from .items import AcceptItem, TentativelyAcceptItem, DeclineItem, CalendarItem, CancelCalendarItem, Contact, \
-    DistributionList, Message, PostItem, Task
+    DistributionList, Message, PostItem, Task, ForwardItem, ReplyToItem, ReplyAllToItem
 from .properties import Body, HTMLBody, ItemId, Mailbox, Attendee, Room, RoomList, UID, DLMailbox
 from .protocol import FaultTolerance, FailFast, BaseProtocol, NoVerifyHTTPAdapter, TLSClientAuth
 from .settings import OofSettings
@@ -44,7 +44,7 @@ from .restriction import Q
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;3.2.1&#39;
+__version__ = &#39;3.3.0&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -57,7 +57,7 @@ __all__ = [
     &#39;ExtendedProperty&#39;,
     &#39;Folder&#39;, &#39;RootOfHierarchy&#39;, &#39;FolderCollection&#39;, &#39;SHALLOW&#39;, &#39;DEEP&#39;,
     &#39;AcceptItem&#39;, &#39;TentativelyAcceptItem&#39;, &#39;DeclineItem&#39;, &#39;CalendarItem&#39;, &#39;CancelCalendarItem&#39;, &#39;Contact&#39;,
-    &#39;DistributionList&#39;, &#39;Message&#39;, &#39;PostItem&#39;, &#39;Task&#39;,
+    &#39;DistributionList&#39;, &#39;Message&#39;, &#39;PostItem&#39;, &#39;Task&#39;, &#39;ForwardItem&#39;, &#39;ReplyToItem&#39;, &#39;ReplyAllToItem&#39;,
     &#39;ItemId&#39;, &#39;Mailbox&#39;, &#39;DLMailbox&#39;, &#39;Attendee&#39;, &#39;Room&#39;, &#39;RoomList&#39;, &#39;Body&#39;, &#39;HTMLBody&#39;, &#39;UID&#39;,
     &#39;FailFast&#39;, &#39;FaultTolerance&#39;, &#39;BaseProtocol&#39;, &#39;NoVerifyHTTPAdapter&#39;, &#39;TLSClientAuth&#39;,
     &#39;OofSettings&#39;,
@@ -172,7 +172,7 @@ login to a specific account …</p></div>
 </dd>
 <dt><code class="name"><a title="exchangelib.winzone" href="winzone.html">exchangelib.winzone</a></code></dt>
 <dd>
-<div class="desc"><p>A dict to translate from pytz location name to Windows timezone name. Translations taken from
+<div class="desc"><p>A dict to translate from IANA location name to Windows timezone name. Translations taken from
 …</p></div>
 </dd>
 </dl>
@@ -3714,15 +3714,14 @@ def from_xml(cls, elem):
         AttendeesField(&#39;resources&#39;, field_uri=&#39;calendar:Resources&#39;, is_searchable=False),
         IntegerField(&#39;conflicting_meeting_count&#39;, field_uri=&#39;calendar:ConflictingMeetingCount&#39;, is_read_only=True),
         IntegerField(&#39;adjacent_meeting_count&#39;, field_uri=&#39;calendar:AdjacentMeetingCount&#39;, is_read_only=True),
-        # Placeholder for ConflictingMeetings
-        # Placeholder for AdjacentMeetings
+        EWSElementListField(&#39;conflicting_meetings&#39;, field_uri=&#39;calendar:ConflictingMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
+                            namespace=Item.NAMESPACE, is_read_only=True),
+        EWSElementListField(&#39;adjacent_meetings&#39;, field_uri=&#39;calendar:AdjacentMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
+                            namespace=Item.NAMESPACE, is_read_only=True),
         CharField(&#39;duration&#39;, field_uri=&#39;calendar:Duration&#39;, is_read_only=True),
         DateTimeField(&#39;appointment_reply_time&#39;, field_uri=&#39;calendar:AppointmentReplyTime&#39;, is_read_only=True),
         IntegerField(&#39;appointment_sequence_number&#39;, field_uri=&#39;calendar:AppointmentSequenceNumber&#39;, is_read_only=True),
-        # Placeholder for AppointmentState
-        # AppointmentState is an EnumListField-like field, but with bitmask values:
-        #    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
-        # We could probably subclass EnumListField to implement this field.
+        AppointmentStateField(&#39;appointment_state&#39;, field_uri=&#39;calendar:AppointmentState&#39;, is_read_only=True),
         RecurrenceField(&#39;recurrence&#39;, field_uri=&#39;calendar:Recurrence&#39;, is_searchable=False),
         OccurrenceField(&#39;first_occurrence&#39;, field_uri=&#39;calendar:FirstOccurrence&#39;, value_cls=FirstOccurrence,
                         is_read_only=True),
@@ -3858,16 +3857,23 @@ def from_xml(cls, elem):
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
+    def tz_field_for_field_name(self, field_name):
+        meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
+        if self.account.version.build &lt; EXCHANGE_2010:
+            return meeting_tz_field
+        if field_name == &#39;start&#39;:
+            return start_tz_field
+        elif field_name == &#39;end&#39;:
+            return end_tz_field
+        raise ValueError(&#39;Unsupported field_name&#39;)
+
     def date_to_datetime(self, field_name):
         # EWS always expects a datetime. If we have a date value, then convert it to datetime in the local
         # timezone. Additionally, if this the end field, add 1 day to the date. We could add 12 hours to both
         # start and end values and let EWS apply its logic, but that seems hacky.
         value = getattr(self, field_name)
-        if self.account.version.build &lt; EXCHANGE_2010:
-            tz = self._meeting_timezone
-        else:
-            tz = getattr(self, &#39;_%s_timezone&#39; % field_name)
-        value = tz.localize(EWSDateTime.combine(value, datetime.time(0, 0)))
+        tz = getattr(self, self.tz_field_for_field_name(field_name).name)
+        value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
         if field_name == &#39;end&#39;:
             value += datetime.timedelta(days=1)
         return value
@@ -3971,6 +3977,10 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.CalendarItem.adjacent_meetings"><code class="name">var <span class="ident">adjacent_meetings</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.CalendarItem.allow_new_time_proposal"><code class="name">var <span class="ident">allow_new_time_proposal</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -3983,11 +3993,19 @@ def timezone_fields(cls):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.CalendarItem.appointment_state"><code class="name">var <span class="ident">appointment_state</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.CalendarItem.conference_type"><code class="name">var <span class="ident">conference_type</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.CalendarItem.conflicting_meeting_count"><code class="name">var <span class="ident">conflicting_meeting_count</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.CalendarItem.conflicting_meetings"><code class="name">var <span class="ident">conflicting_meetings</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -4192,11 +4210,8 @@ def timezone_fields(cls):
     # timezone. Additionally, if this the end field, add 1 day to the date. We could add 12 hours to both
     # start and end values and let EWS apply its logic, but that seems hacky.
     value = getattr(self, field_name)
-    if self.account.version.build &lt; EXCHANGE_2010:
-        tz = self._meeting_timezone
-    else:
-        tz = getattr(self, &#39;_%s_timezone&#39; % field_name)
-    value = tz.localize(EWSDateTime.combine(value, datetime.time(0, 0)))
+    tz = getattr(self, self.tz_field_for_field_name(field_name).name)
+    value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
     if field_name == &#39;end&#39;:
         value += datetime.timedelta(days=1)
     return value</code></pre>
@@ -4294,6 +4309,26 @@ def timezone_fields(cls):
     return elem</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.CalendarItem.tz_field_for_field_name"><code class="name flex">
+<span>def <span class="ident">tz_field_for_field_name</span></span>(<span>self, field_name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tz_field_for_field_name(self, field_name):
+    meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
+    if self.account.version.build &lt; EXCHANGE_2010:
+        return meeting_tz_field
+    if field_name == &#39;start&#39;:
+        return start_tz_field
+    elif field_name == &#39;end&#39;:
+        return end_tz_field
+    raise ValueError(&#39;Unsupported field_name&#39;)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -4337,6 +4372,7 @@ def timezone_fields(cls):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="items/item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="items/item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="items/item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="items/item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="items/item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="items/item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -4568,13 +4604,13 @@ def credentials(self):
         TextField(&#39;initials&#39;, field_uri=&#39;contacts:Initials&#39;),
         CharField(&#39;middle_name&#39;, field_uri=&#39;contacts:MiddleName&#39;),
         TextField(&#39;nickname&#39;, field_uri=&#39;contacts:Nickname&#39;),
-        # Placeholder for CompleteName
+        EWSElementField(&#39;complete_name&#39;, field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True),
         TextField(&#39;company_name&#39;, field_uri=&#39;contacts:CompanyName&#39;),
         EmailAddressesField(&#39;email_addresses&#39;, field_uri=&#39;contacts:EmailAddress&#39;),
         PhysicalAddressField(&#39;physical_addresses&#39;, field_uri=&#39;contacts:PhysicalAddress&#39;),
         PhoneNumberField(&#39;phone_numbers&#39;, field_uri=&#39;contacts:PhoneNumber&#39;),
         TextField(&#39;assistant_name&#39;, field_uri=&#39;contacts:AssistantName&#39;),
-        DateTimeBackedDateField(&#39;birthday&#39;, field_uri=&#39;contacts:Birthday&#39;),
+        DateTimeBackedDateField(&#39;birthday&#39;, field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59)),
         URIField(&#39;business_homepage&#39;, field_uri=&#39;contacts:BusinessHomePage&#39;),
         TextListField(&#39;children&#39;, field_uri=&#39;contacts:Children&#39;),
         TextListField(&#39;companies&#39;, field_uri=&#39;contacts:Companies&#39;, is_searchable=False),
@@ -4594,7 +4630,8 @@ def credentials(self):
         TextField(&#39;profession&#39;, field_uri=&#39;contacts:Profession&#39;),
         TextField(&#39;spouse_name&#39;, field_uri=&#39;contacts:SpouseName&#39;),
         CharField(&#39;surname&#39;, field_uri=&#39;contacts:Surname&#39;),
-        DateTimeBackedDateField(&#39;wedding_anniversary&#39;, field_uri=&#39;contacts:WeddingAnniversary&#39;),
+        DateTimeBackedDateField(&#39;wedding_anniversary&#39;, field_uri=&#39;contacts:WeddingAnniversary&#39;,
+                                default_time=datetime.time(11, 59)),
         BooleanField(&#39;has_picture&#39;, field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True),
         TextField(&#39;phonetic_full_name&#39;, field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2013,
                   is_read_only=True),
@@ -4610,11 +4647,15 @@ def credentials(self):
         # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
         # the &#39;has_picture&#39; field.
         Base64Field(&#39;photo&#39;, field_uri=&#39;contacts:Photo&#39;, is_read_only=True),
-        # Placeholder for UserSMIMECertificate
-        # Placeholder for MSExchangeCertificate
+        Base64Field(&#39;user_smime_certificate&#39;, field_uri=&#39;contacts:UserSMIMECertificate&#39;, is_read_only=True,
+                    supported_from=EXCHANGE_2010_SP2),
+        Base64Field(&#39;ms_exchange_certificate&#39;, field_uri=&#39;contacts:MSExchangeCertificate&#39;, is_read_only=True,
+                    supported_from=EXCHANGE_2010_SP2),
         TextField(&#39;directory_id&#39;, field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2013, is_read_only=True),
-        # Placeholder for ManagerMailbox
-        # Placeholder for DirectReports
+        CharField(&#39;manager_mailbox&#39;, field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
+                  is_read_only=True),
+        CharField(&#39;direct_reports&#39;, field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
+                  is_read_only=True),
     )
     FIELDS = Item.FIELDS + LOCAL_FIELDS
 
@@ -4669,11 +4710,19 @@ def credentials(self):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.Contact.complete_name"><code class="name">var <span class="ident">complete_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.Contact.contact_source"><code class="name">var <span class="ident">contact_source</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.Contact.department"><code class="name">var <span class="ident">department</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.Contact.direct_reports"><code class="name">var <span class="ident">direct_reports</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -4729,11 +4778,19 @@ def credentials(self):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.Contact.manager_mailbox"><code class="name">var <span class="ident">manager_mailbox</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.Contact.middle_name"><code class="name">var <span class="ident">middle_name</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.Contact.mileage"><code class="name">var <span class="ident">mileage</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.Contact.ms_exchange_certificate"><code class="name">var <span class="ident">ms_exchange_certificate</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -4789,6 +4846,10 @@ def credentials(self):
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.Contact.user_smime_certificate"><code class="name">var <span class="ident">user_smime_certificate</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.Contact.wedding_anniversary"><code class="name">var <span class="ident">wedding_anniversary</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -4836,6 +4897,7 @@ def credentials(self):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="items/item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="items/item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="items/item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="items/item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="items/item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="items/item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -5150,6 +5212,7 @@ password: Clear-text password</li>
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="items/item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="items/item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="items/item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="items/item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="items/item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="items/item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -5334,13 +5397,6 @@ def fromordinal(cls, n):
 
     def __new__(cls, *args, **kwargs):
         # pylint: disable=arguments-differ
-        # Not all Python versions have the same signature for datetime.datetime
-        &#34;&#34;&#34;
-        Inherits datetime and adds extra formatting required by EWS. Do not set tzinfo directly. Use
-        EWSTimeZone.localize() instead.
-        &#34;&#34;&#34;
-        # We can&#39;t use the exact signature of datetime.datetime because we get pickle errors, and implementing pickle
-        # support requires copy-pasting lots of code from datetime.datetime.
         if not isinstance(kwargs.get(&#39;tzinfo&#39;), (EWSTimeZone, type(None))):
             raise ValueError(&#39;tzinfo must be an EWSTimeZone instance&#39;)
         return super().__new__(cls, *args, **kwargs)
@@ -5352,8 +5408,8 @@ def fromordinal(cls, n):
 
         &#34;&#34;&#34;
         if not self.tzinfo:
-            raise ValueError(&#39;EWSDateTime must be timezone-aware&#39;)
-        if self.tzinfo.zone == &#39;UTC&#39;:
+            raise ValueError(&#39;%r must be timezone-aware&#39; % self)
+        if self.tzinfo.key == &#39;UTC&#39;:
             return self.strftime(&#39;%Y-%m-%dT%H:%M:%SZ&#39;)
         return self.replace(microsecond=0).isoformat()
 
@@ -5366,11 +5422,13 @@ def fromordinal(cls, n):
         elif isinstance(d.tzinfo, EWSTimeZone):
             tz = d.tzinfo
         else:
-            tz = EWSTimeZone.from_pytz(d.tzinfo)
+            tz = EWSTimeZone(d.tzinfo.key)
         return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=tz)
 
     def astimezone(self, tz=None):
-        t = super().astimezone(tz=tz)
+        if tz is None:
+            tz = EWSTimeZone.localzone()
+        t = super().astimezone(tz=tz).replace(tzinfo=tz)
         if isinstance(t, self.__class__):
             return t
         return self.from_datetime(t)  # We want to return EWSDateTime objects
@@ -5400,8 +5458,7 @@ def fromordinal(cls, n):
         # Parses several common datetime formats and returns timezone-aware EWSDateTime objects
         if date_string.endswith(&#39;Z&#39;):
             # UTC datetime
-            naive_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%SZ&#39;)
-            return UTC.localize(naive_dt)
+            return super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%SZ&#39;).replace(tzinfo=UTC)
         if len(date_string) == 19:
             # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
             local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
@@ -5409,8 +5466,10 @@ def fromordinal(cls, n):
         # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
         # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
         # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-        aware_dt = dateutil.parser.parse(date_string)
-        return cls.from_datetime(aware_dt.astimezone(UTC))  # We want to return EWSDateTime objects
+        aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+        if isinstance(aware_dt, cls):
+            return aware_dt
+        return cls.from_datetime(aware_dt)
 
     @classmethod
     def fromtimestamp(cls, t, tz=None):
@@ -5471,7 +5530,7 @@ def from_datetime(cls, d):
     elif isinstance(d.tzinfo, EWSTimeZone):
         tz = d.tzinfo
     else:
-        tz = EWSTimeZone.from_pytz(d.tzinfo)
+        tz = EWSTimeZone(d.tzinfo.key)
     return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=tz)</code></pre>
 </details>
 </dd>
@@ -5489,8 +5548,7 @@ def from_string(cls, date_string):
     # Parses several common datetime formats and returns timezone-aware EWSDateTime objects
     if date_string.endswith(&#39;Z&#39;):
         # UTC datetime
-        naive_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%SZ&#39;)
-        return UTC.localize(naive_dt)
+        return super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%SZ&#39;).replace(tzinfo=UTC)
     if len(date_string) == 19:
         # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
         local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
@@ -5498,8 +5556,10 @@ def from_string(cls, date_string):
     # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
     # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
     # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-    aware_dt = dateutil.parser.parse(date_string)
-    return cls.from_datetime(aware_dt.astimezone(UTC))  # We want to return EWSDateTime objects</code></pre>
+    aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+    if isinstance(aware_dt, cls):
+        return aware_dt
+    return cls.from_datetime(aware_dt)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.EWSDateTime.fromtimestamp"><code class="name flex">
@@ -5586,7 +5646,9 @@ def utcnow(cls):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def astimezone(self, tz=None):
-    t = super().astimezone(tz=tz)
+    if tz is None:
+        tz = EWSTimeZone.localzone()
+    t = super().astimezone(tz=tz).replace(tzinfo=tz)
     if isinstance(t, self.__class__):
         return t
     return self.from_datetime(t)  # We want to return EWSDateTime objects</code></pre>
@@ -5626,8 +5688,8 @@ def utcnow(cls):
 
     &#34;&#34;&#34;
     if not self.tzinfo:
-        raise ValueError(&#39;EWSDateTime must be timezone-aware&#39;)
-    if self.tzinfo.zone == &#39;UTC&#39;:
+        raise ValueError(&#39;%r must be timezone-aware&#39; % self)
+    if self.tzinfo.key == &#39;UTC&#39;:
         return self.strftime(&#39;%Y-%m-%dT%H:%M:%SZ&#39;)
     return self.replace(microsecond=0).isoformat()</code></pre>
 </details>
@@ -5636,6 +5698,7 @@ def utcnow(cls):
 </dd>
 <dt id="exchangelib.EWSTimeZone"><code class="flex name class">
 <span>class <span class="ident">EWSTimeZone</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
@@ -5644,109 +5707,95 @@ services.GetServerTimeZones.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class EWSTimeZone:
+<pre><code class="python">class EWSTimeZone(zoneinfo.ZoneInfo):
     &#34;&#34;&#34;Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
     services.GetServerTimeZones.
 
     &#34;&#34;&#34;
-    PYTZ_TO_MS_MAP = PYTZ_TO_MS_TIMEZONE_MAP
-    MS_TO_PYTZ_MAP = MS_TIMEZONE_TO_PYTZ_MAP
+    IANA_TO_MS_MAP = IANA_TO_MS_TIMEZONE_MAP
+    MS_TO_IANA_MAP = MS_TIMEZONE_TO_IANA_MAP
 
-    def __eq__(self, other):
-        # Microsoft timezones are less granular than pytz, so an EWSTimeZone created from &#39;Europe/Copenhagen&#39; may return
-        # from the server as &#39;Europe/Copenhagen&#39;. We&#39;re catering for Microsoft here, so base equality on the Microsoft
-        # timezone ID.
-        if not hasattr(other, &#39;ms_id&#39;):
-            # Due to the type magic in from_pytz(), we cannot use isinstance() here
-            return NotImplemented
-        return self.ms_id == other.ms_id
-
-    def __hash__(self):
-        # We&#39;re shuffling around with base classes in from_pytz(). Make sure we have __hash__() implementation.
-        return super().__hash__()
-
-    @classmethod
-    def from_ms_id(cls, ms_id):
-        # Create a timezone instance from a Microsoft timezone ID. This is lossy because there is not a 1:1 translation
-        # from MS timezone ID to pytz timezone.
+    def __new__(cls, *args, **kwargs):
         try:
-            return cls.timezone(cls.MS_TO_PYTZ_MAP[ms_id])
-        except KeyError:
-            if &#39;/&#39; in ms_id:
-                # EWS sometimes returns an ID that has a region/location format, e.g. &#39;Europe/Copenhagen&#39;. Try the
-                # string unaltered.
-                return cls.timezone(ms_id)
-            raise UnknownTimeZone(&#34;Windows timezone ID &#39;%s&#39; is unknown by CLDR&#34; % ms_id)
-
-    @classmethod
-    def from_pytz(cls, tz):
-        # pytz timezones are dynamically generated. Subclass the tz.__class__ and add the extra Microsoft timezone
-        # labels we need.
-
-        # type() does not allow duplicate base classes. For static timezones, &#39;cls&#39; and &#39;tz&#39; are the same class.
-        base_classes = (cls,) if cls == tz.__class__ else (cls, tz.__class__)
-        self_cls = type(cls.__name__, base_classes, dict(tz.__class__.__dict__))
+            instance = super().__new__(cls, *args, **kwargs)
+        except zoneinfo.ZoneInfoNotFoundError as e:
+            raise UnknownTimeZone(e.args[0])
         try:
-            self_cls.ms_id = cls.PYTZ_TO_MS_MAP[tz.zone][0]
+            instance.ms_id = cls.IANA_TO_MS_MAP[instance.key][0]
         except KeyError:
-            raise UnknownTimeZone(&#39;No Windows timezone name found for timezone &#34;%s&#34;&#39; % tz.zone)
+            raise UnknownTimeZone(&#39;No Windows timezone name found for timezone &#34;%s&#34;&#39; % instance.key)
 
         # We don&#39;t need the Windows long-format timezone name in long format. It&#39;s used in timezone XML elements, but
         # EWS happily accepts empty strings. For a full list of timezones supported by the target server, including
         # long-format names, see output of services.GetServerTimeZones(account.protocol).call()
-        self_cls.ms_name = &#39;&#39;
+        instance.ms_name = &#39;&#39;
+        return instance
 
-        self = self_cls()
-        for k, v in tz.__dict__.items():
-            setattr(self, k, v)
-        return self
+    def __eq__(self, other):
+        # Microsoft timezones are less granular than IANA, so an EWSTimeZone created from &#39;Europe/Copenhagen&#39; may return
+        # from the server as &#39;Europe/Copenhagen&#39;. We&#39;re catering for Microsoft here, so base equality on the Microsoft
+        # timezone ID.
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.ms_id == other.ms_id
+
+    @classmethod
+    def from_ms_id(cls, ms_id):
+        # Create a timezone instance from a Microsoft timezone ID. This is lossy because there is not a 1:1 translation
+        # from MS timezone ID to IANA timezone.
+        try:
+            return cls(cls.MS_TO_IANA_MAP[ms_id])
+        except KeyError:
+            if &#39;/&#39; in ms_id:
+                # EWS sometimes returns an ID that has a region/location format, e.g. &#39;Europe/Copenhagen&#39;. Try the
+                # string unaltered.
+                return cls(ms_id)
+            raise UnknownTimeZone(&#34;Windows timezone ID &#39;%s&#39; is unknown by CLDR&#34; % ms_id)
+
+    @classmethod
+    def from_pytz(cls, tz):
+        return cls(tz.zone)
+
+    @classmethod
+    def from_dateutil(cls, tz):
+        key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
+        return cls(key)
 
     @classmethod
     def localzone(cls):
         try:
             tz = tzlocal.get_localzone()
-        except pytz.exceptions.UnknownTimeZoneError:
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Older versions of tzlocal will raise a pytz exception. Let&#39;s not depend on pytz just for that.
             raise UnknownTimeZone(&#34;Failed to guess local timezone&#34;)
-        return cls.from_pytz(tz)
+        # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
+        return cls(tz.key if hasattr(tz, &#39;key&#39;) else tz.zone)
 
     @classmethod
     def timezone(cls, location):
-        # Like pytz.timezone() but returning EWSTimeZone instances
-        try:
-            tz = pytz.timezone(location)
-        except pytz.exceptions.UnknownTimeZoneError:
-            raise UnknownTimeZone(&#34;Timezone &#39;%s&#39; is unknown by pytz&#34; % location)
-        return cls.from_pytz(tz)
+        warnings.warn(&#39;replace EWSTimeZone.timezone() with just EWSTimeZone()&#39;, DeprecationWarning, stacklevel=2)
+        return cls(location)
 
     def normalize(self, dt, is_dst=False):
-        return self._localize_or_normalize(func=&#39;normalize&#39;, dt=dt, is_dst=is_dst)
+        warnings.warn(&#39;normalization is now handled gracefully&#39;, DeprecationWarning, stacklevel=2)
+        return dt
 
     def localize(self, dt, is_dst=False):
-        return self._localize_or_normalize(func=&#39;localize&#39;, dt=dt, is_dst=is_dst)
-
-    def _localize_or_normalize(self, func, dt, is_dst=False):
-        &#34;&#34;&#34;localize() and normalize() have common code paths
-
-        Args:
-          func:
-          dt:
-          is_dst:  (Default value = False)
-
-        &#34;&#34;&#34;
-        # super() returns a dt.tzinfo of class pytz.tzinfo.FooBar. We need to return type EWSTimeZone
-        if is_dst is not False:
-            # Not all pytz timezones support &#39;is_dst&#39; argument. Only pass it on if it&#39;s set explicitly.
-            try:
-                res = getattr(super(EWSTimeZone, self), func)(dt, is_dst=is_dst)
-            except pytz.exceptions.AmbiguousTimeError as exc:
-                raise AmbiguousTimeError(str(dt)) from exc
-            except pytz.exceptions.NonExistentTimeError as exc:
-                raise NonExistentTimeError(str(dt)) from exc
-        else:
-            res = getattr(super(EWSTimeZone, self), func)(dt)
-        if not isinstance(res.tzinfo, EWSTimeZone):
-            return res.replace(tzinfo=self.from_pytz(res.tzinfo))
-        return res
+        warnings.warn(&#39;replace tz.localize() with dt.replace(tzinfo=tz)&#39;, DeprecationWarning, stacklevel=2)
+        if dt.tzinfo is not None:
+            raise ValueError(&#39;%r must be timezone-unaware&#39; % dt)
+        dt = dt.replace(tzinfo=self)
+        if is_dst is not None:
+            # DST dates are assumed to always be after non-DST dates
+            dt_before = dt.replace(fold=0)
+            dt_after = dt.replace(fold=1)
+            dst_before = dt_before.dst()
+            dst_after = dt_after.dst()
+            if dst_before &gt; dst_after:
+                dt = dt_before if is_dst else dt_after
+            elif dst_before &lt; dst_after:
+                dt = dt_after if is_dst else dt_before
+        return dt
 
     def fromutc(self, dt):
         t = super().fromutc(dt)
@@ -5754,23 +5803,39 @@ services.GetServerTimeZones.</p></div>
             return t
         return EWSDateTime.from_datetime(t)  # We want to return EWSDateTime objects</code></pre>
 </details>
-<h3>Subclasses</h3>
+<h3>Ancestors</h3>
 <ul class="hlist">
-<li>pytz.EWSTimeZone</li>
+<li>backports.zoneinfo.ZoneInfo</li>
+<li>datetime.tzinfo</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.EWSTimeZone.MS_TO_PYTZ_MAP"><code class="name">var <span class="ident">MS_TO_PYTZ_MAP</span></code></dt>
+<dt id="exchangelib.EWSTimeZone.IANA_TO_MS_MAP"><code class="name">var <span class="ident">IANA_TO_MS_MAP</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.EWSTimeZone.PYTZ_TO_MS_MAP"><code class="name">var <span class="ident">PYTZ_TO_MS_MAP</span></code></dt>
+<dt id="exchangelib.EWSTimeZone.MS_TO_IANA_MAP"><code class="name">var <span class="ident">MS_TO_IANA_MAP</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="exchangelib.EWSTimeZone.from_dateutil"><code class="name flex">
+<span>def <span class="ident">from_dateutil</span></span>(<span>tz)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_dateutil(cls, tz):
+    key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
+    return cls(key)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.EWSTimeZone.from_ms_id"><code class="name flex">
 <span>def <span class="ident">from_ms_id</span></span>(<span>ms_id)</span>
 </code></dt>
@@ -5783,14 +5848,14 @@ services.GetServerTimeZones.</p></div>
 <pre><code class="python">@classmethod
 def from_ms_id(cls, ms_id):
     # Create a timezone instance from a Microsoft timezone ID. This is lossy because there is not a 1:1 translation
-    # from MS timezone ID to pytz timezone.
+    # from MS timezone ID to IANA timezone.
     try:
-        return cls.timezone(cls.MS_TO_PYTZ_MAP[ms_id])
+        return cls(cls.MS_TO_IANA_MAP[ms_id])
     except KeyError:
         if &#39;/&#39; in ms_id:
             # EWS sometimes returns an ID that has a region/location format, e.g. &#39;Europe/Copenhagen&#39;. Try the
             # string unaltered.
-            return cls.timezone(ms_id)
+            return cls(ms_id)
         raise UnknownTimeZone(&#34;Windows timezone ID &#39;%s&#39; is unknown by CLDR&#34; % ms_id)</code></pre>
 </details>
 </dd>
@@ -5805,26 +5870,7 @@ def from_ms_id(cls, ms_id):
 </summary>
 <pre><code class="python">@classmethod
 def from_pytz(cls, tz):
-    # pytz timezones are dynamically generated. Subclass the tz.__class__ and add the extra Microsoft timezone
-    # labels we need.
-
-    # type() does not allow duplicate base classes. For static timezones, &#39;cls&#39; and &#39;tz&#39; are the same class.
-    base_classes = (cls,) if cls == tz.__class__ else (cls, tz.__class__)
-    self_cls = type(cls.__name__, base_classes, dict(tz.__class__.__dict__))
-    try:
-        self_cls.ms_id = cls.PYTZ_TO_MS_MAP[tz.zone][0]
-    except KeyError:
-        raise UnknownTimeZone(&#39;No Windows timezone name found for timezone &#34;%s&#34;&#39; % tz.zone)
-
-    # We don&#39;t need the Windows long-format timezone name in long format. It&#39;s used in timezone XML elements, but
-    # EWS happily accepts empty strings. For a full list of timezones supported by the target server, including
-    # long-format names, see output of services.GetServerTimeZones(account.protocol).call()
-    self_cls.ms_name = &#39;&#39;
-
-    self = self_cls()
-    for k, v in tz.__dict__.items():
-        setattr(self, k, v)
-    return self</code></pre>
+    return cls(tz.zone)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.EWSTimeZone.localzone"><code class="name flex">
@@ -5840,9 +5886,11 @@ def from_pytz(cls, tz):
 def localzone(cls):
     try:
         tz = tzlocal.get_localzone()
-    except pytz.exceptions.UnknownTimeZoneError:
+    except zoneinfo.ZoneInfoNotFoundError:
+        # Older versions of tzlocal will raise a pytz exception. Let&#39;s not depend on pytz just for that.
         raise UnknownTimeZone(&#34;Failed to guess local timezone&#34;)
-    return cls.from_pytz(tz)</code></pre>
+    # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
+    return cls(tz.key if hasattr(tz, &#39;key&#39;) else tz.zone)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.EWSTimeZone.timezone"><code class="name flex">
@@ -5856,12 +5904,8 @@ def localzone(cls):
 </summary>
 <pre><code class="python">@classmethod
 def timezone(cls, location):
-    # Like pytz.timezone() but returning EWSTimeZone instances
-    try:
-        tz = pytz.timezone(location)
-    except pytz.exceptions.UnknownTimeZoneError:
-        raise UnknownTimeZone(&#34;Timezone &#39;%s&#39; is unknown by pytz&#34; % location)
-    return cls.from_pytz(tz)</code></pre>
+    warnings.warn(&#39;replace EWSTimeZone.timezone() with just EWSTimeZone()&#39;, DeprecationWarning, stacklevel=2)
+    return cls(location)</code></pre>
 </details>
 </dd>
 </dl>
@@ -5871,7 +5915,7 @@ def timezone(cls, location):
 <span>def <span class="ident">fromutc</span></span>(<span>self, dt)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Given a datetime with local time in UTC, retrieve an adjusted datetime in local time.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5893,7 +5937,21 @@ def timezone(cls, location):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def localize(self, dt, is_dst=False):
-    return self._localize_or_normalize(func=&#39;localize&#39;, dt=dt, is_dst=is_dst)</code></pre>
+    warnings.warn(&#39;replace tz.localize() with dt.replace(tzinfo=tz)&#39;, DeprecationWarning, stacklevel=2)
+    if dt.tzinfo is not None:
+        raise ValueError(&#39;%r must be timezone-unaware&#39; % dt)
+    dt = dt.replace(tzinfo=self)
+    if is_dst is not None:
+        # DST dates are assumed to always be after non-DST dates
+        dt_before = dt.replace(fold=0)
+        dt_after = dt.replace(fold=1)
+        dst_before = dt_before.dst()
+        dst_after = dt_after.dst()
+        if dst_before &gt; dst_after:
+            dt = dt_before if is_dst else dt_after
+        elif dst_before &lt; dst_after:
+            dt = dt_after if is_dst else dt_before
+    return dt</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.EWSTimeZone.normalize"><code class="name flex">
@@ -5906,7 +5964,8 @@ def timezone(cls, location):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def normalize(self, dt, is_dst=False):
-    return self._localize_or_normalize(func=&#39;normalize&#39;, dt=dt, is_dst=is_dst)</code></pre>
+    warnings.warn(&#39;normalization is now handled gracefully&#39;, DeprecationWarning, stacklevel=2)
+    return dt</code></pre>
 </details>
 </dd>
 </dl>
@@ -8171,6 +8230,60 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 </dd>
 </dl>
 </dd>
+<dt id="exchangelib.ForwardItem"><code class="flex name class">
+<span>class <span class="ident">ForwardItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ForwardItem(BaseReplyItem):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ForwardItem&#39;
+
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.ForwardItem.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="items/base.html#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="items/base.html#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="items/base.html#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="items/base.html#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="items/base.html#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="items/base.html#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="items/base.html#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="items/base.html#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="items/base.html#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="items/base.html#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="items/base.html#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.HTMLBody"><code class="flex name class">
 <span>class <span class="ident">HTMLBody</span></span>
 <span>(</span><span>...)</span>
@@ -8687,7 +8800,8 @@ def item(self):
         MailboxListField(&#39;reply_to&#39;, field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False),
         MailboxField(&#39;received_by&#39;, field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True),
         MailboxField(&#39;received_representing&#39;, field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True),
-        # Placeholder for ReminderMessageData
+        EWSElementField(&#39;reminder_message_data&#39;, field_uri=&#39;message:ReminderMessageData&#39;,
+                        value_cls=ReminderMessageData, supported_from=EXCHANGE_2013_SP1, is_read_only=True),
     )
     FIELDS = Item.FIELDS + LOCAL_FIELDS
 
@@ -8869,6 +8983,10 @@ def item(self):
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="exchangelib.Message.references"><code class="name">var <span class="ident">references</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.Message.reminder_message_data"><code class="name">var <span class="ident">reminder_message_data</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -9092,6 +9210,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="items/item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="items/item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="items/item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="items/item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="items/item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="items/item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -9810,6 +9929,7 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="items/item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="items/item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="items/item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="items/item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="items/item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="items/item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -10731,6 +10851,114 @@ def from_xml(cls, elem, account):
 </dd>
 </dl>
 </dd>
+<dt id="exchangelib.ReplyAllToItem"><code class="flex name class">
+<span>class <span class="ident">ReplyAllToItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReplyAllToItem(BaseReplyItem):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ReplyAllToItem&#39;
+
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.ReplyAllToItem.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="items/base.html#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="items/base.html#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="items/base.html#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="items/base.html#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="items/base.html#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="items/base.html#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="items/base.html#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="items/base.html#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="items/base.html#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="items/base.html#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="items/base.html#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.ReplyToItem"><code class="flex name class">
+<span>class <span class="ident">ReplyToItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReplyToItem(BaseReplyItem):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ReplyToItem&#39;
+
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.ReplyToItem.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="items/base.html#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="items/base.html#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="items/base.html#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="items/base.html#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="items/base.html#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="items/base.html#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="items/base.html#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="items/base.html#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="items/base.html#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="items/base.html#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="items/base.html#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="items/base.html#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.Room"><code class="flex name class">
 <span>class <span class="ident">Room</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -11508,7 +11736,7 @@ exposed for use when subclassing the
             Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
         }, is_read_only=True),
         CharField(&#39;delegator&#39;, field_uri=&#39;task:Delegator&#39;, is_read_only=True),
-        DateTimeField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
+        DateTimeBackedDateField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
         BooleanField(&#39;is_editable&#39;, field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True),
         BooleanField(&#39;is_complete&#39;, field_uri=&#39;task:IsComplete&#39;, is_read_only=True),
         BooleanField(&#39;is_recurring&#39;, field_uri=&#39;task:IsRecurring&#39;, is_read_only=True),
@@ -11517,8 +11745,8 @@ exposed for use when subclassing the
         CharField(&#39;owner&#39;, field_uri=&#39;task:Owner&#39;, is_read_only=True),
         DecimalField(&#39;percent_complete&#39;, field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
                      min=Decimal(0), max=Decimal(100), is_searchable=False),
-        # Placeholder for Recurrence
-        DateTimeField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
+        TaskRecurrenceField(&#39;recurrence&#39;, field_uri=&#39;task:Recurrence&#39;, is_searchable=False),
+        DateTimeBackedDateField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
         ChoiceField(&#39;status&#39;, field_uri=&#39;task:Status&#39;, choices={
             Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
         }, is_required=True, is_searchable=False, default=NOT_STARTED),
@@ -11547,10 +11775,10 @@ exposed for use when subclassing the
                 # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
                 log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
                 self.complete_date = now
-            if self.start_date and self.complete_date &lt; self.start_date:
+            if self.start_date and self.complete_date.date() &lt; self.start_date:
                 log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
                             self.complete_date, self.start_date)
-                self.complete_date = self.start_date
+                self.complete_date = EWSDateTime.combine(self.start_date, datetime.time(0, 0)).replace(tzinfo=UTC)
         if self.percent_complete is not None:
             if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
                 # percent_complete must be 100% if task is complete
@@ -11671,6 +11899,10 @@ exposed for use when subclassing the
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="exchangelib.Task.recurrence"><code class="name">var <span class="ident">recurrence</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.Task.start_date"><code class="name">var <span class="ident">start_date</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
@@ -11717,10 +11949,10 @@ exposed for use when subclassing the
             # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
             log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
             self.complete_date = now
-        if self.start_date and self.complete_date &lt; self.start_date:
+        if self.start_date and self.complete_date.date() &lt; self.start_date:
             log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
                         self.complete_date, self.start_date)
-            self.complete_date = self.start_date
+            self.complete_date = EWSDateTime.combine(self.start_date, datetime.time(0, 0)).replace(tzinfo=UTC)
     if self.percent_complete is not None:
         if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
             # percent_complete must be 100% if task is complete
@@ -11794,6 +12026,7 @@ exposed for use when subclassing the
 <li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="items/item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="items/item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.response_objects" href="items/item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.sensitivity" href="items/item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.size" href="items/item.html#exchangelib.items.item.Item.size">size</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.subject" href="items/item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
@@ -12340,14 +12573,17 @@ def fullname(self):
 <li><code><a title="exchangelib.CalendarItem.FIELDS" href="#exchangelib.CalendarItem.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.LOCAL_FIELDS" href="#exchangelib.CalendarItem.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.adjacent_meeting_count" href="#exchangelib.CalendarItem.adjacent_meeting_count">adjacent_meeting_count</a></code></li>
+<li><code><a title="exchangelib.CalendarItem.adjacent_meetings" href="#exchangelib.CalendarItem.adjacent_meetings">adjacent_meetings</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.allow_new_time_proposal" href="#exchangelib.CalendarItem.allow_new_time_proposal">allow_new_time_proposal</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.appointment_reply_time" href="#exchangelib.CalendarItem.appointment_reply_time">appointment_reply_time</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.appointment_sequence_number" href="#exchangelib.CalendarItem.appointment_sequence_number">appointment_sequence_number</a></code></li>
+<li><code><a title="exchangelib.CalendarItem.appointment_state" href="#exchangelib.CalendarItem.appointment_state">appointment_state</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.cancel" href="#exchangelib.CalendarItem.cancel">cancel</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.clean" href="#exchangelib.CalendarItem.clean">clean</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.clean_timezone_fields" href="#exchangelib.CalendarItem.clean_timezone_fields">clean_timezone_fields</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.conference_type" href="#exchangelib.CalendarItem.conference_type">conference_type</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.conflicting_meeting_count" href="#exchangelib.CalendarItem.conflicting_meeting_count">conflicting_meeting_count</a></code></li>
+<li><code><a title="exchangelib.CalendarItem.conflicting_meetings" href="#exchangelib.CalendarItem.conflicting_meetings">conflicting_meetings</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.date_to_datetime" href="#exchangelib.CalendarItem.date_to_datetime">date_to_datetime</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.deleted_occurrences" href="#exchangelib.CalendarItem.deleted_occurrences">deleted_occurrences</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.duration" href="#exchangelib.CalendarItem.duration">duration</a></code></li>
@@ -12380,6 +12616,7 @@ def fullname(self):
 <li><code><a title="exchangelib.CalendarItem.timezone_fields" href="#exchangelib.CalendarItem.timezone_fields">timezone_fields</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.to_xml" href="#exchangelib.CalendarItem.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.type" href="#exchangelib.CalendarItem.type">type</a></code></li>
+<li><code><a title="exchangelib.CalendarItem.tz_field_for_field_name" href="#exchangelib.CalendarItem.tz_field_for_field_name">tz_field_for_field_name</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.uid" href="#exchangelib.CalendarItem.uid">uid</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.when" href="#exchangelib.CalendarItem.when">when</a></code></li>
 </ul>
@@ -12410,8 +12647,10 @@ def fullname(self):
 <li><code><a title="exchangelib.Contact.children" href="#exchangelib.Contact.children">children</a></code></li>
 <li><code><a title="exchangelib.Contact.companies" href="#exchangelib.Contact.companies">companies</a></code></li>
 <li><code><a title="exchangelib.Contact.company_name" href="#exchangelib.Contact.company_name">company_name</a></code></li>
+<li><code><a title="exchangelib.Contact.complete_name" href="#exchangelib.Contact.complete_name">complete_name</a></code></li>
 <li><code><a title="exchangelib.Contact.contact_source" href="#exchangelib.Contact.contact_source">contact_source</a></code></li>
 <li><code><a title="exchangelib.Contact.department" href="#exchangelib.Contact.department">department</a></code></li>
+<li><code><a title="exchangelib.Contact.direct_reports" href="#exchangelib.Contact.direct_reports">direct_reports</a></code></li>
 <li><code><a title="exchangelib.Contact.directory_id" href="#exchangelib.Contact.directory_id">directory_id</a></code></li>
 <li><code><a title="exchangelib.Contact.display_name" href="#exchangelib.Contact.display_name">display_name</a></code></li>
 <li><code><a title="exchangelib.Contact.email_addresses" href="#exchangelib.Contact.email_addresses">email_addresses</a></code></li>
@@ -12425,8 +12664,10 @@ def fullname(self):
 <li><code><a title="exchangelib.Contact.initials" href="#exchangelib.Contact.initials">initials</a></code></li>
 <li><code><a title="exchangelib.Contact.job_title" href="#exchangelib.Contact.job_title">job_title</a></code></li>
 <li><code><a title="exchangelib.Contact.manager" href="#exchangelib.Contact.manager">manager</a></code></li>
+<li><code><a title="exchangelib.Contact.manager_mailbox" href="#exchangelib.Contact.manager_mailbox">manager_mailbox</a></code></li>
 <li><code><a title="exchangelib.Contact.middle_name" href="#exchangelib.Contact.middle_name">middle_name</a></code></li>
 <li><code><a title="exchangelib.Contact.mileage" href="#exchangelib.Contact.mileage">mileage</a></code></li>
+<li><code><a title="exchangelib.Contact.ms_exchange_certificate" href="#exchangelib.Contact.ms_exchange_certificate">ms_exchange_certificate</a></code></li>
 <li><code><a title="exchangelib.Contact.nickname" href="#exchangelib.Contact.nickname">nickname</a></code></li>
 <li><code><a title="exchangelib.Contact.notes" href="#exchangelib.Contact.notes">notes</a></code></li>
 <li><code><a title="exchangelib.Contact.office" href="#exchangelib.Contact.office">office</a></code></li>
@@ -12440,6 +12681,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Contact.profession" href="#exchangelib.Contact.profession">profession</a></code></li>
 <li><code><a title="exchangelib.Contact.spouse_name" href="#exchangelib.Contact.spouse_name">spouse_name</a></code></li>
 <li><code><a title="exchangelib.Contact.surname" href="#exchangelib.Contact.surname">surname</a></code></li>
+<li><code><a title="exchangelib.Contact.user_smime_certificate" href="#exchangelib.Contact.user_smime_certificate">user_smime_certificate</a></code></li>
 <li><code><a title="exchangelib.Contact.wedding_anniversary" href="#exchangelib.Contact.wedding_anniversary">wedding_anniversary</a></code></li>
 </ul>
 </li>
@@ -12501,8 +12743,9 @@ def fullname(self):
 <li>
 <h4><code><a title="exchangelib.EWSTimeZone" href="#exchangelib.EWSTimeZone">EWSTimeZone</a></code></h4>
 <ul class="two-column">
-<li><code><a title="exchangelib.EWSTimeZone.MS_TO_PYTZ_MAP" href="#exchangelib.EWSTimeZone.MS_TO_PYTZ_MAP">MS_TO_PYTZ_MAP</a></code></li>
-<li><code><a title="exchangelib.EWSTimeZone.PYTZ_TO_MS_MAP" href="#exchangelib.EWSTimeZone.PYTZ_TO_MS_MAP">PYTZ_TO_MS_MAP</a></code></li>
+<li><code><a title="exchangelib.EWSTimeZone.IANA_TO_MS_MAP" href="#exchangelib.EWSTimeZone.IANA_TO_MS_MAP">IANA_TO_MS_MAP</a></code></li>
+<li><code><a title="exchangelib.EWSTimeZone.MS_TO_IANA_MAP" href="#exchangelib.EWSTimeZone.MS_TO_IANA_MAP">MS_TO_IANA_MAP</a></code></li>
+<li><code><a title="exchangelib.EWSTimeZone.from_dateutil" href="#exchangelib.EWSTimeZone.from_dateutil">from_dateutil</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_ms_id" href="#exchangelib.EWSTimeZone.from_ms_id">from_ms_id</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_pytz" href="#exchangelib.EWSTimeZone.from_pytz">from_pytz</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.fromutc" href="#exchangelib.EWSTimeZone.fromutc">fromutc</a></code></li>
@@ -12606,6 +12849,12 @@ def fullname(self):
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.ForwardItem" href="#exchangelib.ForwardItem">ForwardItem</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.ForwardItem.ELEMENT_NAME" href="#exchangelib.ForwardItem.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.HTMLBody" href="#exchangelib.HTMLBody">HTMLBody</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.HTMLBody.body_type" href="#exchangelib.HTMLBody.body_type">body_type</a></code></li>
@@ -12671,6 +12920,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Message.received_by" href="#exchangelib.Message.received_by">received_by</a></code></li>
 <li><code><a title="exchangelib.Message.received_representing" href="#exchangelib.Message.received_representing">received_representing</a></code></li>
 <li><code><a title="exchangelib.Message.references" href="#exchangelib.Message.references">references</a></code></li>
+<li><code><a title="exchangelib.Message.reminder_message_data" href="#exchangelib.Message.reminder_message_data">reminder_message_data</a></code></li>
 <li><code><a title="exchangelib.Message.reply" href="#exchangelib.Message.reply">reply</a></code></li>
 <li><code><a title="exchangelib.Message.reply_all" href="#exchangelib.Message.reply_all">reply_all</a></code></li>
 <li><code><a title="exchangelib.Message.reply_to" href="#exchangelib.Message.reply_to">reply_to</a></code></li>
@@ -12787,6 +13037,18 @@ def fullname(self):
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.ReplyAllToItem" href="#exchangelib.ReplyAllToItem">ReplyAllToItem</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.ReplyAllToItem.ELEMENT_NAME" href="#exchangelib.ReplyAllToItem.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.ReplyToItem" href="#exchangelib.ReplyToItem">ReplyToItem</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.ReplyToItem.ELEMENT_NAME" href="#exchangelib.ReplyToItem.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.Room" href="#exchangelib.Room">Room</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.Room.ELEMENT_NAME" href="#exchangelib.Room.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
@@ -12858,6 +13120,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Task.mileage" href="#exchangelib.Task.mileage">mileage</a></code></li>
 <li><code><a title="exchangelib.Task.owner" href="#exchangelib.Task.owner">owner</a></code></li>
 <li><code><a title="exchangelib.Task.percent_complete" href="#exchangelib.Task.percent_complete">percent_complete</a></code></li>
+<li><code><a title="exchangelib.Task.recurrence" href="#exchangelib.Task.recurrence">recurrence</a></code></li>
 <li><code><a title="exchangelib.Task.start_date" href="#exchangelib.Task.start_date">start_date</a></code></li>
 <li><code><a title="exchangelib.Task.status" href="#exchangelib.Task.status">status</a></code></li>
 <li><code><a title="exchangelib.Task.status_description" href="#exchangelib.Task.status_description">status_description</a></code></li>
@@ -12889,7 +13152,7 @@ def fullname(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>

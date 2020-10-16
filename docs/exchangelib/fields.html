@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>exchangelib.fields API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -32,7 +32,10 @@ import binascii
 from collections import OrderedDict
 import datetime
 from decimal import Decimal, InvalidOperation
+from importlib import import_module
 import logging
+
+import dateutil.parser
 
 from .errors import ErrorInvalidServerVersion
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
@@ -207,6 +210,13 @@ class FieldPath:
                     return subitem
             return None  # No item with this label
         return getattr(item, self.field.name)
+
+    def get_sort_value(self, item):
+        # For fields that allow values of different types, we need to return a value that is
+        val = self.get_value(item)
+        if isinstance(self.field, DateOrDateTimeField) and isinstance(val, EWSDate):
+            return item.date_to_datetime(field_name=self.field.name)
+        return val
 
     def to_xml(self):
         if isinstance(self.field, IndexedField):
@@ -570,6 +580,26 @@ class EnumAsIntField(EnumField):
         return set_xml_value(field_elem, value, version=version)
 
 
+class AppointmentStateField(IntegerField):
+    # MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
+    NONE = &#39;None&#39;
+    MEETING = &#39;Meeting&#39;
+    RECEIVED = &#39;Received&#39;
+    CANCELLED = &#39;Cancelled&#39;
+    STATES = {
+        NONE: 0x0000,
+        MEETING: 0x0001,
+        RECEIVED: 0x0002,
+        CANCELLED: 0x0004,
+    }
+
+    def from_xml(self, elem, account):
+        val = super().from_xml(elem=elem, account=account)
+        if val is None:
+            return val
+        return tuple(name for name, mask in self.STATES.items() if bool(val &amp; mask))
+
+
 class Base64Field(FieldURIField):
     value_cls = bytes
     is_complex = True
@@ -620,21 +650,31 @@ class DateTimeBackedDateField(FieldURIField):
     value_cls = datetime.date
 
     def __init__(self, *args, **kwargs):
+        # Not all fields assume a default tim of 00:00, so make this configurable
+        self._default_time = kwargs.pop(&#39;default_time&#39;, datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
 
     def date_to_datetime(self, value):
-        return UTC.localize(self._datetime_field.value_cls.combine(value, datetime.time(11, 59)))
+        return self._datetime_field.value_cls.combine(value, self._default_time).replace(tzinfo=UTC)
 
     def from_xml(self, elem, account):
+        val = self._get_val_from_elem(elem)
+        if val is not None and len(val) == 25:
+            # This is a datetime string with timezone info. We don&#39;t want to have datetime values converted to UTC
+            # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don&#39;t have an
+            # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
+            # datetime string with timezone info.
+            return EWSDate.from_date(dateutil.parser.parse(val).date())
+        # Revert to default parsing of datetime strings
         res = self._datetime_field.from_xml(elem=elem, account=account)
         if res is None:
             return res
         return res.date()
 
     def to_xml(self, value, version):
-        # Convert date to datetime. EWS changes all values to have a time of 11:59 local time, so let&#39;s send that.
+        # Convert date to datetime
         value = self.date_to_datetime(value)
         return self._datetime_field.to_xml(value=value, version=version)
 
@@ -678,7 +718,7 @@ class DateTimeField(FieldURIField):
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
                         log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, local_dt, self.name, tz)
-                        return tz.localize(local_dt)
+                        return local_dt.replace(tzinfo=tz)
                     # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
                     log.warning(&#39;Returning naive datetime %s on field %s&#39;, local_dt, self.name)
                     return local_dt
@@ -689,9 +729,11 @@ class DateTimeField(FieldURIField):
 
 class DateOrDateTimeField(DateTimeField):
     &#34;&#34;&#34;This field can handle both EWSDate and EWSDateTime. Used for calendar items where &#39;start&#39; and &#39;end&#39;
-    values are conceptually dates when the calendar item is an all-day event, but datetimes in all other cases.
+    values are conceptually dates when the calendar item is an all-day event, but datetimes in all other cases, and
+    for recurrences where the returned &#39;start&#39; and &#39;end&#39; values may be either dates or datetimes depending on whether
+    the recurring item is a task or a calendar item.
 
-    For all-day items, we assume both start and end dates are inclusive.
+    For all-day calendar items, we assume both start and end dates are inclusive.
 
     For filtering kwarg validation and other places where we must decide on a specific class, we settle on datetime.
 
@@ -708,6 +750,13 @@ class DateOrDateTimeField(DateTimeField):
         if type(value) == EWSDate:
             return self._date_field.clean(value=value, version=version)
         return super().clean(value=value, version=version)
+
+    def from_xml(self, elem, account):
+        val = self._get_val_from_elem(elem)
+        if val is not None and len(val) == 16:
+            # This is a date format with timezone info, as sent by task recurrences. Eg: &#39;2006-01-09+01:00&#39;
+            return self._date_field.from_xml(elem=elem, account=account)
+        return super().from_xml(elem=elem, account=account)
 
 
 class TimeZoneField(FieldURIField):
@@ -935,9 +984,18 @@ class BodyField(TextField):
 
 class EWSElementField(FieldURIField):
     def __init__(self, *args, **kwargs):
-        self.value_cls = kwargs.pop(&#39;value_cls&#39;)
-        kwargs[&#39;namespace&#39;] = kwargs.get(&#39;namespace&#39;, self.value_cls.NAMESPACE)
+        self._value_cls = kwargs.pop(&#39;value_cls&#39;)
+        if &#39;namespace&#39; not in kwargs:
+            kwargs[&#39;namespace&#39;] = self.value_cls.NAMESPACE
         super().__init__(*args, **kwargs)
+
+    @property
+    def value_cls(self):
+        if isinstance(self._value_cls, str):
+            # Support &#39;value_cls&#39; as string to allow self-referencing classes. The class must be importable from the
+            # top-level module.
+            self._value_cls = getattr(import_module(self.__module__.split(&#39;.&#39;)[0]), self._value_cls)
+        return self._value_cls
 
     def from_xml(self, elem, account):
         if self.is_list:
@@ -984,6 +1042,18 @@ class RecurrenceField(EWSElementField):
     def __init__(self, *args, **kwargs):
         from .recurrence import Recurrence
         kwargs[&#39;value_cls&#39;] = Recurrence
+        super().__init__(*args, **kwargs)
+
+    def to_xml(self, value, version):
+        return value.to_xml(version=version)
+
+
+class TaskRecurrenceField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .recurrence import TaskRecurrence
+        kwargs[&#39;value_cls&#39;] = TaskRecurrence
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -1526,6 +1596,92 @@ class IdElementField(EWSElementField):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="exchangelib.fields.AppointmentStateField"><code class="flex name class">
+<span>class <span class="ident">AppointmentStateField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AppointmentStateField(IntegerField):
+    # MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
+    NONE = &#39;None&#39;
+    MEETING = &#39;Meeting&#39;
+    RECEIVED = &#39;Received&#39;
+    CANCELLED = &#39;Cancelled&#39;
+    STATES = {
+        NONE: 0x0000,
+        MEETING: 0x0001,
+        RECEIVED: 0x0002,
+        CANCELLED: 0x0004,
+    }
+
+    def from_xml(self, elem, account):
+        val = super().from_xml(elem=elem, account=account)
+        if val is None:
+            return val
+        return tuple(name for name, mask in self.STATES.items() if bool(val &amp; mask))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.AppointmentStateField.CANCELLED"><code class="name">var <span class="ident">CANCELLED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.AppointmentStateField.MEETING"><code class="name">var <span class="ident">MEETING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.AppointmentStateField.NONE"><code class="name">var <span class="ident">NONE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.AppointmentStateField.RECEIVED"><code class="name">var <span class="ident">RECEIVED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.AppointmentStateField.STATES"><code class="name">var <span class="ident">STATES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.AppointmentStateField.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def from_xml(self, elem, account):
+    val = super().from_xml(elem=elem, account=account)
+    if val is None:
+        return val
+    return tuple(name for name, mask in self.STATES.items() if bool(val &amp; mask))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.fields.IntegerField.value_cls" href="#exchangelib.fields.IntegerField.value_cls">value_cls</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.fields.AssociatedCalendarItemIdField"><code class="flex name class">
 <span>class <span class="ident">AssociatedCalendarItemIdField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -2567,8 +2723,10 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 </code></dt>
 <dd>
 <div class="desc"><p>This field can handle both EWSDate and EWSDateTime. Used for calendar items where 'start' and 'end'
-values are conceptually dates when the calendar item is an all-day event, but datetimes in all other cases.</p>
-<p>For all-day items, we assume both start and end dates are inclusive.</p>
+values are conceptually dates when the calendar item is an all-day event, but datetimes in all other cases, and
+for recurrences where the returned 'start' and 'end' values may be either dates or datetimes depending on whether
+the recurring item is a task or a calendar item.</p>
+<p>For all-day calendar items, we assume both start and end dates are inclusive.</p>
 <p>For filtering kwarg validation and other places where we must decide on a specific class, we settle on datetime.</p></div>
 <details class="source">
 <summary>
@@ -2576,9 +2734,11 @@ values are conceptually dates when the calendar item is an all-day event, but da
 </summary>
 <pre><code class="python">class DateOrDateTimeField(DateTimeField):
     &#34;&#34;&#34;This field can handle both EWSDate and EWSDateTime. Used for calendar items where &#39;start&#39; and &#39;end&#39;
-    values are conceptually dates when the calendar item is an all-day event, but datetimes in all other cases.
+    values are conceptually dates when the calendar item is an all-day event, but datetimes in all other cases, and
+    for recurrences where the returned &#39;start&#39; and &#39;end&#39; values may be either dates or datetimes depending on whether
+    the recurring item is a task or a calendar item.
 
-    For all-day items, we assume both start and end dates are inclusive.
+    For all-day calendar items, we assume both start and end dates are inclusive.
 
     For filtering kwarg validation and other places where we must decide on a specific class, we settle on datetime.
 
@@ -2594,7 +2754,14 @@ values are conceptually dates when the calendar item is an all-day event, but da
         # must handle that sanity check.
         if type(value) == EWSDate:
             return self._date_field.clean(value=value, version=version)
-        return super().clean(value=value, version=version)</code></pre>
+        return super().clean(value=value, version=version)
+
+    def from_xml(self, elem, account):
+        val = self._get_val_from_elem(elem)
+        if val is not None and len(val) == 16:
+            # This is a date format with timezone info, as sent by task recurrences. Eg: &#39;2006-01-09+01:00&#39;
+            return self._date_field.from_xml(elem=elem, account=account)
+        return super().from_xml(elem=elem, account=account)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2619,6 +2786,23 @@ values are conceptually dates when the calendar item is an all-day event, but da
     if type(value) == EWSDate:
         return self._date_field.clean(value=value, version=version)
     return super().clean(value=value, version=version)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.DateOrDateTimeField.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def from_xml(self, elem, account):
+    val = self._get_val_from_elem(elem)
+    if val is not None and len(val) == 16:
+        # This is a date format with timezone info, as sent by task recurrences. Eg: &#39;2006-01-09+01:00&#39;
+        return self._date_field.from_xml(elem=elem, account=account)
+    return super().from_xml(elem=elem, account=account)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2646,21 +2830,31 @@ values are conceptually dates when the calendar item is an all-day event, but da
     value_cls = datetime.date
 
     def __init__(self, *args, **kwargs):
+        # Not all fields assume a default tim of 00:00, so make this configurable
+        self._default_time = kwargs.pop(&#39;default_time&#39;, datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
 
     def date_to_datetime(self, value):
-        return UTC.localize(self._datetime_field.value_cls.combine(value, datetime.time(11, 59)))
+        return self._datetime_field.value_cls.combine(value, self._default_time).replace(tzinfo=UTC)
 
     def from_xml(self, elem, account):
+        val = self._get_val_from_elem(elem)
+        if val is not None and len(val) == 25:
+            # This is a datetime string with timezone info. We don&#39;t want to have datetime values converted to UTC
+            # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don&#39;t have an
+            # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
+            # datetime string with timezone info.
+            return EWSDate.from_date(dateutil.parser.parse(val).date())
+        # Revert to default parsing of datetime strings
         res = self._datetime_field.from_xml(elem=elem, account=account)
         if res is None:
             return res
         return res.date()
 
     def to_xml(self, value, version):
-        # Convert date to datetime. EWS changes all values to have a time of 11:59 local time, so let&#39;s send that.
+        # Convert date to datetime
         value = self.date_to_datetime(value)
         return self._datetime_field.to_xml(value=value, version=version)</code></pre>
 </details>
@@ -2688,7 +2882,7 @@ values are conceptually dates when the calendar item is an all-day event, but da
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def date_to_datetime(self, value):
-    return UTC.localize(self._datetime_field.value_cls.combine(value, datetime.time(11, 59)))</code></pre>
+    return self._datetime_field.value_cls.combine(value, self._default_time).replace(tzinfo=UTC)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.DateTimeBackedDateField.from_xml"><code class="name flex">
@@ -2701,6 +2895,14 @@ values are conceptually dates when the calendar item is an all-day event, but da
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def from_xml(self, elem, account):
+    val = self._get_val_from_elem(elem)
+    if val is not None and len(val) == 25:
+        # This is a datetime string with timezone info. We don&#39;t want to have datetime values converted to UTC
+        # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don&#39;t have an
+        # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
+        # datetime string with timezone info.
+        return EWSDate.from_date(dateutil.parser.parse(val).date())
+    # Revert to default parsing of datetime strings
     res = self._datetime_field.from_xml(elem=elem, account=account)
     if res is None:
         return res
@@ -2717,7 +2919,7 @@ values are conceptually dates when the calendar item is an all-day event, but da
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_xml(self, value, version):
-    # Convert date to datetime. EWS changes all values to have a time of 11:59 local time, so let&#39;s send that.
+    # Convert date to datetime
     value = self.date_to_datetime(value)
     return self._datetime_field.to_xml(value=value, version=version)</code></pre>
 </details>
@@ -2755,7 +2957,7 @@ values are conceptually dates when the calendar item is an all-day event, but da
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
                         log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, local_dt, self.name, tz)
-                        return tz.localize(local_dt)
+                        return local_dt.replace(tzinfo=tz)
                     # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
                     log.warning(&#39;Returning naive datetime %s on field %s&#39;, local_dt, self.name)
                     return local_dt
@@ -2818,7 +3020,7 @@ values are conceptually dates when the calendar item is an all-day event, but da
                     # Convert to timezone-aware datetime using the default timezone of the account
                     tz = account.default_timezone
                     log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, local_dt, self.name, tz)
-                    return tz.localize(local_dt)
+                    return local_dt.replace(tzinfo=tz)
                 # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
                 log.warning(&#39;Returning naive datetime %s on field %s&#39;, local_dt, self.name)
                 return local_dt
@@ -2869,9 +3071,18 @@ values are conceptually dates when the calendar item is an all-day event, but da
 </summary>
 <pre><code class="python">class EWSElementField(FieldURIField):
     def __init__(self, *args, **kwargs):
-        self.value_cls = kwargs.pop(&#39;value_cls&#39;)
-        kwargs[&#39;namespace&#39;] = kwargs.get(&#39;namespace&#39;, self.value_cls.NAMESPACE)
+        self._value_cls = kwargs.pop(&#39;value_cls&#39;)
+        if &#39;namespace&#39; not in kwargs:
+            kwargs[&#39;namespace&#39;] = self.value_cls.NAMESPACE
         super().__init__(*args, **kwargs)
+
+    @property
+    def value_cls(self):
+        if isinstance(self._value_cls, str):
+            # Support &#39;value_cls&#39; as string to allow self-referencing classes. The class must be importable from the
+            # top-level module.
+            self._value_cls = getattr(import_module(self.__module__.split(&#39;.&#39;)[0]), self._value_cls)
+        return self._value_cls
 
     def from_xml(self, elem, account):
         if self.is_list:
@@ -2911,7 +3122,27 @@ values are conceptually dates when the calendar item is an all-day event, but da
 <li><a title="exchangelib.fields.PermissionSetField" href="#exchangelib.fields.PermissionSetField">PermissionSetField</a></li>
 <li><a title="exchangelib.fields.RecurrenceField" href="#exchangelib.fields.RecurrenceField">RecurrenceField</a></li>
 <li><a title="exchangelib.fields.ReferenceItemIdField" href="#exchangelib.fields.ReferenceItemIdField">ReferenceItemIdField</a></li>
+<li><a title="exchangelib.fields.TaskRecurrenceField" href="#exchangelib.fields.TaskRecurrenceField">TaskRecurrenceField</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.fields.EWSElementField.value_cls"><code class="name">var <span class="ident">value_cls</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def value_cls(self):
+    if isinstance(self._value_cls, str):
+        # Support &#39;value_cls&#39; as string to allow self-referencing classes. The class must be importable from the
+        # top-level module.
+        self._value_cls = getattr(import_module(self.__module__.split(&#39;.&#39;)[0]), self._value_cls)
+    return self._value_cls</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.fields.EWSElementField.from_xml"><code class="name flex">
@@ -3996,6 +4227,13 @@ property with a specific label, or a particular subfield field on that property.
             return None  # No item with this label
         return getattr(item, self.field.name)
 
+    def get_sort_value(self, item):
+        # For fields that allow values of different types, we need to return a value that is
+        val = self.get_value(item)
+        if isinstance(self.field, DateOrDateTimeField) and isinstance(val, EWSDate):
+            return item.date_to_datetime(field_name=self.field.name)
+        return val
+
     def to_xml(self):
         if isinstance(self.field, IndexedField):
             if not self.label or not self.subfield:
@@ -4099,6 +4337,23 @@ def path(self):
                 yield FieldPath(field=self.field, label=label, subfield=subfield)
     else:
         yield self</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.FieldPath.get_sort_value"><code class="name flex">
+<span>def <span class="ident">get_sort_value</span></span>(<span>self, item)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_sort_value(self, item):
+    # For fields that allow values of different types, we need to return a value that is
+    val = self.get_value(item)
+    if isinstance(self.field, DateOrDateTimeField) and isinstance(val, EWSDate):
+        return item.date_to_datetime(field_name=self.field.name)
+    return val</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.FieldPath.get_value"><code class="name flex">
@@ -4532,6 +4787,7 @@ but we can assume 512 bytes in practice. See
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="exchangelib.fields.AppointmentStateField" href="#exchangelib.fields.AppointmentStateField">AppointmentStateField</a></li>
 <li><a title="exchangelib.fields.DecimalField" href="#exchangelib.fields.DecimalField">DecimalField</a></li>
 <li><a title="exchangelib.fields.EnumField" href="#exchangelib.fields.EnumField">EnumField</a></li>
 </ul>
@@ -4554,7 +4810,7 @@ by whitespace.
 The base defaults to 10.
 Valid bases are 0 and 2-36.
 Base 0 means to interpret the base from the string as an integer literal.</p>
-<pre><code class="python">&gt;&gt;&gt; int('0b100', base=0)
+<pre><code class="python-repl">&gt;&gt;&gt; int('0b100', base=0)
 4
 </code></pre></div>
 </dd>
@@ -5693,6 +5949,57 @@ def field_uri_xml(field_uri, label):
 </dd>
 </dl>
 </dd>
+<dt id="exchangelib.fields.TaskRecurrenceField"><code class="flex name class">
+<span>class <span class="ident">TaskRecurrenceField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TaskRecurrenceField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .recurrence import TaskRecurrence
+        kwargs[&#39;value_cls&#39;] = TaskRecurrence
+        super().__init__(*args, **kwargs)
+
+    def to_xml(self, value, version):
+        return value.to_xml(version=version)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.TaskRecurrenceField.is_complex"><code class="name">var <span class="ident">is_complex</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.TaskRecurrenceField.to_xml"><code class="name flex">
+<span>def <span class="ident">to_xml</span></span>(<span>self, value, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_xml(self, value, version):
+    return value.to_xml(version=version)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="exchangelib.fields.TextField"><code class="flex name class">
 <span>class <span class="ident">TextField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -6090,6 +6397,17 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="exchangelib.fields.AppointmentStateField" href="#exchangelib.fields.AppointmentStateField">AppointmentStateField</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.fields.AppointmentStateField.CANCELLED" href="#exchangelib.fields.AppointmentStateField.CANCELLED">CANCELLED</a></code></li>
+<li><code><a title="exchangelib.fields.AppointmentStateField.MEETING" href="#exchangelib.fields.AppointmentStateField.MEETING">MEETING</a></code></li>
+<li><code><a title="exchangelib.fields.AppointmentStateField.NONE" href="#exchangelib.fields.AppointmentStateField.NONE">NONE</a></code></li>
+<li><code><a title="exchangelib.fields.AppointmentStateField.RECEIVED" href="#exchangelib.fields.AppointmentStateField.RECEIVED">RECEIVED</a></code></li>
+<li><code><a title="exchangelib.fields.AppointmentStateField.STATES" href="#exchangelib.fields.AppointmentStateField.STATES">STATES</a></code></li>
+<li><code><a title="exchangelib.fields.AppointmentStateField.from_xml" href="#exchangelib.fields.AppointmentStateField.from_xml">from_xml</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.AssociatedCalendarItemIdField" href="#exchangelib.fields.AssociatedCalendarItemIdField">AssociatedCalendarItemIdField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.AssociatedCalendarItemIdField.is_complex" href="#exchangelib.fields.AssociatedCalendarItemIdField.is_complex">is_complex</a></code></li>
@@ -6188,6 +6506,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.DateOrDateTimeField" href="#exchangelib.fields.DateOrDateTimeField">DateOrDateTimeField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.DateOrDateTimeField.clean" href="#exchangelib.fields.DateOrDateTimeField.clean">clean</a></code></li>
+<li><code><a title="exchangelib.fields.DateOrDateTimeField.from_xml" href="#exchangelib.fields.DateOrDateTimeField.from_xml">from_xml</a></code></li>
 </ul>
 </li>
 <li>
@@ -6215,6 +6534,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <ul class="">
 <li><code><a title="exchangelib.fields.EWSElementField.from_xml" href="#exchangelib.fields.EWSElementField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.EWSElementField.to_xml" href="#exchangelib.fields.EWSElementField.to_xml">to_xml</a></code></li>
+<li><code><a title="exchangelib.fields.EWSElementField.value_cls" href="#exchangelib.fields.EWSElementField.value_cls">value_cls</a></code></li>
 </ul>
 </li>
 <li>
@@ -6300,9 +6620,10 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.FieldPath" href="#exchangelib.fields.FieldPath">FieldPath</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="exchangelib.fields.FieldPath.expand" href="#exchangelib.fields.FieldPath.expand">expand</a></code></li>
 <li><code><a title="exchangelib.fields.FieldPath.from_string" href="#exchangelib.fields.FieldPath.from_string">from_string</a></code></li>
+<li><code><a title="exchangelib.fields.FieldPath.get_sort_value" href="#exchangelib.fields.FieldPath.get_sort_value">get_sort_value</a></code></li>
 <li><code><a title="exchangelib.fields.FieldPath.get_value" href="#exchangelib.fields.FieldPath.get_value">get_value</a></code></li>
 <li><code><a title="exchangelib.fields.FieldPath.path" href="#exchangelib.fields.FieldPath.path">path</a></code></li>
 <li><code><a title="exchangelib.fields.FieldPath.to_xml" href="#exchangelib.fields.FieldPath.to_xml">to_xml</a></code></li>
@@ -6471,6 +6792,13 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.fields.TaskRecurrenceField" href="#exchangelib.fields.TaskRecurrenceField">TaskRecurrenceField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.TaskRecurrenceField.is_complex" href="#exchangelib.fields.TaskRecurrenceField.is_complex">is_complex</a></code></li>
+<li><code><a title="exchangelib.fields.TaskRecurrenceField.to_xml" href="#exchangelib.fields.TaskRecurrenceField.to_xml">to_xml</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.TextField.from_xml" href="#exchangelib.fields.TextField.from_xml">from_xml</a></code></li>
@@ -6515,7 +6843,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>

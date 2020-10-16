@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>exchangelib.properties API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -38,9 +38,9 @@ from threading import Lock
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
-    RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field
+    RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
-from .version import Version, EXCHANGE_2013
+from .version import Version, EXCHANGE_2013, Build
 
 log = logging.getLogger(__name__)
 
@@ -1391,6 +1391,99 @@ class ExceptionFieldURI(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
+class CompleteName(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/completename&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;CompleteName&#39;
+    FIELDS = Fields(
+        CharField(&#39;title&#39;, field_uri=&#39;Title&#39;),
+        CharField(&#39;first_name&#39;, field_uri=&#39;FirstName&#39;),
+        CharField(&#39;middle_name&#39;, field_uri=&#39;MiddleName&#39;),
+        CharField(&#39;last_name&#39;, field_uri=&#39;LastName&#39;),
+        CharField(&#39;suffix&#39;, field_uri=&#39;Suffix&#39;),
+        CharField(&#39;initials&#39;, field_uri=&#39;Initials&#39;),
+        CharField(&#39;full_name&#39;, field_uri=&#39;FullName&#39;),
+        CharField(&#39;nickname&#39;, field_uri=&#39;Nickname&#39;),
+        CharField(&#39;yomi_first_name&#39;, field_uri=&#39;YomiFirstName&#39;),
+        CharField(&#39;yomi_last_name&#39;, field_uri=&#39;YomiLastName&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class ReminderMessageData(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/remindermessagedata&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ReminderMessageData&#39;
+    FIELDS = Fields(
+        CharField(&#39;reminder_text&#39;, field_uri=&#39;ReminderText&#39;),
+        CharField(&#39;location&#39;, field_uri=&#39;Location&#39;),
+        TimeField(&#39;start_time&#39;, field_uri=&#39;StartTime&#39;),
+        TimeField(&#39;end_time&#39;, field_uri=&#39;EndTime&#39;),
+        AssociatedCalendarItemIdField(&#39;associated_calendar_item_id&#39;, field_uri=&#39;AssociatedCalendarItemId&#39;,
+                                      supported_from=Build(15, 0, 913, 9)),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class AcceptSharingInvitation(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptsharinginvitation&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;AcceptSharingInvitation&#39;
+    FIELDS = Fields(
+        ReferenceItemIdField(&#39;reference_item_id&#39;, field_uri=&#39;item:ReferenceItemId&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class SuppressReadReceipt(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suppressreadreceipt&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;SuppressReadReceipt&#39;
+    FIELDS = Fields(
+        ReferenceItemIdField(&#39;reference_item_id&#39;, field_uri=&#39;item:ReferenceItemId&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class RemoveItem(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/removeitem&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;RemoveItem&#39;
+    FIELDS = Fields(
+        ReferenceItemIdField(&#39;reference_item_id&#39;, field_uri=&#39;item:ReferenceItemId&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class ResponseObjects(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ResponseObjects&#39;
+    FIELDS = Fields(
+        EWSElementField(&#39;accept_item&#39;, field_uri=&#39;AcceptItem&#39;, value_cls=&#39;AcceptItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;tentatively_accept_item&#39;, field_uri=&#39;TentativelyAcceptItem&#39;, value_cls=&#39;TentativelyAcceptItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;decline_item&#39;, field_uri=&#39;DeclineItem&#39;, value_cls=&#39;DeclineItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;reply_to_item&#39;, field_uri=&#39;ReplyToItem&#39;, value_cls=&#39;ReplyToItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;forward_item&#39;, field_uri=&#39;ForwardItem&#39;, value_cls=&#39;ForwardItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;reply_all_to_item&#39;, field_uri=&#39;ReplyAllToItem&#39;, value_cls=&#39;ReplyAllToItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;cancel_calendar_item&#39;, field_uri=&#39;CancelCalendarItem&#39;, value_cls=&#39;CancelCalendarItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;remove_item&#39;, field_uri=&#39;RemoveItem&#39;, value_cls=RemoveItem),
+        EWSElementField(&#39;post_reply_item&#39;, field_uri=&#39;PostReplyItem&#39;, value_cls=&#39;PostReplyItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;success_read_receipt&#39;, field_uri=&#39;SuppressReadReceipt&#39;, value_cls=SuppressReadReceipt),
+        EWSElementField(&#39;accept_sharing_invitation&#39;, field_uri=&#39;AcceptSharingInvitation&#39;,
+                        value_cls=AcceptSharingInvitation),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
 class IdChangeKeyMixIn(EWSElement):
     &#34;&#34;&#34;Base class for classes that have a concept of &#39;id&#39; and &#39;changekey&#39; values. The values are actually stored on
      a separate element but we add convenience methods to hide that fact.
@@ -1468,6 +1561,59 @@ class IdChangeKeyMixIn(EWSElement):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="exchangelib.properties.AcceptSharingInvitation"><code class="flex name class">
+<span>class <span class="ident">AcceptSharingInvitation</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptsharinginvitation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptsharinginvitation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcceptSharingInvitation(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptsharinginvitation&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;AcceptSharingInvitation&#39;
+    FIELDS = Fields(
+        ReferenceItemIdField(&#39;reference_item_id&#39;, field_uri=&#39;item:ReferenceItemId&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.AcceptSharingInvitation.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.AcceptSharingInvitation.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.AcceptSharingInvitation.reference_item_id"><code class="name">var <span class="ident">reference_item_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.AlternateId"><code class="flex name class">
 <span>class <span class="ident">AlternateId</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -2321,6 +2467,104 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.properties.CompleteName"><code class="flex name class">
+<span>class <span class="ident">CompleteName</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/completename">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/completename</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CompleteName(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/completename&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;CompleteName&#39;
+    FIELDS = Fields(
+        CharField(&#39;title&#39;, field_uri=&#39;Title&#39;),
+        CharField(&#39;first_name&#39;, field_uri=&#39;FirstName&#39;),
+        CharField(&#39;middle_name&#39;, field_uri=&#39;MiddleName&#39;),
+        CharField(&#39;last_name&#39;, field_uri=&#39;LastName&#39;),
+        CharField(&#39;suffix&#39;, field_uri=&#39;Suffix&#39;),
+        CharField(&#39;initials&#39;, field_uri=&#39;Initials&#39;),
+        CharField(&#39;full_name&#39;, field_uri=&#39;FullName&#39;),
+        CharField(&#39;nickname&#39;, field_uri=&#39;Nickname&#39;),
+        CharField(&#39;yomi_first_name&#39;, field_uri=&#39;YomiFirstName&#39;),
+        CharField(&#39;yomi_last_name&#39;, field_uri=&#39;YomiLastName&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.CompleteName.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.CompleteName.first_name"><code class="name">var <span class="ident">first_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.full_name"><code class="name">var <span class="ident">full_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.initials"><code class="name">var <span class="ident">initials</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.last_name"><code class="name">var <span class="ident">last_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.middle_name"><code class="name">var <span class="ident">middle_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.nickname"><code class="name">var <span class="ident">nickname</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.suffix"><code class="name">var <span class="ident">suffix</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.title"><code class="name">var <span class="ident">title</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.yomi_first_name"><code class="name">var <span class="ident">yomi_first_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.CompleteName.yomi_last_name"><code class="name">var <span class="ident">yomi_last_name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.ConversationId"><code class="flex name class">
 <span>class <span class="ident">ConversationId</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -2949,6 +3193,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.extended_properties.ExtendedProperty" href="extended_properties.html#exchangelib.extended_properties.ExtendedProperty">ExtendedProperty</a></li>
 <li><a title="exchangelib.indexed_properties.IndexedElement" href="indexed_properties.html#exchangelib.indexed_properties.IndexedElement">IndexedElement</a></li>
 <li><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></li>
+<li><a title="exchangelib.properties.AcceptSharingInvitation" href="#exchangelib.properties.AcceptSharingInvitation">AcceptSharingInvitation</a></li>
 <li><a title="exchangelib.properties.AlternateId" href="#exchangelib.properties.AlternateId">AlternateId</a></li>
 <li><a title="exchangelib.properties.AlternatePublicFolderId" href="#exchangelib.properties.AlternatePublicFolderId">AlternatePublicFolderId</a></li>
 <li><a title="exchangelib.properties.AlternatePublicFolderItemId" href="#exchangelib.properties.AlternatePublicFolderItemId">AlternatePublicFolderItemId</a></li>
@@ -2958,6 +3203,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.properties.CalendarEventDetails" href="#exchangelib.properties.CalendarEventDetails">CalendarEventDetails</a></li>
 <li><a title="exchangelib.properties.CalendarPermission" href="#exchangelib.properties.CalendarPermission">CalendarPermission</a></li>
 <li><a title="exchangelib.properties.CalendarView" href="#exchangelib.properties.CalendarView">CalendarView</a></li>
+<li><a title="exchangelib.properties.CompleteName" href="#exchangelib.properties.CompleteName">CompleteName</a></li>
 <li><a title="exchangelib.properties.DelegatePermissions" href="#exchangelib.properties.DelegatePermissions">DelegatePermissions</a></li>
 <li><a title="exchangelib.properties.DelegateUser" href="#exchangelib.properties.DelegateUser">DelegateUser</a></li>
 <li><a title="exchangelib.properties.EffectiveRights" href="#exchangelib.properties.EffectiveRights">EffectiveRights</a></li>
@@ -2978,7 +3224,11 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.properties.OutOfOffice" href="#exchangelib.properties.OutOfOffice">OutOfOffice</a></li>
 <li><a title="exchangelib.properties.Permission" href="#exchangelib.properties.Permission">Permission</a></li>
 <li><a title="exchangelib.properties.PermissionSet" href="#exchangelib.properties.PermissionSet">PermissionSet</a></li>
+<li><a title="exchangelib.properties.ReminderMessageData" href="#exchangelib.properties.ReminderMessageData">ReminderMessageData</a></li>
+<li><a title="exchangelib.properties.RemoveItem" href="#exchangelib.properties.RemoveItem">RemoveItem</a></li>
+<li><a title="exchangelib.properties.ResponseObjects" href="#exchangelib.properties.ResponseObjects">ResponseObjects</a></li>
 <li><a title="exchangelib.properties.SearchableMailbox" href="#exchangelib.properties.SearchableMailbox">SearchableMailbox</a></li>
+<li><a title="exchangelib.properties.SuppressReadReceipt" href="#exchangelib.properties.SuppressReadReceipt">SuppressReadReceipt</a></li>
 <li><a title="exchangelib.properties.TimeWindow" href="#exchangelib.properties.TimeWindow">TimeWindow</a></li>
 <li><a title="exchangelib.properties.TimeZone" href="#exchangelib.properties.TimeZone">TimeZone</a></li>
 <li><a title="exchangelib.properties.TimeZoneTransition" href="#exchangelib.properties.TimeZoneTransition">TimeZoneTransition</a></li>
@@ -4306,7 +4556,7 @@ def id(self):
 </dd>
 <dt id="exchangelib.properties.InvalidField"><code class="flex name class">
 <span>class <span class="ident">InvalidField</span></span>
-<span>(</span><span>...)</span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
@@ -4326,7 +4576,7 @@ def id(self):
 </dd>
 <dt id="exchangelib.properties.InvalidFieldForVersion"><code class="flex name class">
 <span>class <span class="ident">InvalidFieldForVersion</span></span>
-<span>(</span><span>...)</span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
@@ -5571,6 +5821,245 @@ def response_tag(cls):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.properties.ReminderMessageData"><code class="flex name class">
+<span>class <span class="ident">ReminderMessageData</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/remindermessagedata">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/remindermessagedata</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReminderMessageData(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/remindermessagedata&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ReminderMessageData&#39;
+    FIELDS = Fields(
+        CharField(&#39;reminder_text&#39;, field_uri=&#39;ReminderText&#39;),
+        CharField(&#39;location&#39;, field_uri=&#39;Location&#39;),
+        TimeField(&#39;start_time&#39;, field_uri=&#39;StartTime&#39;),
+        TimeField(&#39;end_time&#39;, field_uri=&#39;EndTime&#39;),
+        AssociatedCalendarItemIdField(&#39;associated_calendar_item_id&#39;, field_uri=&#39;AssociatedCalendarItemId&#39;,
+                                      supported_from=Build(15, 0, 913, 9)),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.ReminderMessageData.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.ReminderMessageData.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.ReminderMessageData.associated_calendar_item_id"><code class="name">var <span class="ident">associated_calendar_item_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ReminderMessageData.end_time"><code class="name">var <span class="ident">end_time</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ReminderMessageData.location"><code class="name">var <span class="ident">location</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ReminderMessageData.reminder_text"><code class="name">var <span class="ident">reminder_text</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ReminderMessageData.start_time"><code class="name">var <span class="ident">start_time</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.RemoveItem"><code class="flex name class">
+<span>class <span class="ident">RemoveItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/removeitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/removeitem</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RemoveItem(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/removeitem&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;RemoveItem&#39;
+    FIELDS = Fields(
+        ReferenceItemIdField(&#39;reference_item_id&#39;, field_uri=&#39;item:ReferenceItemId&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.RemoveItem.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RemoveItem.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.RemoveItem.reference_item_id"><code class="name">var <span class="ident">reference_item_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects"><code class="flex name class">
+<span>class <span class="ident">ResponseObjects</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ResponseObjects(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;ResponseObjects&#39;
+    FIELDS = Fields(
+        EWSElementField(&#39;accept_item&#39;, field_uri=&#39;AcceptItem&#39;, value_cls=&#39;AcceptItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;tentatively_accept_item&#39;, field_uri=&#39;TentativelyAcceptItem&#39;, value_cls=&#39;TentativelyAcceptItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;decline_item&#39;, field_uri=&#39;DeclineItem&#39;, value_cls=&#39;DeclineItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;reply_to_item&#39;, field_uri=&#39;ReplyToItem&#39;, value_cls=&#39;ReplyToItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;forward_item&#39;, field_uri=&#39;ForwardItem&#39;, value_cls=&#39;ForwardItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;reply_all_to_item&#39;, field_uri=&#39;ReplyAllToItem&#39;, value_cls=&#39;ReplyAllToItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;cancel_calendar_item&#39;, field_uri=&#39;CancelCalendarItem&#39;, value_cls=&#39;CancelCalendarItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;remove_item&#39;, field_uri=&#39;RemoveItem&#39;, value_cls=RemoveItem),
+        EWSElementField(&#39;post_reply_item&#39;, field_uri=&#39;PostReplyItem&#39;, value_cls=&#39;PostReplyItem&#39;,
+                        namespace=EWSElement.NAMESPACE),
+        EWSElementField(&#39;success_read_receipt&#39;, field_uri=&#39;SuppressReadReceipt&#39;, value_cls=SuppressReadReceipt),
+        EWSElementField(&#39;accept_sharing_invitation&#39;, field_uri=&#39;AcceptSharingInvitation&#39;,
+                        value_cls=AcceptSharingInvitation),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.ResponseObjects.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.ResponseObjects.accept_item"><code class="name">var <span class="ident">accept_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.accept_sharing_invitation"><code class="name">var <span class="ident">accept_sharing_invitation</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.cancel_calendar_item"><code class="name">var <span class="ident">cancel_calendar_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.decline_item"><code class="name">var <span class="ident">decline_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.forward_item"><code class="name">var <span class="ident">forward_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.post_reply_item"><code class="name">var <span class="ident">post_reply_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.remove_item"><code class="name">var <span class="ident">remove_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.reply_all_to_item"><code class="name">var <span class="ident">reply_all_to_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.reply_to_item"><code class="name">var <span class="ident">reply_to_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.success_read_receipt"><code class="name">var <span class="ident">success_read_receipt</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="exchangelib.properties.ResponseObjects.tentatively_accept_item"><code class="name">var <span class="ident">tentatively_accept_item</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.Room"><code class="flex name class">
 <span>class <span class="ident">Room</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -5974,6 +6463,59 @@ def response_tag(cls):
 <li><code><a title="exchangelib.properties.TimeZoneTransition.time" href="#exchangelib.properties.TimeZoneTransition.time">time</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZoneTransition.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZoneTransition.weekday" href="#exchangelib.properties.TimeZoneTransition.weekday">weekday</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.SuppressReadReceipt"><code class="flex name class">
+<span>class <span class="ident">SuppressReadReceipt</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suppressreadreceipt">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suppressreadreceipt</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SuppressReadReceipt(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suppressreadreceipt&#34;&#34;&#34;
+    ELEMENT_NAME = &#39;SuppressReadReceipt&#39;
+    FIELDS = Fields(
+        ReferenceItemIdField(&#39;reference_item_id&#39;, field_uri=&#39;item:ReferenceItemId&#39;),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.SuppressReadReceipt.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.SuppressReadReceipt.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.SuppressReadReceipt.reference_item_id"><code class="name">var <span class="ident">reference_item_id</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6676,6 +7218,14 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="exchangelib.properties.AcceptSharingInvitation" href="#exchangelib.properties.AcceptSharingInvitation">AcceptSharingInvitation</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.AcceptSharingInvitation.ELEMENT_NAME" href="#exchangelib.properties.AcceptSharingInvitation.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.AcceptSharingInvitation.FIELDS" href="#exchangelib.properties.AcceptSharingInvitation.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.AcceptSharingInvitation.reference_item_id" href="#exchangelib.properties.AcceptSharingInvitation.reference_item_id">reference_item_id</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.properties.AlternateId" href="#exchangelib.properties.AlternateId">AlternateId</a></code></h4>
 <ul class="two-column">
 <li><code><a title="exchangelib.properties.AlternateId.ELEMENT_NAME" href="#exchangelib.properties.AlternateId.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
@@ -6795,6 +7345,23 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
 <li><code><a title="exchangelib.properties.CalendarView.end" href="#exchangelib.properties.CalendarView.end">end</a></code></li>
 <li><code><a title="exchangelib.properties.CalendarView.max_items" href="#exchangelib.properties.CalendarView.max_items">max_items</a></code></li>
 <li><code><a title="exchangelib.properties.CalendarView.start" href="#exchangelib.properties.CalendarView.start">start</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.CompleteName" href="#exchangelib.properties.CompleteName">CompleteName</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.properties.CompleteName.ELEMENT_NAME" href="#exchangelib.properties.CompleteName.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.FIELDS" href="#exchangelib.properties.CompleteName.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.first_name" href="#exchangelib.properties.CompleteName.first_name">first_name</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.full_name" href="#exchangelib.properties.CompleteName.full_name">full_name</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.initials" href="#exchangelib.properties.CompleteName.initials">initials</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.last_name" href="#exchangelib.properties.CompleteName.last_name">last_name</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.middle_name" href="#exchangelib.properties.CompleteName.middle_name">middle_name</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.nickname" href="#exchangelib.properties.CompleteName.nickname">nickname</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.suffix" href="#exchangelib.properties.CompleteName.suffix">suffix</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.title" href="#exchangelib.properties.CompleteName.title">title</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.yomi_first_name" href="#exchangelib.properties.CompleteName.yomi_first_name">yomi_first_name</a></code></li>
+<li><code><a title="exchangelib.properties.CompleteName.yomi_last_name" href="#exchangelib.properties.CompleteName.yomi_last_name">yomi_last_name</a></code></li>
 </ul>
 </li>
 <li>
@@ -7168,6 +7735,44 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.properties.ReminderMessageData" href="#exchangelib.properties.ReminderMessageData">ReminderMessageData</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.ReminderMessageData.ELEMENT_NAME" href="#exchangelib.properties.ReminderMessageData.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.ReminderMessageData.FIELDS" href="#exchangelib.properties.ReminderMessageData.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.ReminderMessageData.associated_calendar_item_id" href="#exchangelib.properties.ReminderMessageData.associated_calendar_item_id">associated_calendar_item_id</a></code></li>
+<li><code><a title="exchangelib.properties.ReminderMessageData.end_time" href="#exchangelib.properties.ReminderMessageData.end_time">end_time</a></code></li>
+<li><code><a title="exchangelib.properties.ReminderMessageData.location" href="#exchangelib.properties.ReminderMessageData.location">location</a></code></li>
+<li><code><a title="exchangelib.properties.ReminderMessageData.reminder_text" href="#exchangelib.properties.ReminderMessageData.reminder_text">reminder_text</a></code></li>
+<li><code><a title="exchangelib.properties.ReminderMessageData.start_time" href="#exchangelib.properties.ReminderMessageData.start_time">start_time</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.RemoveItem" href="#exchangelib.properties.RemoveItem">RemoveItem</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.RemoveItem.ELEMENT_NAME" href="#exchangelib.properties.RemoveItem.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.RemoveItem.FIELDS" href="#exchangelib.properties.RemoveItem.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.RemoveItem.reference_item_id" href="#exchangelib.properties.RemoveItem.reference_item_id">reference_item_id</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.ResponseObjects" href="#exchangelib.properties.ResponseObjects">ResponseObjects</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.ResponseObjects.ELEMENT_NAME" href="#exchangelib.properties.ResponseObjects.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.FIELDS" href="#exchangelib.properties.ResponseObjects.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.accept_item" href="#exchangelib.properties.ResponseObjects.accept_item">accept_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.accept_sharing_invitation" href="#exchangelib.properties.ResponseObjects.accept_sharing_invitation">accept_sharing_invitation</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.cancel_calendar_item" href="#exchangelib.properties.ResponseObjects.cancel_calendar_item">cancel_calendar_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.decline_item" href="#exchangelib.properties.ResponseObjects.decline_item">decline_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.forward_item" href="#exchangelib.properties.ResponseObjects.forward_item">forward_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.post_reply_item" href="#exchangelib.properties.ResponseObjects.post_reply_item">post_reply_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.remove_item" href="#exchangelib.properties.ResponseObjects.remove_item">remove_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.reply_all_to_item" href="#exchangelib.properties.ResponseObjects.reply_all_to_item">reply_all_to_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.reply_to_item" href="#exchangelib.properties.ResponseObjects.reply_to_item">reply_to_item</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.success_read_receipt" href="#exchangelib.properties.ResponseObjects.success_read_receipt">success_read_receipt</a></code></li>
+<li><code><a title="exchangelib.properties.ResponseObjects.tentatively_accept_item" href="#exchangelib.properties.ResponseObjects.tentatively_accept_item">tentatively_accept_item</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.properties.Room" href="#exchangelib.properties.Room">Room</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.properties.Room.ELEMENT_NAME" href="#exchangelib.properties.Room.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
@@ -7217,6 +7822,14 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
 <h4><code><a title="exchangelib.properties.StandardTime" href="#exchangelib.properties.StandardTime">StandardTime</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.properties.StandardTime.ELEMENT_NAME" href="#exchangelib.properties.StandardTime.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.SuppressReadReceipt" href="#exchangelib.properties.SuppressReadReceipt">SuppressReadReceipt</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.SuppressReadReceipt.ELEMENT_NAME" href="#exchangelib.properties.SuppressReadReceipt.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.SuppressReadReceipt.FIELDS" href="#exchangelib.properties.SuppressReadReceipt.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.SuppressReadReceipt.reference_item_id" href="#exchangelib.properties.SuppressReadReceipt.reference_item_id">reference_item_id</a></code></li>
 </ul>
 </li>
 <li>
@@ -7284,7 +7897,7 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>

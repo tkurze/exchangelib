@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.1" />
 <title>exchangelib.autodiscover API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -463,8 +463,14 @@ implementation, start by doing an official test at <a href="https://testconnecti
         domain = get_domain(self.email)
         return domain, self.credentials
 
+    @threaded_cached_property
+    def resolver(self):
+        resolver = dns.resolver.Resolver()
+        resolver.timeout = AutodiscoverProtocol.TIMEOUT
+        return resolver
+
     def _build_response(self, ad_response):
-        ews_url = ad_response.protocol.ews_url
+        ews_url = ad_response.ews_url
         if not ews_url:
             raise AutoDiscoverFailed(&#34;Response is missing an &#39;ews_url&#39; value&#34;)
         if not ad_response.autodiscover_smtp_address:
@@ -559,7 +565,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
         &#34;&#34;&#34;
         # We are connecting to untrusted servers here, so take necessary precautions.
         hostname = urlparse(url).netloc
-        if not is_valid_hostname(hostname, timeout=AutodiscoverProtocol.TIMEOUT):
+        if not self._is_valid_hostname(hostname):
             # &#39;requests&#39; is really bad at reporting that a hostname cannot be resolved. Let&#39;s check this separately.
             # Don&#39;t retry on DNS errors. They will most likely be persistent.
             raise TransportError(&#39;%r has no DNS entry&#39; % hostname)
@@ -590,9 +596,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
                         self.INITIAL_RETRY_POLICY.back_off(self.RETRY_WAIT)
                         retry += 1
                         continue
-                    else:
-                        log.debug(&#34;Connection error on URL %s: %s&#34;, url, e)
-                        raise TransportError(str(e))
+                    log.debug(&#34;Connection error on URL %s: %s&#34;, url, e)
+                    raise TransportError(str(e))
         try:
             auth_type = get_auth_method_from_response(response=r)
         except UnauthorizedError:
@@ -680,6 +685,47 @@ implementation, start by doing an official test at <a href="https://testconnecti
             except ValueError as e:
                 log.debug(&#39;Invalid response: %s&#39;, e)
         return False, None
+
+    def _is_valid_hostname(self, hostname):
+        log.debug(&#39;Checking if %s can be looked up in DNS&#39;, hostname)
+        try:
+            self.resolver.resolve(hostname)
+        except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+            return False
+        return True
+
+    def _get_srv_records(self, hostname):
+        &#34;&#34;&#34;Send a DNS query for SRV entries for the hostname.
+
+        An SRV entry that has been formatted for autodiscovery will have the following format:
+
+            canonical name = mail.example.com.
+            service = 8 100 443 webmail.example.com.
+
+        The first three numbers in the service line are: priority, weight, port
+
+        Args:
+          hostname:
+
+        &#34;&#34;&#34;
+        log.debug(&#39;Attempting to get SRV records for %s&#39;, hostname)
+        records = []
+        try:
+            answers = self.resolver.resolve(&#39;%s.&#39; % hostname, &#39;SRV&#39;)
+        except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
+            log.debug(&#39;DNS lookup failure: %s&#39;, e)
+            return records
+        for rdata in answers:
+            try:
+                vals = rdata.to_text().strip().rstrip(&#39;.&#39;).split(&#39; &#39;)
+                # Raise ValueError if the first three are not ints, and IndexError if there are less than 4 values
+                priority, weight, port, srv = int(vals[0]), int(vals[1]), int(vals[2]), vals[3]
+                record = SrvRecord(priority=priority, weight=weight, port=port, srv=srv)
+                log.debug(&#39;Found SRV record %s &#39;, record)
+                records.append(record)
+            except (ValueError, IndexError):
+                log.debug(&#39;Incompatible SRV record for %s (%s)&#39;, hostname, rdata.to_text())
+        return records
 
     def _step_1(self, hostname):
         &#34;&#34;&#34;The client sends an Autodiscover request to https://example.com/autodiscover/autodiscover.xml and then does
@@ -772,7 +818,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
         &#34;&#34;&#34;
         dns_hostname = &#39;_autodiscover._tcp.%s&#39; % hostname
         log.info(&#39;Step 4: Trying autodiscover on %r with email %r&#39;, dns_hostname, self.email)
-        srv_records = _get_srv_records(dns_hostname)
+        srv_records = self._get_srv_records(dns_hostname)
         try:
             srv_host = _select_srv_host(srv_records)
         except ValueError:
@@ -853,6 +899,32 @@ implementation, start by doing an official test at <a href="https://testconnecti
 <dt id="exchangelib.autodiscover.Autodiscovery.RETRY_WAIT"><code class="name">var <span class="ident">RETRY_WAIT</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.autodiscover.Autodiscovery.resolver"><code class="name">var <span class="ident">resolver</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls):
+    if obj is None:
+        return self
+
+    obj_dict = obj.__dict__
+    name = self.func.__name__
+    with self.lock:
+        try:
+            # check if the value was computed before the lock was acquired
+            return obj_dict[name]
+
+        except KeyError:
+            # if not, do the calculation and release the lock
+            return obj_dict.setdefault(name, self.func(obj))</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -975,6 +1047,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
 <li><code><a title="exchangelib.autodiscover.Autodiscovery.RETRY_WAIT" href="#exchangelib.autodiscover.Autodiscovery.RETRY_WAIT">RETRY_WAIT</a></code></li>
 <li><code><a title="exchangelib.autodiscover.Autodiscovery.clear" href="#exchangelib.autodiscover.Autodiscovery.clear">clear</a></code></li>
 <li><code><a title="exchangelib.autodiscover.Autodiscovery.discover" href="#exchangelib.autodiscover.Autodiscovery.discover">discover</a></code></li>
+<li><code><a title="exchangelib.autodiscover.Autodiscovery.resolver" href="#exchangelib.autodiscover.Autodiscovery.resolver">resolver</a></code></li>
 </ul>
 </li>
 </ul>
@@ -983,7 +1056,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
 </footer>
 </body>
 </html>
