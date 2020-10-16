@@ -8,7 +8,7 @@ import psutil
 import requests_mock
 
 from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, EWSTimeZone, EWSDateTime, \
-    EWSDate, Mailbox, DLMailbox, UTC, CalendarItem
+    Mailbox, DLMailbox, UTC, CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID
@@ -366,7 +366,8 @@ class ProtocolTest(EWSTest):
         self.assertEqual(self.account.oof_settings, oof)
 
         # Scheduled duration must not be in the past
-        start, end = get_random_datetime_range(start_date=EWSDate.today())
+        tz = EWSTimeZone('Europe/Copenhagen')
+        start, end = get_random_datetime_range(start_date=EWSDateTime.now(tz).date())
         oof = OofSettings(
             state=OofSettings.SCHEDULED,
             external_audience='Known',

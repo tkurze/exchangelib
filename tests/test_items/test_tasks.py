@@ -136,5 +136,6 @@ class TasksTest(CommonItemTest):
         master_item = self.get_item_by_id((master_item_id, None))
         self.assertEqual(master_item.change_count, 2)
         # The due date is the next occurrence after today
-        self.assertEqual(master_item.due_date, EWSDate.today() + datetime.timedelta(days=1))
+        tz = EWSTimeZone('Europe/Copenhagen')
+        self.assertEqual(master_item.due_date, EWSDateTime.now(tz).date() + datetime.timedelta(days=1))
         self.assertEqual(master_item.recurrence.boundary.number, 3)  # One less
