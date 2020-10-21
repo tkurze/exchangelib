@@ -30,7 +30,6 @@
 import logging
 import warnings
 
-import dateutil.parser
 try:
     import zoneinfo
 except ImportError:
@@ -176,10 +175,8 @@ class EWSDateTime(datetime.datetime):
             # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
             local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
             raise NaiveDateTimeNotAllowed(local_dt)
-        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
-        # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
-        # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-        aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+        aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
         if isinstance(aware_dt, cls):
             return aware_dt
         return cls.from_datetime(aware_dt)
@@ -581,10 +578,8 @@ def fromordinal(cls, n):
             # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
             local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
             raise NaiveDateTimeNotAllowed(local_dt)
-        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
-        # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
-        # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-        aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+        aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
         if isinstance(aware_dt, cls):
             return aware_dt
         return cls.from_datetime(aware_dt)
@@ -671,10 +666,8 @@ def from_string(cls, date_string):
         # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
         local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
         raise NaiveDateTimeNotAllowed(local_dt)
-    # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
-    # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
-    # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-    aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+    # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+    aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
     if isinstance(aware_dt, cls):
         return aware_dt
     return cls.from_datetime(aware_dt)</code></pre>

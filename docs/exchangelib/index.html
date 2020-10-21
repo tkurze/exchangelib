@@ -26,7 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .account import Account, Identity
+<pre><code class="python">import sys
+
+from .account import Account, Identity
 from .attachments import FileAttachment, ItemAttachment
 from .autodiscover import discover
 from .configuration import Configuration
@@ -44,7 +46,7 @@ from .restriction import Q
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;3.3.0&#39;
+__version__ = &#39;3.3.1&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -69,6 +71,11 @@ __all__ = [
 # Set a default user agent, e.g. &#34;exchangelib/3.1.1 (python-requests/2.22.0)&#34;
 import requests.utils
 BaseProtocol.USERAGENT = &#34;%s/%s (%s)&#34; % (__name__, __version__, requests.utils.default_user_agent())
+
+# Support fromisoformat() in Python &lt; 3.7
+if sys.version_info[:2] &lt; (3, 7):
+    from backports.datetime_fromisoformat import MonkeyPatch
+    MonkeyPatch.patch_fromisoformat()
 
 
 def close_connections():
@@ -5463,10 +5470,8 @@ def fromordinal(cls, n):
             # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
             local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
             raise NaiveDateTimeNotAllowed(local_dt)
-        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
-        # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
-        # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-        aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+        aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
         if isinstance(aware_dt, cls):
             return aware_dt
         return cls.from_datetime(aware_dt)
@@ -5553,10 +5558,8 @@ def from_string(cls, date_string):
         # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
         local_dt = super().strptime(date_string, &#39;%Y-%m-%dT%H:%M:%S&#39;)
         raise NaiveDateTimeNotAllowed(local_dt)
-    # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39; but the Python
-    # strptime &#39;%z&#39; directive cannot yet handle full ISO8601 formatted timezone information (see
-    # http://bugs.python.org/issue15873). Use the &#39;dateutil&#39; package instead.
-    aware_dt = dateutil.parser.parse(date_string).astimezone(UTC).replace(tzinfo=UTC)
+    # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+    aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
     if isinstance(aware_dt, cls):
         return aware_dt
     return cls.from_datetime(aware_dt)</code></pre>
