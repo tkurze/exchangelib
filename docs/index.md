@@ -441,15 +441,15 @@ from datetime import datetime, timedelta
 import pytz
 from exchangelib import EWSTimeZone, EWSDateTime, EWSDate
 
-# EWSTimeZone works just like pytz.timezone()
-tz = EWSTimeZone.timezone('Europe/Copenhagen')
+# EWSTimeZone works just like zoneinfo.ZoneInfo()
+tz = EWSTimeZone('Europe/Copenhagen')
 # You can also get the local timezone defined in your operating system
 tz = EWSTimeZone.localzone()
 
 # EWSDate and EWSDateTime work just like datetime.datetime and datetime.date. Always create
-# timezone-aware datetimes with EWSTimeZone.localize():
-localized_dt = tz.localize(EWSDateTime(2017, 9, 5, 8, 30))
-right_now = tz.localize(EWSDateTime.now())
+# timezone-aware datetimes:
+localized_dt = EWSDateTime(2017, 9, 5, 8, 30, tzinfo=tz)
+right_now = EWSDateTime.now(tz)
 
 # Datetime math works transparently
 two_hours_later = localized_dt + timedelta(hours=2)
@@ -466,13 +466,19 @@ also_today += timedelta(days=10)
 # 'UTC_NOW' returns a timezone-aware UTC timestamp of current time.
 from exchangelib import UTC, UTC_NOW
 
-right_now_in_utc = UTC.localize(EWSDateTime.now())
+right_now_in_utc = EWSDateTime.now(tz=UTC)
 right_now_in_utc = UTC_NOW()
 
-# Already have a Python datetime object you want to use? Make sure it's localized. Then pass 
-# it to from_datetime().
+# Already have a 'pytz' or 'dateutil' timezone you want to use? Then convert is using from_pytz()
+or from_dateutil().
 pytz_tz = pytz.timezone('Europe/Copenhagen')
-py_dt = pytz_tz.localize(datetime(2017, 12, 11, 10, 9, 8))
+tz = EWSTimeZone.from_pytz(pytz_tz)
+dateutil_tz = dateutil.tz.gettz('Europe/Copenhagen')
+tz = EWSTimeZone.from_dateutil(dateutil_tz)
+
+# Already have a Python datetime object you want to use? Make sure it's timezone-aware and tzinfo
+# is an EWSTimeZone instance. Then convert it using from_datetime().
+py_dt = datetime(2017, 12, 11, 10, 9, 8, tzinfo=tz)
 ews_now = EWSDateTime.from_datetime(py_dt)
 ```
 
@@ -573,13 +579,13 @@ from exchangelib import Account, CalendarItem, EWSDateTime, EWSTimeZone, Attende
 from exchangelib.properties import DistinguishedFolderId
 
 a = Account(...)
-tz = EWSTimeZone.timezone('Europe/Copenhagen')
+tz = EWSTimeZone('Europe/Copenhagen')
 year, month, day = 2016, 3, 20
 calendar_items = []
 for hour in range(7, 17):
     calendar_items.append(CalendarItem(
-        start=tz.localize(EWSDateTime(year, month, day, hour, 30)),
-        end=tz.localize(EWSDateTime(year, month, day, hour + 1, 15)),
+        start=EWSDateTime(year, month, day, hour, 30, tzinfo=tz),
+        end=EWSDateTime(year, month, day, hour + 1, 15, tzinfo=tz),
         subject='Test item',
         body='Hello from Python',
         location='devnull',
@@ -656,8 +662,8 @@ all_items_without_caching = a.inbox.all().iterator()  # Get everything, but don'
 # Chain multiple modifiers to refine the query
 filtered_items = a.inbox.filter(subject__contains='foo').exclude(categories__icontains='bar')
 status_report = a.inbox.all().delete()  # Delete the items returned by the QuerySet
-start = a.default_timezone.localize(EWSDateTime(2017, 1, 1))
-end = a.default_timezone.localize(EWSDateTime(2018, 1, 1))
+start = EWSDateTime(2017, 1, 1, tzinfo=a.default_timezone)
+end = EWSDateTime(2018, 1, 1, tzinfo=a.default_timezone)
 items_for_2017 = a.calendar.filter(start__range=(start, end))  # Filter by a date range
 
 # Same as filter() but throws an error if exactly one item isn't returned
@@ -760,16 +766,16 @@ a.inbox.filter(q)
 
 # In this example, we filter by categories so we only get the items created by us.
 a.calendar.filter(
-    start__lt=a.default_timezone.localize(EWSDateTime(2019, 1, 1)),
-    end__gt=a.default_timezone.localize(EWSDateTime(2019, 1, 31)),
+    start__lt=EWSDateTime(2019, 1, 1, tzinfo=a.default_timezone),
+    end__gt=EWSDateTime(2019, 1, 31, tzinfo=a.default_timezone),
     categories__contains=['foo', 'bar'],
 )
 
 # By default, EWS returns only the master recurring item. If you want recurring calendar
 # items to be expanded, use calendar.view(start=..., end=...) instead.
 items = a.calendar.view(
-    start=a.default_timezone.localize(EWSDateTime(2019, 1, 31)),
-    end=a.default_timezone.localize(EWSDateTime(2019, 1, 31)) + timedelta(days=1),
+    start=EWSDateTime(2019, 1, 31, tzinfo=a.default_timezone),
+    end=EWSDateTime(2019, 1, 31, tzinfo=a.default_timezone) + timedelta(days=1),
 )
 for item in items:
     print(item.start, item.end, item.subject, item.body, item.location)
@@ -777,8 +783,8 @@ for item in items:
 # You can combine view() with other modifiers. For example, to check for conflicts before 
 # adding a meeting from 8:00 to 10:00:
 has_conflicts = a.calendar.view(
-    start=a.default_timezone.localize(EWSDateTime(2019, 1, 31, 8)),
-    end=a.default_timezone.localize(EWSDateTime(2019, 1, 31, 10)),
+    start=EWSDateTime(2019, 1, 31, 8, tzinfo=a.default_timezone),
+    end=EWSDateTime(2019, 1, 31, 10, tzinfo=a.default_timezone),
     max_items=1
 ).exists()
 
@@ -849,8 +855,8 @@ a = Account(...)
 item = CalendarItem(
     account=a,
     folder=a.calendar,
-    start=a.default_timezone.localize(EWSDateTime(2019, 1, 31, 8, 15)),
-    end=a.default_timezone.localize(EWSDateTime(2019, 1, 31, 8, 45)),
+    start=EWSDateTime(2019, 1, 31, 8, 15, tzinfo=a.default_timezone),
+    end=EWSDateTime(2019, 1, 31, 8, 45, tzinfo=a.default_timezone),
     subject="Subject of Meeting",
     body="Please come to my meeting",
     required_attendees=['anne@example.com', 'bob@example.com']
@@ -1120,7 +1126,7 @@ from exchangelib.fields import MONDAY, WEDNESDAY
 from exchangelib.recurrence import Recurrence, WeeklyPattern
 
 a = Account(...)
-start = a.default_timezone.localize(EWSDateTime(2017, 9, 1, 11))
+start = EWSDateTime(2017, 9, 1, 11, tzinfo=a.default_timezone)
 end = start + timedelta(hours=2)
 master_recurrence = CalendarItem(
     folder=a.calendar,
@@ -1214,8 +1220,8 @@ a.oof_settings = OofSettings(
     external_audience='Known',
     internal_reply="I'm in the pub. See ya guys!",
     external_reply="I'm having a business dinner in town",
-    start=a.default_timezone.localize(EWSDateTime(2017, 11, 1, 11)),
-    end=a.default_timezone.localize(EWSDateTime(2017, 12, 1, 11)),
+    start=EWSDateTime(2017, 11, 1, 11, tzinfo=a.default_timezone),
+    end=EWSDateTime(2017, 12, 1, 11, tzinfo=a.default_timezone),
 )
 # Disable OOF messages
 a.oof_settings = OofSettings(
@@ -1318,7 +1324,7 @@ from datetime import timedelta
 from exchangelib import Account, EWSDateTime
 
 a = Account(...)
-start = a.default_timezone.localize(EWSDateTime.now())
+start = EWSDateTime.now(a.default_timezone)
 end = start + timedelta(hours=6)
 accounts = [(a, 'Organizer', False)]
 for busy_info in a.protocol.get_free_busy_info(accounts=accounts, start=start, end=end):
@@ -1338,7 +1344,7 @@ a = Account(...)
 timezones = list(a.protocol.get_timezones(return_full_timezone_data=True))
 
 # Get availability information for a list of accounts
-start = a.default_timezone.localize(EWSDateTime.now())
+start = EWSDateTime.now(a.default_timezone)
 end = start + timedelta(hours=6)
 # get_free_busy_info() expects a list of (account, attendee_type, exclude_conflicts) tuples
 accounts = [(a, 'Organizer', False)]
