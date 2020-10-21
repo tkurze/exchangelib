@@ -37,7 +37,7 @@ setup(
     description='Client for Microsoft Exchange Web Services (EWS)',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
-    license='BSD',
+    license='BSD-2-Clause',
     keywords='ews exchange autodiscover microsoft outlook exchange-web-services o365 office365',
     install_requires=[
         'backports-datetime-fromisoformat;python_version<"3.7"',
