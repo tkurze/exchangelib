@@ -15,7 +15,7 @@ class MessagesTest(CommonItemTest):
     TEST_FOLDER = 'inbox'
     FOLDER_CLASS = Inbox
     ITEM_CLASS = Message
-    INCOMING_MESSAGE_TIMEOUT = 20
+    INCOMING_MESSAGE_TIMEOUT = 10
 
     def get_incoming_message(self, subject):
         t1 = time.monotonic()
