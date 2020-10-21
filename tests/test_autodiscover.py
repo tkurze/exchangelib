@@ -22,7 +22,7 @@ class AutodiscoverTest(EWSTest):
         super().setUp()
 
         # Enable retries, to make tests more robust
-        Autodiscovery.INITIAL_RETRY_POLICY = FaultTolerance(max_wait=30)
+        Autodiscovery.INITIAL_RETRY_POLICY = FaultTolerance(max_wait=5)
         Autodiscovery.RETRY_WAIT = 5
 
         # Each test should start with a clean autodiscover cache
@@ -75,7 +75,6 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_magic(self, m):
         # Just test we don't fail when calling repr() and str(). Insert a dummy cache entry for testing
-        clear_cache()
         c = Credentials('leet_user', 'cannaguess')
         autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
@@ -92,7 +91,6 @@ class AutodiscoverTest(EWSTest):
 
     def test_autodiscover_empty_cache(self):
         # A live test of the entire process with an empty cache
-        clear_cache()
         ad_response, protocol = exchangelib.autodiscover.discovery.discover(
             email=self.account.primary_smtp_address,
             credentials=self.account.protocol.credentials,
@@ -123,8 +121,6 @@ class AutodiscoverTest(EWSTest):
             )
 
     def test_failed_login_via_account(self):
-        Autodiscovery.INITIAL_RETRY_POLICY = FaultTolerance(max_wait=10)
-        clear_cache()
         with self.assertRaises(AutoDiscoverFailed):
             Account(
                 primary_smtp_address=self.account.primary_smtp_address,
@@ -137,7 +133,6 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_close_autodiscover_connections(self, m):
         # A live test that we can close TCP connections
-        clear_cache()
         c = Credentials('leet_user', 'cannaguess')
         autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
@@ -151,7 +146,6 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_autodiscover_direct_gc(self, m):
         # Test garbage collection of the autodiscover cache
-        clear_cache()
         c = Credentials('leet_user', 'cannaguess')
         autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
@@ -239,7 +233,6 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_autodiscover_from_account(self, m):
         # Test that autodiscovery via account creation works
-        clear_cache()
         # Mock the default endpoint that we test in step 1 of autodiscovery
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.dummy_ad_response)
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
@@ -280,7 +273,6 @@ class AutodiscoverTest(EWSTest):
     def test_autodiscover_redirect(self, m):
         # Test various aspects of autodiscover redirection. Mock all HTTP responses because we can't force a live server
         # to send us into the correct code paths.
-        clear_cache()
         # Mock the default endpoint that we test in step 1 of autodiscovery
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.dummy_ad_response)
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
