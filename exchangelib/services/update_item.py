@@ -170,6 +170,8 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         itemchanges = create_element('m:ItemChanges')
         version = self.account.version
         for item, fieldnames in items:
+            if not item.account:
+                item.account = self.account
             if not fieldnames:
                 raise ValueError('"fieldnames" must not be empty')
             itemchange = create_element('t:ItemChange')

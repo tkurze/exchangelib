@@ -81,6 +81,8 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
             createitem.append(saveditemfolderid)
         item_elems = create_element('m:Items')
         for item in items:
+            if not item.account:
+                item.account = self.account
             log.debug('Adding item %s', item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):

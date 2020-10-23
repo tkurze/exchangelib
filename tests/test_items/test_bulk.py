@@ -1,7 +1,8 @@
 from exchangelib.errors import ErrorItemNotFound, ErrorInvalidChangeKey, ErrorInvalidIdMalformed
+from exchangelib.ewsdatetime import EWSDate
 from exchangelib.fields import FieldPath
-from exchangelib.folders import Inbox, Folder
-from exchangelib.items import Item, Message, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY
+from exchangelib.folders import Inbox, Folder, Calendar
+from exchangelib.items import Item, Message, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, CalendarItem
 
 from .test_basics import BaseItemTest
 
@@ -28,6 +29,27 @@ class BulkMethodTest(BaseItemTest):
 
         items = list(self.account.fetch(ids=ids, only_fields=['id', 'changekey']))
         self.assertEqual(len(items), 2)
+
+    def test_no_account(self):
+        # Test bulk operations on items with no self.account
+        item = self.get_test_item()
+        item.account = None
+        res = self.test_folder.bulk_create(items=[item])[0]
+        item.id, item.changekey = res.id, res.changekey
+        item.account = None
+        self.assertEqual(list(self.account.fetch(ids=[item]))[0].id, item.id)
+        item.account = None
+        res = self.account.bulk_update(items=[(item, ('subject',))])[0]
+        item.id, item.changekey = res
+        item.account = None
+        self.assertEqual(self.account.bulk_send(ids=[item]), [True])
+        item.account = None
+        self.account.bulk_copy(ids=[item], to_folder=self.account.trash)
+        item.account = None
+        res = self.account.bulk_move(ids=[item], to_folder=self.account.trash)[0]
+        item.id, item.changekey = res
+        item.account = None
+        self.assertEqual(self.account.bulk_delete(ids=[item]), [True])
 
     def test_empty_args(self):
         # We allow empty sequences for these methods
@@ -113,3 +135,21 @@ class BulkMethodTest(BaseItemTest):
                 self.assertIsInstance(res, ErrorItemNotFound)
             else:
                 self.assertIsInstance(res, Item)
+
+
+class CalendarBulkMethodTest(BaseItemTest):
+    TEST_FOLDER = 'calendar'
+    FOLDER_CLASS = Calendar
+    ITEM_CLASS = CalendarItem
+
+    def test_no_account(self):
+        # Test corner cases with bulk operations on items with no self.account
+        item = self.get_test_item()
+        item.recurrence = None
+        item.is_all_day = True
+        item.start, item.end = EWSDate(2020, 1, 1), EWSDate(2020, 1, 2)
+        item.account = None
+        res = self.test_folder.bulk_create(items=[item])[0]
+        item.id, item.changekey = res.id, res.changekey
+        item.account = None
+        self.account.bulk_update(items=[(item, ('start',))])
