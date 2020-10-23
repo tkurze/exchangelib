@@ -3,6 +3,7 @@ Change Log
 
 HEAD
 ----
+-   Change Kerberos dependency from `requests_kerberos` to `requests_gssapi`
 
 
 3.3.1

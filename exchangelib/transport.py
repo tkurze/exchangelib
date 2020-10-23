@@ -33,8 +33,8 @@ AUTH_TYPE_MAP = {
     NOAUTH: None,
 }
 try:
-    import requests_kerberos
-    AUTH_TYPE_MAP[GSSAPI] = requests_kerberos.HTTPKerberosAuth
+    import requests_gssapi
+    AUTH_TYPE_MAP[GSSAPI] = requests_gssapi.HTTPSPNEGOAuth
 except ImportError:
     # Kerberos auth is optional
     pass

@@ -56,9 +56,9 @@ setup(
         'tzlocal',
     ],
     extras_require={
-        'kerberos': ['requests_kerberos'],
+        'kerberos': ['requests_gssapi'],
         'sspi': ['requests_negotiate_sspi'],  # Only for Win32 environments
-        'complete': ['requests_kerberos', 'requests_negotiate_sspi'],  # Only for Win32 environments
+        'complete': ['requests_gssapi', 'requests_negotiate_sspi'],  # Only for Win32 environments
     },
     packages=find_packages(exclude=('tests', 'tests.*')),
     tests_require=['flake8', 'psutil', 'python-dateutil', 'PyYAML', 'requests_mock'],
