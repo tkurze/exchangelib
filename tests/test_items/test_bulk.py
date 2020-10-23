@@ -44,9 +44,10 @@ class BulkMethodTest(BaseItemTest):
         item.account = None
         self.assertEqual(self.account.bulk_send(ids=[item]), [True])
         item.account = None
-        self.account.bulk_copy(ids=[item], to_folder=self.account.trash)
+        res = self.account.bulk_copy(ids=[item], to_folder=self.account.trash)[0]
+        item.id, item.changekey = res
         item.account = None
-        res = self.account.bulk_move(ids=[item], to_folder=self.account.trash)[0]
+        res = self.account.bulk_move(ids=[item], to_folder=self.test_folder)[0]
         item.id, item.changekey = res
         item.account = None
         self.assertEqual(self.account.bulk_delete(ids=[item]), [True])
