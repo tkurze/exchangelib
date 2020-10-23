@@ -109,6 +109,8 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
             createitem.append(saveditemfolderid)
         item_elems = create_element(&#39;m:Items&#39;)
         for item in items:
+            if not item.account:
+                item.account = self.account
             log.debug(&#39;Adding item %s&#39;, item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
@@ -212,6 +214,8 @@ errormessage), in the same order as the input list.</p>
             createitem.append(saveditemfolderid)
         item_elems = create_element(&#39;m:Items&#39;)
         for item in items:
+            if not item.account:
+                item.account = self.account
             log.debug(&#39;Adding item %s&#39;, item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
@@ -335,6 +339,8 @@ send_meeting_invitations:</p></div>
         createitem.append(saveditemfolderid)
     item_elems = create_element(&#39;m:Items&#39;)
     for item in items:
+        if not item.account:
+            item.account = self.account
         log.debug(&#39;Adding item %s&#39;, item)
         set_xml_value(item_elems, item, version=self.account.version)
     if not len(item_elems):

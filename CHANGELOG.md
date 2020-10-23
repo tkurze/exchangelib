@@ -3,7 +3,13 @@ Change Log
 
 HEAD
 ----
+
+
+3.3.2
+-----
 -   Change Kerberos dependency from `requests_kerberos` to `requests_gssapi`
+-   Let `EWSDateTime.from_datetime()` accept `datetime.datetime` objects with `tzinfo` objects that
+    are `dateutil`, `zoneinfo` and `pytz` instances, in addition to `EWSTimeZone`.
 
 
 3.3.1

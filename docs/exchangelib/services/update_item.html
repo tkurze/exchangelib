@@ -198,6 +198,8 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         itemchanges = create_element(&#39;m:ItemChanges&#39;)
         version = self.account.version
         for item, fieldnames in items:
+            if not item.account:
+                item.account = self.account
             if not fieldnames:
                 raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
             itemchange = create_element(&#39;t:ItemChange&#39;)
@@ -394,6 +396,8 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         itemchanges = create_element(&#39;m:ItemChanges&#39;)
         version = self.account.version
         for item, fieldnames in items:
+            if not item.account:
+                item.account = self.account
             if not fieldnames:
                 raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
             itemchange = create_element(&#39;t:ItemChange&#39;)
@@ -503,6 +507,8 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
     itemchanges = create_element(&#39;m:ItemChanges&#39;)
     version = self.account.version
     for item, fieldnames in items:
+        if not item.account:
+            item.account = self.account
         if not fieldnames:
             raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
         itemchange = create_element(&#39;t:ItemChange&#39;)

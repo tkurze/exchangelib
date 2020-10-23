@@ -859,6 +859,8 @@ errormessage), in the same order as the input list.</p>
             createitem.append(saveditemfolderid)
         item_elems = create_element(&#39;m:Items&#39;)
         for item in items:
+            if not item.account:
+                item.account = self.account
             log.debug(&#39;Adding item %s&#39;, item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
@@ -982,6 +984,8 @@ send_meeting_invitations:</p></div>
         createitem.append(saveditemfolderid)
     item_elems = create_element(&#39;m:Items&#39;)
     for item in items:
+        if not item.account:
+            item.account = self.account
         log.debug(&#39;Adding item %s&#39;, item)
         set_xml_value(item_elems, item, version=self.account.version)
     if not len(item_elems):
@@ -4685,6 +4689,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         itemchanges = create_element(&#39;m:ItemChanges&#39;)
         version = self.account.version
         for item, fieldnames in items:
+            if not item.account:
+                item.account = self.account
             if not fieldnames:
                 raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
             itemchange = create_element(&#39;t:ItemChange&#39;)
@@ -4794,6 +4800,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     itemchanges = create_element(&#39;m:ItemChanges&#39;)
     version = self.account.version
     for item, fieldnames in items:
+        if not item.account:
+            item.account = self.account
         if not fieldnames:
             raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
         itemchange = create_element(&#39;t:ItemChange&#39;)
