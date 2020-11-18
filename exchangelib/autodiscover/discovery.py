@@ -75,6 +75,7 @@ class Autodiscovery:
     INITIAL_RETRY_POLICY = FailFast()
     RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
     MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
+    DNS_RESOLVER_KWARGS = {}
     DNS_RESOLVER_ATTRS = {
         'timeout': AutodiscoverProtocol.TIMEOUT,
     }
@@ -151,7 +152,7 @@ class Autodiscovery:
 
     @threaded_cached_property
     def resolver(self):
-        resolver = dns.resolver.Resolver()
+        resolver = dns.resolver.Resolver(**self.DNS_RESOLVER_KWARGS)
         for k, v in self.DNS_RESOLVER_ATTRS.items():
             setattr(resolver, k, v)
         return resolver
