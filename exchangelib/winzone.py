@@ -8,6 +8,7 @@ from .util import to_xml
 
 CLDR_WINZONE_URL = 'https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml'
 DEFAULT_TERRITORY = '001'
+CLDR_WINZONE_VERSION = '2020d'
 
 
 def generate_map(timeout=10):
@@ -21,7 +22,9 @@ def generate_map(timeout=10):
     if r.status_code != 200:
         raise ValueError('Unexpected response: %s' % r)
     tz_map = {}
-    for e in to_xml(r.content).find('windowsZones').find('mapTimezones').findall('mapZone'):
+    timezones_elem = to_xml(r.content).find('windowsZones').find('mapTimezones')
+    version = timezones_elem.get('typeVersion')
+    for e in timezones_elem.findall('mapZone'):
         for location in re.split(r'\s+', e.get('type')):
             if e.get('territory') == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
@@ -29,13 +32,13 @@ def generate_map(timeout=10):
                 if not location:
                     raise ValueError('Expected location')
                 tz_map[location] = e.get('other'), e.get('territory')
-    return tz_map
+    return version, tz_map
 
 
 # This map is generated irregularly from generate_map(). Do not edit manually - make corrections to
 # IANA_TO_MS_TIMEZONE_MAP instead. We provide this map to avoid hammering the CLDR_WINZONE_URL.
 #
-# This list was generated from CLDR_WINZONE_URL version 2020a.
+# This list was generated from CLDR_WINZONE_URL version CLDR_WINZONE_VERSION.
 CLDR_TO_MS_TIMEZONE_MAP = {
     'Africa/Abidjan': ('Greenwich Standard Time', 'CI'),
     'Africa/Accra': ('Greenwich Standard Time', 'GH'),
@@ -125,19 +128,19 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'America/Coral_Harbour': ('SA Pacific Standard Time', 'CA'),
     'America/Cordoba': ('Argentina Standard Time', 'AR'),
     'America/Costa_Rica': ('Central America Standard Time', 'CR'),
-    'America/Creston': ('US Mountain Standard Time', 'CA'),
+    'America/Creston': ('Yukon Standard Time', 'CA'),
     'America/Cuiaba': ('Central Brazilian Standard Time', '001'),
     'America/Curacao': ('SA Western Standard Time', 'CW'),
     'America/Danmarkshavn': ('UTC', 'GL'),
-    'America/Dawson': ('US Mountain Standard Time', 'CA'),
-    'America/Dawson_Creek': ('US Mountain Standard Time', 'CA'),
+    'America/Dawson': ('Yukon Standard Time', 'CA'),
+    'America/Dawson_Creek': ('Yukon Standard Time', 'CA'),
     'America/Denver': ('Mountain Standard Time', '001'),
     'America/Detroit': ('Eastern Standard Time', 'US'),
     'America/Dominica': ('SA Western Standard Time', 'DM'),
     'America/Edmonton': ('Mountain Standard Time', 'CA'),
     'America/Eirunepe': ('SA Pacific Standard Time', 'BR'),
     'America/El_Salvador': ('Central America Standard Time', 'SV'),
-    'America/Fort_Nelson': ('US Mountain Standard Time', 'CA'),
+    'America/Fort_Nelson': ('Yukon Standard Time', 'CA'),
     'America/Fortaleza': ('SA Eastern Standard Time', 'BR'),
     'America/Glace_Bay': ('Atlantic Standard Time', 'CA'),
     'America/Godthab': ('Greenland Standard Time', '001'),
@@ -234,7 +237,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'America/Toronto': ('Eastern Standard Time', 'CA'),
     'America/Tortola': ('SA Western Standard Time', 'VG'),
     'America/Vancouver': ('Pacific Standard Time', 'CA'),
-    'America/Whitehorse': ('US Mountain Standard Time', 'CA'),
+    'America/Whitehorse': ('Yukon Standard Time', '001'),
     'America/Winnipeg': ('Central Standard Time', 'CA'),
     'America/Yakutat': ('Alaskan Standard Time', 'US'),
     'America/Yellowknife': ('Mountain Standard Time', 'CA'),

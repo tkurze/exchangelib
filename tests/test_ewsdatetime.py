@@ -10,7 +10,7 @@ except ImportError:
 
 from exchangelib import EWSDateTime, EWSDate, EWSTimeZone, UTC
 from exchangelib.errors import UnknownTimeZone, NaiveDateTimeNotAllowed
-from exchangelib.winzone import generate_map, CLDR_TO_MS_TIMEZONE_MAP, CLDR_WINZONE_URL
+from exchangelib.winzone import generate_map, CLDR_TO_MS_TIMEZONE_MAP, CLDR_WINZONE_URL, CLDR_WINZONE_VERSION
 from exchangelib.util import CONNECTION_ERRORS
 
 from .common import TimedTestCase
@@ -192,11 +192,13 @@ class EWSDateTimeTest(TimedTestCase):
 
     def test_generate(self):
         try:
-            self.assertDictEqual(generate_map(), CLDR_TO_MS_TIMEZONE_MAP)
+            version, tz_map = generate_map()
         except CONNECTION_ERRORS:
             # generate_map() requires access to unicode.org, which may be unavailable. Don't fail test, since this is
             # out of our control.
-            pass
+            return
+        self.assertEqual(version, CLDR_WINZONE_VERSION)
+        self.assertDictEqual(tz_map, CLDR_TO_MS_TIMEZONE_MAP)
 
     @requests_mock.mock()
     def test_generate_failure(self, m):
