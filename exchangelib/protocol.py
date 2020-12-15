@@ -241,7 +241,7 @@ class BaseProtocol:
                 # they're the same as the session was created with. If
                 # this isn't the case, we can just go ahead with a new
                 # session using the already-updated credentials.
-                self.credentials.refresh()
+                self.credentials.refresh(session=session)
         return self.renew_session(session)
 
     def create_session(self):
