@@ -1,7 +1,7 @@
 import datetime
 
 from exchangelib.attachments import ItemAttachment
-from exchangelib.errors import ErrorItemNotFound
+from exchangelib.errors import ErrorItemNotFound, ErrorInternalServerError
 from exchangelib.ewsdatetime import UTC_NOW
 from exchangelib.extended_properties import ExtendedProperty, ExternId
 from exchangelib.fields import ExtendedPropertyField, CharField
@@ -620,10 +620,14 @@ class GenericItemTest(CommonItemTest):
         item.save()
         # For some reason, the querystring search doesn't work instantly. We may have to wait for up to 60 seconds.
         # I'm too impatient for that, so also allow empty results. This makes the test almost worthless but I blame EWS.
-        self.assertIn(
-            self.test_folder.filter('Subject:%s' % item.subject).count(),
-            (0, 1)
-        )
+        # Also, some servers are misconfigured and don't support querystrings at all. Don't fail on that.
+        try:
+            self.assertIn(
+                self.test_folder.filter('Subject:%s' % item.subject).count(),
+                (0, 1)
+            )
+        except ErrorInternalServerError as e:
+            self.assertIn('AQS parser has been removed from Windows 2016 Server Core', e.args[0])
 
     def test_complex_fields(self):
         # Test that complex fields can be fetched using only(). This is a test for #141.
