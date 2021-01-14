@@ -8,7 +8,7 @@ from .util import to_xml
 
 CLDR_WINZONE_URL = 'https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml'
 DEFAULT_TERRITORY = '001'
-CLDR_WINZONE_VERSION = '2020d'
+CLDR_WINZONE_VERSION = '2020f'
 
 
 def generate_map(timeout=10):
