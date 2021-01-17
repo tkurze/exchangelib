@@ -523,7 +523,9 @@ class Mailbox(EWSElement):
     FIELDS = Fields(
         TextField('name', field_uri='Name'),
         EmailAddressField('email_address', field_uri='EmailAddress'),
-        RoutingTypeField('routing_type', field_uri='RoutingType'),
+        # RoutingType values are not restricted:
+        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/routingtype-emailaddresstype
+        TextField('routing_type', field_uri='RoutingType', default='SMTP'),
         ChoiceField('mailbox_type', field_uri='MailboxType', choices=MAILBOX_TYPE_CHOICES, default=MAILBOX),
         EWSElementField('item_id', value_cls=ItemId, is_read_only=True),
     )
@@ -586,6 +588,8 @@ class AvailabilityMailbox(EWSElement):
     FIELDS = Fields(
         TextField('name', field_uri='Name'),
         EmailAddressField('email_address', field_uri='Address', is_required=True),
+        # RoutingType values restricted to EX and SMTP:
+        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/routingtype-emailaddress
         RoutingTypeField('routing_type', field_uri='RoutingType'),
     )
 
