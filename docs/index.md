@@ -1107,10 +1107,17 @@ logo_filename = 'logo.png'
 with open(logo_filename, 'rb') as f:
     my_logo = FileAttachment(name=logo_filename, content=f.read(), is_inline=True, content_id=logo_filename)
 message.attach(my_logo)
-message.body = HTMLBody('<html><body>Hello logo: <img src="cid:%s"></body></html>' % logo_filename)
+# Most email systems
+message.body = HTMLBody(
+  '<html><body>Hello logo: <img src="cid:%s"></body></html>' % logo_filename
+)
+# Gmail needs this additional img attribute
+message.body = HTMLBody(
+  '<html><body>Hello logo: <img data-imagetype="AttachmentByCid" src="cid:%s"></body></html>' % logo_filename
+)
 
-# Attachments cannot be updated via EWS. In this case, you must to detach the attachment, update
-# the relevant fields, and attach the updated attachment.
+# Attachments cannot be updated via EWS. If you want to change an attachment, you must detach the attachment,
+# update the relevant fields, and attach as a new attachment.
 
 # Be aware that adding and deleting attachments from items that are already created in Exchange
 # (items that have an item_id) will update the changekey of the item.
