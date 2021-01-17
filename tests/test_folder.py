@@ -453,6 +453,8 @@ class FolderTest(EWSTest):
             )
 
             # Test get()
+            self.assertEqual(folder_qs.get(id=f2.id).name, f2.name)
+            self.assertEqual(folder_qs.get(id=f2.id, changekey=f2.changekey).name, f2.name)
             self.assertEqual(
                 folder_qs.get(name=f2.name).child_folder_count,
                 2

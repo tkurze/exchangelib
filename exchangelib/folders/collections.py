@@ -263,9 +263,10 @@ class FolderCollection(SearchableMixIn):
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
+        from .base import BaseFolder
         resolveable_folders = []
         for f in self.folders:
-            if not f.get_folder_allowed:
+            if isinstance(f, BaseFolder) and not f.get_folder_allowed:
                 log.debug('GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder', f)
                 yield f
             else:

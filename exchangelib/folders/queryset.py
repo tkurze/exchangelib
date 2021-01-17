@@ -79,7 +79,13 @@ class FolderQuerySet:
 
 
         """
-        if args or kwargs:
+        from .collections import FolderCollection
+        from ..properties import FolderId
+        if not args and set(kwargs.keys()) in ({'id'}, {'id', 'changekey'}):
+            folders = list(FolderCollection(
+                account=self.folder_collection.account, folders=[FolderId(**kwargs)]
+            ).resolve())
+        elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
         else:
             folders = list(self.all())
