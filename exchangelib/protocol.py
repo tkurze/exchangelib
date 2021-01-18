@@ -129,7 +129,8 @@ class BaseProtocol:
         log.debug('Server %s: Closing sessions', self.server)
         while True:
             try:
-                self._session_pool.get(block=False).close()
+                session = self._session_pool.get(block=False)
+                self.close_session(session)
             except Empty:
                 break
 
@@ -189,7 +190,8 @@ class BaseProtocol:
                 return
             log.warning('Decreasing session pool size from %s to %s', self._session_pool_size,
                         self._session_pool_size - 1)
-            self.get_session().close()
+            session = self.get_session()
+            self.close_session(session)
             self._session_pool_size -= 1
 
     def get_session(self):
@@ -216,18 +218,20 @@ class BaseProtocol:
         except Full:
             log.debug('Server %s: Session pool was already full %s', self.server, session.session_id)
 
+    def close_session(self, session):
+        session.close()
+        del session
+
     def retire_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug('Server %s: Retiring session %s', self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         self.release_session(self.create_session())
 
     def renew_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug('Server %s: Renewing session %s', self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         return self.create_session()
 
     def refresh_credentials(self, session):
@@ -622,7 +626,7 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We're overiding a method so we have to keep the signature
+        # We're overriding a method so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
 
 
