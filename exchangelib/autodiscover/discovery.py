@@ -268,7 +268,7 @@ class Autodiscovery:
         while True:
             _back_off_if_needed(self.INITIAL_RETRY_POLICY.back_off_until)
             log.debug('Trying to get response from %s', url)
-            with AutodiscoverProtocol.raw_session() as s:
+            with AutodiscoverProtocol.raw_session(url) as s:
                 try:
                     r = getattr(s, method)(**kwargs)
                     r.close()  # Release memory

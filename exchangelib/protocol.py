@@ -254,7 +254,7 @@ class BaseProtocol:
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
                 raise ValueError('Auth type %r requires credentials' % self.auth_type)
-            session = self.raw_session()
+            session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
             with self.credentials.lock:
@@ -271,7 +271,7 @@ class BaseProtocol:
                         username = '\\' + self.credentials.username
                     else:
                         username = self.credentials.username
-                    session = self.raw_session()
+                    session = self.raw_session(self.service_endpoint)
                     session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
                                                      password=self.credentials.password)
 
@@ -331,7 +331,7 @@ class BaseProtocol:
             token_url = 'https://login.microsoftonline.com/%s/oauth2/v2.0/token' % self.credentials.tenant_id
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
-        session = self.raw_session(oauth2_client=client, oauth2_session_params=session_params)
+        session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not has_token:
             # Fetch the token explicitly -- it doesn't occur implicitly
             token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
@@ -345,15 +345,14 @@ class BaseProtocol:
         return session
 
     @classmethod
-    def raw_session(cls, oauth2_client=None, oauth2_session_params=None):
+    def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
         if oauth2_client:
             session = OAuth2Session(client=oauth2_client, **(oauth2_session_params or {}))
         else:
             session = requests.sessions.Session()
         session.headers.update(DEFAULT_HEADERS)
         session.headers['User-Agent'] = cls.USERAGENT
-        session.mount('http://', adapter=cls.get_adapter())
-        session.mount('https://', adapter=cls.get_adapter())
+        session.mount(prefix, adapter=cls.get_adapter())
         return session
 
     def __repr__(self):

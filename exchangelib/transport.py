@@ -153,7 +153,7 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
         while True:
             _back_off_if_needed(retry_policy.back_off_until)
             log.debug('Trying to get service auth type for %s', service_endpoint)
-            with BaseProtocol.raw_session() as s:
+            with BaseProtocol.raw_session(service_endpoint) as s:
                 try:
                     r = s.post(url=service_endpoint, headers=headers, data=data, allow_redirects=False,
                                timeout=BaseProtocol.TIMEOUT)
