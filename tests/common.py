@@ -282,7 +282,7 @@ def get_random_decimal(min_val=0, max_val=100):
 
 
 def get_random_choice(choices):
-    return random.sample(choices, 1)[0]
+    return random.sample(tuple(choices), 1)[0]
 
 
 def get_random_string(length, spaces=True, special=True):

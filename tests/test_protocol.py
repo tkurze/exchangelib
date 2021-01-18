@@ -485,12 +485,14 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
 -----END CERTIFICATE-----''')
             try:
                 os.environ['REQUESTS_CA_BUNDLE'] = f.name
-
                 # Setting the credentials is just an easy way of resetting the session pool. This will let requests
                 # pick up the new environment variable. Now the request should fail
                 self.account.protocol.credentials = self.account.protocol.credentials
-                with self.assertRaises(TransportError):
-                    self.account.root.all().exists()
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    # Ignore ResourceWarning for unclosed socket. It does get closed.
+                    with self.assertRaises(TransportError):
+                            self.account.root.all().exists()
 
                 # Disable insecure TLS warnings
                 with warnings.catch_warnings():
@@ -505,6 +507,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                     self.account.protocol.credentials = self.account.protocol.credentials
                     self.account.root.all().exists()
             finally:
-                # Reset environment
+                # Reset environment and connections
                 os.environ.pop('REQUESTS_CA_BUNDLE', None)  # May already have been deleted
                 BaseProtocol.HTTP_ADAPTER_CLS = default_adapter_cls
+                self.account.protocol.credentials = self.account.protocol.credentials
