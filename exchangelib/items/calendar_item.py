@@ -12,7 +12,7 @@ from ..recurrence import FirstOccurrence, LastOccurrence, Occurrence, DeletedOcc
 from ..services import CreateItem
 from ..util import set_xml_value, require_account
 from ..version import EXCHANGE_2010, EXCHANGE_2013
-from .base import BaseItem, BaseReplyItem, BulkCreateResult, SEND_ONLY, SEND_AND_SAVE_COPY, SEND_TO_NONE
+from .base import BaseItem, BaseReplyItem, BulkCreateResult, SEND_AND_SAVE_COPY, SEND_TO_NONE
 from .item import Item
 from .message import Message
 

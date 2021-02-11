@@ -8,7 +8,7 @@ from .util import to_xml
 
 CLDR_WINZONE_URL = 'https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml'
 DEFAULT_TERRITORY = '001'
-CLDR_WINZONE_VERSION = '2020f'
+CLDR_WINZONE_VERSION = '2021a'
 
 
 def generate_map(timeout=10):
@@ -65,7 +65,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'Africa/Gaborone': ('South Africa Standard Time', 'BW'),
     'Africa/Harare': ('South Africa Standard Time', 'ZW'),
     'Africa/Johannesburg': ('South Africa Standard Time', '001'),
-    'Africa/Juba': ('E. Africa Standard Time', 'SS'),
+    'Africa/Juba': ('South Africa Standard Time', 'SS'),
     'Africa/Kampala': ('E. Africa Standard Time', 'UG'),
     'Africa/Khartoum': ('Sudan Standard Time', '001'),
     'Africa/Kigali': ('South Africa Standard Time', 'RW'),
