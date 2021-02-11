@@ -395,8 +395,9 @@ class BaseMeetingReplyItem(BaseItem):
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
-            expect_result=message_disposition not in (SEND_ONLY, SEND_AND_SAVE_COPY),
         )
+        if res is None:
+            return
         return BulkCreateResult.from_xml(elem=res, account=self)
 
 
