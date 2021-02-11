@@ -96,7 +96,7 @@ class EWSService(metaclass=abc.ABCMeta):
             return
         if expect_result is False:
             if res:
-                raise ValueError('Expected result length 0, but got %r', res)
+                raise ValueError('Expected result length 0, but got %r' % res)
             return
         if len(res) != 1:
             raise ValueError('Expected result length 1, but got %r' % res)
@@ -628,7 +628,7 @@ def parse_folder_elem(elem, folder, account):
             if folder_cls.DISTINGUISHED_FOLDER_ID == folder.id:
                 break
         else:
-            raise ValueError('Unknown distinguished folder ID: %s', folder.id)
+            raise ValueError('Unknown distinguished folder ID: %s' % folder.id)
         f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
     else:
         # 'folder' is a generic FolderId instance. We don't know the root so assume account.root.
