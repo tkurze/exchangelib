@@ -176,6 +176,9 @@ account.identity.upn = 'john@subdomain.example.com'
 # use a Configuration object to set the server location instead:
 credentials = Credentials(...)
 config = Configuration(server='mail.example.com', credentials=credentials)
+# For accounts that are known to be hosted on Office365, there's no need to use autodiscover.
+# Here's the server to use for Office365:
+config = Configuration(server='outlook.office365.com', credentials=credentials)
 account = Account(primary_smtp_address='john@example.com', config=config,
                   autodiscover=False, access_type=DELEGATE)
 
