@@ -46,7 +46,7 @@ class BaseProtocol:
     CONNECTIONS_PER_SESSION = 1
     # The number of times a session may be reused before creating a new session object. 'None' means "infinite".
     # Discarding sessions after a certain number of usages may limit memory leaks in the Session object.
-    MAX_SESSION_USAGE_COUNT = 100
+    MAX_SESSION_USAGE_COUNT = None
     # Timeout for HTTP requests
     TIMEOUT = 120
 
