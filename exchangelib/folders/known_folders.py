@@ -618,6 +618,14 @@ class System(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
+class System1(NonDeleteableFolderMixin, Folder):
+    LOCALIZED_NAMES = {
+        None: ('System1',),
+    }
+    get_folder_allowed = False
+    __slots__ = tuple()
+
+
 class TemporarySaves(NonDeleteableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('TemporarySaves',),
@@ -671,6 +679,7 @@ NON_DELETEABLE_FOLDERS = [
     SmsAndChatsSync,
     SpoolerQueue,
     System,
+    System1,
     TemporarySaves,
     Views,
     WorkingSet,
