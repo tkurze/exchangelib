@@ -10,7 +10,7 @@ import requests_mock
 from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, EWSTimeZone, EWSDateTime, \
     Mailbox, DLMailbox, UTC, CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
-    TransportError
+    TransportError, SessionPoolMaxSizeReached
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames
@@ -74,21 +74,22 @@ class ProtocolTest(EWSTest):
         self.assertEqual(self.account.protocol.SESSION_POOLSIZE, 1)
 
     def test_decrease_poolsize(self):
-        # Temporarily change the session pool size so we can test decreasing the pool size
+        # Test increasing and decreasing the pool size
         tmp = Protocol.SESSION_POOLSIZE
-        Protocol.SESSION_POOLSIZE = 4
+        Protocol.SESSION_POOLSIZE = 3
         protocol = Protocol(config=Configuration(
             service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
         ))
+        protocol.increase_poolsize()
+        protocol.increase_poolsize()
+        protocol.increase_poolsize()
+        with self.assertRaises(SessionPoolMaxSizeReached):
+            protocol.increase_poolsize()
+        self.assertEqual(protocol._session_pool.qsize(), protocol.session_pool_size)
         Protocol.SESSION_POOLSIZE = tmp
-        self.assertEqual(protocol._session_pool.qsize(), 4)
         protocol.decrease_poolsize()
-        self.assertEqual(protocol._session_pool.qsize(), 3)
         protocol.decrease_poolsize()
-        self.assertEqual(protocol._session_pool.qsize(), 2)
-        protocol.decrease_poolsize()
-        self.assertEqual(protocol._session_pool.qsize(), 1)
         with self.assertRaises(SessionPoolMinSizeReached):
             protocol.decrease_poolsize()
         self.assertEqual(protocol._session_pool.qsize(), 1)

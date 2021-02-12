@@ -63,7 +63,8 @@ class BaseProtocol:
         if not config.service_endpoint:
             raise AttributeError("'config.service_endpoint' must be set")
         self.config = config
-        self._session_pool_size = self.SESSION_POOLSIZE
+        self._session_pool_size = 0
+        self._session_pool_maxsize = self.SESSION_POOLSIZE
 
         # Autodetect authentication type if necessary
         if self.config.auth_type is None:
@@ -71,8 +72,8 @@ class BaseProtocol:
 
         # Try to behave nicely with the remote server. We want to keep the connection open between requests.
         # We also want to re-use sessions, to avoid the NTLM auth handshake on every request. We must know the
-        # authentication method to create a session pool.
-        self._session_pool = self._create_session_pool()
+        # authentication method to create sessions.
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     @property
@@ -90,11 +91,10 @@ class BaseProtocol:
     @credentials.setter
     def credentials(self, value):
         # We are updating credentials, but that doesn't automatically propagate to the session objects. The simplest
-        # solution is to just kill the session pool and rebuild it.
+        # solution is to just kill the sessions in the pool.
         with self._session_pool_lock:
             self.config._credentials = value
             self.close()
-            self._session_pool = self._create_session_pool()
 
     @property
     def retry_policy(self):
@@ -114,7 +114,7 @@ class BaseProtocol:
     def __setstate__(self, state):
         # Restore the session pool and lock
         self.__dict__.update(state)
-        self._session_pool = self._create_session_pool()
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     def __del__(self):
@@ -131,6 +131,7 @@ class BaseProtocol:
             try:
                 session = self._session_pool.get(block=False)
                 self.close_session(session)
+                self._session_pool_size -= 1
             except Empty:
                 break
 
@@ -148,13 +149,6 @@ class BaseProtocol:
         # Autodetect and return authentication type
         raise NotImplementedError()
 
-    def _create_session_pool(self):
-        # Create a pool to reuse sessions containing connections to the server
-        session_pool = LifoQueue()
-        for _ in range(self._session_pool_size):
-            session_pool.put(self.create_session(), block=False)
-        return session_pool
-
     @property
     def session_pool_size(self):
         return self._session_pool_size
@@ -163,15 +157,15 @@ class BaseProtocol:
         """Increases the session pool size. We increase by one session per call.
         """
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
-        # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
-        if self._session_pool_size == self.SESSION_POOLSIZE:
+        # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
+        if self._session_pool_size == self._session_pool_maxsize:
             raise SessionPoolMaxSizeReached('Session pool size cannot be increased further')
         with self._session_pool_lock:
-            if self._session_pool_size >= self.SESSION_POOLSIZE:
+            if self._session_pool_size >= self._session_pool_maxsize:
                 log.debug('Session pool size was increased in another thread')
                 return
-            log.warning('Increasing session pool size from %s to %s', self._session_pool_size,
-                        self._session_pool_size + 1)
+            log.debug('Server %s: Increasing session pool size from %s to %s', self.server, self._session_pool_size,
+                      self._session_pool_size + 1)
             self._session_pool.put(self.create_session(), block=False)
             self._session_pool_size += 1
 
@@ -188,24 +182,35 @@ class BaseProtocol:
             if self._session_pool_size <= 1:
                 log.debug('Session pool size was decreased in another thread')
                 return
-            log.warning('Decreasing session pool size from %s to %s', self._session_pool_size,
+            log.warning('Server %s: Decreasing session pool size from %s to %s', self.server, self._session_pool_size,
                         self._session_pool_size - 1)
             session = self.get_session()
             self.close_session(session)
             self._session_pool_size -= 1
 
     def get_session(self):
+        # Try to get a session from the queue. If the queue is empty, try to add one more session to the queue. If the
+        # queue is already at its max, wait until a session becomes available.
         _timeout = 60  # Rate-limit messages about session starvation
-        while True:
+        try:
+            session = self._session_pool.get(block=False)
+            log.debug('Server %s: Got session immediately', self.server)
+        except Empty:
             try:
-                log.debug('Server %s: Waiting for session', self.server)
-                session = self._session_pool.get(timeout=_timeout)
-                log.debug('Server %s: Got session %s', self.server, session.session_id)
-                session.usage_count += 1
-                return session
-            except Empty:
-                # This is normal when we have many worker threads starving for available sessions
-                log.debug('Server %s: No sessions available for %s seconds', self.server, _timeout)
+                self.increase_poolsize()
+            except SessionPoolMaxSizeReached:
+                pass
+            while True:
+                try:
+                    log.debug('Server %s: Waiting for session', self.server)
+                    session = self._session_pool.get(timeout=_timeout)
+                    break
+                except Empty:
+                    # This is normal when we have many worker threads starving for available sessions
+                    log.debug('Server %s: No sessions available for %s seconds', self.server, _timeout)
+        log.debug('Server %s: Got session %s', self.server, session.session_id)
+        session.usage_count += 1
+        return session
 
     def release_session(self, session):
         # This should never fail, as we don't have more sessions than the queue contains
