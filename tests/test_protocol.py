@@ -52,6 +52,7 @@ class ProtocolTest(EWSTest):
             self.assertEqual(id(base_p), id(p))
             self.assertEqual(hash(base_p), hash(p))
             self.assertEqual(id(base_p._session_pool), id(p._session_pool))
+        Protocol.clear_cache()
 
     def test_close(self):
         proc = psutil.Process()
