@@ -31,14 +31,16 @@ class Configuration:
         config = Configuration(auth_type=NTLM, ...)
         config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
 
-    Finally, you can use 'retry_policy' to define a custom retry policy for handling server connection failures:
+    You can use 'retry_policy' to define a custom retry policy for handling server connection failures:
 
         config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
 
+    'max_connections' defines the max number of connections allowed for this server. This may be restricted by
+    policies on the Exchange server.
     """
 
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
-                 retry_policy=None):
+                 retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError("'credentials' %r must be a Credentials instance" % credentials)
         if server and service_endpoint:
@@ -52,6 +54,8 @@ class Configuration:
             raise ValueError("'version' %r must be a Version instance" % version)
         if not isinstance(retry_policy, RetryPolicy):
             raise ValueError("'retry_policy' %r must be a RetryPolicy instance" % retry_policy)
+        if not isinstance(max_connections, (int, type(None))):
+            raise ValueError("'max_connections' must be an integer")
         self._credentials = credentials
         if server:
             self.service_endpoint = 'https://%s/EWS/Exchange.asmx' % server
@@ -60,6 +64,7 @@ class Configuration:
         self.auth_type = auth_type
         self.version = version
         self.retry_policy = retry_policy
+        self.max_connections = max_connections
 
     @property
     def credentials(self):

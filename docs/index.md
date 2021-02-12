@@ -186,6 +186,11 @@ version = Version(build=Build(15, 0, 12, 34))
 config = Configuration(
     server='example.com', credentials=credentials, version=version, auth_type=NTLM
 )
+# By default, 'exchangelib' will only create 1 connection to the server. If you are using threads
+# to send multiple requests concurrently, you may want to increase this limit. The Exchange server
+# may have rate-limiting policies in place for the connecting credentials, so make sure to agree
+# with your Exchange admins before increasing this value.
+config = Configuration(server='mail.example.com', max_connections=10)
 ```
 
 ### Fault tolerance

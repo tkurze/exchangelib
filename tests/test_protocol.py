@@ -71,24 +71,22 @@ class ProtocolTest(EWSTest):
         protocol.close()
         self.assertEqual(len({p.raddr[0] for p in proc.connections() if p.raddr[0] in ip_addresses}), 0)
 
-    def test_poolsize(self):
-        self.assertEqual(self.account.protocol.SESSION_POOLSIZE, 1)
-
     def test_decrease_poolsize(self):
         # Test increasing and decreasing the pool size
-        tmp = Protocol.SESSION_POOLSIZE
-        Protocol.SESSION_POOLSIZE = 3
+        max_connections = 3
         protocol = Protocol(config=Configuration(
             service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
+            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast(), max_connections=max_connections
         ))
+        self.assertEqual(protocol._session_pool.qsize(), 0)
+        self.assertEqual(protocol.session_pool_size, 0)
         protocol.increase_poolsize()
         protocol.increase_poolsize()
         protocol.increase_poolsize()
         with self.assertRaises(SessionPoolMaxSizeReached):
             protocol.increase_poolsize()
-        self.assertEqual(protocol._session_pool.qsize(), protocol.session_pool_size)
-        Protocol.SESSION_POOLSIZE = tmp
+        self.assertEqual(protocol._session_pool.qsize(), max_connections)
+        self.assertEqual(protocol.session_pool_size, max_connections)
         protocol.decrease_poolsize()
         protocol.decrease_poolsize()
         with self.assertRaises(SessionPoolMinSizeReached):

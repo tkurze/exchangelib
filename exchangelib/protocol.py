@@ -64,7 +64,7 @@ class BaseProtocol:
             raise AttributeError("'config.service_endpoint' must be set")
         self.config = config
         self._session_pool_size = 0
-        self._session_pool_maxsize = self.SESSION_POOLSIZE
+        self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
         # Autodetect authentication type if necessary
         if self.config.auth_type is None:
