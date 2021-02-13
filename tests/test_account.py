@@ -7,6 +7,7 @@ from exchangelib.folders import Calendar
 from exchangelib.properties import DelegateUser, UserId, DelegatePermissions
 from exchangelib.protocol import Protocol
 from exchangelib.services import GetDelegate
+from exchangelib.version import Version, EXCHANGE_2007_SP1
 
 from .common import EWSTest, MockResponse
 
@@ -153,7 +154,9 @@ class AccountTest(EWSTest):
 
         MockTZ = namedtuple('EWSTimeZone', ['ms_id'])
         MockAccount = namedtuple('Account', ['access_type', 'primary_smtp_address', 'default_timezone', 'protocol'])
-        a = MockAccount(DELEGATE, 'foo@example.com', MockTZ('XXX'), protocol='foo')
+        MockProtocol = namedtuple('Protocol', ['version'])
+        p = MockProtocol(version=Version(build=EXCHANGE_2007_SP1))
+        a = MockAccount(DELEGATE, 'foo@example.com', MockTZ('XXX'), protocol=p)
 
         ws = GetDelegate(account=a)
         header, body = ws._get_soap_parts(response=MockResponse(xml))

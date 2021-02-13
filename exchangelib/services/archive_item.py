@@ -7,6 +7,7 @@ class ArchiveItem(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation"""
     SERVICE_NAME = 'ArchiveItem'
     element_container_name = '{%s}Items' % MNS
+    supported_from = EXCHANGE_2013
 
     def call(self, items, to_folder):
         """Move a list of items to a specific folder in the archive mailbox.
@@ -19,8 +20,6 @@ class ArchiveItem(EWSAccountService, EWSPooledMixIn):
           None
 
         """
-        if self.protocol.version.build < EXCHANGE_2013:
-            raise NotImplementedError('%s is only supported for Exchange 2013 servers and later' % self.SERVICE_NAME)
         return self._pool_requests(payload_func=self.get_payload, **dict(items=items, to_folder=to_folder))
 
     def _get_elements_in_response(self, response):

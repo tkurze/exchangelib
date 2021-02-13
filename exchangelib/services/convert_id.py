@@ -15,11 +15,9 @@ class ConvertId(EWSPooledMixIn):
 
     """
     SERVICE_NAME = 'ConvertId'
+    supported_from = EXCHANGE_2007_SP1
 
     def call(self, items, destination_format):
-        if self.protocol.version.build < EXCHANGE_2007_SP1:
-            raise NotImplementedError(
-                '%r is only supported for Exchange 2007 SP1 servers and later' % self.SERVICE_NAME)
         from ..properties import ID_FORMATS
         if destination_format not in ID_FORMATS:
             raise ValueError("'destination_format' %r must be one of %s" % (destination_format, ID_FORMATS))

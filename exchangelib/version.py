@@ -127,6 +127,9 @@ class Build:
         except KeyError:
             raise ValueError('API version for build %s is unknown' % self)
 
+    def fullname(self):
+        return VERSIONS[self.api_version()][1]
+
     def __cmp__(self, other):
         # __cmp__ is not a magic method in Python3. We'll just use it here to implement comparison operators
         c = (self.major_version > other.major_version) - (self.major_version < other.major_version)

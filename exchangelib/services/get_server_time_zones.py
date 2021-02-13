@@ -12,10 +12,9 @@ class GetServerTimeZones(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones"""
     SERVICE_NAME = 'GetServerTimeZones'
     element_container_name = '{%s}TimeZoneDefinitions' % MNS
+    supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        if self.protocol.version.build < EXCHANGE_2010:
-            raise NotImplementedError('%s is only supported for Exchange 2010 servers and later' % self.SERVICE_NAME)
         return self._get_elements(payload=self.get_payload(
             timezones=timezones,
             return_full_timezone_data=return_full_timezone_data

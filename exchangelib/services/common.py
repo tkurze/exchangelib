@@ -67,6 +67,8 @@ class EWSService(metaclass=abc.ABCMeta):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # Controls whether the HTTP request should be streaming or fetch everything at once
     streaming = False
+    # Marks the version from which the service was introduced
+    supported_from = None
 
     def __init__(self, protocol, chunk_size=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
@@ -74,6 +76,10 @@ class EWSService(metaclass=abc.ABCMeta):
             raise ValueError("'chunk_size' %r must be an integer" % chunk_size)
         if self.chunk_size < 1:
             raise ValueError("'chunk_size' must be a positive number")
+        if self.supported_from and protocol.version.build < self.supported_from:
+            raise NotImplementedError(
+                '%r is only supported on %r and later' % (self.SERVICE_NAME, self.supported_from.fullname())
+            )
         self.protocol = protocol
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of

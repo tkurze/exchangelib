@@ -7,12 +7,10 @@ class GetRooms(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms"""
     SERVICE_NAME = 'GetRooms'
     element_container_name = '{%s}Rooms' % MNS
+    supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
         from ..properties import Room
-        if self.protocol.version.build < EXCHANGE_2010:
-            raise NotImplementedError('%s is only supported for Exchange 2010 servers and later' % self.SERVICE_NAME)
-
         for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
             yield Room.from_xml(elem=elem, account=None)
 

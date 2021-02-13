@@ -12,10 +12,9 @@ class GetSearchableMailboxes(EWSService):
     SERVICE_NAME = 'GetSearchableMailboxes'
     element_container_name = '{%s}SearchableMailboxes' % MNS
     failed_mailboxes_container_name = '{%s}FailedMailboxes' % MNS
+    supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
-        if self.protocol.version.build < EXCHANGE_2013:
-            raise NotImplementedError('%s is only supported for Exchange 2013 servers and later' % self.SERVICE_NAME)
         from ..properties import SearchableMailbox, FailedMailbox
         for elem in self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,

@@ -6,11 +6,9 @@ from .common import EWSAccountService, EWSPooledMixIn
 class GetDelegate(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation"""
     SERVICE_NAME = 'GetDelegate'
+    supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        if self.protocol.version.build < EXCHANGE_2007_SP1:
-            raise NotImplementedError(
-                '%r is only supported for Exchange 2007 SP1 servers and later' % self.SERVICE_NAME)
         from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
 
         if user_ids:
