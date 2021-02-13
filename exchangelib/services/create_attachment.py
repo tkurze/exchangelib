@@ -1,20 +1,19 @@
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, to_item_id
+from .common import EWSAccountService, EWSPooledMixIn, to_item_id
 
 
-class CreateAttachment(EWSAccountService):
+class CreateAttachment(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation
     """
     SERVICE_NAME = 'CreateAttachment'
     element_container_name = '{%s}Attachments' % MNS
 
     def call(self, parent_item, items):
-        return self._get_elements(payload=self.get_payload(
-            parent_item=parent_item,
-            items=items,
+        return self._pool_requests(payload_func=self.get_payload, **dict(
+            items=items, parent_item=parent_item,
         ))
 
-    def get_payload(self, parent_item, items):
+    def get_payload(self, items, parent_item):
         from ..properties import ParentItemId
         from ..items import BaseItem
         payload = create_element('m:%s' % self.SERVICE_NAME)

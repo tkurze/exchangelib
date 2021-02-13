@@ -15,7 +15,7 @@ class UploadItems(EWSAccountService, EWSPooledMixIn):
 
     def call(self, items):
         # _pool_requests expects 'items', not 'data'
-        return self._pool_requests(payload_func=self.get_payload, **dict(items=items))
+        return self._pool_requests(payload_func=self.get_payload, items=items)
 
     def get_payload(self, items):
         """Upload given items to given account

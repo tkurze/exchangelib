@@ -1,10 +1,10 @@
 from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
 from ..util import create_element, set_xml_value, add_xml_child, MNS
 from ..version import EXCHANGE_2010_SP2
-from .common import EWSService
+from .common import EWSPooledMixIn
 
 
-class ResolveNames(EWSService):
+class ResolveNames(EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames"""
     # TODO: Does not support paged responses yet. See example in issue #205
     SERVICE_NAME = 'ResolveNames'
@@ -22,8 +22,8 @@ class ResolveNames(EWSService):
             if contact_data_shape not in SHAPE_CHOICES:
                 raise ValueError("'shape' %s must be one if %s" % (contact_data_shape, SHAPE_CHOICES))
         from ..properties import Mailbox
-        elements = self._get_elements(payload=self.get_payload(
-            unresolved_entries=unresolved_entries,
+        elements = self._pool_requests(payload_func=self.get_payload, **dict(
+            items=unresolved_entries,
             parent_folders=parent_folders,
             return_full_contact_data=return_full_contact_data,
             search_scope=search_scope,

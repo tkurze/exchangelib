@@ -1,8 +1,8 @@
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, create_item_ids_element
+from .common import EWSAccountService, EWSPooledMixIn, create_item_ids_element
 
 
-class MoveItem(EWSAccountService):
+class MoveItem(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveitem-operation"""
     SERVICE_NAME = 'MoveItem'
     element_container_name = '{%s}Items' % MNS
@@ -11,9 +11,8 @@ class MoveItem(EWSAccountService):
         from ..folders import BaseFolder, FolderId, DistinguishedFolderId
         if not isinstance(to_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
             raise ValueError("'to_folder' %r must be a Folder or FolderId instance" % to_folder)
-        return self._get_elements(payload=self.get_payload(
-            items=items,
-            to_folder=to_folder,
+        return self._pool_requests(payload_func=self.get_payload, **dict(
+            items=items, to_folder=to_folder,
         ))
 
     def get_payload(self, items, to_folder):

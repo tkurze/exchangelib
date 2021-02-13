@@ -1,21 +1,21 @@
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSService
+from .common import EWSPooledMixIn
 
 
-class GetMailTips(EWSService):
+class GetMailTips(EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation"""
     SERVICE_NAME = 'GetMailTips'
 
     def call(self, sending_as, recipients, mail_tips_requested):
         from ..properties import MailTips
-        for elem in self._get_elements(payload=self.get_payload(
+        for elem in self._pool_requests(payload_func=self.get_payload, **dict(
+                items=recipients,
                 sending_as=sending_as,
-                recipients=recipients,
                 mail_tips_requested=mail_tips_requested,
         )):
             yield MailTips.from_xml(elem=elem, account=None)
 
-    def get_payload(self, sending_as, recipients, mail_tips_requested):
+    def get_payload(self, recipients, sending_as,  mail_tips_requested):
         payload = create_element('m:%s' % self.SERVICE_NAME)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 

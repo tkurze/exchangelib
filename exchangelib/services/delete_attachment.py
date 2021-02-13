@@ -1,14 +1,14 @@
 from ..util import create_element
-from .common import EWSAccountService, create_attachment_ids_element
+from .common import EWSAccountService, EWSPooledMixIn, create_attachment_ids_element
 
 
-class DeleteAttachment(EWSAccountService):
+class DeleteAttachment(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     """
     SERVICE_NAME = 'DeleteAttachment'
 
     def call(self, items):
-        return self._get_elements(payload=self.get_payload(
+        return self._pool_requests(payload_func=self.get_payload, **dict(
             items=items,
         ))
 

@@ -10,7 +10,7 @@ class ExportItems(EWSAccountService, EWSPooledMixIn):
     element_container_name = '{%s}Data' % MNS
 
     def call(self, items):
-        return self._pool_requests(payload_func=self.get_payload, **dict(items=items))
+        return self._pool_requests(payload_func=self.get_payload, items=items)
 
     def get_payload(self, items):
         exportitems = create_element('m:%s' % self.SERVICE_NAME)
