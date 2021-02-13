@@ -12,7 +12,7 @@ from .known_folders import AdminAuditLogs, AllContacts, AllItems, ArchiveDeleted
     RecoverableItemsDeletions, RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Reminders, \
     Schedule, SearchFolders, SentItems, ServerFailures, Sharing, Shortcuts, Signal, SmsAndChatsSync, SpoolerQueue, \
     SyncIssues, System, Tasks, TemporarySaves, ToDoSearch, Views, VoiceMail, WellknownFolder, WorkingSet, \
-    NON_DELETEABLE_FOLDERS
+    Companies, OrganizationalContacts, PeopleCentricConversationBuddies, NON_DELETEABLE_FOLDERS
 from .queryset import FolderQuerySet, SingleFolderQuerySet, FOLDER_TRAVERSAL_CHOICES, SHALLOW, DEEP, SOFT_DELETED
 from .roots import Root, ArchiveRoot, PublicFoldersRoot, RootOfHierarchy
 
@@ -32,7 +32,8 @@ __all__ = [
     'RecoverableItemsDeletions', 'RecoverableItemsPurges', 'RecoverableItemsRoot', 'RecoverableItemsVersions',
     'Reminders', 'Schedule', 'SearchFolders', 'SentItems', 'ServerFailures', 'Sharing', 'Shortcuts', 'Signal',
     'SmsAndChatsSync', 'SpoolerQueue', 'SyncIssues', 'System', 'Tasks', 'TemporarySaves', 'ToDoSearch', 'Views',
-    'VoiceMail', 'WellknownFolder', 'WorkingSet', 'NON_DELETEABLE_FOLDERS',
+    'VoiceMail', 'WellknownFolder', 'WorkingSet', 'Companies', 'OrganizationalContacts',
+    'PeopleCentricConversationBuddies', 'NON_DELETEABLE_FOLDERS',
     'FolderQuerySet', 'SingleFolderQuerySet', 'FOLDER_TRAVERSAL_CHOICES', 'SHALLOW', 'DEEP', 'SOFT_DELETED',
     'Root', 'ArchiveRoot', 'PublicFoldersRoot', 'RootOfHierarchy',
 ]

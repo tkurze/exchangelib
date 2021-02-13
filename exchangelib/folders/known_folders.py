@@ -430,6 +430,15 @@ class CommonViews(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
+class Companies(NonDeleteableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = 'IPF.Contact.Company'
+    LOCALIZED_NAMES = {
+        None: ('Companies',),
+    }
+    __slots__ = tuple()
+
+
 class ConversationSettings(NonDeleteableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.Configuration'
     LOCALIZED_NAMES = {
@@ -525,6 +534,15 @@ class MyContactsExtended(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
+class OrganizationalContacts(NonDeleteableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = 'IPF.Contact.OrganizationalContacts'
+    LOCALIZED_NAMES = {
+        None: ('Organizational Contacts',),
+    }
+    __slots__ = tuple()
+
+
 class ParkedMessages(NonDeleteableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
@@ -537,6 +555,15 @@ class PassThroughSearchResults(NonDeleteableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.StoreItem.PassThroughSearchResults'
     LOCALIZED_NAMES = {
         None: ('Pass-Through Search Results',),
+    }
+    __slots__ = tuple()
+
+
+class PeopleCentricConversationBuddies(NonDeleteableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = 'IPF.Contact.PeopleCentricConversationBuddies'
+    LOCALIZED_NAMES = {
+        None: ('PeopleCentricConversation Buddies',),
     }
     __slots__ = tuple()
 
@@ -647,6 +674,7 @@ NON_DELETEABLE_FOLDERS = [
     Audits,
     CalendarLogging,
     CommonViews,
+    Companies,
     ConversationSettings,
     DefaultFoldersChangeHistory,
     DeferredAction,
@@ -659,8 +687,10 @@ NON_DELETEABLE_FOLDERS = [
     Location,
     MailboxAssociations,
     MyContactsExtended,
+    OrganizationalContacts,
     ParkedMessages,
     PassThroughSearchResults,
+    PeopleCentricConversationBuddies,
     PdpProfileV2Secured,
     Reminders,
     RSSFeeds,

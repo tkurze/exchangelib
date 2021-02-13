@@ -6,7 +6,8 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     AllItems, ConversationSettings, Friends, RSSFeeds, Sharing, IMContactList, QuickContacts, Journal, Notes, \
     SyncIssues, MyContacts, ToDoSearch, FolderCollection, DistinguishedFolderId, Files, \
     DefaultFoldersChangeHistory, PassThroughSearchResults, SmsAndChatsSync, GraphAnalytics, Signal, \
-    PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy
+    PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy, Companies, \
+    OrganizationalContacts, PeopleCentricConversationBuddies
 from exchangelib.properties import Mailbox, InvalidField
 from exchangelib.services import GetFolder
 
@@ -95,6 +96,12 @@ class FolderTest(EWSTest):
                         MyContacts
                 )):
                     self.assertEqual(f.folder_class, 'IPF.Note')
+                elif isinstance(f, Companies):
+                    self.assertEqual(f.folder_class, 'IPF.Contact.Company')
+                elif isinstance(f, OrganizationalContacts):
+                    self.assertEqual(f.folder_class, 'IPF.Contact.OrganizationalContacts')
+                elif isinstance(f, PeopleCentricConversationBuddies):
+                    self.assertEqual(f.folder_class, 'IPF.Contact.PeopleCentricConversationBuddies')
                 elif isinstance(f, GALContacts):
                     self.assertEqual(f.folder_class, 'IPF.Contact.GalContacts')
                 elif isinstance(f, RecipientCache):
