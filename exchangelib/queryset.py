@@ -757,6 +757,28 @@ class QuerySet(SearchableMixIn):
         self._cache = None  # Invalidate the cache after delete, regardless of the results
         return res
 
+    def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+        """Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
+        items to fetch and mark per request. We're only fetching the IDs, so keep it high
+
+        Args:
+          page_size:  (Default value = 1000)
+          **mark_as_junk_kwargs:
+
+        """
+        if self.is_cached:
+            ids = self._cache
+        else:
+            ids = self._id_only_copy_self()
+            ids.page_size = page_size
+        res = self.folder_collection.account.bulk_mark_as_junk(
+            ids=ids,
+            chunk_size=page_size,
+            **mark_as_junk_kwargs
+        )
+        self._cache = None  # Invalidate the cache after delete, regardless of the results
+        return res
+
     def __str__(self):
         fmt_args = [('q', str(self.q)), ('folders', '[%s]' % ', '.join(str(f) for f in self.folder_collection.folders))]
         if self.is_cached:

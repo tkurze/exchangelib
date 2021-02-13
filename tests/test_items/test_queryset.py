@@ -399,6 +399,18 @@ class ItemQuerySetTest(BaseItemTest):
         self.assertEqual(qs.count(), 0)
         self.assertEqual(to_folder_qs.count(), 1)
 
+    def test_mark_as_junk_via_queryset(self):
+        self.get_test_item().save()
+        qs = self.test_folder.filter(categories__contains=self.categories)
+        qs.mark_as_junk(is_junk=False, move_item=False)
+        self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 1)
+        qs.mark_as_junk(is_junk=True, move_item=False)
+        self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 1)
+        qs.mark_as_junk(is_junk=True, move_item=True)
+        self.assertEqual(self.account.junk.filter(categories__contains=self.categories).count(), 1)
+        self.account.junk.filter(categories__contains=self.categories).mark_as_junk(is_junk=False, move_item=True)
+        self.assertEqual(self.account.inbox.filter(categories__contains=self.categories).count(), 1)
+
     def test_depth(self):
         self.assertGreaterEqual(self.test_folder.all().depth(ASSOCIATED).count(), 0)
         self.assertGreaterEqual(self.test_folder.all().depth(SHALLOW).count(), 0)

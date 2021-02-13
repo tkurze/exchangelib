@@ -496,7 +496,7 @@ py_dt = datetime(2017, 12, 11, 10, 9, 8, tzinfo=tz)
 ews_now = EWSDateTime.from_datetime(py_dt)
 ```
 
-## Creating, updating, deleting, sending, moving, archiving
+## Creating, updating, deleting, sending, moving, archiving, marking as junk
 
 ```python
 # Here's an example of creating a calendar item in the user's standard calendar.  If you want to
@@ -526,7 +526,8 @@ item.soft_delete()  # Delete, but keep a copy in the recoverable items folder
 item.move_to_trash()  # Move to the trash folder
 item.move(a.trash)  # Also moves the item to the trash folder
 item.copy(a.trash)  # Creates a copy of the item to the trash folder
-item.archive(DistinguishedFolderId('inbox'))  # Archives the item to inbox of the the archive mailbox
+item.archive(DistinguishedFolderId('inbox'))  # Archives the item to inbox of the archive mailbox
+item.mark_as_junk(is_junk=True, move_item=True)  # Block sender and move item to junk folder
 
 # You can also send emails. If you don't want a local copy:
 m = Message(

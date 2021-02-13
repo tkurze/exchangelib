@@ -510,6 +510,19 @@ class OccurrenceItemId(ItemId):
     __slots__ = tuple() + ('instance_index',)
 
 
+class MovedItemId(ItemId):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveditemid"""
+    ELEMENT_NAME = 'MovedItemId'
+    NAMESPACE = MNS
+
+    __slots__ = tuple()
+
+    @classmethod
+    def id_from_xml(cls, elem):
+        item = cls.from_xml(elem=elem, account=None)
+        return item.id, item.changekey
+
+
 class Mailbox(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox"""
     ELEMENT_NAME = 'Mailbox'

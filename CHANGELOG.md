@@ -6,6 +6,8 @@ HEAD
 -   Add a new `max_connections` option for the `Configuration` class, to increase the session poolsize
     on a per-server, per-credentials basis. Useful when exchangelib is used with threads, where one may
     wish to increase the number of concurrent connections to the server.
+-   Add `Message.mark_as_junk()` and complementary `QuerySet.mark_as_junk()` methods to mark or un-mark
+    messages as junk email, and optionally move them to the junk folder.
 
 
 3.3.2

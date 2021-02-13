@@ -1,8 +1,8 @@
 import logging
 
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
-from ..properties import ReferenceItemId, ReminderMessageData, Fields
-from ..services import SendItem
+from ..properties import ReferenceItemId, ReminderMessageData, Fields, MovedItemId
+from ..services import SendItem, MarkAsJunk
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
 from .base import BaseReplyItem
@@ -146,6 +146,22 @@ class Message(Item):
 
     def reply_all(self, subject, body):
         self.create_reply_all(subject, body).send()
+
+    def mark_as_junk(self, is_junk=True, move_item=True):
+        """Mark or un-marks items as junk email.
+
+        :param is_junk: If True, the sender will be added from the blocked sender list. Otherwise, the sender will be
+        removed.
+        :param move_item: If true, the item will be moved to the junk folder.
+        :return:
+        """
+        res = MarkAsJunk(account=self.account).get(
+            items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+        )
+        if res is None:
+            return
+        self.folder = self.account.junk if is_junk else self.account.inbox
+        self.id, self.changekey = MovedItemId.id_from_xml(res)
 
 
 class ReplyToItem(BaseReplyItem):

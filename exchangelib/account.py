@@ -17,11 +17,11 @@ from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, 
     RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Root, SearchFolders, SentItems, \
     ServerFailures, SyncIssues, Tasks, ToDoSearch, VoiceMail
 from .items import Item, BulkCreateResult, HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
-from .properties import Mailbox, SendingAs
+from .properties import Mailbox, SendingAs, MovedItemId
 from .protocol import Protocol
 from .queryset import QuerySet
 from .services import ExportItems, UploadItems, GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, SendItem, \
-    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate
+    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate, MarkAsJunk
 from .util import get_domain, peek
 
 log = getLogger(__name__)
@@ -575,6 +575,28 @@ class Account:
         """
         return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
+            ))
+        )
+
+    def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
+        """Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          is_junk: Whether the messages are junk or not
+          move_item: Whether to move the messages to the junk folder or not
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+          stable order of the requested items.
+
+        """
+        return list(
+            i if isinstance(i, Exception) else MovedItemId.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+                is_junk=is_junk,
+                move_item=move_item,
             ))
         )
 
