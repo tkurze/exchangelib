@@ -55,6 +55,7 @@ KNOWN_EXCEPTIONS = (
 class EWSService(metaclass=abc.ABCMeta):
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
+    returns_elements = True  # If False, the service does not return response elements, just the RsponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
         EWSWarning, ErrorCannotDeleteObject, ErrorInvalidChangeKey, ErrorItemNotFound, ErrorItemSave,
@@ -342,20 +343,18 @@ class EWSService(metaclass=abc.ABCMeta):
         raise SOAPError('SOAP error code: %s string: %s actor: %s detail: %s' % (
             faultcode, faultstring, faultactor, detail))
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        if response_message is None:
-            response_message = message
+    def _get_element_container(self, message, name=None):
         # ResponseClass: See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditemresponsemessage
-        response_class = response_message.get('ResponseClass')
+        response_class = message.get('ResponseClass')
         # ResponseCode, MessageText: See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
-        response_code = get_xml_attr(response_message, '{%s}ResponseCode' % MNS)
-        msg_text = get_xml_attr(response_message, '{%s}MessageText' % MNS)
-        msg_xml = response_message.find('{%s}MessageXml' % MNS)
+        response_code = get_xml_attr(message, '{%s}ResponseCode' % MNS)
+        msg_text = get_xml_attr(message, '{%s}MessageText' % MNS)
+        msg_xml = message.find('{%s}MessageXml' % MNS)
         if response_class == 'Success' and response_code == 'NoError':
             if not name:
-                return True
+                return message
             container = message.find(name)
             if container is None:
                 raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (name, xml_to_str(message)))
@@ -424,9 +423,11 @@ class EWSService(metaclass=abc.ABCMeta):
                 for c in self._get_elements_in_container(container=container_or_exc):
                     yield c
 
-    @staticmethod
-    def _get_elements_in_container(container):
-        return [elem for elem in container]
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        if cls.returns_elements:
+            return [elem for elem in container]
+        return [True]
 
 
 class EWSAccountService(EWSService):

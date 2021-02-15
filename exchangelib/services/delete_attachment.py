@@ -12,19 +12,10 @@ class DeleteAttachment(EWSAccountService, EWSPooledMixIn):
             items=items,
         ))
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        # DeleteAttachment returns RootItemIds directly beneath DeleteAttachmentResponseMessage. Collect the elements
-        # and make our own fake container.
+    @staticmethod
+    def _get_elements_in_container(container):
         from ..properties import RootItemId
-        res = super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )
-        if not res:
-            return res
-        fake_elem = create_element('FakeContainer')
-        for elem in message.findall(RootItemId.response_tag()):
-            fake_elem.append(elem)
-        return fake_elem
+        return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
         payload = create_element('m:%s' % self.SERVICE_NAME)

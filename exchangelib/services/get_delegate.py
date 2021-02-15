@@ -44,17 +44,11 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
             set_xml_value(payload, user_ids, version=self.protocol.version)
         return payload
 
-    def _get_elements_in_container(self, container):
-        # We may have other elements in here, e.g. 'ResponseCode'. Filter away those.
+    @staticmethod
+    def _get_elements_in_container(container):
         from ..properties import DelegateUser
         return container.findall(DelegateUser.response_tag())
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        # Do nothing. See self._response_message_tag.
-        return message
-
     @classmethod
     def _response_message_tag(cls):
-        # We're using this in place of self.element_container_name because self._get_soap_messages expects to find
-        # elements at this level. We'll let self._get_element_container do nothing instead.
         return '{%s}DelegateUserResponseMessageType' % MNS

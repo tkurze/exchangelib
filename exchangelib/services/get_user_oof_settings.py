@@ -19,19 +19,20 @@ class GetUserOofSettings(EWSAccountService):
         return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
 
     def _get_elements_in_response(self, response):
-        # This service only returns one result, but 'response' is a list
         from ..settings import OofSettings
-        if len(response) != 1:
-            raise ValueError("Expected 'response' length 1, got %s" % response)
-        for msg in response:
-            container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
-            if isinstance(container_or_exc, (bool, Exception)):
-                # pylint: disable=raising-bad-type
-                raise container_or_exc
-            yield OofSettings.from_xml(container_or_exc, account=self.account)
+        for c in super()._get_elements_in_response(response=response):
+            yield OofSettings.from_xml(elem=c, account=self.account)
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        response_message = message.find('{%s}ResponseMessage' % MNS)
-        return super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        # This service only returns one result, directly in 'container'
+        return [container]
+
+    def _get_element_container(self, message, name=None):
+        # This service returns the result container outside the response message
+        super()._get_element_container(message=message.find(self._response_message_tag()), name=None)
+        return message.find(name)
+
+    @staticmethod
+    def _response_message_tag():
+        return '{%s}ResponseMessage' % MNS

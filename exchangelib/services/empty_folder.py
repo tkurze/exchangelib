@@ -7,7 +7,7 @@ from .common import EWSAccountService, EWSPooledMixIn, create_folder_ids_element
 class EmptyFolder(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder"""
     SERVICE_NAME = 'EmptyFolder'
-    element_container_name = None  # EmptyFolder doesn't return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
         return self._pool_requests(payload_func=self.get_payload, **dict(

@@ -13,7 +13,7 @@ class DeleteItem(EWSAccountService, EWSPooledMixIn):
 
     """
     SERVICE_NAME = 'DeleteItem'
-    element_container_name = None  # DeleteItem doesn't return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
         from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES

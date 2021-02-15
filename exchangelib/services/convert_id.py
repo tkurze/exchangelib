@@ -47,7 +47,3 @@ class ConvertId(EWSPooledMixIn):
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
             + container.findall(AlternatePublicFolderItemId.response_tag())
-
-    def _get_element_container(self, message, response_message=None, name=None):
-        # There is no element container
-        return message

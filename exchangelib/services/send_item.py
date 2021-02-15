@@ -5,7 +5,7 @@ from .common import EWSAccountService, EWSPooledMixIn, create_item_ids_element
 class SendItem(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation"""
     SERVICE_NAME = 'SendItem'
-    element_container_name = None  # SendItem doesn't return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, items, saved_item_folder):
         from ..folders import BaseFolder, FolderId, DistinguishedFolderId

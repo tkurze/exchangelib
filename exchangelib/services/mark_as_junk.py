@@ -11,19 +11,10 @@ class MarkAsJunk(EWSAccountService, EWSPooledMixIn):
             items=items, is_junk=is_junk, move_item=move_item
         ))
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        # MarkAsJunk returns MovedItemIds directly beneath MarkAsJunkResponseMessage. Collect the elements
-        # and make our own fake container.
+    @staticmethod
+    def _get_elements_in_container(container):
         from ..properties import MovedItemId
-        res = super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )
-        if not res:
-            return res
-        fake_elem = create_element('FakeContainer')
-        for elem in message.findall(MovedItemId.response_tag()):
-            fake_elem.append(elem)
-        return fake_elem
+        return container.findall(MovedItemId.response_tag())
 
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message

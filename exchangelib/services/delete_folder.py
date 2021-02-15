@@ -5,7 +5,7 @@ from .common import EWSAccountService, EWSPooledMixIn, create_folder_ids_element
 class DeleteFolder(EWSAccountService, EWSPooledMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation"""
     SERVICE_NAME = 'DeleteFolder'
-    element_container_name = None  # DeleteFolder doesn't return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, folders, delete_type):
         return self._pool_requests(payload_func=self.get_payload, **dict(

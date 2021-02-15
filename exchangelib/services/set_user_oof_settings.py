@@ -8,6 +8,7 @@ class SetUserOofSettings(EWSAccountService):
 
     """
     SERVICE_NAME = 'SetUserOofSettings'
+    returns_elements = False
 
     def call(self, oof_settings, mailbox):
         from ..settings import OofSettings
@@ -25,8 +26,10 @@ class SetUserOofSettings(EWSAccountService):
         set_xml_value(payload, oof_settings, version=self.account.version)
         return payload
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        response_message = message.find('{%s}ResponseMessage' % MNS)
-        return super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )
+    def _get_element_container(self, message, name=None):
+        message = message.find(self._response_message_tag())
+        return super()._get_element_container(message=message, name=name)
+
+    @staticmethod
+    def _response_message_tag():
+        return '{%s}ResponseMessage' % MNS
