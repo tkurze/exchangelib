@@ -1,16 +1,14 @@
 from ..util import create_element
-from .common import EWSAccountService, EWSPooledMixIn, create_folder_ids_element
+from .common import EWSAccountService, create_folder_ids_element
 
 
-class DeleteFolder(EWSAccountService, EWSPooledMixIn):
+class DeleteFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation"""
     SERVICE_NAME = 'DeleteFolder'
     returns_elements = False
 
     def call(self, folders, delete_type):
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=folders, delete_type=delete_type
-        ))
+        return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
 
     def get_payload(self, folders, delete_type):
         deletefolder = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))

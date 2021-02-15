@@ -1,12 +1,12 @@
 import logging
 
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, EWSPooledMixIn, parse_folder_elem, to_item_id
+from .common import EWSAccountService, parse_folder_elem, to_item_id
 
 log = logging.getLogger(__name__)
 
 
-class UpdateFolder(EWSAccountService, EWSPooledMixIn):
+class UpdateFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation"""
     SERVICE_NAME = 'UpdateFolder'
     element_container_name = '{%s}Folders' % MNS
@@ -15,7 +15,7 @@ class UpdateFolder(EWSAccountService, EWSPooledMixIn):
         # We can't easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
         folders_list = list(f[0] for f in folders)  # Convert to a list, in case 'folders' is a generator
-        for folder, elem in zip(folders_list, self._pool_requests(payload_func=self.get_payload, items=folders)):
+        for folder, elem in zip(folders_list, self._chunked_get_elements(self.get_payload, items=folders)):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     @staticmethod

@@ -117,6 +117,12 @@ class EWSService(metaclass=abc.ABCMeta):
         # Read the XML and throw any general EWS error messages
         return self._get_elements_in_response(response=response)
 
+    def _chunked_get_elements(self, payload_func, items, **kwargs):
+        # Chop items list into suitable pieces
+        for i, chunk in enumerate(chunkify(items, self.chunk_size), start=1):
+            log.debug('Processing chunk %s containing %s items', i, len(chunk))
+            yield from self._get_elements(payload=payload_func(chunk, **kwargs))
+
     def _get_elements(self, payload):
         while True:
             try:
@@ -545,17 +551,6 @@ class PagingEWSMixIn(EWSService):
             rootfolder = None
         log.debug('%s: Got page with next offset %s (last_page %s)', self.SERVICE_NAME, next_offset, is_last_page)
         return rootfolder, next_offset
-
-
-class EWSPooledMixIn(EWSService):
-    def _pool_requests(self, payload_func, items, **kwargs):
-        log.debug('Processing items in chunks of %s', self.chunk_size)
-        # Chop items list into suitable pieces. The order of the output result list must be the same as the input id
-        # list, so the caller knows which status message belongs to which ID. Yield results as they become available.
-        for i, chunk in enumerate(chunkify(items, self.chunk_size), start=1):
-            log.debug('Processing %s chunk %s containing %s items', self.__class__.__name__, i, len(chunk))
-            for elem in self._get_elements(payload=payload_func(chunk, **kwargs)):
-                yield elem
 
 
 def to_item_id(item, item_cls, version):

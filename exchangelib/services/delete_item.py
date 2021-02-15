@@ -2,10 +2,10 @@ from collections import OrderedDict
 
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
-from .common import EWSAccountService, EWSPooledMixIn, create_item_ids_element
+from .common import EWSAccountService, create_item_ids_element
 
 
-class DeleteItem(EWSAccountService, EWSPooledMixIn):
+class DeleteItem(EWSAccountService):
     """Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
     (success[True|False], errormessage), in the same order as the input list.
 
@@ -31,13 +31,14 @@ class DeleteItem(EWSAccountService, EWSPooledMixIn):
             ))
         if suppress_read_receipts not in (True, False):
             raise ValueError("'suppress_read_receipts' %s must be True or False" % suppress_read_receipts)
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        return self._chunked_get_elements(
+            self.get_payload,
             items=items,
             delete_type=delete_type,
             send_meeting_cancellations=send_meeting_cancellations,
             affected_task_occurrences=affected_task_occurrences,
             suppress_read_receipts=suppress_read_receipts,
-        ))
+        )
 
     def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
                     suppress_read_receipts):

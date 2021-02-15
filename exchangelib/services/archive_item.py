@@ -1,9 +1,9 @@
 from ..util import create_element, MNS
 from ..version import EXCHANGE_2013
-from .common import EWSAccountService, EWSPooledMixIn, create_folder_ids_element, create_item_ids_element
+from .common import EWSAccountService, create_folder_ids_element, create_item_ids_element
 
 
-class ArchiveItem(EWSAccountService, EWSPooledMixIn):
+class ArchiveItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation"""
     SERVICE_NAME = 'ArchiveItem'
     element_container_name = '{%s}Items' % MNS
@@ -20,7 +20,7 @@ class ArchiveItem(EWSAccountService, EWSPooledMixIn):
           None
 
         """
-        return self._pool_requests(payload_func=self.get_payload, **dict(items=items, to_folder=to_folder))
+        return self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder)
 
     def _get_elements_in_response(self, response):
         for msg in response:

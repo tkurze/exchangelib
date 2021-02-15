@@ -1,18 +1,16 @@
 from ..util import create_element, add_xml_child, DummyResponse, StreamingBase64Parser, StreamingContentHandler, \
     ElementNotFound, MNS
-from .common import EWSAccountService, EWSPooledMixIn, create_attachment_ids_element
+from .common import EWSAccountService, create_attachment_ids_element
 
 
-class GetAttachment(EWSAccountService, EWSPooledMixIn):
+class GetAttachment(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation"""
     SERVICE_NAME = 'GetAttachment'
     element_container_name = '{%s}Attachments' % MNS
     streaming = True
 
     def call(self, items, include_mime_content):
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items, include_mime_content=include_mime_content,
-        ))
+        return self._chunked_get_elements(self.get_payload, items=items, include_mime_content=include_mime_content)
 
     def get_payload(self, items, include_mime_content):
         payload = create_element('m:%s' % self.SERVICE_NAME)

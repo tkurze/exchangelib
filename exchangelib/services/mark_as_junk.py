@@ -1,15 +1,13 @@
 from ..util import create_element
-from .common import EWSAccountService, EWSPooledMixIn, create_item_ids_element
+from .common import EWSAccountService, create_item_ids_element
 
 
-class MarkAsJunk(EWSAccountService, EWSPooledMixIn):
+class MarkAsJunk(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk"""
     SERVICE_NAME = 'MarkAsJunk'
 
     def call(self, items, is_junk, move_item):
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items, is_junk=is_junk, move_item=move_item
-        ))
+        return self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
 
     @staticmethod
     def _get_elements_in_container(container):

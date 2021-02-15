@@ -2,12 +2,12 @@ from collections import OrderedDict
 import logging
 
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, EWSPooledMixIn
+from .common import EWSAccountService
 
 log = logging.getLogger(__name__)
 
 
-class CreateItem(EWSAccountService, EWSPooledMixIn):
+class CreateItem(EWSAccountService):
     """Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
@@ -40,12 +40,13 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
             folder = self.account.sent  # 'Sent' is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError("Folder must be None in send-ony mode")
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        return self._chunked_get_elements(
+            self.get_payload,
             items=items,
             folder=folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-        ))
+        )
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
         """Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.

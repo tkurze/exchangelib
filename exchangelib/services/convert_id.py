@@ -2,12 +2,12 @@ import logging
 
 from ..util import create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
-from .common import EWSPooledMixIn
+from .common import EWSService
 
 log = logging.getLogger(__name__)
 
 
-class ConvertId(EWSPooledMixIn):
+class ConvertId(EWSService):
     """Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
@@ -21,10 +21,8 @@ class ConvertId(EWSPooledMixIn):
         from ..properties import ID_FORMATS
         if destination_format not in ID_FORMATS:
             raise ValueError("'destination_format' %r must be one of %s" % (destination_format, ID_FORMATS))
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items,
-            destination_format=destination_format,
-        ))
+
+        return self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
 
     def get_payload(self, items, destination_format):
         from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId

@@ -4,12 +4,12 @@ import logging
 from ..ewsdatetime import EWSDate
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013_SP1
-from .common import EWSAccountService, EWSPooledMixIn, to_item_id
+from .common import EWSAccountService, to_item_id
 
 log = logging.getLogger(__name__)
 
 
-class UpdateItem(EWSAccountService, EWSPooledMixIn):
+class UpdateItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem"""
     SERVICE_NAME = 'UpdateItem'
     element_container_name = '{%s}Items' % MNS
@@ -34,13 +34,14 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             raise ValueError("'suppress_read_receipts' %s must be True or False" % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError('Cannot send-only existing objects. Use SendItem service instead')
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        return self._chunked_get_elements(
+            self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ))
+        )
 
     def _delete_item_elem(self, field_path):
         deleteitemfield = create_element('t:DeleteItemField')

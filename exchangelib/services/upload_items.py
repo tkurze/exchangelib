@@ -1,8 +1,8 @@
 from ..util import create_element, set_xml_value, add_xml_child, MNS
-from .common import EWSAccountService, EWSPooledMixIn
+from .common import EWSAccountService
 
 
-class UploadItems(EWSAccountService, EWSPooledMixIn):
+class UploadItems(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
 
     This currently has the existing limitation of only being able to upload
@@ -15,7 +15,7 @@ class UploadItems(EWSAccountService, EWSPooledMixIn):
 
     def call(self, items):
         # _pool_requests expects 'items', not 'data'
-        return self._pool_requests(payload_func=self.get_payload, items=items)
+        return self._chunked_get_elements(self.get_payload, items=items)
 
     def get_payload(self, items):
         """Upload given items to given account

@@ -1,8 +1,8 @@
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, EWSPooledMixIn, parse_folder_elem, create_folder_ids_element
+from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element
 
 
-class CreateFolder(EWSAccountService, EWSPooledMixIn):
+class CreateFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation"""
     SERVICE_NAME = 'CreateFolder'
     element_container_name = '{%s}Folders' % MNS
@@ -11,9 +11,9 @@ class CreateFolder(EWSAccountService, EWSPooledMixIn):
         # We can't easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
         folders_list = list(folders)  # Convert to a list, in case 'folders' is a generator
-        for folder, elem in zip(folders_list, self._pool_requests(payload_func=self.get_payload, **dict(
-                items=folders, parent_folder=parent_folder,
-        ))):
+        for folder, elem in zip(folders_list, self._chunked_get_elements(
+                self.get_payload, items=folders, parent_folder=parent_folder,
+        )):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):

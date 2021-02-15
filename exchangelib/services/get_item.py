@@ -1,8 +1,8 @@
 from ..util import create_element, MNS
-from .common import EWSAccountService, EWSPooledMixIn, create_item_ids_element, create_shape_element
+from .common import EWSAccountService, create_item_ids_element, create_shape_element
 
 
-class GetItem(EWSAccountService, EWSPooledMixIn):
+class GetItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem"""
     SERVICE_NAME = 'GetItem'
     element_container_name = '{%s}Items' % MNS
@@ -19,11 +19,9 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
           XML elements for the items, in stable order
 
         """
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items,
-            additional_fields=additional_fields,
-            shape=shape,
-        ))
+        return self._chunked_get_elements(
+            self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
+        )
 
     def get_payload(self, items, additional_fields, shape):
         getitem = create_element('m:%s' % self.SERVICE_NAME)

@@ -1,9 +1,9 @@
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2007_SP1
-from .common import EWSAccountService, EWSPooledMixIn
+from .common import EWSAccountService
 
 
-class GetDelegate(EWSAccountService, EWSPooledMixIn):
+class GetDelegate(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation"""
     SERVICE_NAME = 'GetDelegate'
     supported_from = EXCHANGE_2007_SP1
@@ -13,13 +13,11 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 
         if user_ids:
             # Pool requests to avoid arbitrarily large requests when user_ids is huge
-            res = self._pool_requests(
+            res = self._chunked_get_elements(
+                self.get_payload,
                 items=user_ids,
-                payload_func=self.get_payload,
-                **dict(
-                    mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                    include_permissions=include_permissions,
-                )
+                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+                include_permissions=include_permissions,
             )
         else:
             # Pooling expects an iterable of items but we have None. Just call _get_elements directly.
