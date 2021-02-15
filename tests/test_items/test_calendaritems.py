@@ -423,12 +423,13 @@ class CalendarTest(CommonItemTest):
         # Test getting the master recurrence via an occurrence
         start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
         end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        recurrence = Recurrence(pattern=DailyPattern(interval=1), start=start.date(), number=4)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
             end=end,
             subject=get_random_string(16),
-            recurrence=Recurrence(pattern=DailyPattern(interval=1), start=start.date(), number=4),
+            recurrence=recurrence,
             categories=self.categories,
         ).save()
 
@@ -436,9 +437,11 @@ class CalendarTest(CommonItemTest):
         range_start, range_end = start, end + datetime.timedelta(days=3)
         unfolded = [i for i in self.test_folder.view(start=range_start, end=range_end) if self.match_cat(i)]
         third_occurrence = unfolded[2]
+        self.assertEqual(third_occurrence.recurrence, None)
         master_from_occurrence = third_occurrence.recurring_master()
 
         master_from_occurrence.refresh()  # Test that GetItem works
+        self.assertEqual(master_from_occurrence.recurrence, recurrence)
         self.assertEqual(master_from_occurrence.subject, master_item.subject)
 
         master_from_occurrence = third_occurrence.recurring_master()
@@ -448,3 +451,5 @@ class CalendarTest(CommonItemTest):
 
         with self.assertRaises(ErrorItemNotFound):
             master_item.delete()  # Item is gone from the server, so this should fail
+        with self.assertRaises(ErrorItemNotFound):
+            third_occurrence.delete()  # Item is gone from the server, so this should fail
