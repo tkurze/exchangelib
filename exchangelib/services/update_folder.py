@@ -61,14 +61,14 @@ class UpdateFolder(EWSAccountService):
             yield self._set_folder_elem(folder_model=folder_model, field_path=FieldPath(field=field), value=value)
 
     def get_payload(self, folders):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
+        from ..folders import BaseFolder, FolderId
         updatefolder = create_element('m:%s' % self.SERVICE_NAME)
         folderchanges = create_element('m:FolderChanges')
         version = self.account.version
         for folder, fieldnames in folders:
             log.debug('Updating folder %s fields %s', folder, fieldnames)
             folderchange = create_element('t:FolderChange')
-            if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+            if not isinstance(folder, (BaseFolder, FolderId)):
                 folder = to_item_id(folder, FolderId, version=version)
             set_xml_value(folderchange, folder, version=version)
             updates = create_element('t:Updates')

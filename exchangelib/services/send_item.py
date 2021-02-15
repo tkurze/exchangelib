@@ -8,8 +8,8 @@ class SendItem(EWSAccountService):
     returns_elements = False
 
     def call(self, items, saved_item_folder):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        from ..folders import BaseFolder, FolderId
+        if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
             raise ValueError("'saved_item_folder' %r must be a Folder or FolderId instance" % saved_item_folder)
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 

@@ -645,7 +645,7 @@ class MailboxData(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
-class DistinguishedFolderId(ItemId):
+class DistinguishedFolderId(FolderId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid"""
     ELEMENT_NAME = 'DistinguishedFolderId'
 

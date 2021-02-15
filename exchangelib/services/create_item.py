@@ -18,7 +18,7 @@ class CreateItem(EWSAccountService):
     element_container_name = '{%s}Items' % MNS
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
+        from ..folders import BaseFolder, FolderId
         from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, SEND_MEETING_INVITATIONS_CHOICES, \
             MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
@@ -30,7 +30,7 @@ class CreateItem(EWSAccountService):
                 send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
             ))
         if folder is not None:
-            if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+            if not isinstance(folder, (BaseFolder, FolderId)):
                 raise ValueError("'folder' %r must be a Folder or FolderId instance" % folder)
             if folder.account != self.account:
                 raise ValueError('"Folder must belong to this account')

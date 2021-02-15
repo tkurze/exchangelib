@@ -582,11 +582,11 @@ def create_shape_element(tag, shape, additional_fields, version):
 
 
 def create_folder_ids_element(tag, folders, version):
-    from ..folders import FolderId, DistinguishedFolderId
+    from ..folders import FolderId
     folder_ids = create_element(tag)
     for folder in folders:
         log.debug('Collecting folder %s', folder)
-        if not isinstance(folder, DistinguishedFolderId):
+        if not isinstance(folder, FolderId):
             folder = to_item_id(folder, FolderId, version=version)
         set_xml_value(folder_ids, folder, version=version)
     if not len(folder_ids):
