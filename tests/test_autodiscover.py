@@ -371,38 +371,39 @@ class AutodiscoverTest(EWSTest):
             discovery.discover()
 
         # Test that we can handle being asked to redirect to an address on a different domain
+        # Don't use example.com to redirect - it does not resolve or answer on all ISPs
         m.post(self.dummy_ad_endpoint, status_code=200, content=b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
     <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
         <Account>
             <Action>redirectAddr</Action>
-            <RedirectAddr>john@example.com</RedirectAddr>
+            <RedirectAddr>john@httpbin.org</RedirectAddr>
         </Account>
     </Response>
 </Autodiscover>''')
-        m.post('https://example.com/Autodiscover/Autodiscover.xml', status_code=200, content=b'''\
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200, content=b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
     <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
         <User>
-            <AutoDiscoverSMTPAddress>john@redirected.example.com</AutoDiscoverSMTPAddress>
+            <AutoDiscoverSMTPAddress>john@redirected.httpbin.org</AutoDiscoverSMTPAddress>
         </User>
         <Account>
             <AccountType>email</AccountType>
             <Action>settings</Action>
             <Protocol>
                 <Type>EXPR</Type>
-                <EwsUrl>https://redirected.example.com/EWS/Exchange.asmx</EwsUrl>
+                <EwsUrl>https://httpbin.org/EWS/Exchange.asmx</EwsUrl>
             </Protocol>
         </Account>
     </Response>
 </Autodiscover>''')
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
-        m.post('https://redirected.example.com/EWS/Exchange.asmx', status_code=200)
+        m.post('https://httpbin.org/EWS/Exchange.asmx', status_code=200)
         ad_response, p = discovery.discover()
-        self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.example.com')
-        self.assertEqual(ad_response.ews_url, 'https://redirected.example.com/EWS/Exchange.asmx')
+        self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.httpbin.org')
+        self.assertEqual(ad_response.ews_url, 'https://httpbin.org/EWS/Exchange.asmx')
 
     def test_get_srv_records(self):
         from exchangelib.autodiscover.discovery import SrvRecord
