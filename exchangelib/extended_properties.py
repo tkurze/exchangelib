@@ -198,7 +198,7 @@ class ExtendedProperty(EWSElement):
         # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
         extended_field_uri = elem.find('{%s}ExtendedFieldURI' % TNS)
         cls_props = cls.properties_map()
-        elem_props = {k: extended_field_uri.get(k) for k in cls_props.keys()}
+        elem_props = {k: extended_field_uri.get(k) for k in cls_props}
         # Sometimes, EWS will helpfully translate a 'distinguished_property_set_id' value to a 'property_set_id' value
         # and vice versa. Align these values.
         cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get('DistinguishedPropertySetId'))

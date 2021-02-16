@@ -46,7 +46,7 @@ class Identity:
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if getattr(self, k) != getattr(other, k):
                 return False
         return True
@@ -91,7 +91,7 @@ class Account:
             self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
-            log.warning('Failed to get locale (%s)' % e)
+            log.warning('Failed to get locale (%s)', e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
             raise ValueError("Expected 'locale' to be a string, got %r" % self.locale)

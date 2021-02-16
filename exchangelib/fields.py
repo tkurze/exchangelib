@@ -194,8 +194,7 @@ class FieldPath:
             if not self.label or not self.subfield:
                 raise ValueError("Field path for indexed field '%s' is missing label and/or subfield" % self.field.name)
             return self.subfield.field_uri_xml(field_uri=self.field.field_uri, label=self.label)
-        else:
-            return self.field.field_uri_xml()
+        return self.field.field_uri_xml()
 
     def expand(self, version):
         # If this path does not point to a specific subfield on an indexed property, return all the possible path
@@ -660,9 +659,8 @@ class TimeField(FieldURIField):
                 if ':' in val:
                     # Assume a string of the form HH:MM:SS
                     return datetime.datetime.strptime(val, '%H:%M:%S').time()
-                else:
-                    # Assume an integer in minutes since midnight
-                    return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
+                # Assume an integer in minutes since midnight
+                return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
             except ValueError:
                 pass
         return self.default

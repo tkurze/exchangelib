@@ -47,7 +47,7 @@ class Configuration:
             raise AttributeError("Only one of 'server' or 'service_endpoint' must be provided")
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
             raise ValueError("'auth_type' %r must be one of %s"
-                             % (auth_type, ', '.join("'%s'" % k for k in sorted(AUTH_TYPE_MAP.keys()))))
+                             % (auth_type, ', '.join("'%s'" % k for k in sorted(AUTH_TYPE_MAP))))
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):

@@ -337,7 +337,7 @@ class CommonItemTest(BaseItemTest):
                         if not matches:
                             time.sleep(10)
                             matches = common_qs.filter(**kw).count()
-                    if f.is_list and not val and list(kw.keys())[0].endswith('__%s' % Q.LOOKUP_IN):
+                    if f.is_list and not val and list(kw)[0].endswith('__%s' % Q.LOOKUP_IN):
                         # __in with an empty list returns an empty result
                         self.assertEqual(matches, 0, (f.name, val, kw))
                     else:
@@ -537,7 +537,7 @@ class CommonItemTest(BaseItemTest):
         if self.ITEM_CLASS in (Contact, DistributionList):
             # Contact and DistributionList don't support mime_type updates at all
             update_kwargs.pop('mime_content', None)
-        update_fieldnames = [f for f in update_kwargs.keys() if f != 'attachments']
+        update_fieldnames = [f for f in update_kwargs if f != 'attachments']
         for k, v in update_kwargs.items():
             setattr(item, k, v)
         # Test with generator as argument

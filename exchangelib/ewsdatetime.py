@@ -60,15 +60,15 @@ class EWSDate(datetime.date):
     def from_string(cls, date_string):
         # Sometimes, we'll receive a date string with timezone information. Not very useful.
         if date_string.endswith('Z'):
-            dt = datetime.datetime.strptime(date_string, '%Y-%m-%dZ')
+            date_fmt = '%Y-%m-%dZ'
         elif ':' in date_string:
             if '+' in date_string:
-                dt = datetime.datetime.strptime(date_string, '%Y-%m-%d+%H:%M')
+                date_fmt = '%Y-%m-%d+%H:%M'
             else:
-                dt = datetime.datetime.strptime(date_string, '%Y-%m-%d-%H:%M')
+                date_fmt = '%Y-%m-%d-%H:%M'
         else:
-            dt = datetime.datetime.strptime(date_string, '%Y-%m-%d')
-        d = dt.date()
+            date_fmt = '%Y-%m-%d'
+        d = datetime.datetime.strptime(date_string, date_fmt).date()
         if isinstance(d, cls):
             return d
         return cls.from_date(d)  # We want to return EWSDate objects

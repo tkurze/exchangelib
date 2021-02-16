@@ -81,7 +81,7 @@ class FolderQuerySet:
         """
         from .collections import FolderCollection
         from ..properties import FolderId
-        if not args and set(kwargs.keys()) in ({'id'}, {'id', 'changekey'}):
+        if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
             folders = list(FolderCollection(
                 account=self.folder_collection.account, folders=[FolderId(**kwargs)]
             ).resolve())

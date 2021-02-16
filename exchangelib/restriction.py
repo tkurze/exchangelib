@@ -424,8 +424,7 @@ class Q:
             # __contains and __in are implemented as multiple leaves, with one value per leaf. clean() on list fields
             # only works on lists, so clean a one-element list.
             return clean_field.clean(value=[self.value], version=version)[0]
-        else:
-            return clean_field.clean(value=self.value, version=version)
+        return clean_field.clean(value=self.value, version=version)
 
     def xml_elem(self, folders, version, applies_to):
         # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),

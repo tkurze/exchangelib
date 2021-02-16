@@ -862,7 +862,7 @@ class TimeZone(EWSElement):
         standard_time, daylight_time = None, None
         for transition in transitiongroup:
             period = periods[transition['to']]
-            if len(transition.keys()) == 1:
+            if len(transition) == 1:
                 # This is a simple transition representing a timezone with no DST. Some servers don't accept TimeZone
                 # elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime objects
                 # with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn't break the

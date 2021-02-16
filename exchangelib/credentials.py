@@ -48,10 +48,10 @@ class BaseCredentials(metaclass=abc.ABCMeta):
         )
 
     def _get_hash_values(self):
-        return (getattr(self, k) for k in self.__dict__.keys() if k != '_lock')
+        return (getattr(self, k) for k in self.__dict__ if k != '_lock')
 
     def __eq__(self, other):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if k == '_lock':
                 continue
             if getattr(self, k) != getattr(other, k):
@@ -165,13 +165,13 @@ class OAuth2Credentials(BaseCredentials):
     def _get_hash_values(self):
         # 'access_token' may be refreshed once in a while. This should not affect the hash signature.
         # 'identity' is just informational and should also not affect the hash signature.
-        return (getattr(self, k) for k in self.__dict__.keys() if k not in ('_lock', 'identity', 'access_token'))
+        return (getattr(self, k) for k in self.__dict__ if k not in ('_lock', 'identity', 'access_token'))
 
     def sig(self):
         # Like hash(self), but pulls in the access token. Protocol.refresh_credentials() uses this to find out
         # if the access_token needs to be refreshed.
         res = []
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if k in ('_lock', 'identity'):
                 continue
             if k == 'access_token':

@@ -8,6 +8,7 @@ class ArchiveItem(EWSAccountService):
     SERVICE_NAME = 'ArchiveItem'
     element_container_name = '{%s}Items' % MNS
     supported_from = EXCHANGE_2013
+    returns_elements = False
 
     def call(self, items, to_folder):
         """Move a list of items to a specific folder in the archive mailbox.
@@ -21,16 +22,6 @@ class ArchiveItem(EWSAccountService):
 
         """
         return self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder)
-
-    def _get_elements_in_response(self, response):
-        for msg in response:
-            container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
-            if isinstance(container_or_exc, (bool, Exception)):
-                yield container_or_exc
-            else:
-                if len(container_or_exc):
-                    raise ValueError('Unexpected container length: %s' % container_or_exc)
-                yield True
 
     def get_payload(self, items, to_folder):
         archiveitem = create_element('m:%s' % self.SERVICE_NAME)

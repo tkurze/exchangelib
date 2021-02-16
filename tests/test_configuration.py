@@ -22,7 +22,7 @@ class ConfigurationTest(TimedTestCase):
             Configuration(auth_type='foo')
         self.assertEqual(
             e.exception.args[0],
-            "'auth_type' 'foo' must be one of %s" % ', '.join("'%s'" % k for k in sorted(AUTH_TYPE_MAP.keys()))
+            "'auth_type' 'foo' must be one of %s" % ', '.join("'%s'" % k for k in sorted(AUTH_TYPE_MAP))
         )
         with self.assertRaises(ValueError) as e:
             Configuration(version='foo')

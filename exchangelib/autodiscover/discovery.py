@@ -36,7 +36,7 @@ class SrvRecord:
         self.srv = srv
 
     def __eq__(self, other):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if getattr(self, k) != getattr(other, k):
                 return False
         return True

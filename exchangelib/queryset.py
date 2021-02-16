@@ -597,7 +597,7 @@ class QuerySet(SearchableMixIn):
         if self.is_cached and not args and not kwargs:
             # We can only safely use the cache if get() is called without args
             items = self._cache
-        elif not args and set(kwargs.keys()) in ({'id'}, {'id', 'changekey'}):
+        elif not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
             account = self.folder_collection.account
