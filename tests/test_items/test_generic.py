@@ -776,6 +776,12 @@ class GenericItemTest(CommonItemTest):
         # Clean up after yourself
         del ids[3]  # Sending the deleted one through will cause an error
 
+    def test_archive(self):
+        item = self.get_test_item(folder=self.test_folder).save()
+        item_id, changekey = item.archive(to_folder=self.account.trash)
+        archived_item = self.account.root.get(id=item_id, changekey=changekey)
+        self.assertEqual(self.account.root.get_folder(archived_item.parent_folder_id.id), self.account.trash)
+
     def test_item_attachments(self):
         item = self.get_test_item(folder=self.test_folder)
         item.attachments = []

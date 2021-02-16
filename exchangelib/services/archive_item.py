@@ -8,7 +8,6 @@ class ArchiveItem(EWSAccountService):
     SERVICE_NAME = 'ArchiveItem'
     element_container_name = '{%s}Items' % MNS
     supported_from = EXCHANGE_2013
-    returns_elements = False
 
     def call(self, items, to_folder):
         """Move a list of items to a specific folder in the archive mailbox.

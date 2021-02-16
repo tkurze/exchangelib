@@ -573,7 +573,9 @@ class Account:
           A list containing True or an exception instance in stable order of the requested items
 
         """
-        return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        return list(
+            i if isinstance(i, Exception) else Item.id_from_xml(i)
+            for i in self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
             ))
         )

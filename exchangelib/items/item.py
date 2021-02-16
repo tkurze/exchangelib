@@ -274,7 +274,8 @@ class Item(BaseItem):
 
     @require_id
     def archive(self, to_folder):
-        return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder)
+        res = ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)
+        return Item.id_from_xml(elem=res)
 
     def attach(self, attachments):
         """Add an attachment, or a list of attachments, to this item. If the item has already been saved, the
