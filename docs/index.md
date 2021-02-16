@@ -1123,6 +1123,9 @@ binary_file_content = 'Hello from unicode æøå'.encode('utf-8')  # Or read fro
 my_file = FileAttachment(name='my_file.txt', content=binary_file_content)
 item.attach(my_file)
 my_calendar_item = CalendarItem(...)
+# If you got the item to attach from the server, you probably want to ignore the 'mime_content'
+# field that contains copies of other field values on the item. This avoids duplicate attachments etc.
+my_calendar_item.mime_content = None
 my_appointment = ItemAttachment(name='my_appointment', item=my_calendar_item)
 item.attach(my_appointment)
 item.save()
