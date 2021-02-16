@@ -442,6 +442,30 @@ f.empty(delete_sub_folders=True)
 # like `empty(delete_sub_folders=True)` but attempts to protect distinguished folders from
 # being deleted. Use with caution!
 f.wipe()
+
+# Folders support getting, creating, updating and deleting Master Category Lists, also known
+# as User Configuration objects.
+f.create_user_configuration(
+    name='SomeName',
+    dictionary={'foo': 'bar', 123: 'a', 'b': False},
+    xml_data=b'<foo>bar</foo>',
+    binary_data=b'XXX',
+)
+
+config = f.get_user_configuration(name='SomeName')
+config.dictionary  # {'foo': 'bar', 123: 'a', 'b': False}
+config.xml_data  # b'<foo>bar</foo>'
+config.binary_data  # b'XXX'
+
+f.update_user_configuration(
+    name='SomeName',
+    dictionary={'bar': 'foo', 456: 'a', 'b': True},
+    xml_data=b'<foo>baz</foo>',
+    binary_data=b'YYY',
+)
+
+f.delete_user_configuration(name='SomeName')
+
 ```
 
 ## Dates, datetimes and timezones

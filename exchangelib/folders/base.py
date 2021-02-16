@@ -11,7 +11,9 @@ from ..items import CalendarItem, RegisterMixIn, Persona, ITEM_CLASSES, ITEM_TRA
 from ..properties import Mailbox, FolderId, ParentFolderId, InvalidField, DistinguishedFolderId, Fields
 from ..queryset import QuerySet, SearchableMixIn, DoesNotExist
 from ..restriction import Restriction
-from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, FindPeople
+from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, FindPeople, GetUserConfiguration, \
+    CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration
+from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
 from .collections import FolderCollection
@@ -470,7 +472,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
             kwargs['name'] = cls.DISTINGUISHED_FOLDER_ID
         return kwargs
 
-    def to_xml(self, version):
+    def to_folder_id(self):
         if self.is_distinguished:
             # Don't add the changekey here. When modifying folder content, we usually don't care if others have changed
             # the folder content since we fetched the changekey.
@@ -478,11 +480,17 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
                 return DistinguishedFolderId(
                     id=self.DISTINGUISHED_FOLDER_ID,
                     mailbox=Mailbox(email_address=self.account.primary_smtp_address)
-                ).to_xml(version=version)
-            return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID).to_xml(version=version)
+                )
+            return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
         if self.id:
-            return FolderId(id=self.id, changekey=self.changekey).to_xml(version=version)
-        return super().to_xml(version=version)
+            return FolderId(id=self.id, changekey=self.changekey)
+        raise ValueError('Must be a distinguished folder or have an ID')
+
+    def to_xml(self, version):
+        try:
+            return self.to_folder_id().to_xml(version=version)
+        except ValueError:
+            return super().to_xml(version=version)
 
     def to_id_xml(self, version):
         # Folder(name='Foo') is a perfectly valid ID to e.g. create a folder
@@ -511,6 +519,43 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
         # Apparently, the changekey may get updated
         for f in self.FIELDS:
             setattr(self, f.name, getattr(fresh_folder, f.name))
+
+    @require_id
+    def get_user_configuration(self, name, properties=ALL):
+        from ..properties import UserConfigurationNameMNS
+        return GetUserConfiguration(account=self.account).get(
+            user_configuration_name=UserConfigurationNameMNS(name=name, folder=self),
+            properties=properties,
+        )
+
+    @require_id
+    def create_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
+        from ..properties import UserConfiguration, UserConfigurationName
+        user_configuration = UserConfiguration(
+            user_configuration_name=UserConfigurationName(name=name, folder=self),
+            dictionary=dictionary,
+            xml_data=xml_data,
+            binary_data=binary_data,
+        )
+        return CreateUserConfiguration(account=self.account).get(user_configuration=user_configuration)
+
+    @require_id
+    def update_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
+        from ..properties import UserConfiguration, UserConfigurationName
+        user_configuration = UserConfiguration(
+            user_configuration_name=UserConfigurationName(name=name, folder=self),
+            dictionary=dictionary,
+            xml_data=xml_data,
+            binary_data=binary_data,
+        )
+        return UpdateUserConfiguration(account=self.account).get(user_configuration=user_configuration)
+
+    @require_id
+    def delete_user_configuration(self, name):
+        from ..properties import UserConfigurationNameMNS
+        return DeleteUserConfiguration(account=self.account).get(
+            user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
+        )
 
     def __floordiv__(self, other):
         """Same as __truediv__ but does not touch the folder cache.

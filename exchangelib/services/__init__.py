@@ -15,9 +15,11 @@ from .copy_item import CopyItem
 from .create_attachment import CreateAttachment
 from .create_folder import CreateFolder
 from .create_item import CreateItem
+from .create_user_configuration import CreateUserConfiguration
 from .delete_attachment import DeleteAttachment
 from .delete_folder import DeleteFolder
 from .delete_item import DeleteItem
+from .delete_user_configuration import DeleteUserConfiguration
 from .empty_folder import EmptyFolder
 from .expand_dl import ExpandDL
 from .export_items import ExportItems
@@ -35,6 +37,7 @@ from .get_rooms import GetRooms
 from .get_searchable_mailboxes import GetSearchableMailboxes
 from .get_server_time_zones import GetServerTimeZones
 from .get_user_availability import GetUserAvailability
+from .get_user_configuration import GetUserConfiguration
 from .get_user_oof_settings import GetUserOofSettings
 from .mark_as_junk import MarkAsJunk
 from .move_item import MoveItem
@@ -43,6 +46,7 @@ from .send_item import SendItem
 from .set_user_oof_settings import SetUserOofSettings
 from .update_folder import UpdateFolder
 from .update_item import UpdateItem
+from .update_user_configuration import UpdateUserConfiguration
 from .upload_items import UploadItems
 
 __all__ = [
@@ -53,8 +57,10 @@ __all__ = [
     'CreateAttachment',
     'CreateFolder',
     'CreateItem',
+    'CreateUserConfiguration',
     'DeleteAttachment',
     'DeleteFolder',
+    'DeleteUserConfiguration',
     'DeleteItem',
     'EmptyFolder',
     'ExpandDL',
@@ -73,6 +79,7 @@ __all__ = [
     'GetSearchableMailboxes',
     'GetServerTimeZones',
     'GetUserAvailability',
+    'GetUserConfiguration',
     'GetUserOofSettings',
     'MarkAsJunk',
     'MoveItem',
@@ -81,5 +88,6 @@ __all__ = [
     'SetUserOofSettings',
     'UpdateFolder',
     'UpdateItem',
+    'UpdateUserConfiguration',
     'UploadItems',
 ]

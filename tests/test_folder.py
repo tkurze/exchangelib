@@ -1,6 +1,6 @@
 from exchangelib import Q, Message, ExtendedProperty
 from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
-    MultipleObjectsReturned
+    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound
 from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
     Contacts, Folder, RecipientCache, GALContacts, System, AllContacts, MyContactsExtended, Reminders, Favorites, \
     AllItems, ConversationSettings, Friends, RSSFeeds, Sharing, IMContactList, QuickContacts, Journal, Notes, \
@@ -494,3 +494,53 @@ class FolderTest(EWSTest):
             fld_qs.only('XXX')
         with self.assertRaises(InvalidField):
             list(fld_qs.filter(XXX='XXX'))
+
+    def test_user_configuration(self):
+        """Test that we can do CRUD operations on user configuration data"""
+        # Create a test folder that we delete afterwards
+        f = Messages(parent=self.account.inbox, name=get_random_string(16)).save()
+        # The name must be fewer than 237 characters, can contain only the characters "A-Z", "a-z", "0-9", and ".",
+        # and must not start with "IPM.Configuration"
+        name = get_random_string(16, spaces=False, special=False)
+
+        # Should not exist yet
+        with self.assertRaises(ErrorItemNotFound):
+            f.get_user_configuration(name=name)
+
+        # Create a config
+        f.create_user_configuration(
+            name=name, dictionary={'foo': 'bar', 123: 'a', 'b': False}, xml_data=b'<foo>bar</foo>', binary_data=b'XXX'
+        )
+
+        # Fetch and compare values
+        config = f.get_user_configuration(name=name)
+        self.assertEqual(config.dictionary, {'foo': 'bar', 123: 'a', 'b': False})
+        self.assertEqual(config.xml_data, b'<foo>bar</foo>')
+        self.assertEqual(config.binary_data, b'XXX')
+
+        # Cannot create one more with the same name
+        with self.assertRaises(ErrorItemSave):
+            f.create_user_configuration(name=name)
+
+        # Does not exist on a different folder
+        with self.assertRaises(ErrorItemNotFound):
+            self.account.inbox.get_user_configuration(name=name)
+
+        # Update the config
+        f.update_user_configuration(
+            name=name, dictionary={'bar': 'foo', 456: 'a', 'b': True}, xml_data=b'<foo>baz</foo>', binary_data=b'YYY'
+        )
+
+        # Fetch again and compare values
+        config = f.get_user_configuration(name=name)
+        self.assertEqual(config.dictionary, {'bar': 'foo', 456: 'a', 'b': True})
+        self.assertEqual(config.xml_data, b'<foo>baz</foo>')
+        self.assertEqual(config.binary_data, b'YYY')
+
+        # Delete the config
+        f.delete_user_configuration(name=name)
+
+        # We already deleted this config
+        with self.assertRaises(ErrorItemNotFound):
+            f.get_user_configuration(name=name)
+        f.delete()

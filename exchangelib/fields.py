@@ -9,7 +9,8 @@ import logging
 
 from .errors import ErrorInvalidServerVersion
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
-from .util import create_element, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, safe_b64decode, TNS
+from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
+    safe_b64decode, xml_text_to_value, TNS
 from .version import Build, Version, EXCHANGE_2013
 
 log = logging.getLogger(__name__)
@@ -1443,3 +1444,70 @@ class IdElementField(EWSElementField):
         kwargs['is_searchable'] = False
         kwargs['is_read_only'] = True
         super().__init__(*args, **kwargs)
+
+
+class TypeValueField(FieldURIField):
+    TYPES_MAP = {
+        'DateTime': EWSDateTime,
+        'Boolean': bool,
+        'Byte': bytes,
+        'String': str,
+        'Integer32': int,
+        'UnsignedInteger32': int,
+        'Integer64': int,
+        'UnsignedInteger64': int,
+        'StringArray': str,
+        'ByteArray': bytes,
+    }
+    TYPES_MAP_REVERSED = {v: k for k, v in TYPES_MAP.items() if not k.endswith('Array')}
+
+    @classmethod
+    def get_type(cls, value):
+        if is_iterable(value):
+            return '%sArray' % cls.TYPES_MAP_REVERSED[type(list(value)[0])]
+        return cls.TYPES_MAP_REVERSED[type(value)]
+
+    def from_xml(self, elem, account):
+        field_elem = elem.find(self.response_tag())
+        if field_elem is None:
+            return self.default
+        value_type = get_xml_attr(field_elem, '{%s}Type' % TNS)
+        value = get_xml_attr(field_elem, '{%s}Value' % TNS)
+        if value_type.endswith('Array'):
+            raise NotImplementedError()
+        if value_type.startswith('Byte'):
+            # safe_b64decode()
+            raise NotImplementedError()
+        return xml_text_to_value(value=value, value_type=self.TYPES_MAP[value_type])
+
+    def to_xml(self, value, version):
+        if is_iterable(value):
+            raise NotImplementedError()
+        if isinstance(value, bytes):
+            # base64.b64encode(self.value).decode('ascii')
+            raise NotImplementedError()
+        field_elem = create_element(self.request_tag())
+        field_elem.append(set_xml_value(create_element('t:Type'), self.get_type(value), version=version))
+        field_elem.append(set_xml_value(create_element('t:Value'), value, version=version))
+        return field_elem
+
+
+class DictionaryField(FieldURIField):
+    value_cls = dict
+
+    def from_xml(self, elem, account):
+        from .properties import DictionaryEntry
+        iter_elem = elem.find(self.response_tag())
+        if iter_elem is not None:
+            entries = [
+                DictionaryEntry.from_xml(elem=e, account=account)
+                for e in iter_elem.findall(DictionaryEntry.response_tag())
+            ]
+            return {e.key: e.value for e in entries}
+        return self.default
+
+    def to_xml(self, value, version):
+        from .properties import DictionaryEntry
+        field_elem = create_element(self.request_tag())
+        entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
+        return set_xml_value(field_elem, entries, version=version)

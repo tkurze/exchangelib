@@ -10,7 +10,8 @@ from threading import Lock
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
-    RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField
+    RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField, \
+    Base64Field, TypeValueField, DictionaryField, IdElementField
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
 from .version import Version, EXCHANGE_2013, Build
 
@@ -1539,3 +1540,69 @@ class IdChangeKeyMixIn(EWSElement):
         if self.id:
             return hash((self.id, self.changekey))
         return super().__hash__()
+
+
+class DictionaryEntry(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/dictionaryentry"""
+    ELEMENT_NAME = 'DictionaryEntry'
+    FIELDS = Fields(
+        TypeValueField('key', field_uri='DictionaryKey'),
+        TypeValueField('value', field_uri='DictionaryValue'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class UserConfigurationName(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfigurationname"""
+    ELEMENT_NAME = 'UserConfigurationName'
+    NAMESPACE = TNS
+
+    FIELDS = Fields(
+        CharField('name', field_uri='Name', is_attribute=True),
+        EWSElementField('folder', value_cls=FolderId),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+    def clean(self, version=None):
+        from .folders import BaseFolder
+        if isinstance(self.folder, BaseFolder):
+            self.folder = self.folder.to_folder_id()
+        super().clean(version=version)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        # We also accept distinguished folders
+        f = EWSElementField('', value_cls=DistinguishedFolderId)
+        distinguished_folder_id = f.from_xml(elem=elem, account=account)
+        res = super().from_xml(elem=elem, account=account)
+        if distinguished_folder_id:
+            res.folder = distinguished_folder_id
+        return res
+
+
+class UserConfigurationNameMNS(UserConfigurationName):
+    """Like UserConfigurationName, but in the MNS namespace
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfigurationname
+    """
+    NAMESPACE = MNS
+    __slots__ = tuple()
+
+
+class UserConfiguration(IdChangeKeyMixIn):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfiguration"""
+    ELEMENT_NAME = 'UserConfiguration'
+    NAMESPACE = MNS
+    ID_ELEMENT_CLS = ItemId
+
+    FIELDS = Fields(
+        IdElementField('_id', field_uri='ItemId', value_cls=ID_ELEMENT_CLS),
+        EWSElementField('user_configuration_name', value_cls=UserConfigurationName),
+        DictionaryField('dictionary', field_uri='Dictionary'),
+        Base64Field('xml_data', field_uri='XmlData'),
+        Base64Field('binary_data', field_uri='BinaryData'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
