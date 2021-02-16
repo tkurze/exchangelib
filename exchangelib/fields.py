@@ -1447,6 +1447,8 @@ class IdElementField(EWSElementField):
 
 
 class TypeValueField(FieldURIField):
+    """This field type has no value_cls because values may have many different types.
+    """
     TYPES_MAP = {
         'DateTime': EWSDateTime,
         'Boolean': bool,
@@ -1466,6 +1468,13 @@ class TypeValueField(FieldURIField):
         if is_iterable(value):
             return '%sArray' % cls.TYPES_MAP_REVERSED[type(list(value)[0])]
         return cls.TYPES_MAP_REVERSED[type(value)]
+
+    def clean(self, value, version=None):
+        if value is None:
+            if self.is_required and self.default is None:
+                raise ValueError("'%s' is a required field with no default" % self.name)
+            return self.default
+        return value
 
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
