@@ -60,17 +60,42 @@ class ProtocolTest(EWSTest):
         ip_addresses = {info[4][0] for info in socket.getaddrinfo(
             'httpbin.org', 80, socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_IP
         )}
+
+        def conn_count():
+            return len([p for p in proc.connections() if p.raddr[0] in ip_addresses])
+
         self.assertGreater(len(ip_addresses), 0)
         protocol = Protocol(config=Configuration(
             service_endpoint='http://httpbin.org', credentials=Credentials('A', 'B'),
-            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast()
+            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast(),
+            max_connections=3
         ))
+        # Merely getting a session should not create conections
         session = protocol.get_session()
+        self.assertEqual(conn_count(), 0)
+        # Open one URL - we have 1 connection
         session.get('http://httpbin.org')
-        self.assertEqual(len({p.raddr[0] for p in proc.connections() if p.raddr[0] in ip_addresses}), 1)
+        self.assertEqual(conn_count(), 1)
+        # Open the same URL - we should still have 1 connection
+        session.get('http://httpbin.org')
+        self.assertEqual(conn_count(), 1)
+
+        # Open some more connections
+        s2 = protocol.get_session()
+        s2.get('http://httpbin.org')
+        s3 = protocol.get_session()
+        s3.get('http://httpbin.org')
+        self.assertEqual(conn_count(), 3)
+
+        # Releasing the sessions does not close the connections
         protocol.release_session(session)
+        protocol.release_session(s2)
+        protocol.release_session(s3)
+        self.assertEqual(conn_count(), 3)
+
+        # But closing explicitly does
         protocol.close()
-        self.assertEqual(len({p.raddr[0] for p in proc.connections() if p.raddr[0] in ip_addresses}), 0)
+        self.assertEqual(conn_count(), 0)
 
     def test_decrease_poolsize(self):
         # Test increasing and decreasing the pool size
