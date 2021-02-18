@@ -444,7 +444,9 @@ f.empty(delete_sub_folders=True)
 f.wipe()
 
 # Folders support getting, creating, updating and deleting Master Category Lists, also known
-# as User Configuration objects.
+# as User Configuration objects. Supported key and value types for the 'dictionary' attribute
+# are: bool, int, bytes, str, tuples of str, EWSDateTime, and the 'Byte' type which we emulate
+# in Python as a 1-length bytes.
 f.create_user_configuration(
     name='SomeName',
     dictionary={'foo': 'bar', 123: 'a', 'b': False},

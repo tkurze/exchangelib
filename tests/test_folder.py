@@ -15,6 +15,10 @@ from .common import EWSTest, get_random_string, get_random_int, get_random_bool,
     get_random_byte
 
 
+def get_random_str_tuple(tuple_length, str_length):
+    return tuple(get_random_string(str_length, spaces=False) for _ in range(tuple_length))
+
+
 class FolderTest(EWSTest):
     def test_folders(self):
         for f in self.account.root.walk():
@@ -510,14 +514,13 @@ class FolderTest(EWSTest):
 
         # Create a config
         dictionary = {
-            get_random_bool(): get_random_datetime(tz=self.account.default_timezone),
+            get_random_bool(): get_random_str_tuple(10, 2),
             get_random_int(): get_random_bool(),
             get_random_byte(): get_random_int(),
             get_random_bytes(16): get_random_byte(),
             get_random_string(8): get_random_bytes(16),
             get_random_datetime(tz=self.account.default_timezone): get_random_string(8),
-            tuple(get_random_string(4, spaces=False) for _ in range(4)):
-                tuple(get_random_string(10, spaces=False) for _ in range(2)),
+            get_random_str_tuple(4, 4): get_random_datetime(tz=self.account.default_timezone),
         }
         xml_data = b'<foo>%s</foo>' % get_random_string(16).encode('utf-8')
         binary_data = get_random_bytes(100)
