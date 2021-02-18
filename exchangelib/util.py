@@ -28,6 +28,7 @@ from .errors import TransportError, RateLimitError, RedirectError, RelativeRedir
     ErrorInvalidSchemaVersionForMailboxVersion
 
 log = logging.getLogger(__name__)
+xml_log = logging.getLogger('%s.xml' % __name__)
 
 
 def require_account(f):
@@ -724,9 +725,7 @@ Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
 Request headers: %(request_headers)s
-Response headers: %(response_headers)s
-Request data: %(xml_request)s
-Response data: %(xml_response)s'''
+Response headers: %(response_headers)s'''
     log_vals = dict(
         retry=retry,
         wait=wait,
@@ -742,8 +741,6 @@ Response data: %(xml_response)s'''
         status_code=None,
         request_headers=headers,
         response_headers=None,
-        xml_request=data,
-        xml_response=None,
     )
     t_start = time.monotonic()
     try:
@@ -784,9 +781,10 @@ Response data: %(xml_response)s'''
                     status_code=r.status_code,
                     request_headers=r.request.headers,
                     response_headers=r.headers,
-                    xml_response='[STREAMING]' if stream else r.content,
                 )
             log.debug(log_msg, log_vals)
+            xml_log.debug('Request XML: %(xml_data)s', dict(xml_data=data))
+            xml_log.debug('Response XML: %(xml_data)s', dict(xml_data='[STREAMING]' if stream else r.content))
             if _need_new_credentials(response=r):
                 r.close()  # Release memory
                 session = protocol.refresh_credentials(session)
