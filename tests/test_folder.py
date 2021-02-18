@@ -508,13 +508,12 @@ class FolderTest(EWSTest):
             f.get_user_configuration(name=name)
 
         # Create a config
+        # TODO: the 'Byte' type is untested
         dictionary = {
             get_random_bool(): get_random_datetime(tz=self.account.default_timezone),
             get_random_int(): get_random_bool(),
-            # get_random_bytes(16): get_random_int(),  # TODO: bytes not accepted as key for some reason
-            get_random_string(8): get_random_int(),
-            # get_random_string(8): get_random_bytes(16),  # TODO: bytes not accepted as value for some reason
-            get_random_string(8): get_random_string(8),
+            get_random_bytes(16): get_random_int(),
+            get_random_string(8): get_random_bytes(16),
             get_random_datetime(tz=self.account.default_timezone): get_random_string(8),
             tuple(get_random_string(4, spaces=False) for _ in range(4)):
                 tuple(get_random_string(10, spaces=False) for _ in range(2)),

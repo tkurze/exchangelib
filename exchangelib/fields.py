@@ -1384,33 +1384,37 @@ class TypeValueField(FieldURIField):
     """This field type has no value_cls because values may have many different types.
     """
     TYPES_MAP = {
-        'DateTime': EWSDateTime,
         'Boolean': bool,
-        'Byte': bytes,
-        'String': str,
         'Integer32': int,
         'UnsignedInteger32': int,
         'Integer64': int,
         'UnsignedInteger64': int,
-        'StringArray': str,
+        # 'Byte': bytes,  # TODO: I cannot find documentation on the format of values of this type
         'ByteArray': bytes,
+        'String': str,
+        'StringArray': str,  # A list of strings
+        'DateTime': EWSDateTime,
     }
     TYPES_MAP_REVERSED = {
-        EWSDateTime: 'DateTime',
         bool: 'Boolean',
-        bytes: 'Byte',
-        str: 'String',
         int: 'Integer64',
+        bytes: 'ByteArray',
+        str: 'String',
+        EWSDateTime: 'DateTime',
     }
 
     @classmethod
     def get_type(cls, value):
         if is_iterable(value):
-            value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(list(value)[0])]
+            value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
             if value_type not in cls.TYPES_MAP:
                 raise ValueError('%r is not a supported type' % value)
             return value_type
         return cls.TYPES_MAP_REVERSED[type(value)]
+
+    @classmethod
+    def is_array_type(cls, value_type):
+        return value_type == 'StringArray'
 
     def clean(self, value, version=None):
         if value is None:
@@ -1426,15 +1430,12 @@ class TypeValueField(FieldURIField):
         value_type_str = get_xml_attr(field_elem, '{%s}Type' % TNS)
         value_type = self.TYPES_MAP[value_type_str]
         value = get_xml_attr(field_elem, '{%s}Value' % TNS)
-        if value_type_str.endswith('Array'):
+        if self. is_array_type(value_type_str):
             return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(' '))
         return xml_text_to_value(value=value, value_type=value_type)
 
     def to_xml(self, value, version):
         value_type = self.get_type(value)
-        if value_type == bool:
-            # TODO: this *should* work, but base64-encoded keys and values are not accepted by EWS
-            raise ValueError('Binary data is not yet supported for keys or values')
         if is_iterable(value):
             value = ' '.join(value_to_xml_text(v) for v in value)
         field_elem = create_element(self.request_tag())
