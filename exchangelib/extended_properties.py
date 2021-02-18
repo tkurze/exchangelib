@@ -1,11 +1,10 @@
-import base64
 import logging
 from decimal import Decimal
 
 from .ewsdatetime import EWSDateTime
 from .properties import EWSElement
 from .util import create_element, add_xml_child, get_xml_attrs, get_xml_attr, set_xml_value, value_to_xml_text, \
-    xml_text_to_value, is_iterable, safe_b64decode, TNS
+    xml_text_to_value, is_iterable, TNS
 
 log = logging.getLogger(__name__)
 
@@ -223,14 +222,10 @@ class ExtendedProperty(EWSElement):
         python_type = cls.python_type()
         if cls.is_array_type():
             values = elem.find('{%s}Values' % TNS)
-            if cls.is_binary_type():
-                return [safe_b64decode(val) for val in get_xml_attrs(values, '{%s}Value' % TNS)]
             return [
                 xml_text_to_value(value=val, value_type=python_type)
                 for val in get_xml_attrs(values, '{%s}Value' % TNS)
             ]
-        if cls.is_binary_type():
-            return safe_b64decode(get_xml_attr(elem, '{%s}Value' % TNS))
         extended_field_value = xml_text_to_value(value=get_xml_attr(elem, '{%s}Value' % TNS), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
@@ -243,22 +238,13 @@ class ExtendedProperty(EWSElement):
         if self.is_array_type():
             values = create_element('t:Values')
             for v in self.value:
-                if self.is_binary_type():
-                    add_xml_child(values, 't:Value', base64.b64encode(v).decode('ascii'))
-                else:
-                    add_xml_child(values, 't:Value', v)
+                add_xml_child(values, 't:Value', v)
             return values
-        val = base64.b64encode(self.value).decode('ascii') if self.is_binary_type() else self.value
-        return set_xml_value(create_element('t:Value'), val, version=version)
+        return set_xml_value(create_element('t:Value'), self.value, version=version)
 
     @classmethod
     def is_array_type(cls):
         return cls.property_type.endswith('Array')
-
-    @classmethod
-    def is_binary_type(cls):
-        # We can't just test python_type() == bytes, because str == bytes in Python2
-        return 'Binary' in cls.property_type
 
     @classmethod
     def property_tag_as_int(cls):

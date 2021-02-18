@@ -255,7 +255,7 @@ class CommonItemTest(BaseItemTest):
                         continue
 
                     f.is_searchable = True
-                    if f.name in ('reminder_due_by',):
+                    if f.name in ('reminder_due_by', 'conversation_index'):
                         # Filtering is accepted but doesn't work
                         self.assertEqual(
                             self.test_folder.filter(**filter_kwargs).count(),

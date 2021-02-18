@@ -1,6 +1,4 @@
 import abc
-import base64
-import binascii
 from collections import OrderedDict
 import datetime
 from decimal import Decimal, InvalidOperation
@@ -10,7 +8,7 @@ import logging
 from .errors import ErrorInvalidServerVersion
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
 from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
-    safe_b64decode, xml_text_to_value, TNS
+    xml_text_to_value, TNS
 from .version import Build, Version, EXCHANGE_2013
 
 log = logging.getLogger(__name__)
@@ -365,12 +363,18 @@ class FieldURIField(Field):
 
     def _get_val_from_elem(self, elem):
         if self.is_attribute:
-            return elem.get(self.field_uri)
-        field_elem = elem.find(self.response_tag())
-        return None if field_elem is None else field_elem.text or None
+            return elem.get(self.field_uri) or None
+        return get_xml_attr(elem, self.response_tag())
 
     def from_xml(self, elem, account):
-        raise NotImplementedError()
+        val = self._get_val_from_elem(elem)
+        if val is not None:
+            try:
+                return xml_text_to_value(val, self.value_cls)
+            except (ValueError, InvalidOperation):
+                log.warning("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
+                return None
+        return self.default
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
@@ -399,30 +403,9 @@ class FieldURIField(Field):
 class BooleanField(FieldURIField):
     value_cls = bool
 
-    def __init__(self, *args, **kwargs):
-        self.true_val = kwargs.pop('true_val', 'true')
-        self.false_val = kwargs.pop('false_val', 'false')
-        super().__init__(*args, **kwargs)
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return {
-                    self.true_val: True,
-                    self.false_val: False,
-                }[val.lower()]
-            except KeyError:
-                log.warning("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
-                return None
-        return self.default
-
 
 class OnOffField(BooleanField):
-    def __init__(self, *args, **kwargs):
-        kwargs['true_val'] = 'on'
-        kwargs['false_val'] = 'off'
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class IntegerField(FieldURIField):
@@ -433,32 +416,22 @@ class IntegerField(FieldURIField):
         self.max = kwargs.pop('max', None)
         super().__init__(*args, **kwargs)
 
+    def _clean_single_value(self, v):
+        if self.min is not None and v < self.min:
+            raise ValueError(
+                "Value %r on field '%s' must be greater than %s" % (v, self.name, self.min))
+        if self.max is not None and v > self.max:
+            raise ValueError("Value %r on field '%s' must be less than %s" % (v, self.name, self.max))
+
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if value is not None:
             if self.is_list:
                 for v in value:
-                    if self.min is not None and v < self.min:
-                        raise ValueError(
-                            "Value %r on field '%s' must be greater than %s" % (v, self.name, self.min))
-                    if self.max is not None and v > self.max:
-                        raise ValueError("Value %r on field '%s' must be less than %s" % (v, self.name, self.max))
+                    self._clean_single_value(v)
             else:
-                if self.min is not None and value < self.min:
-                    raise ValueError("Value %r on field '%s' must be greater than %s" % (value, self.name, self.min))
-                if self.max is not None and value > self.max:
-                    raise ValueError("Value %r on field '%s' must be less than %s" % (value, self.name, self.max))
+                self._clean_single_value(value)
         return value
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return self.value_cls(val)
-            except (ValueError, InvalidOperation):
-                log.warning("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
-                return None
-        return self.default
 
 
 class DecimalField(IntegerField):
@@ -536,14 +509,7 @@ class EnumAsIntField(EnumField):
     """Like EnumField, but communicates values with EWS in integers"""
 
     def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return int(val)
-            except ValueError:
-                log.warning("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
-                return None
-        return self.default
+        return super(EnumField, self).from_xml(elem=elem, account=account)
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
@@ -579,40 +545,16 @@ class Base64Field(FieldURIField):
             kwargs['is_searchable'] = False
         super().__init__(*args, **kwargs)
 
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return safe_b64decode(val)
-            except (TypeError, binascii.Error):
-                log.warning("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
-                return None
-        return self.default
-
-    def to_xml(self, value, version):
-        field_elem = create_element(self.request_tag())
-        return set_xml_value(field_elem, base64.b64encode(value).decode('ascii'), version=version)
-
 
 class MimeContentField(Base64Field):
     # This element has an optional 'CharacterSet' attribute, but it specifies the encoding of the base64-encoded
-    # string (which doesn't make sense since base64 encoded strings are always ASCII). We ignore it here because
+    # string (which doesn't make sense since base64-encoded strings are always ASCII). We ignore it here because
     # the decoded data could be in some other encoding, specified in the "Content-Type:" header.
     pass
 
 
 class DateField(FieldURIField):
     value_cls = EWSDate
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return self.value_cls.from_string(val)
-            except ValueError:
-                log.warning("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
-                return None
-        return self.default
 
 
 class DateTimeBackedDateField(FieldURIField):
@@ -757,12 +699,6 @@ class TextField(FieldURIField):
     """A field that stores a string value with no length limit"""
     value_cls = str
     is_complex = True
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            return val
-        return self.default
 
 
 class TextListField(TextField):
@@ -1410,7 +1346,7 @@ class BuildField(CharField):
         self.value_cls = Build
 
     def from_xml(self, elem, account):
-        val = super().from_xml(elem=elem, account=account)
+        val = self._get_val_from_elem(elem)
         if val:
             try:
                 return self.value_cls.from_hex_string(val)

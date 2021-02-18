@@ -1,4 +1,4 @@
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from codecs import BOM_UTF8
 from collections import OrderedDict
 import datetime
@@ -181,7 +181,6 @@ def get_xml_attrs(tree, name):
 
 
 def value_to_xml_text(value):
-    # We can't handle bytes in this function because str == bytes on Python2
     from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
     from .indexed_properties import PhoneNumber, EmailAddress
     from .properties import Mailbox, Attendee, ConversationId
@@ -189,6 +188,8 @@ def value_to_xml_text(value):
         return safe_xml_value(value)
     if isinstance(value, bool):
         return '1' if value else '0'
+    if isinstance(value, bytes):
+        return b64encode(value).decode('ascii')
     if isinstance(value, (int, Decimal)):
         return str(value)
     if isinstance(value, datetime.time):
@@ -213,15 +214,26 @@ def value_to_xml_text(value):
 
 
 def xml_text_to_value(value, value_type):
-    # We can't handle bytes in this function because str == bytes on Python2
-    from .ewsdatetime import EWSDateTime
+    from .ewsdatetime import EWSDate, EWSDateTime
+    if value_type == str:
+        return value
+    if value_type == bool:
+        try:
+            return {
+                'true': True,
+                'on': True,
+                'false': False,
+                'off': False,
+            }[value.lower()]
+        except KeyError:
+            return None
     return {
-        bool: lambda v: True if v == 'true' else False if v == 'false' else None,
+        bytes: safe_b64decode,
         int: int,
         Decimal: Decimal,
         datetime.timedelta: isodate.parse_duration,
+        EWSDate: EWSDate.from_string,
         EWSDateTime: EWSDateTime.from_string,
-        str: lambda v: v
     }[value_type](value)
 
 
