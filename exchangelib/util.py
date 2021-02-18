@@ -536,7 +536,7 @@ class PrettyXmlHandler(logging.StreamHandler):
     @staticmethod
     def highlight_xml(xml_str):
         # Highlights a string containing XML, using terminal color codes
-        return highlight(xml_str, XmlLexer(), TerminalFormatter())
+        return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
         """Pretty-print and syntax highlight a log statement if all these conditions are met:
@@ -726,8 +726,7 @@ Status code: %(status_code)s
 Request headers: %(request_headers)s
 Response headers: %(response_headers)s
 Request data: %(xml_request)s
-Response data: %(xml_response)s
-'''
+Response data: %(xml_response)s'''
     log_vals = dict(
         retry=retry,
         wait=wait,
