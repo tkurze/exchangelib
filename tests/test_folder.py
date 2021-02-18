@@ -11,7 +11,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
 from exchangelib.properties import Mailbox, InvalidField
 from exchangelib.services import GetFolder
 
-from .common import EWSTest, get_random_string
+from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes
 
 
 class FolderTest(EWSTest):
@@ -508,15 +508,26 @@ class FolderTest(EWSTest):
             f.get_user_configuration(name=name)
 
         # Create a config
-        f.create_user_configuration(
-            name=name, dictionary={'foo': 'bar', 123: 'a', 'b': False}, xml_data=b'<foo>bar</foo>', binary_data=b'XXX'
-        )
+        dictionary = {
+            get_random_bool(): get_random_datetime(tz=self.account.default_timezone),
+            get_random_int(): get_random_bool(),
+            # get_random_bytes(16): get_random_int(),  # TODO: bytes not accepted as key for some reason
+            get_random_string(8): get_random_int(),
+            # get_random_string(8): get_random_bytes(16),  # TODO: bytes not accepted as value for some reason
+            get_random_string(8): get_random_string(8),
+            get_random_datetime(tz=self.account.default_timezone): get_random_string(8),
+            tuple(get_random_string(4, spaces=False) for _ in range(4)):
+                tuple(get_random_string(10, spaces=False) for _ in range(2)),
+        }
+        xml_data = b'<foo>%s</foo>' % get_random_string(16).encode('utf-8')
+        binary_data = get_random_bytes(100)
+        f.create_user_configuration(name=name, dictionary=dictionary, xml_data=xml_data, binary_data=binary_data)
 
         # Fetch and compare values
         config = f.get_user_configuration(name=name)
-        self.assertEqual(config.dictionary, {'foo': 'bar', 123: 'a', 'b': False})
-        self.assertEqual(config.xml_data, b'<foo>bar</foo>')
-        self.assertEqual(config.binary_data, b'XXX')
+        self.assertEqual(config.dictionary, dictionary)
+        self.assertEqual(config.xml_data, xml_data)
+        self.assertEqual(config.binary_data, binary_data)
 
         # Cannot create one more with the same name
         with self.assertRaises(ErrorItemSave):

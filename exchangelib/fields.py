@@ -1395,12 +1395,21 @@ class TypeValueField(FieldURIField):
         'StringArray': str,
         'ByteArray': bytes,
     }
-    TYPES_MAP_REVERSED = {v: k for k, v in TYPES_MAP.items() if not k.endswith('Array')}
+    TYPES_MAP_REVERSED = {
+        EWSDateTime: 'DateTime',
+        bool: 'Boolean',
+        bytes: 'Byte',
+        str: 'String',
+        int: 'Integer64',
+    }
 
     @classmethod
     def get_type(cls, value):
         if is_iterable(value):
-            return '%sArray' % cls.TYPES_MAP_REVERSED[type(list(value)[0])]
+            value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(list(value)[0])]
+            if value_type not in cls.TYPES_MAP:
+                raise ValueError('%r is not a supported type' % value)
+            return value_type
         return cls.TYPES_MAP_REVERSED[type(value)]
 
     def clean(self, value, version=None):
@@ -1414,23 +1423,22 @@ class TypeValueField(FieldURIField):
         field_elem = elem.find(self.response_tag())
         if field_elem is None:
             return self.default
-        value_type = get_xml_attr(field_elem, '{%s}Type' % TNS)
+        value_type_str = get_xml_attr(field_elem, '{%s}Type' % TNS)
+        value_type = self.TYPES_MAP[value_type_str]
         value = get_xml_attr(field_elem, '{%s}Value' % TNS)
-        if value_type.endswith('Array'):
-            raise NotImplementedError()
-        if value_type.startswith('Byte'):
-            # safe_b64decode()
-            raise NotImplementedError()
-        return xml_text_to_value(value=value, value_type=self.TYPES_MAP[value_type])
+        if value_type_str.endswith('Array'):
+            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(' '))
+        return xml_text_to_value(value=value, value_type=value_type)
 
     def to_xml(self, value, version):
+        value_type = self.get_type(value)
+        if value_type == bool:
+            # TODO: this *should* work, but base64-encoded keys and values are not accepted by EWS
+            raise ValueError('Binary data is not yet supported for keys or values')
         if is_iterable(value):
-            raise NotImplementedError()
-        if isinstance(value, bytes):
-            # base64.b64encode(self.value).decode('ascii')
-            raise NotImplementedError()
+            value = ' '.join(value_to_xml_text(v) for v in value)
         field_elem = create_element(self.request_tag())
-        field_elem.append(set_xml_value(create_element('t:Type'), self.get_type(value), version=version))
+        field_elem.append(set_xml_value(create_element('t:Type'), value_type, version=version))
         field_elem.append(set_xml_value(create_element('t:Value'), value, version=version))
         return field_elem
 

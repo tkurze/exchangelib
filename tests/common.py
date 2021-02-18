@@ -151,7 +151,7 @@ class EWSTest(TimedTestCase):
         if isinstance(field, TextField):
             return get_random_string(400)
         if isinstance(field, MimeContentField):
-            return get_random_bytes(400)
+            return get_random_string(400).encode('utf-8')
         if isinstance(field, Base64Field):
             return get_random_bytes(400)
         if isinstance(field, BooleanField):
@@ -167,7 +167,7 @@ class EWSTest(TimedTestCase):
         if isinstance(field, DateTimeField):
             return get_random_datetime(tz=self.account.default_timezone)
         if isinstance(field, AttachmentField):
-            return [FileAttachment(name='my_file.txt', content=get_random_bytes(400))]
+            return [FileAttachment(name='my_file.txt', content=get_random_string(400).encode('utf-8'))]
         if isinstance(field, MailboxListField):
             # email_address must be a real account on the server(?)
             # TODO: Mailbox has multiple optional args but vals must match server account, so we can't easily test
@@ -299,8 +299,8 @@ def get_random_string(length, spaces=True, special=True):
     return res
 
 
-def get_random_bytes(*args, **kwargs):
-    return get_random_string(*args, **kwargs).encode('utf-8')
+def get_random_bytes(length):
+    return bytes(get_random_int(max_val=255) for _ in range(length))
 
 
 def get_random_url():
