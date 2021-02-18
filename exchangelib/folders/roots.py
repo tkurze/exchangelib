@@ -67,8 +67,8 @@ class RootOfHierarchy(BaseFolder):
             raise TypeError('For folder roots, custom fields must be registered on the RootOfHierarchy class')
         return super().deregister(*args, **kwargs)
 
-    def get_folder(self, folder_id):
-        return self._folders_map.get(folder_id, None)
+    def get_folder(self, folder):
+        return self._folders_map.get(folder.id, None)
 
     def add_folder(self, folder):
         if not folder.id:
@@ -253,8 +253,8 @@ class Root(RootOfHierarchy):
         # Try direct children of TOIS first. TOIS might not exist.
         try:
             return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-        except ErrorFolderNotFound:
-            # No candidates, or TOIS does ot exist
+        except (ErrorFolderNotFound, ErrorItemNotFound):
+            # No candidates, or TOIS does not exist, or we don't have access
             pass
 
         # No candidates in TOIS. Try direct children of root.

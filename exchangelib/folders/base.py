@@ -675,7 +675,7 @@ class Folder(BaseFolder):
         if self.parent_folder_id.id == self.id:
             # Some folders have a parent that references itself. Avoid circular references here
             return None
-        return self.root.get_folder(self.parent_folder_id.id)
+        return self.root.get_folder(self.parent_folder_id)
 
     @parent.setter
     def parent(self, value):
