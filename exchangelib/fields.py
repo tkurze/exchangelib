@@ -1389,7 +1389,7 @@ class TypeValueField(FieldURIField):
         'UnsignedInteger32': int,
         'Integer64': int,
         'UnsignedInteger64': int,
-        # 'Byte': bytes,  # TODO: I cannot find documentation on the format of values of this type
+        # Python doesn't have a single-byte type to represent 'Byte'
         'ByteArray': bytes,
         'String': str,
         'StringArray': str,  # A list of strings
@@ -1398,6 +1398,7 @@ class TypeValueField(FieldURIField):
     TYPES_MAP_REVERSED = {
         bool: 'Boolean',
         int: 'Integer64',
+        # Python doesn't have a single-byte type to represent 'Byte'
         bytes: 'ByteArray',
         str: 'String',
         EWSDateTime: 'DateTime',
@@ -1405,6 +1406,9 @@ class TypeValueField(FieldURIField):
 
     @classmethod
     def get_type(cls, value):
+        if isinstance(value, bytes) and len(value) == 1:
+            # This is a single byte. Translate it to the 'Byte' type
+            return 'Byte'
         if is_iterable(value):
             value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
             if value_type not in cls.TYPES_MAP:
@@ -1428,18 +1432,28 @@ class TypeValueField(FieldURIField):
         if field_elem is None:
             return self.default
         value_type_str = get_xml_attr(field_elem, '{%s}Type' % TNS)
-        value_type = self.TYPES_MAP[value_type_str]
         value = get_xml_attr(field_elem, '{%s}Value' % TNS)
+        if value_type_str == 'Byte':
+            try:
+                # The value is an unsigned integer in the range 0 -> 255. Convert it to a single byte
+                return xml_text_to_value(value, int).to_bytes(1, 'little', signed=False)
+            except OverflowError as e:
+                log.warning('Invalid byte value %r (%e)', value, e)
+                return None
+        value_type = self.TYPES_MAP[value_type_str]
         if self. is_array_type(value_type_str):
             return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(' '))
         return xml_text_to_value(value=value, value_type=value_type)
 
     def to_xml(self, value, version):
-        value_type = self.get_type(value)
-        if is_iterable(value):
+        value_type_str = self.get_type(value)
+        if value_type_str == 'Byte':
+            # A single byte is encoded to an unsigned integer in the range 0 -> 255
+            value = int.from_bytes(value, byteorder='little', signed=False)
+        elif is_iterable(value):
             value = ' '.join(value_to_xml_text(v) for v in value)
         field_elem = create_element(self.request_tag())
-        field_elem.append(set_xml_value(create_element('t:Type'), value_type, version=version))
+        field_elem.append(set_xml_value(create_element('t:Type'), value_type_str, version=version))
         field_elem.append(set_xml_value(create_element('t:Value'), value, version=version))
         return field_elem
 

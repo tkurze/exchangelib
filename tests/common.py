@@ -299,6 +299,10 @@ def get_random_string(length, spaces=True, special=True):
     return res
 
 
+def get_random_byte():
+    return get_random_bytes(1)
+
+
 def get_random_bytes(length):
     return bytes(get_random_int(max_val=255) for _ in range(length))
 

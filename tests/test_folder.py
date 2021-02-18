@@ -11,7 +11,8 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
 from exchangelib.properties import Mailbox, InvalidField
 from exchangelib.services import GetFolder
 
-from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes
+from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
+    get_random_byte
 
 
 class FolderTest(EWSTest):
@@ -508,11 +509,11 @@ class FolderTest(EWSTest):
             f.get_user_configuration(name=name)
 
         # Create a config
-        # TODO: the 'Byte' type is untested
         dictionary = {
             get_random_bool(): get_random_datetime(tz=self.account.default_timezone),
             get_random_int(): get_random_bool(),
-            get_random_bytes(16): get_random_int(),
+            get_random_byte(): get_random_int(),
+            get_random_bytes(16): get_random_byte(),
             get_random_string(8): get_random_bytes(16),
             get_random_datetime(tz=self.account.default_timezone): get_random_string(8),
             tuple(get_random_string(4, spaces=False) for _ in range(4)):
