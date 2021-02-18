@@ -397,6 +397,16 @@ class EWSService(metaclass=abc.ABCMeta):
                 if elem is not None:
                     field_uri = elem_cls.from_xml(elem, account=None)
                     text += ' (field: %s)' % field_uri
+                    break
+            if code == 'ErrorInvalidValueForProperty':
+                msg_parts = {}
+                for elem in msg_xml.findall('{%s}Value' % TNS):
+                    key, val = elem.get('Name'), elem.text
+                    if key:
+                        msg_parts[key] = val
+                if msg_parts:
+                    text += ' (%s)' % ', '.join('%s: %s' % (k, v) for k, v in msg_parts.items())
+
             # If this is an ErrorInternalServerError error, the xml may contain a more specific error code
             inner_code, inner_text = None, None
             for value_elem in msg_xml.findall('{%s}Value' % TNS):
