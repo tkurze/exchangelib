@@ -41,7 +41,7 @@ jobs:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         coverage run --source=exchangelib -m unittest
-        coveralls
+        coveralls --service=github
     - name: Clean up test account
       run: |
         PYTHONPATH=./ python scripts/wipe_test_account.py
