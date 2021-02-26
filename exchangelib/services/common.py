@@ -14,7 +14,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorItemSave, ErrorInvalidIdMalformed, ErrorMessageSizeExceeded, UnauthorizedError, \
     ErrorCannotDeleteTaskOccurrence, ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence, \
     ErrorNoPublicFolderReplicaAvailable, MalformedResponseError, ErrorExceededConnectionCount, \
-    SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest
+    SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI
 from ..transport import wrap, extra_headers
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
@@ -60,7 +60,7 @@ class EWSService(metaclass=abc.ABCMeta):
     ERRORS_TO_CATCH_IN_RESPONSE = (
         EWSWarning, ErrorCannotDeleteObject, ErrorInvalidChangeKey, ErrorItemNotFound, ErrorItemSave,
         ErrorInvalidIdMalformed, ErrorMessageSizeExceeded, ErrorCannotDeleteTaskOccurrence,
-        ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence,
+        ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence, ErrorCorruptData
     )
     # Similarly, define the warnings we want to return unraised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped

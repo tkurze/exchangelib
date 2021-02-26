@@ -1,0 +1,47 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+      max-parallel: 1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      env:
+          AES_256_CBC_PASS: ${{ secrets.AES_256_CBC_PASS }}
+      run: |
+        openssl aes-256-cbc -d -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
+        python -m pip install --upgrade pip
+        if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install hg+https://foss.heptapod.net/pypy/cffi ; fi
+        if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/cython/cython.git ; fi
+        if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/lxml/lxml.git ; fi
+        if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/yaml/pyyaml.git ; fi
+        python -m pip install .
+        python -m pip install PyYAML requests_mock psutil coverage coveralls flake8 python-dateutil pytz
+    - name: Test with pytest
+      env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        coverage run --source=exchangelib -m unittest
+        coveralls --service=github
+    - name: Clean up test account
+      run: |
+        PYTHONPATH=./ python scripts/wipe_test_account.py
