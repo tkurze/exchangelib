@@ -46,7 +46,6 @@ Apart from this documentation, we also provide online
 * [Non-account services](#non-account-services)
 * [Troubleshooting](#troubleshooting)
 * [Tests](#tests)
-* [Notes](#notes)
 
 
 ## Installation
@@ -478,6 +477,7 @@ when working with dates.
 
 ```python
 from datetime import datetime, timedelta
+import dateutil.tz
 import pytz
 from exchangelib import EWSTimeZone, EWSDateTime, EWSDate
 
@@ -509,8 +509,8 @@ from exchangelib import UTC, UTC_NOW
 right_now_in_utc = EWSDateTime.now(tz=UTC)
 right_now_in_utc = UTC_NOW()
 
-# Already have a 'pytz' or 'dateutil' timezone you want to use? Then convert is using from_pytz()
-or from_dateutil().
+# Already have a 'pytz' or 'dateutil' timezone you want to use? Then convert it
+# using from_pytz() or from_dateutil().
 pytz_tz = pytz.timezone('Europe/Copenhagen')
 tz = EWSTimeZone.from_pytz(pytz_tz)
 dateutil_tz = dateutil.tz.gettz('Europe/Copenhagen')
