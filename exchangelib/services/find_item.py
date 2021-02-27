@@ -1,19 +1,21 @@
 from collections import OrderedDict
 
 from ..util import create_element, set_xml_value, TNS
-from .common import EWSFolderService, PagingEWSMixIn, create_shape_element
+from .common import EWSAccountService, create_shape_element
 
 
-class FindItem(EWSFolderService, PagingEWSMixIn):
+class FindItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem"""
     SERVICE_NAME = 'FindItem'
     element_container_name = '{%s}Items' % TNS
+    supports_paging = True
 
-    def call(self, additional_fields, restriction, order_fields, shape, query_string, depth, calendar_view, max_items,
-             offset):
+    def call(self, folders, additional_fields, restriction, order_fields, shape, query_string, depth, calendar_view,
+             max_items, offset):
         """Find items in an account.
 
         Args:
+          folders: the folders to act on
           additional_fields: the extra fields that should be returned with the item, as FieldPath objects
           restriction: a Restriction object for
           order_fields: the fields to sort the results by
@@ -28,20 +30,26 @@ class FindItem(EWSFolderService, PagingEWSMixIn):
           XML elements for the matching items
 
         """
-        return self._paged_call(payload_func=self.get_payload, max_items=max_items, **dict(
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            query_string=query_string,
-            shape=shape,
-            depth=depth,
-            calendar_view=calendar_view,
-            page_size=self.chunk_size,
-            offset=offset,
-        ))
+        return self._paged_call(
+            payload_func=self.get_payload,
+            max_items=max_items,
+            expected_message_count=len(folders),
+            **dict(
+                folders=folders,
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                query_string=query_string,
+                shape=shape,
+                depth=depth,
+                calendar_view=calendar_view,
+                page_size=self.chunk_size,
+                offset=offset,
+            )
+        )
 
-    def get_payload(self, additional_fields, restriction, order_fields, query_string, shape, depth, calendar_view,
-                    page_size, offset=0):
+    def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
+                    calendar_view, page_size, offset=0):
         finditem = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))
         itemshape = create_shape_element(
             tag='m:ItemShape', shape=shape, additional_fields=additional_fields, version=self.account.version
@@ -69,7 +77,7 @@ class FindItem(EWSFolderService, PagingEWSMixIn):
             ))
         finditem.append(set_xml_value(
             create_element('m:ParentFolderIds'),
-            self.folders,
+            folders,
             version=self.account.version
         ))
         if query_string:

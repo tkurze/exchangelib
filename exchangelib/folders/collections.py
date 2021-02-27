@@ -196,7 +196,8 @@ class FolderCollection(SearchableMixIn):
             additional_fields,
             restriction.q if restriction else None,
         )
-        items = FindItem(account=self.account, folders=self.folders, chunk_size=page_size).call(
+        items = FindItem(account=self.account, chunk_size=page_size).call(
+            folders=self.folders,
             additional_fields=additional_fields,
             restriction=restriction,
             order_fields=order_fields,
@@ -312,7 +313,8 @@ class FolderCollection(SearchableMixIn):
             (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
         )
 
-        for f in FindFolder(account=self.account, folders=self.folders, chunk_size=page_size).call(
+        for f in FindFolder(account=self.account, chunk_size=page_size).call(
+                folders=self.folders,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 shape=shape,

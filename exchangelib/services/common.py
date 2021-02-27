@@ -3,6 +3,7 @@ from itertools import chain
 import logging
 import traceback
 
+from ..credentials import IMPERSONATION, OAuth2Credentials
 from .. import errors
 from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired, ErrorBatchProcessingStopped, \
     ErrorQuotaExceeded, ErrorCannotDeleteObject, ErrorCreateItemAccessDenied, ErrorFolderNotFound, \
@@ -19,6 +20,7 @@ from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionF
 from ..transport import wrap, extra_headers
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
     xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError
+from ..version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
 
@@ -66,10 +68,14 @@ class EWSService(metaclass=abc.ABCMeta):
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
     # Define the warnings we want to ignore, to let response processing proceed
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
+    # The exception type to raise when all attempted API versions failed
+    NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
     # Controls whether the HTTP request should be streaming or fetch everything at once
     streaming = False
     # Marks the version from which the service was introduced
     supported_from = None
+    # Marks services that support paging of requested items
+    supports_paging = False
 
     def __init__(self, protocol, chunk_size=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
@@ -88,15 +94,26 @@ class EWSService(metaclass=abc.ABCMeta):
 
     # @abc.abstractmethod
     # def call(self, **kwargs):
+    #     """Defines the arguments required by the service. Arguments are basic Python types or EWSElement objects.
+    #     Returns either XML objects or EWSElement objects.
+    #     """"
     #     raise NotImplementedError()
 
     # @abc.abstractmethod
     # def get_payload(self, **kwargs):
+    #     """Using the arguments from .call(), return the payload expected by the service, as an XML object. The XML
+    #     object should consist of a SERVICE_NAME element and everything within that.
+    #     """
     #     raise NotImplementedError()
 
     def get(self, expect_result=True, **kwargs):
-        # Calls the service but expects exactly one result, or None when expect_result=False, or None or exactly one
-        # result when expect_result=None.
+        """Like .call(), but expects exactly one result from the server, or zero when expect_result=False, or either
+        zero or one when expect_result=None. Returns either one object or None.
+
+        :param expect_result: None, True, or False
+        :param kwargs: Same as arguments for .call()
+        :return: Same as .call(), but returns either None or exactly one item
+        """
         res = list(self.call(**kwargs))
         if expect_result is None and not res:
             # Allow empty result
@@ -111,19 +128,55 @@ class EWSService(metaclass=abc.ABCMeta):
             raise res[0]
         return res[0]
 
+    @property
+    def _version_hint(self):
+        # We may be here due to version guessing in Protocol.version, so we can't use the self.protocol.version property
+        return self.protocol.config.version
+
+    @_version_hint.setter
+    def _version_hint(self, value):
+        self.protocol.config.version = value
+
+    @property
+    def _headers(self):
+        return extra_headers(primary_smtp_address=None)
+
+    @property
+    def _account_to_impersonate(self):
+        if isinstance(self.protocol.credentials, OAuth2Credentials):
+            return self.protocol.credentials.identity
+        return None
+
+    @property
+    def _timezone(self):
+        return None
+
     def _response_generator(self, payload):
-        # Send the request, get the response and do basic sanity checking on the SOAP XML
+        """Sends the payload to the server, and returns the response
+        :param payload: payload as an XML object
+        :return: the response, as XML objects
+        """
         response = self._get_response_xml(payload=payload)
-        # Read the XML and throw any general EWS error messages
+        if self.supports_paging:
+            return (self._get_page(message) for message in response)
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
-        # Chop items list into suitable pieces
+        """Like ._get_elements(), but Chop items list into suitable pieces
+
+        :param payload_func: A reference to .payload()
+        :param items: An iterable of items (messages, folders, etc.) to process
+        :param kwargs: Same as arguments for .call(), except for the 'items' argument
+        :return: Same as ._get_elements()
+        """
         for i, chunk in enumerate(chunkify(items, self.chunk_size), start=1):
             log.debug('Processing chunk %s containing %s items', i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def _get_elements(self, payload):
+        """Sends the payload to be sent and parsed. Handles and re-raises exceptions that are not meant to be returned
+        to the caller as exception objects. Retries the request according to the retry policy.
+        """
         while True:
             try:
                 # Create a generator over the response elements so exceptions in response elements are also raised
@@ -159,27 +212,24 @@ class EWSService(metaclass=abc.ABCMeta):
                 raise
 
     def _get_response_xml(self, payload, **parse_opts):
-        # Takes an XML tree and returns SOAP payload as an XML tree
+        """Sends the payload to the server and returns relevant elements from the result. Several things happen here:
+          * The payload is wrapped in SOAP headers
+          * The Exchange API version is negotiated and stored in the protocol object
+          * Connection errors are handled and possibly reraised as ErrorServerBusy
+          * SOAP errors are raised
+          * EWS errors are raised, or passed on to the caller
+
+        :param payload: The request payload, as an XML object
+        :return: A generator of XML objects or None if the service does not return a result
+        """
+        version_hint = self._version_hint
+        headers = self._headers
+        account_to_impersonate = self._account_to_impersonate
+        timezone = self._timezone
+
         # Microsoft really doesn't want to make our lives easy. The server may report one version in our initial version
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
-        # the request for an account. Prepare to handle ErrorInvalidSchemaVersionForMailboxVersion errors and set the
-        # server version per-account.
-        from ..credentials import IMPERSONATION, OAuth2Credentials
-        from ..version import API_VERSIONS
-        account_to_impersonate = None
-        timezone = None
-        primary_smtp_address = None
-        if isinstance(self, EWSAccountService):
-            version_hint = self.account.version
-            if self.account.access_type == IMPERSONATION:
-                account_to_impersonate = self.account.identity
-            timezone = self.account.default_timezone
-            primary_smtp_address = self.account.primary_smtp_address
-        else:
-            # We may be here due to version guessing in Protocol.version, so we can't use the Protocol.version property
-            version_hint = self.protocol.config.version
-            if isinstance(self.protocol.credentials, OAuth2Credentials):
-                account_to_impersonate = self.protocol.credentials.identity
+        # the request for an account. Prepare to handle version-related errors and set the server version per-account.
         api_versions = [version_hint.api_version] + [v for v in API_VERSIONS if v != version_hint.api_version]
         for api_version in api_versions:
             log.debug('Trying API version %s', api_version)
@@ -187,7 +237,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 protocol=self.protocol,
                 session=self.protocol.get_session(),
                 url=self.protocol.service_endpoint,
-                headers=extra_headers(primary_smtp_address=primary_smtp_address),
+                headers=headers,
                 data=wrap(
                     content=payload,
                     api_version=api_version,
@@ -240,13 +290,17 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        if isinstance(self, EWSAccountService):
-            raise ErrorInvalidSchemaVersionForMailboxVersion('Tried versions %s but all were invalid' % api_versions)
-        raise ErrorInvalidServerVersion('Tried versions %s but all were invalid' % api_versions)
+        raise self.NO_VALID_SERVER_VERSIONS('Tried versions %s but all were invalid' % api_versions)
 
     def _handle_backoff(self, e):
+        """Takes a request from the server to back off and checks the retry policy for what to do. Re-raises the
+        exception if conditions are not met.
+
+        :param e: An ErrorServerBusy instance
+        :return:
+        """
         log.debug('Got ErrorServerBusy (back off %s seconds)', e.back_off)
-        # ErrorServerBusy is very often a symptom of sending too many requests. Scale back if possible.
+        # ErrorServerBusy is very often a symptom of sending too many requests. Scale back connections if possible.
         try:
             self.protocol.decrease_poolsize()
         except SessionPoolMinSizeReached:
@@ -257,33 +311,40 @@ class EWSService(metaclass=abc.ABCMeta):
         # We'll warn about this later if we actually need to sleep
 
     def _update_api_version(self, version_hint, api_version, header, **parse_opts):
-        from ..version import Version
+        """Parses the server version contained in SOAP headers and updates the version hint stored by the caller, if
+        necessary.
+        """
         head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
         if version_hint == head_version:
             # Nothing to do
             return
         log.debug('Found new version (%s -> %s)', version_hint, head_version)
-        # The api_version that worked was different than our hint, or we never got a build version. Set new
-        # version for account.
-        if isinstance(self, EWSAccountService):
-            self.account.version = head_version
-        else:
-            self.protocol.config.version = head_version
+        # The api_version that worked was different than our hint, or we never got a build version. Store the working
+        # version.
+        self._version_hint = head_version
 
     @classmethod
     def _response_tag(cls):
+        """The name of the element containing the service response
+        """
         return '{%s}%sResponse' % (MNS, cls.SERVICE_NAME)
 
     @staticmethod
     def _response_messages_tag():
+        """The name of the element containing service response messages
+        """
         return '{%s}ResponseMessages' % MNS
 
     @classmethod
     def _response_message_tag(cls):
+        """The name of the element of a single response message
+        """
         return '{%s}%sResponseMessage' % (MNS, cls.SERVICE_NAME)
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
+        """Split the SOAP response into its headers an body elements
+        """
         root = to_xml(response.iter_content())
         header = root.find('{%s}Header' % SOAPNS)
         if header is None:
@@ -296,6 +357,8 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_soap_messages(cls, body, **parse_opts):
+        """Returns the elements in the response containing the response messages. Raises any SOAP exceptions.
+        """
         response = body.find(cls._response_tag())
         if response is None:
             fault = body.find('{%s}Fault' % SOAPNS)
@@ -313,6 +376,8 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _raise_soap_errors(cls, fault):
+        """Parse error messages contained in SOAP headers and raise as exceptions defined in this package
+        """
         # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
         faultcode = get_xml_attr(fault, 'faultcode')
         faultstring = get_xml_attr(fault, 'faultstring')
@@ -350,14 +415,34 @@ class EWSService(metaclass=abc.ABCMeta):
             faultcode, faultstring, faultactor, detail))
 
     def _get_element_container(self, message, name=None):
-        # ResponseClass: See
+        """Returns the XML element in a response element that contains the elements we want the service to return. For
+        example, in a GetFolder response, 'message' is the GetFolderResponseMessage element, and we return the 'Folders'
+        element:
+
+        <m:GetFolderResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Folders>
+            <t:Folder>
+              <t:FolderId Id="AQApA=" ChangeKey="AQAAAB" />
+              [...]
+            </t:Folder>
+          </m:Folders>
+        </m:GetFolderResponseMessage>
+
+        Some service responses don't have a containing element for the returned elements ('name' is None). In
+        that case, we return the 'SomeServiceResponseMessage' element.
+
+        If the response contains a warning or an error message, we raise the relevant exception, unless the error class
+        is contained in WARNINGS_TO_CATCH_IN_RESPONSE or ERRORS_TO_CATCH_IN_RESPONSE, in which case we return the
+        exception instance.
+        """
+        # ResponseClass is an XML attribute of various SomeServiceResponseMessage elements: Possible values are:
+        # Success, Warning, Error. See e.g.
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditemresponsemessage
         response_class = message.get('ResponseClass')
         # ResponseCode, MessageText: See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
         response_code = get_xml_attr(message, '{%s}ResponseCode' % MNS)
-        msg_text = get_xml_attr(message, '{%s}MessageText' % MNS)
-        msg_xml = message.find('{%s}MessageXml' % MNS)
         if response_class == 'Success' and response_code == 'NoError':
             if not name:
                 return message
@@ -368,6 +453,8 @@ class EWSService(metaclass=abc.ABCMeta):
         if response_code == 'NoError':
             return True
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
+        msg_text = get_xml_attr(message, '{%s}MessageText' % MNS)
+        msg_xml = message.find('{%s}MessageXml' % MNS)
         if response_class == 'Warning':
             try:
                 raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
@@ -387,6 +474,8 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_exception(code, text, msg_xml):
+        """Parse error messages contained in EWS responses and raise as exceptions defined in this package
+        """
         if not code:
             return TransportError('Empty ResponseCode in ResponseMessage (MessageText: %s, MessageXml: %s)' % (
                 text, msg_xml))
@@ -398,6 +487,8 @@ class EWSService(metaclass=abc.ABCMeta):
                     field_uri = elem_cls.from_xml(elem, account=None)
                     text += ' (field: %s)' % field_uri
                     break
+
+            # If this is an ErrorInvalidValueForProperty error, the xml may contain the name and value of the property
             if code == 'ErrorInvalidValueForProperty':
                 msg_parts = {}
                 for elem in msg_xml.findall('{%s}Value' % TNS):
@@ -431,6 +522,30 @@ class EWSService(metaclass=abc.ABCMeta):
                     code, text, msg_xml))
 
     def _get_elements_in_response(self, response):
+        """Takes a list of 'SomeServiceResponseMessage' elements and returns the elements in each response message that
+        we want the service to return. With e.g. 'CreateItem', we get a list of 'CreateItemResponseMessage' elements
+        and return the 'Message' elements.
+
+        <m:CreateItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:Message>
+              <t:ItemId Id="AQApA=" ChangeKey="AQAAAB"/>
+            </t:Message>
+          </m:Items>
+        </m:CreateItemResponseMessage>
+        <m:CreateItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:Message>
+              <t:ItemId Id="AQApB=" ChangeKey="AQAAAC"/>
+            </t:Message>
+          </m:Items>
+        </m:CreateItemResponseMessage>
+
+        :param response: a list of 'SomeServiceResponseMessage' XML objects
+        :return: a generator of items as returned by '_get_elements_in_container()
+        """
         for msg in response:
             container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
             if isinstance(container_or_exc, (bool, Exception)):
@@ -441,49 +556,32 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_elements_in_container(cls, container):
+        """Returns a list of response elements from an XML response element container. With e.g.
+        'CreateItem', 'Items' is the container element and we return the 'Message' child elements:
+
+          <m:Items>
+            <t:Message>
+              <t:ItemId Id="AQApA=" ChangeKey="AQAAAB"/>
+            </t:Message>
+          </m:Items>
+
+        If the service does not return response elements, return True to indicate the status. Errors have already been
+        raised.
+        """
         if cls.returns_elements:
             return [elem for elem in container]
         return [True]
 
-
-class EWSAccountService(EWSService):
-
-    def __init__(self, *args, **kwargs):
-        self.account = kwargs.pop('account')
-        kwargs['protocol'] = self.account.protocol
-        super().__init__(*args, **kwargs)
-
-
-class EWSFolderService(EWSAccountService):
-
-    def __init__(self, *args, **kwargs):
-        self.folders = kwargs.pop('folders')
-        if not self.folders:
-            raise ValueError('"folders" must not be empty')
-        super().__init__(*args, **kwargs)
-
-
-class PagingEWSMixIn(EWSService):
-    def _response_generator(self, payload):
-        response = self._get_response_xml(payload=payload)
-        # Collect a tuple of (rootfolder, next_offset) tuples
-        return (self._get_page(message) for message in response)
-
-    def _paged_call(self, payload_func, max_items, **kwargs):
-        if isinstance(self, EWSAccountService):
-            log_prefix = 'EWS %s, account %s, service %s' % (
-                self.protocol.service_endpoint, self.account, self.SERVICE_NAME)
-        else:
-            log_prefix = 'EWS %s, service %s' % (self.protocol.service_endpoint, self.SERVICE_NAME)
-        if isinstance(self, EWSFolderService):
-            expected_message_count = len(self.folders)
-        else:
-            expected_message_count = 1
+    def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
+        """Call a service that supports paging requests. Return a generator over all response items. Keeps track of
+        all paging-related counters.
+        """
         paging_infos = [dict(item_count=0, next_offset=None) for _ in range(expected_message_count)]
         common_next_offset = kwargs['offset']
         total_item_count = 0
         while True:
-            log.debug('%s: Getting items at offset %s (max_items %s)', log_prefix, common_next_offset, max_items)
+            log.debug('EWS %s, service %s: Getting items at offset %s (max_items %s)', self.protocol.service_endpoint,
+                      self.SERVICE_NAME, common_next_offset, max_items)
             kwargs['offset'] = common_next_offset
             payload = payload_func(**kwargs)
             parsed_pages = list(self._get_elements(payload=payload))
@@ -545,6 +643,8 @@ class PagingEWSMixIn(EWSService):
             common_next_offset = min(next_offsets)
 
     def _get_page(self, message):
+        """Get a single page from a request message, and return the container and next offset
+        """
         rootfolder = self._get_element_container(message=message, name='{%s}RootFolder' % MNS)
         if isinstance(rootfolder, Exception):
             return rootfolder, None
@@ -561,6 +661,39 @@ class PagingEWSMixIn(EWSService):
             rootfolder = None
         log.debug('%s: Got page with next offset %s (last_page %s)', self.SERVICE_NAME, next_offset, is_last_page)
         return rootfolder, next_offset
+
+
+class EWSAccountService(EWSService):
+    """Base class for services that act on items concerning a single Mailbox on the server
+    """
+    NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
+
+    def __init__(self, *args, **kwargs):
+        self.account = kwargs.pop('account')
+        kwargs['protocol'] = self.account.protocol
+        super().__init__(*args, **kwargs)
+
+    @property
+    def _version_hint(self):
+        return self.account.version
+
+    @_version_hint.setter
+    def _version_hint(self, value):
+        self.account.version = value
+
+    @property
+    def _headers(self):
+        return extra_headers(primary_smtp_address=self.account.primary_smtp_address)
+
+    @property
+    def _account_to_impersonate(self):
+        if self.account.access_type == IMPERSONATION:
+            return self.account.identity
+        return None
+
+    @property
+    def _timezone(self):
+        return self.account.default_timezone
 
 
 def to_item_id(item, item_cls, version):

@@ -59,7 +59,7 @@ class ServicesTest(EWSTest):
         version = mock_version(build=EXCHANGE_2010)
         protocol = mock_protocol(version=version, service_endpoint='example.com')
         account = mock_account(version=version, protocol=protocol)
-        ws = FindFolder(account=account, folders=[None])
+        ws = FindFolder(account=account)
         xml = b'''\
 <s:Envelope
         xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">

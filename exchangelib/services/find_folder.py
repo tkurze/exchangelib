@@ -2,18 +2,20 @@ from collections import OrderedDict
 
 from ..util import create_element, set_xml_value, TNS
 from ..version import EXCHANGE_2010
-from .common import EWSFolderService, PagingEWSMixIn, create_shape_element
+from .common import EWSAccountService, create_shape_element
 
 
-class FindFolder(EWSFolderService, PagingEWSMixIn):
+class FindFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder"""
     SERVICE_NAME = 'FindFolder'
     element_container_name = '{%s}Folders' % TNS
+    supports_paging = True
 
-    def call(self, additional_fields, restriction, shape, depth, max_items, offset):
+    def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         """Find subfolders of a folder.
 
         Args:
+          folders: the folders to act on
           additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
           restriction: Restriction object that defines the filters for the query
           shape: The set of attributes to return
@@ -26,24 +28,30 @@ class FindFolder(EWSFolderService, PagingEWSMixIn):
 
         """
         from ..folders import Folder
-        roots = {f.root for f in self.folders}
+        roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError('FindFolder must be called with folders in the same root hierarchy (%r)' % roots)
         root = roots.pop()
-        for elem in self._paged_call(payload_func=self.get_payload, max_items=max_items, **dict(
-            additional_fields=additional_fields,
-            restriction=restriction,
-            shape=shape,
-            depth=depth,
-            page_size=self.chunk_size,
-            offset=offset,
-        )):
+        for elem in self._paged_call(
+                payload_func=self.get_payload,
+                max_items=max_items,
+                expected_message_count=len(folders),
+                **dict(
+                    folders=folders,
+                    additional_fields=additional_fields,
+                    restriction=restriction,
+                    shape=shape,
+                    depth=depth,
+                    page_size=self.chunk_size,
+                    offset=offset,
+                )
+        ):
             if isinstance(elem, Exception):
                 yield elem
                 continue
             yield Folder.from_xml_with_root(elem=elem, root=root)
 
-    def get_payload(self, additional_fields, restriction, shape, depth, page_size, offset=0):
+    def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
         findfolder = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))
         foldershape = create_shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
@@ -65,6 +73,6 @@ class FindFolder(EWSFolderService, PagingEWSMixIn):
         if restriction:
             findfolder.append(restriction.to_xml(version=self.account.version))
         parentfolderids = create_element('m:ParentFolderIds')
-        set_xml_value(parentfolderids, self.folders, version=self.account.version)
+        set_xml_value(parentfolderids, folders, version=self.account.version)
         findfolder.append(parentfolderids)
         return findfolder

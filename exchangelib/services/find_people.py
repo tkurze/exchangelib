@@ -3,15 +3,16 @@ import logging
 
 from ..errors import MalformedResponseError
 from ..util import create_element, set_xml_value, xml_to_str, MNS
-from .common import EWSAccountService, PagingEWSMixIn, create_shape_element
+from .common import EWSAccountService, create_shape_element
 
 log = logging.getLogger(__name__)
 
 
-class FindPeople(EWSAccountService, PagingEWSMixIn):
+class FindPeople(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation"""
     SERVICE_NAME = 'FindPeople'
     element_container_name = '{%s}People' % MNS
+    supports_paging = True
 
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         """Find items in an account.
@@ -32,17 +33,22 @@ class FindPeople(EWSAccountService, PagingEWSMixIn):
 
         """
         from ..items import Persona, ID_ONLY
-        personas = self._paged_call(payload_func=self.get_payload, max_items=max_items, **dict(
-            folder=folder,
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            query_string=query_string,
-            shape=shape,
-            depth=depth,
-            page_size=self.chunk_size,
-            offset=offset,
-        ))
+        personas = self._paged_call(
+            payload_func=self.get_payload,
+            max_items=max_items,
+            expected_message_count=1, # We can only query one folder, so there will only be one element in response
+            **dict(
+                folder=folder,
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                query_string=query_string,
+                shape=shape,
+                depth=depth,
+                page_size=self.chunk_size,
+                offset=offset,
+            )
+        )
         if shape == ID_ONLY and additional_fields is None:
             for p in personas:
                 yield p if isinstance(p, Exception) else Persona.id_from_xml(p)
@@ -83,17 +89,20 @@ class FindPeople(EWSAccountService, PagingEWSMixIn):
             findpeople.append(query_string.to_xml(version=self.account.version))
         return findpeople
 
-    def _paged_call(self, payload_func, max_items, **kwargs):
+    def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
+        """This service doesn't return items wrapped in a paging container
+        """
         item_count = kwargs['offset']
         while True:
-            log.debug('EWS %s, account %s, service %s: Getting items at offset %s',
-                      self.protocol.service_endpoint, self.account, self.SERVICE_NAME, item_count)
+            log.debug('EWS %s, service %s: Getting items at offset %s', self.protocol.service_endpoint,
+                      self.SERVICE_NAME, item_count)
             kwargs['offset'] = item_count
             payload = payload_func(**kwargs)
             parsed_pages = list(self._get_elements(payload=payload))
-            if len(parsed_pages) != 1:
-                # We can only query one folder, so there should only be one element in response
-                raise MalformedResponseError("Expected single item in 'response', got %s" % len(parsed_pages))
+            if len(parsed_pages) != expected_message_count:
+                raise MalformedResponseError(
+                    "Expected %s items in 'response', got %s" % (expected_message_count, len(parsed_pages))
+                )
             rootfolder, total_items = parsed_pages[0]
             if rootfolder is not None:
                 container = rootfolder.find(self.element_container_name)
