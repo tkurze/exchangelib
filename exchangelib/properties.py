@@ -1219,6 +1219,7 @@ class SearchableMailbox(EWSElement):
 
 class FailedMailbox(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/failedmailbox"""
+    ELEMENT_NAME = 'FailedMailbox'
     FIELDS = Fields(
         CharField('mailbox', field_uri='Mailbox'),
         IntegerField('error_code', field_uri='ErrorCode'),

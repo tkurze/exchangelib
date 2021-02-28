@@ -14,13 +14,18 @@ from .common import TimedTestCase
 
 
 class PropertiesTest(TimedTestCase):
-    def test_unique_field_names(self):
-        from exchangelib import attachments, properties, items, folders, indexed_properties, recurrence, settings
+    def test_ews_element_sanity(self):
+        from exchangelib import attachments, properties, items, folders, indexed_properties, extended_properties, \
+            recurrence, settings
         for module in (attachments, properties, items, folders, indexed_properties, recurrence, settings):
             for cls in vars(module).values():
                 with self.subTest(cls=cls):
                     if not isclass(cls) or not issubclass(cls, EWSElement):
                         continue
+                    # Make sure that we have an ELEMENT_NAME on all models
+                    if cls != BulkCreateResult and (not cls.__doc__ or not cls.__doc__.startswith('Base class ')):
+                        self.assertIsNotNone(cls.ELEMENT_NAME,
+                                             '%s.%s must have an ELEMENT_NAME' % (module.__name__, cls.__name__))
                     # Assert that all FIELDS names are unique on the model. Also assert that the class defines
                     # __slots__, that all fields are mentioned in __slots__ and that __slots__ is unique.
                     field_names = set()
