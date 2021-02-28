@@ -103,8 +103,8 @@ class Protocol(SimpleProtocol):
         # Attribute 'Type' is ignored here. Has a name conflict with the child element and does not seem useful.
         TextField('version', field_uri='Version', is_attribute=True, namespace=RNS),
         ChoiceField('type', field_uri='Type', namespace=RNS, choices={Choice(p) for p in SimpleProtocol.TYPES}),
-        EWSElementField('internal', field_uri='Internal', value_cls=Internal),
-        EWSElementField('external', field_uri='External', value_cls=External),
+        EWSElementField('internal', value_cls=Internal),
+        EWSElementField('external', value_cls=External),
         IntegerField('ttl', field_uri='TTL', namespace=RNS, default=1),  # TTL for this autodiscover response, in hours
         TextField('server', field_uri='Server', namespace=RNS),
         TextField('server_dn', field_uri='ServerDN', namespace=RNS),
