@@ -11,23 +11,12 @@ class GetDelegate(EWSAccountService):
     def call(self, user_ids, include_permissions):
         from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
 
-        if user_ids:
-            # Pool requests to avoid arbitrarily large requests when user_ids is huge
-            res = self._chunked_get_elements(
-                self.get_payload,
-                items=user_ids,
-                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                include_permissions=include_permissions,
-            )
-        else:
-            # Pooling expects an iterable of items but we have None. Just call _get_elements directly.
-            res = self._get_elements(payload=self.get_payload(
-                user_ids=user_ids,
-                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                include_permissions=include_permissions,
-            ))
-
-        for elem in res:
+        for elem in self._chunked_get_elements(
+            self.get_payload,
+            items=user_ids or [None],
+            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+            include_permissions=include_permissions,
+        ):
             if isinstance(elem, Exception):
                 raise elem
             yield DelegateUser.from_xml(elem=elem, account=self.account)
@@ -38,7 +27,7 @@ class GetDelegate(EWSAccountService):
             attrs=dict(IncludePermissions='true' if include_permissions else 'false'),
         )
         set_xml_value(payload, mailbox, version=self.protocol.version)
-        if user_ids:
+        if user_ids != [None]:
             set_xml_value(payload, user_ids, version=self.protocol.version)
         return payload
 
