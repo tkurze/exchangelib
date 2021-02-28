@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from ..util import create_element, set_xml_value, TNS
+from ..util import create_element, set_xml_value, TNS, MNS
 from ..version import EXCHANGE_2010
 from .common import EWSAccountService, create_shape_element
 
@@ -9,6 +9,7 @@ class FindFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder"""
     SERVICE_NAME = 'FindFolder'
     element_container_name = '{%s}Folders' % TNS
+    paging_container_name = '{%s}RootFolder' % MNS
     supports_paging = True
 
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):

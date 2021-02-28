@@ -57,6 +57,7 @@ KNOWN_EXCEPTIONS = (
 class EWSService(metaclass=abc.ABCMeta):
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
+    paging_container_name = None  # The name of the element that contains paging information and the paged results
     returns_elements = True  # If False, the service does not return response elements, just the RsponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
@@ -589,16 +590,16 @@ class EWSService(metaclass=abc.ABCMeta):
                 raise MalformedResponseError(
                     "Expected %s items in 'response', got %s" % (expected_message_count, len(parsed_pages))
                 )
-            for (rootfolder, next_offset), paging_info in zip(parsed_pages, paging_infos):
+            for (paging_container, next_offset), paging_info in zip(parsed_pages, paging_infos):
                 paging_info['next_offset'] = next_offset
-                if isinstance(rootfolder, Exception):
-                    yield rootfolder
+                if isinstance(paging_container, Exception):
+                    yield paging_container
                     continue
-                if rootfolder is not None:
-                    container = rootfolder.find(self.element_container_name)
+                if paging_container is not None:
+                    container = paging_container.find(self.element_container_name)
                     if container is None:
                         raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (
-                            self.element_container_name, xml_to_str(rootfolder)))
+                            self.element_container_name, xml_to_str(paging_container)))
                     for elem in self._get_elements_in_container(container=container):
                         if max_items and total_item_count >= max_items:
                             # No need to continue. Break out of elements loop
@@ -642,25 +643,32 @@ class EWSService(metaclass=abc.ABCMeta):
                 log.warning('Inconsistent next_offset values: %r. Using lowest value', next_offsets)
             common_next_offset = min(next_offsets)
 
-    def _get_page(self, message):
-        """Get a single page from a request message, and return the container and next offset
+    def _get_paging_values(self, elem):
+        """Read paging information from the paging container element
         """
-        rootfolder = self._get_element_container(message=message, name='{%s}RootFolder' % MNS)
-        if isinstance(rootfolder, Exception):
-            return rootfolder, None
-        is_last_page = rootfolder.get('IncludesLastItemInRange').lower() in ('true', '0')
-        offset = rootfolder.get('IndexedPagingOffset')
+        is_last_page = elem.get('IncludesLastItemInRange').lower() in ('true', '0')
+        offset = elem.get('IndexedPagingOffset')
         if offset is None and not is_last_page:
             log.debug("Not last page in range, but Exchange didn't send a page offset. Assuming first page")
             offset = '1'
         next_offset = None if is_last_page else int(offset)
-        item_count = int(rootfolder.get('TotalItemsInView'))
+        item_count = int(elem.get('TotalItemsInView'))
         if not item_count:
             if next_offset is not None:
                 raise ValueError("Expected empty 'next_offset' when 'item_count' is 0")
-            rootfolder = None
         log.debug('%s: Got page with next offset %s (last_page %s)', self.SERVICE_NAME, next_offset, is_last_page)
-        return rootfolder, next_offset
+        return item_count, next_offset
+
+    def _get_page(self, message):
+        """Get a single page from a request message, and return the container and next offset
+        """
+        paging_elem = self._get_element_container(message=message, name=self.paging_container_name)
+        if isinstance(paging_elem, Exception):
+            return paging_elem, None
+        item_count, next_offset = self._get_paging_values(paging_elem)
+        if not item_count:
+            paging_elem = None
+        return paging_elem, next_offset
 
 
 class EWSAccountService(EWSService):

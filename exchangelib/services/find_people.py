@@ -1,8 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from ..errors import MalformedResponseError
-from ..util import create_element, set_xml_value, xml_to_str, MNS
+from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
 from .common import EWSAccountService, create_shape_element
 
@@ -84,41 +83,13 @@ class FindPeople(EWSAccountService):
             findpeople.append(query_string.to_xml(version=self.account.version))
         return findpeople
 
-    def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
-        """This service doesn't return items wrapped in a paging container
+    def _get_paging_values(self, elem):
+        """The paging container element from FindPeople is slightly different than other paging containers.
         """
-        item_count = kwargs['offset']
-        while True:
-            log.debug('EWS %s, service %s: Getting items at offset %s', self.protocol.service_endpoint,
-                      self.SERVICE_NAME, item_count)
-            kwargs['offset'] = item_count
-            payload = payload_func(**kwargs)
-            parsed_pages = list(self._get_elements(payload=payload))
-            if len(parsed_pages) != expected_message_count:
-                raise MalformedResponseError(
-                    "Expected %s items in 'response', got %s" % (expected_message_count, len(parsed_pages))
-                )
-            rootfolder, total_items = parsed_pages[0]
-            if rootfolder is not None:
-                container = rootfolder.find(self.element_container_name)
-                if container is None:
-                    raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (
-                        self.element_container_name, xml_to_str(rootfolder)))
-                for elem in self._get_elements_in_container(container=container):
-                    item_count += 1
-                    yield elem
-                if max_items and item_count >= max_items:
-                    log.debug("'max_items' count reached")
-                    break
-            if total_items <= 0 or item_count >= total_items:
-                log.debug('Got all items in view')
-                break
-
-    def _get_page(self, message):
-        self._get_element_container(message=message)  # Just raise exceptions
-        total_items = int(message.find('{%s}TotalNumberOfPeopleInView' % MNS).text)
-        first_matching = int(message.find('{%s}FirstMatchingRowIndex' % MNS).text)
-        first_loaded = int(message.find('{%s}FirstLoadedRowIndex' % MNS).text)
+        item_count = int(elem.find('{%s}TotalNumberOfPeopleInView' % MNS).text)
+        first_matching = int(elem.find('{%s}FirstMatchingRowIndex' % MNS).text)
+        first_loaded = int(elem.find('{%s}FirstLoadedRowIndex' % MNS).text)
         log.debug('%s: Got page with total items %s, first matching %s, first loaded %s ', self.SERVICE_NAME,
-                  total_items, first_matching, first_loaded)
-        return message, total_items
+                  item_count, first_matching, first_loaded)
+        next_offset = None  # GetPersona does not support fetching more pages
+        return item_count, next_offset

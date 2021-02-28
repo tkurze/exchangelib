@@ -106,10 +106,6 @@ class ContactsTest(CommonItemTest):
             )),
             0
         )
-        for p in self.test_folder.people():
-            print(p)
-            x = GetPersona(protocol=self.account.protocol).call(persona=p)
-            print(x)
 
     def test_get_persona(self):
         ws = GetPersona(protocol=self.account.protocol)
