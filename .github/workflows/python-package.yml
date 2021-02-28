@@ -24,11 +24,13 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Unencrypt secret file
       env:
           AES_256_CBC_PASS: ${{ secrets.AES_256_CBC_PASS }}
+      if: ${{ secrets.AES_256_CBC_PASS }}
+      run: openssl aes-256-cbc -d -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
+    - name: Install dependencies
       run: |
-        openssl aes-256-cbc -d -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
         python -m pip install --upgrade pip
         if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install hg+https://foss.heptapod.net/pypy/cffi ; fi
         if [[ "$( python --version | grep '[a|b]' )" ]] ; then python -m pip install git+https://github.com/cython/cython.git ; fi
@@ -43,5 +45,6 @@ jobs:
         coverage run --source=exchangelib -m unittest
         coveralls --service=github
     - name: Clean up test account
+      if: ${{ matrix.python-version == 3.9 }}
       run: |
         PYTHONPATH=./ python scripts/wipe_test_account.py
