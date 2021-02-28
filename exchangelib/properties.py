@@ -11,7 +11,7 @@ from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTim
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
     RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField, \
-    Base64Field, TypeValueField, DictionaryField, IdElementField
+    Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
 from .version import Version, EXCHANGE_2013, Build
 
@@ -463,10 +463,12 @@ class PersonaId(ItemId):
     ELEMENT_NAME = 'PersonaId'
     NAMESPACE = MNS
 
-    @classmethod
-    def response_tag(cls):
-        # For some reason, EWS wants this in the MNS namespace in a request, but TNS namespace in a response...
-        return '{%s}%s' % (TNS, cls.ELEMENT_NAME)
+    __slots__ = tuple()
+
+
+class SourceId(ItemId):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sourceid"""
+    ELEMENT_NAME = 'SourceId'
 
     __slots__ = tuple()
 
@@ -580,9 +582,28 @@ class RecipientAddress(Mailbox):
     """Like Mailbox, but with a different tag name
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recipientaddress
-
     """
     ELEMENT_NAME = 'RecipientAddress'
+
+    __slots__ = tuple()
+
+
+class EmailAddress(Mailbox):
+    """Like Mailbox, but with a different tag name
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emailaddress-emailaddresstype
+    """
+    ELEMENT_NAME = 'EmailAddress'
+
+    __slots__ = tuple()
+
+
+class Address(Mailbox):
+    """Like Mailbox, but with a different tag name
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/address-emailaddresstype
+    """
+    ELEMENT_NAME = 'Address'
 
     __slots__ = tuple()
 
@@ -591,7 +612,6 @@ class AvailabilityMailbox(EWSElement):
     """Like Mailbox, but with slightly different attributes
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox-availability
-
     """
     ELEMENT_NAME = 'Mailbox'
     FIELDS = Fields(
@@ -1138,6 +1158,7 @@ class EffectiveRights(EWSElement):
 
 class DelegatePermissions(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/delegatepermissions"""
+    ELEMENT_NAME = 'DelegatePermissions'
     PERMISSION_LEVEL_CHOICES = {
             Choice('None'), Choice('Editor'), Choice('Reviewer'), Choice('Author'), Choice('Custom'),
         }
@@ -1469,6 +1490,18 @@ class ResponseObjects(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
+class PhoneNumber(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumber"""
+    ELEMENT_NAME = 'PhoneNumber'
+
+    FIELDS = Fields(
+        CharField('number', field_uri='Number'),
+        CharField('type', field_uri='Type'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
 class IdChangeKeyMixIn(EWSElement):
     """Base class for classes that have a concept of 'id' and 'changekey' values. The values are actually stored on
      a separate element but we add convenience methods to hide that fact.
@@ -1598,6 +1631,148 @@ class UserConfiguration(IdChangeKeyMixIn):
         DictionaryField('dictionary', field_uri='Dictionary'),
         Base64Field('xml_data', field_uri='XmlData'),
         Base64Field('binary_data', field_uri='BinaryData'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class Attribution(IdChangeKeyMixIn):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumber"""
+    ELEMENT_NAME = 'Attribution'
+    ID_ELEMENT_CLS = SourceId
+    FIELDS = Fields(
+        CharField('ID', field_uri='Id'),
+        IdElementField('_id', field_uri='SourceId', value_cls=ID_ELEMENT_CLS),
+        CharField('display_name', field_uri='DisplayName'),
+        BooleanField('is_writable', field_uri='IsWritable'),
+        BooleanField('is_quick_contact', field_uri='IsQuickContact'),
+        BooleanField('is_hidden', field_uri='IsHidden'),
+        EWSElementField('folder_id', value_cls=FolderId),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class BodyContentValue(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-bodycontenttype
+    """
+    ELEMENT_NAME = 'Value'
+    FIELDS = Fields(
+        CharField('value', field_uri='Value'),
+        CharField('body_type', field_uri='BodyType'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class BodyContentAttributedValue(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/bodycontentattributedvalue
+    """
+    ELEMENT_NAME = 'BodyContentAttributedValue'
+    FIELDS = Fields(
+        EWSElementField('value', value_cls=BodyContentValue),
+        EWSElementListField('attributions', field_uri='Attributions', value_cls=Attribution),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class StringAttributedValue(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/stringattributedvalue
+    """
+    ELEMENT_NAME = 'StringAttributedValue'
+    FIELDS = Fields(
+        CharField('value', field_uri='Value'),
+        CharListField('attributions', field_uri='Attributions', list_elem_name='Attribution'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class PersonaPhoneNumberTypeValue(EWSElement):
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-personaphonenumbertype
+    """
+    ELEMENT_NAME = 'Value'
+    FIELDS = Fields(
+        CharField('number', field_uri='Number'),
+        CharField('type', field_uri='Type'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class PhoneNumberAttributedValue(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumberattributedvalue
+    """
+    ELEMENT_NAME = 'PhoneNumberAttributedValue'
+    FIELDS = Fields(
+        EWSElementField('value', value_cls=PersonaPhoneNumberTypeValue),
+        CharListField('attributions', field_uri='Attributions', list_elem_name='Attribution'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class EmailAddressTypeValue(Mailbox):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-emailaddresstype
+    """
+    ELEMENT_NAME = 'Value'
+    LOCAL_FIELDS = Fields(
+        TextField('original_display_name', field_uri='OriginalDisplayName'),
+    )
+    FIELDS = Mailbox.FIELDS + LOCAL_FIELDS
+
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+
+class EmailAddressAttributedValue(EWSElement):
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emailaddressattributedvalue
+    """
+    ELEMENT_NAME = 'EmailAddressAttributedValue'
+    FIELDS = Fields(
+        EWSElementField('value', value_cls=EmailAddressTypeValue),
+        EWSElementListField('attributions', field_uri='Attributions', value_cls=Attribution),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class PersonaPostalAddressTypeValue(Mailbox):
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-personapostaladdresstype
+    """
+    ELEMENT_NAME = 'Value'
+    FIELDS = Fields(
+        TextField('street', field_uri='Street'),
+        TextField('city', field_uri='City'),
+        TextField('state', field_uri='State'),
+        TextField('country', field_uri='Country'),
+        TextField('postal_code', field_uri='PostalCode'),
+        TextField('post_office_box', field_uri='PostOfficeBox'),
+        TextField('type', field_uri='Type'),
+        TextField('latitude', field_uri='Latitude'),
+        TextField('longitude', field_uri='Longitude'),
+        TextField('accuracy', field_uri='Accuracy'),
+        TextField('altitude', field_uri='Altitude'),
+        TextField('altitude_accuracy', field_uri='AltitudeAccuracy'),
+        TextField('formatted_address', field_uri='FormattedAddress'),
+        TextField('location_uri', field_uri='LocationUri'),
+        TextField('location_source', field_uri='LocationSource'),
+    )
+
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class PostalAddressAttributedValue(EWSElement):
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postaladdressattributedvalue
+    """
+    ELEMENT_NAME = 'PostalAddressAttributedValue'
+    FIELDS = Fields(
+        EWSElementField('value', value_cls=PersonaPostalAddressTypeValue),
+        EWSElementListField('attributions', field_uri='Attributions', value_cls=Attribution),
     )
 
     __slots__ = tuple(f.name for f in FIELDS)

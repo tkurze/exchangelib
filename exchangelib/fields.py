@@ -1481,3 +1481,49 @@ class DictionaryField(FieldURIField):
         field_elem = create_element(self.request_tag())
         entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
         return set_xml_value(field_elem, entries, version=version)
+
+
+class PersonaPhoneNumberField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .properties import PhoneNumber
+        kwargs['value_cls'] = PhoneNumber
+        super().__init__(*args, **kwargs)
+
+
+class BodyContentAttributedValueField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .properties import BodyContentAttributedValue
+        kwargs['value_cls'] = BodyContentAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class StringAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import StringAttributedValue
+        kwargs['value_cls'] = StringAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class PhoneNumberAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import PhoneNumberAttributedValue
+        kwargs['value_cls'] = PhoneNumberAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class EmailAddressAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import EmailAddressAttributedValue
+        kwargs['value_cls'] = EmailAddressAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class PostalAddressAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import PostalAddressAttributedValue
+        kwargs['value_cls'] = PostalAddressAttributedValue
+        super().__init__(*args, **kwargs)
