@@ -7,6 +7,7 @@ from exchangelib.folders import RootOfHierarchy
 from exchangelib.indexed_properties import PhysicalAddress
 from exchangelib.items import Item, BulkCreateResult
 from exchangelib.properties import InvalidField, InvalidFieldForVersion, EWSElement, MessageHeader
+from exchangelib.extended_properties import ExternId, Flag
 from exchangelib.util import to_xml, TNS
 from exchangelib.version import EXCHANGE_2010, EXCHANGE_2013
 
@@ -17,21 +18,21 @@ class PropertiesTest(TimedTestCase):
     def test_ews_element_sanity(self):
         from exchangelib import attachments, properties, items, folders, indexed_properties, extended_properties, \
             recurrence, settings
-        for module in (attachments, properties, items, folders, indexed_properties, recurrence, settings):
+        for module in (attachments, properties, items, folders, indexed_properties, extended_properties, recurrence,
+                       settings):
             for cls in vars(module).values():
                 with self.subTest(cls=cls):
                     if not isclass(cls) or not issubclass(cls, EWSElement):
                         continue
                     # Make sure that we have an ELEMENT_NAME on all models
                     if cls != BulkCreateResult and (not cls.__doc__ or not cls.__doc__.startswith('Base class ')):
-                        self.assertIsNotNone(cls.ELEMENT_NAME,
-                                             '%s.%s must have an ELEMENT_NAME' % (module.__name__, cls.__name__))
+                        self.assertIsNotNone(cls.ELEMENT_NAME, '%s must have an ELEMENT_NAME' % cls)
                     # Assert that all FIELDS names are unique on the model. Also assert that the class defines
                     # __slots__, that all fields are mentioned in __slots__ and that __slots__ is unique.
                     field_names = set()
                     all_slots = tuple(chain(*(getattr(c, '__slots__', ()) for c in cls.__mro__)))
                     self.assertEqual(len(all_slots), len(set(all_slots)),
-                                     '__slots__ contains duplicates: %s' % sorted(all_slots))
+                                     'Model %s: __slots__ contains duplicates: %s' % (cls, sorted(all_slots)))
                     for f in cls.FIELDS:
                         with self.subTest(f=f):
                             self.assertNotIn(f.name, field_names,
@@ -44,8 +45,8 @@ class PropertiesTest(TimedTestCase):
                         # We have a long list of folders subclasses. Don't require a docstring for each
                         continue
                     self.assertIsNotNone(cls.__doc__, '%s is missing a docstring' % cls)
-                    if cls in (DLMailbox, BulkCreateResult):
-                        # Some classes are just workarounds for other classes
+                    if cls in (DLMailbox, BulkCreateResult, ExternId, Flag):
+                        # Some classes are allowed to not have a link
                         continue
                     if cls.__doc__.startswith('Base class '):
                         # Base classes don't have an MSDN link
@@ -54,7 +55,7 @@ class PropertiesTest(TimedTestCase):
                         # Root folders don't have an MSDN link
                         continue
                     # collapse multiline docstrings
-                    docstring = ' '.join(l.strip() for l in cls.__doc__.split('\n'))
+                    docstring = ' '.join(doc.strip() for doc in cls.__doc__.split('\n'))
                     self.assertIn('MSDN: https://docs.microsoft.com', docstring,
                                   '%s is missing an MSDN link in the docstring' % cls)
 

@@ -426,7 +426,10 @@ class AutodiscoverTest(EWSTest):
         dns.resolver.Resolver = _Mock1
         del ad.resolver
         # Test a valid record
-        self.assertEqual(ad._get_srv_records('example.com.'), [SrvRecord(priority=1, weight=2, port=3, srv='example.com')])
+        self.assertEqual(
+            ad._get_srv_records('example.com.'),
+            [SrvRecord(priority=1, weight=2, port=3, srv='example.com')]
+        )
 
         class _Mock2:
             def resolve(self, hostname, cat):

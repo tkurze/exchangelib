@@ -291,7 +291,6 @@ class ExtendedProperty(EWSElement):
 class ExternId(ExtendedProperty):
     """This is a custom extended property defined by us. It's useful for synchronization purposes, to attach a unique ID
     from an external system.
-
     """
     property_set_id = 'c11ff724-aa03-4555-9952-8fa248a11c3e'  # This is arbitrary. We just want a unique UUID.
     property_name = 'External ID'
@@ -305,7 +304,8 @@ class Flag(ExtendedProperty):
 
     For a description of each status, see:
     https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxoflag/eda9fd25-6407-4cec-9e62-26e4f9d6a098
-
     """
     property_tag = 0x1090
     property_type = 'Integer'
+
+    __slots__ = tuple()

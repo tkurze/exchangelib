@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal
 
-from exchangelib.ewsdatetime import EWSDate, EWSDateTime, EWSTimeZone, UTC_NOW
+from exchangelib.ewsdatetime import EWSDate, EWSDateTime, UTC_NOW
 from exchangelib.folders import Tasks
 from exchangelib.items import Task
 from exchangelib.recurrence import TaskRecurrence, DailyPattern, DailyRegeneration

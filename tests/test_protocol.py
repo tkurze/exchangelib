@@ -495,7 +495,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                     warnings.simplefilter("ignore")
                     # Ignore ResourceWarning for unclosed socket. It does get closed.
                     with self.assertRaises(TransportError):
-                            self.account.root.all().exists()
+                        self.account.root.all().exists()
 
                 # Disable insecure TLS warnings
                 with warnings.catch_warnings():

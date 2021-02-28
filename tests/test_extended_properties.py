@@ -1,5 +1,5 @@
 from exchangelib import Message, Mailbox, CalendarItem
-from exchangelib.extended_properties import ExtendedProperty
+from exchangelib.extended_properties import ExtendedProperty, Flag
 from exchangelib.folders import Inbox
 
 from .common import get_random_int
@@ -81,10 +81,6 @@ class ExtendedPropertyTest(BaseItemTest):
             self.ITEM_CLASS.deregister(attr_name=attr_name)
 
     def test_extended_property_with_tag(self):
-        class Flag(ExtendedProperty):
-            property_tag = 0x1090
-            property_type = 'Integer'
-
         attr_name = 'my_flag'
         self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=Flag)
         try:
@@ -112,10 +108,6 @@ class ExtendedPropertyTest(BaseItemTest):
             InvalidProp('Foo').clean()  # property_tag is in protected range
 
     def test_extended_property_with_string_tag(self):
-        class Flag(ExtendedProperty):
-            property_tag = '0x1090'
-            property_type = 'Integer'
-
         attr_name = 'my_flag'
         self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=Flag)
         try:

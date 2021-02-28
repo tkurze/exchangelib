@@ -1,7 +1,7 @@
 import datetime
 
 from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound
-from exchangelib.ewsdatetime import EWSDateTime, EWSDate, UTC
+from exchangelib.ewsdatetime import EWSDateTime, UTC
 from exchangelib.folders import Calendar
 from exchangelib.items import CalendarItem, BulkCreateResult
 from exchangelib.items.calendar_item import SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
