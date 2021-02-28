@@ -113,9 +113,9 @@ class GenericItemTest(CommonItemTest):
         with self.assertRaises(ValueError):
             item.delete(send_meeting_cancellations='XXX')
         with self.assertRaises(ValueError):
-            item._delete(affected_task_occurrences='XXX')
+            item.delete(affected_task_occurrences='XXX')
         with self.assertRaises(ValueError):
-            item._delete(suppress_read_receipts='XXX')
+            item.delete(suppress_read_receipts='XXX')
 
 
     def test_invalid_kwargs_on_send(self):
