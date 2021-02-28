@@ -3,6 +3,7 @@ import logging
 
 from ..errors import MalformedResponseError
 from ..util import create_element, set_xml_value, xml_to_str, MNS
+from ..version import EXCHANGE_2013
 from .common import EWSAccountService, create_shape_element
 
 log = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ class FindPeople(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation"""
     SERVICE_NAME = 'FindPeople'
     element_container_name = '{%s}People' % MNS
+    supported_from = EXCHANGE_2013
     supports_paging = True
 
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
@@ -32,11 +34,10 @@ class FindPeople(EWSAccountService):
           XML elements for the matching items
 
         """
-        from ..items import Persona, ID_ONLY
-        personas = self._paged_call(
+        return self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
-            expected_message_count=1, # We can only query one folder, so there will only be one element in response
+            expected_message_count=1,  # We can only query one folder, so there will only be one element in response
             **dict(
                 folder=folder,
                 additional_fields=additional_fields,
@@ -49,12 +50,6 @@ class FindPeople(EWSAccountService):
                 offset=offset,
             )
         )
-        if shape == ID_ONLY and additional_fields is None:
-            for p in personas:
-                yield p if isinstance(p, Exception) else Persona.id_from_xml(p)
-        else:
-            for p in personas:
-                yield p if isinstance(p, Exception) else Persona.from_xml(p, account=self.account)
 
     def get_payload(self, folder, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
                     offset=0):

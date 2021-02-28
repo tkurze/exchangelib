@@ -1,12 +1,14 @@
 from exchangelib.errors import ErrorInvalidIdMalformed
+from exchangelib.ewsdatetime import EWSDateTime, UTC
 from exchangelib.folders import Contacts, FolderCollection
 from exchangelib.indexed_properties import EmailAddress, PhysicalAddress
 from exchangelib.items import Contact, DistributionList, Persona
-from exchangelib.properties import Mailbox, Member
+from exchangelib.properties import Mailbox, Member, Attribution, SourceId, FolderId, StringAttributedValue, \
+    PhoneNumberAttributedValue, PersonaPhoneNumberTypeValue
 from exchangelib.queryset import QuerySet
 from exchangelib.services import GetPersona
 
-from ..common import get_random_string, get_random_email
+from ..common import get_random_string, get_random_email, MockResponse
 from .test_basics import CommonItemTest
 
 
@@ -104,8 +106,105 @@ class ContactsTest(CommonItemTest):
             )),
             0
         )
+        for p in self.test_folder.people():
+            print(p)
+            x = GetPersona(protocol=self.account.protocol).call(persona=p)
+            print(x)
 
     def test_get_persona(self):
+        ws = GetPersona(protocol=self.account.protocol)
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body>
+      <m:GetPersonaResponseMessage ResponseClass="Success"
+            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+         <m:ResponseCode>NoError</m:ResponseCode>
+         <m:Persona>
+            <t:PersonaId Id="AAQkADEzAQAKtOtR="/>
+            <t:PersonaType>Person</t:PersonaType>
+            <t:CreationTime>2012-06-01T17:00:34Z</t:CreationTime>
+            <t:DisplayName>Brian Johnson</t:DisplayName>
+            <t:RelevanceScore>4255550110</t:RelevanceScore>
+            <t:Attributions>
+               <t:Attribution>
+                  <t:Id>0</t:Id>
+                  <t:SourceId Id="AAMkA =" ChangeKey="EQAAABY+"/>
+                  <t:DisplayName>Outlook</t:DisplayName>
+                  <t:IsWritable>true</t:IsWritable>
+                  <t:IsQuickContact>false</t:IsQuickContact>
+                  <t:IsHidden>false</t:IsHidden>
+                  <t:FolderId Id="AAMkA=" ChangeKey="AQAAAA=="/>
+               </t:Attribution>
+            </t:Attributions>
+            <t:DisplayNames>
+               <t:StringAttributedValue>
+                  <t:Value>Brian Johnson</t:Value>
+                  <t:Attributions>
+                     <t:Attribution>2</t:Attribution>
+                     <t:Attribution>3</t:Attribution>
+                  </t:Attributions>
+               </t:StringAttributedValue>
+            </t:DisplayNames>
+            <t:MobilePhones>
+               <t:PhoneNumberAttributedValue>
+                  <t:Value>
+                     <t:Number>(425)555-0110</t:Number>
+                     <t:Type>Mobile</t:Type>
+                  </t:Value>
+                  <t:Attributions>
+                     <t:Attribution>0</t:Attribution>
+                  </t:Attributions>
+               </t:PhoneNumberAttributedValue>
+               <t:PhoneNumberAttributedValue>
+                  <t:Value>
+                     <t:Number>(425)555-0111</t:Number>
+                     <t:Type>Mobile</t:Type>
+                  </t:Value>
+                  <t:Attributions>
+                     <t:Attribution>1</t:Attribution>
+                  </t:Attributions>
+               </t:PhoneNumberAttributedValue>
+            </t:MobilePhones>
+         </m:Persona>
+      </m:GetPersonaResponseMessage>
+   </s:Body>
+</s:Envelope>'''
+        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
+        personas = [Persona.from_xml(elem=elem, account=self.account) for elem in res]
+        self.assertEqual(len(personas), 1)
+        persona = personas[0]
+        self.assertEqual(persona.id, 'AAQkADEzAQAKtOtR=')
+        self.assertEqual(persona.persona_type, 'Person')
+        self.assertEqual(persona.creation_time, EWSDateTime(2012, 6, 1, 17, 0, 34, tzinfo=UTC))
+        self.assertEqual(persona.display_name, 'Brian Johnson')
+        self.assertEqual(persona.relevance_score, '4255550110')
+        self.assertEqual(persona.attributions[0], Attribution(
+            ID=None,
+            _id=SourceId(id='AAMkA =', changekey='EQAAABY+'),
+            display_name='Outlook',
+            is_writable=True,
+            is_quick_contact=False,
+            is_hidden=False,
+            folder_id=FolderId(id='AAMkA=', changekey='AQAAAA==')
+        ))
+        self.assertEqual(persona.display_names, [
+            StringAttributedValue(value='Brian Johnson', attributions=['2', '3']),
+        ])
+        self.assertEqual(persona.mobile_phones, [
+            PhoneNumberAttributedValue(
+                value=PersonaPhoneNumberTypeValue(number='(425)555-0110', type='Mobile'),
+                attributions=['0'],
+            ),
+            PhoneNumberAttributedValue(
+                value=PersonaPhoneNumberTypeValue(number='(425)555-0111', type='Mobile'),
+                attributions=['1'],
+            )
+        ])
+
+    def test_get_persona_failure(self):
         # The test server may not have any personas. Just test that the service response with something we can parse
         persona = Persona(id='AAA=', changekey='xxx')
         try:

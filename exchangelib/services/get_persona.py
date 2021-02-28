@@ -14,7 +14,7 @@ class GetPersona(EWSService):
         elem = elements[0]
         if isinstance(elem, Exception):
             raise elem
-        return Persona.from_xml(elem=elem.find(Persona.response_tag()), account=None)
+        return Persona.from_xml(elem=elem, account=None)
 
     def get_payload(self, persona):
         from ..properties import PersonaId
@@ -22,6 +22,11 @@ class GetPersona(EWSService):
         payload = create_element('m:%s' % self.SERVICE_NAME)
         set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
         return payload
+
+    @staticmethod
+    def _get_elements_in_container(container):
+        from ..items import Persona
+        return container.findall('{%s}%s' % (MNS, Persona.ELEMENT_NAME))
 
     @classmethod
     def _response_tag(cls):
