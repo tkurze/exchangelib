@@ -7,13 +7,14 @@ import warnings
 import psutil
 import requests_mock
 
-from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, EWSTimeZone, EWSDateTime, \
+from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, EWSDateTime, \
     Mailbox, DLMailbox, UTC, CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached
-from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID
+from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID, \
+    SearchableMailbox, FailedMailbox
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter
-from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames
+from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes
 from exchangelib.transport import NOAUTH
 from exchangelib.version import Build
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
@@ -337,6 +338,59 @@ class ProtocolTest(EWSTest):
         # Insufficient privileges for the test account, so let's just test the exception
         with self.assertRaises(ErrorAccessDenied):
             self.account.protocol.get_searchable_mailboxes('non_existent_distro@example.com')
+
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+           xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:GetSearchableMailboxesResponse ResponseClass="Success">
+         <m:ResponseCode>NoError</m:ResponseCode>
+         <m:SearchableMailboxes>
+            <t:SearchableMailbox>
+               <t:Guid>33a408fe-2574-4e3b-49f5-5e1e000a3035</t:Guid>
+               <t:PrimarySmtpAddress>LOLgroup@contoso.com</t:PrimarySmtpAddress>
+               <t:IsExternalMailbox>false</t:IsExternalMailbox>
+               <t:ExternalEmailAddress/>
+               <t:DisplayName>LOLgroup</t:DisplayName>
+               <t:IsMembershipGroup>true</t:IsMembershipGroup>
+               <t:ReferenceId>/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup</t:ReferenceId>
+            </t:SearchableMailbox>
+            <t:FailedMailbox>
+               <t:Mailbox>FAILgroup@contoso.com</t:Mailbox>
+               <t:ErrorCode>123</t:ErrorCode>
+               <t:ErrorMessage>Catastrophic Failure</t:ErrorMessage>
+               <t:IsArchive>true</t:IsArchive>
+            </t:FailedMailbox>
+         </m:SearchableMailboxes>
+      </m:GetSearchableMailboxesResponse>
+   </s:Body>
+</s:Envelope>'''
+        ws = GetSearchableMailboxes(protocol=self.account.protocol)
+        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        mailboxes = []
+        for elem in ws._get_elements_in_response(response=ws._get_soap_messages(body=body)):
+            if elem.tag == SearchableMailbox.response_tag():
+                mailboxes.append(SearchableMailbox.from_xml(elem=elem, account=None))
+            elif elem.tag == FailedMailbox.response_tag():
+                mailboxes.append(FailedMailbox.from_xml(elem=elem, account=None))
+        self.assertListEqual(mailboxes, [
+            SearchableMailbox(
+                guid='33a408fe-2574-4e3b-49f5-5e1e000a3035',
+                primary_smtp_address='LOLgroup@contoso.com',
+                is_external=False,
+                external_email=None,
+                display_name='LOLgroup',
+                is_membership_group=True,
+                reference_id='/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup',
+            ),
+            FailedMailbox(
+                mailbox='FAILgroup@contoso.com',
+                error_code=123,
+                error_message='Catastrophic Failure',
+                is_archive=True,
+            ),
+        ])
 
     def test_expanddl(self):
         with self.assertRaises(ErrorNameResolutionNoResults):
