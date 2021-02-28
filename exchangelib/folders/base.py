@@ -1,3 +1,4 @@
+import abc
 from fnmatch import fnmatch
 import logging
 from operator import attrgetter
@@ -21,7 +22,7 @@ from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as 
 log = logging.getLogger(__name__)
 
 
-class BaseFolder(RegisterMixIn, SearchableMixIn):
+class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     """Base class for all classes that implement a folder"""
     ELEMENT_NAME = 'Folder'
     NAMESPACE = TNS
@@ -62,16 +63,19 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
         super().__init__(**kwargs)
 
     @property
+    @abc.abstractmethod
     def account(self):
-        raise NotImplementedError()
+        pass
 
     @property
+    @abc.abstractmethod
     def root(self):
-        raise NotImplementedError()
+        pass
 
     @property
+    @abc.abstractmethod
     def parent(self):
-        raise NotImplementedError()
+        pass
 
     @property
     def is_deleteable(self):

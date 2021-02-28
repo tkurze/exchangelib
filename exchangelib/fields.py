@@ -1195,10 +1195,6 @@ class IndexedField(EWSElementField):
     def to_xml(self, value, version):
         return set_xml_value(create_element('t:%s' % self.PARENT_ELEMENT_NAME), value, version)
 
-    def field_uri_xml(self):
-        # Callers must call field_uri_xml() on the subfield
-        raise NotImplementedError()
-
     def response_tag(self):
         return '{%s}%s' % (self.namespace, self.PARENT_ELEMENT_NAME)
 

@@ -724,7 +724,7 @@ class Attendee(EWSElement):
         return hash(self.mailbox)
 
 
-class TimeZoneTransition(EWSElement):
+class TimeZoneTransition(EWSElement, metaclass=abc.ABCMeta):
     """Base class for StandardTime and DaylightTime classes"""
     FIELDS = Fields(
         IntegerField('bias', field_uri='Bias', is_required=True),  # Offset from the default bias, in minutes
@@ -1500,7 +1500,7 @@ class PhoneNumber(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
-class IdChangeKeyMixIn(EWSElement):
+class IdChangeKeyMixIn(EWSElement, metaclass=abc.ABCMeta):
     """Base class for classes that have a concept of 'id' and 'changekey' values. The values are actually stored on
      a separate element but we add convenience methods to hide that fact.
 
@@ -1554,7 +1554,7 @@ class IdChangeKeyMixIn(EWSElement):
         return id_elem.get(cls.ID_ELEMENT_CLS.ID_ATTR), id_elem.get(cls.ID_ELEMENT_CLS.CHANGEKEY_ATTR)
 
     def to_id_xml(self, version):
-        raise NotImplementedError()
+        return self._id.to_xml(version=version)
 
     def __eq__(self, other):
         if isinstance(other, tuple):

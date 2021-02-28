@@ -1,3 +1,4 @@
+import abc
 import logging
 
 from .fields import EmailSubField, LabelField, SubField, NamedSubField, Choice
@@ -6,14 +7,14 @@ from .properties import EWSElement, Fields
 log = logging.getLogger(__name__)
 
 
-class IndexedElement(EWSElement):
+class IndexedElement(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element"""
     LABELS = set()
 
     __slots__ = tuple()
 
 
-class SingleFieldIndexedElement(IndexedElement):
+class SingleFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element with a single field"""
     __slots__ = tuple()
 
@@ -53,7 +54,7 @@ class PhoneNumber(SingleFieldIndexedElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
-class MultiFieldIndexedElement(IndexedElement):
+class MultiFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element with multiple fields"""
     __slots__ = tuple()
 

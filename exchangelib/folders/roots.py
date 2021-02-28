@@ -1,3 +1,4 @@
+import abc
 import logging
 
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, \
@@ -14,7 +15,7 @@ from .queryset import SingleFolderQuerySet, SHALLOW
 log = logging.getLogger(__name__)
 
 
-class RootOfHierarchy(BaseFolder):
+class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     """Base class for folders that implement the root of a folder hierarchy"""
 
     # A list of wellknown, or "distinguished", folders that are belong in this folder hierarchy. See

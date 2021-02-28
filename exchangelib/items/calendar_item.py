@@ -1,3 +1,4 @@
+import abc
 import datetime
 import logging
 
@@ -368,7 +369,7 @@ class MeetingCancellation(BaseMeetingItem):
     __slots__ = tuple()
 
 
-class BaseMeetingReplyItem(BaseItem):
+class BaseMeetingReplyItem(BaseItem, metaclass=abc.ABCMeta):
     """Base class for meeting request reply items that share the same fields (Accept, TentativelyAccept, Decline)"""
     FIELDS = Fields(
         CharField('item_class', field_uri='item:ItemClass', is_read_only=True),

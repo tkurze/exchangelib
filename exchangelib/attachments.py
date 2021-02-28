@@ -1,3 +1,4 @@
+import abc
 from io import BytesIO
 import logging
 import mimetypes
@@ -30,7 +31,7 @@ class AttachmentId(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
-class Attachment(EWSElement):
+class Attachment(EWSElement, metaclass=abc.ABCMeta):
     """Base class for FileAttachment and ItemAttachment"""
     FIELDS = Fields(
         EWSElementField('attachment_id', value_cls=AttachmentId),

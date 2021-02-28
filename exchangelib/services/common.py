@@ -671,7 +671,7 @@ class EWSService(metaclass=abc.ABCMeta):
         return paging_elem, next_offset
 
 
-class EWSAccountService(EWSService):
+class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     """Base class for services that act on items concerning a single Mailbox on the server
     """
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion

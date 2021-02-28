@@ -1,3 +1,4 @@
+import abc
 import logging
 
 from .fields import IntegerField, EnumField, EnumListField, DateOrDateTimeField, DateTimeField, EWSElementField, \
@@ -19,12 +20,12 @@ def _week_number_to_str(week_number):
     return WEEK_NUMBERS[week_number - 1] if isinstance(week_number, int) else week_number
 
 
-class Pattern(EWSElement):
+class Pattern(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring pattern elements"""
     __slots__ = tuple()
 
 
-class Regeneration(Pattern):
+class Regeneration(Pattern, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring regeneration elements"""
     __slots__ = tuple()
 
@@ -223,7 +224,7 @@ class DailyRegeneration(Regeneration):
         return 'Regenerates every %s day(s)' % self.interval
 
 
-class Boundary(EWSElement):
+class Boundary(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring boundary elements"""
     __slots__ = tuple()
 

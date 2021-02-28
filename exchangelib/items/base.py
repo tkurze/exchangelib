@@ -1,3 +1,4 @@
+import abc
 import logging
 
 from ..extended_properties import ExtendedProperty
@@ -62,7 +63,7 @@ MOVE_TO_DELETED_ITEMS = 'MoveToDeletedItems'
 DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
 
 
-class RegisterMixIn(IdChangeKeyMixIn):
+class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
     """Base class for classes that can change their list of supported fields dynamically"""
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
@@ -115,7 +116,7 @@ class RegisterMixIn(IdChangeKeyMixIn):
         cls.remove_field(field)
 
 
-class BaseItem(RegisterMixIn):
+class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
     """Base class for all other classes that implement EWS items"""
     ID_ELEMENT_CLS = ItemId
 
@@ -152,11 +153,8 @@ class BaseItem(RegisterMixIn):
         item.account = account
         return item
 
-    def to_id_xml(self, version):
-        return self._id.to_xml(version=version)
 
-
-class BaseReplyItem(EWSElement):
+class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
     """Base class for reply/forward elements that share the same fields"""
     FIELDS = Fields(
         CharField('subject', field_uri='Subject'),

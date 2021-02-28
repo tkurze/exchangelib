@@ -67,10 +67,6 @@ class BaseProtocol:
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
-
         # Try to behave nicely with the remote server. We want to keep the connection open between requests.
         # We also want to re-use sessions, to avoid the NTLM auth handshake on every request. We must know the
         # authentication method to create sessions.
@@ -145,10 +141,6 @@ class BaseProtocol:
             pool_maxsize=cls.CONNECTIONS_PER_SESSION,
             max_retries=0,
         )
-
-    def get_auth_type(self):
-        # Autodetect and return authentication type
-        raise NotImplementedError()
 
     @property
     def session_pool_size(self):
@@ -428,6 +420,9 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         super().__init__(*args, **kwargs)
         self._api_version_hint = None
         self._version_lock = Lock()
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
 
     def get_auth_type(self):
         # Autodetect authentication type. We also set version hint here.
