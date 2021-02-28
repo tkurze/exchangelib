@@ -178,19 +178,10 @@ class ProtocolTest(EWSTest):
         xml = b'''\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-    <s:Header>
-        <h:ServerVersionInfo
-            MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1" Version="V2016_10_10"
-            xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
-            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
-    </s:Header>
     <s:Body>
         <m:GetRoomListsResponse ResponseClass="Success"
                 xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
-                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
-                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
             <m:ResponseCode>NoError</m:ResponseCode>
             <m:RoomLists>
                 <t:Address>
@@ -232,13 +223,6 @@ class ProtocolTest(EWSTest):
         xml = b'''\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-    <s:Header>
-        <h:ServerVersionInfo
-            MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1" Version="V2016_10_10"
-            xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
-            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
-    </s:Header>
     <s:Body>
         <m:GetRoomsResponse ResponseClass="Success"
                 xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
@@ -310,13 +294,6 @@ class ProtocolTest(EWSTest):
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-  <s:Header>
-    <h:ServerVersionInfo
-        MajorVersion="15" MinorVersion="0" MajorBuildNumber="1293" MinorBuildNumber="4" Version="V2_23"
-        xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
-  </s:Header>
   <s:Body>
     <m:ResolveNamesResponse
             xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"

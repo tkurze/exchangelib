@@ -51,12 +51,12 @@ class AutodiscoverTest(EWSTest):
 </Autodiscover>''' % (self.account.primary_smtp_address.encode(), self.dummy_ews_endpoint.encode())
         self.dummy_ews_response = b'''\
 <?xml version='1.0' encoding='utf-8'?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Header>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
     <h:ServerVersionInfo xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
     MajorVersion="15" MinorVersion="1" MajorBuildNumber="1847" MinorBuildNumber="5" Version="V2017_07_11"/>
-  </soap:Header>
-  <soap:Body>
+  </s:Header>
+  <s:Body>
     <m:ResolveNamesResponse
     xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
     xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
@@ -68,8 +68,8 @@ class AutodiscoverTest(EWSTest):
         </m:ResolveNamesResponseMessage>
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
-  </soap:Body>
-</soap:Envelope>
+  </s:Body>
+</s:Envelope>
 '''
 
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here

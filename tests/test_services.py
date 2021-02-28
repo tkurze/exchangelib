@@ -61,19 +61,8 @@ class ServicesTest(EWSTest):
         account = mock_account(version=version, protocol=protocol)
         ws = FindFolder(account=account)
         xml = b'''\
-<s:Envelope
-        xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-    <s:Header>
-        <h:ServerVersionInfo
-                xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
-                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xmlns="http://schemas.microsoft.com/exchange/services/2006/types" MajorVersion="15" MinorVersion="0"
-                MajorBuildNumber="1497" MinorBuildNumber="6" Version="V2_23"/>
-    </s:Header>
-    <s:Body
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
         <m:FindFolderResponse
                 xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
                 xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
@@ -104,15 +93,9 @@ class ServicesTest(EWSTest):
     def test_soap_error(self):
         soap_xml = """\
 <?xml version="1.0" encoding="utf-8" ?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Header>
-    <t:ServerVersionInfo MajorVersion="8" MinorVersion="0" MajorBuildNumber="685" MinorBuildNumber="8"
-                         xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
-  </soap:Header>
-  <soap:Body>
-    <soap:Fault>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <s:Fault>
       <faultcode>{faultcode}</faultcode>
       <faultstring>{faultstring}</faultstring>
       <faultactor>https://CAS01.example.com/EWS/Exchange.asmx</faultactor>
@@ -120,9 +103,9 @@ class ServicesTest(EWSTest):
         <ResponseCode xmlns="http://schemas.microsoft.com/exchange/services/2006/errors">{responsecode}</ResponseCode>
         <Message xmlns="http://schemas.microsoft.com/exchange/services/2006/errors">{message}</Message>
       </detail>
-    </soap:Fault>
-  </soap:Body>
-</soap:Envelope>"""
+    </s:Fault>
+  </s:Body>
+</s:Envelope>"""
         header, body = ResolveNames._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='YYY', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')))
@@ -147,29 +130,29 @@ class ServicesTest(EWSTest):
         # Test bad XML (no body)
         soap_xml = b"""\
 <?xml version="1.0" encoding="utf-8" ?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Header>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
     <t:ServerVersionInfo MajorVersion="8" MinorVersion="0" MajorBuildNumber="685" MinorBuildNumber="8"
                          xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
-  </soap:Header>
-  </soap:Body>
-</soap:Envelope>"""
+  </s:Header>
+  </s:Body>
+</s:Envelope>"""
         with self.assertRaises(MalformedResponseError):
             ResolveNames._get_soap_parts(response=MockResponse(soap_xml))
 
         # Test bad XML (no fault)
         soap_xml = b"""\
 <?xml version="1.0" encoding="utf-8" ?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Header>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
     <t:ServerVersionInfo MajorVersion="8" MinorVersion="0" MajorBuildNumber="685" MinorBuildNumber="8"
                          xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
-  </soap:Header>
-  <soap:Body>
-    <soap:Fault>
-    </soap:Fault>
-  </soap:Body>
-</soap:Envelope>"""
+  </s:Header>
+  <s:Body>
+    <s:Fault>
+    </s:Fault>
+  </s:Body>
+</s:Envelope>"""
         header, body = ResolveNames._get_soap_parts(response=MockResponse(soap_xml))
         with self.assertRaises(TransportError):
             ResolveNames._get_soap_messages(body=body)
@@ -178,8 +161,8 @@ class ServicesTest(EWSTest):
         svc = ResolveNames(self.account.protocol)
         soap_xml = b"""\
 <?xml version="1.0" encoding="utf-8" ?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
     <m:ResolveNamesResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
       <m:ResponseMessages>
         <m:ResolveNamesResponseMessage ResponseClass="Success">
@@ -187,8 +170,8 @@ class ServicesTest(EWSTest):
         </m:ResolveNamesResponseMessage>
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
-  </soap:Body>
-</soap:Envelope>"""
+  </s:Body>
+</s:Envelope>"""
         header, body = svc._get_soap_parts(response=MockResponse(soap_xml))
         resp = svc._get_soap_messages(body=body)
         with self.assertRaises(TransportError) as e:

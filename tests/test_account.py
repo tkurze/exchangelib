@@ -115,42 +115,36 @@ class AccountTest(EWSTest):
             0
         )
 
-        xml = b'''<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                       xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-          <soap:Header>
-            <t:ServerVersionInfo MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1"
-                                 Version="V2016_10_10"
-                                 xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
-          </soap:Header>
-          <soap:Body>
-            <m:GetDelegateResponse xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
-                                   ResponseClass="Success"
-                                   xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
-              <m:ResponseCode>NoError</m:ResponseCode>
-              <m:ResponseMessages>
-                <m:DelegateUserResponseMessageType ResponseClass="Success">
-                  <m:ResponseCode>NoError</m:ResponseCode>
-                  <m:DelegateUser>
-                      <t:UserId>
-                        <t:SID>SOME_SID</t:SID>
-                        <t:PrimarySmtpAddress>foo@example.com</t:PrimarySmtpAddress>
-                        <t:DisplayName>Foo Bar</t:DisplayName>
-                      </t:UserId>
-                      <t:DelegatePermissions>
-                        <t:CalendarFolderPermissionLevel>Author</t:CalendarFolderPermissionLevel>
-                        <t:InboxFolderPermissionLevel>Reviewer</t:ContactsFolderPermissionLevel>
-                      </t:DelegatePermissions>
-                      <t:ReceiveCopiesOfMeetingMessages>false</t:ReceiveCopiesOfMeetingMessages>
-                    <t:ViewPrivateItems>true</t:ViewPrivateItems>
-                    </m:DelegateUser>
-                  </m:DelegateUserResponseMessageType>
-              </m:ResponseMessages>
-              <m:DeliverMeetingRequests>DelegatesAndMe</m:DeliverMeetingRequests>
-              </m:GetDelegateResponse>
-          </soap:Body>
-        </soap:Envelope>'''
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:GetDelegateResponse ResponseClass="Success"
+            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
+            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+      <m:ResponseCode>NoError</m:ResponseCode>
+      <m:ResponseMessages>
+        <m:DelegateUserResponseMessageType ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:DelegateUser>
+              <t:UserId>
+                <t:SID>SOME_SID</t:SID>
+                <t:PrimarySmtpAddress>foo@example.com</t:PrimarySmtpAddress>
+                <t:DisplayName>Foo Bar</t:DisplayName>
+              </t:UserId>
+              <t:DelegatePermissions>
+                <t:CalendarFolderPermissionLevel>Author</t:CalendarFolderPermissionLevel>
+                <t:InboxFolderPermissionLevel>Reviewer</t:ContactsFolderPermissionLevel>
+              </t:DelegatePermissions>
+              <t:ReceiveCopiesOfMeetingMessages>false</t:ReceiveCopiesOfMeetingMessages>
+            <t:ViewPrivateItems>true</t:ViewPrivateItems>
+            </m:DelegateUser>
+          </m:DelegateUserResponseMessageType>
+      </m:ResponseMessages>
+      <m:DeliverMeetingRequests>DelegatesAndMe</m:DeliverMeetingRequests>
+      </m:GetDelegateResponse>
+  </s:Body>
+</s:Envelope>'''
 
         MockTZ = namedtuple('EWSTimeZone', ['ms_id'])
         MockAccount = namedtuple('Account', ['access_type', 'primary_smtp_address', 'default_timezone', 'protocol'])
