@@ -1,3 +1,4 @@
+import abc
 from copy import deepcopy
 from itertools import islice
 import logging
@@ -13,26 +14,32 @@ from .version import EXCHANGE_2010
 log = logging.getLogger(__name__)
 
 
-class SearchableMixIn:
+class SearchableMixIn(metaclass=abc.ABCMeta):
     """Implements a search API for inheritance"""
 
+    @abc.abstractmethod
     def get(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def all(self):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def none(self):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def filter(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def exclude(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def people(self):
-        raise NotImplementedError()
+        pass
 
 
 class QuerySet(SearchableMixIn):

@@ -4,6 +4,7 @@ A protocol is an endpoint for EWS service connections. It contains all necessary
 Protocols should be accessed through an Account, and are either created from a default Configuration or autodiscovered
 when creating an Account.
 """
+import abc
 import datetime
 import logging
 import os
@@ -645,24 +646,28 @@ class TLSClientAuth(requests.adapters.HTTPAdapter):
         return super().init_poolmanager(*args, **kwargs)
 
 
-class RetryPolicy:
+class RetryPolicy(metaclass=abc.ABCMeta):
     """Stores retry logic used when faced with errors from the server"""
     @property
+    @abc.abstractmethod
     def fail_fast(self):
         # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
         # policy is used.
-        raise NotImplementedError()
+        pass
 
     @property
+    @abc.abstractmethod
     def back_off_until(self):
-        raise NotImplementedError()
+        pass
 
     @back_off_until.setter
+    @abc.abstractmethod
     def back_off_until(self, value):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def back_off(self, seconds):
-        raise NotImplementedError()
+        pass
 
 
 class FailFast(RetryPolicy):
@@ -674,6 +679,9 @@ class FailFast(RetryPolicy):
     @property
     def back_off_until(self):
         return None
+
+    def back_off(self, seconds):
+        raise ValueError('Cannot back off with fail-fast policy')
 
 
 class FaultTolerance(RetryPolicy):

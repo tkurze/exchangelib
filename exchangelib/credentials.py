@@ -42,10 +42,7 @@ class BaseCredentials(metaclass=abc.ABCMeta):
           session: requests session asking for refreshed credentials
 
         """
-        raise NotImplementedError(
-            'Credentials object does not support refreshing. '
-            + 'See class documentation on automatic refreshing, or subclass and implement refresh().'
-        )
+        pass
 
     def _get_hash_values(self):
         return (getattr(self, k) for k in self.__dict__ if k != '_lock')

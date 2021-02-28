@@ -98,14 +98,14 @@ class EWSService(metaclass=abc.ABCMeta):
     #     """Defines the arguments required by the service. Arguments are basic Python types or EWSElement objects.
     #     Returns either XML objects or EWSElement objects.
     #     """"
-    #     raise NotImplementedError()
+    #     pass
 
     # @abc.abstractmethod
     # def get_payload(self, **kwargs):
     #     """Using the arguments from .call(), return the payload expected by the service, as an XML object. The XML
     #     object should consist of a SERVICE_NAME element and everything within that.
     #     """
-    #     raise NotImplementedError()
+    #     pass
 
     def get(self, expect_result=True, **kwargs):
         """Like .call(), but expects exactly one result from the server, or zero when expect_result=False, or either

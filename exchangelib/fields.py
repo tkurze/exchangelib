@@ -318,11 +318,11 @@ class Field(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def from_xml(self, elem, account):
-        raise NotImplementedError()
+        pass
 
     @abc.abstractmethod
     def to_xml(self, value, version):
-        raise NotImplementedError()
+        pass
 
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
@@ -339,7 +339,7 @@ class Field(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __hash__(self):
-        raise NotImplementedError()
+        pass
 
     def __repr__(self):
         return self.__class__.__name__ + '(%s)' % ', '.join('%s=%r' % (f, getattr(self, f)) for f in (
@@ -1205,9 +1205,6 @@ class EmailAddressesField(IndexedField):
         kwargs['value_cls'] = EmailAddress
         super().__init__(*args, **kwargs)
 
-    def field_uri_xml(self):
-        raise NotImplementedError()
-
     def clean(self, value, version=None):
         if value is not None:
             default_labels = self.value_cls.LABEL_CHOICES
@@ -1233,9 +1230,6 @@ class PhoneNumberField(IndexedField):
         kwargs['value_cls'] = PhoneNumber
         super().__init__(*args, **kwargs)
 
-    def field_uri_xml(self):
-        raise NotImplementedError()
-
 
 class PhysicalAddressField(IndexedField):
     is_list = True
@@ -1246,9 +1240,6 @@ class PhysicalAddressField(IndexedField):
         from .indexed_properties import PhysicalAddress
         kwargs['value_cls'] = PhysicalAddress
         super().__init__(*args, **kwargs)
-
-    def field_uri_xml(self):
-        raise NotImplementedError()
 
 
 class ExtendedPropertyField(Field):
