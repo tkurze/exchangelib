@@ -22,8 +22,8 @@ class GetDelegate(EWSAccountService):
         else:
             # Pooling expects an iterable of items but we have None. Just call _get_elements directly.
             res = self._get_elements(payload=self.get_payload(
-                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
                 user_ids=user_ids,
+                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
                 include_permissions=include_permissions,
             ))
 
@@ -32,7 +32,7 @@ class GetDelegate(EWSAccountService):
                 raise elem
             yield DelegateUser.from_xml(elem=elem, account=self.account)
 
-    def get_payload(self, mailbox, user_ids, include_permissions):
+    def get_payload(self, user_ids, mailbox, include_permissions):
         payload = create_element(
             'm:%s' % self.SERVICE_NAME,
             attrs=dict(IncludePermissions='true' if include_permissions else 'false'),

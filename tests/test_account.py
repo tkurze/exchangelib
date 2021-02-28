@@ -114,6 +114,10 @@ class AccountTest(EWSTest):
             len(self.account.delegates),
             0
         )
+        self.assertGreaterEqual(
+            len(list(GetDelegate(account=self.account).call(user_ids=['foo@example.com'], include_permissions=True))),
+            0
+        )
 
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
