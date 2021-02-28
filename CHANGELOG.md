@@ -10,6 +10,9 @@ HEAD
     messages as junk email, and optionally move them to the junk folder.
 -   Add support for Master Category Lists, also known as User Configurations. These are custom values
     that can be assigned to folders.
+-   `Persona` objects as returned by `QuerySet.people()` now supports almost all documented fields.
+-   Improved `QuerySet.people()` to call the `GetPersona` service if at least one field i requested that
+    is not supported by the `FindPeople` service.
 
 
 3.3.2

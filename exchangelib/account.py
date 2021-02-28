@@ -21,7 +21,7 @@ from .properties import Mailbox, SendingAs, MovedItemId
 from .protocol import Protocol
 from .queryset import QuerySet
 from .services import ExportItems, UploadItems, GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, SendItem, \
-    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate, MarkAsJunk
+    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate, MarkAsJunk, GetPersona
 from .util import get_domain, peek
 
 log = getLogger(__name__)
@@ -640,6 +640,24 @@ class Account:
             else:
                 item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
                 yield item
+
+    def fetch_personas(self, ids):
+        """Fetch personas by ID
+
+        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :return: A generator of Persona objects, in the same order as the input
+        """
+        if isinstance(ids, QuerySet):
+            ids = ids.iterator()
+        is_empty, ids = peek(ids)
+        if is_empty:
+            # We accept generators, so it's not always convenient for caller to know up-front if 'ids' is empty. Allow
+            # empty 'ids' and return early.
+            return
+        # GetPersona only accepts one persona ID per request. Crazy.
+        svc = GetPersona(account=self)
+        for i in ids:
+            yield svc.call(persona=i)
 
     @property
     def mail_tips(self):

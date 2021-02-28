@@ -465,6 +465,11 @@ class PersonaId(ItemId):
 
     __slots__ = tuple()
 
+    @classmethod
+    def response_tag(cls):
+        # This element is in MNS in the request and TNS in the response...
+        return '{%s}%s' % (TNS, cls.ELEMENT_NAME)
+
 
 class SourceId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sourceid"""

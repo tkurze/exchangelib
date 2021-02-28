@@ -171,14 +171,11 @@ class QuerySet(SearchableMixIn):
         }[return_format](items)
 
     def _query(self):
-        from .items import Persona
         if self.only_fields is None:
             # We didn't restrict list of field paths. Get all fields from the server, including extended properties.
             if self.request_type == self.PERSONA:
-                additional_fields = {FieldPath(field=f) for f in Persona.supported_fields(
-                    version=self.folder_collection.account.version
-                ) if not f.is_complex}
-                complex_fields_requested = False
+                additional_fields = {}  # GetPersona doesn't take explicit fields. Don't bother calculating the list
+                complex_fields_requested = True
             else:
                 additional_fields = {FieldPath(field=f) for f in self.folder_collection.allowed_item_fields()}
                 complex_fields_requested = True
@@ -213,7 +210,15 @@ class QuerySet(SearchableMixIn):
             offset=self.offset,
         )
         if self.request_type == self.PERSONA:
-            items = self.folder_collection.find_people(self.q, **find_kwargs)
+            if complex_fields_requested:
+                find_kwargs['additional_fields'] = None
+                items = self.folder_collection.account.fetch_personas(
+                    ids=self.folder_collection.find_people(self.q, **find_kwargs)
+                )
+            else:
+                if not additional_fields:
+                    find_kwargs['additional_fields'] = None
+                items = self.folder_collection.find_people(self.q, **find_kwargs)
         else:
             find_kwargs['calendar_view'] = self.calendar_view
             if complex_fields_requested:

@@ -98,7 +98,7 @@ class ContactsTest(CommonItemTest):
         dl.delete()
 
     def test_find_people(self):
-        # The test server may not have any contacts. Just test that the FindPeople service and helpers work
+        # The test server may not have any contacts. Just test that the FindPeople and GetPersona services work.
         self.assertGreaterEqual(len(list(self.test_folder.people())), 0)
         self.assertGreaterEqual(
             len(list(
@@ -108,7 +108,7 @@ class ContactsTest(CommonItemTest):
         )
 
     def test_get_persona(self):
-        ws = GetPersona(protocol=self.account.protocol)
+        ws = GetPersona(account=self.account)
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -204,6 +204,6 @@ class ContactsTest(CommonItemTest):
         # The test server may not have any personas. Just test that the service response with something we can parse
         persona = Persona(id='AAA=', changekey='xxx')
         try:
-            GetPersona(protocol=self.account.protocol).call(persona=persona)
+            GetPersona(account=self.account).call(persona=persona)
         except ErrorInvalidIdMalformed:
             pass
