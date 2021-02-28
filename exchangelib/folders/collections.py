@@ -3,11 +3,11 @@ import logging
 from cached_property import threaded_cached_property
 
 from ..fields import FieldPath
-from ..items import Item, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
+from ..items import Item, Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
 from ..properties import CalendarView, InvalidField
-from ..queryset import QuerySet, SearchableMixIn
+from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
-from ..services import FindFolder, GetFolder, FindItem
+from ..services import FindFolder, GetFolder, FindItem, FindPeople
 from ..util import require_account
 from .queryset import FOLDER_TRAVERSAL_CHOICES
 
@@ -87,6 +87,9 @@ class FolderCollection(SearchableMixIn):
 
     def exclude(self, *args, **kwargs):
         return QuerySet(self).exclude(*args, **kwargs)
+
+    def people(self):
+        return QuerySet(self).people()
 
     def view(self, start, end, max_items=None, *args, **kwargs):
         """Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
@@ -218,6 +221,74 @@ class FolderCollection(SearchableMixIn):
                 else:
                     yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)
 
+    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                    page_size=None, max_items=None, offset=0):
+        """Private method to call the FindPeople service
+
+        Args:
+          q: a Q instance containing any restrictions
+          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+            non-null, we always return Persona objects. (Default value = ID_ONLY)
+          depth: controls the whether to return soft-deleted items or not. (Default value = None)
+          additional_fields: the extra properties we want on the return objects. Default is no properties.
+          order_fields: the SortOrder fields, if any (Default value = None)
+          page_size: the requested number of items per page (Default value = None)
+          max_items: the max number of items to return (Default value = None)
+          offset: the offset relative to the first item in the item collection (Default value = 0)
+
+        Returns:
+          a generator for the returned personas
+
+        """
+        if len(self.folders) > 1:
+            log.debug('Searching for personas can only be done on a single folder')
+            return
+        if not self.folders:
+            log.debug('Folder list is empty')
+            return
+        if q.is_never():
+            log.debug('Query will never return results')
+            return
+        if shape not in SHAPE_CHOICES:
+            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
+        if depth is None:
+            depth = self._get_default_item_traversal_depth()
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise ValueError("'depth' %s must be one of %s" % (depth, ITEM_TRAVERSAL_CHOICES))
+        if additional_fields:
+            for f in additional_fields:
+                Persona.validate_field(field=f, version=self.account.version)
+                if f.field.is_complex:
+                    raise ValueError("find_people() does not support field '%s'" % f.field.name)
+
+        # Build up any restrictions
+        if q.is_empty():
+            restriction = None
+            query_string = None
+        elif q.query_string:
+            restriction = None
+            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        else:
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = None
+        personas = FindPeople(account=self.account, chunk_size=page_size).call(
+                folder=self.folders,
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                shape=shape,
+                query_string=query_string,
+                depth=depth,
+                max_items=max_items,
+                offset=offset,
+        )
+        if shape == ID_ONLY and additional_fields is None:
+            for p in personas:
+                yield p if isinstance(p, Exception) else Persona.id_from_xml(p)
+        else:
+            for p in personas:
+                yield p if isinstance(p, Exception) else Persona.from_xml(p, account=self.account)
+
     def get_folder_fields(self, target_cls, is_complex=None):
         return {
             FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
@@ -284,13 +355,15 @@ class FolderCollection(SearchableMixIn):
                      offset=0):
         # 'depth' controls whether to return direct children or recurse into sub-folders
         from .base import BaseFolder, Folder
+        if q is None:
+            q = Q()
         if not self.folders:
             log.debug('Folder list is empty')
             return
-        if q is not None and q.is_never():
+        if q.is_never():
             log.debug('Query will never return results')
             return
-        if q is None or q.is_empty():
+        if q.is_empty():
             restriction = None
         else:
             restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)

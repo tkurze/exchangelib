@@ -22,9 +22,9 @@ class FolderQuerySet:
         if not isinstance(folder_collection, FolderCollection):
             raise ValueError("'folder_collection' %r must be a FolderCollection instance" % folder_collection)
         self.folder_collection = folder_collection
+        self.q = Q()  # Default to no restrictions
         self.only_fields = None
         self._depth = None
-        self.q = None
 
     def _copy_cls(self):
         return self.__class__(folder_collection=self.folder_collection)
@@ -32,9 +32,9 @@ class FolderQuerySet:
     def _copy_self(self):
         """Chaining operations must make a copy of self before making any modifications"""
         new_qs = self._copy_cls()
+        new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
         new_qs._depth = self._depth
-        new_qs.q = None if self.q is None else deepcopy(self.q)
         return new_qs
 
     def only(self, *args):
@@ -113,7 +113,7 @@ class FolderQuerySet:
         """
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
-        new_qs.q = q if new_qs.q is None else new_qs.q & q
+        new_qs.q = new_qs.q & q
         return new_qs
 
     def __iter__(self):

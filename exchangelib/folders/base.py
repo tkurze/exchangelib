@@ -6,12 +6,11 @@ from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFol
     ErrorDeleteDistinguishedFolder
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField
-from ..items import CalendarItem, RegisterMixIn, Persona, ITEM_CLASSES, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, \
-    ID_ONLY, DELETE_TYPE_CHOICES, HARD_DELETE, SHALLOW as SHALLOW_ITEMS
+from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
+    SHALLOW as SHALLOW_ITEMS
 from ..properties import Mailbox, FolderId, ParentFolderId, InvalidField, DistinguishedFolderId, Fields
-from ..queryset import QuerySet, SearchableMixIn, DoesNotExist
-from ..restriction import Restriction
-from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, FindPeople, GetUserConfiguration, \
+from ..queryset import SearchableMixIn, DoesNotExist
+from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
@@ -305,67 +304,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn):
         return FolderCollection(account=self.account, folders=[self]).exclude(*args, **kwargs)
 
     def people(self):
-        return QuerySet(
-            folder_collection=FolderCollection(account=self.account, folders=[self]),
-            request_type=QuerySet.PERSONA,
-        )
-
-    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                    page_size=None, max_items=None, offset=0):
-        """Private method to call the FindPeople service
-
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
-            non-null, we always return Persona objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties.
-          order_fields: the SortOrder fields, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
-
-        Returns:
-          a generator for the returned personas
-
-        """
-        if shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
-        if depth is None:
-            depth = self.DEFAULT_ITEM_TRAVERSAL_DEPTH
-        if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise ValueError("'depth' %s must be one of %s" % (depth, ITEM_TRAVERSAL_CHOICES))
-        if additional_fields:
-            for f in additional_fields:
-                Persona.validate_field(field=f, version=self.account.version)
-                if f.field.is_complex:
-                    raise ValueError("find_people() does not support field '%s'" % f.field.name)
-
-        # Build up any restrictions
-        if q.is_empty():
-            restriction = None
-            query_string = None
-        elif q.query_string:
-            restriction = None
-            query_string = Restriction(q, folders=[self], applies_to=Restriction.ITEMS)
-        else:
-            restriction = Restriction(q, folders=[self], applies_to=Restriction.ITEMS)
-            query_string = None
-        personas = FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=self,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                shape=shape,
-                query_string=query_string,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
-        )
-        for p in personas:
-            if isinstance(p, Exception):
-                raise p
-            yield p
+        # No point in using a FolderCollection because FindPeople only supports one folder
+        return FolderCollection(account=self.account, folders=[self]).people()
 
     def bulk_create(self, items, *args, **kwargs):
         return self.account.bulk_create(folder=self, items=items, *args, **kwargs)

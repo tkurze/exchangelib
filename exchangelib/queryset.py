@@ -203,37 +203,25 @@ class QuerySet(SearchableMixIn):
         else:
             extra_order_fields = set()
 
+        find_kwargs = dict(
+            shape=ID_ONLY,  # Always use IdOnly here, because AllProperties doesn't actually get *all* properties
+            depth=self._depth,
+            additional_fields=additional_fields,
+            order_fields=order_fields,
+            page_size=self.page_size,
+            max_items=self.max_items,
+            offset=self.offset,
+        )
         if self.request_type == self.PERSONA:
-            if len(self.folder_collection) != 1:
-                raise ValueError('Personas can only be queried on a single folder')
-            items = list(self.folder_collection)[0].find_people(
-                self.q,
-                shape=ID_ONLY,
-                depth=self._depth,
-                additional_fields=additional_fields,
-                order_fields=order_fields,
-                page_size=self.page_size,
-                max_items=self.max_items,
-                offset=self.offset,
-            )
+            items = self.folder_collection.find_people(self.q, **find_kwargs)
         else:
-            find_item_kwargs = dict(
-                shape=ID_ONLY,  # Always use IdOnly here, because AllProperties doesn't actually get *all* properties
-                depth=self._depth,
-                additional_fields=additional_fields,
-                order_fields=order_fields,
-                calendar_view=self.calendar_view,
-                page_size=self.page_size,
-                max_items=self.max_items,
-                offset=self.offset,
-            )
-
+            find_kwargs['calendar_view'] = self.calendar_view
             if complex_fields_requested:
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
-                find_item_kwargs['additional_fields'] = None
+                find_kwargs['additional_fields'] = None
                 items = self.folder_collection.account.fetch(
-                    ids=self.folder_collection.find_items(self.q, **find_item_kwargs),
+                    ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
                     chunk_size=self.page_size,
                 )
@@ -242,8 +230,8 @@ class QuerySet(SearchableMixIn):
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
                     # take a shortcut by using (shape=ID_ONLY, additional_fields=None) to tell find_items() to return
                     # (id, changekey) tuples. We'll post-process those later.
-                    find_item_kwargs['additional_fields'] = None
-                items = self.folder_collection.find_items(self.q, **find_item_kwargs)
+                    find_kwargs['additional_fields'] = None
+                items = self.folder_collection.find_items(self.q, **find_kwargs)
 
         if not must_sort_clientside:
             return items
