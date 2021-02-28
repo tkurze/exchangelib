@@ -13,7 +13,9 @@ HEAD
 -   `Persona` objects as returned by `QuerySet.people()` now supports almost all documented fields.
 -   Improved `QuerySet.people()` to call the `GetPersona` service if at least one field i requested that
     is not supported by the `FindPeople` service.
-
+-   Removed the internal caching in `QuerySet`. It's not necessary in most use cases for exchangelib,
+    and the memory overhead and complexity is not worth the extra effort. This means that `.iterator()`
+    is now a no-op and marked as deprecated.
 
 3.3.2
 -----

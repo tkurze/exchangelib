@@ -330,11 +330,9 @@ class Account:
         )
 
     def _consume_item_service(self, service_cls, items, chunk_size, kwargs):
-        # 'items' could be an unevaluated QuerySet, e.g. if we ended up here via `some_folder.filter(...).delete()`. In
-        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
-        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
         if isinstance(items, QuerySet):
-            items = items.iterator()
+            # We just want an iterator over the results
+            items = iter(items)
         is_empty, items = peek(items)
         if is_empty:
             # We accept generators, so it's not always convenient for caller to know up-front if 'ids' is empty. Allow
@@ -648,7 +646,8 @@ class Account:
         :return: A generator of Persona objects, in the same order as the input
         """
         if isinstance(ids, QuerySet):
-            ids = ids.iterator()
+            # We just want an iterator over the results
+            ids = iter(ids)
         is_empty, ids = peek(ids)
         if is_empty:
             # We accept generators, so it's not always convenient for caller to know up-front if 'ids' is empty. Allow

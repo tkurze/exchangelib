@@ -2,6 +2,7 @@ import abc
 from copy import deepcopy
 from itertools import islice
 import logging
+import warnings
 
 from .errors import MultipleObjectsReturned, DoesNotExist
 from .items import CalendarItem, ID_ONLY
@@ -77,8 +78,6 @@ class QuerySet(SearchableMixIn):
         self.offset = 0
         self._depth = None
 
-        self._cache = None
-
     def _copy_self(self):
         # When we copy a queryset where the cache has already been filled, we don't copy the cache. Thus, a copied
         # queryset will fetch results from the server again.
@@ -109,10 +108,6 @@ class QuerySet(SearchableMixIn):
         new_qs.offset = self.offset
         new_qs._depth = self._depth
         return new_qs
-
-    @property
-    def is_cached(self):
-        return self._cache is not None
 
     def _get_field_path(self, field_path):
         from .items import Persona
@@ -271,23 +266,12 @@ class QuerySet(SearchableMixIn):
         # Fill cache if this is the first iteration. Return an iterator over the results. Make this non-greedy by
         # filling the cache while we are iterating.
         #
-        # We don't set self._cache until the iterator is finished. Otherwise an interrupted iterator would leave the
-        # cache in an inconsistent state.
-        if self.is_cached:
-            for val in self._cache:
-                yield val
-            return
-
         if self.q.is_never():
-            self._cache = []
             return
 
         log.debug('Initializing cache')
-        _cache = []
         for val in self._format_items(items=self._query(), return_format=self.return_format):
-            _cache.append(val)
             yield val
-        self._cache = _cache
 
     """Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
     given sequence, before calling __iter__. If we implemented __len__, we would end up calling FindItems twice, once
@@ -297,8 +281,6 @@ class QuerySet(SearchableMixIn):
     a __len__ implementation should be cheap. That does not hold for self.count().
 
     def __len__(self):
-        if self.is_cached:
-            return len(self._cache)
         # This queryset has no cache yet. Call the optimized counting implementation
         return self.count()
     """
@@ -311,8 +293,6 @@ class QuerySet(SearchableMixIn):
         return self._getitem_slice(idx_or_slice)
 
     def _getitem_idx(self, idx):
-        if self.is_cached:
-            return self._cache[idx]
         if idx < 0:
             # Support negative indexes by reversing the queryset and negating the index value
             reverse_idx = -(idx+1)
@@ -331,10 +311,7 @@ class QuerySet(SearchableMixIn):
         if ((s.start or 0) < 0) or ((s.stop or 0) < 0) or ((s.step or 0) < 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
-            list(self.__iter__())
-            return self._cache[s]
-        if self.is_cached:
-            return islice(self.__iter__(), s.start, s.stop, s.step)
+            return list(self.__iter__())[s]
         # Optimize by setting an exact offset and max_items value
         new_qs = self._copy_self()
         if s.start is not None and s.stop is not None:
@@ -571,20 +548,16 @@ class QuerySet(SearchableMixIn):
         new_qs._depth = depth
         return new_qs
 
+    def iterator(self):
+        # Return an iterator over the results
+        warnings.warn('QuerySet no longer caches results. .iterator() is a no-op.', DeprecationWarning, stacklevel=2)
+        return self.__iter__()
+
     ###########################
     #
     # Methods that end chaining
     #
     ###########################
-
-    def iterator(self):
-        """ """
-        if self.q.is_never():
-            return []
-        if self.is_cached:
-            return self._cache
-        # Return an iterator that doesn't bother with caching
-        return self._format_items(items=self._query(), return_format=self.return_format)
 
     def get(self, *args, **kwargs):
         """Assume the query will return exactly one item. Return that item
@@ -594,10 +567,7 @@ class QuerySet(SearchableMixIn):
           **kwargs:
 
         """
-        if self.is_cached and not args and not kwargs:
-            # We can only safely use the cache if get() is called without args
-            items = self._cache
-        elif not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
+        if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
             account = self.folder_collection.account
@@ -621,8 +591,6 @@ class QuerySet(SearchableMixIn):
           page_size:  (Default value = 1000)
 
         """
-        if self.is_cached:
-            return len(self._cache)
         new_qs = self._copy_self()
         new_qs.only_fields = tuple()
         new_qs.order_fields = None
@@ -632,8 +600,6 @@ class QuerySet(SearchableMixIn):
 
     def exists(self):
         """Find out if the query contains any hits, with as little effort as possible"""
-        if self.is_cached:
-            return len(self._cache) > 0
         new_qs = self._copy_self()
         new_qs.max_items = 1
         return new_qs.count(page_size=1) > 0
@@ -654,18 +620,13 @@ class QuerySet(SearchableMixIn):
           **delete_kwargs:
 
         """
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_delete(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_delete(
             ids=ids,
             chunk_size=page_size,
             **delete_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def send(self, page_size=1000, **send_kwargs):
         """Send the items matching the query, with as little effort as possible. 'page_size' is the number of items
@@ -676,18 +637,13 @@ class QuerySet(SearchableMixIn):
           **send_kwargs:
 
         """
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_send(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_send(
             ids=ids,
             chunk_size=page_size,
             **send_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def copy(self, to_folder, page_size=1000, **copy_kwargs):
         """Copy the items matching the query, with as little effort as possible. 'page_size' is the number of items
@@ -699,19 +655,14 @@ class QuerySet(SearchableMixIn):
           **copy_kwargs:
 
         """
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_copy(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_copy(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
             **copy_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def move(self, to_folder, page_size=1000):
         """Move the items matching the query, with as little effort as possible. 'page_size' is the number of items
@@ -722,18 +673,13 @@ class QuerySet(SearchableMixIn):
           page_size:  (Default value = 1000)
 
         """
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_move(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_move(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
 
     def archive(self, to_folder, page_size=1000):
         """Archive the items matching the query, with as little effort as possible. 'page_size' is the number of items
@@ -744,18 +690,13 @@ class QuerySet(SearchableMixIn):
           page_size:  (Default value = 1000)
 
         """
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_archive(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_archive(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
 
     def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
         """Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
@@ -766,23 +707,16 @@ class QuerySet(SearchableMixIn):
           **mark_as_junk_kwargs:
 
         """
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_mark_as_junk(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_mark_as_junk(
             ids=ids,
             chunk_size=page_size,
             **mark_as_junk_kwargs
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
 
     def __str__(self):
         fmt_args = [('q', str(self.q)), ('folders', '[%s]' % ', '.join(str(f) for f in self.folder_collection.folders))]
-        if self.is_cached:
-            fmt_args.append(('len', str(len(self._cache))))
         return self.__class__.__name__ + '(%s)' % ', '.join('%s=%s' % (k, v) for k, v in fmt_args)
 
 

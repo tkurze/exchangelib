@@ -36,8 +36,6 @@ class QuerySetTest(TimedTestCase):
         new_qs = qs._copy_self()
         self.assertNotEqual(id(qs), id(new_qs))
         self.assertEqual(id(qs.folder_collection), id(new_qs.folder_collection))
-        self.assertEqual(id(qs._cache), id(new_qs._cache))
-        self.assertEqual(qs._cache, new_qs._cache)
         self.assertNotEqual(id(qs.q), id(new_qs.q))
         self.assertEqual(qs.q, new_qs.q)
         self.assertEqual(id(qs.only_fields), id(new_qs.only_fields))
@@ -55,8 +53,6 @@ class QuerySetTest(TimedTestCase):
 
         self.assertNotEqual(id(qs), id(new_qs))
         self.assertEqual(id(qs.folder_collection), id(new_qs.folder_collection))
-        self.assertEqual(id(qs._cache), id(new_qs._cache))
-        self.assertEqual(qs._cache, new_qs._cache)
         self.assertNotEqual(id(qs.q), id(new_qs.q))
         self.assertEqual(qs.q, new_qs.q)
         self.assertEqual(qs.only_fields, new_qs.only_fields)
@@ -71,8 +67,6 @@ class QuerySetTest(TimedTestCase):
 
         self.assertNotEqual(id(qs), id(new_qs))
         self.assertEqual(id(qs.folder_collection), id(new_qs.folder_collection))
-        self.assertEqual(id(qs._cache), id(new_qs._cache))
-        self.assertEqual(qs._cache, new_qs._cache)
         self.assertNotEqual(id(qs.q), id(new_qs.q))
         self.assertNotEqual(qs.q, new_qs.q)
         self.assertNotEqual(id(qs.only_fields), id(new_qs.only_fields))

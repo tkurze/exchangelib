@@ -1,4 +1,5 @@
 import time
+import warnings
 
 from exchangelib.folders import Inbox, FolderCollection
 from exchangelib.items import Message, SHALLOW, ASSOCIATED
@@ -148,15 +149,18 @@ class ItemQuerySetTest(BaseItemTest):
             [test_cat, test_cat, test_cat, test_cat]
         )
         # Test iterator
-        self.assertEqual(
-            set((i.subject, i.categories[0]) for i in qs.iterator()),
-            {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
-        )
-        # Test that iterator() preserves the result format
-        self.assertEqual(
-            set((i[0], i[1][0]) for i in qs.values_list('subject', 'categories').iterator()),
-            {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
-        )
+        with warnings.catch_warnings():
+            # iterator() is deprecated but we still want to test it. Silence the DeprecationWarning
+            warnings.simplefilter("ignore")
+            self.assertEqual(
+                set((i.subject, i.categories[0]) for i in qs.iterator()),
+                {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
+            )
+            # Test that iterator() preserves the result format
+            self.assertEqual(
+                set((i[0], i[1][0]) for i in qs.values_list('subject', 'categories').iterator()),
+                {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
+            )
         self.assertEqual(qs.get(subject='Item 3').subject, 'Item 3')
         with self.assertRaises(DoesNotExist):
             qs.get(subject='Item XXX')
@@ -206,7 +210,6 @@ class ItemQuerySetTest(BaseItemTest):
         for _ in qs:
             # Build up the cache
             pass
-        self.assertEqual(len(qs._cache), 4)
         with self.assertRaises(MultipleObjectsReturned):
             qs.get()  # Get with a full cache
         self.assertEqual(qs[2].subject, 'Item 2')  # Index with a full cache
@@ -267,7 +270,7 @@ class ItemQuerySetTest(BaseItemTest):
         self.test_folder.bulk_create(items=items)
         ids = self.test_folder.filter(categories__contains=self.categories).values_list('id', 'changekey')
         ids.page_size = 10
-        self.bulk_delete(ids.iterator())
+        self.bulk_delete(ids)
 
     def test_slicing(self):
         # Test that slicing works correctly

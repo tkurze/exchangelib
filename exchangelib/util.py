@@ -137,11 +137,6 @@ def peek(iterable):
       iterable:
 
     """
-    from .queryset import QuerySet
-    if isinstance(iterable, QuerySet):
-        # QuerySet has __len__ but that evaluates the entire query greedily. We don't want that here. Instead, peek()
-        # should be called on QuerySet.iterator()
-        raise ValueError('Cannot peek on a QuerySet')
     if hasattr(iterable, '__len__'):
         # tuple, list, set
         return not iterable, iterable
