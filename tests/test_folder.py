@@ -7,7 +7,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     SyncIssues, MyContacts, ToDoSearch, FolderCollection, DistinguishedFolderId, Files, \
     DefaultFoldersChangeHistory, PassThroughSearchResults, SmsAndChatsSync, GraphAnalytics, Signal, \
     PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy, Companies, \
-    OrganizationalContacts, PeopleCentricConversationBuddies
+    OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot
 from exchangelib.properties import Mailbox, InvalidField
 from exchangelib.services import GetFolder
 
@@ -45,6 +45,31 @@ class FolderTest(EWSTest):
                 self.assertEqual(f.get_item_field_by_fieldname('subject').name, 'subject')
                 with self.assertRaises(ValueError):
                     f.get_item_field_by_fieldname('XXX')
+
+    def test_folder_failure(self):
+        # Folders must have an ID
+        with self.assertRaises(ValueError):
+            self.account.root.get_folder(Folder())
+        with self.assertRaises(ValueError):
+            self.account.root.add_folder(Folder())
+        with self.assertRaises(ValueError):
+            self.account.root.update_folder(Folder())
+        with self.assertRaises(ValueError):
+            self.account.root.remove_folder(Folder())
+        # Removing a non-existent folder is allowed
+        self.account.root.remove_folder(Folder(id='XXX'))
+        # Must be called on a distinguished folder class
+        with self.assertRaises(ValueError):
+            RootOfHierarchy.get_distinguished(self.account)
+        with self.assertRaises(ValueError):
+            self.account.root.get_default_folder(Folder)
+
+    def test_public_folders_root(self):
+        # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
+        self.assertListEqual(
+            list(PublicFoldersRoot(account=self.account, is_distinguished=True).get_children(self.account.inbox)),
+            [],
+        )
 
     def test_find_folders(self):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
@@ -362,11 +387,15 @@ class FolderTest(EWSTest):
         finally:
             RootOfHierarchy.deregister('size')
 
-        # Register is only allowed on Folder and RootOfHierarchy classes
+        # Register and deregister is only allowed on Folder and RootOfHierarchy classes
         with self.assertRaises(TypeError):
             self.account.calendar.register(FolderSize)
         with self.assertRaises(TypeError):
+            self.account.calendar.deregister(FolderSize)
+        with self.assertRaises(TypeError):
             self.account.root.register(FolderSize)
+        with self.assertRaises(TypeError):
+            self.account.root.deregister(FolderSize)
 
     def test_create_update_empty_delete(self):
         f = Messages(parent=self.account.inbox, name=get_random_string(16))

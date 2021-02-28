@@ -34,78 +34,89 @@ class GenericItemTest(CommonItemTest):
                         setattr(item, f.name, 'a')
 
     def test_invalid_direct_args(self):
+        item = self.get_test_item()
+        item.account = None
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
-            item.account = None
             item.save()  # Must have account on save
+        item = self.get_test_item()
+        item.id = 'XXX'  # Fake a saved item
+        item.account = None
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
-            item.id = 'XXX'  # Fake a saved item
-            item.account = None
             item.save()  # Must have account on update
+        item = self.get_test_item()
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
             item.save(update_fields=['foo', 'bar'])  # update_fields is only valid on update
 
+        item = self.get_test_item()
+        item.account = None
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
-            item.account = None
             item.refresh()  # Must have account on refresh
+        item = self.get_test_item()
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
             item.refresh()  # Refresh an item that has not been saved
+        item = self.get_test_item()
+        item.save()
+        item_id, changekey = item.id, item.changekey
+        item.delete()
+        item.id, item.changekey = item_id, changekey
         with self.assertRaises(ErrorItemNotFound):
-            item = self.get_test_item()
-            item.save()
-            item_id, changekey = item.id, item.changekey
-            item.delete()
-            item.id, item.changekey = item_id, changekey
             item.refresh()  # Refresh an item that doesn't exist
 
+        item = self.get_test_item()
+        item.account = None
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
-            item.account = None
             item.copy(to_folder=self.test_folder)  # Must have an account on copy
+        item = self.get_test_item()
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
             item.copy(to_folder=self.test_folder)  # Must be an existing item
+        item = self.get_test_item()
+        item.save()
+        item_id, changekey = item.id, item.changekey
+        item.delete()
+        item.id, item.changekey = item_id, changekey
         with self.assertRaises(ErrorItemNotFound):
-            item = self.get_test_item()
-            item.save()
-            item_id, changekey = item.id, item.changekey
-            item.delete()
-            item.id, item.changekey = item_id, changekey
             item.copy(to_folder=self.test_folder)  # Item disappeared
 
+        item = self.get_test_item()
+        item.account = None
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
-            item.account = None
             item.move(to_folder=self.test_folder)  # Must have an account on move
+        item = self.get_test_item()
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
             item.move(to_folder=self.test_folder)  # Must be an existing item
+        item = self.get_test_item()
+        item.save()
+        item_id, changekey = item.id, item.changekey
+        item.delete()
+        item.id, item.changekey = item_id, changekey
         with self.assertRaises(ErrorItemNotFound):
-            item = self.get_test_item()
-            item.save()
-            item_id, changekey = item.id, item.changekey
-            item.delete()
-            item.id, item.changekey = item_id, changekey
             item.move(to_folder=self.test_folder)  # Item disappeared
 
+        item = self.get_test_item()
+        item.account = None
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
-            item.account = None
             item.delete()  # Must have an account
+        item = self.get_test_item()
         with self.assertRaises(ValueError):
-            item = self.get_test_item()
             item.delete()  # Must be an existing item
+        item = self.get_test_item()
+        item.save()
+        item_id, changekey = item.id, item.changekey
+        item.delete()
+        item.id, item.changekey = item_id, changekey
         with self.assertRaises(ErrorItemNotFound):
-            item = self.get_test_item()
-            item.save()
-            item_id, changekey = item.id, item.changekey
-            item.delete()
-            item.id, item.changekey = item_id, changekey
             item.delete()  # Item disappeared
+        item = self.get_test_item()
+        with self.assertRaises(ValueError):
+            item._delete(delete_type='FOO', send_meeting_cancellations=None, affected_task_occurrences=None,
+                         suppress_read_receipts=None)
+        with self.assertRaises(ValueError):
+            item.delete(send_meeting_cancellations='XXX')
+        with self.assertRaises(ValueError):
+            item._delete(affected_task_occurrences='XXX')
+        with self.assertRaises(ValueError):
+            item._delete(suppress_read_receipts='XXX')
+
 
     def test_invalid_kwargs_on_send(self):
         # Only Message class has the send() method

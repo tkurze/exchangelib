@@ -736,7 +736,6 @@ def create_folder_ids_element(tag, folders, version):
     from ..folders import FolderId
     folder_ids = create_element(tag)
     for folder in folders:
-        log.debug('Collecting folder %s', folder)
         if not isinstance(folder, FolderId):
             folder = to_item_id(folder, FolderId, version=version)
         set_xml_value(folder_ids, folder, version=version)
@@ -749,7 +748,6 @@ def create_item_ids_element(items, version):
     from ..properties import ItemId
     item_ids = create_element('m:ItemIds')
     for item in items:
-        log.debug('Collecting item %s', item)
         set_xml_value(item_ids, to_item_id(item, ItemId, version=version), version=version)
     if not len(item_ids):
         raise ValueError('"items" must not be empty')

@@ -68,6 +68,8 @@ class RootOfHierarchy(BaseFolder):
         return super().deregister(*args, **kwargs)
 
     def get_folder(self, folder):
+        if not folder.id:
+            raise ValueError("'folder' must have an ID")
         return self._folders_map.get(folder.id, None)
 
     def add_folder(self, folder):
