@@ -2,11 +2,11 @@ from inspect import isclass
 from itertools import chain
 
 from exchangelib import Folder, HTMLBody, Body, Mailbox, DLMailbox, UID, ItemId, Version
-from exchangelib.fields import TextField
+from exchangelib.fields import TextField, InvalidField, InvalidFieldForVersion
 from exchangelib.folders import RootOfHierarchy
 from exchangelib.indexed_properties import PhysicalAddress
 from exchangelib.items import Item, BulkCreateResult
-from exchangelib.properties import InvalidField, InvalidFieldForVersion, EWSElement, MessageHeader
+from exchangelib.properties import EWSElement, MessageHeader
 from exchangelib.extended_properties import ExternId, Flag
 from exchangelib.util import to_xml, TNS
 from exchangelib.version import EXCHANGE_2010, EXCHANGE_2013

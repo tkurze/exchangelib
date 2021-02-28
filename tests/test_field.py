@@ -2,11 +2,10 @@ from collections import namedtuple
 from decimal import Decimal
 
 from exchangelib import Version, EWSDateTime, EWSTimeZone, UTC
-from exchangelib.errors import ErrorInvalidServerVersion
 from exchangelib.extended_properties import ExternId
 from exchangelib.fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, \
     Base64Field, TimeZoneField, ExtendedPropertyField, CharListField, Choice, DateField, EnumField, EnumListField, \
-    CharField
+    CharField, InvalidFieldForVersion, InvalidChoiceForVersion
 from exchangelib.indexed_properties import SingleFieldIndexedElement
 from exchangelib.properties import Fields
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010, EXCHANGE_2013
@@ -158,7 +157,7 @@ class FieldTest(TimedTestCase):
 
     def test_versioned_field(self):
         field = TextField('foo', field_uri='bar', supported_from=EXCHANGE_2010)
-        with self.assertRaises(ErrorInvalidServerVersion):
+        with self.assertRaises(InvalidFieldForVersion):
             field.clean('baz', version=Version(EXCHANGE_2007))
         field.clean('baz', version=Version(EXCHANGE_2010))
         field.clean('baz', version=Version(EXCHANGE_2013))
@@ -170,7 +169,7 @@ class FieldTest(TimedTestCase):
         with self.assertRaises(ValueError):
             field.clean('XXX')  # Value must be a valid choice
         field.clean('c2', version=None)
-        with self.assertRaises(ErrorInvalidServerVersion):
+        with self.assertRaises(InvalidChoiceForVersion):
             field.clean('c2', version=Version(EXCHANGE_2007))
         field.clean('c2', version=Version(EXCHANGE_2010))
         field.clean('c2', version=Version(EXCHANGE_2013))

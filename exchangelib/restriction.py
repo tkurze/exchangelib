@@ -2,7 +2,7 @@ from collections import OrderedDict
 from copy import copy
 import logging
 
-from .properties import InvalidField
+from .fields import InvalidField
 from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
 from .version import EXCHANGE_2010
 

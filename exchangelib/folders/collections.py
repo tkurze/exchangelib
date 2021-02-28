@@ -2,9 +2,9 @@ import logging
 
 from cached_property import threaded_cached_property
 
-from ..fields import FieldPath
+from ..fields import FieldPath, InvalidField
 from ..items import Item, Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
-from ..properties import CalendarView, InvalidField
+from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
 from ..services import FindFolder, GetFolder, FindItem, FindPeople

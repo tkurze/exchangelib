@@ -5,7 +5,6 @@ from decimal import Decimal, InvalidOperation
 from importlib import import_module
 import logging
 
-from .errors import ErrorInvalidServerVersion
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
 from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
     xml_text_to_value, TNS
@@ -57,6 +56,18 @@ EXTRA_WEEKDAY_OPTIONS = (DAY, WEEK_DAY, WEEKEND_DAY)
 # DaysOfWeek enum: See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/daysofweek-daysofweektype
 WEEKDAYS = WEEKDAY_NAMES + EXTRA_WEEKDAY_OPTIONS
+
+
+class InvalidField(ValueError):
+    pass
+
+
+class InvalidFieldForVersion(ValueError):
+    pass
+
+
+class InvalidChoiceForVersion(ValueError):
+    pass
 
 
 def split_field_path(field_path):
@@ -295,7 +306,7 @@ class Field(metaclass=abc.ABCMeta):
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
-            raise ErrorInvalidServerVersion("Field '%s' does not support EWS builds prior to %s (server has %s)" % (
+            raise InvalidFieldForVersion("Field '%s' does not support EWS builds prior to %s (server has %s)" % (
                 self.name, self.supported_from, version))
         if value is None:
             if self.is_required and self.default is None:
@@ -834,7 +845,7 @@ class ChoiceField(CharField):
             if value in valid_choices_for_version:
                 return value
             if value in valid_choices:
-                raise ErrorInvalidServerVersion("Choice '%s' only supports EWS builds from %s to %s (server has %s)" % (
+                raise InvalidChoiceForVersion("Choice '%s' only supports EWS builds from %s to %s (server has %s)" % (
                     self.name, self.supported_from or '*', self.deprecated_from or '*', version))
         else:
             if value in valid_choices:

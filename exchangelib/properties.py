@@ -11,19 +11,11 @@ from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTim
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
     RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField, \
-    Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField
+    Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField, InvalidField, InvalidFieldForVersion
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
 from .version import Version, EXCHANGE_2013, Build
 
 log = logging.getLogger(__name__)
-
-
-class InvalidField(ValueError):
-    pass
-
-
-class InvalidFieldForVersion(ValueError):
-    pass
 
 
 class Fields(list):

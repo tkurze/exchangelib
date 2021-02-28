@@ -5,10 +5,10 @@ from operator import attrgetter
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
     ErrorDeleteDistinguishedFolder
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
-    Field, IdElementField
+    Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
     SHALLOW as SHALLOW_ITEMS
-from ..properties import Mailbox, FolderId, ParentFolderId, InvalidField, DistinguishedFolderId, Fields
+from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, Fields
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration
