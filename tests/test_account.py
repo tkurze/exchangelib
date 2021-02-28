@@ -205,10 +205,10 @@ class AccountTest(EWSTest):
                 return False
             return _orig1(response, retry_policy, wait)
 
-        def _mock2(response, protocol, log_msg, log_vals):
+        def _mock2(response, protocol):
             if response.status_code == 401:
                 raise UnauthorizedError('Invalid credentials for %s' % response.url)
-            return _orig2(response, protocol, log_msg, log_vals)
+            return _orig2(response, protocol)
 
         exchangelib.util._may_retry_on_error = _mock1
         exchangelib.util._raise_response_errors = _mock2

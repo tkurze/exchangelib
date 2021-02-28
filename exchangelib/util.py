@@ -721,6 +721,9 @@ Response time: %(response_time)s
 Status code: %(status_code)s
 Request headers: %(request_headers)s
 Response headers: %(response_headers)s'''
+    xml_log_msg = '''\
+Request XML: %(xml_request)s
+Response XML: %(xml_response)s'''
     log_vals = dict(
         retry=retry,
         wait=wait,
@@ -736,6 +739,10 @@ Response headers: %(response_headers)s'''
         status_code=None,
         request_headers=headers,
         response_headers=None,
+    )
+    xml_log_vals = dict(
+        xml_request=None,
+        xml_response=None,
     )
     t_start = time.monotonic()
     try:
@@ -778,8 +785,7 @@ Response headers: %(response_headers)s'''
                     response_headers=r.headers,
                 )
             log.debug(log_msg, log_vals)
-            xml_log.debug('Request XML: %(xml_data)s', dict(xml_data=data))
-            xml_log.debug('Response XML: %(xml_data)s', dict(xml_data='[STREAMING]' if stream else r.content))
+            xml_log.debug(xml_log_msg, xml_log_vals)
             if _need_new_credentials(response=r):
                 r.close()  # Release memory
                 session = protocol.refresh_credentials(session)
@@ -804,7 +810,7 @@ Response headers: %(response_headers)s'''
         raise
     except Exception as e:
         # Let higher layers handle this. Add full context for better debugging.
-        log.error(str('%s: %s\n%s'), e.__class__.__name__, str(e), log_msg % log_vals)
+        log.error('%s: %s\n%s\n%s', e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
         protocol.retire_session(session)
         raise
     if r.status_code == 500 and r.content and is_xml(r.content):
@@ -812,7 +818,10 @@ Response headers: %(response_headers)s'''
         log.debug('Got status code %s but trying to parse content anyway', r.status_code)
     elif r.status_code != 200:
         protocol.retire_session(session)
-        _raise_response_errors(r, protocol, log_msg, log_vals)  # Always raises an exception
+        try:
+            _raise_response_errors(r, protocol)  # Always raises an exception
+        finally:
+            log.error('%s\n%s', log_msg % log_vals, xml_log_msg % xml_log_vals)
     log.debug('Session %s thread %s: Useful response from %s', session.session_id, thread_id, url)
     return r, session
 
@@ -875,7 +884,7 @@ def _redirect_or_fail(response, redirects, allow_redirects):
     return redirect_url, redirects
 
 
-def _raise_response_errors(response, protocol, log_msg, log_vals):
+def _raise_response_errors(response, protocol):
     cas_error = response.headers.get('X-CasErrorCode')
     if cas_error:
         if cas_error.startswith('CAS error:'):
@@ -892,5 +901,5 @@ def _raise_response_errors(response, protocol, log_msg, log_vals):
         raise UnauthorizedError('Invalid credentials for %s' % response.url)
     if 'TimeoutException' in response.headers:
         raise response.headers['TimeoutException']
-    # This could be anything. Let higher layers handle this. Add full context for better debugging.
-    raise TransportError(str('Unknown failure\n') + log_msg % log_vals)
+    # This could be anything. Let higher layers handle this
+    raise TransportError('Unknown failure')
