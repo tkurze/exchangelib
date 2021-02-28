@@ -771,8 +771,12 @@ class IdField(CharField):
 class CharListField(CharField):
     is_list = True
 
+    def __init__(self, *args, **kwargs):
+        self.list_elem_name = kwargs.pop('list_elem_name', 'String')
+        super().__init__(*args, **kwargs)
+
     def list_elem_tag(self):
-        return '{%s}String' % self.namespace
+        return '{%s}%s' % (self.namespace, self.list_elem_name)
 
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
