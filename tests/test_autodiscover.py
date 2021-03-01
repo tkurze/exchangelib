@@ -14,7 +14,7 @@ from exchangelib.autodiscover.properties import Autodiscover
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
 from exchangelib.protocol import FaultTolerance
 from exchangelib.util import get_domain
-from .common import EWSTest
+from .common import EWSTest, get_random_string
 
 
 class AutodiscoverTest(EWSTest):
@@ -75,7 +75,7 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_magic(self, m):
         # Just test we don't fail when calling repr() and str(). Insert a dummy cache entry for testing
-        c = Credentials('leet_user', 'cannaguess')
+        c = Credentials(get_random_string(8), get_random_string(8))
         autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
             credentials=c,
@@ -133,7 +133,7 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_close_autodiscover_connections(self, m):
         # A live test that we can close TCP connections
-        c = Credentials('leet_user', 'cannaguess')
+        c = Credentials(get_random_string(8), get_random_string(8))
         autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
             credentials=c,
@@ -146,7 +146,7 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_autodiscover_direct_gc(self, m):
         # Test garbage collection of the autodiscover cache
-        c = Credentials('leet_user', 'cannaguess')
+        c = Credentials(get_random_string(8), get_random_string(8))
         autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
             credentials=c,
@@ -181,7 +181,7 @@ class AutodiscoverTest(EWSTest):
         # Poison the cache with a failing autodiscover endpoint. discover() must handle this and rebuild the cache
         autodiscover_cache[discovery._cache_key] = AutodiscoverProtocol(config=Configuration(
             service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
-            credentials=Credentials('leet_user', 'cannaguess'),
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NTLM,
             retry_policy=FailFast(),
         ))

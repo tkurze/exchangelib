@@ -7,7 +7,7 @@ import requests_mock
 from exchangelib import Configuration, Credentials, NTLM, FailFast, FaultTolerance, Version, Build
 from exchangelib.transport import AUTH_TYPE_MAP
 
-from .common import TimedTestCase
+from .common import TimedTestCase, get_random_string
 
 
 class ConfigurationTest(TimedTestCase):
@@ -34,7 +34,7 @@ class ConfigurationTest(TimedTestCase):
     def test_magic(self):
         config = Configuration(
             server='example.com',
-            credentials=Credentials('foo', 'bar'),
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NTLM,
             version=Version(build=Build(15, 1, 2, 3), api_version='foo'),
         )
@@ -48,7 +48,7 @@ class ConfigurationTest(TimedTestCase):
         # guessing missing values works.
         Configuration(
             server='example.com',
-            credentials=Credentials('foo', 'bar'),
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NTLM,
             version=Version(build=Build(15, 1, 2, 3), api_version='foo'),
         )

@@ -20,7 +20,7 @@ from exchangelib.transport import NOAUTH
 from exchangelib.version import Build
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
-from .common import EWSTest, MockResponse, get_random_datetime_range
+from .common import EWSTest, MockResponse, get_random_datetime_range, get_random_string
 
 
 class ProtocolTest(EWSTest):
@@ -28,7 +28,8 @@ class ProtocolTest(EWSTest):
     def test_pickle(self):
         # Test that we can pickle, repr and str Protocols
         o = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
         ))
         pickled_o = pickle.dumps(o)
@@ -40,7 +41,8 @@ class ProtocolTest(EWSTest):
     @requests_mock.mock()
     def test_session(self, m):
         protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
         ))
         session = protocol.create_session()
@@ -50,14 +52,15 @@ class ProtocolTest(EWSTest):
     @requests_mock.mock()
     def test_protocol_instance_caching(self, m):
         # Verify that we get the same Protocol instance for the same combination of (endpoint, credentials)
+        user, password = get_random_string(8), get_random_string(8)
         base_p = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
+            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials(user, password),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
         ))
 
         for i in range(10):
             p = Protocol(config=Configuration(
-                service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
+                service_endpoint='https://example.com/Foo.asmx', credentials=Credentials(user, password),
                 auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
             ))
             self.assertEqual(base_p, p)
@@ -78,7 +81,8 @@ class ProtocolTest(EWSTest):
 
         self.assertGreater(len(ip_addresses), 0)
         protocol = Protocol(config=Configuration(
-            service_endpoint='http://httpbin.org', credentials=Credentials('A', 'B'),
+            service_endpoint='http://httpbin.org',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast(),
             max_connections=3
         ))
@@ -113,8 +117,10 @@ class ProtocolTest(EWSTest):
         # Test increasing and decreasing the pool size
         max_connections = 3
         protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast(), max_connections=max_connections
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
+            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast(),
+            max_connections=max_connections,
         ))
         self.assertEqual(protocol._session_pool.qsize(), 0)
         self.assertEqual(protocol.session_pool_size, 0)
