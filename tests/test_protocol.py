@@ -529,7 +529,7 @@ class ProtocolTest(EWSTest):
         # Test that we can make requests when SSL verification is turned off. I don't know how to mock TLS responses
         if not self.verify_ssl:
             # We can only run this test if we haven't already disabled TLS
-            raise self.skipTest('TLS verification already disabled')
+            self.skipTest('TLS verification already disabled')
 
         default_adapter_cls = BaseProtocol.HTTP_ADAPTER_CLS
 

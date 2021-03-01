@@ -673,7 +673,7 @@ class GenericItemTest(CommonItemTest):
 
     def test_text_body(self):
         if self.account.version.build < EXCHANGE_2013:
-            raise self.skipTest('Exchange version too old')
+            self.skipTest('Exchange version too old')
         item = self.get_test_item()
         item.body = 'X' * 500  # Make body longer than the normal 256 char text field limit
         item.save()

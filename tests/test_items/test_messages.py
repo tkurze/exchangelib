@@ -22,7 +22,7 @@ class MessagesTest(CommonItemTest):
         while True:
             t2 = time.monotonic()
             if t2 - t1 > self.INCOMING_MESSAGE_TIMEOUT:
-                raise self.skipTest('Too bad. Gave up in %s waiting for the incoming message to show up' % self.id())
+                self.skipTest('Too bad. Gave up in %s waiting for the incoming message to show up' % self.id())
             try:
                 return self.account.inbox.get(subject=subject)
             except DoesNotExist:

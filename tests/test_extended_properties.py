@@ -129,7 +129,7 @@ class ExtendedPropertyTest(BaseItemTest):
     def test_extended_distinguished_property(self):
         if self.ITEM_CLASS == CalendarItem:
             # MyMeeting is an extended prop version of the 'CalendarItem.uid' field. They don't work together.
-            raise self.skipTest("This extendedproperty doesn't work on CalendarItems")
+            self.skipTest("This extendedproperty doesn't work on CalendarItems")
 
         class MyMeeting(ExtendedProperty):
             distinguished_property_set_id = 'Meeting'

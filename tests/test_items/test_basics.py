@@ -314,7 +314,7 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching fields on this model')
+            self.skipTest('No matching simple fields on this model')
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
@@ -341,7 +341,7 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching fields on this model')
+            self.skipTest('No matching list fields on this model')
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
@@ -360,7 +360,7 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching fields on this model')
+            self.skipTest('No matching single index fields on this model')
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
@@ -389,7 +389,7 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching fields on this model')
+            self.skipTest('No matching multi index fields on this model')
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
