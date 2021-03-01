@@ -267,81 +267,144 @@ class CommonItemTest(BaseItemTest):
                 finally:
                     f.is_searchable = False
 
-    def test_filter_on_all_fields(self):
-        # Test that we can filter on all field names
-        # TODO: Test filtering on subfields of IndexedField
-        item = self.get_test_item().save()
-        common_qs = self.test_folder.filter(categories__contains=self.categories)
-        for f in self.get_item_fields():
+    def _reduce_fields_for_filter(self, item, fields):
+        for f in fields:
             if not f.supports_version(self.account.version):
                 # Cannot be used with this EWS version
                 continue
             if not f.is_searchable:
                 # Cannot be used in a QuerySet
                 continue
-            val = getattr(item, f.name)
-            if val is None:
+            if getattr(item, f.name) is None:
                 # We cannot filter on None values
                 continue
             if self.ITEM_CLASS == Contact and f.name in ('body', 'display_name'):
                 # filtering 'body' or 'display_name' on Contact items doesn't work at all. Error in EWS?
                 continue
-            if f.is_list:
-                # Filter multi-value fields with =, __in and __contains
-                if issubclass(f.value_cls, MultiFieldIndexedElement):
-                    # For these, we need to filter on the subfield
-                    filter_kwargs = []
-                    for v in val:
-                        for subfield in f.value_cls.supported_fields(version=self.account.version):
-                            field_path = FieldPath(field=f, label=v.label, subfield=subfield)
-                            path, subval = field_path.path, field_path.get_value(item)
-                            if subval is None:
-                                continue
-                            filter_kwargs.extend([
-                                {path: subval}, {'%s__in' % path: [subval]}, {'%s__contains' % path: [subval]}
-                            ])
-                elif issubclass(f.value_cls, SingleFieldIndexedElement):
-                    # For these, we may filter by item or subfield value
-                    filter_kwargs = []
-                    for v in val:
-                        for subfield in f.value_cls.supported_fields(version=self.account.version):
-                            field_path = FieldPath(field=f, label=v.label, subfield=subfield)
-                            path, subval = field_path.path, field_path.get_value(item)
-                            if subval is None:
-                                continue
-                            filter_kwargs.extend([
-                                {f.name: v}, {path: subval},
-                                {'%s__in' % path: [subval]}, {'%s__contains' % path: [subval]}
-                            ])
+            yield f
+
+    def _run_filter_tests(self, qs, f, filter_kwargs, val):
+        for kw in filter_kwargs:
+            with self.subTest(f=f, kw=kw):
+                matches = qs.filter(**kw).count()
+                if isinstance(f, TextField) and f.is_complex:
+                    # Complex text fields sometimes fail a search using generated data. In production,
+                    # they almost always work anyway. Give it one more try after 10 seconds; it seems EWS does
+                    # some sort of indexing that needs to catch up.
+                    if not matches and isinstance(f, BodyField):
+                        # The body field is particularly nasty in this area. Give up
+                        continue
+                    if not matches:
+                        time.sleep(10)
+                        matches = qs.filter(**kw).count()
+                if f.is_list and not val and list(kw)[0].endswith('__%s' % Q.LOOKUP_IN):
+                    # __in with an empty list returns an empty result
+                    self.assertEqual(matches, 0, (f.name, val, kw))
                 else:
-                    filter_kwargs = [{'%s__in' % f.name: val}, {'%s__contains' % f.name: val}]
-            else:
-                # Filter all others with =, __in and __contains. We could have more filters here, but these should
-                # always match.
-                filter_kwargs = [{f.name: val}, {'%s__in' % f.name: [val]}]
-                if isinstance(f, TextField) and not isinstance(f, ChoiceField):
-                    # Choice fields cannot be filtered using __contains. Sort of makes sense.
-                    random_start = get_random_int(min_val=0, max_val=len(val)//2)
-                    random_end = get_random_int(min_val=len(val)//2+1, max_val=len(val))
-                    filter_kwargs.append({'%s__contains' % f.name: val[random_start:random_end]})
-            for kw in filter_kwargs:
-                with self.subTest(f=f, kw=kw):
-                    matches = common_qs.filter(**kw).count()
-                    if isinstance(f, TextField) and f.is_complex:
-                        # Complex text fields sometimes fail a search using generated data. In production,
-                        # they almost always work anyway. Give it one more try after 10 seconds; it seems EWS does
-                        # some sort of indexing that needs to catch up.
-                        if not matches and isinstance(f, BodyField):
-                            # The body field is particularly nasty in this area. Give up
-                            continue
-                        if not matches:
-                            time.sleep(10)
-                            matches = common_qs.filter(**kw).count()
-                    if f.is_list and not val and list(kw)[0].endswith('__%s' % Q.LOOKUP_IN):
-                        # __in with an empty list returns an empty result
-                        self.assertEqual(matches, 0, (f.name, val, kw))
-                    else:
-                        self.assertEqual(matches, 1, (f.name, val, kw))
+                    self.assertEqual(matches, 1, (f.name, val, kw))
+
+    def test_filter_on_simple_fields(self):
+        # Test that we can filter on all simple fields
+        item = self.get_test_item()
+        fields = []
+        for f in self._reduce_fields_for_filter(item, self.get_item_fields()):
+            if f.is_list:
+                continue
+            fields.append(f)
+        if not fields:
+            self.skipTest('No matching fields on this model')
+        item.save()
+        common_qs = self.test_folder.filter(categories__contains=self.categories)
+        for f in fields:
+            val = getattr(item, f.name)
+            # Filter with =, __in and __contains. We could have more filters here, but these should always match.
+            filter_kwargs = [{f.name: val}, {'%s__in' % f.name: [val]}]
+            if isinstance(f, TextField) and not isinstance(f, ChoiceField):
+                # Choice fields cannot be filtered using __contains. Sort of makes sense.
+                random_start = get_random_int(min_val=0, max_val=len(val)//2)
+                random_end = get_random_int(min_val=len(val)//2+1, max_val=len(val))
+                filter_kwargs.append({'%s__contains' % f.name: val[random_start:random_end]})
+            self._run_filter_tests(common_qs, f, filter_kwargs, val)
+
+    def test_filter_on_list_fields(self):
+        # Test that we can filter on all list fields
+        item = self.get_test_item()
+        fields = []
+        for f in self._reduce_fields_for_filter(item, self.get_item_fields()):
+            if not f.is_list:
+                continue
+            if issubclass(f.value_cls, MultiFieldIndexedElement):
+                continue
+            if issubclass(f.value_cls, SingleFieldIndexedElement):
+                continue
+            fields.append(f)
+        if not fields:
+            self.skipTest('No matching fields on this model')
+        item.save()
+        common_qs = self.test_folder.filter(categories__contains=self.categories)
+        for f in fields:
+            val = getattr(item, f.name)
+            # Filter multi-value fields with =, __in and __contains
+            filter_kwargs = [{'%s__in' % f.name: val}, {'%s__contains' % f.name: val}]
+            self._run_filter_tests(common_qs, f, filter_kwargs, val)
+
+    def test_filter_on_single_field_index_fields(self):
+        # Test that we can filter on all index fields
+        # TODO: Test filtering on subfields of IndexedField
+        item = self.get_test_item()
+        fields = []
+        for f in self._reduce_fields_for_filter(item, self.get_item_fields()):
+            if not issubclass(f.value_cls, SingleFieldIndexedElement):
+                continue
+            fields.append(f)
+        if not fields:
+            self.skipTest('No matching fields on this model')
+        item.save()
+        common_qs = self.test_folder.filter(categories__contains=self.categories)
+        for f in fields:
+            val = getattr(item, f.name)
+            # For these, we may filter by item or subfield value
+            filter_kwargs = []
+            for v in val:
+                for subfield in f.value_cls.supported_fields(version=self.account.version):
+                    field_path = FieldPath(field=f, label=v.label, subfield=subfield)
+                    path, subval = field_path.path, field_path.get_value(item)
+                    if subval is None:
+                        continue
+                    filter_kwargs.extend([
+                        {f.name: v}, {path: subval},
+                        {'%s__in' % path: [subval]}, {'%s__contains' % path: [subval]}
+                    ])
+            self._run_filter_tests(common_qs, f, filter_kwargs, val)
+
+    def test_filter_on_multi_field_index_fields(self):
+        # Test that we can filter on all index fields
+        # TODO: Test filtering on subfields of IndexedField
+        item = self.get_test_item()
+        fields = []
+        for f in self._reduce_fields_for_filter(item, self.get_item_fields()):
+            if not issubclass(f.value_cls, MultiFieldIndexedElement):
+                continue
+            fields.append(f)
+        if not fields:
+            self.skipTest('No matching fields on this model')
+        item.save()
+        common_qs = self.test_folder.filter(categories__contains=self.categories)
+        for f in fields:
+            val = getattr(item, f.name)
+            # Filter multi-value fields with =, __in and __contains
+            # For these, we need to filter on the subfield
+            filter_kwargs = []
+            for v in val:
+                for subfield in f.value_cls.supported_fields(version=self.account.version):
+                    field_path = FieldPath(field=f, label=v.label, subfield=subfield)
+                    path, subval = field_path.path, field_path.get_value(item)
+                    if subval is None:
+                        continue
+                    filter_kwargs.extend([
+                        {path: subval}, {'%s__in' % path: [subval]}, {'%s__contains' % path: [subval]}
+                    ])
+            self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_text_field_settings(self):
         # Test that the max_length and is_complex field settings are correctly set for text fields
