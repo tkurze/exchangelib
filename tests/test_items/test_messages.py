@@ -94,8 +94,7 @@ class MessagesTest(CommonItemTest):
         sent_item = self.get_incoming_message(item.subject)
         new_subject = ('Re: %s' % sent_item.subject)[:255]
         sent_item.reply(subject=new_subject, body='Hello reply', to_recipients=[item.author])
-        reply = self.get_incoming_message(new_subject)
-        self.account.bulk_delete([sent_item, reply])
+        self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
     def test_reply_all(self):
         # Test that we can reply-all a Message item. EWS only allows items that have been sent to receive a reply
@@ -105,8 +104,7 @@ class MessagesTest(CommonItemTest):
         sent_item = self.get_incoming_message(item.subject)
         new_subject = ('Re: %s' % sent_item.subject)[:255]
         sent_item.reply_all(subject=new_subject, body='Hello reply')
-        reply = self.get_incoming_message(new_subject)
-        self.account.bulk_delete([sent_item, reply])
+        self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
     def test_forward(self):
         # Test that we can forward a Message item. EWS only allows items that have been sent to receive a reply
@@ -116,10 +114,17 @@ class MessagesTest(CommonItemTest):
         sent_item = self.get_incoming_message(item.subject)
         new_subject = ('Re: %s' % sent_item.subject)[:255]
         sent_item.forward(subject=new_subject, body='Hello reply', to_recipients=[item.author])
-        reply = self.get_incoming_message(new_subject)
-        forward = sent_item.create_forward(subject=new_subject, body='Hello reply', to_recipients=[item.author])
-        res = forward.save(self.account.drafts)
-        self.account.bulk_delete([sent_item, reply, res])
+        self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
+
+    def test_create_forward(self):
+        # Test that we can forward a Message item. EWS only allows items that have been sent to receive a reply
+        item = self.get_test_item(folder=None)
+        item.folder = None
+        item.send()
+        sent_item = self.get_incoming_message(item.subject)
+        new_subject = ('Re: %s' % sent_item.subject)[:255]
+        sent_item.create_forward(subject=new_subject, body='Hello reply', to_recipients=[item.author]).send()
+        self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
     def test_mark_as_junk(self):
         # Test that we can mark a Message item as junk and non-junk, and that the message goes to the junk forlder and
