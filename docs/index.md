@@ -1455,5 +1455,5 @@ python -m unittest
 # Single test class or test case
 python -m unittest -k test_folder.FolderTest.test_refresh
 # Or, if you want extreme levels of debug output:
-python -m unittest -k test_folder.FolderTest.test_refresh -v
+DEBUG=1 python -m unittest -k test_folder.FolderTest.test_refresh
 ```

@@ -1,6 +1,6 @@
 import logging
 import random
-import sys
+import os
 from unittest import TestLoader, TestSuite
 import unittest.util
 
@@ -22,7 +22,7 @@ TestLoader.sortTestMethodsUsing = lambda _, x, y: random.choice((1, -1))
 # Always show full repr() output for object instances in unittest error messages
 unittest.util._MAX_LENGTH = 2000
 
-if '-v' in sys.argv:
+if os.environ.get('DEBUG', '').lower() in ('1', 'yes', 'true'):
     logging.basicConfig(level=logging.DEBUG, handlers=[PrettyXmlHandler()])
 else:
     logging.basicConfig(level=logging.CRITICAL)
