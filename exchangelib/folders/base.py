@@ -359,9 +359,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             # We don't know exactly what was deleted, so invalidate the entire folder cache to be safe
             self.root.clear_cache()
 
-    def wipe(self, page_size=None):
+    def wipe(self, page_size=None, _seen=None, _level=0):
         # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
+        _seen = _seen or set()
+        if self.id in _seen:
+            raise RecursionError('We already tried to wipe %s' % self)
+        if _level > 16:
+            raise RecursionError('Max recursion level reached: %s', _level)
+        _seen.add(self.id)
         log.warning('Wiping %s', self)
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
         try:
@@ -380,8 +386,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
                     self.all().delete(**dict(page_size=page_size) if page_size else dict())
                 except (ErrorAccessDenied, ErrorCannotDeleteObject):
                     log.warning('Not allowed to delete items in %s', self)
+        _level += 1
         for f in self.children:
-            f.wipe(page_size=page_size)
+            f.wipe(page_size=page_size, _seen=_seen, _level=_level)
             # Remove non-distinguished children that are empty and have no subfolders
             if f.is_deletable and not f.children:
                 log.warning('Deleting folder %s', f)
