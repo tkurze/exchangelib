@@ -783,6 +783,10 @@ Response XML: %(xml_response)s'''
                     request_headers=r.request.headers,
                     response_headers=r.headers,
                 )
+                xml_log_vals.update(
+                    xml_request=data,
+                    xml_response='[STREAMING]' if stream else r.content,
+                )
             log.debug(log_msg, log_vals)
             xml_log.debug(xml_log_msg, xml_log_vals)
             if _need_new_credentials(response=r):
