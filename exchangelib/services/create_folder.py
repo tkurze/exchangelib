@@ -10,9 +10,9 @@ class CreateFolder(EWSAccountService):
     def call(self, parent_folder, folders):
         # We can't easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case 'folders' is a generator
+        folders_list = list(folders)  # Convert to a list, in case 'folders' is a generator. We're iterating twice.
         for folder, elem in zip(folders_list, self._chunked_get_elements(
-                self.get_payload, items=folders, parent_folder=parent_folder,
+                self.get_payload, items=folders_list, parent_folder=parent_folder,
         )):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
