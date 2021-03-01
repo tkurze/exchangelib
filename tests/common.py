@@ -340,12 +340,16 @@ def get_random_time(start_time=datetime.time.min, end_time=datetime.time.max):
 # The timezone we're testing (CET/CEST) had a DST date change in 1996 (see
 # https://en.wikipedia.org/wiki/Summer_Time_in_Europe). The Microsoft timezone definition on the server
 # does not observe that, but IANA does. So random datetimes before 1996 will fail tests randomly.
-def get_random_date(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1)):
+RANDOM_DATE_MIN = EWSDate(1996, 1, 1)
+RANDOM_DATE_MAX = EWSDate(2030, 1, 1)
+
+
+def get_random_date(start_date=RANDOM_DATE_MIN, end_date=RANDOM_DATE_MAX):
     # Keep with a reasonable date range. A wider date range is unstable WRT timezones
     return EWSDate.fromordinal(random.randint(start_date.toordinal(), end_date.toordinal()))
 
 
-def get_random_datetime(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1), tz=UTC):
+def get_random_datetime(start_date=RANDOM_DATE_MIN, end_date=RANDOM_DATE_MAX, tz=UTC):
     # Create a random datetime with minute precision. Both dates are inclusive.
     # Keep with a reasonable date range. A wider date range than the default values is unstable WRT timezones.
     random_date = get_random_date(start_date=start_date, end_date=end_date)
@@ -354,7 +358,7 @@ def get_random_datetime(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1
     return EWSDateTime.from_datetime(random_datetime).replace(tzinfo=tz)
 
 
-def get_random_datetime_range(start_date=EWSDate(1996, 1, 1), end_date=EWSDate(2030, 1, 1), tz=UTC):
+def get_random_datetime_range(start_date=RANDOM_DATE_MIN, end_date=RANDOM_DATE_MAX, tz=UTC):
     # Create two random datetimes.  Both dates are inclusive.
     # Keep with a reasonable date range. A wider date range than the default values is unstable WRT timezones.
     # Calendar items raise ErrorCalendarDurationIsTooLong if duration is > 5 years.
