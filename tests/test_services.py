@@ -85,10 +85,14 @@ class ServicesTest(EWSTest):
         # so it's easier to only mock the response.
         self.account.root  # Needed to get past the GetFolder request
         m.post(self.account.protocol.service_endpoint, content=xml)
-        self.account.protocol.config.retry_policy = FaultTolerance(max_wait=0)
-        with self.assertRaises(ErrorServerBusy) as e:
-            list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
-        self.assertEqual(e.exception.back_off, None)  # ErrorTooManyObjectsOpened has no BackOffMilliseconds value
+        orig_policy = self.account.protocol.config.retry_policy
+        try:
+            self.account.protocol.config.retry_policy = FaultTolerance(max_wait=0)
+            with self.assertRaises(ErrorServerBusy) as e:
+                list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
+            self.assertEqual(e.exception.back_off, None)  # ErrorTooManyObjectsOpened has no BackOffMilliseconds value
+        finally:
+            self.account.protocol.config.retry_policy = orig_policy
 
     def test_soap_error(self):
         soap_xml = """\

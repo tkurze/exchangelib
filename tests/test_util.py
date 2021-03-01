@@ -151,7 +151,7 @@ class UtilTest(EWSTest):
         url = 'https://example.com'
 
         protocol = self.account.protocol
-        retry_policy = protocol.config.retry_policy
+        orig_policy = protocol.config.retry_policy
         RETRY_WAIT = exchangelib.util.RETRY_WAIT
         MAX_REDIRECTS = exchangelib.util.MAX_REDIRECTS
 
@@ -249,7 +249,7 @@ class UtilTest(EWSTest):
         finally:
             protocol.retire_session(session)  # We have patched the session, so discard it
             # Restore patched attributes and functions
-            protocol.config.retry_policy = retry_policy
+            protocol.config.retry_policy = orig_policy
             exchangelib.util.RETRY_WAIT = RETRY_WAIT
             exchangelib.util.MAX_REDIRECTS = MAX_REDIRECTS
 
