@@ -107,7 +107,7 @@ class EWSTest(TimedTestCase):
         self.categories = [get_random_string(length=16, spaces=False, special=False)]
 
     def wipe_test_account(self):
-        # Deletes up all deleteable items in the test account. Not run in a normal test run
+        # Deletes up all deletable items in the test account. Not run in a normal test run
         self.account.root.wipe(page_size=100)
 
     def bulk_delete(self, ids):

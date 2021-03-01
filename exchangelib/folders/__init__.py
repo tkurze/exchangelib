@@ -7,12 +7,12 @@ from .known_folders import AdminAuditLogs, AllContacts, AllItems, ArchiveDeleted
     Conflicts, Contacts, ConversationHistory, ConversationSettings, DefaultFoldersChangeHistory, DeferredAction, \
     DeletedItems, Directory, Drafts, ExchangeSyncData, Favorites, Files, FreebusyData, Friends, GALContacts, \
     GraphAnalytics, IMContactList, Inbox, Journal, JunkEmail, LocalFailures, Location, MailboxAssociations, Messages, \
-    MsgFolderRoot, MyContacts, MyContactsExtended, NonDeleteableFolderMixin, Notes, Outbox, ParkedMessages, \
+    MsgFolderRoot, MyContacts, MyContactsExtended, NonDeletableFolderMixin, Notes, Outbox, ParkedMessages, \
     PassThroughSearchResults, PdpProfileV2Secured, PeopleConnect, QuickContacts, RSSFeeds, RecipientCache, \
     RecoverableItemsDeletions, RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Reminders, \
     Schedule, SearchFolders, SentItems, ServerFailures, Sharing, Shortcuts, Signal, SmsAndChatsSync, SpoolerQueue, \
     SyncIssues, System, Tasks, TemporarySaves, ToDoSearch, Views, VoiceMail, WellknownFolder, WorkingSet, \
-    Companies, OrganizationalContacts, PeopleCentricConversationBuddies, NON_DELETEABLE_FOLDERS
+    Companies, OrganizationalContacts, PeopleCentricConversationBuddies, NON_DELETABLE_FOLDERS
 from .queryset import FolderQuerySet, SingleFolderQuerySet, FOLDER_TRAVERSAL_CHOICES, SHALLOW, DEEP, SOFT_DELETED
 from .roots import Root, ArchiveRoot, PublicFoldersRoot, RootOfHierarchy
 
@@ -27,13 +27,13 @@ __all__ = [
     'DeletedItems', 'Directory', 'Drafts', 'ExchangeSyncData', 'Favorites', 'Files', 'FreebusyData', 'Friends',
     'GALContacts', 'GraphAnalytics', 'IMContactList', 'Inbox', 'Journal', 'JunkEmail', 'LocalFailures',
     'Location', 'MailboxAssociations', 'Messages', 'MsgFolderRoot', 'MyContacts', 'MyContactsExtended',
-    'NonDeleteableFolderMixin', 'Notes', 'Outbox', 'ParkedMessages', 'PassThroughSearchResults',
+    'NonDeletableFolderMixin', 'Notes', 'Outbox', 'ParkedMessages', 'PassThroughSearchResults',
     'PdpProfileV2Secured', 'PeopleConnect', 'QuickContacts', 'RSSFeeds', 'RecipientCache',
     'RecoverableItemsDeletions', 'RecoverableItemsPurges', 'RecoverableItemsRoot', 'RecoverableItemsVersions',
     'Reminders', 'Schedule', 'SearchFolders', 'SentItems', 'ServerFailures', 'Sharing', 'Shortcuts', 'Signal',
     'SmsAndChatsSync', 'SpoolerQueue', 'SyncIssues', 'System', 'Tasks', 'TemporarySaves', 'ToDoSearch', 'Views',
     'VoiceMail', 'WellknownFolder', 'WorkingSet', 'Companies', 'OrganizationalContacts',
-    'PeopleCentricConversationBuddies', 'NON_DELETEABLE_FOLDERS',
+    'PeopleCentricConversationBuddies', 'NON_DELETABLE_FOLDERS',
     'FolderQuerySet', 'SingleFolderQuerySet', 'FOLDER_TRAVERSAL_CHOICES', 'SHALLOW', 'DEEP', 'SOFT_DELETED',
     'Root', 'ArchiveRoot', 'PublicFoldersRoot', 'RootOfHierarchy',
 ]

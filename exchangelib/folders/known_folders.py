@@ -383,13 +383,13 @@ class VoiceMail(WellknownFolder):
     __slots__ = tuple()
 
 
-class NonDeleteableFolderMixin:
+class NonDeletableFolderMixin:
     @property
-    def is_deleteable(self):
+    def is_deletable(self):
         return False
 
 
-class AllContacts(NonDeleteableFolderMixin, Contacts):
+class AllContacts(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = 'IPF.Note'
 
     LOCALIZED_NAMES = {
@@ -398,7 +398,7 @@ class AllContacts(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class AllItems(NonDeleteableFolderMixin, Folder):
+class AllItems(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF'
 
     LOCALIZED_NAMES = {
@@ -407,7 +407,7 @@ class AllItems(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Audits(NonDeleteableFolderMixin, Folder):
+class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Audits',),
     }
@@ -415,14 +415,14 @@ class Audits(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class CalendarLogging(NonDeleteableFolderMixin, Folder):
+class CalendarLogging(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Calendar Logging',),
     }
     __slots__ = tuple()
 
 
-class CommonViews(NonDeleteableFolderMixin, Folder):
+class CommonViews(NonDeletableFolderMixin, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
         None: ('Common Views',),
@@ -430,7 +430,7 @@ class CommonViews(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Companies(NonDeleteableFolderMixin, Contacts):
+class Companies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = 'IPF.Contact.Company'
     LOCALIZED_NAMES = {
@@ -439,7 +439,7 @@ class Companies(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class ConversationSettings(NonDeleteableFolderMixin, Folder):
+class ConversationSettings(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.Configuration'
     LOCALIZED_NAMES = {
         'da_DK': ('Indstillinger for samtalehandlinger',),
@@ -447,7 +447,7 @@ class ConversationSettings(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class DefaultFoldersChangeHistory(NonDeleteableFolderMixin, Folder):
+class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPM.DefaultFolderHistoryItem'
     LOCALIZED_NAMES = {
         None: ('DefaultFoldersChangeHistory',),
@@ -455,21 +455,21 @@ class DefaultFoldersChangeHistory(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class DeferredAction(NonDeleteableFolderMixin, Folder):
+class DeferredAction(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Deferred Action',),
     }
     __slots__ = tuple()
 
 
-class ExchangeSyncData(NonDeleteableFolderMixin, Folder):
+class ExchangeSyncData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('ExchangeSyncData',),
     }
     __slots__ = tuple()
 
 
-class Files(NonDeleteableFolderMixin, Folder):
+class Files(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.Files'
 
     LOCALIZED_NAMES = {
@@ -478,14 +478,14 @@ class Files(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class FreebusyData(NonDeleteableFolderMixin, Folder):
+class FreebusyData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Freebusy Data',),
     }
     __slots__ = tuple()
 
 
-class Friends(NonDeleteableFolderMixin, Contacts):
+class Friends(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = 'IPF.Note'
 
     LOCALIZED_NAMES = {
@@ -494,7 +494,7 @@ class Friends(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class GALContacts(NonDeleteableFolderMixin, Contacts):
+class GALContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINER_CLASS = 'IPF.Contact.GalContacts'
 
@@ -504,7 +504,7 @@ class GALContacts(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class GraphAnalytics(NonDeleteableFolderMixin, Folder):
+class GraphAnalytics(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.StoreItem.GraphAnalytics'
     LOCALIZED_NAMES = {
         None: ('GraphAnalytics',),
@@ -512,21 +512,21 @@ class GraphAnalytics(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Location(NonDeleteableFolderMixin, Folder):
+class Location(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Location',),
     }
     __slots__ = tuple()
 
 
-class MailboxAssociations(NonDeleteableFolderMixin, Folder):
+class MailboxAssociations(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('MailboxAssociations',),
     }
     __slots__ = tuple()
 
 
-class MyContactsExtended(NonDeleteableFolderMixin, Contacts):
+class MyContactsExtended(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = 'IPF.Note'
     LOCALIZED_NAMES = {
         None: ('MyContactsExtended',),
@@ -534,7 +534,7 @@ class MyContactsExtended(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class OrganizationalContacts(NonDeleteableFolderMixin, Contacts):
+class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = 'IPF.Contact.OrganizationalContacts'
     LOCALIZED_NAMES = {
@@ -543,7 +543,7 @@ class OrganizationalContacts(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class ParkedMessages(NonDeleteableFolderMixin, Folder):
+class ParkedMessages(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
         None: ('ParkedMessages',),
@@ -551,7 +551,7 @@ class ParkedMessages(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class PassThroughSearchResults(NonDeleteableFolderMixin, Folder):
+class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.StoreItem.PassThroughSearchResults'
     LOCALIZED_NAMES = {
         None: ('Pass-Through Search Results',),
@@ -559,7 +559,7 @@ class PassThroughSearchResults(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class PeopleCentricConversationBuddies(NonDeleteableFolderMixin, Contacts):
+class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = 'IPF.Contact.PeopleCentricConversationBuddies'
     LOCALIZED_NAMES = {
@@ -568,7 +568,7 @@ class PeopleCentricConversationBuddies(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class PdpProfileV2Secured(NonDeleteableFolderMixin, Folder):
+class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.StoreItem.PdpProfileSecured'
     LOCALIZED_NAMES = {
         None: ('PdpProfileV2Secured',),
@@ -576,7 +576,7 @@ class PdpProfileV2Secured(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Reminders(NonDeleteableFolderMixin, Folder):
+class Reminders(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'Outlook.Reminder'
     LOCALIZED_NAMES = {
         'da_DK': ('Påmindelser',),
@@ -584,7 +584,7 @@ class Reminders(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class RSSFeeds(NonDeleteableFolderMixin, Folder):
+class RSSFeeds(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.Note.OutlookHomepage'
     LOCALIZED_NAMES = {
         None: ('RSS Feeds',),
@@ -592,14 +592,14 @@ class RSSFeeds(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Schedule(NonDeleteableFolderMixin, Folder):
+class Schedule(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Schedule',),
     }
     __slots__ = tuple()
 
 
-class Sharing(NonDeleteableFolderMixin, Folder):
+class Sharing(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.Note'
     LOCALIZED_NAMES = {
         None: ('Sharing',),
@@ -607,14 +607,14 @@ class Sharing(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Shortcuts(NonDeleteableFolderMixin, Folder):
+class Shortcuts(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Shortcuts',),
     }
     __slots__ = tuple()
 
 
-class Signal(NonDeleteableFolderMixin, Folder):
+class Signal(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.StoreItem.Signal'
     LOCALIZED_NAMES = {
         None: ('Signal',),
@@ -622,7 +622,7 @@ class Signal(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class SmsAndChatsSync(NonDeleteableFolderMixin, Folder):
+class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = 'IPF.SmsAndChatsSync'
     LOCALIZED_NAMES = {
         None: ('SmsAndChatsSync',),
@@ -630,14 +630,14 @@ class SmsAndChatsSync(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class SpoolerQueue(NonDeleteableFolderMixin, Folder):
+class SpoolerQueue(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Spooler Queue',),
     }
     __slots__ = tuple()
 
 
-class System(NonDeleteableFolderMixin, Folder):
+class System(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('System',),
     }
@@ -645,7 +645,7 @@ class System(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class System1(NonDeleteableFolderMixin, Folder):
+class System1(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('System1',),
     }
@@ -653,21 +653,21 @@ class System1(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class TemporarySaves(NonDeleteableFolderMixin, Folder):
+class TemporarySaves(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('TemporarySaves',),
     }
     __slots__ = tuple()
 
 
-class Views(NonDeleteableFolderMixin, Folder):
+class Views(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Views',),
     }
     __slots__ = tuple()
 
 
-class WorkingSet(NonDeleteableFolderMixin, Folder):
+class WorkingSet(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ('Working Set',),
     }
@@ -676,7 +676,7 @@ class WorkingSet(NonDeleteableFolderMixin, Folder):
 
 # Folders that return 'ErrorDeleteDistinguishedFolder' when we try to delete them. I can't find any official docs
 # listing these folders.
-NON_DELETEABLE_FOLDERS = [
+NON_DELETABLE_FOLDERS = [
     AllContacts,
     AllItems,
     Audits,

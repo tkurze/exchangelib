@@ -78,7 +78,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         pass
 
     @property
-    def is_deleteable(self):
+    def is_deletable(self):
         return not self.is_distinguished
 
     def clean(self, version=None):
@@ -386,7 +386,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         for f in self.children:
             f.wipe(page_size=page_size)
             # Remove non-distinguished children that are empty and have no subfolders
-            if f.is_deleteable and not f.children:
+            if f.is_deletable and not f.children:
                 log.warning('Deleting folder %s', f)
                 try:
                     f.delete()
