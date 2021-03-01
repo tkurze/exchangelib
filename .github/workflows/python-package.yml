@@ -10,8 +10,20 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  pre_job:
+    # Cancels all other running workflow runs. We don't want to have two parallel test
+    # suites running against the test server.
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'true'
 
+  build:
+    # Install all requirements, run the test suite, and clean up the server test account.
     runs-on: ubuntu-latest
     strategy:
       matrix:
