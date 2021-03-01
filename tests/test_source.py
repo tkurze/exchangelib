@@ -13,7 +13,7 @@ class StyleTest(TimedTestCase):
         import exchangelib
         flake8.defaults.MAX_LINE_LENGTH = 120
         app = flake8.main.application.Application()
-        app.run(exchangelib.__path__)
+        app.run(exchangelib.__path__ + ['-j', '0'])  # Multiprocessing doesn't work with parallel tests runners
         # If this fails, look at stdout for actual error messages
         self.assertEqual(app.result_count, 0)
 
