@@ -841,7 +841,7 @@ def _back_off_if_needed(back_off_until):
 
 
 def _may_retry_on_error(response, retry_policy, wait):
-    if response.status_code not in (301, 302, 401, 503):
+    if response.status_code not in (301, 302, 401, 500, 503):
         # Don't retry if we didn't get a status code that we can hope to recover from
         log.debug('No retry: wrong status code %s', response.status_code)
         return False
@@ -855,11 +855,14 @@ def _may_retry_on_error(response, retry_policy, wait):
     # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. Redirect to
     # '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS certificate
     # f*ckups on the Exchange server.
+    #
+    # "Server Error in '/EWS' Application" has been seen in highly concurrent settings.
     if (response.status_code == 401) \
             or (response.headers.get('connection') == 'close') \
             or (response.status_code == 302 and response.headers.get('location', '').lower() ==
                 '/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx') \
-            or (response.status_code == 503):
+            or (response.status_code == 503) \
+            or (response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content):
         log.debug('Retry allowed: conditions met')
         return True
     return False
