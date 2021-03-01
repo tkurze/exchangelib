@@ -1454,6 +1454,8 @@ python -m unittest
 
 # Single test class or test case
 python -m unittest -k test_folder.FolderTest.test_refresh
-# Or, if you want extreme levels of debug output:
+# If you want extreme levels of debug output:
 DEBUG=1 python -m unittest -k test_folder.FolderTest.test_refresh
+# Tests can be run in parallel if you install the 'unittest-parallel' package
+unittest-parallel -j 4
 ```
