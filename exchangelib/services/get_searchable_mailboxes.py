@@ -47,5 +47,4 @@ class GetSearchableMailboxes(EWSService):
                 if isinstance(container_or_exc, (bool, Exception)):
                     yield container_or_exc
                     continue
-                for c in self._get_elements_in_container(container=container_or_exc):
-                    yield c
+                yield from self._get_elements_in_container(container=container_or_exc)
