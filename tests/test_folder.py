@@ -259,13 +259,11 @@ class FolderTest(EWSTest):
                     self.assertEqual(getattr(f, field.name), old_values[field.name], (f, field.name))
 
         # Test refresh of root
-        all_folders = sorted(f.name for f in self.account.root.walk())
+        orig_name = self.account.root.name
+        self.account.root.name = 'xxx'
         self.account.root.refresh()
         self.assertIsNone(self.account.root._subfolders)
-        self.assertEqual(
-            sorted(f.name for f in self.account.root.walk()),
-            all_folders
-        )
+        self.assertEqual(self.account.root.name, orig_name)
 
         folder = Folder()
         with self.assertRaises(ValueError):
