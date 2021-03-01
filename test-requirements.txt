@@ -1,0 +1,9 @@
+coverage
+coveralls
+flake8
+psutil
+python-dateutil
+pytz
+PyYAML
+requests_mock
+unittest-parallel
