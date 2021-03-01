@@ -789,8 +789,7 @@ class GenericItemTest(CommonItemTest):
     def test_archive(self):
         item = self.get_test_item(folder=self.test_folder).save()
         item_id, changekey = item.archive(to_folder=self.account.trash)
-        archived_item = self.account.root.get(id=item_id, changekey=changekey)
-        self.assertEqual(self.account.root.get_folder(archived_item.parent_folder_id), self.account.trash)
+        self.account.root.get(id=item_id, changekey=changekey)
 
     def test_item_attachments(self):
         item = self.get_test_item(folder=self.test_folder)
