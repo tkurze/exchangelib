@@ -1,5 +1,6 @@
 import datetime
 import os
+import pickle
 import socket
 import tempfile
 import warnings
@@ -24,9 +25,20 @@ from .common import EWSTest, MockResponse, get_random_datetime_range
 
 class ProtocolTest(EWSTest):
 
+    def test_pickle(self):
+        # Test that we can pickle, repr and str Protocols
+        o = Protocol(config=Configuration(
+            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
+            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
+        ))
+        pickled_o = pickle.dumps(o)
+        unpickled_o = pickle.loads(pickled_o)
+        self.assertIsInstance(unpickled_o, type(o))
+        self.assertEqual(repr(o), repr(unpickled_o))
+        self.assertEqual(str(o), str(unpickled_o))
+
     @requests_mock.mock()
     def test_session(self, m):
-        m.get('https://example.com/EWS/types.xsd', status_code=200)
         protocol = Protocol(config=Configuration(
             service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
@@ -38,7 +50,6 @@ class ProtocolTest(EWSTest):
     @requests_mock.mock()
     def test_protocol_instance_caching(self, m):
         # Verify that we get the same Protocol instance for the same combination of (endpoint, credentials)
-        m.get('https://example.com/EWS/types.xsd', status_code=200)
         base_p = Protocol(config=Configuration(
             service_endpoint='https://example.com/Foo.asmx', credentials=Credentials('A', 'B'),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
