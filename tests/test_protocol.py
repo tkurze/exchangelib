@@ -20,7 +20,8 @@ from exchangelib.transport import NOAUTH
 from exchangelib.version import Build
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
-from .common import EWSTest, MockResponse, get_random_datetime_range, get_random_string
+from .common import EWSTest, MockResponse, get_random_datetime_range, get_random_string, RANDOM_DATE_MIN, \
+    RANDOM_DATE_MAX
 
 
 class ProtocolTest(EWSTest):
@@ -419,7 +420,11 @@ class ProtocolTest(EWSTest):
 
     def test_oof_settings(self):
         # First, ensure a common starting point
-        self.account.oof_settings = OofSettings(state=OofSettings.DISABLED)
+        self.account.oof_settings = OofSettings(
+            state=OofSettings.DISABLED,
+            start=EWSDateTime.combine(RANDOM_DATE_MIN, datetime.time.min, tzinfo=UTC),
+            end=EWSDateTime.combine(RANDOM_DATE_MAX, datetime.time.max, tzinfo=UTC),
+        )
 
         oof = OofSettings(
             state=OofSettings.ENABLED,
@@ -455,6 +460,8 @@ class ProtocolTest(EWSTest):
 
         oof = OofSettings(
             state=OofSettings.DISABLED,
+            start=start,
+            end=end,
         )
         self.account.oof_settings = oof
         self.assertEqual(self.account.oof_settings, oof)
