@@ -294,8 +294,10 @@ class CommonItemTest(BaseItemTest):
                     if not matches and isinstance(f, BodyField):
                         # The body field is particularly nasty in this area. Give up
                         continue
-                    if not matches:
-                        time.sleep(10)
+                    for i in range(5):
+                        if matches:
+                            break
+                        time.sleep(2)
                         matches = qs.filter(**kw).count()
                 if f.is_list and not val and list(kw)[0].endswith('__%s' % Q.LOOKUP_IN):
                     # __in with an empty list returns an empty result
