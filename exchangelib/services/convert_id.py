@@ -18,11 +18,17 @@ class ConvertId(EWSService):
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, items, destination_format):
-        from ..properties import ID_FORMATS
+        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
         if destination_format not in ID_FORMATS:
             raise ValueError("'destination_format' %r must be one of %s" % (destination_format, ID_FORMATS))
-
-        return self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+        cls_map = {cls.response_tag(): cls for cls in (
+            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+        )}
+        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
         from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId

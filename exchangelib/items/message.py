@@ -1,7 +1,7 @@
 import logging
 
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
-from ..properties import ReferenceItemId, ReminderMessageData, Fields, MovedItemId
+from ..properties import ReferenceItemId, ReminderMessageData, Fields
 from ..services import SendItem, MarkAsJunk
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
@@ -161,7 +161,7 @@ class Message(Item):
         if res is None:
             return
         self.folder = self.account.junk if is_junk else self.account.inbox
-        self.id, self.changekey = MovedItemId.id_from_xml(res)
+        self.id, self.changekey = res
 
 
 class ReplyToItem(BaseReplyItem):

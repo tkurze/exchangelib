@@ -7,7 +7,12 @@ class MarkAsJunk(EWSAccountService):
     SERVICE_NAME = 'MarkAsJunk'
 
     def call(self, items, is_junk, move_item):
-        return self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
+        from ..properties import MovedItemId
+        for elem in self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield MovedItemId.id_from_xml(elem)
 
     @staticmethod
     def _get_elements_in_container(container):

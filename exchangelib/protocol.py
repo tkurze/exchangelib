@@ -581,16 +581,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
 
         """
-        from .properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        cls_map = {cls.response_tag(): cls for cls in (
-            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        )}
-        for i in ConvertId(protocol=self).call(items=ids, destination_format=destination_format):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                id_cls = cls_map[i.tag]
-                yield id_cls.from_xml(i, account=None)
+        return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
     def __getstate__(self):
         # The lock and thread pool cannot be pickled

@@ -16,6 +16,7 @@ class GetSearchableMailboxes(EWSService):
 
     def call(self, search_filter, expand_group_membership):
         from ..properties import SearchableMailbox, FailedMailbox
+        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
         for elem in self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,
                 expand_group_membership=expand_group_membership,
@@ -23,12 +24,7 @@ class GetSearchableMailboxes(EWSService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if elem.tag == SearchableMailbox.response_tag():
-                yield SearchableMailbox.from_xml(elem=elem, account=None)
-            elif elem.tag == FailedMailbox.response_tag():
-                yield FailedMailbox.from_xml(elem=elem, account=None)
-            else:
-                raise ValueError("Unknown element tag '%s': (%s)" % (elem.tag, elem))
+            yield cls_map[elem.tag].from_xml(elem=elem, account=None)
 
     def get_payload(self, search_filter, expand_group_membership):
         payload = create_element('m:%s' % self.SERVICE_NAME)

@@ -8,7 +8,7 @@ from ..properties import ConversationId, ParentFolderId, ReferenceItemId, Occurr
 from ..services import GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, CopyItem, ArchiveItem
 from ..util import is_iterable, require_account, require_id
 from ..version import EXCHANGE_2010, EXCHANGE_2013
-from .base import BaseItem, BulkCreateResult, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
+from .base import BaseItem, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
     AUTO_RESOLVE, SOFT_DELETE, HARD_DELETE, ALL_OCCURRENCIES, MOVE_TO_DELETED_ITEMS
 
 log = logging.getLogger(__name__)
@@ -135,16 +135,13 @@ class Item(BaseItem):
     @require_account
     def _create(self, message_disposition, send_meeting_invitations):
         # Return a BulkCreateResult because we want to return the ID of both the main item *and* attachments
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
             expect_result=message_disposition not in (SEND_ONLY, SEND_AND_SAVE_COPY),
         )
-        if res is None:
-            return
-        return BulkCreateResult.from_xml(elem=res, account=self)
 
     def _update_fieldnames(self):
         from .contact import Contact, DistributionList
@@ -180,7 +177,7 @@ class Item(BaseItem):
         if not update_fieldnames:
             # The fields to update was not specified explicitly. Update all fields where update is possible
             update_fieldnames = self._update_fieldnames()
-        res = UpdateItem(account=self.account).get(
+        return UpdateItem(account=self.account).get(
             items=[(self, update_fieldnames)],
             message_disposition=message_disposition,
             conflict_resolution=conflict_resolution,
@@ -188,9 +185,6 @@ class Item(BaseItem):
             suppress_read_receipts=True,
             expect_result=message_disposition != SEND_AND_SAVE_COPY,
         )
-        if res is None:
-            return
-        return Item.id_from_xml(res)
 
     @require_id
     def refresh(self):
@@ -200,8 +194,7 @@ class Item(BaseItem):
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
 
-        elem = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
-        res = Folder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+        res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
         if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
             # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
             # the ID of this item changes.
@@ -215,15 +208,12 @@ class Item(BaseItem):
 
     @require_id
     def copy(self, to_folder):
-        res = CopyItem(account=self.account).get(
+        # If 'to_folder' is a public folder or a folder in a different mailbox then None is returned
+        return CopyItem(account=self.account).get(
             items=[self],
             to_folder=to_folder,
             expect_result=None,
         )
-        if res is None:
-            # Assume 'to_folder' is a public folder or a folder in a different mailbox
-            return
-        return Item.id_from_xml(res)
 
     @require_id
     def move(self, to_folder):
@@ -236,7 +226,7 @@ class Item(BaseItem):
             # Assume 'to_folder' is a public folder or a folder in a different mailbox
             self._id = None
             return
-        self._id = self.ID_ELEMENT_CLS(*Item.id_from_xml(res))
+        self._id = self.ID_ELEMENT_CLS(*res)
         self.folder = to_folder
 
     def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
@@ -274,8 +264,7 @@ class Item(BaseItem):
 
     @require_id
     def archive(self, to_folder):
-        res = ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)
-        return Item.id_from_xml(elem=res)
+        return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)
 
     def attach(self, attachments):
         """Add an attachment, or a list of attachments, to this item. If the item has already been saved, the

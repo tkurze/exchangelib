@@ -117,7 +117,6 @@ class GenericItemTest(CommonItemTest):
         with self.assertRaises(ValueError):
             item.delete(suppress_read_receipts='XXX')
 
-
     def test_invalid_kwargs_on_send(self):
         # Only Message class has the send() method
         item = self.get_test_item()

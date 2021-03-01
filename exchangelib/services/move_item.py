@@ -9,9 +9,14 @@ class MoveItem(EWSAccountService):
 
     def call(self, items, to_folder):
         from ..folders import BaseFolder, FolderId
+        from ..items import Item
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError("'to_folder' %r must be a Folder or FolderId instance" % to_folder)
-        return self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder)
+        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs

@@ -2,8 +2,7 @@ from exchangelib.attachments import FileAttachment, ItemAttachment, AttachmentId
 from exchangelib.errors import ErrorItemNotFound, ErrorInvalidIdMalformed
 from exchangelib.folders import Inbox
 from exchangelib.items import Item, Message
-from exchangelib.services import GetAttachment
-from exchangelib.util import chunkify, TNS
+from exchangelib.util import chunkify
 
 from .test_items.test_basics import BaseItemTest
 from .common import get_random_string
@@ -76,14 +75,6 @@ class AttachmentsTest(BaseItemTest):
         fresh_attachments = sorted(fresh_item.attachments, key=lambda a: a.name)
         self.assertEqual(fresh_attachments[0].name, 'my_file_1.txt')
         self.assertEqual(fresh_attachments[0].content, binary_file_content)
-
-        # Test raw call to service
-        self.assertEqual(
-            list(GetAttachment(account=item.account).call(
-                items=[att1.attachment_id],
-                include_mime_content=False)
-            )[0].find('{%s}Content' % TNS).text,
-            'SGVsbG8gZnJvbSB1bmljb2RlIMOmw7jDpQ==')
 
         # Test attach on saved object
         att2 = FileAttachment(name='my_file_2.txt', content=binary_file_content)

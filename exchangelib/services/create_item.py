@@ -19,8 +19,8 @@ class CreateItem(EWSAccountService):
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         from ..folders import BaseFolder, FolderId
-        from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, SEND_MEETING_INVITATIONS_CHOICES, \
-            MESSAGE_DISPOSITION_CHOICES
+        from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+            SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
             raise ValueError("'message_disposition' %s must be one of %s" % (
                 message_disposition, MESSAGE_DISPOSITION_CHOICES
@@ -40,13 +40,17 @@ class CreateItem(EWSAccountService):
             folder = self.account.sent  # 'Sent' is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError("Folder must be None in send-ony mode")
-        return self._chunked_get_elements(
+        for elem in self._chunked_get_elements(
             self.get_payload,
             items=items,
             folder=folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-        )
+        ):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
         """Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.

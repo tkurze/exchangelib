@@ -16,8 +16,8 @@ from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, 
     Notes, Outbox, PeopleConnect, PublicFoldersRoot, QuickContacts, RecipientCache, RecoverableItemsDeletions, \
     RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Root, SearchFolders, SentItems, \
     ServerFailures, SyncIssues, Tasks, ToDoSearch, VoiceMail
-from .items import Item, BulkCreateResult, HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
-from .properties import Mailbox, SendingAs, MovedItemId
+from .items import HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
+from .properties import Mailbox, SendingAs
 from .protocol import Protocol
 from .queryset import QuerySet
 from .services import ExportItems, UploadItems, GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, SendItem, \
@@ -339,8 +339,7 @@ class Account:
             # empty 'ids' and return early.
             return
         kwargs['items'] = items
-        for i in service_cls(account=self, chunk_size=chunk_size).call(**kwargs):
-            yield i
+        yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
         """Return export strings of the given items
@@ -408,15 +407,11 @@ class Account:
             message_disposition,
             send_meeting_invitations,
         )
-        return list(
-            i if isinstance(i, Exception)
-            else BulkCreateResult.from_xml(elem=i, account=self)
-            for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                folder=folder,
-                message_disposition=message_disposition,
-                send_meeting_invitations=send_meeting_invitations,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            folder=folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=send_meeting_invitations,
+        )))
 
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
@@ -451,15 +446,12 @@ class Account:
             message_disposition,
             send_meeting_invitations_or_cancellations,
         )
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                conflict_resolution=conflict_resolution,
-                message_disposition=message_disposition,
-                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-                suppress_read_receipts=suppress_read_receipts,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
@@ -531,12 +523,9 @@ class Account:
           Status for each send operation, in the same order as the input
 
         """
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
         """Move items to another folder
@@ -551,12 +540,9 @@ class Account:
           folder in a different mailbox, an empty list is returned.
 
         """
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_archive(self, ids, to_folder, chunk_size=None):
         """Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
@@ -571,9 +557,7 @@ class Account:
           A list containing True or an exception instance in stable order of the requested items
 
         """
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
             ))
         )
@@ -592,13 +576,10 @@ class Account:
           stable order of the requested items.
 
         """
-        return list(
-            i if isinstance(i, Exception) else MovedItemId.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
-                is_junk=is_junk,
-                move_item=move_item,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+            is_junk=is_junk,
+            move_item=move_item,
+        )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
         """Fetch items by ID
@@ -629,15 +610,10 @@ class Account:
             additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
                                  if not f.field.is_attribute}
         # Always use IdOnly here, because AllProperties doesn't actually get *all* properties
-        for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        yield from self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        )):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
-                yield item
+        ))
 
     def fetch_personas(self, ids):
         """Fetch personas by ID

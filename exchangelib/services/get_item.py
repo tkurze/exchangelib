@@ -19,9 +19,14 @@ class GetItem(EWSAccountService):
           XML elements for the items, in stable order
 
         """
-        return self._chunked_get_elements(
+        from ..folders.base import BaseFolder
+        for elem in self._chunked_get_elements(
             self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
-        )
+        ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
         getitem = create_element('m:%s' % self.SERVICE_NAME)

@@ -20,7 +20,12 @@ class ArchiveItem(EWSAccountService):
           None
 
         """
-        return self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder)
+        from ..items import Item
+        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
         archiveitem = create_element('m:%s' % self.SERVICE_NAME)

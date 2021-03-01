@@ -3,7 +3,7 @@ import logging
 from cached_property import threaded_cached_property
 
 from ..fields import FieldPath, InvalidField
-from ..items import Item, Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
+from ..items import Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
 from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
@@ -159,7 +159,6 @@ class FolderCollection(SearchableMixIn):
           a generator for the returned item IDs or items
 
         """
-        from .base import BaseFolder
         if not self.folders:
             log.debug('Folder list is empty')
             return
@@ -199,7 +198,7 @@ class FolderCollection(SearchableMixIn):
             additional_fields,
             restriction.q if restriction else None,
         )
-        items = FindItem(account=self.account, chunk_size=page_size).call(
+        yield from FindItem(account=self.account, chunk_size=page_size).call(
             folders=self.folders,
             additional_fields=additional_fields,
             restriction=restriction,
@@ -211,15 +210,6 @@ class FolderCollection(SearchableMixIn):
             max_items=calendar_view.max_items if calendar_view else max_items,
             offset=offset,
         )
-        if shape == ID_ONLY and additional_fields is None:
-            for i in items:
-                yield i if isinstance(i, Exception) else Item.id_from_xml(i)
-        else:
-            for i in items:
-                if isinstance(i, Exception):
-                    yield i
-                else:
-                    yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)
 
     def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                     page_size=None, max_items=None, offset=0):
@@ -271,7 +261,7 @@ class FolderCollection(SearchableMixIn):
         else:
             restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
             query_string = None
-        personas = FindPeople(account=self.account, chunk_size=page_size).call(
+        yield from FindPeople(account=self.account, chunk_size=page_size).call(
                 folder=self.folders,
                 additional_fields=additional_fields,
                 restriction=restriction,
@@ -282,12 +272,6 @@ class FolderCollection(SearchableMixIn):
                 max_items=max_items,
                 offset=offset,
         )
-        if shape == ID_ONLY and additional_fields is None:
-            for p in personas:
-                yield p if isinstance(p, Exception) else Persona.id_from_xml(p)
-        else:
-            for p in personas:
-                yield p if isinstance(p, Exception) else Persona.from_xml(p, account=self.account)
 
     def get_folder_fields(self, target_cls, is_complex=None):
         return {
@@ -386,7 +370,7 @@ class FolderCollection(SearchableMixIn):
             (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
         )
 
-        for f in FindFolder(account=self.account, chunk_size=page_size).call(
+        yield from FindFolder(account=self.account, chunk_size=page_size).call(
                 folders=self.folders,
                 additional_fields=additional_fields,
                 restriction=restriction,
@@ -394,8 +378,7 @@ class FolderCollection(SearchableMixIn):
                 depth=depth,
                 max_items=max_items,
                 offset=offset,
-        ):
-            yield f
+        )
 
     def get_folders(self, additional_fields=None):
         # Expand folders with their full set of properties

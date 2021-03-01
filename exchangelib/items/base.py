@@ -189,16 +189,13 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
                 raise AttributeError("'save_copy' must be True when 'copy_to_folder' is set")
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
         expect_result = True if isinstance(self, CancelCalendarItem) else False
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=copy_to_folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
             expect_result=expect_result,
         )
-        if res is None:
-            return
-        return BulkCreateResult.from_xml(elem=res, account=self)
 
     @require_account
     def save(self, folder):
@@ -209,13 +206,12 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
           folder:
 
         """
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=folder,
             message_disposition=SAVE_ONLY,
             send_meeting_invitations=SEND_TO_NONE,
         )
-        return BulkCreateResult.from_xml(elem=res, account=self)
 
 
 class BulkCreateResult(BaseItem):

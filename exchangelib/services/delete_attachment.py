@@ -8,7 +8,12 @@ class DeleteAttachment(EWSAccountService):
     SERVICE_NAME = 'DeleteAttachment'
 
     def call(self, items):
-        return self._chunked_get_elements(self.get_payload, items=items)
+        from ..properties import RootItemId
+        for elem in self._chunked_get_elements(self.get_payload, items=items):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield RootItemId.from_xml(elem=elem, account=self.account)
 
     @staticmethod
     def _get_elements_in_container(container):

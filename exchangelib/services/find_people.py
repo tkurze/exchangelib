@@ -33,7 +33,8 @@ class FindPeople(EWSAccountService):
           XML elements for the matching items
 
         """
-        return self._paged_call(
+        from ..items import Persona, ID_ONLY
+        for elem in self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -48,7 +49,14 @@ class FindPeople(EWSAccountService):
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        )
+        ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            if shape == ID_ONLY and additional_fields is None:
+                yield Persona.id_from_xml(elem)
+                continue
+            yield Persona.from_xml(elem, account=self.account)
 
     def get_payload(self, folder, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
                     offset=0):
