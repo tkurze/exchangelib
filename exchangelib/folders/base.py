@@ -110,8 +110,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     def _walk(self):
         for c in self.children:
             yield c
-            for f in c.walk():
-                yield f
+            yield from c.walk()
 
     def walk(self):
         return FolderCollection(account=self.account, folders=self._walk())
@@ -121,14 +120,12 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         head, tail = (split_pattern[0], None) if len(split_pattern) == 1 else split_pattern
         if head == '':
             # We got an absolute path. Restart globbing at root
-            for f in self.root.glob(tail or '*'):
-                yield f
+            yield from self.root.glob(tail or '*')
         elif head == '..':
             # Relative path with reference to parent. Restart globbing at parent
             if not self.parent:
                 raise ValueError('Already at top')
-            for f in self.parent.glob(tail or '*'):
-                yield f
+            yield from self.parent.glob(tail or '*')
         elif head == '**':
             # Match anything here or in any subfolder at arbitrary depth
             for c in self.walk():
@@ -146,8 +143,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
                 if tail is None:
                     yield c
                     continue
-                for f in c.glob(tail):
-                    yield f
+                yield from c.glob(tail)
 
     def glob(self, pattern):
         return FolderCollection(account=self.account, folders=self._glob(pattern))

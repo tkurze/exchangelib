@@ -63,8 +63,7 @@ class GetAttachment(EWSAccountService):
         # The streaming XML parser can only stream content of one attachment
         payload = self.get_payload(items=[attachment_id], include_mime_content=False)
         try:
-            for chunk in self._get_response_xml(payload=payload, stream_file_content=True):
-                yield chunk
+            yield from self._get_response_xml(payload=payload, stream_file_content=True)
         except ElementNotFound as enf:
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.

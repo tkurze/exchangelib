@@ -93,11 +93,9 @@ class UpdateItem(EWSAccountService):
             value = self._get_item_value(item, field)
             if value is None or (field.is_list and not value):
                 # A value of None or [] means we want to remove this field from the item
-                for elem in self._get_delete_item_elems(field=field):
-                    yield elem
+                yield from self._get_delete_item_elems(field=field)
             else:
-                for elem in self._get_set_item_elems(item_model=item.__class__, field=field, value=value):
-                    yield elem
+                yield from self._get_set_item_elems(item_model=item.__class__, field=field, value=value)
 
     def _get_item_value(self, item, field):
         from ..items import CalendarItem

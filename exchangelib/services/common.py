@@ -182,8 +182,7 @@ class EWSService(metaclass=abc.ABCMeta):
             try:
                 # Create a generator over the response elements so exceptions in response elements are also raised
                 # here and can be handled.
-                for i in self._response_generator(payload=payload):
-                    yield i
+                yield from self._response_generator(payload=payload)
                 return
             except ErrorServerBusy as e:
                 self._handle_backoff(e)

@@ -134,8 +134,7 @@ class FolderQuerySet:
         # GetFolder but we still want to get as much information as possible.
         folders = self.folder_collection.find_folders(q=self.q, depth=self._depth, additional_fields=non_complex_fields)
         if not complex_fields:
-            for f in folders:
-                yield f
+            yield from folders
             return
 
         # Fetch all properties for the found folders

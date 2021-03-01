@@ -299,8 +299,7 @@ class PublicFoldersRoot(RootOfHierarchy):
         children = list(super().get_children(folder=folder))
         if children:
             # Return a generator like our parent does
-            for f in children:
-                yield f
+            yield from children
             return
 
         # Also return early if the server told us that there are no child folders.
@@ -323,8 +322,7 @@ class PublicFoldersRoot(RootOfHierarchy):
         self._subfolders.update(children_map)
 
         # Child folders have been cached now. Try super().get_children() again.
-        for f in super().get_children(folder=folder):
-            yield f
+        yield from super().get_children(folder=folder)
 
 
 class ArchiveRoot(RootOfHierarchy):

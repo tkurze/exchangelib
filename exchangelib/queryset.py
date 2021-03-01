@@ -270,8 +270,7 @@ class QuerySet(SearchableMixIn):
             return
 
         log.debug('Initializing cache')
-        for val in self._format_items(items=self._query(), return_format=self.return_format):
-            yield val
+        yield from self._format_items(items=self._query(), return_format=self.return_format)
 
     """Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
     given sequence, before calling __iter__. If we implemented __len__, we would end up calling FindItems twice, once

@@ -40,8 +40,7 @@ class FolderCollection(SearchableMixIn):
         return len(self.folders)
 
     def __iter__(self):
-        for f in self.folders:
-            yield f
+        yield from self.folders
 
     def get(self, *args, **kwargs):
         return QuerySet(self).get(*args, **kwargs)
@@ -329,10 +328,9 @@ class FolderCollection(SearchableMixIn):
                 resolveable_folders.append(f)
         # Fetch all properties for the remaining folders of folder IDs
         additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
-        for f in self.__class__(account=self.account, folders=resolveable_folders).get_folders(
+        yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
                 additional_fields=additional_fields
-        ):
-            yield f
+        )
 
     @require_account
     def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
@@ -395,9 +393,8 @@ class FolderCollection(SearchableMixIn):
             (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
         )
 
-        for f in GetFolder(account=self.account).call(
+        yield from GetFolder(account=self.account).call(
                 folders=self.folders,
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        ):
-            yield f
+        )

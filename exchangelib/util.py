@@ -364,8 +364,7 @@ class StreamingBase64Parser(DefusedExpatParser):
         while buffer:
             if not self.element_found:
                 collected_data += buffer
-            for data in self.feed(buffer):
-                yield data
+            yield from self.feed(buffer)
             buffer = file.read(self._bufsize)
         # Any remaining data in self.buffer should be padding chars now
         self.buffer = None
