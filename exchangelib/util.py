@@ -905,4 +905,7 @@ def _raise_response_errors(response, protocol):
     if 'TimeoutException' in response.headers:
         raise response.headers['TimeoutException']
     # This could be anything. Let higher layers handle this
-    raise TransportError('Unknown failure')
+    raise TransportError(
+        'Unknown failure in response. Code: %s headers: %s content: %s'
+        % (response.status_code, response.headers, response.text)
+    )
