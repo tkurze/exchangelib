@@ -363,9 +363,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         log.warning('Wiping %s', self)
-        delete_kwargs = {}
-        if page_size:
-            delete_kwargs['page_size'] = page_size
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
         try:
             if has_distinguished_subfolders:
@@ -380,7 +377,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             except (ErrorAccessDenied, ErrorCannotEmptyFolder):
                 log.warning('Not allowed to empty %s. Trying to delete items instead', self)
                 try:
-                    self.all().delete(**delete_kwargs)
+                    self.all().delete(**dict(page_size=page_size) if page_size else dict())
                 except (ErrorAccessDenied, ErrorCannotDeleteObject):
                     log.warning('Not allowed to delete items in %s', self)
         for f in self.children:
