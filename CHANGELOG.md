@@ -17,9 +17,10 @@ HEAD
     and the memory overhead and complexity is not worth the extra effort. This means that `.iterator()`
     is now a no-op and marked as deprecated. ATTENTION: If you previously relied on caching of results
     in `QuerySet`, you need to do you own caching now.
--   Allow plain `date`, `datetime` and `zoneinfo` objects as values for fields and methods. This lowers
-    the barrier for using the library. We still return `EWSDate`, `EWSDateTime` and `EWSTimeZone` as
-    return values, but they are compatible with `date`, `datetime` and `zoneinfo` objects.
+-   Allow plain `date`, `datetime` and `zoneinfo.ZoneInfo` objects as values for fields and methods. This
+    lowers the barrier for using the library. We still use `EWSDate`, `EWSDateTime` and `EWSTimeZone` for
+    all values returned from the server, but these classes are subclasses of `date`, `datetime` and
+    `zoneinfo.ZoneInfo` objects and instances will behave just like instance of their parent class.
 
 
 3.3.2
