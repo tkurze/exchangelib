@@ -3,19 +3,20 @@ Change Log
 
 HEAD
 ----
--   Add a new `max_connections` option for the `Configuration` class, to increase the session poolsize
+-   Add a new `max_connections` option for the `Configuration` class, to increase the session pool size
     on a per-server, per-credentials basis. Useful when exchangelib is used with threads, where one may
     wish to increase the number of concurrent connections to the server.
 -   Add `Message.mark_as_junk()` and complementary `QuerySet.mark_as_junk()` methods to mark or un-mark
     messages as junk email, and optionally move them to the junk folder.
 -   Add support for Master Category Lists, also known as User Configurations. These are custom values
     that can be assigned to folders.
--   `Persona` objects as returned by `QuerySet.people()` now supports almost all documented fields.
--   Improved `QuerySet.people()` to call the `GetPersona` service if at least one field i requested that
+-   `Persona` objects as returned by `QuerySet.people()` now support almost all documented fields.
+-   Improved `QuerySet.people()` to call the `GetPersona` service if at least one field is requested that
     is not supported by the `FindPeople` service.
 -   Removed the internal caching in `QuerySet`. It's not necessary in most use cases for exchangelib,
     and the memory overhead and complexity is not worth the extra effort. This means that `.iterator()`
-    is now a no-op and marked as deprecated.
+    is now a no-op and marked as deprecated. ATTENTION: If you previously relied on caching of results
+    in `QuerySet`, you need to do you own caching now.
 -   Allow plain `date`, `datetime` and `zoneinfo` objects as values for fields and methods. This lowers
     the barrier for using the library. We still return `EWSDate`, `EWSDateTime` and `EWSTimeZone` as
     return values, but they are compatible with `date`, `datetime` and `zoneinfo` objects.
