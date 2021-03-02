@@ -567,13 +567,18 @@ class MimeContentField(Base64Field):
 class DateField(FieldURIField):
     value_cls = EWSDate
 
+    def clean(self, value, version=None):
+        # Allow plain datetime.date values as input
+        if type(value) == datetime.date:
+            value = self.value_cls.from_date(value)
+        return super().clean(value=value, version=version)
 
-class DateTimeBackedDateField(FieldURIField):
+
+class DateTimeBackedDateField(DateField):
     # A field that acts like a date, but where values are sent to EWS as EWSDateTime.
-    value_cls = datetime.date
 
     def __init__(self, *args, **kwargs):
-        # Not all fields assume a default tim of 00:00, so make this configurable
+        # Not all fields assume a default time of 00:00, so make this configurable
         self._default_time = kwargs.pop('default_time', datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
@@ -585,11 +590,11 @@ class DateTimeBackedDateField(FieldURIField):
     def from_xml(self, elem, account):
         val = self._get_val_from_elem(elem)
         if val is not None and len(val) == 25:
-            # This is a datetime string with timezone info. We don't want to have datetime values converted to UTC
-            # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don't have an
-            # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
-            # datetime string with timezone info.
-            return EWSDate.from_date(datetime.datetime.fromisoformat(val).date())
+            # This is a datetime string with timezone info, e.g. '2021-03-01T21:55:54+00:00'. We don't want to have
+            # datetime values converted to UTC before converting to date. EWSDateTime.from_string() insists on
+            # converting to UTC, but we don't have an EWSTimeZone we can convert the timezone info to. Instead, parse
+            # the string with .fromisoformat().
+            return datetime.datetime.fromisoformat(val).date()
         # Revert to default parsing of datetime strings
         res = self._datetime_field.from_xml(elem=elem, account=account)
         if res is None:
@@ -623,8 +628,11 @@ class DateTimeField(FieldURIField):
     value_cls = EWSDateTime
 
     def clean(self, value, version=None):
-        if value is not None and isinstance(value, self.value_cls) and not value.tzinfo:
-            raise ValueError("Value '%s' on field '%s' must be timezone aware" % (value, self.name))
+        if isinstance(value, datetime.datetime):
+            if not value.tzinfo:
+                raise ValueError("Value '%s' on field '%s' must be timezone aware" % (value, self.name))
+            if type(value) == datetime.datetime:
+                value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
 
     def from_xml(self, elem, account):
@@ -669,7 +677,7 @@ class DateOrDateTimeField(DateTimeField):
     def clean(self, value, version=None):
         # Most calendar items will contain datetime values. We can't access the is_all_day value here, so CalendarItem
         # must handle that sanity check.
-        if type(value) == EWSDate:
+        if type(value) in (EWSDate, datetime.date):
             return self._date_field.clean(value=value, version=version)
         return super().clean(value=value, version=version)
 
@@ -683,6 +691,12 @@ class DateOrDateTimeField(DateTimeField):
 
 class TimeZoneField(FieldURIField):
     value_cls = EWSTimeZone
+
+    def clean(self, value, version=None):
+        # Allow other timezone implementations as input
+        if value is not None:
+            value = self.value_cls.from_timezone(value)
+        return super().clean(value=value, version=version)
 
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
@@ -1403,6 +1417,7 @@ class TypeValueField(FieldURIField):
         # Python doesn't have a single-byte type to represent 'Byte'
         bytes: 'ByteArray',
         str: 'String',
+        datetime.datetime: 'DateTime',
         EWSDateTime: 'DateTime',
     }
 
@@ -1473,6 +1488,18 @@ class DictionaryField(FieldURIField):
             ]
             return {e.key: e.value for e in entries}
         return self.default
+
+    def clean(self, value, version=None):
+        if isinstance(value, dict):
+            cleaned = {}
+            for k, v in value.items():
+                if type(k) == datetime.datetime:
+                    k = EWSDateTime.from_datetime(k)
+                if type(v) == datetime.datetime:
+                    v = EWSDateTime.from_datetime(v)
+                cleaned[k] = v
+            value = cleaned
+        return super().clean(value=value, version=version)
 
     def to_xml(self, value, version):
         from .properties import DictionaryEntry

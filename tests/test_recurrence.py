@@ -1,4 +1,5 @@
-from exchangelib import EWSDate
+import datetime
+
 from exchangelib.fields import MONDAY, FEBRUARY, AUGUST, SECOND, LAST, WEEKEND_DAY
 from exchangelib.recurrence import Recurrence, AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, \
     RelativeMonthlyPattern, WeeklyPattern, DailyPattern, NoEndPattern, EndDatePattern, NumberedPattern
@@ -24,8 +25,8 @@ class RecurrenceTest(TimedTestCase):
 
     def test_validation(self):
         p = DailyPattern(interval=3)
-        d_start = EWSDate(2017, 9, 1)
-        d_end = EWSDate(2017, 9, 7)
+        d_start = datetime.date(2017, 9, 1)
+        d_end = datetime.date(2017, 9, 7)
         with self.assertRaises(ValueError):
             Recurrence(pattern=p, boundary='foo', start='bar')  # Specify *either* boundary *or* start, end and number
         with self.assertRaises(ValueError):

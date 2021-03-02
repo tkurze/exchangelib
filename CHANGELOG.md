@@ -16,6 +16,10 @@ HEAD
 -   Removed the internal caching in `QuerySet`. It's not necessary in most use cases for exchangelib,
     and the memory overhead and complexity is not worth the extra effort. This means that `.iterator()`
     is now a no-op and marked as deprecated.
+-   Allow plain `date`, `datetime` and `zoneinfo` objects as values for fields and methods. This lowers
+    the barrier for using the library. We still return `EWSDate`, `EWSDateTime` and `EWSTimeZone` as
+    return values, but they are compatible with `date`, `datetime` and `zoneinfo` objects.
+
 
 3.3.2
 -----

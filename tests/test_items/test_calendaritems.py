@@ -1,7 +1,11 @@
 import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound
-from exchangelib.ewsdatetime import EWSDateTime, UTC
+from exchangelib.ewsdatetime import UTC
 from exchangelib.folders import Calendar
 from exchangelib.items import CalendarItem, BulkCreateResult
 from exchangelib.items.calendar_item import SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
@@ -117,16 +121,16 @@ class CalendarTest(CommonItemTest):
             account=self.account,
             folder=self.test_folder,
             subject=get_random_string(16),
-            start=EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone),
-            end=EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone),
+            start=datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone),
+            end=datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone),
             categories=self.categories,
         )
         item2 = self.ITEM_CLASS(
             account=self.account,
             folder=self.test_folder,
             subject=get_random_string(16),
-            start=EWSDateTime(2016, 2, 1, 8, tzinfo=self.account.default_timezone),
-            end=EWSDateTime(2016, 2, 1, 10, tzinfo=self.account.default_timezone),
+            start=datetime.datetime(2016, 2, 1, 8, tzinfo=self.account.default_timezone),
+            end=datetime.datetime(2016, 2, 1, 10, tzinfo=self.account.default_timezone),
             categories=self.categories,
         )
         self.test_folder.bulk_create(items=[item1, item2])
@@ -200,10 +204,10 @@ class CalendarTest(CommonItemTest):
 
     def test_client_side_ordering_on_mixed_all_day_and_normal(self):
         # Test that client-side ordering on start and end fields works for items that are a mix of normal an all-day
-        # items. This requires us to compare EWSDateTime -> EWSDate values which is not allowed by default (EWSDate ->
-        # EWSDateTime *is* allowed).
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        # items. This requires us to compare datetime.datetime -> EWSDate values which is not allowed by default (EWSDate ->
+        # datetime.datetime *is* allowed).
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         all_day_date = (start - datetime.timedelta(days=1)).date()
         item1 = self.ITEM_CLASS(
             account=self.account,
@@ -231,8 +235,8 @@ class CalendarTest(CommonItemTest):
 
         # Create a master item with 4 daily occurrences from 8:00 to 10:00. 'start' and 'end' are values for the first
         # occurrence.
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -281,8 +285,8 @@ class CalendarTest(CommonItemTest):
 
     def test_change_occurrence(self):
         # Test that we can make changes to individual occurrences and see the effect on the master item.
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -323,8 +327,8 @@ class CalendarTest(CommonItemTest):
 
     def test_delete_occurrence(self):
         # Test that we can delete an occurrence and see the cange on the master item
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -356,8 +360,8 @@ class CalendarTest(CommonItemTest):
 
     def test_change_occurrence_via_index(self):
         # Test updating occurrences via occurrence index without knowing the ID of the occurrence.
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -393,8 +397,8 @@ class CalendarTest(CommonItemTest):
 
     def test_delete_occurrence_via_index(self):
         # Test deleting occurrences via occurrence index without knowing the ID of the occurrence.
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,
             start=start,
@@ -421,8 +425,8 @@ class CalendarTest(CommonItemTest):
 
     def test_get_master_recurrence(self):
         # Test getting the master recurrence via an occurrence
-        start = EWSDateTime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         recurrence = Recurrence(pattern=DailyPattern(interval=1), start=start.date(), number=4)
         master_item = self.ITEM_CLASS(
             folder=self.test_folder,

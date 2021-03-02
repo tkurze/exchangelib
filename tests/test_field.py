@@ -1,14 +1,18 @@
 from collections import namedtuple
+import datetime
 from decimal import Decimal
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
-from exchangelib import Version, EWSDateTime, EWSTimeZone, UTC
 from exchangelib.extended_properties import ExternId
 from exchangelib.fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, \
     Base64Field, TimeZoneField, ExtendedPropertyField, CharListField, Choice, DateField, EnumField, EnumListField, \
     CharField, InvalidFieldForVersion, InvalidChoiceForVersion
 from exchangelib.indexed_properties import SingleFieldIndexedElement
 from exchangelib.properties import Fields
-from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010, EXCHANGE_2013
+from exchangelib.version import Version, EXCHANGE_2007, EXCHANGE_2010, EXCHANGE_2013
 from exchangelib.util import to_xml, TNS
 
 from .common import TimedTestCase
@@ -49,7 +53,7 @@ class FieldTest(TimedTestCase):
 
         field = DateTimeField('foo', field_uri='bar')
         with self.assertRaises(ValueError) as e:
-            field.clean(EWSDateTime(2017, 1, 1))  # Datetime values must be timezone aware
+            field.clean(datetime.datetime(2017, 1, 1))  # Datetime values must be timezone aware
         self.assertEqual(str(e.exception), "Value '2017-01-01 00:00:00' on field 'foo' must be timezone aware")
 
         field = ChoiceField('foo', field_uri='bar', choices=[Choice('foo'), Choice('bar')])
@@ -129,7 +133,7 @@ class FieldTest(TimedTestCase):
 
     def test_garbage_input(self):
         # Test that we can survive garbage input for common field types
-        tz = EWSTimeZone('Europe/Copenhagen')
+        tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
         account = namedtuple('Account', ['default_timezone'])(default_timezone=tz)
         payload = b'''\
 <?xml version="1.0" encoding="utf-8"?>
@@ -176,9 +180,10 @@ class FieldTest(TimedTestCase):
 
     def test_naive_datetime(self):
         # Test that we can survive naive datetimes on a datetime field
-        tz = EWSTimeZone('Europe/Copenhagen')
+        tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
+        utc = zoneinfo.ZoneInfo('UTC')
         account = namedtuple('Account', ['default_timezone'])(default_timezone=tz)
-        default_value = EWSDateTime(2017, 1, 2, 3, 4, tzinfo=tz)
+        default_value = datetime.datetime(2017, 1, 2, 3, 4, tzinfo=tz)
         field = DateTimeField('foo', field_uri='item:DateTimeSent', default=default_value)
 
         # TZ-aware datetime string
@@ -190,7 +195,9 @@ class FieldTest(TimedTestCase):
     </t:Item>
 </Envelope>'''
         elem = to_xml(payload).find('{%s}Item' % TNS)
-        self.assertEqual(field.from_xml(elem=elem, account=account), EWSDateTime(2017, 6, 21, 18, 40, 2, tzinfo=UTC))
+        self.assertEqual(
+            field.from_xml(elem=elem, account=account), datetime.datetime(2017, 6, 21, 18, 40, 2, tzinfo=utc)
+        )
 
         # Naive datetime string is localized to tz of the account
         payload = b'''\
@@ -201,7 +208,9 @@ class FieldTest(TimedTestCase):
     </t:Item>
 </Envelope>'''
         elem = to_xml(payload).find('{%s}Item' % TNS)
-        self.assertEqual(field.from_xml(elem=elem, account=account), EWSDateTime(2017, 6, 21, 18, 40, 2, tzinfo=tz))
+        self.assertEqual(
+            field.from_xml(elem=elem, account=account), datetime.datetime(2017, 6, 21, 18, 40, 2, tzinfo=tz)
+        )
 
         # Garbage string returns None
         payload = b'''\

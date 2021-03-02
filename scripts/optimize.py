@@ -47,8 +47,8 @@ account.calendar.filter(categories__contains=categories).delete()
 
 # Calendar item generator
 def generate_items(count):
-    start = EWSDateTime(2000, 3, 1, 8, 30, 0, tzinfo=tz)
-    end = EWSDateTime(2000, 3, 1, 9, 15, 0, tzinfo=tz)
+    start = datetime.datetime(2000, 3, 1, 8, 30, 0, tzinfo=tz)
+    end = datetime.datetime(2000, 3, 1, 9, 15, 0, tzinfo=tz)
     tpl_item = CalendarItem(
         start=start,
         end=end,

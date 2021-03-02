@@ -1,7 +1,6 @@
 import datetime
 from decimal import Decimal
 
-from exchangelib.ewsdatetime import EWSDate, EWSDateTime, UTC_NOW
 from exchangelib.folders import Tasks
 from exchangelib.items import Task
 from exchangelib.recurrence import TaskRecurrence, DailyPattern, DailyRegeneration
@@ -16,20 +15,20 @@ class TasksTest(CommonItemTest):
 
     def test_task_validation(self):
         tz = self.account.default_timezone
-        task = Task(due_date=EWSDate(2017, 1, 1), start_date=EWSDate(2017, 2, 1))
+        task = Task(due_date=datetime.date(2017, 1, 1), start_date=datetime.date(2017, 2, 1))
         task.clean()
         # We reset due date if it's before start date
-        self.assertEqual(task.due_date, EWSDate(2017, 2, 1))
+        self.assertEqual(task.due_date, datetime.date(2017, 2, 1))
         self.assertEqual(task.due_date, task.start_date)
 
-        task = Task(complete_date=EWSDateTime(2099, 1, 1, tzinfo=tz), status=Task.NOT_STARTED)
+        task = Task(complete_date=datetime.datetime(2099, 1, 1, tzinfo=tz), status=Task.NOT_STARTED)
         task.clean()
         # We reset status if complete_date is set
         self.assertEqual(task.status, Task.COMPLETED)
         # We also reset complete date to now() if it's in the future
-        self.assertEqual(task.complete_date.date(), UTC_NOW().date())
+        self.assertEqual(task.complete_date.date(), datetime.datetime.utcnow().date())
 
-        task = Task(complete_date=EWSDateTime(2017, 1, 1, tzinfo=tz), start_date=EWSDate(2017, 2, 1))
+        task = Task(complete_date=datetime.datetime(2017, 1, 1, tzinfo=tz), start_date=datetime.date(2017, 2, 1))
         task.clean()
         # We also reset complete date to start_date if it's before start_date
         self.assertEqual(task.complete_date.date(), task.start_date)
@@ -62,7 +61,7 @@ class TasksTest(CommonItemTest):
         """
 
         # Create a master non-regenerating item with 4 daily occurrences
-        start = EWSDate(2016, 1, 1)
+        start = datetime.date(2016, 1, 1)
         recurrence = TaskRecurrence(pattern=DailyPattern(interval=1), start=start, number=4)
         nonregenerating_item = self.ITEM_CLASS(
             folder=self.test_folder,
@@ -77,7 +76,7 @@ class TasksTest(CommonItemTest):
 
         # Change the start date. We should see a new task appear.
         master_item = self.get_item_by_id((master_item_id, None))
-        master_item.recurrence.boundary.start = EWSDate(2016, 2, 1)
+        master_item.recurrence.boundary.start = datetime.date(2016, 2, 1)
         occurrence_item = master_item.save()
         occurrence_item.refresh()
         self.assertEqual(occurrence_item.is_recurring, False)  # This is now the occurrence
@@ -86,7 +85,7 @@ class TasksTest(CommonItemTest):
         # Check fields on the recurring item
         master_item = self.get_item_by_id((master_item_id, None))
         self.assertEqual(master_item.change_count, 2)
-        self.assertEqual(master_item.due_date, EWSDate(2016, 1, 2))  # This is the next occurrence
+        self.assertEqual(master_item.due_date, datetime.date(2016, 1, 2))  # This is the next occurrence
         self.assertEqual(master_item.recurrence.boundary.number, 3)  # One less
 
         # Change the status to 'Completed'. We should see a new task appear.
@@ -99,7 +98,7 @@ class TasksTest(CommonItemTest):
         # Check fields on the recurring item
         master_item = self.get_item_by_id((master_item_id, None))
         self.assertEqual(master_item.change_count, 3)
-        self.assertEqual(master_item.due_date, EWSDate(2016, 2, 1))  # This is the next occurrence
+        self.assertEqual(master_item.due_date, datetime.date(2016, 2, 1))  # This is the next occurrence
         self.assertEqual(master_item.recurrence.boundary.number, 2)  # One less
 
         self.test_folder.filter(categories__contains=self.categories).delete()
@@ -119,7 +118,7 @@ class TasksTest(CommonItemTest):
 
         # Change the start date. We should *not* see a new task appear.
         master_item = self.get_item_by_id((master_item_id, None))
-        master_item.recurrence.boundary.start = EWSDate(2016, 1, 2)
+        master_item.recurrence.boundary.start = datetime.date(2016, 1, 2)
         occurrence_item = master_item.save()
         occurrence_item.refresh()
         self.assertEqual(occurrence_item.id, master_item.id)  # This is not an occurrence. No new task was created
@@ -137,5 +136,5 @@ class TasksTest(CommonItemTest):
         self.assertEqual(master_item.change_count, 2)
         # The due date is the next occurrence after today
         tz = self.account.default_timezone
-        self.assertEqual(master_item.due_date, EWSDateTime.now(tz).date() + datetime.timedelta(days=1))
+        self.assertEqual(master_item.due_date, datetime.datetime.now(tz).date() + datetime.timedelta(days=1))
         self.assertEqual(master_item.recurrence.boundary.number, 3)  # One less

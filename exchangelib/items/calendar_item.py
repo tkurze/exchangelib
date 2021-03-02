@@ -162,13 +162,13 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         # Sets proper values on the timezone fields if they are not already set
         if self.start is None:
             start_tz = None
-        elif type(self.start) == EWSDate:
+        elif type(self.start) in (EWSDate, datetime.date):
             start_tz = self.account.default_timezone
         else:
             start_tz = self.start.tzinfo
         if self.end is None:
             end_tz = None
-        elif type(self.end) == EWSDate:
+        elif type(self.end) in (EWSDate, datetime.date):
             end_tz = self.account.default_timezone
         else:
             end_tz = self.end.tzinfo
@@ -262,7 +262,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
             value = getattr(self, field_name)
             if value is None:
                 continue
-            if type(value) == EWSDate:
+            if type(value) in (EWSDate, datetime.date):
                 # EWS always expects a datetime
                 value = self.date_to_datetime(field_name=field_name)
                 # We already generated an XML element for this field, but it contains a plain date at this point, which

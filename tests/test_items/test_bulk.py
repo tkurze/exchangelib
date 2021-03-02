@@ -1,5 +1,5 @@
+import datetime
 from exchangelib.errors import ErrorItemNotFound, ErrorInvalidChangeKey, ErrorInvalidIdMalformed
-from exchangelib.ewsdatetime import EWSDate
 from exchangelib.fields import FieldPath
 from exchangelib.folders import Inbox, Folder, Calendar
 from exchangelib.items import Item, Message, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, CalendarItem
@@ -149,7 +149,7 @@ class CalendarBulkMethodTest(BaseItemTest):
         item = self.get_test_item()
         item.recurrence = None
         item.is_all_day = True
-        item.start, item.end = EWSDate(2020, 1, 1), EWSDate(2020, 1, 2)
+        item.start, item.end = datetime.date(2020, 1, 1), datetime.date(2020, 1, 2)
         item.account = None
         res = self.test_folder.bulk_create(items=[item])[0]
         item.id, item.changekey = res.id, res.changekey

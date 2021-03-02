@@ -1,4 +1,10 @@
-from exchangelib import EWSDateTime, EWSTimeZone, Q, Build
+import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
+
+from exchangelib import Q, Build
 from exchangelib.folders import Calendar, Root
 from exchangelib.restriction import Restriction
 from exchangelib.util import xml_to_str
@@ -15,9 +21,9 @@ class RestrictionTest(TimedTestCase):
         version = Version(build=EXCHANGE_2007)
         account = mock_account(version=version, protocol=mock_protocol(version=version, service_endpoint='example.com'))
         root = Root(account=account)
-        tz = EWSTimeZone('Europe/Copenhagen')
-        start = EWSDateTime(2020, 9, 26, 8, 0, 0, tzinfo=tz)
-        end = EWSDateTime(2020, 9, 26, 11, 0, 0, tzinfo=tz)
+        tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
+        start = datetime.datetime(2020, 9, 26, 8, 0, 0, tzinfo=tz)
+        end = datetime.datetime(2020, 9, 26, 11, 0, 0, tzinfo=tz)
         result = '''\
 <m:Restriction xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
     <t:And xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
@@ -61,7 +67,8 @@ class RestrictionTest(TimedTestCase):
         with self.assertRaises(TypeError):
             Q(datetime_created=Build(15, 1)).clean(version=Version(build=EXCHANGE_2007))  # Must be serializable
         with self.assertRaises(ValueError):
-            Q(datetime_created=EWSDateTime(2017, 1, 1)).clean(version=Version(build=EXCHANGE_2007))  # Must be tz-aware
+            # Must be a timezone-aware datetime
+            Q(datetime_created=datetime.datetime(2017, 1, 1)).clean(version=Version(build=EXCHANGE_2007))
         with self.assertRaises(ValueError):
             Q(categories__contains=[[1, 2], [3, 4]]).clean(version=Version(build=EXCHANGE_2007))  # Must be single value
 

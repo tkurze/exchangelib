@@ -190,7 +190,7 @@ class EWSDateTimeTest(TimedTestCase):
             dt.ewsformat()
         # Test wrong tzinfo type
         with self.assertRaises(ValueError):
-            EWSDateTime(2000, 1, 2, 3, 4, 5, tzinfo=zoneinfo.ZoneInfo('UTC'))
+            EWSDateTime(2000, 1, 2, 3, 4, 5, tzinfo=pytz.timezone('Europe/Copenhagen'))
         with self.assertRaises(ValueError):
             EWSDateTime.from_datetime(EWSDateTime(2000, 1, 2, 3, 4, 5))
 

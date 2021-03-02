@@ -444,8 +444,8 @@ f.wipe()
 
 # Folders support getting, creating, updating and deleting Master Category Lists, also known
 # as User Configuration objects. Supported key and value types for the 'dictionary' attribute
-# are: bool, int, bytes, str, tuples of str, EWSDateTime, and the 'Byte' type which we emulate
-# in Python as a 1-length bytes.
+# are: bool, int, bytes, str, tuples of str, datetime, EWSDateTime, and the 'Byte' type which
+# we emulate in Python as a 1-length bytes.
 f.create_user_configuration(
     name='SomeName',
     dictionary={'foo': 'bar', 123: 'a', 'b': False},
@@ -471,15 +471,21 @@ f.delete_user_configuration(name='SomeName')
 
 ## Dates, datetimes and timezones
 
-EWS has some special requirements on datetimes and timezones. You need
-to use the special `EWSDate`, `EWSDateTime` and `EWSTimeZone` classes
-when working with dates.
+EWS has some special requirements on datetimes and timezones. You may
+use regular `datetime.*` and `zoneinfo` objects as input, but all methods
+return date values as the special `EWSDate`, `EWSDateTime` and `EWSTimeZone`
+classes. Thes classes are all subclasses of `datetime.*` or `zoneinfo.ZoneInfo`
+so you should be able to use them as regular date objects.
 
 ```python
 from datetime import datetime, timedelta
 import dateutil.tz
 import pytz
-from exchangelib import EWSTimeZone, EWSDateTime, EWSDate
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
+from exchangelib import EWSTimeZone, EWSDateTime, EWSDate, UTC, UTC_NOW
 
 # EWSTimeZone works just like zoneinfo.ZoneInfo()
 tz = EWSTimeZone('Europe/Copenhagen')
@@ -504,20 +510,19 @@ also_today += timedelta(days=10)
 
 # UTC helpers. 'UTC' is the UTC timezone as an EWSTimeZone instance.
 # 'UTC_NOW' returns a timezone-aware UTC timestamp of current time.
-from exchangelib import UTC, UTC_NOW
-
 right_now_in_utc = EWSDateTime.now(tz=UTC)
 right_now_in_utc = UTC_NOW()
 
-# Already have a 'pytz' or 'dateutil' timezone you want to use? Then convert it
-# using from_pytz() or from_dateutil().
+# 'pytz', 'dateutil' and `zoneinfo` timezones can be converted to EWSTimeZone
 pytz_tz = pytz.timezone('Europe/Copenhagen')
-tz = EWSTimeZone.from_pytz(pytz_tz)
+tz = EWSTimeZone.from_timezone(pytz_tz)
 dateutil_tz = dateutil.tz.gettz('Europe/Copenhagen')
-tz = EWSTimeZone.from_dateutil(dateutil_tz)
+tz = EWSTimeZone.from_timezone(dateutil_tz)
+zoneinfo_tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
+tz = EWSTimeZone.from_timezone(zoneinfo_tz)
 
-# Already have a Python datetime object you want to use? Make sure it's timezone-aware and tzinfo
-# is an EWSTimeZone instance. Then convert it using from_datetime().
+# Python datetime objects can be converted using from_datetime(). Make sure values
+# are timezone-aware and tzinfo is an EWSTimeZone or ZoneInfo instance.
 py_dt = datetime(2017, 12, 11, 10, 9, 8, tzinfo=tz)
 ews_now = EWSDateTime.from_datetime(py_dt)
 ```
@@ -616,17 +621,22 @@ item.body = HTMLBody('<html><body>Hello happy <blink>OWA user!</blink></body></h
 
 ```python
 # Build a list of calendar items
-from exchangelib import Account, CalendarItem, EWSDateTime, EWSTimeZone, Attendee, Mailbox
+import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
+from exchangelib import Account, CalendarItem, Attendee, Mailbox
 from exchangelib.properties import DistinguishedFolderId
 
 a = Account(...)
-tz = EWSTimeZone('Europe/Copenhagen')
+tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
 year, month, day = 2016, 3, 20
 calendar_items = []
 for hour in range(7, 17):
     calendar_items.append(CalendarItem(
-        start=EWSDateTime(year, month, day, hour, 30, tzinfo=tz),
-        end=EWSDateTime(year, month, day, hour + 1, 15, tzinfo=tz),
+        start=datetime.datetime(year, month, day, hour, 30, tzinfo=tz),
+        end=datetime.datetime(year, month, day, hour + 1, 15, tzinfo=tz),
         subject='Test item',
         body='Hello from Python',
         location='devnull',
@@ -690,8 +700,8 @@ iterated the first time.
 Here are some examples of using the API:
 
 ```python
-from datetime import timedelta
-from exchangelib import Account, EWSDateTime, FolderCollection, Q, Message
+import datetime
+from exchangelib import Account, FolderCollection, Q, Message
 
 a = Account(...)
 
@@ -703,8 +713,8 @@ all_items_without_caching = a.inbox.all().iterator()  # Get everything, but don'
 # Chain multiple modifiers to refine the query
 filtered_items = a.inbox.filter(subject__contains='foo').exclude(categories__icontains='bar')
 status_report = a.inbox.all().delete()  # Delete the items returned by the QuerySet
-start = EWSDateTime(2017, 1, 1, tzinfo=a.default_timezone)
-end = EWSDateTime(2018, 1, 1, tzinfo=a.default_timezone)
+start = datetime.datetime(2017, 1, 1, tzinfo=a.default_timezone)
+end = datetime.datetime(2018, 1, 1, tzinfo=a.default_timezone)
 items_for_2017 = a.calendar.filter(start__range=(start, end))  # Filter by a date range
 
 # Same as filter() but throws an error if exactly one item isn't returned
@@ -807,16 +817,16 @@ a.inbox.filter(q)
 
 # In this example, we filter by categories so we only get the items created by us.
 a.calendar.filter(
-    start__lt=EWSDateTime(2019, 1, 1, tzinfo=a.default_timezone),
-    end__gt=EWSDateTime(2019, 1, 31, tzinfo=a.default_timezone),
+    start__lt=datetime.datetime(2019, 1, 1, tzinfo=a.default_timezone),
+    end__gt=datetime.datetime(2019, 1, 31, tzinfo=a.default_timezone),
     categories__contains=['foo', 'bar'],
 )
 
 # By default, EWS returns only the master recurring item. If you want recurring calendar
 # items to be expanded, use calendar.view(start=..., end=...) instead.
 items = a.calendar.view(
-    start=EWSDateTime(2019, 1, 31, tzinfo=a.default_timezone),
-    end=EWSDateTime(2019, 1, 31, tzinfo=a.default_timezone) + timedelta(days=1),
+    start=datetime.datetime(2019, 1, 31, tzinfo=a.default_timezone),
+    end=datetime.datetime(2019, 1, 31, tzinfo=a.default_timezone) + datetime.timedelta(days=1),
 )
 for item in items:
     print(item.start, item.end, item.subject, item.body, item.location)
@@ -824,8 +834,8 @@ for item in items:
 # You can combine view() with other modifiers. For example, to check for conflicts before 
 # adding a meeting from 8:00 to 10:00:
 has_conflicts = a.calendar.view(
-    start=EWSDateTime(2019, 1, 31, 8, tzinfo=a.default_timezone),
-    end=EWSDateTime(2019, 1, 31, 10, tzinfo=a.default_timezone),
+    start=datetime.datetime(2019, 1, 31, 8, tzinfo=a.default_timezone),
+    end=datetime.datetime(2019, 1, 31, 10, tzinfo=a.default_timezone),
     max_items=1
 ).exists()
 
@@ -887,7 +897,8 @@ already accepted then you can also process these by removing the entry
 from the calendar.
 
 ```python
-from exchangelib import Account, CalendarItem, EWSDateTime
+import datetime
+from exchangelib import Account, CalendarItem
 from exchangelib.items import MeetingRequest, MeetingCancellation, SEND_TO_ALL_AND_SAVE_COPY
 
 a = Account(...)
@@ -896,8 +907,8 @@ a = Account(...)
 item = CalendarItem(
     account=a,
     folder=a.calendar,
-    start=EWSDateTime(2019, 1, 31, 8, 15, tzinfo=a.default_timezone),
-    end=EWSDateTime(2019, 1, 31, 8, 45, tzinfo=a.default_timezone),
+    start=datetime.datetime(2019, 1, 31, 8, 15, tzinfo=a.default_timezone),
+    end=datetime.datetime(2019, 1, 31, 8, 45, tzinfo=a.default_timezone),
     subject="Subject of Meeting",
     body="Please come to my meeting",
     required_attendees=['anne@example.com', 'bob@example.com']
@@ -1171,14 +1182,14 @@ Here's an example of creating 7 occurrences on Mondays and Wednesdays of
 every third week, starting September 1, 2017:
 
 ```python
-from datetime import timedelta
-from exchangelib import Account, CalendarItem, EWSDateTime
+import datetime
+from exchangelib import Account, CalendarItem
 from exchangelib.fields import MONDAY, WEDNESDAY
 from exchangelib.recurrence import Recurrence, WeeklyPattern
 
 a = Account(...)
-start = EWSDateTime(2017, 9, 1, 11, tzinfo=a.default_timezone)
-end = start + timedelta(hours=2)
+start = datetime.datetime(2017, 9, 1, 11, tzinfo=a.default_timezone)
+end = start + datetime.timedelta(hours=2)
 master_recurrence = CalendarItem(
     folder=a.calendar,
     start=start,
@@ -1203,21 +1214,21 @@ for i in a.calendar.filter(start__lt=end, end__gt=start):
         print(o)
 
 # All occurrences expanded. The recurrence will span over 4 iterations of a 3-week period
-for i in a.calendar.view(start=start, end=start + timedelta(days=4*3*7)):
+for i in a.calendar.view(start=start, end=start + datetime.timedelta(days=4*3*7)):
     print(i.subject, i.start, i.end)
 
 # 'modified_occurrences' and 'deleted_occurrences' of master items are read-only fields. To 
 # delete or modify an occurrence, you must use 'view()' to fetch the occurrence and modify or 
 # delete it:
-for occurrence in a.calendar.view(start=start, end=start + timedelta(days=4*3*7)):
+for occurrence in a.calendar.view(start=start, end=start + datetime.timedelta(days=4*3*7)):
     # Delete or update random occurrences. This will affect 'modified_occurrences' and 
     # 'deleted_occurrences' of the master item.
     if occurrence.start.milliseconds % 2:
         # We receive timestamps as UTC but want to write them back as local timezone
         occurrence.start = occurrence.start.astimezone(a.default_timezone)
-        occurrence.start += timedelta(minutes=30)
+        occurrence.start += datetime.timedelta(minutes=30)
         occurrence.end = occurrence.end.astimezone(a.default_timezone)
-        occurrence.end += timedelta(minutes=30)
+        occurrence.end += datetime.timedelta(minutes=30)
         occurrence.subject = 'My new subject'
         occurrence.save()
     else:
@@ -1228,7 +1239,7 @@ third_occurrence = master_recurrence.occurrence(index=3)
 # Get all fields on this occurrence
 third_occurrence.refresh()
 # Change a field on the occurrence
-third_occurrence.start += timedelta(hours=3)
+third_occurrence.start += datetime.timedelta(hours=3)
 # Delete occurrence
 third_occurrence.save(update_fields=['start'])
 
@@ -1259,7 +1270,8 @@ You can get and set OOF messages using the `Account.oof_settings`
 property:
 
 ```python
-from exchangelib import Account, OofSettings, EWSDateTime
+import datetime
+from exchangelib import Account, OofSettings
 
 a = Account(...)
 
@@ -1271,8 +1283,8 @@ a.oof_settings = OofSettings(
     external_audience='Known',
     internal_reply="I'm in the pub. See ya guys!",
     external_reply="I'm having a business dinner in town",
-    start=EWSDateTime(2017, 11, 1, 11, tzinfo=a.default_timezone),
-    end=EWSDateTime(2017, 12, 1, 11, tzinfo=a.default_timezone),
+    start=datetime.datetime(2017, 11, 1, 11, tzinfo=a.default_timezone),
+    end=datetime.datetime(2017, 12, 1, 11, tzinfo=a.default_timezone),
 )
 # Disable OOF messages
 a.oof_settings = OofSettings(
@@ -1371,12 +1383,12 @@ information, including a list of calendar events in the user's calendar, and
 the working hours and timezone of the user.
 
 ```python
-from datetime import timedelta
-from exchangelib import Account, EWSDateTime
+import datetime
+from exchangelib import Account
 
 a = Account(...)
-start = EWSDateTime.now(a.default_timezone)
-end = start + timedelta(hours=6)
+start = datetime.datetime.now(a.default_timezone)
+end = start + datetime.timedelta(hours=6)
 accounts = [(a, 'Organizer', False)]
 for busy_info in a.protocol.get_free_busy_info(accounts=accounts, start=start, end=end):
     print(busy_info)
@@ -1388,15 +1400,15 @@ known to be in the same timezone.
 
 ```python
 # Get all server timezones. We need that to convert 'working_hours_timezone'
-from datetime import timedelta
-from exchangelib import Account, EWSDateTime, EWSTimeZone
+import datetime
+from exchangelib import Account, EWSTimeZone
 
 a = Account(...)
 timezones = list(a.protocol.get_timezones(return_full_timezone_data=True))
 
 # Get availability information for a list of accounts
-start = EWSDateTime.now(a.default_timezone)
-end = start + timedelta(hours=6)
+start = datetime.datetime.now(a.default_timezone)
+end = start + datetime.timedelta(hours=6)
 # get_free_busy_info() expects a list of (account, attendee_type, exclude_conflicts) tuples
 accounts = [(a, 'Organizer', False)]
 for busy_info in a.protocol.get_free_busy_info(accounts=accounts, start=start, end=end):

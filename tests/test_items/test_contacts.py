@@ -1,5 +1,10 @@
+import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
+
 from exchangelib.errors import ErrorInvalidIdMalformed
-from exchangelib.ewsdatetime import EWSDateTime, UTC
 from exchangelib.folders import Contacts, FolderCollection
 from exchangelib.indexed_properties import EmailAddress, PhysicalAddress
 from exchangelib.items import Contact, DistributionList, Persona
@@ -174,7 +179,9 @@ class ContactsTest(CommonItemTest):
         persona = personas[0]
         self.assertEqual(persona.id, 'AAQkADEzAQAKtOtR=')
         self.assertEqual(persona.persona_type, 'Person')
-        self.assertEqual(persona.creation_time, EWSDateTime(2012, 6, 1, 17, 0, 34, tzinfo=UTC))
+        self.assertEqual(
+            persona.creation_time, datetime.datetime(2012, 6, 1, 17, 0, 34, tzinfo=zoneinfo.ZoneInfo('UTC'))
+        )
         self.assertEqual(persona.display_name, 'Brian Johnson')
         self.assertEqual(persona.relevance_score, '4255550110')
         self.assertEqual(persona.attributions[0], Attribution(

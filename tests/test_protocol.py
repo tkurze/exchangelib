@@ -8,7 +8,7 @@ import warnings
 import psutil
 import requests_mock
 
-from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, EWSDateTime, \
+from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, \
     Mailbox, DLMailbox, UTC, CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached
@@ -153,8 +153,8 @@ class ProtocolTest(EWSTest):
     def test_get_free_busy_info(self):
         tz = self.account.default_timezone
         server_timezones = list(self.account.protocol.get_timezones(return_full_timezone_data=True))
-        start = EWSDateTime.now(tz=tz)
-        end = EWSDateTime.now(tz=tz) + datetime.timedelta(hours=6)
+        start = datetime.datetime.now(tz=tz)
+        end = datetime.datetime.now(tz=tz) + datetime.timedelta(hours=6)
         accounts = [(self.account, 'Organizer', False)]
 
         with self.assertRaises(ValueError):
@@ -422,8 +422,8 @@ class ProtocolTest(EWSTest):
         # First, ensure a common starting point
         self.account.oof_settings = OofSettings(
             state=OofSettings.DISABLED,
-            start=EWSDateTime.combine(RANDOM_DATE_MIN, datetime.time.min, tzinfo=UTC),
-            end=EWSDateTime.combine(RANDOM_DATE_MAX, datetime.time.max, tzinfo=UTC),
+            start=datetime.datetime.combine(RANDOM_DATE_MIN, datetime.time.min, tzinfo=UTC),
+            end=datetime.datetime.combine(RANDOM_DATE_MAX, datetime.time.max, tzinfo=UTC),
         )
 
         oof = OofSettings(
@@ -446,7 +446,7 @@ class ProtocolTest(EWSTest):
 
         # Scheduled duration must not be in the past
         tz = self.account.default_timezone
-        start, end = get_random_datetime_range(start_date=EWSDateTime.now(tz).date())
+        start, end = get_random_datetime_range(start_date=datetime.datetime.now(tz).date())
         oof = OofSettings(
             state=OofSettings.SCHEDULED,
             external_audience='Known',
@@ -476,22 +476,22 @@ class ProtocolTest(EWSTest):
             # Start must be before end
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=EWSDateTime(2100, 12, 1, tzinfo=UTC),
-                end=EWSDateTime(2100, 11, 1, tzinfo=UTC),
+                start=datetime.datetime(2100, 12, 1, tzinfo=UTC),
+                end=datetime.datetime(2100, 11, 1, tzinfo=UTC),
             ).clean(version=None)
         with self.assertRaises(ValueError):
             # End must be in the future
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=EWSDateTime(2000, 11, 1, tzinfo=UTC),
-                end=EWSDateTime(2000, 12, 1, tzinfo=UTC),
+                start=datetime.datetime(2000, 11, 1, tzinfo=UTC),
+                end=datetime.datetime(2000, 12, 1, tzinfo=UTC),
             ).clean(version=None)
         with self.assertRaises(ValueError):
             # Must have an internal and external reply
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=EWSDateTime(2100, 11, 1, tzinfo=UTC),
-                end=EWSDateTime(2100, 12, 1, tzinfo=UTC),
+                start=datetime.datetime(2100, 11, 1, tzinfo=UTC),
+                end=datetime.datetime(2100, 12, 1, tzinfo=UTC),
             ).clean(version=None)
 
     def test_convert_id(self):
@@ -506,8 +506,8 @@ class ProtocolTest(EWSTest):
 
     def test_sessionpool(self):
         # First, empty the calendar
-        start = EWSDateTime(2011, 10, 12, 8, tzinfo=self.account.default_timezone)
-        end = EWSDateTime(2011, 10, 12, 10, tzinfo=self.account.default_timezone)
+        start = datetime.datetime(2011, 10, 12, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2011, 10, 12, 10, tzinfo=self.account.default_timezone)
         self.account.calendar.filter(start__lt=end, end__gt=start, categories__contains=self.categories).delete()
         items = []
         for i in range(75):
