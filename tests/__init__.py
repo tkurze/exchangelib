@@ -18,6 +18,8 @@ class RandomTestSuite(TestSuite):
 TestLoader.suiteClass = RandomTestSuite
 # Execute test methods in random order within each test class
 TestLoader.sortTestMethodsUsing = lambda _, x, y: random.choice((1, -1))
+# Make sure we're also random in multiprocess test runners
+random.seed()
 
 # Always show full repr() output for object instances in unittest error messages
 unittest.util._MAX_LENGTH = 2000
