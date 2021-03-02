@@ -95,15 +95,19 @@ class Account:
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
             raise ValueError("Expected 'locale' to be a string, got %r" % self.locale)
-        try:
-            self.default_timezone = default_timezone or EWSTimeZone.localzone()
-        except (ValueError, UnknownTimeZone) as e:
-            # There is no translation from local timezone name to Windows timezone name, or e failed to find the
-            # local timezone.
-            log.warning('%s. Fallback to UTC', e.args[0])
-            self.default_timezone = UTC
-        if not isinstance(self.default_timezone, EWSTimeZone):
-            raise ValueError("Expected 'default_timezone' to be an EWSTimeZone, got %r" % self.default_timezone)
+        if default_timezone:
+            try:
+                self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
+            except TypeError:
+                raise ValueError("Expected 'default_timezone' to be an EWSTimeZone, got %r" % default_timezone)
+        else:
+            try:
+                self.default_timezone = EWSTimeZone.localzone()
+            except (ValueError, UnknownTimeZone) as e:
+                # There is no translation from local timezone name to Windows timezone name, or e failed to find the
+                # local timezone.
+                log.warning('%s. Fallback to UTC', e.args[0])
+                self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
             raise ValueError("Expected 'config' to be a Configuration, got %r" % config)
         if autodiscover:
