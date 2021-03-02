@@ -4,20 +4,26 @@ import pickle
 import socket
 import tempfile
 import warnings
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 import psutil
 import requests_mock
 
-from exchangelib import Version, NTLM, FailFast, Credentials, Configuration, OofSettings, \
-    Mailbox, DLMailbox, UTC, CalendarItem
+from exchangelib.credentials import Credentials
+from exchangelib.configuration import Configuration
+from exchangelib.items import CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID, \
-    SearchableMailbox, FailedMailbox
-from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter
+    SearchableMailbox, FailedMailbox, Mailbox, DLMailbox
+from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes
-from exchangelib.transport import NOAUTH
-from exchangelib.version import Build
+from exchangelib.settings import OofSettings
+from exchangelib.transport import NOAUTH, NTLM
+from exchangelib.version import Build, Version
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
 from .common import EWSTest, MockResponse, get_random_datetime_range, get_random_string, RANDOM_DATE_MIN, \
@@ -420,10 +426,11 @@ class ProtocolTest(EWSTest):
 
     def test_oof_settings(self):
         # First, ensure a common starting point
+        utc = zoneinfo.ZoneInfo('UTC')
         self.account.oof_settings = OofSettings(
             state=OofSettings.DISABLED,
-            start=datetime.datetime.combine(RANDOM_DATE_MIN, datetime.time.min, tzinfo=UTC),
-            end=datetime.datetime.combine(RANDOM_DATE_MAX, datetime.time.max, tzinfo=UTC),
+            start=datetime.datetime.combine(RANDOM_DATE_MIN, datetime.time.min, tzinfo=utc),
+            end=datetime.datetime.combine(RANDOM_DATE_MAX, datetime.time.max, tzinfo=utc),
         )
 
         oof = OofSettings(
@@ -467,6 +474,7 @@ class ProtocolTest(EWSTest):
         self.assertEqual(self.account.oof_settings, oof)
 
     def test_oof_settings_validation(self):
+        utc = zoneinfo.ZoneInfo('UTC')
         with self.assertRaises(ValueError):
             # Needs a start and end
             OofSettings(
@@ -476,22 +484,22 @@ class ProtocolTest(EWSTest):
             # Start must be before end
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=datetime.datetime(2100, 12, 1, tzinfo=UTC),
-                end=datetime.datetime(2100, 11, 1, tzinfo=UTC),
+                start=datetime.datetime(2100, 12, 1, tzinfo=utc),
+                end=datetime.datetime(2100, 11, 1, tzinfo=utc),
             ).clean(version=None)
         with self.assertRaises(ValueError):
             # End must be in the future
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=datetime.datetime(2000, 11, 1, tzinfo=UTC),
-                end=datetime.datetime(2000, 12, 1, tzinfo=UTC),
+                start=datetime.datetime(2000, 11, 1, tzinfo=utc),
+                end=datetime.datetime(2000, 12, 1, tzinfo=utc),
             ).clean(version=None)
         with self.assertRaises(ValueError):
             # Must have an internal and external reply
             OofSettings(
                 state=OofSettings.SCHEDULED,
-                start=datetime.datetime(2100, 11, 1, tzinfo=UTC),
-                end=datetime.datetime(2100, 12, 1, tzinfo=UTC),
+                start=datetime.datetime(2100, 11, 1, tzinfo=utc),
+                end=datetime.datetime(2100, 12, 1, tzinfo=utc),
             ).clean(version=None)
 
     def test_convert_id(self):

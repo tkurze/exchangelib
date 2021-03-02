@@ -4,11 +4,11 @@ try:
 except ImportError:
     from backports import zoneinfo
 
-from exchangelib import Q, Build
 from exchangelib.folders import Calendar, Root
+from exchangelib.queryset import Q
 from exchangelib.restriction import Restriction
 from exchangelib.util import xml_to_str
-from exchangelib.version import Version, EXCHANGE_2007
+from exchangelib.version import Build, Version, EXCHANGE_2007
 
 from .common import TimedTestCase, mock_account, mock_protocol
 

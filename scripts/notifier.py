@@ -37,12 +37,12 @@ do
 done
 
 """
-from datetime import timedelta
+from datetime import timedelta, datetime
 from netrc import netrc
 import sys
 import warnings
 
-from exchangelib import DELEGATE, Credentials, Account, EWSTimeZone, UTC_NOW
+from exchangelib import DELEGATE, Credentials, Account, EWSTimeZone
 import sh
 
 if '--insecure' in sys.argv:
@@ -60,7 +60,7 @@ zenity = sh.Command('/usr/bin/zenity')
 tz = EWSTimeZone.localzone()
 
 sleep = int(sys.argv[1])  # 1st arg to this script is the number of seconds to look back in the inbox
-now = UTC_NOW()
+now = datetime.now(tz=tz)
 emails_since = now - timedelta(seconds=sleep)
 cal_items_before = now + timedelta(seconds=sleep * 4)  # Longer notice of upcoming appointments than new emails
 username, _, password = netrc().authenticators('office365')

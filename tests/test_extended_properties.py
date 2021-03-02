@@ -1,6 +1,7 @@
-from exchangelib import Message, Mailbox, CalendarItem
 from exchangelib.extended_properties import ExtendedProperty, Flag
+from exchangelib.items import Message, CalendarItem
 from exchangelib.folders import Inbox
+from exchangelib.properties import Mailbox
 
 from .common import get_random_int
 from .test_items.test_basics import BaseItemTest

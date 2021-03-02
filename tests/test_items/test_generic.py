@@ -1,8 +1,11 @@
 import datetime
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 from exchangelib.attachments import ItemAttachment
 from exchangelib.errors import ErrorItemNotFound, ErrorInternalServerError
-from exchangelib.ewsdatetime import UTC_NOW
 from exchangelib.extended_properties import ExtendedProperty, ExternId
 from exchangelib.fields import ExtendedPropertyField, CharField
 from exchangelib.folders import Inbox, FolderCollection
@@ -299,7 +302,7 @@ class GenericItemTest(CommonItemTest):
         )
 
     def test_finditems(self):
-        now = UTC_NOW()
+        now = datetime.datetime.now(tz=zoneinfo.ZoneInfo('UTC'))
 
         # Test argument types
         item = self.get_test_item()

@@ -1,11 +1,15 @@
 from collections import namedtuple
 import pickle
 
-from exchangelib import Account, Credentials, FaultTolerance, Message, FileAttachment, DELEGATE, Configuration
+from exchangelib.account import Account
+from exchangelib.attachments import FileAttachment
+from exchangelib.configuration import Configuration
+from exchangelib.credentials import Credentials, DELEGATE
 from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, UnauthorizedError
 from exchangelib.folders import Calendar
+from exchangelib.items import Message
 from exchangelib.properties import DelegateUser, UserId, DelegatePermissions
-from exchangelib.protocol import Protocol
+from exchangelib.protocol import Protocol, FaultTolerance
 from exchangelib.services import GetDelegate
 from exchangelib.version import Version, EXCHANGE_2007_SP1
 

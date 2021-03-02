@@ -1,6 +1,7 @@
 import pickle
 
-from exchangelib import Credentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials, Identity
+from exchangelib.account import Identity
+from exchangelib.credentials import Credentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
 
 from .common import TimedTestCase
 

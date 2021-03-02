@@ -4,8 +4,11 @@ import time
 
 import requests_mock
 
-from exchangelib import Configuration, Credentials, NTLM, FailFast, FaultTolerance, Version, Build
-from exchangelib.transport import AUTH_TYPE_MAP
+from exchangelib.configuration import Configuration
+from exchangelib.credentials import Credentials
+from exchangelib.transport import NTLM, AUTH_TYPE_MAP
+from exchangelib.protocol import FailFast, FaultTolerance
+from exchangelib.version import Version, Build
 
 from .common import TimedTestCase, get_random_string
 

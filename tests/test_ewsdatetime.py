@@ -9,8 +9,8 @@ try:
 except ImportError:
     from backports import zoneinfo
 
-from exchangelib import EWSDateTime, EWSDate, EWSTimeZone, UTC
 from exchangelib.errors import UnknownTimeZone, NaiveDateTimeNotAllowed
+from exchangelib.ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, UTC
 from exchangelib.winzone import generate_map, CLDR_TO_MS_TIMEZONE_MAP, CLDR_WINZONE_URL, CLDR_WINZONE_VERSION
 from exchangelib.util import CONNECTION_ERRORS
 

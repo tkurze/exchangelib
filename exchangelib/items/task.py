@@ -1,8 +1,12 @@
 import datetime
 from decimal import Decimal
 import logging
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
-from ..ewsdatetime import EWSDateTime, UTC, UTC_NOW
+from ..ewsdatetime import EWSDateTime, UTC
 from ..fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, Choice, \
     CharField, TextListField, TaskRecurrenceField, DateTimeBackedDateField
 from ..properties import Fields
@@ -62,7 +66,7 @@ class Task(Item):
                 log.warning("'status' must be '%s' when 'complete_date' is set (%s). Resetting",
                             self.COMPLETED, self.status)
                 self.status = self.COMPLETED
-            now = UTC_NOW()
+            now = datetime.datetime.now(tz=UTC)
             if (self.complete_date - now).total_seconds() > 120:
                 # Reset complete_date values that are in the future
                 # 'complete_date' can be set automatically by the server. Allow some grace between local and server time

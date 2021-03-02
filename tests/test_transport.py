@@ -3,8 +3,7 @@ from collections import namedtuple
 import requests
 import requests_mock
 
-from exchangelib import DELEGATE
-from exchangelib.account import Identity
+from exchangelib.account import Identity, DELEGATE
 from exchangelib.errors import UnauthorizedError
 from exchangelib.transport import wrap, get_auth_method_from_response, BASIC, NOAUTH, NTLM, DIGEST
 from exchangelib.util import PrettyXmlHandler, create_element

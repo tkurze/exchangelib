@@ -5,14 +5,16 @@ from types import MethodType
 import dns
 import requests_mock
 
-from exchangelib import DELEGATE
+from exchangelib.account import Account
+from exchangelib.credentials import Credentials, DELEGATE
 import exchangelib.autodiscover.discovery
-from exchangelib import Credentials, NTLM, FailFast, Configuration, Account
 from exchangelib.autodiscover import close_connections, clear_cache, autodiscover_cache, AutodiscoverProtocol, \
     Autodiscovery
 from exchangelib.autodiscover.properties import Autodiscover
+from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
-from exchangelib.protocol import FaultTolerance
+from exchangelib.protocol import FaultTolerance, FailFast
+from exchangelib.transport import NTLM
 from exchangelib.util import get_domain
 from .common import EWSTest, get_random_string
 

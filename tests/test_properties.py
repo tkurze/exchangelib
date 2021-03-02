@@ -1,15 +1,15 @@
 from inspect import isclass
 from itertools import chain
 
-from exchangelib import Folder, HTMLBody, Body, Mailbox, DLMailbox, UID, ItemId, Version
+from exchangelib.properties import HTMLBody, Body, Mailbox, DLMailbox, UID, ItemId
 from exchangelib.fields import TextField, InvalidField, InvalidFieldForVersion
-from exchangelib.folders import RootOfHierarchy
+from exchangelib.folders import Folder, RootOfHierarchy
 from exchangelib.indexed_properties import PhysicalAddress
 from exchangelib.items import Item, BulkCreateResult
 from exchangelib.properties import EWSElement, MessageHeader
 from exchangelib.extended_properties import ExternId, Flag
 from exchangelib.util import to_xml, TNS
-from exchangelib.version import EXCHANGE_2010, EXCHANGE_2013
+from exchangelib.version import Version, EXCHANGE_2010, EXCHANGE_2013
 
 from .common import TimedTestCase
 

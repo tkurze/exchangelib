@@ -5,9 +5,9 @@ import logging
 import requests
 import requests_mock
 
-from exchangelib import FailFast, FaultTolerance
 from exchangelib.errors import RelativeRedirect, TransportError, RateLimitError, RedirectError, UnauthorizedError,\
     CASError
+from exchangelib.protocol import FailFast, FaultTolerance
 import exchangelib.util
 from exchangelib.util import chunkify, peek, get_redirect_url, get_domain, PrettyXmlHandler, to_xml, BOM_UTF8, \
     ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS

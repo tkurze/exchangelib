@@ -1,6 +1,7 @@
-from exchangelib import Q, Message, ExtendedProperty
 from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
     MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound
+from exchangelib.extended_properties import ExtendedProperty
+from exchangelib.items import Message
 from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
     Contacts, Folder, RecipientCache, GALContacts, System, AllContacts, MyContactsExtended, Reminders, Favorites, \
     AllItems, ConversationSettings, Friends, RSSFeeds, Sharing, IMContactList, QuickContacts, Journal, Notes, \
@@ -9,6 +10,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy, Companies, \
     OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot
 from exchangelib.properties import Mailbox, InvalidField
+from exchangelib.queryset import Q
 from exchangelib.services import GetFolder
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\

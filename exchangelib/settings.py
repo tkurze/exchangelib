@@ -1,4 +1,6 @@
-from .ewsdatetime import UTC_NOW
+import datetime
+
+from .ewsdatetime import UTC
 from .fields import DateTimeField, MessageField, ChoiceField, Choice
 from .properties import EWSElement, OutOfOffice, Fields
 from .util import create_element, set_xml_value
@@ -32,7 +34,7 @@ class OofSettings(EWSElement):
                 raise ValueError("'start' and 'end' must be set when state is '%s'" % self.SCHEDULED)
             if self.start >= self.end:
                 raise ValueError("'start' must be before 'end'")
-            if self.end < UTC_NOW():
+            if self.end < datetime.datetime.now(tz=UTC):
                 raise ValueError("'end' must be in the future")
         if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
             raise ValueError("'internal_reply' and 'external_reply' must be set when state is not '%s'" % self.DISABLED)

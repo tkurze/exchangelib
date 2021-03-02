@@ -1,8 +1,7 @@
 import requests_mock
 
-from exchangelib import Version
 from exchangelib.errors import TransportError
-from exchangelib.version import EXCHANGE_2007, Build
+from exchangelib.version import EXCHANGE_2007, Version, Build
 from exchangelib.util import to_xml
 
 from .common import TimedTestCase
