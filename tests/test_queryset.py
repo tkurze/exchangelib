@@ -1,9 +1,9 @@
 # coding=utf-8
 from collections import namedtuple
 
-from exchangelib.folders import FolderCollection, Q
+from exchangelib.folders import FolderCollection
 from exchangelib.folders import Inbox
-from exchangelib.queryset import QuerySet
+from exchangelib.queryset import QuerySet, Q
 
 from .common import TimedTestCase
 

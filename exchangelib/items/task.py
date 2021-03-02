@@ -1,10 +1,6 @@
 import datetime
 from decimal import Decimal
 import logging
-try:
-    import zoneinfo
-except ImportError:
-    from backports import zoneinfo
 
 from ..ewsdatetime import EWSDateTime, UTC
 from ..fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, Choice, \

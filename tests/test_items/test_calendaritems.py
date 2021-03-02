@@ -1,8 +1,4 @@
 import datetime
-try:
-    import zoneinfo
-except ImportError:
-    from backports import zoneinfo
 
 from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound
 from exchangelib.ewsdatetime import UTC
@@ -204,8 +200,8 @@ class CalendarTest(CommonItemTest):
 
     def test_client_side_ordering_on_mixed_all_day_and_normal(self):
         # Test that client-side ordering on start and end fields works for items that are a mix of normal an all-day
-        # items. This requires us to compare datetime.datetime -> EWSDate values which is not allowed by default (EWSDate ->
-        # datetime.datetime *is* allowed).
+        # items. This requires us to compare datetime.datetime -> EWSDate values which is not allowed by default
+        # (EWSDate -> datetime.datetime *is* allowed).
         start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
         end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
         all_day_date = (start - datetime.timedelta(days=1)).date()
