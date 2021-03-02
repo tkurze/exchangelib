@@ -72,8 +72,12 @@ jobs:
         unittest-parallel -j 4 --coverage --coverage-source exchangelib
         coveralls --service=github
 
+  cleanup:
+    # Clean up the server test account regardless of whether test failed
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+
+    steps:
     - name: Clean up test account
-      # Only spend time running this once
-      if: matrix.python-version == '3.9'
       run: |
         PYTHONPATH=./ python scripts/wipe_test_account.py
