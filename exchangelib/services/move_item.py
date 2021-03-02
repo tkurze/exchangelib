@@ -1,5 +1,5 @@
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSAccountService, create_item_ids_element
+from ..util import create_element, set_xml_value, MNS
 
 
 class MoveItem(EWSAccountService):

@@ -1,5 +1,6 @@
-from ..util import create_element, set_xml_value
 from .common import EWSAccountService
+from ..properties import UserConfiguration
+from ..util import create_element, set_xml_value
 
 ID = 'Id'
 DICTIONARY = 'Dictionary'
@@ -15,7 +16,6 @@ class GetUserConfiguration(EWSAccountService):
     SERVICE_NAME = 'GetUserConfiguration'
 
     def call(self, user_configuration_name, properties):
-        from ..properties import UserConfiguration
         if properties not in PROPERTIES_CHOICES:
             raise ValueError("'properties' %r must be one of %s" % (properties, PROPERTIES_CHOICES))
         for elem in self._get_elements(payload=self.get_payload(
@@ -28,7 +28,6 @@ class GetUserConfiguration(EWSAccountService):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        from ..properties import UserConfiguration
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):

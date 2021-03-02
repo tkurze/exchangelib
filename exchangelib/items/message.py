@@ -1,12 +1,12 @@
 import logging
 
+from .base import BaseReplyItem
+from .item import Item, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
 from ..properties import ReferenceItemId, ReminderMessageData, Fields
 from ..services import SendItem, MarkAsJunk
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
-from .base import BaseReplyItem
-from .item import Item, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
 
 log = logging.getLogger(__name__)
 

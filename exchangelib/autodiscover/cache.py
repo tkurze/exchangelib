@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 import getpass
 import glob
 import logging
@@ -6,10 +5,11 @@ import os
 import shelve
 import sys
 import tempfile
+from contextlib import contextmanager
 from threading import RLock
 
-from ..configuration import Configuration
 from .protocol import AutodiscoverProtocol
+from ..configuration import Configuration
 
 log = logging.getLogger(__name__)
 

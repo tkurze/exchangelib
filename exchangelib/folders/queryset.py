@@ -1,6 +1,7 @@
-from copy import deepcopy
 import logging
-from ..properties import InvalidField
+from copy import deepcopy
+
+from ..properties import InvalidField, FolderId
 from ..queryset import DoesNotExist, MultipleObjectsReturned
 from ..restriction import Q
 
@@ -80,7 +81,6 @@ class FolderQuerySet:
 
         """
         from .collections import FolderCollection
-        from ..properties import FolderId
         if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
             folders = list(FolderCollection(
                 account=self.folder_collection.account, folders=[FolderId(**kwargs)]

@@ -1,10 +1,10 @@
 import abc
-from itertools import chain
 import logging
 import traceback
+from itertools import chain
 
-from ..credentials import IMPERSONATION, OAuth2Credentials
 from .. import errors
+from ..credentials import IMPERSONATION, OAuth2Credentials
 from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired, ErrorBatchProcessingStopped, \
     ErrorQuotaExceeded, ErrorCannotDeleteObject, ErrorCreateItemAccessDenied, ErrorFolderNotFound, \
     ErrorNonExistentMailbox, ErrorMailboxStoreUnavailable, ErrorImpersonateUserDenied, ErrorInternalServerError, \
@@ -17,7 +17,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorNoPublicFolderReplicaAvailable, MalformedResponseError, ErrorExceededConnectionCount, \
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder
-from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI
+from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
 from ..transport import wrap, extra_headers
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
     xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError
@@ -747,7 +747,6 @@ def create_folder_ids_element(tag, folders, version):
 
 
 def create_item_ids_element(items, version):
-    from ..properties import ItemId
     item_ids = create_element('m:ItemIds')
     for item in items:
         set_xml_value(item_ids, to_item_id(item, ItemId, version=version), version=version)

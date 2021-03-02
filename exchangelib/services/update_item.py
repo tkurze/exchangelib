@@ -1,12 +1,12 @@
 from collections import OrderedDict
-import logging
 
+from .common import EWSAccountService, to_item_id
 from ..ewsdatetime import EWSDate
+from ..fields import FieldPath, IndexedField
+from ..indexed_properties import MultiFieldIndexedElement
+from ..properties import ItemId
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013_SP1
-from .common import EWSAccountService, to_item_id
-
-log = logging.getLogger(__name__)
 
 
 class UpdateItem(EWSAccountService):
@@ -111,15 +111,12 @@ class UpdateItem(EWSAccountService):
         return value
 
     def _get_delete_item_elems(self, field):
-        from ..fields import FieldPath
         if field.is_required or field.is_required_after_save:
             raise ValueError('%s is a required field and may not be deleted' % field.name)
         for field_path in FieldPath(field=field).expand(version=self.account.version):
             yield self._delete_item_elem(field_path=field_path)
 
     def _get_set_item_elems(self, item_model, field, value):
-        from ..fields import FieldPath, IndexedField
-        from ..indexed_properties import MultiFieldIndexedElement
         if isinstance(field, IndexedField):
             # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
             for v in value:
@@ -150,7 +147,6 @@ class UpdateItem(EWSAccountService):
         # Takes a list of (Item, fieldnames) tuples where 'Item' is a instance of a subclass of Item and 'fieldnames'
         # are the attribute names that were updated. Returns the XML for an UpdateItem call.
         # an UpdateItem request.
-        from ..properties import ItemId
         if self.account.version.build >= EXCHANGE_2013_SP1:
             updateitem = create_element(
                 'm:%s' % self.SERVICE_NAME,
@@ -178,7 +174,6 @@ class UpdateItem(EWSAccountService):
             if not fieldnames:
                 raise ValueError('"fieldnames" must not be empty')
             itemchange = create_element('t:ItemChange')
-            log.debug('Updating item %s fields %s', item, fieldnames)
             set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
             updates = create_element('t:Updates')
             for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):

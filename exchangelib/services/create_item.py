@@ -1,10 +1,7 @@
 from collections import OrderedDict
-import logging
 
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSAccountService
-
-log = logging.getLogger(__name__)
+from ..util import create_element, set_xml_value, MNS
 
 
 class CreateItem(EWSAccountService):
@@ -88,7 +85,6 @@ class CreateItem(EWSAccountService):
         for item in items:
             if not item.account:
                 item.account = self.account
-            log.debug('Adding item %s', item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
             raise ValueError('"items" must not be empty')

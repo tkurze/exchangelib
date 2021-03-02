@@ -1,23 +1,24 @@
 import abc
-from fnmatch import fnmatch
 import logging
+from fnmatch import fnmatch
 from operator import attrgetter
 
+from .collections import FolderCollection
+from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
     ErrorDeleteDistinguishedFolder
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
     SHALLOW as SHALLOW_ITEMS
-from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, Fields
+from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, Fields, UserConfiguration, \
+    UserConfigurationName, UserConfigurationNameMNS
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
-from .collections import FolderCollection
-from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 
 log = logging.getLogger(__name__)
 
@@ -466,7 +467,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @require_id
     def get_user_configuration(self, name, properties=ALL):
-        from ..properties import UserConfigurationNameMNS
         return GetUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self),
             properties=properties,
@@ -474,7 +474,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @require_id
     def create_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
-        from ..properties import UserConfiguration, UserConfigurationName
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -485,7 +484,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @require_id
     def update_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
-        from ..properties import UserConfiguration, UserConfigurationName
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -496,7 +494,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @require_id
     def delete_user_configuration(self, name):
-        from ..properties import UserConfigurationNameMNS
         return DeleteUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
         )

@@ -1,8 +1,8 @@
+import logging
 from collections import OrderedDict
 from copy import copy
-import logging
 
-from .fields import InvalidField
+from .fields import InvalidField, FieldPath, DateTimeBackedDateField
 from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
 from .version import EXCHANGE_2010
 
@@ -398,7 +398,6 @@ class Q:
 
     def _get_field_path(self, folders, applies_to, version):
         # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
-        from .fields import FieldPath
         for folder in folders:
             try:
                 if applies_to == Restriction.FOLDERS:
@@ -429,7 +428,6 @@ class Q:
         # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
         # return None.
         from .indexed_properties import SingleFieldIndexedElement
-        from .fields import DateTimeBackedDateField
         # Don't check self.value just yet. We want to return error messages on the field path first, and then the value.
         # This is done in _get_field_path() and _get_clean_value(), respectively.
         self._check_integrity()

@@ -1,12 +1,12 @@
 import abc
-from copy import deepcopy
-from itertools import islice
 import logging
 import warnings
+from copy import deepcopy
+from itertools import islice
 
 from .errors import MultipleObjectsReturned, DoesNotExist
-from .items import CalendarItem, ID_ONLY
 from .fields import FieldPath, FieldOrder
+from .items import CalendarItem, ID_ONLY
 from .properties import InvalidField
 from .restriction import Q
 from .services import CHUNK_SIZE

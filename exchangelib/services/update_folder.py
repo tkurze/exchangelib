@@ -1,9 +1,6 @@
-import logging
-
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSAccountService, parse_folder_elem, to_item_id
-
-log = logging.getLogger(__name__)
+from ..fields import FieldPath
+from ..util import create_element, set_xml_value, MNS
 
 
 class UpdateFolder(EWSAccountService):
@@ -40,7 +37,6 @@ class UpdateFolder(EWSAccountService):
         return set_xml_value(deletefolderfield, field_path, version=self.account.version)
 
     def _get_folder_update_elems(self, folder, fieldnames):
-        from ..fields import FieldPath
         folder_model = folder.__class__
         fieldnames_set = set(fieldnames)
 
@@ -66,7 +62,6 @@ class UpdateFolder(EWSAccountService):
         folderchanges = create_element('m:FolderChanges')
         version = self.account.version
         for folder, fieldnames in folders:
-            log.debug('Updating folder %s fields %s', folder, fieldnames)
             folderchange = create_element('t:FolderChange')
             if not isinstance(folder, (BaseFolder, FolderId)):
                 folder = to_item_id(folder, FolderId, version=version)

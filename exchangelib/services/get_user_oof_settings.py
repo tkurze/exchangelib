@@ -1,5 +1,7 @@
-from ..util import create_element, set_xml_value, MNS, TNS
 from .common import EWSAccountService
+from ..properties import AvailabilityMailbox
+from ..settings import OofSettings
+from ..util import create_element, set_xml_value, MNS, TNS
 
 
 class GetUserOofSettings(EWSAccountService):
@@ -11,7 +13,6 @@ class GetUserOofSettings(EWSAccountService):
     element_container_name = '{%s}OofSettings' % TNS
 
     def call(self, mailbox):
-        from ..settings import OofSettings
         for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
             if isinstance(elem, Exception):
                 yield elem
@@ -19,7 +20,6 @@ class GetUserOofSettings(EWSAccountService):
             yield OofSettings.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, mailbox):
-        from ..properties import AvailabilityMailbox
         payload = create_element('m:%sRequest' % self.SERVICE_NAME)
         return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
 

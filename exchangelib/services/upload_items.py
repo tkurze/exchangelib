@@ -1,5 +1,6 @@
-from ..util import create_element, set_xml_value, add_xml_child, MNS
 from .common import EWSAccountService
+from ..properties import ItemId, ParentFolderId
+from ..util import create_element, set_xml_value, add_xml_child, MNS
 
 
 class UploadItems(EWSAccountService):
@@ -29,7 +30,6 @@ class UploadItems(EWSAccountService):
           items:
 
         """
-        from ..properties import ParentFolderId
         uploaditems = create_element('m:%s' % self.SERVICE_NAME)
         itemselement = create_element('m:Items')
         uploaditems.append(itemselement)
@@ -42,5 +42,4 @@ class UploadItems(EWSAccountService):
         return uploaditems
 
     def _get_elements_in_container(self, container):
-        from ..properties import ItemId
         return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]

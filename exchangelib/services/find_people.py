@@ -1,9 +1,9 @@
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
+from .common import EWSAccountService, create_shape_element
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
-from .common import EWSAccountService, create_shape_element
 
 log = logging.getLogger(__name__)
 

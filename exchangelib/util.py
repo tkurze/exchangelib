@@ -1,28 +1,28 @@
-from base64 import b64decode, b64encode
-from codecs import BOM_UTF8
-from collections import OrderedDict
 import datetime
-from decimal import Decimal
-from functools import wraps
 import io
 import itertools
 import logging
 import re
 import socket
-from threading import get_ident
 import time
-from urllib.parse import urlparse
 import xml.sax.handler  # nosec
+from base64 import b64decode, b64encode
+from codecs import BOM_UTF8
+from collections import OrderedDict
+from decimal import Decimal
+from functools import wraps
+from threading import get_ident
+from urllib.parse import urlparse
 
+import isodate
 import lxml.etree  # nosec
+import requests.exceptions
 from defusedxml.expatreader import DefusedExpatParser
 from defusedxml.sax import _InputSource
-import isodate
 from oauthlib.oauth2 import TokenExpiredError
 from pygments import highlight
-from pygments.lexers.html import XmlLexer
 from pygments.formatters.terminal import TerminalFormatter
-import requests.exceptions
+from pygments.lexers.html import XmlLexer
 
 from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, CASError, UnauthorizedError, \
     ErrorInvalidSchemaVersionForMailboxVersion

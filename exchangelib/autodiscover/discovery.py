@@ -2,9 +2,12 @@ import logging
 import time
 from urllib.parse import urlparse
 
-from cached_property import threaded_cached_property
 import dns.resolver
+from cached_property import threaded_cached_property
 
+from .cache import autodiscover_cache
+from .properties import Autodiscover
+from .protocol import AutodiscoverProtocol
 from ..configuration import Configuration
 from ..credentials import OAuth2Credentials
 from ..errors import AutoDiscoverFailed, AutoDiscoverCircularRedirect, TransportError, RedirectError, UnauthorizedError
@@ -13,9 +16,6 @@ from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, 
 from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, _may_retry_on_error, \
     DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
 from ..version import Version
-from .cache import autodiscover_cache
-from .properties import Autodiscover
-from .protocol import AutodiscoverProtocol
 
 log = logging.getLogger(__name__)
 

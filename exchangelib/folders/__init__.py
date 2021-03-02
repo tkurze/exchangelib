@@ -1,4 +1,3 @@
-from ..properties import FolderId, DistinguishedFolderId
 from .base import BaseFolder, Folder
 from .collections import FolderCollection
 from .known_folders import AdminAuditLogs, AllContacts, AllItems, ArchiveDeletedItems, ArchiveInbox, \
@@ -15,6 +14,7 @@ from .known_folders import AdminAuditLogs, AllContacts, AllItems, ArchiveDeleted
     Companies, OrganizationalContacts, PeopleCentricConversationBuddies, NON_DELETABLE_FOLDERS
 from .queryset import FolderQuerySet, SingleFolderQuerySet, FOLDER_TRAVERSAL_CHOICES, SHALLOW, DEEP, SOFT_DELETED
 from .roots import Root, ArchiveRoot, PublicFoldersRoot, RootOfHierarchy
+from ..properties import FolderId, DistinguishedFolderId
 
 __all__ = [
     'FolderId', 'DistinguishedFolderId',

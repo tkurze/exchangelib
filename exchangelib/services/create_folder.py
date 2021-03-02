@@ -1,5 +1,5 @@
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element
+from ..util import create_element, set_xml_value, MNS
 
 
 class CreateFolder(EWSAccountService):

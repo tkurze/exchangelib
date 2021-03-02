@@ -1,9 +1,9 @@
 import abc
-from collections import OrderedDict
 import datetime
+import logging
+from collections import OrderedDict
 from decimal import Decimal, InvalidOperation
 from importlib import import_module
-import logging
 
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
 from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
@@ -1089,8 +1089,8 @@ class MemberListField(EWSElementListField):
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
+        from .properties import Mailbox
         if value is not None:
-            from .properties import Mailbox
             value = [
                 self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
             ]
@@ -1317,7 +1317,6 @@ class ExtendedPropertyField(Field):
 class ItemField(FieldURIField):
     @property
     def value_cls(self):
-        # This is a workaround for circular imports. Item
         from .items import Item
         return Item
 
@@ -1357,7 +1356,6 @@ class EffectiveRightsField(EWSElementField):
 
 class BuildField(CharField):
     def __init__(self, *args, **kwargs):
-        from .version import Build
         super().__init__(*args, **kwargs)
         self.value_cls = Build
 

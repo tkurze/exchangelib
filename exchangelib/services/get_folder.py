@@ -1,7 +1,7 @@
+from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element, \
+    create_shape_element
 from ..errors import ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation
 from ..util import create_element, MNS
-from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element,\
-    create_shape_element
 
 
 class GetFolder(EWSAccountService):

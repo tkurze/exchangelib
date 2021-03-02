@@ -1,15 +1,15 @@
 import logging
 
+from .base import BaseItem, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
+    AUTO_RESOLVE, SOFT_DELETE, HARD_DELETE, ALL_OCCURRENCIES, MOVE_TO_DELETED_ITEMS
 from ..fields import BooleanField, IntegerField, TextField, CharListField, ChoiceField, URIField, BodyField, \
     DateTimeField, MessageHeaderField, AttachmentField, Choice, EWSElementField, EffectiveRightsField, CultureField, \
     CharField, MimeContentField, FieldPath
-from ..properties import ConversationId, ParentFolderId, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId,\
+from ..properties import ConversationId, ParentFolderId, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId, \
     ResponseObjects, Fields
 from ..services import GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, CopyItem, ArchiveItem
 from ..util import is_iterable, require_account, require_id
 from ..version import EXCHANGE_2010, EXCHANGE_2013
-from .base import BaseItem, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
-    AUTO_RESOLVE, SOFT_DELETE, HARD_DELETE, ALL_OCCURRENCIES, MOVE_TO_DELETED_ITEMS
 
 log = logging.getLogger(__name__)
 

@@ -2,6 +2,9 @@ import abc
 import datetime
 import logging
 
+from .base import BaseItem, BaseReplyItem, SEND_AND_SAVE_COPY, SEND_TO_NONE
+from .item import Item
+from .message import Message
 from ..ewsdatetime import EWSDate, EWSDateTime
 from ..fields import BooleanField, IntegerField, TextField, ChoiceField, URIField, BodyField, DateTimeField, \
     MessageHeaderField, AttachmentField, RecurrenceField, MailboxField, AttendeesField, Choice, OccurrenceField, \
@@ -13,9 +16,6 @@ from ..recurrence import FirstOccurrence, LastOccurrence, Occurrence, DeletedOcc
 from ..services import CreateItem
 from ..util import set_xml_value, require_account
 from ..version import EXCHANGE_2010, EXCHANGE_2013
-from .base import BaseItem, BaseReplyItem, SEND_AND_SAVE_COPY, SEND_TO_NONE
-from .item import Item
-from .message import Message
 
 log = logging.getLogger(__name__)
 

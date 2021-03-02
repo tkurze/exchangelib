@@ -1,6 +1,7 @@
 import datetime
 import logging
 
+from .item import Item
 from ..fields import BooleanField, Base64Field, TextField, ChoiceField, URIField, DateTimeBackedDateField, \
     PhoneNumberField, EmailAddressesField, PhysicalAddressField, Choice, MemberListField, CharField, TextListField, \
     EmailAddressField, IdElementField, EWSElementField, DateTimeField, EWSElementListField, \
@@ -10,7 +11,6 @@ from ..properties import PersonaId, IdChangeKeyMixIn, Fields, CompleteName, Attr
     FolderId
 from ..util import TNS
 from ..version import EXCHANGE_2010, EXCHANGE_2010_SP2, EXCHANGE_2013
-from .item import Item
 
 log = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
+from .common import EWSAccountService
+from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2007_SP1
-from .common import EWSAccountService
 
 
 class GetDelegate(EWSAccountService):
@@ -9,8 +10,6 @@ class GetDelegate(EWSAccountService):
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
-
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=user_ids or [None],
@@ -33,7 +32,6 @@ class GetDelegate(EWSAccountService):
 
     @staticmethod
     def _get_elements_in_container(container):
-        from ..properties import DelegateUser
         return container.findall(DelegateUser.response_tag())
 
     @classmethod

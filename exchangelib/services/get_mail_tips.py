@@ -1,5 +1,6 @@
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSService
+from ..properties import MailTips
+from ..util import create_element, set_xml_value, MNS
 
 
 class GetMailTips(EWSService):
@@ -7,7 +8,6 @@ class GetMailTips(EWSService):
     SERVICE_NAME = 'GetMailTips'
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        from ..properties import MailTips
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=recipients,
@@ -32,7 +32,6 @@ class GetMailTips(EWSService):
         return payload
 
     def _get_elements_in_response(self, response):
-        from ..properties import MailTips
         for msg in response:
             yield self._get_element_container(message=msg, name=MailTips.response_tag())
 

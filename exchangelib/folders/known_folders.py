@@ -1,8 +1,8 @@
+from .base import Folder
+from .collections import FolderCollection
 from ..items import CalendarItem, Contact, Message, Task, DistributionList, MeetingRequest, MeetingResponse, \
     MeetingCancellation, ITEM_CLASSES, ASSOCIATED
 from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1
-from .base import Folder
-from .collections import FolderCollection
 
 
 class Calendar(Folder):

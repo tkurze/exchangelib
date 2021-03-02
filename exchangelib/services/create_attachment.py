@@ -1,5 +1,6 @@
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSAccountService, to_item_id
+from ..properties import ParentItemId
+from ..util import create_element, set_xml_value, MNS
 
 
 class CreateAttachment(EWSAccountService):
@@ -18,7 +19,6 @@ class CreateAttachment(EWSAccountService):
             yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, parent_item):
-        from ..properties import ParentItemId
         from ..items import BaseItem
         payload = create_element('m:%s' % self.SERVICE_NAME)
         version = self.account.version

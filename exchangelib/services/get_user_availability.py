@@ -1,5 +1,6 @@
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSService
+from ..properties import FreeBusyView
+from ..util import create_element, set_xml_value, MNS
 
 
 class GetUserAvailability(EWSService):
@@ -13,7 +14,6 @@ class GetUserAvailability(EWSService):
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
-        from ..properties import FreeBusyView
         for elem in self._get_elements(payload=self.get_payload(
             timezone=timezone,
             mailbox_data=mailbox_data,

@@ -1,8 +1,8 @@
 from collections import OrderedDict
 
+from .common import EWSAccountService, create_shape_element
 from ..util import create_element, set_xml_value, TNS, MNS
 from ..version import EXCHANGE_2010
-from .common import EWSAccountService, create_shape_element
 
 
 class FindFolder(EWSAccountService):

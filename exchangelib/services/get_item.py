@@ -1,5 +1,5 @@
-from ..util import create_element, MNS
 from .common import EWSAccountService, create_item_ids_element, create_shape_element
+from ..util import create_element, MNS
 
 
 class GetItem(EWSAccountService):

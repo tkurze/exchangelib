@@ -1,7 +1,8 @@
+from .common import EWSService
 from ..errors import MalformedResponseError
+from ..properties import SearchableMailbox, FailedMailbox
 from ..util import create_element, add_xml_child, MNS
 from ..version import EXCHANGE_2013
-from .common import EWSService
 
 
 class GetSearchableMailboxes(EWSService):
@@ -15,7 +16,6 @@ class GetSearchableMailboxes(EWSService):
     supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
-        from ..properties import SearchableMailbox, FailedMailbox
         cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
         for elem in self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,

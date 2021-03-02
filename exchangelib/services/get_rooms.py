@@ -1,6 +1,7 @@
+from .common import EWSService
+from ..properties import Room
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2010
-from .common import EWSService
 
 
 class GetRooms(EWSService):
@@ -10,7 +11,6 @@ class GetRooms(EWSService):
     supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
-        from ..properties import Room
         for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
             yield Room.from_xml(elem=elem, account=None)
 

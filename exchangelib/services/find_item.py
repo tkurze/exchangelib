@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
-from ..util import create_element, set_xml_value, TNS, MNS
 from .common import EWSAccountService, create_shape_element
+from ..util import create_element, set_xml_value, TNS, MNS
 
 
 class FindItem(EWSAccountService):

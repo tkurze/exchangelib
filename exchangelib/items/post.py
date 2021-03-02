@@ -1,9 +1,9 @@
 import logging
 
-from ..fields import TextField, BodyField, DateTimeField, MailboxField
-from ..properties import Fields
 from .item import Item
 from .message import Message
+from ..fields import TextField, BodyField, DateTimeField, MailboxField
+from ..properties import Fields
 
 log = logging.getLogger(__name__)
 

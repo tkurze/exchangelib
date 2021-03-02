@@ -1,6 +1,6 @@
+from .common import EWSAccountService, create_attachment_ids_element
 from ..util import create_element, add_xml_child, DummyResponse, StreamingBase64Parser, StreamingContentHandler, \
     ElementNotFound, MNS
-from .common import EWSAccountService, create_attachment_ids_element
 
 
 class GetAttachment(EWSAccountService):

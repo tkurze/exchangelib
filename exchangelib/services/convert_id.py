@@ -1,10 +1,7 @@
-import logging
-
+from .common import EWSService
+from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
 from ..util import create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
-from .common import EWSService
-
-log = logging.getLogger(__name__)
 
 
 class ConvertId(EWSService):
@@ -18,7 +15,6 @@ class ConvertId(EWSService):
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, items, destination_format):
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
         if destination_format not in ID_FORMATS:
             raise ValueError("'destination_format' %r must be one of %s" % (destination_format, ID_FORMATS))
         cls_map = {cls.response_tag(): cls for cls in (
@@ -31,12 +27,10 @@ class ConvertId(EWSService):
             yield cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         convertid = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element('m:SourceIds')
         for item in items:
-            log.debug('Collecting item %s', item)
             if not isinstance(item, supported_item_classes):
                 raise ValueError("'item' value %r must be an instance of %r" % (item, supported_item_classes))
             set_xml_value(item_ids, item, version=self.protocol.version)
@@ -47,7 +41,6 @@ class ConvertId(EWSService):
 
     def _get_elements_in_container(self, container):
         # We may have other elements in here, e.g. 'ResponseCode'. Filter away those.
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
             + container.findall(AlternatePublicFolderItemId.response_tag())

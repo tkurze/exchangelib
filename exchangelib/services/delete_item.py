@@ -1,8 +1,8 @@
 from collections import OrderedDict
 
+from .common import EWSAccountService, create_item_ids_element
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
-from .common import EWSAccountService, create_item_ids_element
 
 
 class DeleteItem(EWSAccountService):

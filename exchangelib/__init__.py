@@ -13,8 +13,8 @@ from .items import AcceptItem, TentativelyAcceptItem, DeclineItem, CalendarItem,
     DistributionList, Message, PostItem, Task, ForwardItem, ReplyToItem, ReplyAllToItem
 from .properties import Body, HTMLBody, ItemId, Mailbox, Attendee, Room, RoomList, UID, DLMailbox
 from .protocol import FaultTolerance, FailFast, BaseProtocol, NoVerifyHTTPAdapter, TLSClientAuth
-from .settings import OofSettings
 from .restriction import Q
+from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 

@@ -1,5 +1,6 @@
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSAccountService, to_item_id
+from ..properties import PersonaId
+from ..util import create_element, set_xml_value, MNS
 
 
 class GetPersona(EWSAccountService):
@@ -17,7 +18,6 @@ class GetPersona(EWSAccountService):
         return Persona.from_xml(elem=elem, account=None)
 
     def get_payload(self, persona):
-        from ..properties import PersonaId
         version = self.protocol.version
         payload = create_element('m:%s' % self.SERVICE_NAME)
         set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)

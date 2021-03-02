@@ -1,16 +1,16 @@
 import abc
 import logging
 
+from .base import BaseFolder
+from .collections import FolderCollection
+from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
+    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
+from .queryset import SingleFolderQuerySet, SHALLOW
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, \
     ErrorInvalidOperation
 from ..fields import EffectiveRightsField
 from ..properties import Fields
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
-from .collections import FolderCollection
-from .base import BaseFolder
-from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
-    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-from .queryset import SingleFolderQuerySet, SHALLOW
 
 log = logging.getLogger(__name__)
 

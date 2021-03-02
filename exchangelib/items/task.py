@@ -1,12 +1,12 @@
 import datetime
-from decimal import Decimal
 import logging
+from decimal import Decimal
 
+from .item import Item
 from ..ewsdatetime import EWSDateTime, UTC
 from ..fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, Choice, \
     CharField, TextListField, TaskRecurrenceField, DateTimeBackedDateField
 from ..properties import Fields
-from .item import Item
 
 log = logging.getLogger(__name__)
 

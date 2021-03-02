@@ -1,6 +1,7 @@
-from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
-from ..util import create_element, set_xml_value, MNS
 from .common import EWSService
+from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
+from ..properties import Mailbox
+from ..util import create_element, set_xml_value, MNS
 
 
 class ExpandDL(EWSService):
@@ -11,7 +12,6 @@ class ExpandDL(EWSService):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
-        from ..properties import Mailbox
         for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
             if isinstance(elem, Exception):
                 raise elem

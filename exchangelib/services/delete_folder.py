@@ -1,5 +1,5 @@
-from ..util import create_element
 from .common import EWSAccountService, create_folder_ids_element
+from ..util import create_element
 
 
 class DeleteFolder(EWSAccountService):

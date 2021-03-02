@@ -2,9 +2,9 @@ import abc
 import binascii
 import codecs
 import datetime
-from inspect import getmro
 import logging
 import struct
+from inspect import getmro
 from threading import Lock
 
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \

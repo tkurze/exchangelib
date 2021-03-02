@@ -2,7 +2,7 @@ from ..errors import ErrorNonExistentMailbox, AutoDiscoverFailed
 from ..fields import TextField, EmailAddressField, ChoiceField, Choice, EWSElementField, OnOffField, BooleanField, \
     IntegerField, BuildField, ProtocolListField
 from ..properties import EWSElement, Fields
-from ..transport import DEFAULT_ENCODING
+from ..transport import DEFAULT_ENCODING, NOAUTH, NTLM, BASIC, GSSAPI, SSPI, CBA
 from ..util import create_element, add_xml_child, to_xml, is_xml, xml_to_str, AUTODISCOVER_REQUEST_NS, \
     AUTODISCOVER_BASE_NS, AUTODISCOVER_RESPONSE_NS as RNS, ParseError
 
@@ -157,7 +157,6 @@ class Protocol(SimpleProtocol):
     @property
     def auth_type(self):
         # Translates 'auth_package' value to our own 'auth_type' enum vals
-        from ..transport import NOAUTH, NTLM, BASIC, GSSAPI, SSPI, CBA
         if not self.auth_required:
             return NOAUTH
         return {

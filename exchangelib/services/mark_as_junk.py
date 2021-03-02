@@ -1,5 +1,6 @@
-from ..util import create_element
 from .common import EWSAccountService, create_item_ids_element
+from ..properties import MovedItemId
+from ..util import create_element
 
 
 class MarkAsJunk(EWSAccountService):
@@ -7,7 +8,6 @@ class MarkAsJunk(EWSAccountService):
     SERVICE_NAME = 'MarkAsJunk'
 
     def call(self, items, is_junk, move_item):
-        from ..properties import MovedItemId
         for elem in self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item):
             if isinstance(elem, (Exception, type(None))):
                 yield elem
@@ -16,7 +16,6 @@ class MarkAsJunk(EWSAccountService):
 
     @staticmethod
     def _get_elements_in_container(container):
-        from ..properties import MovedItemId
         return container.findall(MovedItemId.response_tag())
 
     def get_payload(self, items, is_junk, move_item):

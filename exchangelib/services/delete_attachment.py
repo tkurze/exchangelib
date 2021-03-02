@@ -1,5 +1,6 @@
-from ..util import create_element
 from .common import EWSAccountService, create_attachment_ids_element
+from ..properties import RootItemId
+from ..util import create_element
 
 
 class DeleteAttachment(EWSAccountService):
@@ -8,7 +9,6 @@ class DeleteAttachment(EWSAccountService):
     SERVICE_NAME = 'DeleteAttachment'
 
     def call(self, items):
-        from ..properties import RootItemId
         for elem in self._chunked_get_elements(self.get_payload, items=items):
             if isinstance(elem, Exception):
                 yield elem
@@ -17,7 +17,6 @@ class DeleteAttachment(EWSAccountService):
 
     @staticmethod
     def _get_elements_in_container(container):
-        from ..properties import RootItemId
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):

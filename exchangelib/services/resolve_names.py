@@ -1,7 +1,8 @@
+from .common import EWSService
 from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
+from ..properties import Mailbox
 from ..util import create_element, set_xml_value, add_xml_child, MNS
 from ..version import EXCHANGE_2010_SP2
-from .common import EWSService
 
 
 class ResolveNames(EWSService):
@@ -21,7 +22,6 @@ class ResolveNames(EWSService):
         if contact_data_shape:
             if contact_data_shape not in SHAPE_CHOICES:
                 raise ValueError("'shape' %s must be one if %s" % (contact_data_shape, SHAPE_CHOICES))
-        from ..properties import Mailbox
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,

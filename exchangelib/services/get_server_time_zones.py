@@ -1,11 +1,11 @@
 import datetime
 
+from .common import EWSService
 from ..errors import NaiveDateTimeNotAllowed
 from ..ewsdatetime import EWSDateTime
 from ..fields import WEEKDAY_NAMES
 from ..util import create_element, set_xml_value, xml_text_to_value, peek, TNS, MNS
 from ..version import EXCHANGE_2010
-from .common import EWSService
 
 
 class GetServerTimeZones(EWSService):

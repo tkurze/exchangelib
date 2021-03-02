@@ -1,7 +1,7 @@
 import abc
-from io import BytesIO
 import logging
 import mimetypes
+from io import BytesIO
 
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
     ItemField, IdField

@@ -8,8 +8,8 @@ import abc
 import datetime
 import logging
 import os
-from threading import Lock
 from queue import LifoQueue, Empty, Full
+from threading import Lock
 
 import requests.adapters
 import requests.sessions
@@ -19,7 +19,7 @@ from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached
-from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone
+from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
 from .transport import get_auth_instance, get_service_authtype, NTLM, OAUTH2, CREDENTIALS_REQUIRED, DEFAULT_HEADERS
@@ -516,7 +516,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return GetRoomLists(protocol=self).call()
 
     def get_rooms(self, roomlist):
-        from .properties import RoomList
         return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
@@ -548,7 +547,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           List of Mailbox items that are members of the distribution list
 
         """
-        from .properties import DLMailbox
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type='PublicDL')
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
