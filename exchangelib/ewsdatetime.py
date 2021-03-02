@@ -81,8 +81,22 @@ class EWSDateTime(datetime.datetime):
 
     def __new__(cls, *args, **kwargs):
         # pylint: disable=arguments-differ
-        if not isinstance(kwargs.get('tzinfo'), (EWSTimeZone, type(None))):
-            raise ValueError('tzinfo must be an EWSTimeZone instance')
+
+        if len(args) == 8:
+            tzinfo = args[7]
+        else:
+            tzinfo = kwargs.get('tzinfo')
+        if isinstance(tzinfo, zoneinfo.ZoneInfo):
+            # Don't allow pytz or dateutil timezones here. They are not safe to use as direct input for datetime()
+            tzinfo = EWSTimeZone.from_timezone(tzinfo)
+        if not isinstance(tzinfo, (EWSTimeZone, type(None))):
+            raise ValueError('tzinfo %r must be an EWSTimeZone instance' % tzinfo)
+        if len(args) == 8:
+            args = list(args)
+            args[7] = tzinfo
+            args = tuple(args)
+        else:
+            kwargs['tzinfo'] = tzinfo
         return super().__new__(cls, *args, **kwargs)
 
     def ewsformat(self):
