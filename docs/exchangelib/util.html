@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.util API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,36 +26,37 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from base64 import b64decode
-from codecs import BOM_UTF8
-from collections import OrderedDict
-import datetime
-from decimal import Decimal
-from functools import wraps
+<pre><code class="python">import datetime
 import io
 import itertools
 import logging
 import re
 import socket
-from threading import get_ident
 import time
-from urllib.parse import urlparse
 import xml.sax.handler  # nosec
+from base64 import b64decode, b64encode
+from codecs import BOM_UTF8
+from collections import OrderedDict
+from decimal import Decimal
+from functools import wraps
+from threading import get_ident
+from urllib.parse import urlparse
 
+import isodate
 import lxml.etree  # nosec
+import requests.exceptions
 from defusedxml.expatreader import DefusedExpatParser
 from defusedxml.sax import _InputSource
-import isodate
 from oauthlib.oauth2 import TokenExpiredError
 from pygments import highlight
-from pygments.lexers.html import XmlLexer
 from pygments.formatters.terminal import TerminalFormatter
-import requests.exceptions
+from pygments.lexers.html import XmlLexer
 
 from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, CASError, UnauthorizedError, \
     ErrorInvalidSchemaVersionForMailboxVersion
 
 log = logging.getLogger(__name__)
+xml_log = logging.getLogger(&#39;%s.xml&#39; % __name__)
 
 
 def require_account(f):
@@ -164,11 +165,6 @@ def peek(iterable):
       iterable:
 
     &#34;&#34;&#34;
-    from .queryset import QuerySet
-    if isinstance(iterable, QuerySet):
-        # QuerySet has __len__ but that evaluates the entire query greedily. We don&#39;t want that here. Instead, peek()
-        # should be called on QuerySet.iterator()
-        raise ValueError(&#39;Cannot peek on a QuerySet&#39;)
     if hasattr(iterable, &#39;__len__&#39;):
         # tuple, list, set
         return not iterable, iterable
@@ -209,7 +205,6 @@ def get_xml_attrs(tree, name):
 
 
 def value_to_xml_text(value):
-    # We can&#39;t handle bytes in this function because str == bytes on Python2
     from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
     from .indexed_properties import PhoneNumber, EmailAddress
     from .properties import Mailbox, Attendee, ConversationId
@@ -217,6 +212,8 @@ def value_to_xml_text(value):
         return safe_xml_value(value)
     if isinstance(value, bool):
         return &#39;1&#39; if value else &#39;0&#39;
+    if isinstance(value, bytes):
+        return b64encode(value).decode(&#39;ascii&#39;)
     if isinstance(value, (int, Decimal)):
         return str(value)
     if isinstance(value, datetime.time):
@@ -241,15 +238,26 @@ def value_to_xml_text(value):
 
 
 def xml_text_to_value(value, value_type):
-    # We can&#39;t handle bytes in this function because str == bytes on Python2
-    from .ewsdatetime import EWSDateTime
+    from .ewsdatetime import EWSDate, EWSDateTime
+    if value_type == str:
+        return value
+    if value_type == bool:
+        try:
+            return {
+                &#39;true&#39;: True,
+                &#39;on&#39;: True,
+                &#39;false&#39;: False,
+                &#39;off&#39;: False,
+            }[value.lower()]
+        except KeyError:
+            return None
     return {
-        bool: lambda v: True if v == &#39;true&#39; else False if v == &#39;false&#39; else None,
+        bytes: safe_b64decode,
         int: int,
         Decimal: Decimal,
         datetime.timedelta: isodate.parse_duration,
+        EWSDate: EWSDate.from_string,
         EWSDateTime: EWSDateTime.from_string,
-        str: lambda v: v
     }[value_type](value)
 
 
@@ -384,8 +392,7 @@ class StreamingBase64Parser(DefusedExpatParser):
         while buffer:
             if not self.element_found:
                 collected_data += buffer
-            for data in self.feed(buffer):
-                yield data
+            yield from self.feed(buffer)
             buffer = file.read(self._bufsize)
         # Any remaining data in self.buffer should be padding chars now
         self.buffer = None
@@ -552,7 +559,7 @@ class PrettyXmlHandler(logging.StreamHandler):
     @staticmethod
     def highlight_xml(xml_str):
         # Highlights a string containing XML, using terminal color codes
-        return highlight(xml_str, XmlLexer(), TerminalFormatter())
+        return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
         &#34;&#34;&#34;Pretty-print and syntax highlight a log statement if all these conditions are met:
@@ -740,10 +747,10 @@ Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
 Request headers: %(request_headers)s
-Response headers: %(response_headers)s
-Request data: %(xml_request)s
-Response data: %(xml_response)s
-&#39;&#39;&#39;
+Response headers: %(response_headers)s&#39;&#39;&#39;
+    xml_log_msg = &#39;&#39;&#39;\
+Request XML: %(xml_request)s
+Response XML: %(xml_response)s&#39;&#39;&#39;
     log_vals = dict(
         retry=retry,
         wait=wait,
@@ -759,7 +766,9 @@ Response data: %(xml_response)s
         status_code=None,
         request_headers=headers,
         response_headers=None,
-        xml_request=data,
+    )
+    xml_log_vals = dict(
+        xml_request=None,
         xml_response=None,
     )
     t_start = time.monotonic()
@@ -801,9 +810,13 @@ Response data: %(xml_response)s
                     status_code=r.status_code,
                     request_headers=r.request.headers,
                     response_headers=r.headers,
+                )
+                xml_log_vals.update(
+                    xml_request=data,
                     xml_response=&#39;[STREAMING]&#39; if stream else r.content,
                 )
             log.debug(log_msg, log_vals)
+            xml_log.debug(xml_log_msg, xml_log_vals)
             if _need_new_credentials(response=r):
                 r.close()  # Release memory
                 session = protocol.refresh_credentials(session)
@@ -828,7 +841,7 @@ Response data: %(xml_response)s
         raise
     except Exception as e:
         # Let higher layers handle this. Add full context for better debugging.
-        log.error(str(&#39;%s: %s\n%s&#39;), e.__class__.__name__, str(e), log_msg % log_vals)
+        log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
         protocol.retire_session(session)
         raise
     if r.status_code == 500 and r.content and is_xml(r.content):
@@ -836,7 +849,10 @@ Response data: %(xml_response)s
         log.debug(&#39;Got status code %s but trying to parse content anyway&#39;, r.status_code)
     elif r.status_code != 200:
         protocol.retire_session(session)
-        _raise_response_errors(r, protocol, log_msg, log_vals)  # Always raises an exception
+        try:
+            _raise_response_errors(r, protocol)  # Always raises an exception
+        finally:
+            log.error(&#39;%s\n%s&#39;, log_msg % log_vals, xml_log_msg % xml_log_vals)
     log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
     return r, session
 
@@ -853,7 +869,7 @@ def _back_off_if_needed(back_off_until):
 
 
 def _may_retry_on_error(response, retry_policy, wait):
-    if response.status_code not in (301, 302, 401, 503):
+    if response.status_code not in (301, 302, 401, 500, 503):
         # Don&#39;t retry if we didn&#39;t get a status code that we can hope to recover from
         log.debug(&#39;No retry: wrong status code %s&#39;, response.status_code)
         return False
@@ -867,11 +883,14 @@ def _may_retry_on_error(response, retry_policy, wait):
     # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. Redirect to
     # &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS certificate
     # f*ckups on the Exchange server.
+    #
+    # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings.
     if (response.status_code == 401) \
             or (response.headers.get(&#39;connection&#39;) == &#39;close&#39;) \
             or (response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() ==
                 &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;) \
-            or (response.status_code == 503):
+            or (response.status_code == 503) \
+            or (response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content):
         log.debug(&#39;Retry allowed: conditions met&#39;)
         return True
     return False
@@ -899,7 +918,7 @@ def _redirect_or_fail(response, redirects, allow_redirects):
     return redirect_url, redirects
 
 
-def _raise_response_errors(response, protocol, log_msg, log_vals):
+def _raise_response_errors(response, protocol):
     cas_error = response.headers.get(&#39;X-CasErrorCode&#39;)
     if cas_error:
         if cas_error.startswith(&#39;CAS error:&#39;):
@@ -916,8 +935,11 @@ def _raise_response_errors(response, protocol, log_msg, log_vals):
         raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
     if &#39;TimeoutException&#39; in response.headers:
         raise response.headers[&#39;TimeoutException&#39;]
-    # This could be anything. Let higher layers handle this. Add full context for better debugging.
-    raise TransportError(str(&#39;Unknown failure\n&#39;) + log_msg % log_vals)</code></pre>
+    # This could be anything. Let higher layers handle this
+    raise TransportError(
+        &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
+        % (response.status_code, response.headers, response.text)
+    )</code></pre>
 </details>
 </section>
 <section>
@@ -1181,11 +1203,6 @@ bytes.</p>
       iterable:
 
     &#34;&#34;&#34;
-    from .queryset import QuerySet
-    if isinstance(iterable, QuerySet):
-        # QuerySet has __len__ but that evaluates the entire query greedily. We don&#39;t want that here. Instead, peek()
-        # should be called on QuerySet.iterator()
-        raise ValueError(&#39;Cannot peek on a QuerySet&#39;)
     if hasattr(iterable, &#39;__len__&#39;):
         # tuple, list, set
         return not iterable, iterable
@@ -1289,10 +1306,10 @@ Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
 Request headers: %(request_headers)s
-Response headers: %(response_headers)s
-Request data: %(xml_request)s
-Response data: %(xml_response)s
-&#39;&#39;&#39;
+Response headers: %(response_headers)s&#39;&#39;&#39;
+    xml_log_msg = &#39;&#39;&#39;\
+Request XML: %(xml_request)s
+Response XML: %(xml_response)s&#39;&#39;&#39;
     log_vals = dict(
         retry=retry,
         wait=wait,
@@ -1308,7 +1325,9 @@ Response data: %(xml_response)s
         status_code=None,
         request_headers=headers,
         response_headers=None,
-        xml_request=data,
+    )
+    xml_log_vals = dict(
+        xml_request=None,
         xml_response=None,
     )
     t_start = time.monotonic()
@@ -1350,9 +1369,13 @@ Response data: %(xml_response)s
                     status_code=r.status_code,
                     request_headers=r.request.headers,
                     response_headers=r.headers,
+                )
+                xml_log_vals.update(
+                    xml_request=data,
                     xml_response=&#39;[STREAMING]&#39; if stream else r.content,
                 )
             log.debug(log_msg, log_vals)
+            xml_log.debug(xml_log_msg, xml_log_vals)
             if _need_new_credentials(response=r):
                 r.close()  # Release memory
                 session = protocol.refresh_credentials(session)
@@ -1377,7 +1400,7 @@ Response data: %(xml_response)s
         raise
     except Exception as e:
         # Let higher layers handle this. Add full context for better debugging.
-        log.error(str(&#39;%s: %s\n%s&#39;), e.__class__.__name__, str(e), log_msg % log_vals)
+        log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
         protocol.retire_session(session)
         raise
     if r.status_code == 500 and r.content and is_xml(r.content):
@@ -1385,7 +1408,10 @@ Response data: %(xml_response)s
         log.debug(&#39;Got status code %s but trying to parse content anyway&#39;, r.status_code)
     elif r.status_code != 200:
         protocol.retire_session(session)
-        _raise_response_errors(r, protocol, log_msg, log_vals)  # Always raises an exception
+        try:
+            _raise_response_errors(r, protocol)  # Always raises an exception
+        finally:
+            log.error(&#39;%s\n%s&#39;, log_msg % log_vals, xml_log_msg % xml_log_vals)
     log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
     return r, session</code></pre>
 </details>
@@ -1599,7 +1625,6 @@ Response data: %(xml_response)s
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def value_to_xml_text(value):
-    # We can&#39;t handle bytes in this function because str == bytes on Python2
     from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
     from .indexed_properties import PhoneNumber, EmailAddress
     from .properties import Mailbox, Attendee, ConversationId
@@ -1607,6 +1632,8 @@ Response data: %(xml_response)s
         return safe_xml_value(value)
     if isinstance(value, bool):
         return &#39;1&#39; if value else &#39;0&#39;
+    if isinstance(value, bytes):
+        return b64encode(value).decode(&#39;ascii&#39;)
     if isinstance(value, (int, Decimal)):
         return str(value)
     if isinstance(value, datetime.time):
@@ -1640,15 +1667,26 @@ Response data: %(xml_response)s
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def xml_text_to_value(value, value_type):
-    # We can&#39;t handle bytes in this function because str == bytes on Python2
-    from .ewsdatetime import EWSDateTime
+    from .ewsdatetime import EWSDate, EWSDateTime
+    if value_type == str:
+        return value
+    if value_type == bool:
+        try:
+            return {
+                &#39;true&#39;: True,
+                &#39;on&#39;: True,
+                &#39;false&#39;: False,
+                &#39;off&#39;: False,
+            }[value.lower()]
+        except KeyError:
+            return None
     return {
-        bool: lambda v: True if v == &#39;true&#39; else False if v == &#39;false&#39; else None,
+        bytes: safe_b64decode,
         int: int,
         Decimal: Decimal,
         datetime.timedelta: isodate.parse_duration,
+        EWSDate: EWSDate.from_string,
         EWSDateTime: EWSDateTime.from_string,
-        str: lambda v: v
     }[value_type](value)</code></pre>
 </details>
 </dd>
@@ -2054,7 +2092,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
     @staticmethod
     def highlight_xml(xml_str):
         # Highlights a string containing XML, using terminal color codes
-        return highlight(xml_str, XmlLexer(), TerminalFormatter())
+        return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
         &#34;&#34;&#34;Pretty-print and syntax highlight a log statement if all these conditions are met:
@@ -2112,7 +2150,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <pre><code class="python">@staticmethod
 def highlight_xml(xml_str):
     # Highlights a string containing XML, using terminal color codes
-    return highlight(xml_str, XmlLexer(), TerminalFormatter())</code></pre>
+    return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.PrettyXmlHandler.parse_bytes"><code class="name flex">
@@ -2243,8 +2281,7 @@ def prettify_xml(cls, xml_bytes):
         while buffer:
             if not self.element_found:
                 collected_data += buffer
-            for data in self.feed(buffer):
-                yield data
+            yield from self.feed(buffer)
             buffer = file.read(self._bufsize)
         # Any remaining data in self.buffer should be padding chars now
         self.buffer = None
@@ -2324,8 +2361,7 @@ split across several calls to feed.</p>
     while buffer:
         if not self.element_found:
             collected_data += buffer
-        for data in self.feed(buffer):
-            yield data
+        yield from self.feed(buffer)
         buffer = file.read(self._bufsize)
     # Any remaining data in self.buffer should be padding chars now
     self.buffer = None
@@ -2551,7 +2587,7 @@ no namespace.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

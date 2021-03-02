@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.set_user_oof_settings API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,8 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService
+<pre><code class="python">from .common import EWSAccountService
+from ..properties import AvailabilityMailbox, Mailbox
+from ..settings import OofSettings
+from ..util import create_element, set_xml_value, MNS
 
 
 class SetUserOofSettings(EWSAccountService):
@@ -36,10 +38,9 @@ class SetUserOofSettings(EWSAccountService):
 
     &#34;&#34;&#34;
     SERVICE_NAME = &#39;SetUserOofSettings&#39;
+    returns_elements = False
 
     def call(self, oof_settings, mailbox):
-        from ..settings import OofSettings
-        from ..properties import Mailbox
         if not isinstance(oof_settings, OofSettings):
             raise ValueError(&#34;&#39;oof_settings&#39; %r must be an OofSettings instance&#34; % oof_settings)
         if not isinstance(mailbox, Mailbox):
@@ -47,17 +48,18 @@ class SetUserOofSettings(EWSAccountService):
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):
-        from ..properties import AvailabilityMailbox
         payload = create_element(&#39;m:%sRequest&#39; % self.SERVICE_NAME)
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
         set_xml_value(payload, oof_settings, version=self.account.version)
         return payload
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        response_message = message.find(&#39;{%s}ResponseMessage&#39; % MNS)
-        return super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )</code></pre>
+    def _get_element_container(self, message, name=None):
+        message = message.find(self._response_message_tag())
+        return super()._get_element_container(message=message, name=name)
+
+    @staticmethod
+    def _response_message_tag():
+        return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 </section>
 <section>
@@ -86,10 +88,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     &#34;&#34;&#34;
     SERVICE_NAME = &#39;SetUserOofSettings&#39;
+    returns_elements = False
 
     def call(self, oof_settings, mailbox):
-        from ..settings import OofSettings
-        from ..properties import Mailbox
         if not isinstance(oof_settings, OofSettings):
             raise ValueError(&#34;&#39;oof_settings&#39; %r must be an OofSettings instance&#34; % oof_settings)
         if not isinstance(mailbox, Mailbox):
@@ -97,17 +98,18 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):
-        from ..properties import AvailabilityMailbox
         payload = create_element(&#39;m:%sRequest&#39; % self.SERVICE_NAME)
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
         set_xml_value(payload, oof_settings, version=self.account.version)
         return payload
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        response_message = message.find(&#39;{%s}ResponseMessage&#39; % MNS)
-        return super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )</code></pre>
+    def _get_element_container(self, message, name=None):
+        message = message.find(self._response_message_tag())
+        return super()._get_element_container(message=message, name=name)
+
+    @staticmethod
+    def _response_message_tag():
+        return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -117,6 +119,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.set_user_oof_settings.SetUserOofSettings.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.set_user_oof_settings.SetUserOofSettings.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -133,8 +139,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, oof_settings, mailbox):
-    from ..settings import OofSettings
-    from ..properties import Mailbox
     if not isinstance(oof_settings, OofSettings):
         raise ValueError(&#34;&#39;oof_settings&#39; %r must be an OofSettings instance&#34; % oof_settings)
     if not isinstance(mailbox, Mailbox):
@@ -152,7 +156,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, oof_settings, mailbox):
-    from ..properties import AvailabilityMailbox
     payload = create_element(&#39;m:%sRequest&#39; % self.SERVICE_NAME)
     set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
     set_xml_value(payload, oof_settings, version=self.account.version)
@@ -164,7 +167,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -191,6 +196,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings.SERVICE_NAME" href="#exchangelib.services.set_user_oof_settings.SetUserOofSettings.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings.call" href="#exchangelib.services.set_user_oof_settings.SetUserOofSettings.call">call</a></code></li>
 <li><code><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings.get_payload" href="#exchangelib.services.set_user_oof_settings.SetUserOofSettings.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings.returns_elements" href="#exchangelib.services.set_user_oof_settings.SetUserOofSettings.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>
 </ul>
@@ -199,7 +205,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

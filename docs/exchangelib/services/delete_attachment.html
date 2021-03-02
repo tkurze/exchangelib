@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.delete_attachment API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,8 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element
-from .common import EWSAccountService, create_attachment_ids_element
+<pre><code class="python">from .common import EWSAccountService, create_attachment_ids_element
+from ..properties import RootItemId
+from ..util import create_element
 
 
 class DeleteAttachment(EWSAccountService):
@@ -36,23 +37,15 @@ class DeleteAttachment(EWSAccountService):
     SERVICE_NAME = &#39;DeleteAttachment&#39;
 
     def call(self, items):
-        return self._get_elements(payload=self.get_payload(
-            items=items,
-        ))
+        for elem in self._chunked_get_elements(self.get_payload, items=items):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield RootItemId.from_xml(elem=elem, account=self.account)
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        # DeleteAttachment returns RootItemIds directly beneath DeleteAttachmentResponseMessage. Collect the elements
-        # and make our own fake container.
-        from ..properties import RootItemId
-        res = super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )
-        if not res:
-            return res
-        fake_elem = create_element(&#39;FakeContainer&#39;)
-        for elem in message.findall(RootItemId.response_tag()):
-            fake_elem.append(elem)
-        return fake_elem
+    @staticmethod
+    def _get_elements_in_container(container):
+        return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -86,23 +79,15 @@ class DeleteAttachment(EWSAccountService):
     SERVICE_NAME = &#39;DeleteAttachment&#39;
 
     def call(self, items):
-        return self._get_elements(payload=self.get_payload(
-            items=items,
-        ))
+        for elem in self._chunked_get_elements(self.get_payload, items=items):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield RootItemId.from_xml(elem=elem, account=self.account)
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        # DeleteAttachment returns RootItemIds directly beneath DeleteAttachmentResponseMessage. Collect the elements
-        # and make our own fake container.
-        from ..properties import RootItemId
-        res = super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )
-        if not res:
-            return res
-        fake_elem = create_element(&#39;FakeContainer&#39;)
-        for elem in message.findall(RootItemId.response_tag()):
-            fake_elem.append(elem)
-        return fake_elem
+    @staticmethod
+    def _get_elements_in_container(container):
+        return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -134,9 +119,11 @@ class DeleteAttachment(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items):
-    return self._get_elements(payload=self.get_payload(
-        items=items,
-    ))</code></pre>
+    for elem in self._chunked_get_elements(self.get_payload, items=items):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield RootItemId.from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.delete_attachment.DeleteAttachment.get_payload"><code class="name flex">
@@ -160,7 +147,9 @@ class DeleteAttachment(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -195,7 +184,7 @@ class DeleteAttachment(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

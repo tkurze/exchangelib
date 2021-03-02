@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.attachments API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,13 +26,14 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from io import BytesIO
+<pre><code class="python">import abc
 import logging
 import mimetypes
+from io import BytesIO
 
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
     ItemField, IdField
-from .properties import RootItemId, EWSElement, Fields
+from .properties import EWSElement, Fields
 from .services import GetAttachment, CreateAttachment, DeleteAttachment
 
 log = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ class AttachmentId(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
 
-class Attachment(EWSElement):
+class Attachment(EWSElement, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for FileAttachment and ItemAttachment&#34;&#34;&#34;
     FIELDS = Fields(
         EWSElementField(&#39;attachment_id&#39;, value_cls=AttachmentId),
@@ -92,16 +93,8 @@ class Attachment(EWSElement):
             raise ValueError(&#39;This attachment has already been created&#39;)
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
-        items = list(
-            i if isinstance(i, Exception) else self.from_xml(elem=i, account=self.parent_item.account)
-            for i in CreateAttachment(account=self.parent_item.account).call(parent_item=self.parent_item, items=[self])
-        )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        root_item_id = items[0]
-        if isinstance(root_item_id, Exception):
-            raise root_item_id
-        attachment_id = root_item_id.attachment_id
+        item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
+        attachment_id = item.attachment_id
         if attachment_id.root_id != self.parent_item.id:
             raise ValueError(&#34;&#39;root_id&#39; vs. &#39;id&#39; mismatch&#34;)
         if attachment_id.root_changekey == self.parent_item.changekey:
@@ -118,15 +111,7 @@ class Attachment(EWSElement):
             raise ValueError(&#39;This attachment has not been created&#39;)
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
-        items = list(
-            i if isinstance(i, Exception) else RootItemId.from_xml(elem=i, account=self.parent_item.account)
-            for i in DeleteAttachment(account=self.parent_item.account).call(items=[self.attachment_id])
-        )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        root_item_id = items[0]
-        if isinstance(root_item_id, Exception):
-            raise root_item_id
+        root_item_id = DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
         if root_item_id.id != self.parent_item.id:
             raise ValueError(&#34;&#39;root_item_id.id&#39; mismatch&#34;)
         if root_item_id.changekey == self.parent_item.changekey:
@@ -243,18 +228,9 @@ class ItemAttachment(Attachment):
         # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
-        items = list(
-            i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
-            for i in GetAttachment(account=self.parent_item.account).call(
-                items=[self.attachment_id], include_mime_content=True)
+        attachment = GetAttachment(account=self.parent_item.account).get(
+            items=[self.attachment_id], include_mime_content=True
         )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        attachment = items[0]
-        if isinstance(attachment, Exception):
-            raise attachment
-        if attachment.item is None:
-            raise ValueError(&#39;GetAttachment returned no item&#39;)
         self._item = attachment.item
         return self._item
 
@@ -329,7 +305,7 @@ class FileAttachmentIO(BytesIO):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Attachment(EWSElement):
+<pre><code class="python">class Attachment(EWSElement, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for FileAttachment and ItemAttachment&#34;&#34;&#34;
     FIELDS = Fields(
         EWSElementField(&#39;attachment_id&#39;, value_cls=AttachmentId),
@@ -363,16 +339,8 @@ class FileAttachmentIO(BytesIO):
             raise ValueError(&#39;This attachment has already been created&#39;)
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
-        items = list(
-            i if isinstance(i, Exception) else self.from_xml(elem=i, account=self.parent_item.account)
-            for i in CreateAttachment(account=self.parent_item.account).call(parent_item=self.parent_item, items=[self])
-        )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        root_item_id = items[0]
-        if isinstance(root_item_id, Exception):
-            raise root_item_id
-        attachment_id = root_item_id.attachment_id
+        item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
+        attachment_id = item.attachment_id
         if attachment_id.root_id != self.parent_item.id:
             raise ValueError(&#34;&#39;root_id&#39; vs. &#39;id&#39; mismatch&#34;)
         if attachment_id.root_changekey == self.parent_item.changekey:
@@ -389,15 +357,7 @@ class FileAttachmentIO(BytesIO):
             raise ValueError(&#39;This attachment has not been created&#39;)
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
-        items = list(
-            i if isinstance(i, Exception) else RootItemId.from_xml(elem=i, account=self.parent_item.account)
-            for i in DeleteAttachment(account=self.parent_item.account).call(items=[self.attachment_id])
-        )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        root_item_id = items[0]
-        if isinstance(root_item_id, Exception):
-            raise root_item_id
+        root_item_id = DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
         if root_item_id.id != self.parent_item.id:
             raise ValueError(&#34;&#39;root_item_id.id&#39; mismatch&#34;)
         if root_item_id.changekey == self.parent_item.changekey:
@@ -489,16 +449,8 @@ class FileAttachmentIO(BytesIO):
         raise ValueError(&#39;This attachment has already been created&#39;)
     if not self.parent_item or not self.parent_item.account:
         raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
-    items = list(
-        i if isinstance(i, Exception) else self.from_xml(elem=i, account=self.parent_item.account)
-        for i in CreateAttachment(account=self.parent_item.account).call(parent_item=self.parent_item, items=[self])
-    )
-    if len(items) != 1:
-        raise ValueError(&#39;Expected single item, got %s&#39; % items)
-    root_item_id = items[0]
-    if isinstance(root_item_id, Exception):
-        raise root_item_id
-    attachment_id = root_item_id.attachment_id
+    item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
+    attachment_id = item.attachment_id
     if attachment_id.root_id != self.parent_item.id:
         raise ValueError(&#34;&#39;root_id&#39; vs. &#39;id&#39; mismatch&#34;)
     if attachment_id.root_changekey == self.parent_item.changekey:
@@ -544,15 +496,7 @@ class FileAttachmentIO(BytesIO):
         raise ValueError(&#39;This attachment has not been created&#39;)
     if not self.parent_item or not self.parent_item.account:
         raise ValueError(&#39;Parent item %s must have an account&#39; % self.parent_item)
-    items = list(
-        i if isinstance(i, Exception) else RootItemId.from_xml(elem=i, account=self.parent_item.account)
-        for i in DeleteAttachment(account=self.parent_item.account).call(items=[self.attachment_id])
-    )
-    if len(items) != 1:
-        raise ValueError(&#39;Expected single item, got %s&#39; % items)
-    root_item_id = items[0]
-    if isinstance(root_item_id, Exception):
-        raise root_item_id
+    root_item_id = DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
     if root_item_id.id != self.parent_item.id:
         raise ValueError(&#34;&#39;root_item_id.id&#39; mismatch&#34;)
     if root_item_id.changekey == self.parent_item.changekey:
@@ -979,18 +923,9 @@ Return an empty bytes object at EOF.</p></div>
         # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
-        items = list(
-            i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
-            for i in GetAttachment(account=self.parent_item.account).call(
-                items=[self.attachment_id], include_mime_content=True)
+        attachment = GetAttachment(account=self.parent_item.account).get(
+            items=[self.attachment_id], include_mime_content=True
         )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        attachment = items[0]
-        if isinstance(attachment, Exception):
-            raise attachment
-        if attachment.item is None:
-            raise ValueError(&#39;GetAttachment returned no item&#39;)
         self._item = attachment.item
         return self._item
 
@@ -1062,18 +997,9 @@ def item(self):
     # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
     if not self.parent_item or not self.parent_item.account:
         raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
-    items = list(
-        i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
-        for i in GetAttachment(account=self.parent_item.account).call(
-            items=[self.attachment_id], include_mime_content=True)
+    attachment = GetAttachment(account=self.parent_item.account).get(
+        items=[self.attachment_id], include_mime_content=True
     )
-    if len(items) != 1:
-        raise ValueError(&#39;Expected single item, got %s&#39; % items)
-    attachment = items[0]
-    if isinstance(attachment, Exception):
-        raise attachment
-    if attachment.item is None:
-        raise ValueError(&#39;GetAttachment returned no item&#39;)
     self._item = attachment.item
     return self._item</code></pre>
 </details>
@@ -1180,7 +1106,7 @@ def item(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

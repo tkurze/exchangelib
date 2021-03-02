@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.protocol API documentation</title>
 <meta name="description" content="A protocol is an endpoint for EWS service connections. It contains all necessary information to make HTTPS connections …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -35,11 +35,12 @@ A protocol is an endpoint for EWS service connections. It contains all necessary
 Protocols should be accessed through an Account, and are either created from a default Configuration or autodiscovered
 when creating an Account.
 &#34;&#34;&#34;
+import abc
 import datetime
 import logging
 import os
-from threading import Lock
 from queue import LifoQueue, Empty, Full
+from threading import Lock
 
 import requests.adapters
 import requests.sessions
@@ -49,7 +50,7 @@ from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached
-from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone
+from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
 from .transport import get_auth_instance, get_service_authtype, NTLM, OAUTH2, CREDENTIALS_REQUIRED, DEFAULT_HEADERS
@@ -77,7 +78,7 @@ class BaseProtocol:
     CONNECTIONS_PER_SESSION = 1
     # The number of times a session may be reused before creating a new session object. &#39;None&#39; means &#34;infinite&#34;.
     # Discarding sessions after a certain number of usages may limit memory leaks in the Session object.
-    MAX_SESSION_USAGE_COUNT = 100
+    MAX_SESSION_USAGE_COUNT = None
     # Timeout for HTTP requests
     TIMEOUT = 120
 
@@ -94,16 +95,13 @@ class BaseProtocol:
         if not config.service_endpoint:
             raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         self.config = config
-        self._session_pool_size = self.SESSION_POOLSIZE
-
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
+        self._session_pool_size = 0
+        self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
         # Try to behave nicely with the remote server. We want to keep the connection open between requests.
         # We also want to re-use sessions, to avoid the NTLM auth handshake on every request. We must know the
-        # authentication method to create a session pool.
-        self._session_pool = self._create_session_pool()
+        # authentication method to create sessions.
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     @property
@@ -121,11 +119,10 @@ class BaseProtocol:
     @credentials.setter
     def credentials(self, value):
         # We are updating credentials, but that doesn&#39;t automatically propagate to the session objects. The simplest
-        # solution is to just kill the session pool and rebuild it.
+        # solution is to just kill the sessions in the pool.
         with self._session_pool_lock:
             self.config._credentials = value
             self.close()
-            self._session_pool = self._create_session_pool()
 
     @property
     def retry_policy(self):
@@ -145,7 +142,7 @@ class BaseProtocol:
     def __setstate__(self, state):
         # Restore the session pool and lock
         self.__dict__.update(state)
-        self._session_pool = self._create_session_pool()
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     def __del__(self):
@@ -160,7 +157,9 @@ class BaseProtocol:
         log.debug(&#39;Server %s: Closing sessions&#39;, self.server)
         while True:
             try:
-                self._session_pool.get(block=False).close()
+                session = self._session_pool.get(block=False)
+                self.close_session(session)
+                self._session_pool_size -= 1
             except Empty:
                 break
 
@@ -174,17 +173,6 @@ class BaseProtocol:
             max_retries=0,
         )
 
-    def get_auth_type(self):
-        # Autodetect and return authentication type
-        raise NotImplementedError()
-
-    def _create_session_pool(self):
-        # Create a pool to reuse sessions containing connections to the server
-        session_pool = LifoQueue()
-        for _ in range(self._session_pool_size):
-            session_pool.put(self.create_session(), block=False)
-        return session_pool
-
     @property
     def session_pool_size(self):
         return self._session_pool_size
@@ -193,15 +181,15 @@ class BaseProtocol:
         &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
         &#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
-        # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
-        if self._session_pool_size == self.SESSION_POOLSIZE:
+        # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
+        if self._session_pool_size == self._session_pool_maxsize:
             raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
         with self._session_pool_lock:
-            if self._session_pool_size &gt;= self.SESSION_POOLSIZE:
+            if self._session_pool_size &gt;= self._session_pool_maxsize:
                 log.debug(&#39;Session pool size was increased in another thread&#39;)
                 return
-            log.warning(&#39;Increasing session pool size from %s to %s&#39;, self._session_pool_size,
-                        self._session_pool_size + 1)
+            log.debug(&#39;Server %s: Increasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
+                      self._session_pool_size + 1)
             self._session_pool.put(self.create_session(), block=False)
             self._session_pool_size += 1
 
@@ -218,23 +206,35 @@ class BaseProtocol:
             if self._session_pool_size &lt;= 1:
                 log.debug(&#39;Session pool size was decreased in another thread&#39;)
                 return
-            log.warning(&#39;Decreasing session pool size from %s to %s&#39;, self._session_pool_size,
+            log.warning(&#39;Server %s: Decreasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
                         self._session_pool_size - 1)
-            self.get_session().close()
+            session = self.get_session()
+            self.close_session(session)
             self._session_pool_size -= 1
 
     def get_session(self):
+        # Try to get a session from the queue. If the queue is empty, try to add one more session to the queue. If the
+        # queue is already at its max, wait until a session becomes available.
         _timeout = 60  # Rate-limit messages about session starvation
-        while True:
+        try:
+            session = self._session_pool.get(block=False)
+            log.debug(&#39;Server %s: Got session immediately&#39;, self.server)
+        except Empty:
             try:
-                log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
-                session = self._session_pool.get(timeout=_timeout)
-                log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
-                session.usage_count += 1
-                return session
-            except Empty:
-                # This is normal when we have many worker threads starving for available sessions
-                log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+                self.increase_poolsize()
+            except SessionPoolMaxSizeReached:
+                pass
+            while True:
+                try:
+                    log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
+                    session = self._session_pool.get(timeout=_timeout)
+                    break
+                except Empty:
+                    # This is normal when we have many worker threads starving for available sessions
+                    log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+        log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
+        session.usage_count += 1
+        return session
 
     def release_session(self, session):
         # This should never fail, as we don&#39;t have more sessions than the queue contains
@@ -247,18 +247,20 @@ class BaseProtocol:
         except Full:
             log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
 
+    def close_session(self, session):
+        session.close()
+        del session
+
     def retire_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug(&#39;Server %s: Retiring session %s&#39;, self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         self.release_session(self.create_session())
 
     def renew_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug(&#39;Server %s: Renewing session %s&#39;, self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         return self.create_session()
 
     def refresh_credentials(self, session):
@@ -272,7 +274,7 @@ class BaseProtocol:
                 # they&#39;re the same as the session was created with. If
                 # this isn&#39;t the case, we can just go ahead with a new
                 # session using the already-updated credentials.
-                self.credentials.refresh()
+                self.credentials.refresh(session=session)
         return self.renew_session(session)
 
     def create_session(self):
@@ -281,7 +283,7 @@ class BaseProtocol:
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
                 raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
-            session = self.raw_session()
+            session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
             with self.credentials.lock:
@@ -298,7 +300,7 @@ class BaseProtocol:
                         username = &#39;\\&#39; + self.credentials.username
                     else:
                         username = self.credentials.username
-                    session = self.raw_session()
+                    session = self.raw_session(self.service_endpoint)
                     session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
                                                      password=self.credentials.password)
 
@@ -358,7 +360,7 @@ class BaseProtocol:
             token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
-        session = self.raw_session(oauth2_client=client, oauth2_session_params=session_params)
+        session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not has_token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
@@ -372,15 +374,14 @@ class BaseProtocol:
         return session
 
     @classmethod
-    def raw_session(cls, oauth2_client=None, oauth2_session_params=None):
+    def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
         if oauth2_client:
             session = OAuth2Session(client=oauth2_client, **(oauth2_session_params or {}))
         else:
             session = requests.sessions.Session()
         session.headers.update(DEFAULT_HEADERS)
         session.headers[&#39;User-Agent&#39;] = cls.USERAGENT
-        session.mount(&#39;http://&#39;, adapter=cls.get_adapter())
-        session.mount(&#39;https://&#39;, adapter=cls.get_adapter())
+        session.mount(prefix, adapter=cls.get_adapter())
         return session
 
     def __repr__(self):
@@ -434,13 +435,15 @@ class CachingProtocol(type):
 
     @classmethod
     def clear_cache(mcs):
-        for key, protocol in mcs._protocol_cache.items():
-            if isinstance(protocol, Exception):
-                continue
-            service_endpoint = key[0]
-            log.debug(&#34;Service endpoint &#39;%s&#39;: Closing sessions&#34;, service_endpoint)
-            protocol.close()
-        mcs._protocol_cache.clear()
+        with mcs._protocol_cache_lock:
+            for key, protocol in mcs._protocol_cache.items():
+                if isinstance(protocol, Exception):
+                    continue
+                service_endpoint = key[0]
+                log.debug(&#34;Service endpoint &#39;%s&#39;: Closing sessions&#34;, service_endpoint)
+                with protocol._session_pool_lock:
+                    protocol.close()
+            mcs._protocol_cache.clear()
 
 
 class Protocol(BaseProtocol, metaclass=CachingProtocol):
@@ -448,6 +451,9 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         super().__init__(*args, **kwargs)
         self._api_version_hint = None
         self._version_lock = Lock()
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
 
     def get_auth_type(self):
         # Autodetect authentication type. We also set version hint here.
@@ -541,7 +547,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return GetRoomLists(protocol=self).call()
 
     def get_rooms(self, roomlist):
-        from .properties import RoomList
         return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
@@ -573,7 +578,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           List of Mailbox items that are members of the distribution list
 
         &#34;&#34;&#34;
-        from .properties import DLMailbox
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type=&#39;PublicDL&#39;)
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
@@ -606,16 +610,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
 
         &#34;&#34;&#34;
-        from .properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        cls_map = {cls.response_tag(): cls for cls in (
-            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        )}
-        for i in ConvertId(protocol=self).call(items=ids, destination_format=destination_format):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                id_cls = cls_map[i.tag]
-                yield id_cls.from_xml(i, account=None)
+        return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
     def __getstate__(self):
         # The lock and thread pool cannot be pickled
@@ -653,7 +648,7 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We&#39;re overiding a method so we have to keep the signature
+        # We&#39;re overriding a method so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
 
 
@@ -666,24 +661,28 @@ class TLSClientAuth(requests.adapters.HTTPAdapter):
         return super().init_poolmanager(*args, **kwargs)
 
 
-class RetryPolicy:
+class RetryPolicy(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Stores retry logic used when faced with errors from the server&#34;&#34;&#34;
     @property
+    @abc.abstractmethod
     def fail_fast(self):
         # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
         # policy is used.
-        raise NotImplementedError()
+        pass
 
     @property
+    @abc.abstractmethod
     def back_off_until(self):
-        raise NotImplementedError()
+        pass
 
     @back_off_until.setter
+    @abc.abstractmethod
     def back_off_until(self, value):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def back_off(self, seconds):
-        raise NotImplementedError()
+        pass
 
 
 class FailFast(RetryPolicy):
@@ -695,6 +694,9 @@ class FailFast(RetryPolicy):
     @property
     def back_off_until(self):
         return None
+
+    def back_off(self, seconds):
+        raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)
 
 
 class FaultTolerance(RetryPolicy):
@@ -802,7 +804,7 @@ class FaultTolerance(RetryPolicy):
     CONNECTIONS_PER_SESSION = 1
     # The number of times a session may be reused before creating a new session object. &#39;None&#39; means &#34;infinite&#34;.
     # Discarding sessions after a certain number of usages may limit memory leaks in the Session object.
-    MAX_SESSION_USAGE_COUNT = 100
+    MAX_SESSION_USAGE_COUNT = None
     # Timeout for HTTP requests
     TIMEOUT = 120
 
@@ -819,16 +821,13 @@ class FaultTolerance(RetryPolicy):
         if not config.service_endpoint:
             raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         self.config = config
-        self._session_pool_size = self.SESSION_POOLSIZE
-
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
+        self._session_pool_size = 0
+        self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
         # Try to behave nicely with the remote server. We want to keep the connection open between requests.
         # We also want to re-use sessions, to avoid the NTLM auth handshake on every request. We must know the
-        # authentication method to create a session pool.
-        self._session_pool = self._create_session_pool()
+        # authentication method to create sessions.
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     @property
@@ -846,11 +845,10 @@ class FaultTolerance(RetryPolicy):
     @credentials.setter
     def credentials(self, value):
         # We are updating credentials, but that doesn&#39;t automatically propagate to the session objects. The simplest
-        # solution is to just kill the session pool and rebuild it.
+        # solution is to just kill the sessions in the pool.
         with self._session_pool_lock:
             self.config._credentials = value
             self.close()
-            self._session_pool = self._create_session_pool()
 
     @property
     def retry_policy(self):
@@ -870,7 +868,7 @@ class FaultTolerance(RetryPolicy):
     def __setstate__(self, state):
         # Restore the session pool and lock
         self.__dict__.update(state)
-        self._session_pool = self._create_session_pool()
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     def __del__(self):
@@ -885,7 +883,9 @@ class FaultTolerance(RetryPolicy):
         log.debug(&#39;Server %s: Closing sessions&#39;, self.server)
         while True:
             try:
-                self._session_pool.get(block=False).close()
+                session = self._session_pool.get(block=False)
+                self.close_session(session)
+                self._session_pool_size -= 1
             except Empty:
                 break
 
@@ -899,17 +899,6 @@ class FaultTolerance(RetryPolicy):
             max_retries=0,
         )
 
-    def get_auth_type(self):
-        # Autodetect and return authentication type
-        raise NotImplementedError()
-
-    def _create_session_pool(self):
-        # Create a pool to reuse sessions containing connections to the server
-        session_pool = LifoQueue()
-        for _ in range(self._session_pool_size):
-            session_pool.put(self.create_session(), block=False)
-        return session_pool
-
     @property
     def session_pool_size(self):
         return self._session_pool_size
@@ -918,15 +907,15 @@ class FaultTolerance(RetryPolicy):
         &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
         &#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
-        # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
-        if self._session_pool_size == self.SESSION_POOLSIZE:
+        # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
+        if self._session_pool_size == self._session_pool_maxsize:
             raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
         with self._session_pool_lock:
-            if self._session_pool_size &gt;= self.SESSION_POOLSIZE:
+            if self._session_pool_size &gt;= self._session_pool_maxsize:
                 log.debug(&#39;Session pool size was increased in another thread&#39;)
                 return
-            log.warning(&#39;Increasing session pool size from %s to %s&#39;, self._session_pool_size,
-                        self._session_pool_size + 1)
+            log.debug(&#39;Server %s: Increasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
+                      self._session_pool_size + 1)
             self._session_pool.put(self.create_session(), block=False)
             self._session_pool_size += 1
 
@@ -943,23 +932,35 @@ class FaultTolerance(RetryPolicy):
             if self._session_pool_size &lt;= 1:
                 log.debug(&#39;Session pool size was decreased in another thread&#39;)
                 return
-            log.warning(&#39;Decreasing session pool size from %s to %s&#39;, self._session_pool_size,
+            log.warning(&#39;Server %s: Decreasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
                         self._session_pool_size - 1)
-            self.get_session().close()
+            session = self.get_session()
+            self.close_session(session)
             self._session_pool_size -= 1
 
     def get_session(self):
+        # Try to get a session from the queue. If the queue is empty, try to add one more session to the queue. If the
+        # queue is already at its max, wait until a session becomes available.
         _timeout = 60  # Rate-limit messages about session starvation
-        while True:
+        try:
+            session = self._session_pool.get(block=False)
+            log.debug(&#39;Server %s: Got session immediately&#39;, self.server)
+        except Empty:
             try:
-                log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
-                session = self._session_pool.get(timeout=_timeout)
-                log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
-                session.usage_count += 1
-                return session
-            except Empty:
-                # This is normal when we have many worker threads starving for available sessions
-                log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+                self.increase_poolsize()
+            except SessionPoolMaxSizeReached:
+                pass
+            while True:
+                try:
+                    log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
+                    session = self._session_pool.get(timeout=_timeout)
+                    break
+                except Empty:
+                    # This is normal when we have many worker threads starving for available sessions
+                    log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+        log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
+        session.usage_count += 1
+        return session
 
     def release_session(self, session):
         # This should never fail, as we don&#39;t have more sessions than the queue contains
@@ -972,18 +973,20 @@ class FaultTolerance(RetryPolicy):
         except Full:
             log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
 
+    def close_session(self, session):
+        session.close()
+        del session
+
     def retire_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug(&#39;Server %s: Retiring session %s&#39;, self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         self.release_session(self.create_session())
 
     def renew_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug(&#39;Server %s: Renewing session %s&#39;, self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         return self.create_session()
 
     def refresh_credentials(self, session):
@@ -997,7 +1000,7 @@ class FaultTolerance(RetryPolicy):
                 # they&#39;re the same as the session was created with. If
                 # this isn&#39;t the case, we can just go ahead with a new
                 # session using the already-updated credentials.
-                self.credentials.refresh()
+                self.credentials.refresh(session=session)
         return self.renew_session(session)
 
     def create_session(self):
@@ -1006,7 +1009,7 @@ class FaultTolerance(RetryPolicy):
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
                 raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
-            session = self.raw_session()
+            session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
             with self.credentials.lock:
@@ -1023,7 +1026,7 @@ class FaultTolerance(RetryPolicy):
                         username = &#39;\\&#39; + self.credentials.username
                     else:
                         username = self.credentials.username
-                    session = self.raw_session()
+                    session = self.raw_session(self.service_endpoint)
                     session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
                                                      password=self.credentials.password)
 
@@ -1083,7 +1086,7 @@ class FaultTolerance(RetryPolicy):
             token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
-        session = self.raw_session(oauth2_client=client, oauth2_session_params=session_params)
+        session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not has_token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
@@ -1097,15 +1100,14 @@ class FaultTolerance(RetryPolicy):
         return session
 
     @classmethod
-    def raw_session(cls, oauth2_client=None, oauth2_session_params=None):
+    def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
         if oauth2_client:
             session = OAuth2Session(client=oauth2_client, **(oauth2_session_params or {}))
         else:
             session = requests.sessions.Session()
         session.headers.update(DEFAULT_HEADERS)
         session.headers[&#39;User-Agent&#39;] = cls.USERAGENT
-        session.mount(&#39;http://&#39;, adapter=cls.get_adapter())
-        session.mount(&#39;https://&#39;, adapter=cls.get_adapter())
+        session.mount(prefix, adapter=cls.get_adapter())
         return session
 
     def __repr__(self):
@@ -1191,7 +1193,7 @@ def get_adapter(cls):
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.raw_session"><code class="name flex">
-<span>def <span class="ident">raw_session</span></span>(<span>oauth2_client=None, oauth2_session_params=None)</span>
+<span>def <span class="ident">raw_session</span></span>(<span>prefix, oauth2_client=None, oauth2_session_params=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1200,15 +1202,14 @@ def get_adapter(cls):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def raw_session(cls, oauth2_client=None, oauth2_session_params=None):
+def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
     if oauth2_client:
         session = OAuth2Session(client=oauth2_client, **(oauth2_session_params or {}))
     else:
         session = requests.sessions.Session()
     session.headers.update(DEFAULT_HEADERS)
     session.headers[&#39;User-Agent&#39;] = cls.USERAGENT
-    session.mount(&#39;http://&#39;, adapter=cls.get_adapter())
-    session.mount(&#39;https://&#39;, adapter=cls.get_adapter())
+    session.mount(prefix, adapter=cls.get_adapter())
     return session</code></pre>
 </details>
 </dd>
@@ -1303,9 +1304,25 @@ def session_pool_size(self):
     log.debug(&#39;Server %s: Closing sessions&#39;, self.server)
     while True:
         try:
-            self._session_pool.get(block=False).close()
+            session = self._session_pool.get(block=False)
+            self.close_session(session)
+            self._session_pool_size -= 1
         except Empty:
             break</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.protocol.BaseProtocol.close_session"><code class="name flex">
+<span>def <span class="ident">close_session</span></span>(<span>self, session)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_session(self, session):
+    session.close()
+    del session</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.create_oauth2_session"><code class="name flex">
@@ -1366,7 +1383,7 @@ def session_pool_size(self):
         token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
         client = BackendApplicationClient(client_id=self.credentials.client_id)
 
-    session = self.raw_session(oauth2_client=client, oauth2_session_params=session_params)
+    session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
     if not has_token:
         # Fetch the token explicitly -- it doesn&#39;t occur implicitly
         token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
@@ -1395,7 +1412,7 @@ def session_pool_size(self):
     if self.credentials is None:
         if self.auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
-        session = self.raw_session()
+        session = self.raw_session(self.service_endpoint)
         session.auth = get_auth_instance(auth_type=self.auth_type)
     else:
         with self.credentials.lock:
@@ -1412,7 +1429,7 @@ def session_pool_size(self):
                     username = &#39;\\&#39; + self.credentials.username
                 else:
                     username = self.credentials.username
-                session = self.raw_session()
+                session = self.raw_session(self.service_endpoint)
                 session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
                                                  password=self.credentials.password)
 
@@ -1447,24 +1464,11 @@ requests. We decrease by one session per call.</p></div>
         if self._session_pool_size &lt;= 1:
             log.debug(&#39;Session pool size was decreased in another thread&#39;)
             return
-        log.warning(&#39;Decreasing session pool size from %s to %s&#39;, self._session_pool_size,
+        log.warning(&#39;Server %s: Decreasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
                     self._session_pool_size - 1)
-        self.get_session().close()
+        session = self.get_session()
+        self.close_session(session)
         self._session_pool_size -= 1</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.protocol.BaseProtocol.get_auth_type"><code class="name flex">
-<span>def <span class="ident">get_auth_type</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_auth_type(self):
-    # Autodetect and return authentication type
-    raise NotImplementedError()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.get_session"><code class="name flex">
@@ -1477,17 +1481,28 @@ requests. We decrease by one session per call.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_session(self):
+    # Try to get a session from the queue. If the queue is empty, try to add one more session to the queue. If the
+    # queue is already at its max, wait until a session becomes available.
     _timeout = 60  # Rate-limit messages about session starvation
-    while True:
+    try:
+        session = self._session_pool.get(block=False)
+        log.debug(&#39;Server %s: Got session immediately&#39;, self.server)
+    except Empty:
         try:
-            log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
-            session = self._session_pool.get(timeout=_timeout)
-            log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
-            session.usage_count += 1
-            return session
-        except Empty:
-            # This is normal when we have many worker threads starving for available sessions
-            log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)</code></pre>
+            self.increase_poolsize()
+        except SessionPoolMaxSizeReached:
+            pass
+        while True:
+            try:
+                log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
+                session = self._session_pool.get(timeout=_timeout)
+                break
+            except Empty:
+                # This is normal when we have many worker threads starving for available sessions
+                log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+    log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
+    session.usage_count += 1
+    return session</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.increase_poolsize"><code class="name flex">
@@ -1503,15 +1518,15 @@ requests. We decrease by one session per call.</p></div>
     &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
     &#34;&#34;&#34;
     # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
-    # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
-    if self._session_pool_size == self.SESSION_POOLSIZE:
+    # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
+    if self._session_pool_size == self._session_pool_maxsize:
         raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
     with self._session_pool_lock:
-        if self._session_pool_size &gt;= self.SESSION_POOLSIZE:
+        if self._session_pool_size &gt;= self._session_pool_maxsize:
             log.debug(&#39;Session pool size was increased in another thread&#39;)
             return
-        log.warning(&#39;Increasing session pool size from %s to %s&#39;, self._session_pool_size,
-                    self._session_pool_size + 1)
+        log.debug(&#39;Server %s: Increasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
+                  self._session_pool_size + 1)
         self._session_pool.put(self.create_session(), block=False)
         self._session_pool_size += 1</code></pre>
 </details>
@@ -1536,7 +1551,7 @@ requests. We decrease by one session per call.</p></div>
             # they&#39;re the same as the session was created with. If
             # this isn&#39;t the case, we can just go ahead with a new
             # session using the already-updated credentials.
-            self.credentials.refresh()
+            self.credentials.refresh(session=session)
     return self.renew_session(session)</code></pre>
 </details>
 </dd>
@@ -1573,8 +1588,7 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">def renew_session(self, session):
     # The session is useless. Close it completely and place a fresh session in the pool
     log.debug(&#39;Server %s: Renewing session %s&#39;, self.server, session.session_id)
-    session.close()
-    del session
+    self.close_session(session)
     return self.create_session()</code></pre>
 </details>
 </dd>
@@ -1590,8 +1604,7 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">def retire_session(self, session):
     # The session is useless. Close it completely and place a fresh session in the pool
     log.debug(&#39;Server %s: Retiring session %s&#39;, self.server, session.session_id)
-    session.close()
-    del session
+    self.close_session(session)
     self.release_session(self.create_session())</code></pre>
 </details>
 </dd>
@@ -1656,13 +1669,15 @@ type(name, bases, dict) -&gt; a new type</p></div>
 
     @classmethod
     def clear_cache(mcs):
-        for key, protocol in mcs._protocol_cache.items():
-            if isinstance(protocol, Exception):
-                continue
-            service_endpoint = key[0]
-            log.debug(&#34;Service endpoint &#39;%s&#39;: Closing sessions&#34;, service_endpoint)
-            protocol.close()
-        mcs._protocol_cache.clear()</code></pre>
+        with mcs._protocol_cache_lock:
+            for key, protocol in mcs._protocol_cache.items():
+                if isinstance(protocol, Exception):
+                    continue
+                service_endpoint = key[0]
+                log.debug(&#34;Service endpoint &#39;%s&#39;: Closing sessions&#34;, service_endpoint)
+                with protocol._session_pool_lock:
+                    protocol.close()
+            mcs._protocol_cache.clear()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1681,13 +1696,15 @@ type(name, bases, dict) -&gt; a new type</p></div>
 </summary>
 <pre><code class="python">@classmethod
 def clear_cache(mcs):
-    for key, protocol in mcs._protocol_cache.items():
-        if isinstance(protocol, Exception):
-            continue
-        service_endpoint = key[0]
-        log.debug(&#34;Service endpoint &#39;%s&#39;: Closing sessions&#34;, service_endpoint)
-        protocol.close()
-    mcs._protocol_cache.clear()</code></pre>
+    with mcs._protocol_cache_lock:
+        for key, protocol in mcs._protocol_cache.items():
+            if isinstance(protocol, Exception):
+                continue
+            service_endpoint = key[0]
+            log.debug(&#34;Service endpoint &#39;%s&#39;: Closing sessions&#34;, service_endpoint)
+            with protocol._session_pool_lock:
+                protocol.close()
+        mcs._protocol_cache.clear()</code></pre>
 </details>
 </dd>
 </dl>
@@ -1709,7 +1726,10 @@ def clear_cache(mcs):
 
     @property
     def back_off_until(self):
-        return None</code></pre>
+        return None
+
+    def back_off(self, seconds):
+        raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1739,6 +1759,22 @@ def back_off_until(self):
 <pre><code class="python">@property
 def fail_fast(self):
     return True</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.protocol.FailFast.back_off"><code class="name flex">
+<span>def <span class="ident">back_off</span></span>(<span>self, seconds)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def back_off(self, seconds):
+    raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1891,7 +1927,7 @@ def fail_fast(self):
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We&#39;re overiding a method so we have to keep the signature
+        # We&#39;re overriding a method so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1920,7 +1956,7 @@ to a CA bundle to use
 </summary>
 <pre><code class="python">def cert_verify(self, conn, url, verify, cert):
     # pylint: disable=unused-argument
-    # We&#39;re overiding a method so we have to keep the signature
+    # We&#39;re overriding a method so we have to keep the signature
     super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 </dd>
@@ -1941,6 +1977,9 @@ to a CA bundle to use
         super().__init__(*args, **kwargs)
         self._api_version_hint = None
         self._version_lock = Lock()
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
 
     def get_auth_type(self):
         # Autodetect authentication type. We also set version hint here.
@@ -2034,7 +2073,6 @@ to a CA bundle to use
         return GetRoomLists(protocol=self).call()
 
     def get_rooms(self, roomlist):
-        from .properties import RoomList
         return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
@@ -2066,7 +2104,6 @@ to a CA bundle to use
           List of Mailbox items that are members of the distribution list
 
         &#34;&#34;&#34;
-        from .properties import DLMailbox
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type=&#39;PublicDL&#39;)
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
@@ -2099,16 +2136,7 @@ to a CA bundle to use
           a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
 
         &#34;&#34;&#34;
-        from .properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        cls_map = {cls.response_tag(): cls for cls in (
-            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        )}
-        for i in ConvertId(protocol=self).call(items=ids, destination_format=destination_format):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                id_cls = cls_map[i.tag]
-                yield id_cls.from_xml(i, account=None)
+        return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
     def __getstate__(self):
         # The lock and thread pool cannot be pickled
@@ -2196,16 +2224,7 @@ def version(self):
       a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
 
     &#34;&#34;&#34;
-    from .properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    cls_map = {cls.response_tag(): cls for cls in (
-        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    )}
-    for i in ConvertId(protocol=self).call(items=ids, destination_format=destination_format):
-        if isinstance(i, Exception):
-            yield i
-        else:
-            id_cls = cls_map[i.tag]
-            yield id_cls.from_xml(i, account=None)</code></pre>
+    return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.Protocol.expand_dl"><code class="name flex">
@@ -2234,7 +2253,6 @@ def version(self):
       List of Mailbox items that are members of the distribution list
 
     &#34;&#34;&#34;
-    from .properties import DLMailbox
     if isinstance(distribution_list, str):
         distribution_list = DLMailbox(email_address=distribution_list, mailbox_type=&#39;PublicDL&#39;)
     return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))</code></pre>
@@ -2363,7 +2381,6 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_rooms(self, roomlist):
-    from .properties import RoomList
     return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))</code></pre>
 </details>
 </dd>
@@ -2502,24 +2519,28 @@ items (Default value = None)</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RetryPolicy:
+<pre><code class="python">class RetryPolicy(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Stores retry logic used when faced with errors from the server&#34;&#34;&#34;
     @property
+    @abc.abstractmethod
     def fail_fast(self):
         # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
         # policy is used.
-        raise NotImplementedError()
+        pass
 
     @property
+    @abc.abstractmethod
     def back_off_until(self):
-        raise NotImplementedError()
+        pass
 
     @back_off_until.setter
+    @abc.abstractmethod
     def back_off_until(self, value):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def back_off(self, seconds):
-        raise NotImplementedError()</code></pre>
+        pass</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2536,8 +2557,9 @@ items (Default value = None)</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
+@abc.abstractmethod
 def back_off_until(self):
-    raise NotImplementedError()</code></pre>
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.RetryPolicy.fail_fast"><code class="name">var <span class="ident">fail_fast</span></code></dt>
@@ -2548,10 +2570,11 @@ def back_off_until(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
+@abc.abstractmethod
 def fail_fast(self):
     # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
     # policy is used.
-    raise NotImplementedError()</code></pre>
+    pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -2566,8 +2589,9 @@ def fail_fast(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def back_off(self, seconds):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def back_off(self, seconds):
+    pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -2659,12 +2683,12 @@ exposed for use when subclassing the
 <li><code><a title="exchangelib.protocol.BaseProtocol.USERAGENT" href="#exchangelib.protocol.BaseProtocol.USERAGENT">USERAGENT</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.auth_type" href="#exchangelib.protocol.BaseProtocol.auth_type">auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.close" href="#exchangelib.protocol.BaseProtocol.close">close</a></code></li>
+<li><code><a title="exchangelib.protocol.BaseProtocol.close_session" href="#exchangelib.protocol.BaseProtocol.close_session">close_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.create_oauth2_session" href="#exchangelib.protocol.BaseProtocol.create_oauth2_session">create_oauth2_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.create_session" href="#exchangelib.protocol.BaseProtocol.create_session">create_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.credentials" href="#exchangelib.protocol.BaseProtocol.credentials">credentials</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.decrease_poolsize" href="#exchangelib.protocol.BaseProtocol.decrease_poolsize">decrease_poolsize</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.get_adapter" href="#exchangelib.protocol.BaseProtocol.get_adapter">get_adapter</a></code></li>
-<li><code><a title="exchangelib.protocol.BaseProtocol.get_auth_type" href="#exchangelib.protocol.BaseProtocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.get_session" href="#exchangelib.protocol.BaseProtocol.get_session">get_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.increase_poolsize" href="#exchangelib.protocol.BaseProtocol.increase_poolsize">increase_poolsize</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.raw_session" href="#exchangelib.protocol.BaseProtocol.raw_session">raw_session</a></code></li>
@@ -2687,6 +2711,7 @@ exposed for use when subclassing the
 <li>
 <h4><code><a title="exchangelib.protocol.FailFast" href="#exchangelib.protocol.FailFast">FailFast</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.protocol.FailFast.back_off" href="#exchangelib.protocol.FailFast.back_off">back_off</a></code></li>
 <li><code><a title="exchangelib.protocol.FailFast.back_off_until" href="#exchangelib.protocol.FailFast.back_off_until">back_off_until</a></code></li>
 <li><code><a title="exchangelib.protocol.FailFast.fail_fast" href="#exchangelib.protocol.FailFast.fail_fast">fail_fast</a></code></li>
 </ul>
@@ -2742,7 +2767,7 @@ exposed for use when subclassing the
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

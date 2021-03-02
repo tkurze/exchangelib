@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.account API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -44,12 +44,12 @@ from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, 
     Notes, Outbox, PeopleConnect, PublicFoldersRoot, QuickContacts, RecipientCache, RecoverableItemsDeletions, \
     RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Root, SearchFolders, SentItems, \
     ServerFailures, SyncIssues, Tasks, ToDoSearch, VoiceMail
-from .items import Item, BulkCreateResult, HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
+from .items import HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
 from .properties import Mailbox, SendingAs
 from .protocol import Protocol
 from .queryset import QuerySet
 from .services import ExportItems, UploadItems, GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, SendItem, \
-    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate
+    CopyItem, GetUserOofSettings, SetUserOofSettings, GetMailTips, ArchiveItem, GetDelegate, MarkAsJunk, GetPersona
 from .util import get_domain, peek
 
 log = getLogger(__name__)
@@ -74,7 +74,7 @@ class Identity:
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if getattr(self, k) != getattr(other, k):
                 return False
         return True
@@ -119,19 +119,23 @@ class Account:
             self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
-            log.warning(&#39;Failed to get locale (%s)&#39; % e)
+            log.warning(&#39;Failed to get locale (%s)&#39;, e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
             raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
-        try:
-            self.default_timezone = default_timezone or EWSTimeZone.localzone()
-        except (ValueError, UnknownTimeZone) as e:
-            # There is no translation from local timezone name to Windows timezone name, or e failed to find the
-            # local timezone.
-            log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
-            self.default_timezone = UTC
-        if not isinstance(self.default_timezone, EWSTimeZone):
-            raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % self.default_timezone)
+        if default_timezone:
+            try:
+                self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
+            except TypeError:
+                raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % default_timezone)
+        else:
+            try:
+                self.default_timezone = EWSTimeZone.localzone()
+            except (ValueError, UnknownTimeZone) as e:
+                # There is no translation from local timezone name to Windows timezone name, or e failed to find the
+                # local timezone.
+                log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
+                self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
             raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
         if autodiscover:
@@ -358,19 +362,16 @@ class Account:
         )
 
     def _consume_item_service(self, service_cls, items, chunk_size, kwargs):
-        # &#39;items&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `some_folder.filter(...).delete()`. In
-        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
-        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
         if isinstance(items, QuerySet):
-            items = items.iterator()
+            # We just want an iterator over the results
+            items = iter(items)
         is_empty, items = peek(items)
         if is_empty:
             # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
             # empty &#39;ids&#39; and return early.
             return
         kwargs[&#39;items&#39;] = items
-        for i in service_cls(account=self, chunk_size=chunk_size).call(**kwargs):
-            yield i
+        yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
         &#34;&#34;&#34;Return export strings of the given items
@@ -438,15 +439,11 @@ class Account:
             message_disposition,
             send_meeting_invitations,
         )
-        return list(
-            i if isinstance(i, Exception)
-            else BulkCreateResult.from_xml(elem=i, account=self)
-            for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                folder=folder,
-                message_disposition=message_disposition,
-                send_meeting_invitations=send_meeting_invitations,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            folder=folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=send_meeting_invitations,
+        )))
 
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
@@ -481,15 +478,12 @@ class Account:
             message_disposition,
             send_meeting_invitations_or_cancellations,
         )
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                conflict_resolution=conflict_resolution,
-                message_disposition=message_disposition,
-                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-                suppress_read_receipts=suppress_read_receipts,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
@@ -561,12 +555,9 @@ class Account:
           Status for each send operation, in the same order as the input
 
         &#34;&#34;&#34;
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
         &#34;&#34;&#34;Move items to another folder
@@ -581,12 +572,9 @@ class Account:
           folder in a different mailbox, an empty list is returned.
 
         &#34;&#34;&#34;
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_archive(self, ids, to_folder, chunk_size=None):
         &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
@@ -605,6 +593,25 @@ class Account:
                 to_folder=to_folder,
             ))
         )
+
+    def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
+        &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          is_junk: Whether the messages are junk or not
+          move_item: Whether to move the messages to the junk folder or not
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+          stable order of the requested items.
+
+        &#34;&#34;&#34;
+        return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+            is_junk=is_junk,
+            move_item=move_item,
+        )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
         &#34;&#34;&#34;Fetch items by ID
@@ -635,15 +642,29 @@ class Account:
             additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
                                  if not f.field.is_attribute}
         # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-        for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        yield from self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        )):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
-                yield item
+        ))
+
+    def fetch_personas(self, ids):
+        &#34;&#34;&#34;Fetch personas by ID
+
+        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :return: A generator of Persona objects, in the same order as the input
+        &#34;&#34;&#34;
+        if isinstance(ids, QuerySet):
+            # We just want an iterator over the results
+            ids = iter(ids)
+        is_empty, ids = peek(ids)
+        if is_empty:
+            # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+            # empty &#39;ids&#39; and return early.
+            return
+        # GetPersona only accepts one persona ID per request. Crazy.
+        svc = GetPersona(account=self)
+        for i in ids:
+            yield svc.call(persona=i)
 
     @property
     def mail_tips(self):
@@ -742,19 +763,23 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
-            log.warning(&#39;Failed to get locale (%s)&#39; % e)
+            log.warning(&#39;Failed to get locale (%s)&#39;, e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
             raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
-        try:
-            self.default_timezone = default_timezone or EWSTimeZone.localzone()
-        except (ValueError, UnknownTimeZone) as e:
-            # There is no translation from local timezone name to Windows timezone name, or e failed to find the
-            # local timezone.
-            log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
-            self.default_timezone = UTC
-        if not isinstance(self.default_timezone, EWSTimeZone):
-            raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % self.default_timezone)
+        if default_timezone:
+            try:
+                self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
+            except TypeError:
+                raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % default_timezone)
+        else:
+            try:
+                self.default_timezone = EWSTimeZone.localzone()
+            except (ValueError, UnknownTimeZone) as e:
+                # There is no translation from local timezone name to Windows timezone name, or e failed to find the
+                # local timezone.
+                log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
+                self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
             raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
         if autodiscover:
@@ -981,19 +1006,16 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         )
 
     def _consume_item_service(self, service_cls, items, chunk_size, kwargs):
-        # &#39;items&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `some_folder.filter(...).delete()`. In
-        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
-        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
         if isinstance(items, QuerySet):
-            items = items.iterator()
+            # We just want an iterator over the results
+            items = iter(items)
         is_empty, items = peek(items)
         if is_empty:
             # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
             # empty &#39;ids&#39; and return early.
             return
         kwargs[&#39;items&#39;] = items
-        for i in service_cls(account=self, chunk_size=chunk_size).call(**kwargs):
-            yield i
+        yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
         &#34;&#34;&#34;Return export strings of the given items
@@ -1061,15 +1083,11 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             message_disposition,
             send_meeting_invitations,
         )
-        return list(
-            i if isinstance(i, Exception)
-            else BulkCreateResult.from_xml(elem=i, account=self)
-            for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                folder=folder,
-                message_disposition=message_disposition,
-                send_meeting_invitations=send_meeting_invitations,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            folder=folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=send_meeting_invitations,
+        )))
 
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
@@ -1104,15 +1122,12 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             message_disposition,
             send_meeting_invitations_or_cancellations,
         )
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                conflict_resolution=conflict_resolution,
-                message_disposition=message_disposition,
-                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-                suppress_read_receipts=suppress_read_receipts,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
@@ -1184,12 +1199,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
           Status for each send operation, in the same order as the input
 
         &#34;&#34;&#34;
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
         &#34;&#34;&#34;Move items to another folder
@@ -1204,12 +1216,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
           folder in a different mailbox, an empty list is returned.
 
         &#34;&#34;&#34;
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_archive(self, ids, to_folder, chunk_size=None):
         &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
@@ -1228,6 +1237,25 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                 to_folder=to_folder,
             ))
         )
+
+    def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
+        &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          is_junk: Whether the messages are junk or not
+          move_item: Whether to move the messages to the junk folder or not
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+          stable order of the requested items.
+
+        &#34;&#34;&#34;
+        return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+            is_junk=is_junk,
+            move_item=move_item,
+        )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
         &#34;&#34;&#34;Fetch items by ID
@@ -1258,15 +1286,29 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
                                  if not f.field.is_attribute}
         # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-        for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        yield from self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        )):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
-                yield item
+        ))
+
+    def fetch_personas(self, ids):
+        &#34;&#34;&#34;Fetch personas by ID
+
+        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :return: A generator of Persona objects, in the same order as the input
+        &#34;&#34;&#34;
+        if isinstance(ids, QuerySet):
+            # We just want an iterator over the results
+            ids = iter(ids)
+        is_empty, ids = peek(ids)
+        if is_empty:
+            # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+            # empty &#39;ids&#39; and return early.
+            return
+        # GetPersona only accepts one persona ID per request. Crazy.
+        svc = GetPersona(account=self)
+        for i in ids:
+            yield svc.call(persona=i)
 
     @property
     def mail_tips(self):
@@ -2405,12 +2447,9 @@ to work.</p>
       Status for each send operation, in the same order as the input
 
     &#34;&#34;&#34;
-    return list(
-        i if isinstance(i, Exception) else Item.id_from_xml(i)
-        for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-            to_folder=to_folder,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        to_folder=to_folder,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.bulk_create"><code class="name flex">
@@ -2470,15 +2509,11 @@ of the created item, and the 'id' of any attachments that were also created.</p>
         message_disposition,
         send_meeting_invitations,
     )
-    return list(
-        i if isinstance(i, Exception)
-        else BulkCreateResult.from_xml(elem=i, account=self)
-        for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-            folder=folder,
-            message_disposition=message_disposition,
-            send_meeting_invitations=send_meeting_invitations,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+        folder=folder,
+        message_disposition=message_disposition,
+        send_meeting_invitations=send_meeting_invitations,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.bulk_delete"><code class="name flex">
@@ -2546,6 +2581,49 @@ AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)</dd>
     )</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.account.Account.bulk_mark_as_junk"><code class="name flex">
+<span>def <span class="ident">bulk_mark_as_junk</span></span>(<span>self, ids, is_junk, move_item, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>is_junk</code></strong></dt>
+<dd>Whether the messages are junk or not</dd>
+<dt><strong><code>move_item</code></strong></dt>
+<dd>Whether to move the messages to the junk folder or not</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+stable order of the requested items.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
+    &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      is_junk: Whether the messages are junk or not
+      move_item: Whether to move the messages to the junk folder or not
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+      stable order of the requested items.
+
+    &#34;&#34;&#34;
+    return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+        is_junk=is_junk,
+        move_item=move_item,
+    )))</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.account.Account.bulk_move"><code class="name flex">
 <span>def <span class="ident">bulk_move</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
 </code></dt>
@@ -2580,12 +2658,9 @@ folder in a different mailbox, an empty list is returned.</p></div>
       folder in a different mailbox, an empty list is returned.
 
     &#34;&#34;&#34;
-    return list(
-        i if isinstance(i, Exception) else Item.id_from_xml(i)
-        for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-            to_folder=to_folder,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        to_folder=to_folder,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.bulk_send"><code class="name flex">
@@ -2697,15 +2772,12 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
         message_disposition,
         send_meeting_invitations_or_cancellations,
     )
-    return list(
-        i if isinstance(i, Exception) else Item.id_from_xml(i)
-        for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-            conflict_resolution=conflict_resolution,
-            message_disposition=message_disposition,
-            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-            suppress_read_receipts=suppress_read_receipts,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+        conflict_resolution=conflict_resolution,
+        message_disposition=message_disposition,
+        send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+        suppress_read_receipts=suppress_read_receipts,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.export"><code class="name flex">
@@ -2793,15 +2865,41 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
         additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
                              if not f.field.is_attribute}
     # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-    for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+    yield from self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             additional_fields=additional_fields,
             shape=ID_ONLY,
-    )):
-        if isinstance(i, Exception):
-            yield i
-        else:
-            item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
-            yield item</code></pre>
+    ))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.account.Account.fetch_personas"><code class="name flex">
+<span>def <span class="ident">fetch_personas</span></span>(<span>self, ids)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetch personas by ID</p>
+<p>ids: an iterable of either (id, changekey) tuples or Persona objects.
+:return: A generator of Persona objects, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_personas(self, ids):
+    &#34;&#34;&#34;Fetch personas by ID
+
+    ids: an iterable of either (id, changekey) tuples or Persona objects.
+    :return: A generator of Persona objects, in the same order as the input
+    &#34;&#34;&#34;
+    if isinstance(ids, QuerySet):
+        # We just want an iterator over the results
+        ids = iter(ids)
+    is_empty, ids = peek(ids)
+    if is_empty:
+        # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+        # empty &#39;ids&#39; and return early.
+        return
+    # GetPersona only accepts one persona ID per request. Crazy.
+    svc = GetPersona(account=self)
+    for i in ids:
+        yield svc.call(persona=i)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.upload"><code class="name flex">
@@ -2893,7 +2991,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if getattr(self, k) != getattr(other, k):
                 return False
         return True
@@ -2937,6 +3035,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
 <li><code><a title="exchangelib.account.Account.bulk_copy" href="#exchangelib.account.Account.bulk_copy">bulk_copy</a></code></li>
 <li><code><a title="exchangelib.account.Account.bulk_create" href="#exchangelib.account.Account.bulk_create">bulk_create</a></code></li>
 <li><code><a title="exchangelib.account.Account.bulk_delete" href="#exchangelib.account.Account.bulk_delete">bulk_delete</a></code></li>
+<li><code><a title="exchangelib.account.Account.bulk_mark_as_junk" href="#exchangelib.account.Account.bulk_mark_as_junk">bulk_mark_as_junk</a></code></li>
 <li><code><a title="exchangelib.account.Account.bulk_move" href="#exchangelib.account.Account.bulk_move">bulk_move</a></code></li>
 <li><code><a title="exchangelib.account.Account.bulk_send" href="#exchangelib.account.Account.bulk_send">bulk_send</a></code></li>
 <li><code><a title="exchangelib.account.Account.bulk_update" href="#exchangelib.account.Account.bulk_update">bulk_update</a></code></li>
@@ -2951,6 +3050,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
 <li><code><a title="exchangelib.account.Account.export" href="#exchangelib.account.Account.export">export</a></code></li>
 <li><code><a title="exchangelib.account.Account.favorites" href="#exchangelib.account.Account.favorites">favorites</a></code></li>
 <li><code><a title="exchangelib.account.Account.fetch" href="#exchangelib.account.Account.fetch">fetch</a></code></li>
+<li><code><a title="exchangelib.account.Account.fetch_personas" href="#exchangelib.account.Account.fetch_personas">fetch_personas</a></code></li>
 <li><code><a title="exchangelib.account.Account.im_contact_list" href="#exchangelib.account.Account.im_contact_list">im_contact_list</a></code></li>
 <li><code><a title="exchangelib.account.Account.inbox" href="#exchangelib.account.Account.inbox">inbox</a></code></li>
 <li><code><a title="exchangelib.account.Account.journal" href="#exchangelib.account.Account.journal">journal</a></code></li>
@@ -2992,7 +3092,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

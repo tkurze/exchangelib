@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.winzone API documentation</title>
 <meta name="description" content="A dict to translate from IANA location name to Windows timezone name. Translations taken from
 …" />
@@ -39,6 +39,7 @@ from .util import to_xml
 
 CLDR_WINZONE_URL = &#39;https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml&#39;
 DEFAULT_TERRITORY = &#39;001&#39;
+CLDR_WINZONE_VERSION = &#39;2021a&#39;
 
 
 def generate_map(timeout=10):
@@ -52,7 +53,9 @@ def generate_map(timeout=10):
     if r.status_code != 200:
         raise ValueError(&#39;Unexpected response: %s&#39; % r)
     tz_map = {}
-    for e in to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;).findall(&#39;mapZone&#39;):
+    timezones_elem = to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;)
+    version = timezones_elem.get(&#39;typeVersion&#39;)
+    for e in timezones_elem.findall(&#39;mapZone&#39;):
         for location in re.split(r&#39;\s+&#39;, e.get(&#39;type&#39;)):
             if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
@@ -60,13 +63,13 @@ def generate_map(timeout=10):
                 if not location:
                     raise ValueError(&#39;Expected location&#39;)
                 tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
-    return tz_map
+    return version, tz_map
 
 
 # This map is generated irregularly from generate_map(). Do not edit manually - make corrections to
 # IANA_TO_MS_TIMEZONE_MAP instead. We provide this map to avoid hammering the CLDR_WINZONE_URL.
 #
-# This list was generated from CLDR_WINZONE_URL version 2020a.
+# This list was generated from CLDR_WINZONE_URL version CLDR_WINZONE_VERSION.
 CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;Africa/Abidjan&#39;: (&#39;Greenwich Standard Time&#39;, &#39;CI&#39;),
     &#39;Africa/Accra&#39;: (&#39;Greenwich Standard Time&#39;, &#39;GH&#39;),
@@ -93,7 +96,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;Africa/Gaborone&#39;: (&#39;South Africa Standard Time&#39;, &#39;BW&#39;),
     &#39;Africa/Harare&#39;: (&#39;South Africa Standard Time&#39;, &#39;ZW&#39;),
     &#39;Africa/Johannesburg&#39;: (&#39;South Africa Standard Time&#39;, &#39;001&#39;),
-    &#39;Africa/Juba&#39;: (&#39;E. Africa Standard Time&#39;, &#39;SS&#39;),
+    &#39;Africa/Juba&#39;: (&#39;South Africa Standard Time&#39;, &#39;SS&#39;),
     &#39;Africa/Kampala&#39;: (&#39;E. Africa Standard Time&#39;, &#39;UG&#39;),
     &#39;Africa/Khartoum&#39;: (&#39;Sudan Standard Time&#39;, &#39;001&#39;),
     &#39;Africa/Kigali&#39;: (&#39;South Africa Standard Time&#39;, &#39;RW&#39;),
@@ -160,7 +163,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;America/Cuiaba&#39;: (&#39;Central Brazilian Standard Time&#39;, &#39;001&#39;),
     &#39;America/Curacao&#39;: (&#39;SA Western Standard Time&#39;, &#39;CW&#39;),
     &#39;America/Danmarkshavn&#39;: (&#39;UTC&#39;, &#39;GL&#39;),
-    &#39;America/Dawson&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Dawson&#39;: (&#39;Yukon Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Dawson_Creek&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Denver&#39;: (&#39;Mountain Standard Time&#39;, &#39;001&#39;),
     &#39;America/Detroit&#39;: (&#39;Eastern Standard Time&#39;, &#39;US&#39;),
@@ -265,7 +268,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;America/Toronto&#39;: (&#39;Eastern Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Tortola&#39;: (&#39;SA Western Standard Time&#39;, &#39;VG&#39;),
     &#39;America/Vancouver&#39;: (&#39;Pacific Standard Time&#39;, &#39;CA&#39;),
-    &#39;America/Whitehorse&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
+    &#39;America/Whitehorse&#39;: (&#39;Yukon Standard Time&#39;, &#39;001&#39;),
     &#39;America/Winnipeg&#39;: (&#39;Central Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Yakutat&#39;: (&#39;Alaskan Standard Time&#39;, &#39;US&#39;),
     &#39;America/Yellowknife&#39;: (&#39;Mountain Standard Time&#39;, &#39;CA&#39;),
@@ -586,7 +589,9 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
     if r.status_code != 200:
         raise ValueError(&#39;Unexpected response: %s&#39; % r)
     tz_map = {}
-    for e in to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;).findall(&#39;mapZone&#39;):
+    timezones_elem = to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;)
+    version = timezones_elem.get(&#39;typeVersion&#39;)
+    for e in timezones_elem.findall(&#39;mapZone&#39;):
         for location in re.split(r&#39;\s+&#39;, e.get(&#39;type&#39;)):
             if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
@@ -594,7 +599,7 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
                 if not location:
                     raise ValueError(&#39;Expected location&#39;)
                 tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
-    return tz_map</code></pre>
+    return version, tz_map</code></pre>
 </details>
 </dd>
 </dl>
@@ -622,7 +627,7 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

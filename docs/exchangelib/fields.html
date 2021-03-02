@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.fields API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -27,17 +27,15 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import abc
-import base64
-import binascii
-from collections import OrderedDict
 import datetime
+import logging
+from collections import OrderedDict
 from decimal import Decimal, InvalidOperation
 from importlib import import_module
-import logging
 
-from .errors import ErrorInvalidServerVersion
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
-from .util import create_element, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, safe_b64decode, TNS
+from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
+    xml_text_to_value, TNS
 from .version import Build, Version, EXCHANGE_2013
 
 log = logging.getLogger(__name__)
@@ -86,6 +84,18 @@ EXTRA_WEEKDAY_OPTIONS = (DAY, WEEK_DAY, WEEKEND_DAY)
 # DaysOfWeek enum: See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/daysofweek-daysofweektype
 WEEKDAYS = WEEKDAY_NAMES + EXTRA_WEEKDAY_OPTIONS
+
+
+class InvalidField(ValueError):
+    pass
+
+
+class InvalidFieldForVersion(ValueError):
+    pass
+
+
+class InvalidChoiceForVersion(ValueError):
+    pass
 
 
 def split_field_path(field_path):
@@ -221,8 +231,7 @@ class FieldPath:
             if not self.label or not self.subfield:
                 raise ValueError(&#34;Field path for indexed field &#39;%s&#39; is missing label and/or subfield&#34; % self.field.name)
             return self.subfield.field_uri_xml(field_uri=self.field.field_uri, label=self.label)
-        else:
-            return self.field.field_uri_xml()
+        return self.field.field_uri_xml()
 
     def expand(self, version):
         # If this path does not point to a specific subfield on an indexed property, return all the possible path
@@ -325,7 +334,7 @@ class Field(metaclass=abc.ABCMeta):
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
-            raise ErrorInvalidServerVersion(&#34;Field &#39;%s&#39; does not support EWS builds prior to %s (server has %s)&#34; % (
+            raise InvalidFieldForVersion(&#34;Field &#39;%s&#39; does not support EWS builds prior to %s (server has %s)&#34; % (
                 self.name, self.supported_from, version))
         if value is None:
             if self.is_required and self.default is None:
@@ -348,11 +357,11 @@ class Field(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def from_xml(self, elem, account):
-        raise NotImplementedError()
+        pass
 
     @abc.abstractmethod
     def to_xml(self, value, version):
-        raise NotImplementedError()
+        pass
 
     def supports_version(self, version):
         # &#39;version&#39; is a Version instance, for convenience by callers
@@ -369,7 +378,7 @@ class Field(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __hash__(self):
-        raise NotImplementedError()
+        pass
 
     def __repr__(self):
         return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%r&#39; % (f, getattr(self, f)) for f in (
@@ -393,12 +402,18 @@ class FieldURIField(Field):
 
     def _get_val_from_elem(self, elem):
         if self.is_attribute:
-            return elem.get(self.field_uri)
-        field_elem = elem.find(self.response_tag())
-        return None if field_elem is None else field_elem.text or None
+            return elem.get(self.field_uri) or None
+        return get_xml_attr(elem, self.response_tag())
 
     def from_xml(self, elem, account):
-        raise NotImplementedError()
+        val = self._get_val_from_elem(elem)
+        if val is not None:
+            try:
+                return xml_text_to_value(val, self.value_cls)
+            except (ValueError, InvalidOperation):
+                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
+                return None
+        return self.default
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
@@ -427,30 +442,9 @@ class FieldURIField(Field):
 class BooleanField(FieldURIField):
     value_cls = bool
 
-    def __init__(self, *args, **kwargs):
-        self.true_val = kwargs.pop(&#39;true_val&#39;, &#39;true&#39;)
-        self.false_val = kwargs.pop(&#39;false_val&#39;, &#39;false&#39;)
-        super().__init__(*args, **kwargs)
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return {
-                    self.true_val: True,
-                    self.false_val: False,
-                }[val.lower()]
-            except KeyError:
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
-
 
 class OnOffField(BooleanField):
-    def __init__(self, *args, **kwargs):
-        kwargs[&#39;true_val&#39;] = &#39;on&#39;
-        kwargs[&#39;false_val&#39;] = &#39;off&#39;
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class IntegerField(FieldURIField):
@@ -461,32 +455,22 @@ class IntegerField(FieldURIField):
         self.max = kwargs.pop(&#39;max&#39;, None)
         super().__init__(*args, **kwargs)
 
+    def _clean_single_value(self, v):
+        if self.min is not None and v &lt; self.min:
+            raise ValueError(
+                &#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (v, self.name, self.min))
+        if self.max is not None and v &gt; self.max:
+            raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (v, self.name, self.max))
+
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if value is not None:
             if self.is_list:
                 for v in value:
-                    if self.min is not None and v &lt; self.min:
-                        raise ValueError(
-                            &#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (v, self.name, self.min))
-                    if self.max is not None and v &gt; self.max:
-                        raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (v, self.name, self.max))
+                    self._clean_single_value(v)
             else:
-                if self.min is not None and value &lt; self.min:
-                    raise ValueError(&#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (value, self.name, self.min))
-                if self.max is not None and value &gt; self.max:
-                    raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (value, self.name, self.max))
+                self._clean_single_value(value)
         return value
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return self.value_cls(val)
-            except (ValueError, InvalidOperation):
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
 
 
 class DecimalField(IntegerField):
@@ -564,14 +548,7 @@ class EnumAsIntField(EnumField):
     &#34;&#34;&#34;Like EnumField, but communicates values with EWS in integers&#34;&#34;&#34;
 
     def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return int(val)
-            except ValueError:
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
+        return super(EnumField, self).from_xml(elem=elem, account=account)
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
@@ -607,24 +584,10 @@ class Base64Field(FieldURIField):
             kwargs[&#39;is_searchable&#39;] = False
         super().__init__(*args, **kwargs)
 
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return safe_b64decode(val)
-            except (TypeError, binascii.Error):
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
-
-    def to_xml(self, value, version):
-        field_elem = create_element(self.request_tag())
-        return set_xml_value(field_elem, base64.b64encode(value).decode(&#39;ascii&#39;), version=version)
-
 
 class MimeContentField(Base64Field):
     # This element has an optional &#39;CharacterSet&#39; attribute, but it specifies the encoding of the base64-encoded
-    # string (which doesn&#39;t make sense since base64 encoded strings are always ASCII). We ignore it here because
+    # string (which doesn&#39;t make sense since base64-encoded strings are always ASCII). We ignore it here because
     # the decoded data could be in some other encoding, specified in the &#34;Content-Type:&#34; header.
     pass
 
@@ -632,23 +595,18 @@ class MimeContentField(Base64Field):
 class DateField(FieldURIField):
     value_cls = EWSDate
 
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return self.value_cls.from_string(val)
-            except ValueError:
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
+    def clean(self, value, version=None):
+        # Allow plain datetime.date values as input
+        if type(value) == datetime.date:
+            value = self.value_cls.from_date(value)
+        return super().clean(value=value, version=version)
 
 
-class DateTimeBackedDateField(FieldURIField):
+class DateTimeBackedDateField(DateField):
     # A field that acts like a date, but where values are sent to EWS as EWSDateTime.
-    value_cls = datetime.date
 
     def __init__(self, *args, **kwargs):
-        # Not all fields assume a default tim of 00:00, so make this configurable
+        # Not all fields assume a default time of 00:00, so make this configurable
         self._default_time = kwargs.pop(&#39;default_time&#39;, datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
@@ -660,11 +618,11 @@ class DateTimeBackedDateField(FieldURIField):
     def from_xml(self, elem, account):
         val = self._get_val_from_elem(elem)
         if val is not None and len(val) == 25:
-            # This is a datetime string with timezone info. We don&#39;t want to have datetime values converted to UTC
-            # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don&#39;t have an
-            # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
-            # datetime string with timezone info.
-            return EWSDate.from_date(datetime.datetime.fromisoformat(val).date())
+            # This is a datetime string with timezone info, e.g. &#39;2021-03-01T21:55:54+00:00&#39;. We don&#39;t want to have
+            # datetime values converted to UTC before converting to date. EWSDateTime.from_string() insists on
+            # converting to UTC, but we don&#39;t have an EWSTimeZone we can convert the timezone info to. Instead, parse
+            # the string with .fromisoformat().
+            return datetime.datetime.fromisoformat(val).date()
         # Revert to default parsing of datetime strings
         res = self._datetime_field.from_xml(elem=elem, account=account)
         if res is None:
@@ -687,9 +645,8 @@ class TimeField(FieldURIField):
                 if &#39;:&#39; in val:
                     # Assume a string of the form HH:MM:SS
                     return datetime.datetime.strptime(val, &#39;%H:%M:%S&#39;).time()
-                else:
-                    # Assume an integer in minutes since midnight
-                    return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
+                # Assume an integer in minutes since midnight
+                return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
             except ValueError:
                 pass
         return self.default
@@ -699,8 +656,11 @@ class DateTimeField(FieldURIField):
     value_cls = EWSDateTime
 
     def clean(self, value, version=None):
-        if value is not None and isinstance(value, self.value_cls) and not value.tzinfo:
-            raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
+        if isinstance(value, datetime.datetime):
+            if not value.tzinfo:
+                raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
+            if type(value) == datetime.datetime:
+                value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
 
     def from_xml(self, elem, account):
@@ -745,7 +705,7 @@ class DateOrDateTimeField(DateTimeField):
     def clean(self, value, version=None):
         # Most calendar items will contain datetime values. We can&#39;t access the is_all_day value here, so CalendarItem
         # must handle that sanity check.
-        if type(value) == EWSDate:
+        if type(value) in (EWSDate, datetime.date):
             return self._date_field.clean(value=value, version=version)
         return super().clean(value=value, version=version)
 
@@ -759,6 +719,12 @@ class DateOrDateTimeField(DateTimeField):
 
 class TimeZoneField(FieldURIField):
     value_cls = EWSTimeZone
+
+    def clean(self, value, version=None):
+        # Allow other timezone implementations as input
+        if value is not None:
+            value = self.value_cls.from_timezone(value)
+        return super().clean(value=value, version=version)
 
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
@@ -786,12 +752,6 @@ class TextField(FieldURIField):
     &#34;&#34;&#34;A field that stores a string value with no length limit&#34;&#34;&#34;
     value_cls = str
     is_complex = True
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            return val
-        return self.default
 
 
 class TextListField(TextField):
@@ -864,8 +824,12 @@ class IdField(CharField):
 class CharListField(CharField):
     is_list = True
 
+    def __init__(self, *args, **kwargs):
+        self.list_elem_name = kwargs.pop(&#39;list_elem_name&#39;, &#39;String&#39;)
+        super().__init__(*args, **kwargs)
+
     def list_elem_tag(self):
-        return &#39;{%s}String&#39; % self.namespace
+        return &#39;{%s}%s&#39; % (self.namespace, self.list_elem_name)
 
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
@@ -923,7 +887,7 @@ class ChoiceField(CharField):
             if value in valid_choices_for_version:
                 return value
             if value in valid_choices:
-                raise ErrorInvalidServerVersion(&#34;Choice &#39;%s&#39; only supports EWS builds from %s to %s (server has %s)&#34; % (
+                raise InvalidChoiceForVersion(&#34;Choice &#39;%s&#39; only supports EWS builds from %s to %s (server has %s)&#34; % (
                     self.name, self.supported_from or &#39;*&#39;, self.deprecated_from or &#39;*&#39;, version))
         else:
             if value in valid_choices:
@@ -1153,8 +1117,8 @@ class MemberListField(EWSElementListField):
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
+        from .properties import Mailbox
         if value is not None:
-            from .properties import Mailbox
             value = [
                 self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
             ]
@@ -1273,10 +1237,6 @@ class IndexedField(EWSElementField):
     def to_xml(self, value, version):
         return set_xml_value(create_element(&#39;t:%s&#39; % self.PARENT_ELEMENT_NAME), value, version)
 
-    def field_uri_xml(self):
-        # Callers must call field_uri_xml() on the subfield
-        raise NotImplementedError()
-
     def response_tag(self):
         return &#39;{%s}%s&#39; % (self.namespace, self.PARENT_ELEMENT_NAME)
 
@@ -1293,9 +1253,6 @@ class EmailAddressesField(IndexedField):
         from .indexed_properties import EmailAddress
         kwargs[&#39;value_cls&#39;] = EmailAddress
         super().__init__(*args, **kwargs)
-
-    def field_uri_xml(self):
-        raise NotImplementedError()
 
     def clean(self, value, version=None):
         if value is not None:
@@ -1322,9 +1279,6 @@ class PhoneNumberField(IndexedField):
         kwargs[&#39;value_cls&#39;] = PhoneNumber
         super().__init__(*args, **kwargs)
 
-    def field_uri_xml(self):
-        raise NotImplementedError()
-
 
 class PhysicalAddressField(IndexedField):
     is_list = True
@@ -1335,9 +1289,6 @@ class PhysicalAddressField(IndexedField):
         from .indexed_properties import PhysicalAddress
         kwargs[&#39;value_cls&#39;] = PhysicalAddress
         super().__init__(*args, **kwargs)
-
-    def field_uri_xml(self):
-        raise NotImplementedError()
 
 
 class ExtendedPropertyField(Field):
@@ -1394,7 +1345,6 @@ class ExtendedPropertyField(Field):
 class ItemField(FieldURIField):
     @property
     def value_cls(self):
-        # This is a workaround for circular imports. Item
         from .items import Item
         return Item
 
@@ -1434,12 +1384,11 @@ class EffectiveRightsField(EWSElementField):
 
 class BuildField(CharField):
     def __init__(self, *args, **kwargs):
-        from .version import Build
         super().__init__(*args, **kwargs)
         self.value_cls = Build
 
     def from_xml(self, elem, account):
-        val = super().from_xml(elem=elem, account=account)
+        val = self._get_val_from_elem(elem)
         if val:
             try:
                 return self.value_cls.from_hex_string(val)
@@ -1470,6 +1419,164 @@ class IdElementField(EWSElementField):
     def __init__(self, *args, **kwargs):
         kwargs[&#39;is_searchable&#39;] = False
         kwargs[&#39;is_read_only&#39;] = True
+        super().__init__(*args, **kwargs)
+
+
+class TypeValueField(FieldURIField):
+    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.
+    &#34;&#34;&#34;
+    TYPES_MAP = {
+        &#39;Boolean&#39;: bool,
+        &#39;Integer32&#39;: int,
+        &#39;UnsignedInteger32&#39;: int,
+        &#39;Integer64&#39;: int,
+        &#39;UnsignedInteger64&#39;: int,
+        # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
+        &#39;ByteArray&#39;: bytes,
+        &#39;String&#39;: str,
+        &#39;StringArray&#39;: str,  # A list of strings
+        &#39;DateTime&#39;: EWSDateTime,
+    }
+    TYPES_MAP_REVERSED = {
+        bool: &#39;Boolean&#39;,
+        int: &#39;Integer64&#39;,
+        # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
+        bytes: &#39;ByteArray&#39;,
+        str: &#39;String&#39;,
+        datetime.datetime: &#39;DateTime&#39;,
+        EWSDateTime: &#39;DateTime&#39;,
+    }
+
+    @classmethod
+    def get_type(cls, value):
+        if isinstance(value, bytes) and len(value) == 1:
+            # This is a single byte. Translate it to the &#39;Byte&#39; type
+            return &#39;Byte&#39;
+        if is_iterable(value):
+            value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+            if value_type not in cls.TYPES_MAP:
+                raise ValueError(&#39;%r is not a supported type&#39; % value)
+            return value_type
+        return cls.TYPES_MAP_REVERSED[type(value)]
+
+    @classmethod
+    def is_array_type(cls, value_type):
+        return value_type == &#39;StringArray&#39;
+
+    def clean(self, value, version=None):
+        if value is None:
+            if self.is_required and self.default is None:
+                raise ValueError(&#34;&#39;%s&#39; is a required field with no default&#34; % self.name)
+            return self.default
+        return value
+
+    def from_xml(self, elem, account):
+        field_elem = elem.find(self.response_tag())
+        if field_elem is None:
+            return self.default
+        value_type_str = get_xml_attr(field_elem, &#39;{%s}Type&#39; % TNS)
+        value = get_xml_attr(field_elem, &#39;{%s}Value&#39; % TNS)
+        if value_type_str == &#39;Byte&#39;:
+            try:
+                # The value is an unsigned integer in the range 0 -&gt; 255. Convert it to a single byte
+                return xml_text_to_value(value, int).to_bytes(1, &#39;little&#39;, signed=False)
+            except OverflowError as e:
+                log.warning(&#39;Invalid byte value %r (%e)&#39;, value, e)
+                return None
+        value_type = self.TYPES_MAP[value_type_str]
+        if self. is_array_type(value_type_str):
+            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#39; &#39;))
+        return xml_text_to_value(value=value, value_type=value_type)
+
+    def to_xml(self, value, version):
+        value_type_str = self.get_type(value)
+        if value_type_str == &#39;Byte&#39;:
+            # A single byte is encoded to an unsigned integer in the range 0 -&gt; 255
+            value = int.from_bytes(value, byteorder=&#39;little&#39;, signed=False)
+        elif is_iterable(value):
+            value = &#39; &#39;.join(value_to_xml_text(v) for v in value)
+        field_elem = create_element(self.request_tag())
+        field_elem.append(set_xml_value(create_element(&#39;t:Type&#39;), value_type_str, version=version))
+        field_elem.append(set_xml_value(create_element(&#39;t:Value&#39;), value, version=version))
+        return field_elem
+
+
+class DictionaryField(FieldURIField):
+    value_cls = dict
+
+    def from_xml(self, elem, account):
+        from .properties import DictionaryEntry
+        iter_elem = elem.find(self.response_tag())
+        if iter_elem is not None:
+            entries = [
+                DictionaryEntry.from_xml(elem=e, account=account)
+                for e in iter_elem.findall(DictionaryEntry.response_tag())
+            ]
+            return {e.key: e.value for e in entries}
+        return self.default
+
+    def clean(self, value, version=None):
+        if isinstance(value, dict):
+            cleaned = {}
+            for k, v in value.items():
+                if type(k) == datetime.datetime:
+                    k = EWSDateTime.from_datetime(k)
+                if type(v) == datetime.datetime:
+                    v = EWSDateTime.from_datetime(v)
+                cleaned[k] = v
+            value = cleaned
+        return super().clean(value=value, version=version)
+
+    def to_xml(self, value, version):
+        from .properties import DictionaryEntry
+        field_elem = create_element(self.request_tag())
+        entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
+        return set_xml_value(field_elem, entries, version=version)
+
+
+class PersonaPhoneNumberField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .properties import PhoneNumber
+        kwargs[&#39;value_cls&#39;] = PhoneNumber
+        super().__init__(*args, **kwargs)
+
+
+class BodyContentAttributedValueField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .properties import BodyContentAttributedValue
+        kwargs[&#39;value_cls&#39;] = BodyContentAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class StringAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import StringAttributedValue
+        kwargs[&#39;value_cls&#39;] = StringAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class PhoneNumberAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import PhoneNumberAttributedValue
+        kwargs[&#39;value_cls&#39;] = PhoneNumberAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class EmailAddressAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import EmailAddressAttributedValue
+        kwargs[&#39;value_cls&#39;] = EmailAddressAttributedValue
+        super().__init__(*args, **kwargs)
+
+
+class PostalAddressAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import PostalAddressAttributedValue
+        kwargs[&#39;value_cls&#39;] = PostalAddressAttributedValue
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 </section>
@@ -1862,21 +1969,7 @@ class IdElementField(EWSElementField):
     def __init__(self, *args, **kwargs):
         if &#39;is_searchable&#39; not in kwargs:
             kwargs[&#39;is_searchable&#39;] = False
-        super().__init__(*args, **kwargs)
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return safe_b64decode(val)
-            except (TypeError, binascii.Error):
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
-
-    def to_xml(self, value, version):
-        field_elem = create_element(self.request_tag())
-        return set_xml_value(field_elem, base64.b64encode(value).decode(&#39;ascii&#39;), version=version)</code></pre>
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1905,43 +1998,6 @@ bytes() -&gt; empty bytes object</p>
 - a text string encoded using the specified encoding
 - any object implementing the buffer API.
 - an integer</p></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.Base64Field.from_xml"><code class="name flex">
-<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def from_xml(self, elem, account):
-    val = self._get_val_from_elem(elem)
-    if val is not None:
-        try:
-            return safe_b64decode(val)
-        except (TypeError, binascii.Error):
-            log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-            return None
-    return self.default</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.fields.Base64Field.to_xml"><code class="name flex">
-<span>def <span class="ident">to_xml</span></span>(<span>self, value, version)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def to_xml(self, value, version):
-    field_elem = create_element(self.request_tag())
-    return set_xml_value(field_elem, base64.b64encode(value).decode(&#39;ascii&#39;), version=version)</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -2044,6 +2100,38 @@ bytes() -&gt; empty bytes object</p>
         return self.value_cls.from_xml(elem=sub_elem, account=account)
     return self.default</code></pre>
 </details>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.fields.BodyContentAttributedValueField"><code class="flex name class">
+<span>class <span class="ident">BodyContentAttributedValueField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BodyContentAttributedValueField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .properties import BodyContentAttributedValue
+        kwargs[&#39;value_cls&#39;] = BodyContentAttributedValue
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.BodyContentAttributedValueField.is_complex"><code class="name">var <span class="ident">is_complex</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 </dd>
@@ -2176,25 +2264,7 @@ bytes() -&gt; empty bytes object</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BooleanField(FieldURIField):
-    value_cls = bool
-
-    def __init__(self, *args, **kwargs):
-        self.true_val = kwargs.pop(&#39;true_val&#39;, &#39;true&#39;)
-        self.false_val = kwargs.pop(&#39;false_val&#39;, &#39;false&#39;)
-        super().__init__(*args, **kwargs)
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return {
-                    self.true_val: True,
-                    self.false_val: False,
-                }[val.lower()]
-            except KeyError:
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default</code></pre>
+    value_cls = bool</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2215,32 +2285,6 @@ The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.</p></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.BooleanField.from_xml"><code class="name flex">
-<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def from_xml(self, elem, account):
-    val = self._get_val_from_elem(elem)
-    if val is not None:
-        try:
-            return {
-                self.true_val: True,
-                self.false_val: False,
-            }[val.lower()]
-        except KeyError:
-            log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-            return None
-    return self.default</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="exchangelib.fields.BuildField"><code class="flex name class">
 <span>class <span class="ident">BuildField</span></span>
@@ -2254,12 +2298,11 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 </summary>
 <pre><code class="python">class BuildField(CharField):
     def __init__(self, *args, **kwargs):
-        from .version import Build
         super().__init__(*args, **kwargs)
         self.value_cls = Build
 
     def from_xml(self, elem, account):
-        val = super().from_xml(elem=elem, account=account)
+        val = self._get_val_from_elem(elem)
         if val:
             try:
                 return self.value_cls.from_hex_string(val)
@@ -2286,7 +2329,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def from_xml(self, elem, account):
-    val = super().from_xml(elem=elem, account=account)
+    val = self._get_val_from_elem(elem)
     if val:
         try:
             return self.value_cls.from_hex_string(val)
@@ -2407,8 +2450,12 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <pre><code class="python">class CharListField(CharField):
     is_list = True
 
+    def __init__(self, *args, **kwargs):
+        self.list_elem_name = kwargs.pop(&#39;list_elem_name&#39;, &#39;String&#39;)
+        super().__init__(*args, **kwargs)
+
     def list_elem_tag(self):
-        return &#39;{%s}String&#39; % self.namespace
+        return &#39;{%s}%s&#39; % (self.namespace, self.list_elem_name)
 
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
@@ -2462,7 +2509,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def list_elem_tag(self):
-    return &#39;{%s}String&#39; % self.namespace</code></pre>
+    return &#39;{%s}%s&#39; % (self.namespace, self.list_elem_name)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2547,7 +2594,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
             if value in valid_choices_for_version:
                 return value
             if value in valid_choices:
-                raise ErrorInvalidServerVersion(&#34;Choice &#39;%s&#39; only supports EWS builds from %s to %s (server has %s)&#34; % (
+                raise InvalidChoiceForVersion(&#34;Choice &#39;%s&#39; only supports EWS builds from %s to %s (server has %s)&#34; % (
                     self.name, self.supported_from or &#39;*&#39;, self.deprecated_from or &#39;*&#39;, version))
         else:
             if value in valid_choices:
@@ -2593,7 +2640,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
         if value in valid_choices_for_version:
             return value
         if value in valid_choices:
-            raise ErrorInvalidServerVersion(&#34;Choice &#39;%s&#39; only supports EWS builds from %s to %s (server has %s)&#34; % (
+            raise InvalidChoiceForVersion(&#34;Choice &#39;%s&#39; only supports EWS builds from %s to %s (server has %s)&#34; % (
                 self.name, self.supported_from or &#39;*&#39;, self.deprecated_from or &#39;*&#39;, version))
     else:
         if value in valid_choices:
@@ -2669,20 +2716,20 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <pre><code class="python">class DateField(FieldURIField):
     value_cls = EWSDate
 
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return self.value_cls.from_string(val)
-            except ValueError:
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default</code></pre>
+    def clean(self, value, version=None):
+        # Allow plain datetime.date values as input
+        if type(value) == datetime.date:
+            value = self.value_cls.from_date(value)
+        return super().clean(value=value, version=version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.DateTimeBackedDateField" href="#exchangelib.fields.DateTimeBackedDateField">DateTimeBackedDateField</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2693,8 +2740,8 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.fields.DateField.from_xml"><code class="name flex">
-<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+<dt id="exchangelib.fields.DateField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2702,15 +2749,11 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def from_xml(self, elem, account):
-    val = self._get_val_from_elem(elem)
-    if val is not None:
-        try:
-            return self.value_cls.from_string(val)
-        except ValueError:
-            log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-            return None
-    return self.default</code></pre>
+<pre><code class="python">def clean(self, value, version=None):
+    # Allow plain datetime.date values as input
+    if type(value) == datetime.date:
+        value = self.value_cls.from_date(value)
+    return super().clean(value=value, version=version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2750,7 +2793,7 @@ the recurring item is a task or a calendar item.</p>
     def clean(self, value, version=None):
         # Most calendar items will contain datetime values. We can&#39;t access the is_all_day value here, so CalendarItem
         # must handle that sanity check.
-        if type(value) == EWSDate:
+        if type(value) in (EWSDate, datetime.date):
             return self._date_field.clean(value=value, version=version)
         return super().clean(value=value, version=version)
 
@@ -2781,7 +2824,7 @@ the recurring item is a task or a calendar item.</p>
 <pre><code class="python">def clean(self, value, version=None):
     # Most calendar items will contain datetime values. We can&#39;t access the is_all_day value here, so CalendarItem
     # must handle that sanity check.
-    if type(value) == EWSDate:
+    if type(value) in (EWSDate, datetime.date):
         return self._date_field.clean(value=value, version=version)
     return super().clean(value=value, version=version)</code></pre>
 </details>
@@ -2823,12 +2866,11 @@ the recurring item is a task or a calendar item.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DateTimeBackedDateField(FieldURIField):
+<pre><code class="python">class DateTimeBackedDateField(DateField):
     # A field that acts like a date, but where values are sent to EWS as EWSDateTime.
-    value_cls = datetime.date
 
     def __init__(self, *args, **kwargs):
-        # Not all fields assume a default tim of 00:00, so make this configurable
+        # Not all fields assume a default time of 00:00, so make this configurable
         self._default_time = kwargs.pop(&#39;default_time&#39;, datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
@@ -2840,11 +2882,11 @@ the recurring item is a task or a calendar item.</p>
     def from_xml(self, elem, account):
         val = self._get_val_from_elem(elem)
         if val is not None and len(val) == 25:
-            # This is a datetime string with timezone info. We don&#39;t want to have datetime values converted to UTC
-            # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don&#39;t have an
-            # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
-            # datetime string with timezone info.
-            return EWSDate.from_date(datetime.datetime.fromisoformat(val).date())
+            # This is a datetime string with timezone info, e.g. &#39;2021-03-01T21:55:54+00:00&#39;. We don&#39;t want to have
+            # datetime values converted to UTC before converting to date. EWSDateTime.from_string() insists on
+            # converting to UTC, but we don&#39;t have an EWSTimeZone we can convert the timezone info to. Instead, parse
+            # the string with .fromisoformat().
+            return datetime.datetime.fromisoformat(val).date()
         # Revert to default parsing of datetime strings
         res = self._datetime_field.from_xml(elem=elem, account=account)
         if res is None:
@@ -2858,16 +2900,10 @@ the recurring item is a task or a calendar item.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.fields.DateField" href="#exchangelib.fields.DateField">DateField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="exchangelib.fields.DateTimeBackedDateField.value_cls"><code class="name">var <span class="ident">value_cls</span></code></dt>
-<dd>
-<div class="desc"><p>date(year, month, day) &ndash;&gt; date object</p></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.fields.DateTimeBackedDateField.date_to_datetime"><code class="name flex">
@@ -2895,11 +2931,11 @@ the recurring item is a task or a calendar item.</p>
 <pre><code class="python">def from_xml(self, elem, account):
     val = self._get_val_from_elem(elem)
     if val is not None and len(val) == 25:
-        # This is a datetime string with timezone info. We don&#39;t want to have datetime values converted to UTC
-        # before converting to date. EWSDateTime.from_string() insists on converting to UTC, but we don&#39;t have an
-        # EWSTimeZone we can convert the timezone info to. Instead, parse the string manually when we have a
-        # datetime string with timezone info.
-        return EWSDate.from_date(datetime.datetime.fromisoformat(val).date())
+        # This is a datetime string with timezone info, e.g. &#39;2021-03-01T21:55:54+00:00&#39;. We don&#39;t want to have
+        # datetime values converted to UTC before converting to date. EWSDateTime.from_string() insists on
+        # converting to UTC, but we don&#39;t have an EWSTimeZone we can convert the timezone info to. Instead, parse
+        # the string with .fromisoformat().
+        return datetime.datetime.fromisoformat(val).date()
     # Revert to default parsing of datetime strings
     res = self._datetime_field.from_xml(elem=elem, account=account)
     if res is None:
@@ -2923,6 +2959,14 @@ the recurring item is a task or a calendar item.</p>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.fields.DateField" href="#exchangelib.fields.DateField">DateField</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.fields.DateField.value_cls" href="#exchangelib.fields.DateField.value_cls">value_cls</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="exchangelib.fields.DateTimeField"><code class="flex name class">
 <span>class <span class="ident">DateTimeField</span></span>
@@ -2938,8 +2982,11 @@ the recurring item is a task or a calendar item.</p>
     value_cls = EWSDateTime
 
     def clean(self, value, version=None):
-        if value is not None and isinstance(value, self.value_cls) and not value.tzinfo:
-            raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
+        if isinstance(value, datetime.datetime):
+            if not value.tzinfo:
+                raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
+            if type(value) == datetime.datetime:
+                value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
 
     def from_xml(self, elem, account):
@@ -2991,8 +3038,11 @@ the recurring item is a task or a calendar item.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
-    if value is not None and isinstance(value, self.value_cls) and not value.tzinfo:
-        raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
+    if isinstance(value, datetime.datetime):
+        if not value.tzinfo:
+            raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
+        if type(value) == datetime.datetime:
+            value = self.value_cls.from_datetime(value)
     return super().clean(value, version=version)</code></pre>
 </details>
 </dd>
@@ -3057,6 +3107,133 @@ the recurring item is a task or a calendar item.</p>
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.fields.DictionaryField"><code class="flex name class">
+<span>class <span class="ident">DictionaryField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DictionaryField(FieldURIField):
+    value_cls = dict
+
+    def from_xml(self, elem, account):
+        from .properties import DictionaryEntry
+        iter_elem = elem.find(self.response_tag())
+        if iter_elem is not None:
+            entries = [
+                DictionaryEntry.from_xml(elem=e, account=account)
+                for e in iter_elem.findall(DictionaryEntry.response_tag())
+            ]
+            return {e.key: e.value for e in entries}
+        return self.default
+
+    def clean(self, value, version=None):
+        if isinstance(value, dict):
+            cleaned = {}
+            for k, v in value.items():
+                if type(k) == datetime.datetime:
+                    k = EWSDateTime.from_datetime(k)
+                if type(v) == datetime.datetime:
+                    v = EWSDateTime.from_datetime(v)
+                cleaned[k] = v
+            value = cleaned
+        return super().clean(value=value, version=version)
+
+    def to_xml(self, value, version):
+        from .properties import DictionaryEntry
+        field_elem = create_element(self.request_tag())
+        entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
+        return set_xml_value(field_elem, entries, version=version)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.DictionaryField.value_cls"><code class="name">var <span class="ident">value_cls</span></code></dt>
+<dd>
+<div class="desc"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.
+For example:
+dict(one=1, two=2)</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.DictionaryField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    if isinstance(value, dict):
+        cleaned = {}
+        for k, v in value.items():
+            if type(k) == datetime.datetime:
+                k = EWSDateTime.from_datetime(k)
+            if type(v) == datetime.datetime:
+                v = EWSDateTime.from_datetime(v)
+            cleaned[k] = v
+        value = cleaned
+    return super().clean(value=value, version=version)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.DictionaryField.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def from_xml(self, elem, account):
+    from .properties import DictionaryEntry
+    iter_elem = elem.find(self.response_tag())
+    if iter_elem is not None:
+        entries = [
+            DictionaryEntry.from_xml(elem=e, account=account)
+            for e in iter_elem.findall(DictionaryEntry.response_tag())
+        ]
+        return {e.key: e.value for e in entries}
+    return self.default</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.DictionaryField.to_xml"><code class="name flex">
+<span>def <span class="ident">to_xml</span></span>(<span>self, value, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_xml(self, value, version):
+    from .properties import DictionaryEntry
+    field_elem = create_element(self.request_tag())
+    entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
+    return set_xml_value(field_elem, entries, version=version)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="exchangelib.fields.EWSElementField"><code class="flex name class">
 <span>class <span class="ident">EWSElementField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -3112,12 +3289,14 @@ the recurring item is a task or a calendar item.</p>
 <ul class="hlist">
 <li><a title="exchangelib.fields.AssociatedCalendarItemIdField" href="#exchangelib.fields.AssociatedCalendarItemIdField">AssociatedCalendarItemIdField</a></li>
 <li><a title="exchangelib.fields.BaseEmailField" href="#exchangelib.fields.BaseEmailField">BaseEmailField</a></li>
+<li><a title="exchangelib.fields.BodyContentAttributedValueField" href="#exchangelib.fields.BodyContentAttributedValueField">BodyContentAttributedValueField</a></li>
 <li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
 <li><a title="exchangelib.fields.EffectiveRightsField" href="#exchangelib.fields.EffectiveRightsField">EffectiveRightsField</a></li>
 <li><a title="exchangelib.fields.IdElementField" href="#exchangelib.fields.IdElementField">IdElementField</a></li>
 <li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
 <li><a title="exchangelib.fields.OccurrenceField" href="#exchangelib.fields.OccurrenceField">OccurrenceField</a></li>
 <li><a title="exchangelib.fields.PermissionSetField" href="#exchangelib.fields.PermissionSetField">PermissionSetField</a></li>
+<li><a title="exchangelib.fields.PersonaPhoneNumberField" href="#exchangelib.fields.PersonaPhoneNumberField">PersonaPhoneNumberField</a></li>
 <li><a title="exchangelib.fields.RecurrenceField" href="#exchangelib.fields.RecurrenceField">RecurrenceField</a></li>
 <li><a title="exchangelib.fields.ReferenceItemIdField" href="#exchangelib.fields.ReferenceItemIdField">ReferenceItemIdField</a></li>
 <li><a title="exchangelib.fields.TaskRecurrenceField" href="#exchangelib.fields.TaskRecurrenceField">TaskRecurrenceField</a></li>
@@ -3210,10 +3389,14 @@ def value_cls(self):
 <ul class="hlist">
 <li><a title="exchangelib.fields.AttachmentField" href="#exchangelib.fields.AttachmentField">AttachmentField</a></li>
 <li><a title="exchangelib.fields.AttendeesField" href="#exchangelib.fields.AttendeesField">AttendeesField</a></li>
+<li><a title="exchangelib.fields.EmailAddressAttributedValueField" href="#exchangelib.fields.EmailAddressAttributedValueField">EmailAddressAttributedValueField</a></li>
 <li><a title="exchangelib.fields.MailboxListField" href="#exchangelib.fields.MailboxListField">MailboxListField</a></li>
 <li><a title="exchangelib.fields.MemberListField" href="#exchangelib.fields.MemberListField">MemberListField</a></li>
 <li><a title="exchangelib.fields.MessageHeaderField" href="#exchangelib.fields.MessageHeaderField">MessageHeaderField</a></li>
+<li><a title="exchangelib.fields.PhoneNumberAttributedValueField" href="#exchangelib.fields.PhoneNumberAttributedValueField">PhoneNumberAttributedValueField</a></li>
+<li><a title="exchangelib.fields.PostalAddressAttributedValueField" href="#exchangelib.fields.PostalAddressAttributedValueField">PostalAddressAttributedValueField</a></li>
 <li><a title="exchangelib.fields.ProtocolListField" href="#exchangelib.fields.ProtocolListField">ProtocolListField</a></li>
+<li><a title="exchangelib.fields.StringAttributedValueField" href="#exchangelib.fields.StringAttributedValueField">StringAttributedValueField</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3245,6 +3428,30 @@ def value_cls(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+</dd>
+<dt id="exchangelib.fields.EmailAddressAttributedValueField"><code class="flex name class">
+<span>class <span class="ident">EmailAddressAttributedValueField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EmailAddressAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import EmailAddressAttributedValue
+        kwargs[&#39;value_cls&#39;] = EmailAddressAttributedValue
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
@@ -3299,9 +3506,6 @@ def value_cls(self):
         from .indexed_properties import EmailAddress
         kwargs[&#39;value_cls&#39;] = EmailAddress
         super().__init__(*args, **kwargs)
-
-    def field_uri_xml(self):
-        raise NotImplementedError()
 
     def clean(self, value, version=None):
         if value is not None:
@@ -3359,19 +3563,6 @@ def value_cls(self):
             tmp.append(self.value_cls(email=s, label=default_label))
         value = tmp
     return super().clean(value, version=version)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.fields.EmailAddressesField.field_uri_xml"><code class="name flex">
-<span>def <span class="ident">field_uri_xml</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def field_uri_xml(self):
-    raise NotImplementedError()</code></pre>
 </details>
 </dd>
 </dl>
@@ -3461,14 +3652,7 @@ def value_cls(self):
     &#34;&#34;&#34;Like EnumField, but communicates values with EWS in integers&#34;&#34;&#34;
 
     def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return int(val)
-            except ValueError:
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default
+        return super(EnumField, self).from_xml(elem=elem, account=account)
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
@@ -3493,14 +3677,7 @@ def value_cls(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def from_xml(self, elem, account):
-    val = self._get_val_from_elem(elem)
-    if val is not None:
-        try:
-            return int(val)
-        except ValueError:
-            log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-            return None
-    return self.default</code></pre>
+    return super(EnumField, self).from_xml(elem=elem, account=account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.EnumAsIntField.to_xml"><code class="name flex">
@@ -3949,7 +4126,7 @@ stored internally as integers but output in XML as strings.</p></div>
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
-            raise ErrorInvalidServerVersion(&#34;Field &#39;%s&#39; does not support EWS builds prior to %s (server has %s)&#34; % (
+            raise InvalidFieldForVersion(&#34;Field &#39;%s&#39; does not support EWS builds prior to %s (server has %s)&#34; % (
                 self.name, self.supported_from, version))
         if value is None:
             if self.is_required and self.default is None:
@@ -3972,11 +4149,11 @@ stored internally as integers but output in XML as strings.</p></div>
 
     @abc.abstractmethod
     def from_xml(self, elem, account):
-        raise NotImplementedError()
+        pass
 
     @abc.abstractmethod
     def to_xml(self, value, version):
-        raise NotImplementedError()
+        pass
 
     def supports_version(self, version):
         # &#39;version&#39; is a Version instance, for convenience by callers
@@ -3993,7 +4170,7 @@ stored internally as integers but output in XML as strings.</p></div>
 
     @abc.abstractmethod
     def __hash__(self):
-        raise NotImplementedError()
+        pass
 
     def __repr__(self):
         return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%r&#39; % (f, getattr(self, f)) for f in (
@@ -4033,7 +4210,7 @@ stored internally as integers but output in XML as strings.</p></div>
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
     if version and not self.supports_version(version):
-        raise ErrorInvalidServerVersion(&#34;Field &#39;%s&#39; does not support EWS builds prior to %s (server has %s)&#34; % (
+        raise InvalidFieldForVersion(&#34;Field &#39;%s&#39; does not support EWS builds prior to %s (server has %s)&#34; % (
             self.name, self.supported_from, version))
     if value is None:
         if self.is_required and self.default is None:
@@ -4066,7 +4243,7 @@ stored internally as integers but output in XML as strings.</p></div>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def from_xml(self, elem, account):
-    raise NotImplementedError()</code></pre>
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.Field.supports_version"><code class="name flex">
@@ -4100,7 +4277,7 @@ def from_xml(self, elem, account):
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def to_xml(self, value, version):
-    raise NotImplementedError()</code></pre>
+    pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -4237,8 +4414,7 @@ property with a specific label, or a particular subfield field on that property.
             if not self.label or not self.subfield:
                 raise ValueError(&#34;Field path for indexed field &#39;%s&#39; is missing label and/or subfield&#34; % self.field.name)
             return self.subfield.field_uri_xml(field_uri=self.field.field_uri, label=self.label)
-        else:
-            return self.field.field_uri_xml()
+        return self.field.field_uri_xml()
 
     def expand(self, version):
         # If this path does not point to a specific subfield on an indexed property, return all the possible path
@@ -4390,8 +4566,7 @@ def path(self):
         if not self.label or not self.subfield:
             raise ValueError(&#34;Field path for indexed field &#39;%s&#39; is missing label and/or subfield&#34; % self.field.name)
         return self.subfield.field_uri_xml(field_uri=self.field.field_uri, label=self.label)
-    else:
-        return self.field.field_uri_xml()</code></pre>
+    return self.field.field_uri_xml()</code></pre>
 </details>
 </dd>
 </dl>
@@ -4423,12 +4598,18 @@ def path(self):
 
     def _get_val_from_elem(self, elem):
         if self.is_attribute:
-            return elem.get(self.field_uri)
-        field_elem = elem.find(self.response_tag())
-        return None if field_elem is None else field_elem.text or None
+            return elem.get(self.field_uri) or None
+        return get_xml_attr(elem, self.response_tag())
 
     def from_xml(self, elem, account):
-        raise NotImplementedError()
+        val = self._get_val_from_elem(elem)
+        if val is not None:
+            try:
+                return xml_text_to_value(val, self.value_cls)
+            except (ValueError, InvalidOperation):
+                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
+                return None
+        return self.default
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
@@ -4462,14 +4643,15 @@ def path(self):
 <li><a title="exchangelib.fields.Base64Field" href="#exchangelib.fields.Base64Field">Base64Field</a></li>
 <li><a title="exchangelib.fields.BooleanField" href="#exchangelib.fields.BooleanField">BooleanField</a></li>
 <li><a title="exchangelib.fields.DateField" href="#exchangelib.fields.DateField">DateField</a></li>
-<li><a title="exchangelib.fields.DateTimeBackedDateField" href="#exchangelib.fields.DateTimeBackedDateField">DateTimeBackedDateField</a></li>
 <li><a title="exchangelib.fields.DateTimeField" href="#exchangelib.fields.DateTimeField">DateTimeField</a></li>
+<li><a title="exchangelib.fields.DictionaryField" href="#exchangelib.fields.DictionaryField">DictionaryField</a></li>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.ItemField" href="#exchangelib.fields.ItemField">ItemField</a></li>
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.TimeField" href="#exchangelib.fields.TimeField">TimeField</a></li>
 <li><a title="exchangelib.fields.TimeZoneField" href="#exchangelib.fields.TimeZoneField">TimeZoneField</a></li>
+<li><a title="exchangelib.fields.TypeValueField" href="#exchangelib.fields.TypeValueField">TypeValueField</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -4499,7 +4681,14 @@ def path(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def from_xml(self, elem, account):
-    raise NotImplementedError()</code></pre>
+    val = self._get_val_from_elem(elem)
+    if val is not None:
+        try:
+            return xml_text_to_value(val, self.value_cls)
+        except (ValueError, InvalidOperation):
+            log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
+            return None
+    return self.default</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.FieldURIField.request_tag"><code class="name flex">
@@ -4660,10 +4849,6 @@ but we can assume 512 bytes in practice. See
     def to_xml(self, value, version):
         return set_xml_value(create_element(&#39;t:%s&#39; % self.PARENT_ELEMENT_NAME), value, version)
 
-    def field_uri_xml(self):
-        # Callers must call field_uri_xml() on the subfield
-        raise NotImplementedError()
-
     def response_tag(self):
         return &#39;{%s}%s&#39; % (self.namespace, self.PARENT_ELEMENT_NAME)
 
@@ -4691,20 +4876,6 @@ but we can assume 512 bytes in practice. See
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.fields.IndexedField.field_uri_xml"><code class="name flex">
-<span>def <span class="ident">field_uri_xml</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def field_uri_xml(self):
-    # Callers must call field_uri_xml() on the subfield
-    raise NotImplementedError()</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.fields.IndexedField.response_tag"><code class="name flex">
 <span>def <span class="ident">response_tag</span></span>(<span>self)</span>
 </code></dt>
@@ -4751,32 +4922,22 @@ but we can assume 512 bytes in practice. See
         self.max = kwargs.pop(&#39;max&#39;, None)
         super().__init__(*args, **kwargs)
 
+    def _clean_single_value(self, v):
+        if self.min is not None and v &lt; self.min:
+            raise ValueError(
+                &#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (v, self.name, self.min))
+        if self.max is not None and v &gt; self.max:
+            raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (v, self.name, self.max))
+
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if value is not None:
             if self.is_list:
                 for v in value:
-                    if self.min is not None and v &lt; self.min:
-                        raise ValueError(
-                            &#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (v, self.name, self.min))
-                    if self.max is not None and v &gt; self.max:
-                        raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (v, self.name, self.max))
+                    self._clean_single_value(v)
             else:
-                if self.min is not None and value &lt; self.min:
-                    raise ValueError(&#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (value, self.name, self.min))
-                if self.max is not None and value &gt; self.max:
-                    raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (value, self.name, self.max))
-        return value
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            try:
-                return self.value_cls(val)
-            except (ValueError, InvalidOperation):
-                log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-                return None
-        return self.default</code></pre>
+                self._clean_single_value(value)
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4829,40 +4990,73 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
     if value is not None:
         if self.is_list:
             for v in value:
-                if self.min is not None and v &lt; self.min:
-                    raise ValueError(
-                        &#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (v, self.name, self.min))
-                if self.max is not None and v &gt; self.max:
-                    raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (v, self.name, self.max))
+                self._clean_single_value(v)
         else:
-            if self.min is not None and value &lt; self.min:
-                raise ValueError(&#34;Value %r on field &#39;%s&#39; must be greater than %s&#34; % (value, self.name, self.min))
-            if self.max is not None and value &gt; self.max:
-                raise ValueError(&#34;Value %r on field &#39;%s&#39; must be less than %s&#34; % (value, self.name, self.max))
+            self._clean_single_value(value)
     return value</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.fields.IntegerField.from_xml"><code class="name flex">
-<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+</dl>
+</dd>
+<dt id="exchangelib.fields.InvalidChoiceForVersion"><code class="flex name class">
+<span>class <span class="ident">InvalidChoiceForVersion</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def from_xml(self, elem, account):
-    val = self._get_val_from_elem(elem)
-    if val is not None:
-        try:
-            return self.value_cls(val)
-        except (ValueError, InvalidOperation):
-            log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
-            return None
-    return self.default</code></pre>
+<pre><code class="python">class InvalidChoiceForVersion(ValueError):
+    pass</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
-</dl>
+<dt id="exchangelib.fields.InvalidField"><code class="flex name class">
+<span>class <span class="ident">InvalidField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidField(ValueError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="exchangelib.fields.InvalidFieldForVersion"><code class="flex name class">
+<span>class <span class="ident">InvalidFieldForVersion</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidFieldForVersion(ValueError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
 <dt id="exchangelib.fields.ItemField"><code class="flex name class">
 <span>class <span class="ident">ItemField</span></span>
@@ -4877,7 +5071,6 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <pre><code class="python">class ItemField(FieldURIField):
     @property
     def value_cls(self):
-        # This is a workaround for circular imports. Item
         from .items import Item
         return Item
 
@@ -4909,7 +5102,6 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 </summary>
 <pre><code class="python">@property
 def value_cls(self):
-    # This is a workaround for circular imports. Item
     from .items import Item
     return Item</code></pre>
 </details>
@@ -5092,8 +5284,8 @@ def value_cls(self):
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
+        from .properties import Mailbox
         if value is not None:
-            from .properties import Mailbox
             value = [
                 self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
             ]
@@ -5118,8 +5310,8 @@ def value_cls(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
+    from .properties import Mailbox
     if value is not None:
-        from .properties import Mailbox
         value = [
             self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
         ]
@@ -5252,7 +5444,7 @@ def value_cls(self):
 </summary>
 <pre><code class="python">class MimeContentField(Base64Field):
     # This element has an optional &#39;CharacterSet&#39; attribute, but it specifies the encoding of the base64-encoded
-    # string (which doesn&#39;t make sense since base64 encoded strings are always ASCII). We ignore it here because
+    # string (which doesn&#39;t make sense since base64-encoded strings are always ASCII). We ignore it here because
     # the decoded data could be in some other encoding, specified in the &#34;Content-Type:&#34; header.
     pass</code></pre>
 </details>
@@ -5470,10 +5662,7 @@ def value_cls(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class OnOffField(BooleanField):
-    def __init__(self, *args, **kwargs):
-        kwargs[&#39;true_val&#39;] = &#39;on&#39;
-        kwargs[&#39;false_val&#39;] = &#39;off&#39;
-        super().__init__(*args, **kwargs)</code></pre>
+    pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5522,6 +5711,62 @@ def value_cls(self):
 </dd>
 </dl>
 </dd>
+<dt id="exchangelib.fields.PersonaPhoneNumberField"><code class="flex name class">
+<span>class <span class="ident">PersonaPhoneNumberField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PersonaPhoneNumberField(EWSElementField):
+    is_complex = True
+
+    def __init__(self, *args, **kwargs):
+        from .properties import PhoneNumber
+        kwargs[&#39;value_cls&#39;] = PhoneNumber
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.PersonaPhoneNumberField.is_complex"><code class="name">var <span class="ident">is_complex</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.fields.PhoneNumberAttributedValueField"><code class="flex name class">
+<span>class <span class="ident">PhoneNumberAttributedValueField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PhoneNumberAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import PhoneNumberAttributedValue
+        kwargs[&#39;value_cls&#39;] = PhoneNumberAttributedValue
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+</dd>
 <dt id="exchangelib.fields.PhoneNumberField"><code class="flex name class">
 <span>class <span class="ident">PhoneNumberField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -5540,10 +5785,7 @@ def value_cls(self):
     def __init__(self, *args, **kwargs):
         from .indexed_properties import PhoneNumber
         kwargs[&#39;value_cls&#39;] = PhoneNumber
-        super().__init__(*args, **kwargs)
-
-    def field_uri_xml(self):
-        raise NotImplementedError()</code></pre>
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5561,22 +5803,6 @@ def value_cls(self):
 <dt id="exchangelib.fields.PhoneNumberField.is_list"><code class="name">var <span class="ident">is_list</span></code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.PhoneNumberField.field_uri_xml"><code class="name flex">
-<span>def <span class="ident">field_uri_xml</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def field_uri_xml(self):
-    raise NotImplementedError()</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -5598,10 +5824,7 @@ def value_cls(self):
     def __init__(self, *args, **kwargs):
         from .indexed_properties import PhysicalAddress
         kwargs[&#39;value_cls&#39;] = PhysicalAddress
-        super().__init__(*args, **kwargs)
-
-    def field_uri_xml(self):
-        raise NotImplementedError()</code></pre>
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5621,22 +5844,30 @@ def value_cls(self):
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.PhysicalAddressField.field_uri_xml"><code class="name flex">
-<span>def <span class="ident">field_uri_xml</span></span>(<span>self)</span>
+</dd>
+<dt id="exchangelib.fields.PostalAddressAttributedValueField"><code class="flex name class">
+<span>class <span class="ident">PostalAddressAttributedValueField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Holds information related to an item field</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def field_uri_xml(self):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">class PostalAddressAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import PostalAddressAttributedValue
+        kwargs[&#39;value_cls&#39;] = PostalAddressAttributedValue
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
 </dd>
 <dt id="exchangelib.fields.ProtocolListField"><code class="flex name class">
 <span>class <span class="ident">ProtocolListField</span></span>
@@ -5841,6 +6072,30 @@ def value_cls(self):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.fields.StringAttributedValueField"><code class="flex name class">
+<span>class <span class="ident">StringAttributedValueField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Holds information related to an item field</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StringAttributedValueField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import StringAttributedValue
+        kwargs[&#39;value_cls&#39;] = StringAttributedValue
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+</dd>
 <dt id="exchangelib.fields.SubField"><code class="flex name class">
 <span>class <span class="ident">SubField</span></span>
 <span>(</span><span>name, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
@@ -6011,13 +6266,7 @@ def field_uri_xml(field_uri, label):
 <pre><code class="python">class TextField(FieldURIField):
     &#34;&#34;&#34;A field that stores a string value with no length limit&#34;&#34;&#34;
     value_cls = str
-    is_complex = True
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val is not None:
-            return val
-        return self.default</code></pre>
+    is_complex = True</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6049,25 +6298,6 @@ Otherwise, returns the result of object.<strong>str</strong>() (if defined)
 or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.</p></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.TextField.from_xml"><code class="name flex">
-<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def from_xml(self, elem, account):
-    val = self._get_val_from_elem(elem)
-    if val is not None:
-        return val
-    return self.default</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -6151,9 +6381,8 @@ errors defaults to 'strict'.</p></div>
                 if &#39;:&#39; in val:
                     # Assume a string of the form HH:MM:SS
                     return datetime.datetime.strptime(val, &#39;%H:%M:%S&#39;).time()
-                else:
-                    # Assume an integer in minutes since midnight
-                    return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
+                # Assume an integer in minutes since midnight
+                return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
             except ValueError:
                 pass
         return self.default</code></pre>
@@ -6190,9 +6419,8 @@ a tzinfo subclass. The remaining arguments may be ints.</p></div>
             if &#39;:&#39; in val:
                 # Assume a string of the form HH:MM:SS
                 return datetime.datetime.strptime(val, &#39;%H:%M:%S&#39;).time()
-            else:
-                # Assume an integer in minutes since midnight
-                return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
+            # Assume an integer in minutes since midnight
+            return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
         except ValueError:
             pass
     return self.default</code></pre>
@@ -6212,6 +6440,12 @@ a tzinfo subclass. The remaining arguments may be ints.</p></div>
 </summary>
 <pre><code class="python">class TimeZoneField(FieldURIField):
     value_cls = EWSTimeZone
+
+    def clean(self, value, version=None):
+        # Allow other timezone implementations as input
+        if value is not None:
+            value = self.value_cls.from_timezone(value)
+        return super().clean(value=value, version=version)
 
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
@@ -6249,6 +6483,22 @@ services.GetServerTimeZones.</p></div>
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="exchangelib.fields.TimeZoneField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    # Allow other timezone implementations as input
+    if value is not None:
+        value = self.value_cls.from_timezone(value)
+    return super().clean(value=value, version=version)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.fields.TimeZoneField.from_xml"><code class="name flex">
 <span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
 </code></dt>
@@ -6288,6 +6538,220 @@ services.GetServerTimeZones.</p></div>
     if value.ms_name:
         attrs[&#39;Name&#39;] = value.ms_name
     return create_element(self.request_tag(), attrs=attrs)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.fields.TypeValueField"><code class="flex name class">
+<span>class <span class="ident">TypeValueField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This field type has no value_cls because values may have many different types.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TypeValueField(FieldURIField):
+    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.
+    &#34;&#34;&#34;
+    TYPES_MAP = {
+        &#39;Boolean&#39;: bool,
+        &#39;Integer32&#39;: int,
+        &#39;UnsignedInteger32&#39;: int,
+        &#39;Integer64&#39;: int,
+        &#39;UnsignedInteger64&#39;: int,
+        # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
+        &#39;ByteArray&#39;: bytes,
+        &#39;String&#39;: str,
+        &#39;StringArray&#39;: str,  # A list of strings
+        &#39;DateTime&#39;: EWSDateTime,
+    }
+    TYPES_MAP_REVERSED = {
+        bool: &#39;Boolean&#39;,
+        int: &#39;Integer64&#39;,
+        # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
+        bytes: &#39;ByteArray&#39;,
+        str: &#39;String&#39;,
+        datetime.datetime: &#39;DateTime&#39;,
+        EWSDateTime: &#39;DateTime&#39;,
+    }
+
+    @classmethod
+    def get_type(cls, value):
+        if isinstance(value, bytes) and len(value) == 1:
+            # This is a single byte. Translate it to the &#39;Byte&#39; type
+            return &#39;Byte&#39;
+        if is_iterable(value):
+            value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+            if value_type not in cls.TYPES_MAP:
+                raise ValueError(&#39;%r is not a supported type&#39; % value)
+            return value_type
+        return cls.TYPES_MAP_REVERSED[type(value)]
+
+    @classmethod
+    def is_array_type(cls, value_type):
+        return value_type == &#39;StringArray&#39;
+
+    def clean(self, value, version=None):
+        if value is None:
+            if self.is_required and self.default is None:
+                raise ValueError(&#34;&#39;%s&#39; is a required field with no default&#34; % self.name)
+            return self.default
+        return value
+
+    def from_xml(self, elem, account):
+        field_elem = elem.find(self.response_tag())
+        if field_elem is None:
+            return self.default
+        value_type_str = get_xml_attr(field_elem, &#39;{%s}Type&#39; % TNS)
+        value = get_xml_attr(field_elem, &#39;{%s}Value&#39; % TNS)
+        if value_type_str == &#39;Byte&#39;:
+            try:
+                # The value is an unsigned integer in the range 0 -&gt; 255. Convert it to a single byte
+                return xml_text_to_value(value, int).to_bytes(1, &#39;little&#39;, signed=False)
+            except OverflowError as e:
+                log.warning(&#39;Invalid byte value %r (%e)&#39;, value, e)
+                return None
+        value_type = self.TYPES_MAP[value_type_str]
+        if self. is_array_type(value_type_str):
+            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#39; &#39;))
+        return xml_text_to_value(value=value, value_type=value_type)
+
+    def to_xml(self, value, version):
+        value_type_str = self.get_type(value)
+        if value_type_str == &#39;Byte&#39;:
+            # A single byte is encoded to an unsigned integer in the range 0 -&gt; 255
+            value = int.from_bytes(value, byteorder=&#39;little&#39;, signed=False)
+        elif is_iterable(value):
+            value = &#39; &#39;.join(value_to_xml_text(v) for v in value)
+        field_elem = create_element(self.request_tag())
+        field_elem.append(set_xml_value(create_element(&#39;t:Type&#39;), value_type_str, version=version))
+        field_elem.append(set_xml_value(create_element(&#39;t:Value&#39;), value, version=version))
+        return field_elem</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.TypeValueField.TYPES_MAP"><code class="name">var <span class="ident">TYPES_MAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.TypeValueField.TYPES_MAP_REVERSED"><code class="name">var <span class="ident">TYPES_MAP_REVERSED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.fields.TypeValueField.get_type"><code class="name flex">
+<span>def <span class="ident">get_type</span></span>(<span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_type(cls, value):
+    if isinstance(value, bytes) and len(value) == 1:
+        # This is a single byte. Translate it to the &#39;Byte&#39; type
+        return &#39;Byte&#39;
+    if is_iterable(value):
+        value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+        if value_type not in cls.TYPES_MAP:
+            raise ValueError(&#39;%r is not a supported type&#39; % value)
+        return value_type
+    return cls.TYPES_MAP_REVERSED[type(value)]</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.TypeValueField.is_array_type"><code class="name flex">
+<span>def <span class="ident">is_array_type</span></span>(<span>value_type)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def is_array_type(cls, value_type):
+    return value_type == &#39;StringArray&#39;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.TypeValueField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    if value is None:
+        if self.is_required and self.default is None:
+            raise ValueError(&#34;&#39;%s&#39; is a required field with no default&#34; % self.name)
+        return self.default
+    return value</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.TypeValueField.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def from_xml(self, elem, account):
+    field_elem = elem.find(self.response_tag())
+    if field_elem is None:
+        return self.default
+    value_type_str = get_xml_attr(field_elem, &#39;{%s}Type&#39; % TNS)
+    value = get_xml_attr(field_elem, &#39;{%s}Value&#39; % TNS)
+    if value_type_str == &#39;Byte&#39;:
+        try:
+            # The value is an unsigned integer in the range 0 -&gt; 255. Convert it to a single byte
+            return xml_text_to_value(value, int).to_bytes(1, &#39;little&#39;, signed=False)
+        except OverflowError as e:
+            log.warning(&#39;Invalid byte value %r (%e)&#39;, value, e)
+            return None
+    value_type = self.TYPES_MAP[value_type_str]
+    if self. is_array_type(value_type_str):
+        return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#39; &#39;))
+    return xml_text_to_value(value=value, value_type=value_type)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.fields.TypeValueField.to_xml"><code class="name flex">
+<span>def <span class="ident">to_xml</span></span>(<span>self, value, version)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_xml(self, value, version):
+    value_type_str = self.get_type(value)
+    if value_type_str == &#39;Byte&#39;:
+        # A single byte is encoded to an unsigned integer in the range 0 -&gt; 255
+        value = int.from_bytes(value, byteorder=&#39;little&#39;, signed=False)
+    elif is_iterable(value):
+        value = &#39; &#39;.join(value_to_xml_text(v) for v in value)
+    field_elem = create_element(self.request_tag())
+    field_elem.append(set_xml_value(create_element(&#39;t:Type&#39;), value_type_str, version=version))
+    field_elem.append(set_xml_value(create_element(&#39;t:Value&#39;), value, version=version))
+    return field_elem</code></pre>
 </details>
 </dd>
 </dl>
@@ -6427,9 +6891,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li>
 <h4><code><a title="exchangelib.fields.Base64Field" href="#exchangelib.fields.Base64Field">Base64Field</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.fields.Base64Field.from_xml" href="#exchangelib.fields.Base64Field.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.Base64Field.is_complex" href="#exchangelib.fields.Base64Field.is_complex">is_complex</a></code></li>
-<li><code><a title="exchangelib.fields.Base64Field.to_xml" href="#exchangelib.fields.Base64Field.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.fields.Base64Field.value_cls" href="#exchangelib.fields.Base64Field.value_cls">value_cls</a></code></li>
 </ul>
 </li>
@@ -6439,6 +6901,12 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li><code><a title="exchangelib.fields.BaseEmailField.clean" href="#exchangelib.fields.BaseEmailField.clean">clean</a></code></li>
 <li><code><a title="exchangelib.fields.BaseEmailField.from_xml" href="#exchangelib.fields.BaseEmailField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.BaseEmailField.is_complex" href="#exchangelib.fields.BaseEmailField.is_complex">is_complex</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.BodyContentAttributedValueField" href="#exchangelib.fields.BodyContentAttributedValueField">BodyContentAttributedValueField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.BodyContentAttributedValueField.is_complex" href="#exchangelib.fields.BodyContentAttributedValueField.is_complex">is_complex</a></code></li>
 </ul>
 </li>
 <li>
@@ -6452,7 +6920,6 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li>
 <h4><code><a title="exchangelib.fields.BooleanField" href="#exchangelib.fields.BooleanField">BooleanField</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.fields.BooleanField.from_xml" href="#exchangelib.fields.BooleanField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.BooleanField.value_cls" href="#exchangelib.fields.BooleanField.value_cls">value_cls</a></code></li>
 </ul>
 </li>
@@ -6496,7 +6963,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li>
 <h4><code><a title="exchangelib.fields.DateField" href="#exchangelib.fields.DateField">DateField</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.fields.DateField.from_xml" href="#exchangelib.fields.DateField.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.DateField.clean" href="#exchangelib.fields.DateField.clean">clean</a></code></li>
 <li><code><a title="exchangelib.fields.DateField.value_cls" href="#exchangelib.fields.DateField.value_cls">value_cls</a></code></li>
 </ul>
 </li>
@@ -6513,7 +6980,6 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li><code><a title="exchangelib.fields.DateTimeBackedDateField.date_to_datetime" href="#exchangelib.fields.DateTimeBackedDateField.date_to_datetime">date_to_datetime</a></code></li>
 <li><code><a title="exchangelib.fields.DateTimeBackedDateField.from_xml" href="#exchangelib.fields.DateTimeBackedDateField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.DateTimeBackedDateField.to_xml" href="#exchangelib.fields.DateTimeBackedDateField.to_xml">to_xml</a></code></li>
-<li><code><a title="exchangelib.fields.DateTimeBackedDateField.value_cls" href="#exchangelib.fields.DateTimeBackedDateField.value_cls">value_cls</a></code></li>
 </ul>
 </li>
 <li>
@@ -6526,6 +6992,15 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.DecimalField" href="#exchangelib.fields.DecimalField">DecimalField</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.DictionaryField" href="#exchangelib.fields.DictionaryField">DictionaryField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.DictionaryField.clean" href="#exchangelib.fields.DictionaryField.clean">clean</a></code></li>
+<li><code><a title="exchangelib.fields.DictionaryField.from_xml" href="#exchangelib.fields.DictionaryField.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.DictionaryField.to_xml" href="#exchangelib.fields.DictionaryField.to_xml">to_xml</a></code></li>
+<li><code><a title="exchangelib.fields.DictionaryField.value_cls" href="#exchangelib.fields.DictionaryField.value_cls">value_cls</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></code></h4>
@@ -6546,6 +7021,9 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.EffectiveRightsField" href="#exchangelib.fields.EffectiveRightsField">EffectiveRightsField</a></code></h4>
 </li>
 <li>
+<h4><code><a title="exchangelib.fields.EmailAddressAttributedValueField" href="#exchangelib.fields.EmailAddressAttributedValueField">EmailAddressAttributedValueField</a></code></h4>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.EmailAddressField" href="#exchangelib.fields.EmailAddressField">EmailAddressField</a></code></h4>
 </li>
 <li>
@@ -6553,7 +7031,6 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <ul class="">
 <li><code><a title="exchangelib.fields.EmailAddressesField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.EmailAddressesField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.fields.EmailAddressesField.clean" href="#exchangelib.fields.EmailAddressesField.clean">clean</a></code></li>
-<li><code><a title="exchangelib.fields.EmailAddressesField.field_uri_xml" href="#exchangelib.fields.EmailAddressesField.field_uri_xml">field_uri_xml</a></code></li>
 <li><code><a title="exchangelib.fields.EmailAddressesField.is_list" href="#exchangelib.fields.EmailAddressesField.is_list">is_list</a></code></li>
 </ul>
 </li>
@@ -6650,7 +7127,6 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.IndexedField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.IndexedField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
-<li><code><a title="exchangelib.fields.IndexedField.field_uri_xml" href="#exchangelib.fields.IndexedField.field_uri_xml">field_uri_xml</a></code></li>
 <li><code><a title="exchangelib.fields.IndexedField.response_tag" href="#exchangelib.fields.IndexedField.response_tag">response_tag</a></code></li>
 <li><code><a title="exchangelib.fields.IndexedField.to_xml" href="#exchangelib.fields.IndexedField.to_xml">to_xml</a></code></li>
 </ul>
@@ -6659,9 +7135,17 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.IntegerField.clean" href="#exchangelib.fields.IntegerField.clean">clean</a></code></li>
-<li><code><a title="exchangelib.fields.IntegerField.from_xml" href="#exchangelib.fields.IntegerField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.IntegerField.value_cls" href="#exchangelib.fields.IntegerField.value_cls">value_cls</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.InvalidChoiceForVersion" href="#exchangelib.fields.InvalidChoiceForVersion">InvalidChoiceForVersion</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.InvalidField" href="#exchangelib.fields.InvalidField">InvalidField</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.InvalidFieldForVersion" href="#exchangelib.fields.InvalidFieldForVersion">InvalidFieldForVersion</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.ItemField" href="#exchangelib.fields.ItemField">ItemField</a></code></h4>
@@ -6738,10 +7222,18 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.fields.PersonaPhoneNumberField" href="#exchangelib.fields.PersonaPhoneNumberField">PersonaPhoneNumberField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.PersonaPhoneNumberField.is_complex" href="#exchangelib.fields.PersonaPhoneNumberField.is_complex">is_complex</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.PhoneNumberAttributedValueField" href="#exchangelib.fields.PhoneNumberAttributedValueField">PhoneNumberAttributedValueField</a></code></h4>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.PhoneNumberField" href="#exchangelib.fields.PhoneNumberField">PhoneNumberField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.PhoneNumberField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.PhoneNumberField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
-<li><code><a title="exchangelib.fields.PhoneNumberField.field_uri_xml" href="#exchangelib.fields.PhoneNumberField.field_uri_xml">field_uri_xml</a></code></li>
 <li><code><a title="exchangelib.fields.PhoneNumberField.is_list" href="#exchangelib.fields.PhoneNumberField.is_list">is_list</a></code></li>
 </ul>
 </li>
@@ -6749,9 +7241,11 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.PhysicalAddressField" href="#exchangelib.fields.PhysicalAddressField">PhysicalAddressField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.PhysicalAddressField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.PhysicalAddressField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
-<li><code><a title="exchangelib.fields.PhysicalAddressField.field_uri_xml" href="#exchangelib.fields.PhysicalAddressField.field_uri_xml">field_uri_xml</a></code></li>
 <li><code><a title="exchangelib.fields.PhysicalAddressField.is_list" href="#exchangelib.fields.PhysicalAddressField.is_list">is_list</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.PostalAddressAttributedValueField" href="#exchangelib.fields.PostalAddressAttributedValueField">PostalAddressAttributedValueField</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.ProtocolListField" href="#exchangelib.fields.ProtocolListField">ProtocolListField</a></code></h4>
@@ -6780,6 +7274,9 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.RoutingTypeField" href="#exchangelib.fields.RoutingTypeField">RoutingTypeField</a></code></h4>
 </li>
 <li>
+<h4><code><a title="exchangelib.fields.StringAttributedValueField" href="#exchangelib.fields.StringAttributedValueField">StringAttributedValueField</a></code></h4>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.SubField" href="#exchangelib.fields.SubField">SubField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.SubField.field_uri_xml" href="#exchangelib.fields.SubField.field_uri_xml">field_uri_xml</a></code></li>
@@ -6799,7 +7296,6 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li>
 <h4><code><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.fields.TextField.from_xml" href="#exchangelib.fields.TextField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.TextField.is_complex" href="#exchangelib.fields.TextField.is_complex">is_complex</a></code></li>
 <li><code><a title="exchangelib.fields.TextField.value_cls" href="#exchangelib.fields.TextField.value_cls">value_cls</a></code></li>
 </ul>
@@ -6821,9 +7317,22 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <li>
 <h4><code><a title="exchangelib.fields.TimeZoneField" href="#exchangelib.fields.TimeZoneField">TimeZoneField</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.fields.TimeZoneField.clean" href="#exchangelib.fields.TimeZoneField.clean">clean</a></code></li>
 <li><code><a title="exchangelib.fields.TimeZoneField.from_xml" href="#exchangelib.fields.TimeZoneField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.TimeZoneField.to_xml" href="#exchangelib.fields.TimeZoneField.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.fields.TimeZoneField.value_cls" href="#exchangelib.fields.TimeZoneField.value_cls">value_cls</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.TypeValueField" href="#exchangelib.fields.TypeValueField">TypeValueField</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.fields.TypeValueField.TYPES_MAP" href="#exchangelib.fields.TypeValueField.TYPES_MAP">TYPES_MAP</a></code></li>
+<li><code><a title="exchangelib.fields.TypeValueField.TYPES_MAP_REVERSED" href="#exchangelib.fields.TypeValueField.TYPES_MAP_REVERSED">TYPES_MAP_REVERSED</a></code></li>
+<li><code><a title="exchangelib.fields.TypeValueField.clean" href="#exchangelib.fields.TypeValueField.clean">clean</a></code></li>
+<li><code><a title="exchangelib.fields.TypeValueField.from_xml" href="#exchangelib.fields.TypeValueField.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.TypeValueField.get_type" href="#exchangelib.fields.TypeValueField.get_type">get_type</a></code></li>
+<li><code><a title="exchangelib.fields.TypeValueField.is_array_type" href="#exchangelib.fields.TypeValueField.is_array_type">is_array_type</a></code></li>
+<li><code><a title="exchangelib.fields.TypeValueField.to_xml" href="#exchangelib.fields.TypeValueField.to_xml">to_xml</a></code></li>
 </ul>
 </li>
 <li>
@@ -6841,7 +7350,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

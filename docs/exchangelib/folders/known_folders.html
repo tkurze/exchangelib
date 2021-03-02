@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.folders.known_folders API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,11 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..items import CalendarItem, Contact, Message, Task, DistributionList, MeetingRequest, MeetingResponse, \
+<pre><code class="python">from .base import Folder
+from .collections import FolderCollection
+from ..items import CalendarItem, Contact, Message, Task, DistributionList, MeetingRequest, MeetingResponse, \
     MeetingCancellation, ITEM_CLASSES, ASSOCIATED
 from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1
-from .base import Folder
-from .collections import FolderCollection
 
 
 class Calendar(Folder):
@@ -411,13 +411,13 @@ class VoiceMail(WellknownFolder):
     __slots__ = tuple()
 
 
-class NonDeleteableFolderMixin:
+class NonDeletableFolderMixin:
     @property
-    def is_deleteable(self):
+    def is_deletable(self):
         return False
 
 
-class AllContacts(NonDeleteableFolderMixin, Contacts):
+class AllContacts(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
 
     LOCALIZED_NAMES = {
@@ -426,7 +426,7 @@ class AllContacts(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class AllItems(NonDeleteableFolderMixin, Folder):
+class AllItems(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF&#39;
 
     LOCALIZED_NAMES = {
@@ -435,7 +435,7 @@ class AllItems(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Audits(NonDeleteableFolderMixin, Folder):
+class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Audits&#39;,),
     }
@@ -443,14 +443,14 @@ class Audits(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class CalendarLogging(NonDeleteableFolderMixin, Folder):
+class CalendarLogging(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Calendar Logging&#39;,),
     }
     __slots__ = tuple()
 
 
-class CommonViews(NonDeleteableFolderMixin, Folder):
+class CommonViews(NonDeletableFolderMixin, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
         None: (&#39;Common Views&#39;,),
@@ -458,7 +458,16 @@ class CommonViews(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class ConversationSettings(NonDeleteableFolderMixin, Folder):
+class Companies(NonDeletableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = &#39;IPF.Contact.Company&#39;
+    LOCALIZED_NAMES = {
+        None: (&#39;Companies&#39;,),
+    }
+    __slots__ = tuple()
+
+
+class ConversationSettings(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Configuration&#39;
     LOCALIZED_NAMES = {
         &#39;da_DK&#39;: (&#39;Indstillinger for samtalehandlinger&#39;,),
@@ -466,7 +475,7 @@ class ConversationSettings(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class DefaultFoldersChangeHistory(NonDeleteableFolderMixin, Folder):
+class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPM.DefaultFolderHistoryItem&#39;
     LOCALIZED_NAMES = {
         None: (&#39;DefaultFoldersChangeHistory&#39;,),
@@ -474,21 +483,21 @@ class DefaultFoldersChangeHistory(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class DeferredAction(NonDeleteableFolderMixin, Folder):
+class DeferredAction(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Deferred Action&#39;,),
     }
     __slots__ = tuple()
 
 
-class ExchangeSyncData(NonDeleteableFolderMixin, Folder):
+class ExchangeSyncData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;ExchangeSyncData&#39;,),
     }
     __slots__ = tuple()
 
 
-class Files(NonDeleteableFolderMixin, Folder):
+class Files(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Files&#39;
 
     LOCALIZED_NAMES = {
@@ -497,14 +506,14 @@ class Files(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class FreebusyData(NonDeleteableFolderMixin, Folder):
+class FreebusyData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Freebusy Data&#39;,),
     }
     __slots__ = tuple()
 
 
-class Friends(NonDeleteableFolderMixin, Contacts):
+class Friends(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
 
     LOCALIZED_NAMES = {
@@ -513,7 +522,7 @@ class Friends(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class GALContacts(NonDeleteableFolderMixin, Contacts):
+class GALContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINER_CLASS = &#39;IPF.Contact.GalContacts&#39;
 
@@ -523,7 +532,7 @@ class GALContacts(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class GraphAnalytics(NonDeleteableFolderMixin, Folder):
+class GraphAnalytics(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.GraphAnalytics&#39;
     LOCALIZED_NAMES = {
         None: (&#39;GraphAnalytics&#39;,),
@@ -531,21 +540,21 @@ class GraphAnalytics(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Location(NonDeleteableFolderMixin, Folder):
+class Location(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Location&#39;,),
     }
     __slots__ = tuple()
 
 
-class MailboxAssociations(NonDeleteableFolderMixin, Folder):
+class MailboxAssociations(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;MailboxAssociations&#39;,),
     }
     __slots__ = tuple()
 
 
-class MyContactsExtended(NonDeleteableFolderMixin, Contacts):
+class MyContactsExtended(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
     LOCALIZED_NAMES = {
         None: (&#39;MyContactsExtended&#39;,),
@@ -553,7 +562,16 @@ class MyContactsExtended(NonDeleteableFolderMixin, Contacts):
     __slots__ = tuple()
 
 
-class ParkedMessages(NonDeleteableFolderMixin, Folder):
+class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = &#39;IPF.Contact.OrganizationalContacts&#39;
+    LOCALIZED_NAMES = {
+        None: (&#39;Organizational Contacts&#39;,),
+    }
+    __slots__ = tuple()
+
+
+class ParkedMessages(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
         None: (&#39;ParkedMessages&#39;,),
@@ -561,7 +579,7 @@ class ParkedMessages(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class PassThroughSearchResults(NonDeleteableFolderMixin, Folder):
+class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.PassThroughSearchResults&#39;
     LOCALIZED_NAMES = {
         None: (&#39;Pass-Through Search Results&#39;,),
@@ -569,7 +587,16 @@ class PassThroughSearchResults(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class PdpProfileV2Secured(NonDeleteableFolderMixin, Folder):
+class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = &#39;IPF.Contact.PeopleCentricConversationBuddies&#39;
+    LOCALIZED_NAMES = {
+        None: (&#39;PeopleCentricConversation Buddies&#39;,),
+    }
+    __slots__ = tuple()
+
+
+class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.PdpProfileSecured&#39;
     LOCALIZED_NAMES = {
         None: (&#39;PdpProfileV2Secured&#39;,),
@@ -577,7 +604,7 @@ class PdpProfileV2Secured(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Reminders(NonDeleteableFolderMixin, Folder):
+class Reminders(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;Outlook.Reminder&#39;
     LOCALIZED_NAMES = {
         &#39;da_DK&#39;: (&#39;Påmindelser&#39;,),
@@ -585,7 +612,7 @@ class Reminders(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class RSSFeeds(NonDeleteableFolderMixin, Folder):
+class RSSFeeds(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Note.OutlookHomepage&#39;
     LOCALIZED_NAMES = {
         None: (&#39;RSS Feeds&#39;,),
@@ -593,14 +620,14 @@ class RSSFeeds(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Schedule(NonDeleteableFolderMixin, Folder):
+class Schedule(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Schedule&#39;,),
     }
     __slots__ = tuple()
 
 
-class Sharing(NonDeleteableFolderMixin, Folder):
+class Sharing(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
     LOCALIZED_NAMES = {
         None: (&#39;Sharing&#39;,),
@@ -608,14 +635,14 @@ class Sharing(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class Shortcuts(NonDeleteableFolderMixin, Folder):
+class Shortcuts(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Shortcuts&#39;,),
     }
     __slots__ = tuple()
 
 
-class Signal(NonDeleteableFolderMixin, Folder):
+class Signal(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.Signal&#39;
     LOCALIZED_NAMES = {
         None: (&#39;Signal&#39;,),
@@ -623,7 +650,7 @@ class Signal(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class SmsAndChatsSync(NonDeleteableFolderMixin, Folder):
+class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.SmsAndChatsSync&#39;
     LOCALIZED_NAMES = {
         None: (&#39;SmsAndChatsSync&#39;,),
@@ -631,14 +658,14 @@ class SmsAndChatsSync(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class SpoolerQueue(NonDeleteableFolderMixin, Folder):
+class SpoolerQueue(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Spooler Queue&#39;,),
     }
     __slots__ = tuple()
 
 
-class System(NonDeleteableFolderMixin, Folder):
+class System(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;System&#39;,),
     }
@@ -646,21 +673,29 @@ class System(NonDeleteableFolderMixin, Folder):
     __slots__ = tuple()
 
 
-class TemporarySaves(NonDeleteableFolderMixin, Folder):
+class System1(NonDeletableFolderMixin, Folder):
+    LOCALIZED_NAMES = {
+        None: (&#39;System1&#39;,),
+    }
+    get_folder_allowed = False
+    __slots__ = tuple()
+
+
+class TemporarySaves(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;TemporarySaves&#39;,),
     }
     __slots__ = tuple()
 
 
-class Views(NonDeleteableFolderMixin, Folder):
+class Views(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Views&#39;,),
     }
     __slots__ = tuple()
 
 
-class WorkingSet(NonDeleteableFolderMixin, Folder):
+class WorkingSet(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Working Set&#39;,),
     }
@@ -669,12 +704,13 @@ class WorkingSet(NonDeleteableFolderMixin, Folder):
 
 # Folders that return &#39;ErrorDeleteDistinguishedFolder&#39; when we try to delete them. I can&#39;t find any official docs
 # listing these folders.
-NON_DELETEABLE_FOLDERS = [
+NON_DELETABLE_FOLDERS = [
     AllContacts,
     AllItems,
     Audits,
     CalendarLogging,
     CommonViews,
+    Companies,
     ConversationSettings,
     DefaultFoldersChangeHistory,
     DeferredAction,
@@ -687,8 +723,10 @@ NON_DELETEABLE_FOLDERS = [
     Location,
     MailboxAssociations,
     MyContactsExtended,
+    OrganizationalContacts,
     ParkedMessages,
     PassThroughSearchResults,
+    PeopleCentricConversationBuddies,
     PdpProfileV2Secured,
     Reminders,
     RSSFeeds,
@@ -699,6 +737,7 @@ NON_DELETEABLE_FOLDERS = [
     SmsAndChatsSync,
     SpoolerQueue,
     System,
+    System1,
     TemporarySaves,
     Views,
     WorkingSet,
@@ -809,7 +848,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -839,7 +877,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AllContacts(NonDeleteableFolderMixin, Contacts):
+<pre><code class="python">class AllContacts(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
 
     LOCALIZED_NAMES = {
@@ -849,7 +887,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -878,7 +916,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Contacts.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -908,7 +945,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AllItems(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class AllItems(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF&#39;
 
     LOCALIZED_NAMES = {
@@ -918,7 +955,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -946,7 +983,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1011,7 +1047,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1076,7 +1111,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1140,7 +1174,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1205,7 +1238,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1270,7 +1302,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1335,7 +1366,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1400,7 +1430,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1430,7 +1459,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Audits(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Audits&#39;,),
     }
@@ -1439,7 +1468,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -1467,7 +1496,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1572,7 +1600,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1602,7 +1629,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CalendarLogging(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class CalendarLogging(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Calendar Logging&#39;,),
     }
@@ -1610,7 +1637,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -1634,7 +1661,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1664,7 +1690,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CommonViews(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class CommonViews(NonDeletableFolderMixin, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
         None: (&#39;Common Views&#39;,),
@@ -1673,7 +1699,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -1701,7 +1727,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1717,6 +1742,78 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.folders.known_folders.Companies"><code class="flex name class">
+<span>class <span class="ident">Companies</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Companies(NonDeletableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = &#39;IPF.Contact.Company&#39;
+    LOCALIZED_NAMES = {
+        None: (&#39;Companies&#39;,),
+    }
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
+<li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
+<li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+<li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.folders.known_folders.Companies.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.Companies.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.Companies.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.folders.known_folders.Contacts.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.name" href="base.html#exchangelib.folders.base.BaseFolder.name">name</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.parent_folder_id" href="base.html#exchangelib.folders.base.BaseFolder.parent_folder_id">parent_folder_id</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.permission_set" href="base.html#exchangelib.folders.base.Folder.permission_set">permission_set</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.test_access" href="base.html#exchangelib.folders.base.BaseFolder.test_access">test_access</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.total_count" href="base.html#exchangelib.folders.base.BaseFolder.total_count">total_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1766,7 +1863,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1826,9 +1922,12 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.folders.known_folders.AllContacts" href="#exchangelib.folders.known_folders.AllContacts">AllContacts</a></li>
+<li><a title="exchangelib.folders.known_folders.Companies" href="#exchangelib.folders.known_folders.Companies">Companies</a></li>
 <li><a title="exchangelib.folders.known_folders.Friends" href="#exchangelib.folders.known_folders.Friends">Friends</a></li>
 <li><a title="exchangelib.folders.known_folders.GALContacts" href="#exchangelib.folders.known_folders.GALContacts">GALContacts</a></li>
 <li><a title="exchangelib.folders.known_folders.MyContactsExtended" href="#exchangelib.folders.known_folders.MyContactsExtended">MyContactsExtended</a></li>
+<li><a title="exchangelib.folders.known_folders.OrganizationalContacts" href="#exchangelib.folders.known_folders.OrganizationalContacts">OrganizationalContacts</a></li>
+<li><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies">PeopleCentricConversationBuddies</a></li>
 <li><a title="exchangelib.folders.known_folders.RecipientCache" href="#exchangelib.folders.known_folders.RecipientCache">RecipientCache</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -1859,7 +1958,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1924,7 +2022,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -1954,7 +2051,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ConversationSettings(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class ConversationSettings(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Configuration&#39;
     LOCALIZED_NAMES = {
         &#39;da_DK&#39;: (&#39;Indstillinger for samtalehandlinger&#39;,),
@@ -1963,7 +2060,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -1991,7 +2088,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2021,7 +2117,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DefaultFoldersChangeHistory(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPM.DefaultFolderHistoryItem&#39;
     LOCALIZED_NAMES = {
         None: (&#39;DefaultFoldersChangeHistory&#39;,),
@@ -2030,7 +2126,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -2058,7 +2154,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2088,7 +2183,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DeferredAction(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class DeferredAction(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Deferred Action&#39;,),
     }
@@ -2096,7 +2191,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -2120,7 +2215,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2205,7 +2299,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2270,7 +2363,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2346,7 +2438,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Messages.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Messages.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2376,7 +2467,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ExchangeSyncData(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class ExchangeSyncData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;ExchangeSyncData&#39;,),
     }
@@ -2384,7 +2475,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -2408,7 +2499,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2478,7 +2568,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2508,7 +2597,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Files(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Files(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Files&#39;
 
     LOCALIZED_NAMES = {
@@ -2518,7 +2607,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -2546,7 +2635,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2576,7 +2664,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FreebusyData(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class FreebusyData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Freebusy Data&#39;,),
     }
@@ -2584,7 +2672,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -2608,7 +2696,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2638,7 +2725,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Friends(NonDeleteableFolderMixin, Contacts):
+<pre><code class="python">class Friends(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
 
     LOCALIZED_NAMES = {
@@ -2648,7 +2735,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -2677,7 +2764,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Contacts.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2707,7 +2793,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GALContacts(NonDeleteableFolderMixin, Contacts):
+<pre><code class="python">class GALContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINER_CLASS = &#39;IPF.Contact.GalContacts&#39;
 
@@ -2718,7 +2804,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -2751,7 +2837,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Contacts.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2781,7 +2866,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GraphAnalytics(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class GraphAnalytics(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.GraphAnalytics&#39;
     LOCALIZED_NAMES = {
         None: (&#39;GraphAnalytics&#39;,),
@@ -2790,7 +2875,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -2818,7 +2903,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2888,7 +2972,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -2964,7 +3047,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Messages.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Messages.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3029,7 +3111,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3105,7 +3186,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Messages.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Messages.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3170,7 +3250,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3200,7 +3279,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Location(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Location(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Location&#39;,),
     }
@@ -3208,7 +3287,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -3232,7 +3311,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3262,7 +3340,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MailboxAssociations(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class MailboxAssociations(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;MailboxAssociations&#39;,),
     }
@@ -3270,7 +3348,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -3294,7 +3372,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3366,7 +3443,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3434,7 +3510,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3504,7 +3579,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3534,7 +3608,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MyContactsExtended(NonDeleteableFolderMixin, Contacts):
+<pre><code class="python">class MyContactsExtended(NonDeletableFolderMixin, Contacts):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
     LOCALIZED_NAMES = {
         None: (&#39;MyContactsExtended&#39;,),
@@ -3543,7 +3617,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -3572,7 +3646,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Contacts.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3592,8 +3665,8 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </li>
 </ul>
 </dd>
-<dt id="exchangelib.folders.known_folders.NonDeleteableFolderMixin"><code class="flex name class">
-<span>class <span class="ident">NonDeleteableFolderMixin</span></span>
+<dt id="exchangelib.folders.known_folders.NonDeletableFolderMixin"><code class="flex name class">
+<span>class <span class="ident">NonDeletableFolderMixin</span></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3601,9 +3674,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NonDeleteableFolderMixin:
+<pre><code class="python">class NonDeletableFolderMixin:
     @property
-    def is_deleteable(self):
+    def is_deletable(self):
         return False</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -3613,6 +3686,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><a title="exchangelib.folders.known_folders.Audits" href="#exchangelib.folders.known_folders.Audits">Audits</a></li>
 <li><a title="exchangelib.folders.known_folders.CalendarLogging" href="#exchangelib.folders.known_folders.CalendarLogging">CalendarLogging</a></li>
 <li><a title="exchangelib.folders.known_folders.CommonViews" href="#exchangelib.folders.known_folders.CommonViews">CommonViews</a></li>
+<li><a title="exchangelib.folders.known_folders.Companies" href="#exchangelib.folders.known_folders.Companies">Companies</a></li>
 <li><a title="exchangelib.folders.known_folders.ConversationSettings" href="#exchangelib.folders.known_folders.ConversationSettings">ConversationSettings</a></li>
 <li><a title="exchangelib.folders.known_folders.DefaultFoldersChangeHistory" href="#exchangelib.folders.known_folders.DefaultFoldersChangeHistory">DefaultFoldersChangeHistory</a></li>
 <li><a title="exchangelib.folders.known_folders.DeferredAction" href="#exchangelib.folders.known_folders.DeferredAction">DeferredAction</a></li>
@@ -3625,9 +3699,11 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><a title="exchangelib.folders.known_folders.Location" href="#exchangelib.folders.known_folders.Location">Location</a></li>
 <li><a title="exchangelib.folders.known_folders.MailboxAssociations" href="#exchangelib.folders.known_folders.MailboxAssociations">MailboxAssociations</a></li>
 <li><a title="exchangelib.folders.known_folders.MyContactsExtended" href="#exchangelib.folders.known_folders.MyContactsExtended">MyContactsExtended</a></li>
+<li><a title="exchangelib.folders.known_folders.OrganizationalContacts" href="#exchangelib.folders.known_folders.OrganizationalContacts">OrganizationalContacts</a></li>
 <li><a title="exchangelib.folders.known_folders.ParkedMessages" href="#exchangelib.folders.known_folders.ParkedMessages">ParkedMessages</a></li>
 <li><a title="exchangelib.folders.known_folders.PassThroughSearchResults" href="#exchangelib.folders.known_folders.PassThroughSearchResults">PassThroughSearchResults</a></li>
 <li><a title="exchangelib.folders.known_folders.PdpProfileV2Secured" href="#exchangelib.folders.known_folders.PdpProfileV2Secured">PdpProfileV2Secured</a></li>
+<li><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies">PeopleCentricConversationBuddies</a></li>
 <li><a title="exchangelib.folders.known_folders.RSSFeeds" href="#exchangelib.folders.known_folders.RSSFeeds">RSSFeeds</a></li>
 <li><a title="exchangelib.folders.known_folders.Reminders" href="#exchangelib.folders.known_folders.Reminders">Reminders</a></li>
 <li><a title="exchangelib.folders.known_folders.Schedule" href="#exchangelib.folders.known_folders.Schedule">Schedule</a></li>
@@ -3637,13 +3713,14 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <li><a title="exchangelib.folders.known_folders.SmsAndChatsSync" href="#exchangelib.folders.known_folders.SmsAndChatsSync">SmsAndChatsSync</a></li>
 <li><a title="exchangelib.folders.known_folders.SpoolerQueue" href="#exchangelib.folders.known_folders.SpoolerQueue">SpoolerQueue</a></li>
 <li><a title="exchangelib.folders.known_folders.System" href="#exchangelib.folders.known_folders.System">System</a></li>
+<li><a title="exchangelib.folders.known_folders.System1" href="#exchangelib.folders.known_folders.System1">System1</a></li>
 <li><a title="exchangelib.folders.known_folders.TemporarySaves" href="#exchangelib.folders.known_folders.TemporarySaves">TemporarySaves</a></li>
 <li><a title="exchangelib.folders.known_folders.Views" href="#exchangelib.folders.known_folders.Views">Views</a></li>
 <li><a title="exchangelib.folders.known_folders.WorkingSet" href="#exchangelib.folders.known_folders.WorkingSet">WorkingSet</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="exchangelib.folders.known_folders.NonDeleteableFolderMixin.is_deleteable"><code class="name">var <span class="ident">is_deleteable</span></code></dt>
+<dt id="exchangelib.folders.known_folders.NonDeletableFolderMixin.is_deletable"><code class="name">var <span class="ident">is_deletable</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -3651,7 +3728,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def is_deleteable(self):
+def is_deletable(self):
     return False</code></pre>
 </details>
 </dd>
@@ -3709,7 +3786,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3725,6 +3801,78 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.folders.known_folders.OrganizationalContacts"><code class="flex name class">
+<span>class <span class="ident">OrganizationalContacts</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = &#39;IPF.Contact.OrganizationalContacts&#39;
+    LOCALIZED_NAMES = {
+        None: (&#39;Organizational Contacts&#39;,),
+    }
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
+<li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
+<li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+<li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.folders.known_folders.OrganizationalContacts.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.OrganizationalContacts.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.folders.known_folders.Contacts.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.name" href="base.html#exchangelib.folders.base.BaseFolder.name">name</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.parent_folder_id" href="base.html#exchangelib.folders.base.BaseFolder.parent_folder_id">parent_folder_id</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.permission_set" href="base.html#exchangelib.folders.base.Folder.permission_set">permission_set</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.test_access" href="base.html#exchangelib.folders.base.BaseFolder.test_access">test_access</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.total_count" href="base.html#exchangelib.folders.base.BaseFolder.total_count">total_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3785,7 +3933,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.Messages.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Messages.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3815,7 +3962,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ParkedMessages(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class ParkedMessages(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
         None: (&#39;ParkedMessages&#39;,),
@@ -3824,7 +3971,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -3852,7 +3999,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3882,7 +4028,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PassThroughSearchResults(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.PassThroughSearchResults&#39;
     LOCALIZED_NAMES = {
         None: (&#39;Pass-Through Search Results&#39;,),
@@ -3891,7 +4037,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -3919,7 +4065,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -3949,7 +4094,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PdpProfileV2Secured(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.PdpProfileSecured&#39;
     LOCALIZED_NAMES = {
         None: (&#39;PdpProfileV2Secured&#39;,),
@@ -3958,7 +4103,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -3986,7 +4131,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4002,6 +4146,78 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.folders.known_folders.PeopleCentricConversationBuddies"><code class="flex name class">
+<span>class <span class="ident">PeopleCentricConversationBuddies</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
+    DISTINGUISHED_FOLDER_ID = None
+    CONTAINTER_CLASS = &#39;IPF.Contact.PeopleCentricConversationBuddies&#39;
+    LOCALIZED_NAMES = {
+        None: (&#39;PeopleCentricConversation Buddies&#39;,),
+    }
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
+<li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
+<li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+<li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.folders.known_folders.Contacts" href="#exchangelib.folders.known_folders.Contacts">Contacts</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.folders.known_folders.Contacts.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.name" href="base.html#exchangelib.folders.base.BaseFolder.name">name</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.parent_folder_id" href="base.html#exchangelib.folders.base.BaseFolder.parent_folder_id">parent_folder_id</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.permission_set" href="base.html#exchangelib.folders.base.Folder.permission_set">permission_set</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.test_access" href="base.html#exchangelib.folders.base.BaseFolder.test_access">test_access</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.total_count" href="base.html#exchangelib.folders.base.BaseFolder.total_count">total_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Contacts.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4051,7 +4267,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4121,7 +4336,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4151,7 +4365,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RSSFeeds(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class RSSFeeds(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Note.OutlookHomepage&#39;
     LOCALIZED_NAMES = {
         None: (&#39;RSS Feeds&#39;,),
@@ -4160,7 +4374,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -4188,7 +4402,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4264,7 +4477,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.Contacts.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Contacts.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Contacts.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4329,7 +4541,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4394,7 +4605,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4459,7 +4669,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4524,7 +4733,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4554,7 +4762,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Reminders(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Reminders(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;Outlook.Reminder&#39;
     LOCALIZED_NAMES = {
         &#39;da_DK&#39;: (&#39;Påmindelser&#39;,),
@@ -4563,7 +4771,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -4591,7 +4799,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4621,7 +4828,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Schedule(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Schedule(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Schedule&#39;,),
     }
@@ -4629,7 +4836,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -4653,7 +4860,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4713,7 +4919,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4789,7 +4994,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.Messages.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.Messages.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Messages.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4854,7 +5058,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4884,7 +5087,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Sharing(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Sharing(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.Note&#39;
     LOCALIZED_NAMES = {
         None: (&#39;Sharing&#39;,),
@@ -4893,7 +5096,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -4921,7 +5124,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -4951,7 +5153,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Shortcuts(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Shortcuts(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Shortcuts&#39;,),
     }
@@ -4959,7 +5161,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -4983,7 +5185,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5013,7 +5214,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Signal(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Signal(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.StoreItem.Signal&#39;
     LOCALIZED_NAMES = {
         None: (&#39;Signal&#39;,),
@@ -5022,7 +5223,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5050,7 +5251,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5080,7 +5280,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SmsAndChatsSync(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = &#39;IPF.SmsAndChatsSync&#39;
     LOCALIZED_NAMES = {
         None: (&#39;SmsAndChatsSync&#39;,),
@@ -5089,7 +5289,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5117,7 +5317,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5147,7 +5346,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SpoolerQueue(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class SpoolerQueue(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Spooler Queue&#39;,),
     }
@@ -5155,7 +5354,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5179,7 +5378,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5249,7 +5447,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5279,7 +5476,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class System(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class System(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;System&#39;,),
     }
@@ -5288,7 +5485,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5316,7 +5513,72 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.name" href="base.html#exchangelib.folders.base.BaseFolder.name">name</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.parent_folder_id" href="base.html#exchangelib.folders.base.BaseFolder.parent_folder_id">parent_folder_id</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.permission_set" href="base.html#exchangelib.folders.base.Folder.permission_set">permission_set</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.test_access" href="base.html#exchangelib.folders.base.BaseFolder.test_access">test_access</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.total_count" href="base.html#exchangelib.folders.base.BaseFolder.total_count">total_count</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.unread_count" href="base.html#exchangelib.folders.base.BaseFolder.unread_count">unread_count</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.folders.known_folders.System1"><code class="flex name class">
+<span>class <span class="ident">System1</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class System1(NonDeletableFolderMixin, Folder):
+    LOCALIZED_NAMES = {
+        None: (&#39;System1&#39;,),
+    }
+    get_folder_allowed = False
+    __slots__ = tuple()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
+<li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+<li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.folders.known_folders.System1.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.known_folders.System1.get_folder_allowed"><code class="name">var <span class="ident">get_folder_allowed</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.folders.base.Folder.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5401,7 +5663,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5431,7 +5692,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TemporarySaves(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class TemporarySaves(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;TemporarySaves&#39;,),
     }
@@ -5439,7 +5700,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5463,7 +5724,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5541,7 +5801,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5571,7 +5830,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Views(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class Views(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Views&#39;,),
     }
@@ -5579,7 +5838,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5603,7 +5862,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5675,7 +5933,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.known_folders.WellknownFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.WellknownFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5767,7 +6024,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5797,7 +6053,7 @@ def is_deleteable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class WorkingSet(NonDeleteableFolderMixin, Folder):
+<pre><code class="python">class WorkingSet(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: (&#39;Working Set&#39;,),
     }
@@ -5805,7 +6061,7 @@ def is_deleteable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
@@ -5829,7 +6085,6 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.base.Folder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.effective_rights" href="base.html#exchangelib.folders.base.Folder.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.base.Folder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
@@ -5964,6 +6219,14 @@ def is_deleteable(self):
 <ul class="">
 <li><code><a title="exchangelib.folders.known_folders.CommonViews.DEFAULT_ITEM_TRAVERSAL_DEPTH" href="#exchangelib.folders.known_folders.CommonViews.DEFAULT_ITEM_TRAVERSAL_DEPTH">DEFAULT_ITEM_TRAVERSAL_DEPTH</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.CommonViews.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.CommonViews.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.known_folders.Companies" href="#exchangelib.folders.known_folders.Companies">Companies</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.known_folders.Companies.CONTAINTER_CLASS" href="#exchangelib.folders.known_folders.Companies.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Companies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.Companies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Companies.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.Companies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
 </li>
 <li>
@@ -6159,9 +6422,9 @@ def is_deleteable(self):
 </ul>
 </li>
 <li>
-<h4><code><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin">NonDeleteableFolderMixin</a></code></h4>
+<h4><code><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.known_folders.NonDeleteableFolderMixin.is_deleteable" href="#exchangelib.folders.known_folders.NonDeleteableFolderMixin.is_deleteable">is_deleteable</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin.is_deletable" href="#exchangelib.folders.known_folders.NonDeletableFolderMixin.is_deletable">is_deletable</a></code></li>
 </ul>
 </li>
 <li>
@@ -6170,6 +6433,14 @@ def is_deleteable(self):
 <li><code><a title="exchangelib.folders.known_folders.Notes.CONTAINER_CLASS" href="#exchangelib.folders.known_folders.Notes.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Notes.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.Notes.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Notes.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.Notes.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.known_folders.OrganizationalContacts" href="#exchangelib.folders.known_folders.OrganizationalContacts">OrganizationalContacts</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.CONTAINTER_CLASS" href="#exchangelib.folders.known_folders.OrganizationalContacts.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.OrganizationalContacts.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
 </li>
 <li>
@@ -6198,6 +6469,14 @@ def is_deleteable(self):
 <ul class="">
 <li><code><a title="exchangelib.folders.known_folders.PdpProfileV2Secured.CONTAINER_CLASS" href="#exchangelib.folders.known_folders.PdpProfileV2Secured.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.PdpProfileV2Secured.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.PdpProfileV2Secured.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies">PeopleCentricConversationBuddies</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
 </li>
 <li>
@@ -6341,6 +6620,13 @@ def is_deleteable(self):
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.folders.known_folders.System1" href="#exchangelib.folders.known_folders.System1">System1</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.known_folders.System1.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.System1.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.System1.get_folder_allowed" href="#exchangelib.folders.known_folders.System1.get_folder_allowed">get_folder_allowed</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.folders.known_folders.Tasks" href="#exchangelib.folders.known_folders.Tasks">Tasks</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.folders.known_folders.Tasks.CONTAINER_CLASS" href="#exchangelib.folders.known_folders.Tasks.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
@@ -6396,7 +6682,7 @@ def is_deleteable(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.get_delegate API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,67 +26,44 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value, MNS
+<pre><code class="python">from .common import EWSAccountService
+from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
+from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2007_SP1
-from .common import EWSAccountService, EWSPooledMixIn
 
 
-class GetDelegate(EWSAccountService, EWSPooledMixIn):
+class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
     SERVICE_NAME = &#39;GetDelegate&#39;
+    supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        if self.protocol.version.build &lt; EXCHANGE_2007_SP1:
-            raise NotImplementedError(
-                &#39;%r is only supported for Exchange 2007 SP1 servers and later&#39; % self.SERVICE_NAME)
-        from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
-
-        if user_ids:
-            # Pool requests to avoid arbitrarily large requests when user_ids is huge
-            res = self._pool_requests(
-                items=user_ids,
-                payload_func=self.get_payload,
-                **dict(
-                    mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                    include_permissions=include_permissions,
-                )
-            )
-        else:
-            # Pooling expects an iterable of items but we have None. Just call _get_elements directly.
-            res = self._get_elements(payload=self.get_payload(
-                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                user_ids=user_ids,
-                include_permissions=include_permissions,
-            ))
-
-        for elem in res:
+        for elem in self._chunked_get_elements(
+            self.get_payload,
+            items=user_ids or [None],
+            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+            include_permissions=include_permissions,
+        ):
             if isinstance(elem, Exception):
                 raise elem
             yield DelegateUser.from_xml(elem=elem, account=self.account)
 
-    def get_payload(self, mailbox, user_ids, include_permissions):
+    def get_payload(self, user_ids, mailbox, include_permissions):
         payload = create_element(
             &#39;m:%s&#39; % self.SERVICE_NAME,
             attrs=dict(IncludePermissions=&#39;true&#39; if include_permissions else &#39;false&#39;),
         )
         set_xml_value(payload, mailbox, version=self.protocol.version)
-        if user_ids:
+        if user_ids != [None]:
             set_xml_value(payload, user_ids, version=self.protocol.version)
         return payload
 
-    def _get_elements_in_container(self, container):
-        # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        from ..properties import DelegateUser
+    @staticmethod
+    def _get_elements_in_container(container):
         return container.findall(DelegateUser.response_tag())
-
-    def _get_element_container(self, message, response_message=None, name=None):
-        # Do nothing. See self._response_message_tag.
-        return message
 
     @classmethod
     def _response_message_tag(cls):
-        # We&#39;re using this in place of self.element_container_name because self._get_soap_messages expects to find
-        # elements at this level. We&#39;ll let self._get_element_container do nothing instead.
         return &#39;{%s}DelegateUserResponseMessageType&#39; % MNS</code></pre>
 </details>
 </section>
@@ -109,73 +86,52 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GetDelegate(EWSAccountService, EWSPooledMixIn):
+<pre><code class="python">class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
     SERVICE_NAME = &#39;GetDelegate&#39;
+    supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        if self.protocol.version.build &lt; EXCHANGE_2007_SP1:
-            raise NotImplementedError(
-                &#39;%r is only supported for Exchange 2007 SP1 servers and later&#39; % self.SERVICE_NAME)
-        from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
-
-        if user_ids:
-            # Pool requests to avoid arbitrarily large requests when user_ids is huge
-            res = self._pool_requests(
-                items=user_ids,
-                payload_func=self.get_payload,
-                **dict(
-                    mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                    include_permissions=include_permissions,
-                )
-            )
-        else:
-            # Pooling expects an iterable of items but we have None. Just call _get_elements directly.
-            res = self._get_elements(payload=self.get_payload(
-                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                user_ids=user_ids,
-                include_permissions=include_permissions,
-            ))
-
-        for elem in res:
+        for elem in self._chunked_get_elements(
+            self.get_payload,
+            items=user_ids or [None],
+            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+            include_permissions=include_permissions,
+        ):
             if isinstance(elem, Exception):
                 raise elem
             yield DelegateUser.from_xml(elem=elem, account=self.account)
 
-    def get_payload(self, mailbox, user_ids, include_permissions):
+    def get_payload(self, user_ids, mailbox, include_permissions):
         payload = create_element(
             &#39;m:%s&#39; % self.SERVICE_NAME,
             attrs=dict(IncludePermissions=&#39;true&#39; if include_permissions else &#39;false&#39;),
         )
         set_xml_value(payload, mailbox, version=self.protocol.version)
-        if user_ids:
+        if user_ids != [None]:
             set_xml_value(payload, user_ids, version=self.protocol.version)
         return payload
 
-    def _get_elements_in_container(self, container):
-        # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        from ..properties import DelegateUser
+    @staticmethod
+    def _get_elements_in_container(container):
         return container.findall(DelegateUser.response_tag())
-
-    def _get_element_container(self, message, response_message=None, name=None):
-        # Do nothing. See self._response_message_tag.
-        return message
 
     @classmethod
     def _response_message_tag(cls):
-        # We&#39;re using this in place of self.element_container_name because self._get_soap_messages expects to find
-        # elements at this level. We&#39;ll let self._get_element_container do nothing instead.
         return &#39;{%s}DelegateUserResponseMessageType&#39; % MNS</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
-<li><a title="exchangelib.services.common.EWSPooledMixIn" href="common.html#exchangelib.services.common.EWSPooledMixIn">EWSPooledMixIn</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.get_delegate.GetDelegate.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.get_delegate.GetDelegate.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -192,37 +148,19 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, user_ids, include_permissions):
-    if self.protocol.version.build &lt; EXCHANGE_2007_SP1:
-        raise NotImplementedError(
-            &#39;%r is only supported for Exchange 2007 SP1 servers and later&#39; % self.SERVICE_NAME)
-    from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
-
-    if user_ids:
-        # Pool requests to avoid arbitrarily large requests when user_ids is huge
-        res = self._pool_requests(
-            items=user_ids,
-            payload_func=self.get_payload,
-            **dict(
-                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-                include_permissions=include_permissions,
-            )
-        )
-    else:
-        # Pooling expects an iterable of items but we have None. Just call _get_elements directly.
-        res = self._get_elements(payload=self.get_payload(
-            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-            user_ids=user_ids,
-            include_permissions=include_permissions,
-        ))
-
-    for elem in res:
+    for elem in self._chunked_get_elements(
+        self.get_payload,
+        items=user_ids or [None],
+        mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+        include_permissions=include_permissions,
+    ):
         if isinstance(elem, Exception):
             raise elem
         yield DelegateUser.from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_delegate.GetDelegate.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, mailbox, user_ids, include_permissions)</span>
+<span>def <span class="ident">get_payload</span></span>(<span>self, user_ids, mailbox, include_permissions)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -230,13 +168,13 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, mailbox, user_ids, include_permissions):
+<pre><code class="python">def get_payload(self, user_ids, mailbox, include_permissions):
     payload = create_element(
         &#39;m:%s&#39; % self.SERVICE_NAME,
         attrs=dict(IncludePermissions=&#39;true&#39; if include_permissions else &#39;false&#39;),
     )
     set_xml_value(payload, mailbox, version=self.protocol.version)
-    if user_ids:
+    if user_ids != [None]:
         set_xml_value(payload, user_ids, version=self.protocol.version)
     return payload</code></pre>
 </details>
@@ -246,7 +184,9 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -273,6 +213,7 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 <li><code><a title="exchangelib.services.get_delegate.GetDelegate.SERVICE_NAME" href="#exchangelib.services.get_delegate.GetDelegate.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.get_delegate.GetDelegate.call" href="#exchangelib.services.get_delegate.GetDelegate.call">call</a></code></li>
 <li><code><a title="exchangelib.services.get_delegate.GetDelegate.get_payload" href="#exchangelib.services.get_delegate.GetDelegate.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.get_delegate.GetDelegate.supported_from" href="#exchangelib.services.get_delegate.GetDelegate.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 </ul>
@@ -281,7 +222,7 @@ class GetDelegate(EWSAccountService, EWSPooledMixIn):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.send_item API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,20 +26,20 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value
-from .common import EWSAccountService, create_item_ids_element
+<pre><code class="python">from .common import EWSAccountService, create_item_ids_element
+from ..util import create_element, set_xml_value
 
 
 class SendItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation&#34;&#34;&#34;
     SERVICE_NAME = &#39;SendItem&#39;
-    element_container_name = None  # SendItem doesn&#39;t return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, items, saved_item_folder):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        from ..folders import BaseFolder, FolderId
+        if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;saved_item_folder&#39; %r must be a Folder or FolderId instance&#34; % saved_item_folder)
-        return self._get_elements(payload=self.get_payload(items=items, saved_item_folder=saved_item_folder))
+        return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
         senditem = create_element(
@@ -77,13 +77,13 @@ class SendItem(EWSAccountService):
 <pre><code class="python">class SendItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation&#34;&#34;&#34;
     SERVICE_NAME = &#39;SendItem&#39;
-    element_container_name = None  # SendItem doesn&#39;t return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, items, saved_item_folder):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        from ..folders import BaseFolder, FolderId
+        if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;saved_item_folder&#39; %r must be a Folder or FolderId instance&#34; % saved_item_folder)
-        return self._get_elements(payload=self.get_payload(items=items, saved_item_folder=saved_item_folder))
+        return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
         senditem = create_element(
@@ -109,7 +109,7 @@ class SendItem(EWSAccountService):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.send_item.SendItem.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
+<dt id="exchangelib.services.send_item.SendItem.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -126,10 +126,10 @@ class SendItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, saved_item_folder):
-    from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-    if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+    from ..folders import BaseFolder, FolderId
+    if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
         raise ValueError(&#34;&#39;saved_item_folder&#39; %r must be a Folder or FolderId instance&#34; % saved_item_folder)
-    return self._get_elements(payload=self.get_payload(items=items, saved_item_folder=saved_item_folder))</code></pre>
+    return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.send_item.SendItem.get_payload"><code class="name flex">
@@ -160,7 +160,9 @@ class SendItem(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -186,8 +188,8 @@ class SendItem(EWSAccountService):
 <ul class="">
 <li><code><a title="exchangelib.services.send_item.SendItem.SERVICE_NAME" href="#exchangelib.services.send_item.SendItem.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.send_item.SendItem.call" href="#exchangelib.services.send_item.SendItem.call">call</a></code></li>
-<li><code><a title="exchangelib.services.send_item.SendItem.element_container_name" href="#exchangelib.services.send_item.SendItem.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.send_item.SendItem.get_payload" href="#exchangelib.services.send_item.SendItem.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.send_item.SendItem.returns_elements" href="#exchangelib.services.send_item.SendItem.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>
 </ul>
@@ -196,7 +198,7 @@ class SendItem(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>exchangelib.services.get_rooms API documentation</title>
+<title>exchangelib.services.update_user_configuration API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,33 +19,31 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>exchangelib.services.get_rooms</code></h1>
+<h1 class="title">Module <code>exchangelib.services.update_user_configuration</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..properties import Room
-from ..util import create_element, set_xml_value, MNS
-from ..version import EXCHANGE_2010
+<pre><code class="python">from .common import EWSAccountService
+from ..util import create_element, set_xml_value
 
 
-class GetRooms(EWSService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms&#34;&#34;&#34;
-    SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = &#39;{%s}Rooms&#39; % MNS
-    supported_from = EXCHANGE_2010
+class UpdateUserConfiguration(EWSAccountService):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation
+    &#34;&#34;&#34;
+    SERVICE_NAME = &#39;UpdateUserConfiguration&#39;
+    returns_elements = False
 
-    def call(self, roomlist):
-        for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
-            yield Room.from_xml(elem=elem, account=None)
+    def call(self, user_configuration):
+        return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
-    def get_payload(self, roomlist):
-        getrooms = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(getrooms, roomlist, version=self.protocol.version)
-        return getrooms</code></pre>
+    def get_payload(self, user_configuration):
+        updateuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
+        return updateuserconfiguration</code></pre>
 </details>
 </section>
 <section>
@@ -57,54 +55,52 @@ class GetRooms(EWSService):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="exchangelib.services.get_rooms.GetRooms"><code class="flex name class">
-<span>class <span class="ident">GetRooms</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<dt id="exchangelib.services.update_user_configuration.UpdateUserConfiguration"><code class="flex name class">
+<span>class <span class="ident">UpdateUserConfiguration</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms</a></p></div>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GetRooms(EWSService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms&#34;&#34;&#34;
-    SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = &#39;{%s}Rooms&#39; % MNS
-    supported_from = EXCHANGE_2010
+<pre><code class="python">class UpdateUserConfiguration(EWSAccountService):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation
+    &#34;&#34;&#34;
+    SERVICE_NAME = &#39;UpdateUserConfiguration&#39;
+    returns_elements = False
 
-    def call(self, roomlist):
-        for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
-            yield Room.from_xml(elem=elem, account=None)
+    def call(self, user_configuration):
+        return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
-    def get_payload(self, roomlist):
-        getrooms = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(getrooms, roomlist, version=self.protocol.version)
-        return getrooms</code></pre>
+    def get_payload(self, user_configuration):
+        updateuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
+        return updateuserconfiguration</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.services.get_rooms.GetRooms.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dt id="exchangelib.services.update_user_configuration.UpdateUserConfiguration.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.get_rooms.GetRooms.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.get_rooms.GetRooms.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+<dt id="exchangelib.services.update_user_configuration.UpdateUserConfiguration.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.services.get_rooms.GetRooms.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, roomlist)</span>
+<dt id="exchangelib.services.update_user_configuration.UpdateUserConfiguration.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, user_configuration)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -112,13 +108,12 @@ class GetRooms(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, roomlist):
-    for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
-        yield Room.from_xml(elem=elem, account=None)</code></pre>
+<pre><code class="python">def call(self, user_configuration):
+    return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.services.get_rooms.GetRooms.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, roomlist)</span>
+<dt id="exchangelib.services.update_user_configuration.UpdateUserConfiguration.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, user_configuration)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -126,20 +121,20 @@ class GetRooms(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, roomlist):
-    getrooms = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    set_xml_value(getrooms, roomlist, version=self.protocol.version)
-    return getrooms</code></pre>
+<pre><code class="python">def get_payload(self, user_configuration):
+    updateuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
+    return updateuserconfiguration</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
+<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -161,13 +156,12 @@ class GetRooms(EWSService):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="exchangelib.services.get_rooms.GetRooms" href="#exchangelib.services.get_rooms.GetRooms">GetRooms</a></code></h4>
+<h4><code><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration" href="#exchangelib.services.update_user_configuration.UpdateUserConfiguration">UpdateUserConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.services.get_rooms.GetRooms.SERVICE_NAME" href="#exchangelib.services.get_rooms.GetRooms.SERVICE_NAME">SERVICE_NAME</a></code></li>
-<li><code><a title="exchangelib.services.get_rooms.GetRooms.call" href="#exchangelib.services.get_rooms.GetRooms.call">call</a></code></li>
-<li><code><a title="exchangelib.services.get_rooms.GetRooms.element_container_name" href="#exchangelib.services.get_rooms.GetRooms.element_container_name">element_container_name</a></code></li>
-<li><code><a title="exchangelib.services.get_rooms.GetRooms.get_payload" href="#exchangelib.services.get_rooms.GetRooms.get_payload">get_payload</a></code></li>
-<li><code><a title="exchangelib.services.get_rooms.GetRooms.supported_from" href="#exchangelib.services.get_rooms.GetRooms.supported_from">supported_from</a></code></li>
+<li><code><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration.SERVICE_NAME" href="#exchangelib.services.update_user_configuration.UpdateUserConfiguration.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration.call" href="#exchangelib.services.update_user_configuration.UpdateUserConfiguration.call">call</a></code></li>
+<li><code><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration.get_payload" href="#exchangelib.services.update_user_configuration.UpdateUserConfiguration.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration.returns_elements" href="#exchangelib.services.update_user_configuration.UpdateUserConfiguration.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>
 </ul>

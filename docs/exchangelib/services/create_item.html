@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.create_item API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -27,15 +27,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from collections import OrderedDict
-import logging
 
+from .common import EWSAccountService
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, EWSPooledMixIn
-
-log = logging.getLogger(__name__)
 
 
-class CreateItem(EWSAccountService, EWSPooledMixIn):
+class CreateItem(EWSAccountService):
     &#34;&#34;&#34;Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
@@ -46,9 +43,9 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, SEND_MEETING_INVITATIONS_CHOICES, \
-            MESSAGE_DISPOSITION_CHOICES
+        from ..folders import BaseFolder, FolderId
+        from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+            SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
             raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
                 message_disposition, MESSAGE_DISPOSITION_CHOICES
@@ -58,7 +55,7 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
                 send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
             ))
         if folder is not None:
-            if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+            if not isinstance(folder, (BaseFolder, FolderId)):
                 raise ValueError(&#34;&#39;folder&#39; %r must be a Folder or FolderId instance&#34; % folder)
             if folder.account != self.account:
                 raise ValueError(&#39;&#34;Folder must belong to this account&#39;)
@@ -68,12 +65,17 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
             folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        for elem in self._chunked_get_elements(
+            self.get_payload,
             items=items,
             folder=folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-        ))
+        ):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
         &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
@@ -111,7 +113,6 @@ class CreateItem(EWSAccountService, EWSPooledMixIn):
         for item in items:
             if not item.account:
                 item.account = self.account
-            log.debug(&#39;Adding item %s&#39;, item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
             raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
@@ -140,7 +141,7 @@ errormessage), in the same order as the input list.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CreateItem(EWSAccountService, EWSPooledMixIn):
+<pre><code class="python">class CreateItem(EWSAccountService):
     &#34;&#34;&#34;Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
@@ -151,9 +152,9 @@ errormessage), in the same order as the input list.</p>
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, SEND_MEETING_INVITATIONS_CHOICES, \
-            MESSAGE_DISPOSITION_CHOICES
+        from ..folders import BaseFolder, FolderId
+        from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+            SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
             raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
                 message_disposition, MESSAGE_DISPOSITION_CHOICES
@@ -163,7 +164,7 @@ errormessage), in the same order as the input list.</p>
                 send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
             ))
         if folder is not None:
-            if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+            if not isinstance(folder, (BaseFolder, FolderId)):
                 raise ValueError(&#34;&#39;folder&#39; %r must be a Folder or FolderId instance&#34; % folder)
             if folder.account != self.account:
                 raise ValueError(&#39;&#34;Folder must belong to this account&#39;)
@@ -173,12 +174,17 @@ errormessage), in the same order as the input list.</p>
             folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        for elem in self._chunked_get_elements(
+            self.get_payload,
             items=items,
             folder=folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-        ))
+        ):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
         &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
@@ -216,7 +222,6 @@ errormessage), in the same order as the input list.</p>
         for item in items:
             if not item.account:
                 item.account = self.account
-            log.debug(&#39;Adding item %s&#39;, item)
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
             raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
@@ -226,7 +231,6 @@ errormessage), in the same order as the input list.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
-<li><a title="exchangelib.services.common.EWSPooledMixIn" href="common.html#exchangelib.services.common.EWSPooledMixIn">EWSPooledMixIn</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -252,9 +256,9 @@ errormessage), in the same order as the input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, folder, message_disposition, send_meeting_invitations):
-    from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-    from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, SEND_MEETING_INVITATIONS_CHOICES, \
-        MESSAGE_DISPOSITION_CHOICES
+    from ..folders import BaseFolder, FolderId
+    from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+        SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
     if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
         raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
             message_disposition, MESSAGE_DISPOSITION_CHOICES
@@ -264,7 +268,7 @@ errormessage), in the same order as the input list.</p>
             send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
         ))
     if folder is not None:
-        if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        if not isinstance(folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;folder&#39; %r must be a Folder or FolderId instance&#34; % folder)
         if folder.account != self.account:
             raise ValueError(&#39;&#34;Folder must belong to this account&#39;)
@@ -274,12 +278,17 @@ errormessage), in the same order as the input list.</p>
         folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
     if message_disposition == SEND_ONLY and folder is not None:
         raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-    return self._pool_requests(payload_func=self.get_payload, **dict(
+    for elem in self._chunked_get_elements(
+        self.get_payload,
         items=items,
         folder=folder,
         message_disposition=message_disposition,
         send_meeting_invitations=send_meeting_invitations,
-    ))</code></pre>
+    ):
+        if isinstance(elem, (Exception, type(None))):
+            yield elem
+            continue
+        yield BulkCreateResult.from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.create_item.CreateItem.get_payload"><code class="name flex">
@@ -341,7 +350,6 @@ send_meeting_invitations:</p></div>
     for item in items:
         if not item.account:
             item.account = self.account
-        log.debug(&#39;Adding item %s&#39;, item)
         set_xml_value(item_elems, item, version=self.account.version)
     if not len(item_elems):
         raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
@@ -354,7 +362,9 @@ send_meeting_invitations:</p></div>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -390,7 +400,7 @@ send_meeting_invitations:</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

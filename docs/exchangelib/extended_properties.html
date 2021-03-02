@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.extended_properties API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,14 +26,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import base64
-import logging
+<pre><code class="python">import logging
 from decimal import Decimal
 
 from .ewsdatetime import EWSDateTime
 from .properties import EWSElement
 from .util import create_element, add_xml_child, get_xml_attrs, get_xml_attr, set_xml_value, value_to_xml_text, \
-    xml_text_to_value, is_iterable, safe_b64decode, TNS
+    xml_text_to_value, is_iterable, TNS
 
 log = logging.getLogger(__name__)
 
@@ -226,7 +225,7 @@ class ExtendedProperty(EWSElement):
         # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
         extended_field_uri = elem.find(&#39;{%s}ExtendedFieldURI&#39; % TNS)
         cls_props = cls.properties_map()
-        elem_props = {k: extended_field_uri.get(k) for k in cls_props.keys()}
+        elem_props = {k: extended_field_uri.get(k) for k in cls_props}
         # Sometimes, EWS will helpfully translate a &#39;distinguished_property_set_id&#39; value to a &#39;property_set_id&#39; value
         # and vice versa. Align these values.
         cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get(&#39;DistinguishedPropertySetId&#39;))
@@ -251,14 +250,10 @@ class ExtendedProperty(EWSElement):
         python_type = cls.python_type()
         if cls.is_array_type():
             values = elem.find(&#39;{%s}Values&#39; % TNS)
-            if cls.is_binary_type():
-                return [safe_b64decode(val) for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)]
             return [
                 xml_text_to_value(value=val, value_type=python_type)
                 for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
             ]
-        if cls.is_binary_type():
-            return safe_b64decode(get_xml_attr(elem, &#39;{%s}Value&#39; % TNS))
         extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
@@ -271,22 +266,13 @@ class ExtendedProperty(EWSElement):
         if self.is_array_type():
             values = create_element(&#39;t:Values&#39;)
             for v in self.value:
-                if self.is_binary_type():
-                    add_xml_child(values, &#39;t:Value&#39;, base64.b64encode(v).decode(&#39;ascii&#39;))
-                else:
-                    add_xml_child(values, &#39;t:Value&#39;, v)
+                add_xml_child(values, &#39;t:Value&#39;, v)
             return values
-        val = base64.b64encode(self.value).decode(&#39;ascii&#39;) if self.is_binary_type() else self.value
-        return set_xml_value(create_element(&#39;t:Value&#39;), val, version=version)
+        return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)
 
     @classmethod
     def is_array_type(cls):
         return cls.property_type.endswith(&#39;Array&#39;)
-
-    @classmethod
-    def is_binary_type(cls):
-        # We can&#39;t just test python_type() == bytes, because str == bytes in Python2
-        return &#39;Binary&#39; in cls.property_type
 
     @classmethod
     def property_tag_as_int(cls):
@@ -333,7 +319,6 @@ class ExtendedProperty(EWSElement):
 class ExternId(ExtendedProperty):
     &#34;&#34;&#34;This is a custom extended property defined by us. It&#39;s useful for synchronization purposes, to attach a unique ID
     from an external system.
-
     &#34;&#34;&#34;
     property_set_id = &#39;c11ff724-aa03-4555-9952-8fa248a11c3e&#39;  # This is arbitrary. We just want a unique UUID.
     property_name = &#39;External ID&#39;
@@ -347,10 +332,11 @@ class Flag(ExtendedProperty):
 
     For a description of each status, see:
     https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxoflag/eda9fd25-6407-4cec-9e62-26e4f9d6a098
-
     &#34;&#34;&#34;
     property_tag = 0x1090
-    property_type = &#39;Integer&#39;</code></pre>
+    property_type = &#39;Integer&#39;
+
+    __slots__ = tuple()</code></pre>
 </details>
 </section>
 <section>
@@ -560,7 +546,7 @@ class Flag(ExtendedProperty):
         # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
         extended_field_uri = elem.find(&#39;{%s}ExtendedFieldURI&#39; % TNS)
         cls_props = cls.properties_map()
-        elem_props = {k: extended_field_uri.get(k) for k in cls_props.keys()}
+        elem_props = {k: extended_field_uri.get(k) for k in cls_props}
         # Sometimes, EWS will helpfully translate a &#39;distinguished_property_set_id&#39; value to a &#39;property_set_id&#39; value
         # and vice versa. Align these values.
         cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get(&#39;DistinguishedPropertySetId&#39;))
@@ -585,14 +571,10 @@ class Flag(ExtendedProperty):
         python_type = cls.python_type()
         if cls.is_array_type():
             values = elem.find(&#39;{%s}Values&#39; % TNS)
-            if cls.is_binary_type():
-                return [safe_b64decode(val) for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)]
             return [
                 xml_text_to_value(value=val, value_type=python_type)
                 for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
             ]
-        if cls.is_binary_type():
-            return safe_b64decode(get_xml_attr(elem, &#39;{%s}Value&#39; % TNS))
         extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
@@ -605,22 +587,13 @@ class Flag(ExtendedProperty):
         if self.is_array_type():
             values = create_element(&#39;t:Values&#39;)
             for v in self.value:
-                if self.is_binary_type():
-                    add_xml_child(values, &#39;t:Value&#39;, base64.b64encode(v).decode(&#39;ascii&#39;))
-                else:
-                    add_xml_child(values, &#39;t:Value&#39;, v)
+                add_xml_child(values, &#39;t:Value&#39;, v)
             return values
-        val = base64.b64encode(self.value).decode(&#39;ascii&#39;) if self.is_binary_type() else self.value
-        return set_xml_value(create_element(&#39;t:Value&#39;), val, version=version)
+        return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)
 
     @classmethod
     def is_array_type(cls):
         return cls.property_type.endswith(&#39;Array&#39;)
-
-    @classmethod
-    def is_binary_type(cls):
-        # We can&#39;t just test python_type() == bytes, because str == bytes in Python2
-        return &#39;Binary&#39; in cls.property_type
 
     @classmethod
     def property_tag_as_int(cls):
@@ -736,14 +709,10 @@ def from_xml(cls, elem, account):
     python_type = cls.python_type()
     if cls.is_array_type():
         values = elem.find(&#39;{%s}Values&#39; % TNS)
-        if cls.is_binary_type():
-            return [safe_b64decode(val) for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)]
         return [
             xml_text_to_value(value=val, value_type=python_type)
             for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
         ]
-    if cls.is_binary_type():
-        return safe_b64decode(get_xml_attr(elem, &#39;{%s}Value&#39; % TNS))
     extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
     if python_type == str and not extended_field_value:
         # For string types, we want to return the empty string instead of None if the element was
@@ -767,21 +736,6 @@ def is_array_type(cls):
     return cls.property_type.endswith(&#39;Array&#39;)</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.extended_properties.ExtendedProperty.is_binary_type"><code class="name flex">
-<span>def <span class="ident">is_binary_type</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def is_binary_type(cls):
-    # We can&#39;t just test python_type() == bytes, because str == bytes in Python2
-    return &#39;Binary&#39; in cls.property_type</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.extended_properties.ExtendedProperty.is_property_instance"><code class="name flex">
 <span>def <span class="ident">is_property_instance</span></span>(<span>elem)</span>
 </code></dt>
@@ -799,7 +753,7 @@ def is_property_instance(cls, elem):
     # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
     extended_field_uri = elem.find(&#39;{%s}ExtendedFieldURI&#39; % TNS)
     cls_props = cls.properties_map()
-    elem_props = {k: extended_field_uri.get(k) for k in cls_props.keys()}
+    elem_props = {k: extended_field_uri.get(k) for k in cls_props}
     # Sometimes, EWS will helpfully translate a &#39;distinguished_property_set_id&#39; value to a &#39;property_set_id&#39; value
     # and vice versa. Align these values.
     cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get(&#39;DistinguishedPropertySetId&#39;))
@@ -968,13 +922,9 @@ def validate_cls(cls):
     if self.is_array_type():
         values = create_element(&#39;t:Values&#39;)
         for v in self.value:
-            if self.is_binary_type():
-                add_xml_child(values, &#39;t:Value&#39;, base64.b64encode(v).decode(&#39;ascii&#39;))
-            else:
-                add_xml_child(values, &#39;t:Value&#39;, v)
+            add_xml_child(values, &#39;t:Value&#39;, v)
         return values
-    val = base64.b64encode(self.value).decode(&#39;ascii&#39;) if self.is_binary_type() else self.value
-    return set_xml_value(create_element(&#39;t:Value&#39;), val, version=version)</code></pre>
+    return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1004,7 +954,6 @@ from an external system.</p></div>
 <pre><code class="python">class ExternId(ExtendedProperty):
     &#34;&#34;&#34;This is a custom extended property defined by us. It&#39;s useful for synchronization purposes, to attach a unique ID
     from an external system.
-
     &#34;&#34;&#34;
     property_set_id = &#39;c11ff724-aa03-4555-9952-8fa248a11c3e&#39;  # This is arbitrary. We just want a unique UUID.
     property_name = &#39;External ID&#39;
@@ -1062,10 +1011,11 @@ from an external system.</p></div>
 
     For a description of each status, see:
     https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxoflag/eda9fd25-6407-4cec-9e62-26e4f9d6a098
-
     &#34;&#34;&#34;
     property_tag = 0x1090
-    property_type = &#39;Integer&#39;</code></pre>
+    property_type = &#39;Integer&#39;
+
+    __slots__ = tuple()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1124,7 +1074,6 @@ from an external system.</p></div>
 <li><code><a title="exchangelib.extended_properties.ExtendedProperty.distinguished_property_set_id" href="#exchangelib.extended_properties.ExtendedProperty.distinguished_property_set_id">distinguished_property_set_id</a></code></li>
 <li><code><a title="exchangelib.extended_properties.ExtendedProperty.from_xml" href="#exchangelib.extended_properties.ExtendedProperty.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.extended_properties.ExtendedProperty.is_array_type" href="#exchangelib.extended_properties.ExtendedProperty.is_array_type">is_array_type</a></code></li>
-<li><code><a title="exchangelib.extended_properties.ExtendedProperty.is_binary_type" href="#exchangelib.extended_properties.ExtendedProperty.is_binary_type">is_binary_type</a></code></li>
 <li><code><a title="exchangelib.extended_properties.ExtendedProperty.is_property_instance" href="#exchangelib.extended_properties.ExtendedProperty.is_property_instance">is_property_instance</a></code></li>
 <li><code><a title="exchangelib.extended_properties.ExtendedProperty.properties_map" href="#exchangelib.extended_properties.ExtendedProperty.properties_map">properties_map</a></code></li>
 <li><code><a title="exchangelib.extended_properties.ExtendedProperty.property_id" href="#exchangelib.extended_properties.ExtendedProperty.property_id">property_id</a></code></li>
@@ -1161,7 +1110,7 @@ from an external system.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

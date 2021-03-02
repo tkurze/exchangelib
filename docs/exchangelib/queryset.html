@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.queryset API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,13 +26,15 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from copy import deepcopy
-from itertools import islice
+<pre><code class="python">import abc
 import logging
+import warnings
+from copy import deepcopy
+from itertools import islice
 
 from .errors import MultipleObjectsReturned, DoesNotExist
-from .items import CalendarItem, ID_ONLY
 from .fields import FieldPath, FieldOrder
+from .items import CalendarItem, ID_ONLY
 from .properties import InvalidField
 from .restriction import Q
 from .services import CHUNK_SIZE
@@ -41,26 +43,32 @@ from .version import EXCHANGE_2010
 log = logging.getLogger(__name__)
 
 
-class SearchableMixIn:
+class SearchableMixIn(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Implements a search API for inheritance&#34;&#34;&#34;
 
+    @abc.abstractmethod
     def get(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def all(self):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def none(self):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def filter(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def exclude(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def people(self):
-        raise NotImplementedError()
+        pass
 
 
 class QuerySet(SearchableMixIn):
@@ -98,8 +106,6 @@ class QuerySet(SearchableMixIn):
         self.offset = 0
         self._depth = None
 
-        self._cache = None
-
     def _copy_self(self):
         # When we copy a queryset where the cache has already been filled, we don&#39;t copy the cache. Thus, a copied
         # queryset will fetch results from the server again.
@@ -130,10 +136,6 @@ class QuerySet(SearchableMixIn):
         new_qs.offset = self.offset
         new_qs._depth = self._depth
         return new_qs
-
-    @property
-    def is_cached(self):
-        return self._cache is not None
 
     def _get_field_path(self, field_path):
         from .items import Persona
@@ -199,14 +201,11 @@ class QuerySet(SearchableMixIn):
         }[return_format](items)
 
     def _query(self):
-        from .items import Persona
         if self.only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
             if self.request_type == self.PERSONA:
-                additional_fields = {FieldPath(field=f) for f in Persona.supported_fields(
-                    version=self.folder_collection.account.version
-                ) if not f.is_complex}
-                complex_fields_requested = False
+                additional_fields = {}  # GetPersona doesn&#39;t take explicit fields. Don&#39;t bother calculating the list
+                complex_fields_requested = True
             else:
                 additional_fields = {FieldPath(field=f) for f in self.folder_collection.allowed_item_fields()}
                 complex_fields_requested = True
@@ -231,37 +230,33 @@ class QuerySet(SearchableMixIn):
         else:
             extra_order_fields = set()
 
+        find_kwargs = dict(
+            shape=ID_ONLY,  # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
+            depth=self._depth,
+            additional_fields=additional_fields,
+            order_fields=order_fields,
+            page_size=self.page_size,
+            max_items=self.max_items,
+            offset=self.offset,
+        )
         if self.request_type == self.PERSONA:
-            if len(self.folder_collection) != 1:
-                raise ValueError(&#39;Personas can only be queried on a single folder&#39;)
-            items = list(self.folder_collection)[0].find_people(
-                self.q,
-                shape=ID_ONLY,
-                depth=self._depth,
-                additional_fields=additional_fields,
-                order_fields=order_fields,
-                page_size=self.page_size,
-                max_items=self.max_items,
-                offset=self.offset,
-            )
+            if complex_fields_requested:
+                find_kwargs[&#39;additional_fields&#39;] = None
+                items = self.folder_collection.account.fetch_personas(
+                    ids=self.folder_collection.find_people(self.q, **find_kwargs)
+                )
+            else:
+                if not additional_fields:
+                    find_kwargs[&#39;additional_fields&#39;] = None
+                items = self.folder_collection.find_people(self.q, **find_kwargs)
         else:
-            find_item_kwargs = dict(
-                shape=ID_ONLY,  # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-                depth=self._depth,
-                additional_fields=additional_fields,
-                order_fields=order_fields,
-                calendar_view=self.calendar_view,
-                page_size=self.page_size,
-                max_items=self.max_items,
-                offset=self.offset,
-            )
-
+            find_kwargs[&#39;calendar_view&#39;] = self.calendar_view
             if complex_fields_requested:
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
-                find_item_kwargs[&#39;additional_fields&#39;] = None
+                find_kwargs[&#39;additional_fields&#39;] = None
                 items = self.folder_collection.account.fetch(
-                    ids=self.folder_collection.find_items(self.q, **find_item_kwargs),
+                    ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
                     chunk_size=self.page_size,
                 )
@@ -270,8 +265,8 @@ class QuerySet(SearchableMixIn):
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
                     # take a shortcut by using (shape=ID_ONLY, additional_fields=None) to tell find_items() to return
                     # (id, changekey) tuples. We&#39;ll post-process those later.
-                    find_item_kwargs[&#39;additional_fields&#39;] = None
-                items = self.folder_collection.find_items(self.q, **find_item_kwargs)
+                    find_kwargs[&#39;additional_fields&#39;] = None
+                items = self.folder_collection.find_items(self.q, **find_kwargs)
 
         if not must_sort_clientside:
             return items
@@ -299,23 +294,11 @@ class QuerySet(SearchableMixIn):
         # Fill cache if this is the first iteration. Return an iterator over the results. Make this non-greedy by
         # filling the cache while we are iterating.
         #
-        # We don&#39;t set self._cache until the iterator is finished. Otherwise an interrupted iterator would leave the
-        # cache in an inconsistent state.
-        if self.is_cached:
-            for val in self._cache:
-                yield val
-            return
-
         if self.q.is_never():
-            self._cache = []
             return
 
         log.debug(&#39;Initializing cache&#39;)
-        _cache = []
-        for val in self._format_items(items=self._query(), return_format=self.return_format):
-            _cache.append(val)
-            yield val
-        self._cache = _cache
+        yield from self._format_items(items=self._query(), return_format=self.return_format)
 
     &#34;&#34;&#34;Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
     given sequence, before calling __iter__. If we implemented __len__, we would end up calling FindItems twice, once
@@ -325,8 +308,6 @@ class QuerySet(SearchableMixIn):
     a __len__ implementation should be cheap. That does not hold for self.count().
 
     def __len__(self):
-        if self.is_cached:
-            return len(self._cache)
         # This queryset has no cache yet. Call the optimized counting implementation
         return self.count()
     &#34;&#34;&#34;
@@ -339,8 +320,6 @@ class QuerySet(SearchableMixIn):
         return self._getitem_slice(idx_or_slice)
 
     def _getitem_idx(self, idx):
-        if self.is_cached:
-            return self._cache[idx]
         if idx &lt; 0:
             # Support negative indexes by reversing the queryset and negating the index value
             reverse_idx = -(idx+1)
@@ -359,10 +338,7 @@ class QuerySet(SearchableMixIn):
         if ((s.start or 0) &lt; 0) or ((s.stop or 0) &lt; 0) or ((s.step or 0) &lt; 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
-            list(self.__iter__())
-            return self._cache[s]
-        if self.is_cached:
-            return islice(self.__iter__(), s.start, s.stop, s.step)
+            return list(self.__iter__())[s]
         # Optimize by setting an exact offset and max_items value
         new_qs = self._copy_self()
         if s.start is not None and s.stop is not None:
@@ -599,20 +575,16 @@ class QuerySet(SearchableMixIn):
         new_qs._depth = depth
         return new_qs
 
+    def iterator(self):
+        # Return an iterator over the results
+        warnings.warn(&#39;QuerySet no longer caches results. .iterator() is a no-op.&#39;, DeprecationWarning, stacklevel=2)
+        return self.__iter__()
+
     ###########################
     #
     # Methods that end chaining
     #
     ###########################
-
-    def iterator(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
-        if self.q.is_never():
-            return []
-        if self.is_cached:
-            return self._cache
-        # Return an iterator that doesn&#39;t bother with caching
-        return self._format_items(items=self._query(), return_format=self.return_format)
 
     def get(self, *args, **kwargs):
         &#34;&#34;&#34;Assume the query will return exactly one item. Return that item
@@ -622,10 +594,7 @@ class QuerySet(SearchableMixIn):
           **kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached and not args and not kwargs:
-            # We can only safely use the cache if get() is called without args
-            items = self._cache
-        elif not args and set(kwargs.keys()) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
+        if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
             account = self.folder_collection.account
@@ -649,8 +618,6 @@ class QuerySet(SearchableMixIn):
           page_size:  (Default value = 1000)
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            return len(self._cache)
         new_qs = self._copy_self()
         new_qs.only_fields = tuple()
         new_qs.order_fields = None
@@ -660,8 +627,6 @@ class QuerySet(SearchableMixIn):
 
     def exists(self):
         &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible&#34;&#34;&#34;
-        if self.is_cached:
-            return len(self._cache) &gt; 0
         new_qs = self._copy_self()
         new_qs.max_items = 1
         return new_qs.count(page_size=1) &gt; 0
@@ -682,18 +647,13 @@ class QuerySet(SearchableMixIn):
           **delete_kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_delete(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_delete(
             ids=ids,
             chunk_size=page_size,
             **delete_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def send(self, page_size=1000, **send_kwargs):
         &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -704,18 +664,13 @@ class QuerySet(SearchableMixIn):
           **send_kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_send(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_send(
             ids=ids,
             chunk_size=page_size,
             **send_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def copy(self, to_folder, page_size=1000, **copy_kwargs):
         &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -727,19 +682,14 @@ class QuerySet(SearchableMixIn):
           **copy_kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_copy(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_copy(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
             **copy_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def move(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -750,18 +700,13 @@ class QuerySet(SearchableMixIn):
           page_size:  (Default value = 1000)
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_move(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_move(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
 
     def archive(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -772,23 +717,33 @@ class QuerySet(SearchableMixIn):
           page_size:  (Default value = 1000)
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_archive(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_archive(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
+
+    def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+        &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
+        items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high
+
+        Args:
+          page_size:  (Default value = 1000)
+          **mark_as_junk_kwargs:
+
+        &#34;&#34;&#34;
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_mark_as_junk(
+            ids=ids,
+            chunk_size=page_size,
+            **mark_as_junk_kwargs
+        )
 
     def __str__(self):
         fmt_args = [(&#39;q&#39;, str(self.q)), (&#39;folders&#39;, &#39;[%s]&#39; % &#39;, &#39;.join(str(f) for f in self.folder_collection.folders))]
-        if self.is_cached:
-            fmt_args.append((&#39;len&#39;, str(len(self._cache))))
         return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%s&#39; % (k, v) for k, v in fmt_args)
 
 
@@ -876,8 +831,6 @@ build up complex queries.</p>
         self.offset = 0
         self._depth = None
 
-        self._cache = None
-
     def _copy_self(self):
         # When we copy a queryset where the cache has already been filled, we don&#39;t copy the cache. Thus, a copied
         # queryset will fetch results from the server again.
@@ -908,10 +861,6 @@ build up complex queries.</p>
         new_qs.offset = self.offset
         new_qs._depth = self._depth
         return new_qs
-
-    @property
-    def is_cached(self):
-        return self._cache is not None
 
     def _get_field_path(self, field_path):
         from .items import Persona
@@ -977,14 +926,11 @@ build up complex queries.</p>
         }[return_format](items)
 
     def _query(self):
-        from .items import Persona
         if self.only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
             if self.request_type == self.PERSONA:
-                additional_fields = {FieldPath(field=f) for f in Persona.supported_fields(
-                    version=self.folder_collection.account.version
-                ) if not f.is_complex}
-                complex_fields_requested = False
+                additional_fields = {}  # GetPersona doesn&#39;t take explicit fields. Don&#39;t bother calculating the list
+                complex_fields_requested = True
             else:
                 additional_fields = {FieldPath(field=f) for f in self.folder_collection.allowed_item_fields()}
                 complex_fields_requested = True
@@ -1009,37 +955,33 @@ build up complex queries.</p>
         else:
             extra_order_fields = set()
 
+        find_kwargs = dict(
+            shape=ID_ONLY,  # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
+            depth=self._depth,
+            additional_fields=additional_fields,
+            order_fields=order_fields,
+            page_size=self.page_size,
+            max_items=self.max_items,
+            offset=self.offset,
+        )
         if self.request_type == self.PERSONA:
-            if len(self.folder_collection) != 1:
-                raise ValueError(&#39;Personas can only be queried on a single folder&#39;)
-            items = list(self.folder_collection)[0].find_people(
-                self.q,
-                shape=ID_ONLY,
-                depth=self._depth,
-                additional_fields=additional_fields,
-                order_fields=order_fields,
-                page_size=self.page_size,
-                max_items=self.max_items,
-                offset=self.offset,
-            )
+            if complex_fields_requested:
+                find_kwargs[&#39;additional_fields&#39;] = None
+                items = self.folder_collection.account.fetch_personas(
+                    ids=self.folder_collection.find_people(self.q, **find_kwargs)
+                )
+            else:
+                if not additional_fields:
+                    find_kwargs[&#39;additional_fields&#39;] = None
+                items = self.folder_collection.find_people(self.q, **find_kwargs)
         else:
-            find_item_kwargs = dict(
-                shape=ID_ONLY,  # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-                depth=self._depth,
-                additional_fields=additional_fields,
-                order_fields=order_fields,
-                calendar_view=self.calendar_view,
-                page_size=self.page_size,
-                max_items=self.max_items,
-                offset=self.offset,
-            )
-
+            find_kwargs[&#39;calendar_view&#39;] = self.calendar_view
             if complex_fields_requested:
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
-                find_item_kwargs[&#39;additional_fields&#39;] = None
+                find_kwargs[&#39;additional_fields&#39;] = None
                 items = self.folder_collection.account.fetch(
-                    ids=self.folder_collection.find_items(self.q, **find_item_kwargs),
+                    ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
                     chunk_size=self.page_size,
                 )
@@ -1048,8 +990,8 @@ build up complex queries.</p>
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
                     # take a shortcut by using (shape=ID_ONLY, additional_fields=None) to tell find_items() to return
                     # (id, changekey) tuples. We&#39;ll post-process those later.
-                    find_item_kwargs[&#39;additional_fields&#39;] = None
-                items = self.folder_collection.find_items(self.q, **find_item_kwargs)
+                    find_kwargs[&#39;additional_fields&#39;] = None
+                items = self.folder_collection.find_items(self.q, **find_kwargs)
 
         if not must_sort_clientside:
             return items
@@ -1077,23 +1019,11 @@ build up complex queries.</p>
         # Fill cache if this is the first iteration. Return an iterator over the results. Make this non-greedy by
         # filling the cache while we are iterating.
         #
-        # We don&#39;t set self._cache until the iterator is finished. Otherwise an interrupted iterator would leave the
-        # cache in an inconsistent state.
-        if self.is_cached:
-            for val in self._cache:
-                yield val
-            return
-
         if self.q.is_never():
-            self._cache = []
             return
 
         log.debug(&#39;Initializing cache&#39;)
-        _cache = []
-        for val in self._format_items(items=self._query(), return_format=self.return_format):
-            _cache.append(val)
-            yield val
-        self._cache = _cache
+        yield from self._format_items(items=self._query(), return_format=self.return_format)
 
     &#34;&#34;&#34;Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
     given sequence, before calling __iter__. If we implemented __len__, we would end up calling FindItems twice, once
@@ -1103,8 +1033,6 @@ build up complex queries.</p>
     a __len__ implementation should be cheap. That does not hold for self.count().
 
     def __len__(self):
-        if self.is_cached:
-            return len(self._cache)
         # This queryset has no cache yet. Call the optimized counting implementation
         return self.count()
     &#34;&#34;&#34;
@@ -1117,8 +1045,6 @@ build up complex queries.</p>
         return self._getitem_slice(idx_or_slice)
 
     def _getitem_idx(self, idx):
-        if self.is_cached:
-            return self._cache[idx]
         if idx &lt; 0:
             # Support negative indexes by reversing the queryset and negating the index value
             reverse_idx = -(idx+1)
@@ -1137,10 +1063,7 @@ build up complex queries.</p>
         if ((s.start or 0) &lt; 0) or ((s.stop or 0) &lt; 0) or ((s.step or 0) &lt; 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
-            list(self.__iter__())
-            return self._cache[s]
-        if self.is_cached:
-            return islice(self.__iter__(), s.start, s.stop, s.step)
+            return list(self.__iter__())[s]
         # Optimize by setting an exact offset and max_items value
         new_qs = self._copy_self()
         if s.start is not None and s.stop is not None:
@@ -1377,20 +1300,16 @@ build up complex queries.</p>
         new_qs._depth = depth
         return new_qs
 
+    def iterator(self):
+        # Return an iterator over the results
+        warnings.warn(&#39;QuerySet no longer caches results. .iterator() is a no-op.&#39;, DeprecationWarning, stacklevel=2)
+        return self.__iter__()
+
     ###########################
     #
     # Methods that end chaining
     #
     ###########################
-
-    def iterator(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
-        if self.q.is_never():
-            return []
-        if self.is_cached:
-            return self._cache
-        # Return an iterator that doesn&#39;t bother with caching
-        return self._format_items(items=self._query(), return_format=self.return_format)
 
     def get(self, *args, **kwargs):
         &#34;&#34;&#34;Assume the query will return exactly one item. Return that item
@@ -1400,10 +1319,7 @@ build up complex queries.</p>
           **kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached and not args and not kwargs:
-            # We can only safely use the cache if get() is called without args
-            items = self._cache
-        elif not args and set(kwargs.keys()) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
+        if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
             account = self.folder_collection.account
@@ -1427,8 +1343,6 @@ build up complex queries.</p>
           page_size:  (Default value = 1000)
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            return len(self._cache)
         new_qs = self._copy_self()
         new_qs.only_fields = tuple()
         new_qs.order_fields = None
@@ -1438,8 +1352,6 @@ build up complex queries.</p>
 
     def exists(self):
         &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible&#34;&#34;&#34;
-        if self.is_cached:
-            return len(self._cache) &gt; 0
         new_qs = self._copy_self()
         new_qs.max_items = 1
         return new_qs.count(page_size=1) &gt; 0
@@ -1460,18 +1372,13 @@ build up complex queries.</p>
           **delete_kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_delete(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_delete(
             ids=ids,
             chunk_size=page_size,
             **delete_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def send(self, page_size=1000, **send_kwargs):
         &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -1482,18 +1389,13 @@ build up complex queries.</p>
           **send_kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_send(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_send(
             ids=ids,
             chunk_size=page_size,
             **send_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def copy(self, to_folder, page_size=1000, **copy_kwargs):
         &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -1505,19 +1407,14 @@ build up complex queries.</p>
           **copy_kwargs:
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_copy(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_copy(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
             **copy_kwargs
         )
-        self._cache = None  # Invalidate the cache, regardless of the results
-        return res
 
     def move(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -1528,18 +1425,13 @@ build up complex queries.</p>
           page_size:  (Default value = 1000)
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_move(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_move(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
 
     def archive(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
@@ -1550,23 +1442,33 @@ build up complex queries.</p>
           page_size:  (Default value = 1000)
 
         &#34;&#34;&#34;
-        if self.is_cached:
-            ids = self._cache
-        else:
-            ids = self._id_only_copy_self()
-            ids.page_size = page_size
-        res = self.folder_collection.account.bulk_archive(
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_archive(
             ids=ids,
             to_folder=to_folder,
             chunk_size=page_size,
         )
-        self._cache = None  # Invalidate the cache after delete, regardless of the results
-        return res
+
+    def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+        &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
+        items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high
+
+        Args:
+          page_size:  (Default value = 1000)
+          **mark_as_junk_kwargs:
+
+        &#34;&#34;&#34;
+        ids = self._id_only_copy_self()
+        ids.page_size = page_size
+        return self.folder_collection.account.bulk_mark_as_junk(
+            ids=ids,
+            chunk_size=page_size,
+            **mark_as_junk_kwargs
+        )
 
     def __str__(self):
         fmt_args = [(&#39;q&#39;, str(self.q)), (&#39;folders&#39;, &#39;[%s]&#39; % &#39;, &#39;.join(str(f) for f in self.folder_collection.folders))]
-        if self.is_cached:
-            fmt_args.append((&#39;len&#39;, str(len(self._cache))))
         return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%s&#39; % (k, v) for k, v in fmt_args)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1606,21 +1508,6 @@ build up complex queries.</p>
 <dt id="exchangelib.queryset.QuerySet.VALUES_LIST"><code class="name">var <span class="ident">VALUES_LIST</span></code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-</dl>
-<h3>Instance variables</h3>
-<dl>
-<dt id="exchangelib.queryset.QuerySet.is_cached"><code class="name">var <span class="ident">is_cached</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def is_cached(self):
-    return self._cache is not None</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -1665,18 +1552,13 @@ to fetch and move per request. We're only fetching the IDs, so keep it high</p>
       page_size:  (Default value = 1000)
 
     &#34;&#34;&#34;
-    if self.is_cached:
-        ids = self._cache
-    else:
-        ids = self._id_only_copy_self()
-        ids.page_size = page_size
-    res = self.folder_collection.account.bulk_archive(
+    ids = self._id_only_copy_self()
+    ids.page_size = page_size
+    return self.folder_collection.account.bulk_archive(
         ids=ids,
         to_folder=to_folder,
         chunk_size=page_size,
-    )
-    self._cache = None  # Invalidate the cache after delete, regardless of the results
-    return res</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.copy"><code class="name flex">
@@ -1706,19 +1588,14 @@ to fetch and copy per request. We're only fetching the IDs, so keep it high</p>
       **copy_kwargs:
 
     &#34;&#34;&#34;
-    if self.is_cached:
-        ids = self._cache
-    else:
-        ids = self._id_only_copy_self()
-        ids.page_size = page_size
-    res = self.folder_collection.account.bulk_copy(
+    ids = self._id_only_copy_self()
+    ids.page_size = page_size
+    return self.folder_collection.account.bulk_copy(
         ids=ids,
         to_folder=to_folder,
         chunk_size=page_size,
         **copy_kwargs
-    )
-    self._cache = None  # Invalidate the cache, regardless of the results
-    return res</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.count"><code class="name flex">
@@ -1744,8 +1621,6 @@ fetch from the server per request. We're only fetching the IDs, so keep it high<
       page_size:  (Default value = 1000)
 
     &#34;&#34;&#34;
-    if self.is_cached:
-        return len(self._cache)
     new_qs = self._copy_self()
     new_qs.only_fields = tuple()
     new_qs.order_fields = None
@@ -1779,18 +1654,13 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
       **delete_kwargs:
 
     &#34;&#34;&#34;
-    if self.is_cached:
-        ids = self._cache
-    else:
-        ids = self._id_only_copy_self()
-        ids.page_size = page_size
-    res = self.folder_collection.account.bulk_delete(
+    ids = self._id_only_copy_self()
+    ids.page_size = page_size
+    return self.folder_collection.account.bulk_delete(
         ids=ids,
         chunk_size=page_size,
         **delete_kwargs
-    )
-    self._cache = None  # Invalidate the cache, regardless of the results
-    return res</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.depth"><code class="name flex">
@@ -1853,8 +1723,6 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 </summary>
 <pre><code class="python">def exists(self):
     &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible&#34;&#34;&#34;
-    if self.is_cached:
-        return len(self._cache) &gt; 0
     new_qs = self._copy_self()
     new_qs.max_items = 1
     return new_qs.count(page_size=1) &gt; 0</code></pre>
@@ -1906,10 +1774,7 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
       **kwargs:
 
     &#34;&#34;&#34;
-    if self.is_cached and not args and not kwargs:
-        # We can only safely use the cache if get() is called without args
-        items = self._cache
-    elif not args and set(kwargs.keys()) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
+    if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
         # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
         # kwargs are present.
         account = self.folder_collection.account
@@ -1936,13 +1801,43 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def iterator(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
-    if self.q.is_never():
-        return []
-    if self.is_cached:
-        return self._cache
-    # Return an iterator that doesn&#39;t bother with caching
-    return self._format_items(items=self._query(), return_format=self.return_format)</code></pre>
+    # Return an iterator over the results
+    warnings.warn(&#39;QuerySet no longer caches results. .iterator() is a no-op.&#39;, DeprecationWarning, stacklevel=2)
+    return self.__iter__()</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.queryset.QuerySet.mark_as_junk"><code class="name flex">
+<span>def <span class="ident">mark_as_junk</span></span>(<span>self, page_size=1000, **mark_as_junk_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
+items to fetch and mark per request. We're only fetching the IDs, so keep it high</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>page_size</code></strong></dt>
+<dd>(Default value = 1000)</dd>
+</dl>
+<p>**mark_as_junk_kwargs:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+    &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
+    items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high
+
+    Args:
+      page_size:  (Default value = 1000)
+      **mark_as_junk_kwargs:
+
+    &#34;&#34;&#34;
+    ids = self._id_only_copy_self()
+    ids.page_size = page_size
+    return self.folder_collection.account.bulk_mark_as_junk(
+        ids=ids,
+        chunk_size=page_size,
+        **mark_as_junk_kwargs
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.move"><code class="name flex">
@@ -1970,18 +1865,13 @@ to fetch and move per request. We're only fetching the IDs, so keep it high</p>
       page_size:  (Default value = 1000)
 
     &#34;&#34;&#34;
-    if self.is_cached:
-        ids = self._cache
-    else:
-        ids = self._id_only_copy_self()
-        ids.page_size = page_size
-    res = self.folder_collection.account.bulk_move(
+    ids = self._id_only_copy_self()
+    ids.page_size = page_size
+    return self.folder_collection.account.bulk_move(
         ids=ids,
         to_folder=to_folder,
         chunk_size=page_size,
-    )
-    self._cache = None  # Invalidate the cache after delete, regardless of the results
-    return res</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.none"><code class="name flex">
@@ -2120,18 +2010,13 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
       **send_kwargs:
 
     &#34;&#34;&#34;
-    if self.is_cached:
-        ids = self._cache
-    else:
-        ids = self._id_only_copy_self()
-        ids.page_size = page_size
-    res = self.folder_collection.account.bulk_send(
+    ids = self._id_only_copy_self()
+    ids.page_size = page_size
+    return self.folder_collection.account.bulk_send(
         ids=ids,
         chunk_size=page_size,
         **send_kwargs
-    )
-    self._cache = None  # Invalidate the cache, regardless of the results
-    return res</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.values"><code class="name flex">
@@ -2213,26 +2098,32 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SearchableMixIn:
+<pre><code class="python">class SearchableMixIn(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Implements a search API for inheritance&#34;&#34;&#34;
 
+    @abc.abstractmethod
     def get(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def all(self):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def none(self):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def filter(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def exclude(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def people(self):
-        raise NotImplementedError()</code></pre>
+        pass</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2251,8 +2142,9 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def all(self):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def all(self):
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.exclude"><code class="name flex">
@@ -2264,8 +2156,9 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def exclude(self, *args, **kwargs):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def exclude(self, *args, **kwargs):
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.filter"><code class="name flex">
@@ -2277,8 +2170,9 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def filter(self, *args, **kwargs):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def filter(self, *args, **kwargs):
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.get"><code class="name flex">
@@ -2290,8 +2184,9 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get(self, *args, **kwargs):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def get(self, *args, **kwargs):
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.none"><code class="name flex">
@@ -2303,8 +2198,9 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def none(self):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def none(self):
+    pass</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.people"><code class="name flex">
@@ -2316,8 +2212,9 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def people(self):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def people(self):
+    pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -2359,8 +2256,8 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <li><code><a title="exchangelib.queryset.QuerySet.exists" href="#exchangelib.queryset.QuerySet.exists">exists</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.filter" href="#exchangelib.queryset.QuerySet.filter">filter</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.get" href="#exchangelib.queryset.QuerySet.get">get</a></code></li>
-<li><code><a title="exchangelib.queryset.QuerySet.is_cached" href="#exchangelib.queryset.QuerySet.is_cached">is_cached</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.iterator" href="#exchangelib.queryset.QuerySet.iterator">iterator</a></code></li>
+<li><code><a title="exchangelib.queryset.QuerySet.mark_as_junk" href="#exchangelib.queryset.QuerySet.mark_as_junk">mark_as_junk</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.move" href="#exchangelib.queryset.QuerySet.move">move</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.none" href="#exchangelib.queryset.QuerySet.none">none</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.only" href="#exchangelib.queryset.QuerySet.only">only</a></code></li>
@@ -2389,7 +2286,7 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

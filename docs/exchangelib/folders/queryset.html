@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.folders.queryset API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,9 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from copy import deepcopy
-import logging
-from ..properties import InvalidField
+<pre><code class="python">import logging
+from copy import deepcopy
+
+from ..properties import InvalidField, FolderId
 from ..queryset import DoesNotExist, MultipleObjectsReturned
 from ..restriction import Q
 
@@ -50,9 +51,9 @@ class FolderQuerySet:
         if not isinstance(folder_collection, FolderCollection):
             raise ValueError(&#34;&#39;folder_collection&#39; %r must be a FolderCollection instance&#34; % folder_collection)
         self.folder_collection = folder_collection
+        self.q = Q()  # Default to no restrictions
         self.only_fields = None
         self._depth = None
-        self.q = None
 
     def _copy_cls(self):
         return self.__class__(folder_collection=self.folder_collection)
@@ -60,9 +61,9 @@ class FolderQuerySet:
     def _copy_self(self):
         &#34;&#34;&#34;Chaining operations must make a copy of self before making any modifications&#34;&#34;&#34;
         new_qs = self._copy_cls()
+        new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
         new_qs._depth = self._depth
-        new_qs.q = None if self.q is None else deepcopy(self.q)
         return new_qs
 
     def only(self, *args):
@@ -107,7 +108,12 @@ class FolderQuerySet:
 
 
         &#34;&#34;&#34;
-        if args or kwargs:
+        from .collections import FolderCollection
+        if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
+            folders = list(FolderCollection(
+                account=self.folder_collection.account, folders=[FolderId(**kwargs)]
+            ).resolve())
+        elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
         else:
             folders = list(self.all())
@@ -135,7 +141,7 @@ class FolderQuerySet:
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
-        new_qs.q = q if new_qs.q is None else new_qs.q &amp; q
+        new_qs.q = new_qs.q &amp; q
         return new_qs
 
     def __iter__(self):
@@ -156,8 +162,7 @@ class FolderQuerySet:
         # GetFolder but we still want to get as much information as possible.
         folders = self.folder_collection.find_folders(q=self.q, depth=self._depth, additional_fields=non_complex_fields)
         if not complex_fields:
-            for f in folders:
-                yield f
+            yield from folders
             return
 
         # Fetch all properties for the found folders
@@ -228,9 +233,9 @@ class SingleFolderQuerySet(FolderQuerySet):
         if not isinstance(folder_collection, FolderCollection):
             raise ValueError(&#34;&#39;folder_collection&#39; %r must be a FolderCollection instance&#34; % folder_collection)
         self.folder_collection = folder_collection
+        self.q = Q()  # Default to no restrictions
         self.only_fields = None
         self._depth = None
-        self.q = None
 
     def _copy_cls(self):
         return self.__class__(folder_collection=self.folder_collection)
@@ -238,9 +243,9 @@ class SingleFolderQuerySet(FolderQuerySet):
     def _copy_self(self):
         &#34;&#34;&#34;Chaining operations must make a copy of self before making any modifications&#34;&#34;&#34;
         new_qs = self._copy_cls()
+        new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
         new_qs._depth = self._depth
-        new_qs.q = None if self.q is None else deepcopy(self.q)
         return new_qs
 
     def only(self, *args):
@@ -285,7 +290,12 @@ class SingleFolderQuerySet(FolderQuerySet):
 
 
         &#34;&#34;&#34;
-        if args or kwargs:
+        from .collections import FolderCollection
+        if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
+            folders = list(FolderCollection(
+                account=self.folder_collection.account, folders=[FolderId(**kwargs)]
+            ).resolve())
+        elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
         else:
             folders = list(self.all())
@@ -313,7 +323,7 @@ class SingleFolderQuerySet(FolderQuerySet):
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
-        new_qs.q = q if new_qs.q is None else new_qs.q &amp; q
+        new_qs.q = new_qs.q &amp; q
         return new_qs
 
     def __iter__(self):
@@ -334,8 +344,7 @@ class SingleFolderQuerySet(FolderQuerySet):
         # GetFolder but we still want to get as much information as possible.
         folders = self.folder_collection.find_folders(q=self.q, depth=self._depth, additional_fields=non_complex_fields)
         if not complex_fields:
-            for f in folders:
-                yield f
+            yield from folders
             return
 
         # Fetch all properties for the found folders
@@ -432,7 +441,7 @@ class SingleFolderQuerySet(FolderQuerySet):
     &#34;&#34;&#34;
     new_qs = self._copy_self()
     q = Q(*args, **kwargs)
-    new_qs.q = q if new_qs.q is None else new_qs.q &amp; q
+    new_qs.q = new_qs.q &amp; q
     return new_qs</code></pre>
 </details>
 </dd>
@@ -456,7 +465,12 @@ class SingleFolderQuerySet(FolderQuerySet):
 
 
     &#34;&#34;&#34;
-    if args or kwargs:
+    from .collections import FolderCollection
+    if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
+        folders = list(FolderCollection(
+            account=self.folder_collection.account, folders=[FolderId(**kwargs)]
+        ).resolve())
+    elif args or kwargs:
         folders = list(self.filter(*args, **kwargs))
     else:
         folders = list(self.all())
@@ -578,7 +592,7 @@ class SingleFolderQuerySet(FolderQuerySet):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

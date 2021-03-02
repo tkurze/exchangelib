@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.create_folder API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,8 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element
+<pre><code class="python">from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element
+from ..util import create_element, set_xml_value, MNS
 
 
 class CreateFolder(EWSAccountService):
@@ -38,13 +38,13 @@ class CreateFolder(EWSAccountService):
     def call(self, parent_folder, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator
-        for folder, elem in zip(folders_list, self._get_elements(payload=self.get_payload(
-                parent_folder=parent_folder, folders=folders
-        ))):
+        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        for folder, elem in zip(folders_list, self._chunked_get_elements(
+                self.get_payload, items=folders_list, parent_folder=parent_folder,
+        )):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
-    def get_payload(self, parent_folder, folders):
+    def get_payload(self, folders, parent_folder):
         create_folder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         parentfolderid = create_element(&#39;m:ParentFolderId&#39;)
         set_xml_value(parentfolderid, parent_folder, version=self.account.version)
@@ -81,13 +81,13 @@ class CreateFolder(EWSAccountService):
     def call(self, parent_folder, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator
-        for folder, elem in zip(folders_list, self._get_elements(payload=self.get_payload(
-                parent_folder=parent_folder, folders=folders
-        ))):
+        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        for folder, elem in zip(folders_list, self._chunked_get_elements(
+                self.get_payload, items=folders_list, parent_folder=parent_folder,
+        )):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
-    def get_payload(self, parent_folder, folders):
+    def get_payload(self, folders, parent_folder):
         create_folder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         parentfolderid = create_element(&#39;m:ParentFolderId&#39;)
         set_xml_value(parentfolderid, parent_folder, version=self.account.version)
@@ -126,15 +126,15 @@ class CreateFolder(EWSAccountService):
 <pre><code class="python">def call(self, parent_folder, folders):
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
-    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator
-    for folder, elem in zip(folders_list, self._get_elements(payload=self.get_payload(
-            parent_folder=parent_folder, folders=folders
-    ))):
+    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+    for folder, elem in zip(folders_list, self._chunked_get_elements(
+            self.get_payload, items=folders_list, parent_folder=parent_folder,
+    )):
         yield parse_folder_elem(elem=elem, folder=folder, account=self.account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.create_folder.CreateFolder.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, parent_folder, folders)</span>
+<span>def <span class="ident">get_payload</span></span>(<span>self, folders, parent_folder)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -142,7 +142,7 @@ class CreateFolder(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, parent_folder, folders):
+<pre><code class="python">def get_payload(self, folders, parent_folder):
     create_folder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     parentfolderid = create_element(&#39;m:ParentFolderId&#39;)
     set_xml_value(parentfolderid, parent_folder, version=self.account.version)
@@ -157,7 +157,9 @@ class CreateFolder(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -193,7 +195,7 @@ class CreateFolder(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

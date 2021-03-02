@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>exchangelib.services.get_persona API documentation</title>
+<title>exchangelib.services.get_user_configuration API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,46 +19,52 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>exchangelib.services.get_persona</code></h1>
+<h1 class="title">Module <code>exchangelib.services.get_user_configuration</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, to_item_id
-from ..properties import PersonaId
-from ..util import create_element, set_xml_value, MNS
+<pre><code class="python">from .common import EWSAccountService
+from ..properties import UserConfiguration
+from ..util import create_element, set_xml_value
+
+ID = &#39;Id&#39;
+DICTIONARY = &#39;Dictionary&#39;
+XML_DATA = &#39;XmlData&#39;
+BINARY_DATA = &#39;BinaryData&#39;
+ALL = &#39;All&#39;
+PROPERTIES_CHOICES = {ID, DICTIONARY, XML_DATA, BINARY_DATA, ALL}
 
 
-class GetPersona(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation&#34;&#34;&#34;
-    SERVICE_NAME = &#39;GetPersona&#39;
+class GetUserConfiguration(EWSAccountService):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation&#34;&#34;&#34;
+    SERVICE_NAME = &#39;GetUserConfiguration&#39;
 
-    def call(self, persona):
-        from ..items import Persona
-        elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
-        if len(elements) != 1:
-            raise ValueError(&#39;Expected exactly one element in response&#39;)
-        elem = elements[0]
-        if isinstance(elem, Exception):
-            raise elem
-        return Persona.from_xml(elem=elem, account=None)
-
-    def get_payload(self, persona):
-        version = self.protocol.version
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
-        return payload
-
-    @staticmethod
-    def _get_elements_in_container(container):
-        from ..items import Persona
-        return container.findall(&#39;{%s}%s&#39; % (MNS, Persona.ELEMENT_NAME))
+    def call(self, user_configuration_name, properties):
+        if properties not in PROPERTIES_CHOICES:
+            raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
+        for elem in self._get_elements(payload=self.get_payload(
+                user_configuration_name=user_configuration_name, properties=properties
+        )):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield UserConfiguration.from_xml(elem=elem, account=self.account)
 
     @classmethod
-    def _response_tag(cls):
-        return &#39;{%s}%sResponseMessage&#39; % (MNS, cls.SERVICE_NAME)</code></pre>
+    def _get_elements_in_container(cls, container):
+        return container.findall(UserConfiguration.response_tag())
+
+    def get_payload(self, user_configuration_name, properties):
+        getuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
+        user_configuration_properties = create_element(&#39;m:UserConfigurationProperties&#39;)
+        set_xml_value(user_configuration_properties, properties, version=self.account.version)
+        getuserconfiguration.append(user_configuration_properties)
+        return getuserconfiguration</code></pre>
 </details>
 </section>
 <section>
@@ -70,44 +76,44 @@ class GetPersona(EWSAccountService):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="exchangelib.services.get_persona.GetPersona"><code class="flex name class">
-<span>class <span class="ident">GetPersona</span></span>
+<dt id="exchangelib.services.get_user_configuration.GetUserConfiguration"><code class="flex name class">
+<span>class <span class="ident">GetUserConfiguration</span></span>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation</a></p></div>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GetPersona(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation&#34;&#34;&#34;
-    SERVICE_NAME = &#39;GetPersona&#39;
+<pre><code class="python">class GetUserConfiguration(EWSAccountService):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation&#34;&#34;&#34;
+    SERVICE_NAME = &#39;GetUserConfiguration&#39;
 
-    def call(self, persona):
-        from ..items import Persona
-        elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
-        if len(elements) != 1:
-            raise ValueError(&#39;Expected exactly one element in response&#39;)
-        elem = elements[0]
-        if isinstance(elem, Exception):
-            raise elem
-        return Persona.from_xml(elem=elem, account=None)
-
-    def get_payload(self, persona):
-        version = self.protocol.version
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
-        return payload
-
-    @staticmethod
-    def _get_elements_in_container(container):
-        from ..items import Persona
-        return container.findall(&#39;{%s}%s&#39; % (MNS, Persona.ELEMENT_NAME))
+    def call(self, user_configuration_name, properties):
+        if properties not in PROPERTIES_CHOICES:
+            raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
+        for elem in self._get_elements(payload=self.get_payload(
+                user_configuration_name=user_configuration_name, properties=properties
+        )):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield UserConfiguration.from_xml(elem=elem, account=self.account)
 
     @classmethod
-    def _response_tag(cls):
-        return &#39;{%s}%sResponseMessage&#39; % (MNS, cls.SERVICE_NAME)</code></pre>
+    def _get_elements_in_container(cls, container):
+        return container.findall(UserConfiguration.response_tag())
+
+    def get_payload(self, user_configuration_name, properties):
+        getuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
+        user_configuration_properties = create_element(&#39;m:UserConfigurationProperties&#39;)
+        set_xml_value(user_configuration_properties, properties, version=self.account.version)
+        getuserconfiguration.append(user_configuration_properties)
+        return getuserconfiguration</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -116,15 +122,15 @@ class GetPersona(EWSAccountService):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.services.get_persona.GetPersona.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dt id="exchangelib.services.get_user_configuration.GetUserConfiguration.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.services.get_persona.GetPersona.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, persona)</span>
+<dt id="exchangelib.services.get_user_configuration.GetUserConfiguration.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, user_configuration_name, properties)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -132,19 +138,20 @@ class GetPersona(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, persona):
-    from ..items import Persona
-    elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
-    if len(elements) != 1:
-        raise ValueError(&#39;Expected exactly one element in response&#39;)
-    elem = elements[0]
-    if isinstance(elem, Exception):
-        raise elem
-    return Persona.from_xml(elem=elem, account=None)</code></pre>
+<pre><code class="python">def call(self, user_configuration_name, properties):
+    if properties not in PROPERTIES_CHOICES:
+        raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
+    for elem in self._get_elements(payload=self.get_payload(
+            user_configuration_name=user_configuration_name, properties=properties
+    )):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield UserConfiguration.from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.services.get_persona.GetPersona.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, persona)</span>
+<dt id="exchangelib.services.get_user_configuration.GetUserConfiguration.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, user_configuration_name, properties)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -152,11 +159,13 @@ class GetPersona(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, persona):
-    version = self.protocol.version
-    payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
-    return payload</code></pre>
+<pre><code class="python">def get_payload(self, user_configuration_name, properties):
+    getuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
+    user_configuration_properties = create_element(&#39;m:UserConfigurationProperties&#39;)
+    set_xml_value(user_configuration_properties, properties, version=self.account.version)
+    getuserconfiguration.append(user_configuration_properties)
+    return getuserconfiguration</code></pre>
 </details>
 </dd>
 </dl>
@@ -188,11 +197,11 @@ class GetPersona(EWSAccountService):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="exchangelib.services.get_persona.GetPersona" href="#exchangelib.services.get_persona.GetPersona">GetPersona</a></code></h4>
+<h4><code><a title="exchangelib.services.get_user_configuration.GetUserConfiguration" href="#exchangelib.services.get_user_configuration.GetUserConfiguration">GetUserConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.services.get_persona.GetPersona.SERVICE_NAME" href="#exchangelib.services.get_persona.GetPersona.SERVICE_NAME">SERVICE_NAME</a></code></li>
-<li><code><a title="exchangelib.services.get_persona.GetPersona.call" href="#exchangelib.services.get_persona.GetPersona.call">call</a></code></li>
-<li><code><a title="exchangelib.services.get_persona.GetPersona.get_payload" href="#exchangelib.services.get_persona.GetPersona.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.get_user_configuration.GetUserConfiguration.SERVICE_NAME" href="#exchangelib.services.get_user_configuration.GetUserConfiguration.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.get_user_configuration.GetUserConfiguration.call" href="#exchangelib.services.get_user_configuration.GetUserConfiguration.call">call</a></code></li>
+<li><code><a title="exchangelib.services.get_user_configuration.GetUserConfiguration.get_payload" href="#exchangelib.services.get_user_configuration.GetUserConfiguration.get_payload">get_payload</a></code></li>
 </ul>
 </li>
 </ul>

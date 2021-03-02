@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.get_item API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,11 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, MNS
-from .common import EWSAccountService, EWSPooledMixIn, create_item_ids_element, create_shape_element
+<pre><code class="python">from .common import EWSAccountService, create_item_ids_element, create_shape_element
+from ..util import create_element, MNS
 
 
-class GetItem(EWSAccountService, EWSPooledMixIn):
+class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem&#34;&#34;&#34;
     SERVICE_NAME = &#39;GetItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
@@ -47,11 +47,14 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
           XML elements for the items, in stable order
 
         &#34;&#34;&#34;
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items,
-            additional_fields=additional_fields,
-            shape=shape,
-        ))
+        from ..folders.base import BaseFolder
+        for elem in self._chunked_get_elements(
+            self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
+        ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
         getitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -83,7 +86,7 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GetItem(EWSAccountService, EWSPooledMixIn):
+<pre><code class="python">class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem&#34;&#34;&#34;
     SERVICE_NAME = &#39;GetItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
@@ -100,11 +103,14 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
           XML elements for the items, in stable order
 
         &#34;&#34;&#34;
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items,
-            additional_fields=additional_fields,
-            shape=shape,
-        ))
+        from ..folders.base import BaseFolder
+        for elem in self._chunked_get_elements(
+            self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
+        ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
         getitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -119,7 +125,6 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
-<li><a title="exchangelib.services.common.EWSPooledMixIn" href="common.html#exchangelib.services.common.EWSPooledMixIn">EWSPooledMixIn</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -167,11 +172,14 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
       XML elements for the items, in stable order
 
     &#34;&#34;&#34;
-    return self._pool_requests(payload_func=self.get_payload, **dict(
-        items=items,
-        additional_fields=additional_fields,
-        shape=shape,
-    ))</code></pre>
+    from ..folders.base import BaseFolder
+    for elem in self._chunked_get_elements(
+        self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
+    ):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_item.GetItem.get_payload"><code class="name flex">
@@ -199,7 +207,9 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -235,7 +245,7 @@ class GetItem(EWSAccountService, EWSPooledMixIn):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.convert_id API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,16 +26,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import logging
-
+<pre><code class="python">from .common import EWSService
+from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
 from ..util import create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
-from .common import EWSPooledMixIn
-
-log = logging.getLogger(__name__)
 
 
-class ConvertId(EWSPooledMixIn):
+class ConvertId(EWSService):
     &#34;&#34;&#34;Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
@@ -43,26 +40,25 @@ class ConvertId(EWSPooledMixIn):
 
     &#34;&#34;&#34;
     SERVICE_NAME = &#39;ConvertId&#39;
+    supported_from = EXCHANGE_2007_SP1
 
     def call(self, items, destination_format):
-        if self.protocol.version.build &lt; EXCHANGE_2007_SP1:
-            raise NotImplementedError(
-                &#39;%r is only supported for Exchange 2007 SP1 servers and later&#39; % self.SERVICE_NAME)
-        from ..properties import ID_FORMATS
         if destination_format not in ID_FORMATS:
             raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items,
-            destination_format=destination_format,
-        ))
+        cls_map = {cls.response_tag(): cls for cls in (
+            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+        )}
+        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         convertid = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element(&#39;m:SourceIds&#39;)
         for item in items:
-            log.debug(&#39;Collecting item %s&#39;, item)
             if not isinstance(item, supported_item_classes):
                 raise ValueError(&#34;&#39;item&#39; value %r must be an instance of %r&#34; % (item, supported_item_classes))
             set_xml_value(item_ids, item, version=self.protocol.version)
@@ -73,14 +69,9 @@ class ConvertId(EWSPooledMixIn):
 
     def _get_elements_in_container(self, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
-            + container.findall(AlternatePublicFolderItemId.response_tag())
-
-    def _get_element_container(self, message, response_message=None, name=None):
-        # There is no element container
-        return message</code></pre>
+            + container.findall(AlternatePublicFolderItemId.response_tag())</code></pre>
 </details>
 </section>
 <section>
@@ -104,7 +95,7 @@ input list.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ConvertId(EWSPooledMixIn):
+<pre><code class="python">class ConvertId(EWSService):
     &#34;&#34;&#34;Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
@@ -112,26 +103,25 @@ input list.</p>
 
     &#34;&#34;&#34;
     SERVICE_NAME = &#39;ConvertId&#39;
+    supported_from = EXCHANGE_2007_SP1
 
     def call(self, items, destination_format):
-        if self.protocol.version.build &lt; EXCHANGE_2007_SP1:
-            raise NotImplementedError(
-                &#39;%r is only supported for Exchange 2007 SP1 servers and later&#39; % self.SERVICE_NAME)
-        from ..properties import ID_FORMATS
         if destination_format not in ID_FORMATS:
             raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
-        return self._pool_requests(payload_func=self.get_payload, **dict(
-            items=items,
-            destination_format=destination_format,
-        ))
+        cls_map = {cls.response_tag(): cls for cls in (
+            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+        )}
+        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         convertid = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element(&#39;m:SourceIds&#39;)
         for item in items:
-            log.debug(&#39;Collecting item %s&#39;, item)
             if not isinstance(item, supported_item_classes):
                 raise ValueError(&#34;&#39;item&#39; value %r must be an instance of %r&#34; % (item, supported_item_classes))
             set_xml_value(item_ids, item, version=self.protocol.version)
@@ -142,23 +132,21 @@ input list.</p>
 
     def _get_elements_in_container(self, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
-            + container.findall(AlternatePublicFolderItemId.response_tag())
-
-    def _get_element_container(self, message, response_message=None, name=None):
-        # There is no element container
-        return message</code></pre>
+            + container.findall(AlternatePublicFolderItemId.response_tag())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.services.common.EWSPooledMixIn" href="common.html#exchangelib.services.common.EWSPooledMixIn">EWSPooledMixIn</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.convert_id.ConvertId.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.convert_id.ConvertId.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -175,16 +163,16 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, destination_format):
-    if self.protocol.version.build &lt; EXCHANGE_2007_SP1:
-        raise NotImplementedError(
-            &#39;%r is only supported for Exchange 2007 SP1 servers and later&#39; % self.SERVICE_NAME)
-    from ..properties import ID_FORMATS
     if destination_format not in ID_FORMATS:
         raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
-    return self._pool_requests(payload_func=self.get_payload, **dict(
-        items=items,
-        destination_format=destination_format,
-    ))</code></pre>
+    cls_map = {cls.response_tag(): cls for cls in (
+        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+    )}
+    for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield cls_map[elem.tag].from_xml(elem, account=None)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.convert_id.ConvertId.get_payload"><code class="name flex">
@@ -197,12 +185,10 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, destination_format):
-    from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
     supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
     convertid = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
     item_ids = create_element(&#39;m:SourceIds&#39;)
     for item in items:
-        log.debug(&#39;Collecting item %s&#39;, item)
         if not isinstance(item, supported_item_classes):
             raise ValueError(&#34;&#39;item&#39; value %r must be an instance of %r&#34; % (item, supported_item_classes))
         set_xml_value(item_ids, item, version=self.protocol.version)
@@ -215,9 +201,11 @@ input list.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSPooledMixIn" href="common.html#exchangelib.services.common.EWSPooledMixIn">EWSPooledMixIn</a></b></code>:
+<li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSPooledMixIn.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -244,6 +232,7 @@ input list.</p>
 <li><code><a title="exchangelib.services.convert_id.ConvertId.SERVICE_NAME" href="#exchangelib.services.convert_id.ConvertId.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.convert_id.ConvertId.call" href="#exchangelib.services.convert_id.ConvertId.call">call</a></code></li>
 <li><code><a title="exchangelib.services.convert_id.ConvertId.get_payload" href="#exchangelib.services.convert_id.ConvertId.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.convert_id.ConvertId.supported_from" href="#exchangelib.services.convert_id.ConvertId.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 </ul>
@@ -252,7 +241,7 @@ input list.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

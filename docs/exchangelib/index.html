@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -41,12 +41,12 @@ from .items import AcceptItem, TentativelyAcceptItem, DeclineItem, CalendarItem,
     DistributionList, Message, PostItem, Task, ForwardItem, ReplyToItem, ReplyAllToItem
 from .properties import Body, HTMLBody, ItemId, Mailbox, Attendee, Room, RoomList, UID, DLMailbox
 from .protocol import FaultTolerance, FailFast, BaseProtocol, NoVerifyHTTPAdapter, TLSClientAuth
-from .settings import OofSettings
 from .restriction import Q
+from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;3.3.2&#39;
+__version__ = &#39;4.0.0&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -351,19 +351,23 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
-            log.warning(&#39;Failed to get locale (%s)&#39; % e)
+            log.warning(&#39;Failed to get locale (%s)&#39;, e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
             raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
-        try:
-            self.default_timezone = default_timezone or EWSTimeZone.localzone()
-        except (ValueError, UnknownTimeZone) as e:
-            # There is no translation from local timezone name to Windows timezone name, or e failed to find the
-            # local timezone.
-            log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
-            self.default_timezone = UTC
-        if not isinstance(self.default_timezone, EWSTimeZone):
-            raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % self.default_timezone)
+        if default_timezone:
+            try:
+                self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
+            except TypeError:
+                raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % default_timezone)
+        else:
+            try:
+                self.default_timezone = EWSTimeZone.localzone()
+            except (ValueError, UnknownTimeZone) as e:
+                # There is no translation from local timezone name to Windows timezone name, or e failed to find the
+                # local timezone.
+                log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
+                self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
             raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
         if autodiscover:
@@ -590,19 +594,16 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         )
 
     def _consume_item_service(self, service_cls, items, chunk_size, kwargs):
-        # &#39;items&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `some_folder.filter(...).delete()`. In
-        # that case, we want to use its iterator. Otherwise, peek() will start a count() which is wasteful because we
-        # need the item IDs immediately afterwards. iterator() will only do the bare minimum.
         if isinstance(items, QuerySet):
-            items = items.iterator()
+            # We just want an iterator over the results
+            items = iter(items)
         is_empty, items = peek(items)
         if is_empty:
             # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
             # empty &#39;ids&#39; and return early.
             return
         kwargs[&#39;items&#39;] = items
-        for i in service_cls(account=self, chunk_size=chunk_size).call(**kwargs):
-            yield i
+        yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
         &#34;&#34;&#34;Return export strings of the given items
@@ -670,15 +671,11 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             message_disposition,
             send_meeting_invitations,
         )
-        return list(
-            i if isinstance(i, Exception)
-            else BulkCreateResult.from_xml(elem=i, account=self)
-            for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                folder=folder,
-                message_disposition=message_disposition,
-                send_meeting_invitations=send_meeting_invitations,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            folder=folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=send_meeting_invitations,
+        )))
 
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
@@ -713,15 +710,12 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             message_disposition,
             send_meeting_invitations_or_cancellations,
         )
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-                conflict_resolution=conflict_resolution,
-                message_disposition=message_disposition,
-                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-                suppress_read_receipts=suppress_read_receipts,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
@@ -793,12 +787,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
           Status for each send operation, in the same order as the input
 
         &#34;&#34;&#34;
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
         &#34;&#34;&#34;Move items to another folder
@@ -813,12 +804,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
           folder in a different mailbox, an empty list is returned.
 
         &#34;&#34;&#34;
-        return list(
-            i if isinstance(i, Exception) else Item.id_from_xml(i)
-            for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-                to_folder=to_folder,
-            ))
-        )
+        return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+            to_folder=to_folder,
+        )))
 
     def bulk_archive(self, ids, to_folder, chunk_size=None):
         &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
@@ -837,6 +825,25 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                 to_folder=to_folder,
             ))
         )
+
+    def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
+        &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
+
+        Args:
+          ids: an iterable of either (id, changekey) tuples or Item objects.
+          is_junk: Whether the messages are junk or not
+          move_item: Whether to move the messages to the junk folder or not
+          chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+        Returns:
+          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+          stable order of the requested items.
+
+        &#34;&#34;&#34;
+        return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+            is_junk=is_junk,
+            move_item=move_item,
+        )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
         &#34;&#34;&#34;Fetch items by ID
@@ -867,15 +874,29 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
                                  if not f.field.is_attribute}
         # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-        for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        yield from self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        )):
-            if isinstance(i, Exception):
-                yield i
-            else:
-                item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
-                yield item
+        ))
+
+    def fetch_personas(self, ids):
+        &#34;&#34;&#34;Fetch personas by ID
+
+        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :return: A generator of Persona objects, in the same order as the input
+        &#34;&#34;&#34;
+        if isinstance(ids, QuerySet):
+            # We just want an iterator over the results
+            ids = iter(ids)
+        is_empty, ids = peek(ids)
+        if is_empty:
+            # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+            # empty &#39;ids&#39; and return early.
+            return
+        # GetPersona only accepts one persona ID per request. Crazy.
+        svc = GetPersona(account=self)
+        for i in ids:
+            yield svc.call(persona=i)
 
     @property
     def mail_tips(self):
@@ -2014,12 +2035,9 @@ to work.</p>
       Status for each send operation, in the same order as the input
 
     &#34;&#34;&#34;
-    return list(
-        i if isinstance(i, Exception) else Item.id_from_xml(i)
-        for i in self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-            to_folder=to_folder,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        to_folder=to_folder,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Account.bulk_create"><code class="name flex">
@@ -2079,15 +2097,11 @@ of the created item, and the 'id' of any attachments that were also created.</p>
         message_disposition,
         send_meeting_invitations,
     )
-    return list(
-        i if isinstance(i, Exception)
-        else BulkCreateResult.from_xml(elem=i, account=self)
-        for i in self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-            folder=folder,
-            message_disposition=message_disposition,
-            send_meeting_invitations=send_meeting_invitations,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=CreateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+        folder=folder,
+        message_disposition=message_disposition,
+        send_meeting_invitations=send_meeting_invitations,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Account.bulk_delete"><code class="name flex">
@@ -2155,6 +2169,49 @@ AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)</dd>
     )</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.Account.bulk_mark_as_junk"><code class="name flex">
+<span>def <span class="ident">bulk_mark_as_junk</span></span>(<span>self, ids, is_junk, move_item, chunk_size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
+<dt><strong><code>is_junk</code></strong></dt>
+<dd>Whether the messages are junk or not</dd>
+<dt><strong><code>move_item</code></strong></dt>
+<dd>Whether to move the messages to the junk folder or not</dd>
+<dt><strong><code>chunk_size</code></strong></dt>
+<dd>The number of items to send to the server in a single request (Default value = None)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+stable order of the requested items.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
+    &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
+
+    Args:
+      ids: an iterable of either (id, changekey) tuples or Item objects.
+      is_junk: Whether the messages are junk or not
+      move_item: Whether to move the messages to the junk folder or not
+      chunk_size: The number of items to send to the server in a single request (Default value = None)
+
+    Returns:
+      A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
+      stable order of the requested items.
+
+    &#34;&#34;&#34;
+    return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
+        is_junk=is_junk,
+        move_item=move_item,
+    )))</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.Account.bulk_move"><code class="name flex">
 <span>def <span class="ident">bulk_move</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
 </code></dt>
@@ -2189,12 +2246,9 @@ folder in a different mailbox, an empty list is returned.</p></div>
       folder in a different mailbox, an empty list is returned.
 
     &#34;&#34;&#34;
-    return list(
-        i if isinstance(i, Exception) else Item.id_from_xml(i)
-        for i in self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
-            to_folder=to_folder,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+        to_folder=to_folder,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Account.bulk_send"><code class="name flex">
@@ -2306,15 +2360,12 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
         message_disposition,
         send_meeting_invitations_or_cancellations,
     )
-    return list(
-        i if isinstance(i, Exception) else Item.id_from_xml(i)
-        for i in self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
-            conflict_resolution=conflict_resolution,
-            message_disposition=message_disposition,
-            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-            suppress_read_receipts=suppress_read_receipts,
-        ))
-    )</code></pre>
+    return list(self._consume_item_service(service_cls=UpdateItem, items=items, chunk_size=chunk_size, kwargs=dict(
+        conflict_resolution=conflict_resolution,
+        message_disposition=message_disposition,
+        send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+        suppress_read_receipts=suppress_read_receipts,
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Account.export"><code class="name flex">
@@ -2402,15 +2453,41 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
         additional_fields = {f for f in validation_folder.normalize_fields(fields=only_fields)
                              if not f.field.is_attribute}
     # Always use IdOnly here, because AllProperties doesn&#39;t actually get *all* properties
-    for i in self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
+    yield from self._consume_item_service(service_cls=GetItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             additional_fields=additional_fields,
             shape=ID_ONLY,
-    )):
-        if isinstance(i, Exception):
-            yield i
-        else:
-            item = validation_folder.item_model_from_tag(i.tag).from_xml(elem=i, account=self)
-            yield item</code></pre>
+    ))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.Account.fetch_personas"><code class="name flex">
+<span>def <span class="ident">fetch_personas</span></span>(<span>self, ids)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fetch personas by ID</p>
+<p>ids: an iterable of either (id, changekey) tuples or Persona objects.
+:return: A generator of Persona objects, in the same order as the input</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_personas(self, ids):
+    &#34;&#34;&#34;Fetch personas by ID
+
+    ids: an iterable of either (id, changekey) tuples or Persona objects.
+    :return: A generator of Persona objects, in the same order as the input
+    &#34;&#34;&#34;
+    if isinstance(ids, QuerySet):
+        # We just want an iterator over the results
+        ids = iter(ids)
+    is_empty, ids = peek(ids)
+    if is_empty:
+        # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
+        # empty &#39;ids&#39; and return early.
+        return
+    # GetPersona only accepts one persona ID per request. Crazy.
+    svc = GetPersona(account=self)
+    for i in ids:
+        yield svc.call(persona=i)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Account.upload"><code class="name flex">
@@ -2562,7 +2639,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
     CONNECTIONS_PER_SESSION = 1
     # The number of times a session may be reused before creating a new session object. &#39;None&#39; means &#34;infinite&#34;.
     # Discarding sessions after a certain number of usages may limit memory leaks in the Session object.
-    MAX_SESSION_USAGE_COUNT = 100
+    MAX_SESSION_USAGE_COUNT = None
     # Timeout for HTTP requests
     TIMEOUT = 120
 
@@ -2579,16 +2656,13 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         if not config.service_endpoint:
             raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         self.config = config
-        self._session_pool_size = self.SESSION_POOLSIZE
-
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
+        self._session_pool_size = 0
+        self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
         # Try to behave nicely with the remote server. We want to keep the connection open between requests.
         # We also want to re-use sessions, to avoid the NTLM auth handshake on every request. We must know the
-        # authentication method to create a session pool.
-        self._session_pool = self._create_session_pool()
+        # authentication method to create sessions.
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     @property
@@ -2606,11 +2680,10 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
     @credentials.setter
     def credentials(self, value):
         # We are updating credentials, but that doesn&#39;t automatically propagate to the session objects. The simplest
-        # solution is to just kill the session pool and rebuild it.
+        # solution is to just kill the sessions in the pool.
         with self._session_pool_lock:
             self.config._credentials = value
             self.close()
-            self._session_pool = self._create_session_pool()
 
     @property
     def retry_policy(self):
@@ -2630,7 +2703,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
     def __setstate__(self, state):
         # Restore the session pool and lock
         self.__dict__.update(state)
-        self._session_pool = self._create_session_pool()
+        self._session_pool = LifoQueue()
         self._session_pool_lock = Lock()
 
     def __del__(self):
@@ -2645,7 +2718,9 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         log.debug(&#39;Server %s: Closing sessions&#39;, self.server)
         while True:
             try:
-                self._session_pool.get(block=False).close()
+                session = self._session_pool.get(block=False)
+                self.close_session(session)
+                self._session_pool_size -= 1
             except Empty:
                 break
 
@@ -2659,17 +2734,6 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
             max_retries=0,
         )
 
-    def get_auth_type(self):
-        # Autodetect and return authentication type
-        raise NotImplementedError()
-
-    def _create_session_pool(self):
-        # Create a pool to reuse sessions containing connections to the server
-        session_pool = LifoQueue()
-        for _ in range(self._session_pool_size):
-            session_pool.put(self.create_session(), block=False)
-        return session_pool
-
     @property
     def session_pool_size(self):
         return self._session_pool_size
@@ -2678,15 +2742,15 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
         &#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
-        # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
-        if self._session_pool_size == self.SESSION_POOLSIZE:
+        # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
+        if self._session_pool_size == self._session_pool_maxsize:
             raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
         with self._session_pool_lock:
-            if self._session_pool_size &gt;= self.SESSION_POOLSIZE:
+            if self._session_pool_size &gt;= self._session_pool_maxsize:
                 log.debug(&#39;Session pool size was increased in another thread&#39;)
                 return
-            log.warning(&#39;Increasing session pool size from %s to %s&#39;, self._session_pool_size,
-                        self._session_pool_size + 1)
+            log.debug(&#39;Server %s: Increasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
+                      self._session_pool_size + 1)
             self._session_pool.put(self.create_session(), block=False)
             self._session_pool_size += 1
 
@@ -2703,23 +2767,35 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
             if self._session_pool_size &lt;= 1:
                 log.debug(&#39;Session pool size was decreased in another thread&#39;)
                 return
-            log.warning(&#39;Decreasing session pool size from %s to %s&#39;, self._session_pool_size,
+            log.warning(&#39;Server %s: Decreasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
                         self._session_pool_size - 1)
-            self.get_session().close()
+            session = self.get_session()
+            self.close_session(session)
             self._session_pool_size -= 1
 
     def get_session(self):
+        # Try to get a session from the queue. If the queue is empty, try to add one more session to the queue. If the
+        # queue is already at its max, wait until a session becomes available.
         _timeout = 60  # Rate-limit messages about session starvation
-        while True:
+        try:
+            session = self._session_pool.get(block=False)
+            log.debug(&#39;Server %s: Got session immediately&#39;, self.server)
+        except Empty:
             try:
-                log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
-                session = self._session_pool.get(timeout=_timeout)
-                log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
-                session.usage_count += 1
-                return session
-            except Empty:
-                # This is normal when we have many worker threads starving for available sessions
-                log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+                self.increase_poolsize()
+            except SessionPoolMaxSizeReached:
+                pass
+            while True:
+                try:
+                    log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
+                    session = self._session_pool.get(timeout=_timeout)
+                    break
+                except Empty:
+                    # This is normal when we have many worker threads starving for available sessions
+                    log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+        log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
+        session.usage_count += 1
+        return session
 
     def release_session(self, session):
         # This should never fail, as we don&#39;t have more sessions than the queue contains
@@ -2732,18 +2808,20 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         except Full:
             log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
 
+    def close_session(self, session):
+        session.close()
+        del session
+
     def retire_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug(&#39;Server %s: Retiring session %s&#39;, self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         self.release_session(self.create_session())
 
     def renew_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
         log.debug(&#39;Server %s: Renewing session %s&#39;, self.server, session.session_id)
-        session.close()
-        del session
+        self.close_session(session)
         return self.create_session()
 
     def refresh_credentials(self, session):
@@ -2757,7 +2835,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
                 # they&#39;re the same as the session was created with. If
                 # this isn&#39;t the case, we can just go ahead with a new
                 # session using the already-updated credentials.
-                self.credentials.refresh()
+                self.credentials.refresh(session=session)
         return self.renew_session(session)
 
     def create_session(self):
@@ -2766,7 +2844,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
                 raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
-            session = self.raw_session()
+            session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
             with self.credentials.lock:
@@ -2783,7 +2861,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
                         username = &#39;\\&#39; + self.credentials.username
                     else:
                         username = self.credentials.username
-                    session = self.raw_session()
+                    session = self.raw_session(self.service_endpoint)
                     session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
                                                      password=self.credentials.password)
 
@@ -2843,7 +2921,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
             token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
-        session = self.raw_session(oauth2_client=client, oauth2_session_params=session_params)
+        session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not has_token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
@@ -2857,15 +2935,14 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
         return session
 
     @classmethod
-    def raw_session(cls, oauth2_client=None, oauth2_session_params=None):
+    def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
         if oauth2_client:
             session = OAuth2Session(client=oauth2_client, **(oauth2_session_params or {}))
         else:
             session = requests.sessions.Session()
         session.headers.update(DEFAULT_HEADERS)
         session.headers[&#39;User-Agent&#39;] = cls.USERAGENT
-        session.mount(&#39;http://&#39;, adapter=cls.get_adapter())
-        session.mount(&#39;https://&#39;, adapter=cls.get_adapter())
+        session.mount(prefix, adapter=cls.get_adapter())
         return session
 
     def __repr__(self):
@@ -2951,7 +3028,7 @@ def get_adapter(cls):
 </details>
 </dd>
 <dt id="exchangelib.BaseProtocol.raw_session"><code class="name flex">
-<span>def <span class="ident">raw_session</span></span>(<span>oauth2_client=None, oauth2_session_params=None)</span>
+<span>def <span class="ident">raw_session</span></span>(<span>prefix, oauth2_client=None, oauth2_session_params=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2960,15 +3037,14 @@ def get_adapter(cls):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def raw_session(cls, oauth2_client=None, oauth2_session_params=None):
+def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
     if oauth2_client:
         session = OAuth2Session(client=oauth2_client, **(oauth2_session_params or {}))
     else:
         session = requests.sessions.Session()
     session.headers.update(DEFAULT_HEADERS)
     session.headers[&#39;User-Agent&#39;] = cls.USERAGENT
-    session.mount(&#39;http://&#39;, adapter=cls.get_adapter())
-    session.mount(&#39;https://&#39;, adapter=cls.get_adapter())
+    session.mount(prefix, adapter=cls.get_adapter())
     return session</code></pre>
 </details>
 </dd>
@@ -3063,9 +3139,25 @@ def session_pool_size(self):
     log.debug(&#39;Server %s: Closing sessions&#39;, self.server)
     while True:
         try:
-            self._session_pool.get(block=False).close()
+            session = self._session_pool.get(block=False)
+            self.close_session(session)
+            self._session_pool_size -= 1
         except Empty:
             break</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.BaseProtocol.close_session"><code class="name flex">
+<span>def <span class="ident">close_session</span></span>(<span>self, session)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_session(self, session):
+    session.close()
+    del session</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.BaseProtocol.create_oauth2_session"><code class="name flex">
@@ -3126,7 +3218,7 @@ def session_pool_size(self):
         token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
         client = BackendApplicationClient(client_id=self.credentials.client_id)
 
-    session = self.raw_session(oauth2_client=client, oauth2_session_params=session_params)
+    session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
     if not has_token:
         # Fetch the token explicitly -- it doesn&#39;t occur implicitly
         token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
@@ -3155,7 +3247,7 @@ def session_pool_size(self):
     if self.credentials is None:
         if self.auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
-        session = self.raw_session()
+        session = self.raw_session(self.service_endpoint)
         session.auth = get_auth_instance(auth_type=self.auth_type)
     else:
         with self.credentials.lock:
@@ -3172,7 +3264,7 @@ def session_pool_size(self):
                     username = &#39;\\&#39; + self.credentials.username
                 else:
                     username = self.credentials.username
-                session = self.raw_session()
+                session = self.raw_session(self.service_endpoint)
                 session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
                                                  password=self.credentials.password)
 
@@ -3207,24 +3299,11 @@ requests. We decrease by one session per call.</p></div>
         if self._session_pool_size &lt;= 1:
             log.debug(&#39;Session pool size was decreased in another thread&#39;)
             return
-        log.warning(&#39;Decreasing session pool size from %s to %s&#39;, self._session_pool_size,
+        log.warning(&#39;Server %s: Decreasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
                     self._session_pool_size - 1)
-        self.get_session().close()
+        session = self.get_session()
+        self.close_session(session)
         self._session_pool_size -= 1</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.BaseProtocol.get_auth_type"><code class="name flex">
-<span>def <span class="ident">get_auth_type</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_auth_type(self):
-    # Autodetect and return authentication type
-    raise NotImplementedError()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.BaseProtocol.get_session"><code class="name flex">
@@ -3237,17 +3316,28 @@ requests. We decrease by one session per call.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_session(self):
+    # Try to get a session from the queue. If the queue is empty, try to add one more session to the queue. If the
+    # queue is already at its max, wait until a session becomes available.
     _timeout = 60  # Rate-limit messages about session starvation
-    while True:
+    try:
+        session = self._session_pool.get(block=False)
+        log.debug(&#39;Server %s: Got session immediately&#39;, self.server)
+    except Empty:
         try:
-            log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
-            session = self._session_pool.get(timeout=_timeout)
-            log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
-            session.usage_count += 1
-            return session
-        except Empty:
-            # This is normal when we have many worker threads starving for available sessions
-            log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)</code></pre>
+            self.increase_poolsize()
+        except SessionPoolMaxSizeReached:
+            pass
+        while True:
+            try:
+                log.debug(&#39;Server %s: Waiting for session&#39;, self.server)
+                session = self._session_pool.get(timeout=_timeout)
+                break
+            except Empty:
+                # This is normal when we have many worker threads starving for available sessions
+                log.debug(&#39;Server %s: No sessions available for %s seconds&#39;, self.server, _timeout)
+    log.debug(&#39;Server %s: Got session %s&#39;, self.server, session.session_id)
+    session.usage_count += 1
+    return session</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.BaseProtocol.increase_poolsize"><code class="name flex">
@@ -3263,15 +3353,15 @@ requests. We decrease by one session per call.</p></div>
     &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
     &#34;&#34;&#34;
     # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
-    # the pool size variable, to avoid race conditions. We must not exceed the SESSION_POOLSIZE limit.
-    if self._session_pool_size == self.SESSION_POOLSIZE:
+    # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
+    if self._session_pool_size == self._session_pool_maxsize:
         raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
     with self._session_pool_lock:
-        if self._session_pool_size &gt;= self.SESSION_POOLSIZE:
+        if self._session_pool_size &gt;= self._session_pool_maxsize:
             log.debug(&#39;Session pool size was increased in another thread&#39;)
             return
-        log.warning(&#39;Increasing session pool size from %s to %s&#39;, self._session_pool_size,
-                    self._session_pool_size + 1)
+        log.debug(&#39;Server %s: Increasing session pool size from %s to %s&#39;, self.server, self._session_pool_size,
+                  self._session_pool_size + 1)
         self._session_pool.put(self.create_session(), block=False)
         self._session_pool_size += 1</code></pre>
 </details>
@@ -3296,7 +3386,7 @@ requests. We decrease by one session per call.</p></div>
             # they&#39;re the same as the session was created with. If
             # this isn&#39;t the case, we can just go ahead with a new
             # session using the already-updated credentials.
-            self.credentials.refresh()
+            self.credentials.refresh(session=session)
     return self.renew_session(session)</code></pre>
 </details>
 </dd>
@@ -3333,8 +3423,7 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">def renew_session(self, session):
     # The session is useless. Close it completely and place a fresh session in the pool
     log.debug(&#39;Server %s: Renewing session %s&#39;, self.server, session.session_id)
-    session.close()
-    del session
+    self.close_session(session)
     return self.create_session()</code></pre>
 </details>
 </dd>
@@ -3350,8 +3439,7 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">def retire_session(self, session):
     # The session is useless. Close it completely and place a fresh session in the pool
     log.debug(&#39;Server %s: Retiring session %s&#39;, self.server, session.session_id)
-    session.close()
-    del session
+    self.close_session(session)
     self.release_session(self.create_session())</code></pre>
 </details>
 </dd>
@@ -3372,7 +3460,6 @@ requests. We decrease by one session per call.</p></div>
     &#34;&#34;&#34;Helper to mark the &#39;body&#39; field as a complex attribute.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/body
-
     &#34;&#34;&#34;
     body_type = &#39;Text&#39;
 
@@ -3521,6 +3608,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
             return self.API_VERSION_MAP[self.major_version][self.minor_version]
         except KeyError:
             raise ValueError(&#39;API version for build %s is unknown&#39; % self)
+
+    def fullname(self):
+        return VERSIONS[self.api_version()][1]
 
     def __cmp__(self, other):
         # __cmp__ is not a magic method in Python3. We&#39;ll just use it here to implement comparison operators
@@ -3679,6 +3769,19 @@ def from_xml(cls, elem):
         raise ValueError(&#39;API version for build %s is unknown&#39; % self)</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.Build.fullname"><code class="name flex">
+<span>def <span class="ident">fullname</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fullname(self):
+    return VERSIONS[self.api_version()][1]</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="exchangelib.CalendarItem"><code class="flex name class">
@@ -3799,13 +3902,13 @@ def from_xml(cls, elem):
         # Sets proper values on the timezone fields if they are not already set
         if self.start is None:
             start_tz = None
-        elif type(self.start) == EWSDate:
+        elif type(self.start) in (EWSDate, datetime.date):
             start_tz = self.account.default_timezone
         else:
             start_tz = self.start.tzinfo
         if self.end is None:
             end_tz = None
-        elif type(self.end) == EWSDate:
+        elif type(self.end) in (EWSDate, datetime.date):
             end_tz = self.account.default_timezone
         else:
             end_tz = self.end.tzinfo
@@ -3899,7 +4002,7 @@ def from_xml(cls, elem):
             value = getattr(self, field_name)
             if value is None:
                 continue
-            if type(value) == EWSDate:
+            if type(value) in (EWSDate, datetime.date):
                 # EWS always expects a datetime
                 value = self.date_to_datetime(field_name=field_name)
                 # We already generated an XML element for this field, but it contains a plain date at this point, which
@@ -4180,13 +4283,13 @@ def timezone_fields(cls):
     # Sets proper values on the timezone fields if they are not already set
     if self.start is None:
         start_tz = None
-    elif type(self.start) == EWSDate:
+    elif type(self.start) in (EWSDate, datetime.date):
         start_tz = self.account.default_timezone
     else:
         start_tz = self.start.tzinfo
     if self.end is None:
         end_tz = None
-    elif type(self.end) == EWSDate:
+    elif type(self.end) in (EWSDate, datetime.date):
         end_tz = self.account.default_timezone
     else:
         end_tz = self.end.tzinfo
@@ -4306,7 +4409,7 @@ def timezone_fields(cls):
         value = getattr(self, field_name)
         if value is None:
             continue
-        if type(value) == EWSDate:
+        if type(value) in (EWSDate, datetime.date):
             # EWS always expects a datetime
             value = self.date_to_datetime(field_name=field_name)
             # We already generated an XML element for this field, but it contains a plain date at this point, which
@@ -4453,7 +4556,7 @@ def timezone_fields(cls):
 </dd>
 <dt id="exchangelib.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>credentials=None, server=None, service_endpoint=None, auth_type=None, version=None, retry_policy=None)</span>
+<span>(</span><span>credentials=None, server=None, service_endpoint=None, auth_type=None, version=None, retry_policy=None, max_connections=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Contains information needed to create an authenticated connection to an EWS endpoint.</p>
@@ -4470,9 +4573,11 @@ add the server version as a hint. This allows to skip the auth type and version 
 <pre><code>config = Configuration(auth_type=NTLM, ...)
 config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
 </code></pre>
-<p>Finally, you can use 'retry_policy' to define a custom retry policy for handling server connection failures:</p>
+<p>You can use 'retry_policy' to define a custom retry policy for handling server connection failures:</p>
 <pre><code>config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
-</code></pre></div>
+</code></pre>
+<p>'max_connections' defines the max number of connections allowed for this server. This may be restricted by
+policies on the Exchange server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -4497,27 +4602,31 @@ config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
         config = Configuration(auth_type=NTLM, ...)
         config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
 
-    Finally, you can use &#39;retry_policy&#39; to define a custom retry policy for handling server connection failures:
+    You can use &#39;retry_policy&#39; to define a custom retry policy for handling server connection failures:
 
         config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
 
+    &#39;max_connections&#39; defines the max number of connections allowed for this server. This may be restricted by
+    policies on the Exchange server.
     &#34;&#34;&#34;
 
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
-                 retry_policy=None):
+                 retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError(&#34;&#39;credentials&#39; %r must be a Credentials instance&#34; % credentials)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
             raise ValueError(&#34;&#39;auth_type&#39; %r must be one of %s&#34;
-                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP.keys()))))
+                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP))))
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
             raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
         if not isinstance(retry_policy, RetryPolicy):
             raise ValueError(&#34;&#39;retry_policy&#39; %r must be a RetryPolicy instance&#34; % retry_policy)
+        if not isinstance(max_connections, (int, type(None))):
+            raise ValueError(&#34;&#39;max_connections&#39; must be an integer&#34;)
         self._credentials = credentials
         if server:
             self.service_endpoint = &#39;https://%s/EWS/Exchange.asmx&#39; % server
@@ -4526,6 +4635,7 @@ config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
         self.auth_type = auth_type
         self.version = version
         self.retry_policy = retry_policy
+        self.max_connections = max_connections
 
     @property
     def credentials(self):
@@ -5289,15 +5399,15 @@ password: Clear-text password</li>
     def from_string(cls, date_string):
         # Sometimes, we&#39;ll receive a date string with timezone information. Not very useful.
         if date_string.endswith(&#39;Z&#39;):
-            dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%dZ&#39;)
+            date_fmt = &#39;%Y-%m-%dZ&#39;
         elif &#39;:&#39; in date_string:
             if &#39;+&#39; in date_string:
-                dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%d+%H:%M&#39;)
+                date_fmt = &#39;%Y-%m-%d+%H:%M&#39;
             else:
-                dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%d-%H:%M&#39;)
+                date_fmt = &#39;%Y-%m-%d-%H:%M&#39;
         else:
-            dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%d&#39;)
-        d = dt.date()
+            date_fmt = &#39;%Y-%m-%d&#39;
+        d = datetime.datetime.strptime(date_string, date_fmt).date()
         if isinstance(d, cls):
             return d
         return cls.from_date(d)  # We want to return EWSDate objects</code></pre>
@@ -5337,15 +5447,15 @@ def from_date(cls, d):
 def from_string(cls, date_string):
     # Sometimes, we&#39;ll receive a date string with timezone information. Not very useful.
     if date_string.endswith(&#39;Z&#39;):
-        dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%dZ&#39;)
+        date_fmt = &#39;%Y-%m-%dZ&#39;
     elif &#39;:&#39; in date_string:
         if &#39;+&#39; in date_string:
-            dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%d+%H:%M&#39;)
+            date_fmt = &#39;%Y-%m-%d+%H:%M&#39;
         else:
-            dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%d-%H:%M&#39;)
+            date_fmt = &#39;%Y-%m-%d-%H:%M&#39;
     else:
-        dt = datetime.datetime.strptime(date_string, &#39;%Y-%m-%d&#39;)
-    d = dt.date()
+        date_fmt = &#39;%Y-%m-%d&#39;
+    d = datetime.datetime.strptime(date_string, date_fmt).date()
     if isinstance(d, cls):
         return d
     return cls.from_date(d)  # We want to return EWSDate objects</code></pre>
@@ -5404,8 +5514,22 @@ def fromordinal(cls, n):
 
     def __new__(cls, *args, **kwargs):
         # pylint: disable=arguments-differ
-        if not isinstance(kwargs.get(&#39;tzinfo&#39;), (EWSTimeZone, type(None))):
-            raise ValueError(&#39;tzinfo must be an EWSTimeZone instance&#39;)
+
+        if len(args) == 8:
+            tzinfo = args[7]
+        else:
+            tzinfo = kwargs.get(&#39;tzinfo&#39;)
+        if isinstance(tzinfo, zoneinfo.ZoneInfo):
+            # Don&#39;t allow pytz or dateutil timezones here. They are not safe to use as direct input for datetime()
+            tzinfo = EWSTimeZone.from_timezone(tzinfo)
+        if not isinstance(tzinfo, (EWSTimeZone, type(None))):
+            raise ValueError(&#39;tzinfo %r must be an EWSTimeZone instance&#39; % tzinfo)
+        if len(args) == 8:
+            args = list(args)
+            args[7] = tzinfo
+            args = tuple(args)
+        else:
+            kwargs[&#39;tzinfo&#39;] = tzinfo
         return super().__new__(cls, *args, **kwargs)
 
     def ewsformat(self):
@@ -5429,17 +5553,7 @@ def fromordinal(cls, n):
         elif isinstance(d.tzinfo, EWSTimeZone):
             tz = d.tzinfo
         else:
-            # Support some more tzinfo implementations. We could use isinstance(), but then we&#39;d have to have pytz
-            # and dateutil as dependencies for this package.
-            tz_module = d.tzinfo.__class__.__module__.split(&#39;.&#39;)[0]
-            if tz_module == &#39;pytz&#39;:
-                tz = EWSTimeZone.from_pytz(d.tzinfo)
-            elif tz_module == &#39;dateutil&#39;:
-                tz = EWSTimeZone.from_dateutil(d.tzinfo)
-            elif tz_module in (&#39;backports&#39;, &#39;zoneinfo&#39;):
-                tz = EWSTimeZone(d.tzinfo.key)
-            else:
-                raise ValueError(&#39;Unsupported tzinfo value: %r&#39; % d.tzinfo)
+            tz = EWSTimeZone.from_timezone(d.tzinfo)
         return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=tz)
 
     def astimezone(self, tz=None):
@@ -5545,17 +5659,7 @@ def from_datetime(cls, d):
     elif isinstance(d.tzinfo, EWSTimeZone):
         tz = d.tzinfo
     else:
-        # Support some more tzinfo implementations. We could use isinstance(), but then we&#39;d have to have pytz
-        # and dateutil as dependencies for this package.
-        tz_module = d.tzinfo.__class__.__module__.split(&#39;.&#39;)[0]
-        if tz_module == &#39;pytz&#39;:
-            tz = EWSTimeZone.from_pytz(d.tzinfo)
-        elif tz_module == &#39;dateutil&#39;:
-            tz = EWSTimeZone.from_dateutil(d.tzinfo)
-        elif tz_module in (&#39;backports&#39;, &#39;zoneinfo&#39;):
-            tz = EWSTimeZone(d.tzinfo.key)
-        else:
-            raise ValueError(&#39;Unsupported tzinfo value: %r&#39; % d.tzinfo)
+        tz = EWSTimeZone.from_timezone(d.tzinfo)
     return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=tz)</code></pre>
 </details>
 </dd>
@@ -5785,6 +5889,26 @@ services.GetServerTimeZones.</p></div>
         return cls(key)
 
     @classmethod
+    def from_zoneinfo(cls, tz):
+        return cls(tz.key)
+
+    @classmethod
+    def from_timezone(cls, tz):
+        # Support multiple tzinfo implementations. We could use isinstance(), but then we&#39;d have to have pytz
+        # and dateutil as dependencies for this package.
+        tz_module = tz.__class__.__module__.split(&#39;.&#39;)[0]
+        try:
+            return {
+                cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
+                &#39;backports&#39;: cls.from_zoneinfo,
+                &#39;dateutil&#39;: cls.from_dateutil,
+                &#39;pytz&#39;: cls.from_pytz,
+                &#39;zoneinfo&#39;: cls.from_zoneinfo,
+            }[tz_module](tz)
+        except KeyError:
+            raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)
+
+    @classmethod
     def localzone(cls):
         try:
             tz = tzlocal.get_localzone()
@@ -5792,7 +5916,7 @@ services.GetServerTimeZones.</p></div>
             # Older versions of tzlocal will raise a pytz exception. Let&#39;s not depend on pytz just for that.
             raise UnknownTimeZone(&#34;Failed to guess local timezone&#34;)
         # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
-        return cls(tz.key if hasattr(tz, &#39;key&#39;) else tz.zone)
+        return cls.from_timezone(tz)
 
     @classmethod
     def timezone(cls, location):
@@ -5896,6 +6020,46 @@ def from_pytz(cls, tz):
     return cls(tz.zone)</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.EWSTimeZone.from_timezone"><code class="name flex">
+<span>def <span class="ident">from_timezone</span></span>(<span>tz)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_timezone(cls, tz):
+    # Support multiple tzinfo implementations. We could use isinstance(), but then we&#39;d have to have pytz
+    # and dateutil as dependencies for this package.
+    tz_module = tz.__class__.__module__.split(&#39;.&#39;)[0]
+    try:
+        return {
+            cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
+            &#39;backports&#39;: cls.from_zoneinfo,
+            &#39;dateutil&#39;: cls.from_dateutil,
+            &#39;pytz&#39;: cls.from_pytz,
+            &#39;zoneinfo&#39;: cls.from_zoneinfo,
+        }[tz_module](tz)
+    except KeyError:
+        raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.EWSTimeZone.from_zoneinfo"><code class="name flex">
+<span>def <span class="ident">from_zoneinfo</span></span>(<span>tz)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_zoneinfo(cls, tz):
+    return cls(tz.key)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.EWSTimeZone.localzone"><code class="name flex">
 <span>def <span class="ident">localzone</span></span>(<span>)</span>
 </code></dt>
@@ -5913,7 +6077,7 @@ def localzone(cls):
         # Older versions of tzlocal will raise a pytz exception. Let&#39;s not depend on pytz just for that.
         raise UnknownTimeZone(&#34;Failed to guess local timezone&#34;)
     # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
-    return cls(tz.key if hasattr(tz, &#39;key&#39;) else tz.zone)</code></pre>
+    return cls.from_timezone(tz)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.EWSTimeZone.timezone"><code class="name flex">
@@ -6191,7 +6355,7 @@ def timezone(cls, location):
         # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
         extended_field_uri = elem.find(&#39;{%s}ExtendedFieldURI&#39; % TNS)
         cls_props = cls.properties_map()
-        elem_props = {k: extended_field_uri.get(k) for k in cls_props.keys()}
+        elem_props = {k: extended_field_uri.get(k) for k in cls_props}
         # Sometimes, EWS will helpfully translate a &#39;distinguished_property_set_id&#39; value to a &#39;property_set_id&#39; value
         # and vice versa. Align these values.
         cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get(&#39;DistinguishedPropertySetId&#39;))
@@ -6216,14 +6380,10 @@ def timezone(cls, location):
         python_type = cls.python_type()
         if cls.is_array_type():
             values = elem.find(&#39;{%s}Values&#39; % TNS)
-            if cls.is_binary_type():
-                return [safe_b64decode(val) for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)]
             return [
                 xml_text_to_value(value=val, value_type=python_type)
                 for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
             ]
-        if cls.is_binary_type():
-            return safe_b64decode(get_xml_attr(elem, &#39;{%s}Value&#39; % TNS))
         extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
@@ -6236,22 +6396,13 @@ def timezone(cls, location):
         if self.is_array_type():
             values = create_element(&#39;t:Values&#39;)
             for v in self.value:
-                if self.is_binary_type():
-                    add_xml_child(values, &#39;t:Value&#39;, base64.b64encode(v).decode(&#39;ascii&#39;))
-                else:
-                    add_xml_child(values, &#39;t:Value&#39;, v)
+                add_xml_child(values, &#39;t:Value&#39;, v)
             return values
-        val = base64.b64encode(self.value).decode(&#39;ascii&#39;) if self.is_binary_type() else self.value
-        return set_xml_value(create_element(&#39;t:Value&#39;), val, version=version)
+        return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)
 
     @classmethod
     def is_array_type(cls):
         return cls.property_type.endswith(&#39;Array&#39;)
-
-    @classmethod
-    def is_binary_type(cls):
-        # We can&#39;t just test python_type() == bytes, because str == bytes in Python2
-        return &#39;Binary&#39; in cls.property_type
 
     @classmethod
     def property_tag_as_int(cls):
@@ -6367,14 +6518,10 @@ def from_xml(cls, elem, account):
     python_type = cls.python_type()
     if cls.is_array_type():
         values = elem.find(&#39;{%s}Values&#39; % TNS)
-        if cls.is_binary_type():
-            return [safe_b64decode(val) for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)]
         return [
             xml_text_to_value(value=val, value_type=python_type)
             for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
         ]
-    if cls.is_binary_type():
-        return safe_b64decode(get_xml_attr(elem, &#39;{%s}Value&#39; % TNS))
     extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
     if python_type == str and not extended_field_value:
         # For string types, we want to return the empty string instead of None if the element was
@@ -6398,21 +6545,6 @@ def is_array_type(cls):
     return cls.property_type.endswith(&#39;Array&#39;)</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.ExtendedProperty.is_binary_type"><code class="name flex">
-<span>def <span class="ident">is_binary_type</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def is_binary_type(cls):
-    # We can&#39;t just test python_type() == bytes, because str == bytes in Python2
-    return &#39;Binary&#39; in cls.property_type</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.ExtendedProperty.is_property_instance"><code class="name flex">
 <span>def <span class="ident">is_property_instance</span></span>(<span>elem)</span>
 </code></dt>
@@ -6430,7 +6562,7 @@ def is_property_instance(cls, elem):
     # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
     extended_field_uri = elem.find(&#39;{%s}ExtendedFieldURI&#39; % TNS)
     cls_props = cls.properties_map()
-    elem_props = {k: extended_field_uri.get(k) for k in cls_props.keys()}
+    elem_props = {k: extended_field_uri.get(k) for k in cls_props}
     # Sometimes, EWS will helpfully translate a &#39;distinguished_property_set_id&#39; value to a &#39;property_set_id&#39; value
     # and vice versa. Align these values.
     cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get(&#39;DistinguishedPropertySetId&#39;))
@@ -6599,13 +6731,9 @@ def validate_cls(cls):
     if self.is_array_type():
         values = create_element(&#39;t:Values&#39;)
         for v in self.value:
-            if self.is_binary_type():
-                add_xml_child(values, &#39;t:Value&#39;, base64.b64encode(v).decode(&#39;ascii&#39;))
-            else:
-                add_xml_child(values, &#39;t:Value&#39;, v)
+            add_xml_child(values, &#39;t:Value&#39;, v)
         return values
-    val = base64.b64encode(self.value).decode(&#39;ascii&#39;) if self.is_binary_type() else self.value
-    return set_xml_value(create_element(&#39;t:Value&#39;), val, version=version)</code></pre>
+    return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -6638,7 +6766,10 @@ def validate_cls(cls):
 
     @property
     def back_off_until(self):
-        return None</code></pre>
+        return None
+
+    def back_off(self, seconds):
+        raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6668,6 +6799,22 @@ def back_off_until(self):
 <pre><code class="python">@property
 def fail_fast(self):
     return True</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.FailFast.back_off"><code class="name flex">
+<span>def <span class="ident">back_off</span></span>(<span>self, seconds)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def back_off(self, seconds):
+    raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -7089,7 +7236,7 @@ def fp(self):
         if self.parent_folder_id.id == self.id:
             # Some folders have a parent that references itself. Avoid circular references here
             return None
-        return self.root.get_folder(self.parent_folder_id.id)
+        return self.root.get_folder(self.parent_folder_id)
 
     @parent.setter
     def parent(self, value):
@@ -7192,6 +7339,7 @@ def fp(self):
 <li><a title="exchangelib.folders.known_folders.SmsAndChatsSync" href="folders/known_folders.html#exchangelib.folders.known_folders.SmsAndChatsSync">SmsAndChatsSync</a></li>
 <li><a title="exchangelib.folders.known_folders.SpoolerQueue" href="folders/known_folders.html#exchangelib.folders.known_folders.SpoolerQueue">SpoolerQueue</a></li>
 <li><a title="exchangelib.folders.known_folders.System" href="folders/known_folders.html#exchangelib.folders.known_folders.System">System</a></li>
+<li><a title="exchangelib.folders.known_folders.System1" href="folders/known_folders.html#exchangelib.folders.known_folders.System1">System1</a></li>
 <li><a title="exchangelib.folders.known_folders.Tasks" href="folders/known_folders.html#exchangelib.folders.known_folders.Tasks">Tasks</a></li>
 <li><a title="exchangelib.folders.known_folders.TemporarySaves" href="folders/known_folders.html#exchangelib.folders.known_folders.TemporarySaves">TemporarySaves</a></li>
 <li><a title="exchangelib.folders.known_folders.Views" href="folders/known_folders.html#exchangelib.folders.known_folders.Views">Views</a></li>
@@ -7339,7 +7487,7 @@ def parent(self):
     if self.parent_folder_id.id == self.id:
         # Some folders have a parent that references itself. Avoid circular references here
         return None
-    return self.root.get_folder(self.parent_folder_id.id)</code></pre>
+    return self.root.get_folder(self.parent_folder_id)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Folder.permission_set"><code class="name">var <span class="ident">permission_set</span></code></dt>
@@ -7387,7 +7535,6 @@ def root(self):
 <li><code><a title="exchangelib.folders.base.BaseFolder.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.child_folder_count" href="folders/base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.deregister" href="items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
-<li><code><a title="exchangelib.folders.base.BaseFolder.find_people" href="folders/base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_class" href="folders/base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_cls_from_container_class" href="folders/base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.is_distinguished" href="folders/base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
@@ -7449,8 +7596,7 @@ def root(self):
         return len(self.folders)
 
     def __iter__(self):
-        for f in self.folders:
-            yield f
+        yield from self.folders
 
     def get(self, *args, **kwargs):
         return QuerySet(self).get(*args, **kwargs)
@@ -7496,6 +7642,9 @@ def root(self):
 
     def exclude(self, *args, **kwargs):
         return QuerySet(self).exclude(*args, **kwargs)
+
+    def people(self):
+        return QuerySet(self).people()
 
     def view(self, start, end, max_items=None, *args, **kwargs):
         &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
@@ -7565,7 +7714,6 @@ def root(self):
           a generator for the returned item IDs or items
 
         &#34;&#34;&#34;
-        from .base import BaseFolder
         if not self.folders:
             log.debug(&#39;Folder list is empty&#39;)
             return
@@ -7605,7 +7753,8 @@ def root(self):
             additional_fields,
             restriction.q if restriction else None,
         )
-        items = FindItem(account=self.account, folders=self.folders, chunk_size=page_size).call(
+        yield from FindItem(account=self.account, chunk_size=page_size).call(
+            folders=self.folders,
             additional_fields=additional_fields,
             restriction=restriction,
             order_fields=order_fields,
@@ -7616,15 +7765,68 @@ def root(self):
             max_items=calendar_view.max_items if calendar_view else max_items,
             offset=offset,
         )
-        if shape == ID_ONLY and additional_fields is None:
-            for i in items:
-                yield i if isinstance(i, Exception) else Item.id_from_xml(i)
+
+    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                    page_size=None, max_items=None, offset=0):
+        &#34;&#34;&#34;Private method to call the FindPeople service
+
+        Args:
+          q: a Q instance containing any restrictions
+          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+            non-null, we always return Persona objects. (Default value = ID_ONLY)
+          depth: controls the whether to return soft-deleted items or not. (Default value = None)
+          additional_fields: the extra properties we want on the return objects. Default is no properties.
+          order_fields: the SortOrder fields, if any (Default value = None)
+          page_size: the requested number of items per page (Default value = None)
+          max_items: the max number of items to return (Default value = None)
+          offset: the offset relative to the first item in the item collection (Default value = 0)
+
+        Returns:
+          a generator for the returned personas
+
+        &#34;&#34;&#34;
+        if len(self.folders) &gt; 1:
+            log.debug(&#39;Searching for personas can only be done on a single folder&#39;)
+            return
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        if q.is_never():
+            log.debug(&#39;Query will never return results&#39;)
+            return
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+        if depth is None:
+            depth = self._get_default_item_traversal_depth()
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, ITEM_TRAVERSAL_CHOICES))
+        if additional_fields:
+            for f in additional_fields:
+                Persona.validate_field(field=f, version=self.account.version)
+                if f.field.is_complex:
+                    raise ValueError(&#34;find_people() does not support field &#39;%s&#39;&#34; % f.field.name)
+
+        # Build up any restrictions
+        if q.is_empty():
+            restriction = None
+            query_string = None
+        elif q.query_string:
+            restriction = None
+            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
         else:
-            for i in items:
-                if isinstance(i, Exception):
-                    yield i
-                else:
-                    yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = None
+        yield from FindPeople(account=self.account, chunk_size=page_size).call(
+                folder=self.folders,
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                shape=shape,
+                query_string=query_string,
+                depth=depth,
+                max_items=max_items,
+                offset=offset,
+        )
 
     def get_folder_fields(self, target_cls, is_complex=None):
         return {
@@ -7672,32 +7874,34 @@ def root(self):
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
+        from .base import BaseFolder
         resolveable_folders = []
         for f in self.folders:
-            if not f.get_folder_allowed:
+            if isinstance(f, BaseFolder) and not f.get_folder_allowed:
                 log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
                 yield f
             else:
                 resolveable_folders.append(f)
         # Fetch all properties for the remaining folders of folder IDs
         additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
-        for f in self.__class__(account=self.account, folders=resolveable_folders).get_folders(
+        yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
                 additional_fields=additional_fields
-        ):
-            yield f
+        )
 
     @require_account
     def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
                      offset=0):
         # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
         from .base import BaseFolder, Folder
+        if q is None:
+            q = Q()
         if not self.folders:
             log.debug(&#39;Folder list is empty&#39;)
             return
-        if q is not None and q.is_never():
+        if q.is_never():
             log.debug(&#39;Query will never return results&#39;)
             return
-        if q is None or q.is_empty():
+        if q.is_empty():
             restriction = None
         else:
             restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
@@ -7720,15 +7924,15 @@ def root(self):
             (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
         )
 
-        for f in FindFolder(account=self.account, folders=self.folders, chunk_size=page_size).call(
+        yield from FindFolder(account=self.account, chunk_size=page_size).call(
+                folders=self.folders,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 shape=shape,
                 depth=depth,
                 max_items=max_items,
                 offset=offset,
-        ):
-            yield f
+        )
 
     def get_folders(self, additional_fields=None):
         # Expand folders with their full set of properties
@@ -7745,12 +7949,11 @@ def root(self):
             (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
         )
 
-        for f in GetFolder(account=self.account).call(
+        yield from GetFolder(account=self.account).call(
                 folders=self.folders,
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        ):
-            yield f</code></pre>
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7922,13 +8125,15 @@ def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None
                  offset=0):
     # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
     from .base import BaseFolder, Folder
+    if q is None:
+        q = Q()
     if not self.folders:
         log.debug(&#39;Folder list is empty&#39;)
         return
-    if q is not None and q.is_never():
+    if q.is_never():
         log.debug(&#39;Query will never return results&#39;)
         return
-    if q is None or q.is_empty():
+    if q.is_empty():
         restriction = None
     else:
         restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
@@ -7951,15 +8156,15 @@ def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None
         (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
     )
 
-    for f in FindFolder(account=self.account, folders=self.folders, chunk_size=page_size).call(
+    yield from FindFolder(account=self.account, chunk_size=page_size).call(
+            folders=self.folders,
             additional_fields=additional_fields,
             restriction=restriction,
             shape=shape,
             depth=depth,
             max_items=max_items,
             offset=offset,
-    ):
-        yield f</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.FolderCollection.find_items"><code class="name flex">
@@ -8017,7 +8222,6 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
       a generator for the returned item IDs or items
 
     &#34;&#34;&#34;
-    from .base import BaseFolder
     if not self.folders:
         log.debug(&#39;Folder list is empty&#39;)
         return
@@ -8057,7 +8261,8 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
         additional_fields,
         restriction.q if restriction else None,
     )
-    items = FindItem(account=self.account, folders=self.folders, chunk_size=page_size).call(
+    yield from FindItem(account=self.account, chunk_size=page_size).call(
+        folders=self.folders,
         additional_fields=additional_fields,
         restriction=restriction,
         order_fields=order_fields,
@@ -8067,16 +8272,101 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
         calendar_view=calendar_view,
         max_items=calendar_view.max_items if calendar_view else max_items,
         offset=offset,
-    )
-    if shape == ID_ONLY and additional_fields is None:
-        for i in items:
-            yield i if isinstance(i, Exception) else Item.id_from_xml(i)
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.FolderCollection.find_people"><code class="name flex">
+<span>def <span class="ident">find_people</span></span>(<span>self, q, shape='IdOnly', depth=None, additional_fields=None, order_fields=None, page_size=None, max_items=None, offset=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Private method to call the FindPeople service</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>q</code></strong></dt>
+<dd>a Q instance containing any restrictions</dd>
+<dt><strong><code>shape</code></strong></dt>
+<dd>controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+non-null, we always return Persona objects. (Default value = ID_ONLY)</dd>
+<dt><strong><code>depth</code></strong></dt>
+<dd>controls the whether to return soft-deleted items or not. (Default value = None)</dd>
+<dt><strong><code>additional_fields</code></strong></dt>
+<dd>the extra properties we want on the return objects. Default is no properties.</dd>
+<dt><strong><code>order_fields</code></strong></dt>
+<dd>the SortOrder fields, if any (Default value = None)</dd>
+<dt><strong><code>page_size</code></strong></dt>
+<dd>the requested number of items per page (Default value = None)</dd>
+<dt><strong><code>max_items</code></strong></dt>
+<dd>the max number of items to return (Default value = None)</dd>
+<dt><strong><code>offset</code></strong></dt>
+<dd>the offset relative to the first item in the item collection (Default value = 0)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a generator for the returned personas</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                page_size=None, max_items=None, offset=0):
+    &#34;&#34;&#34;Private method to call the FindPeople service
+
+    Args:
+      q: a Q instance containing any restrictions
+      shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+        non-null, we always return Persona objects. (Default value = ID_ONLY)
+      depth: controls the whether to return soft-deleted items or not. (Default value = None)
+      additional_fields: the extra properties we want on the return objects. Default is no properties.
+      order_fields: the SortOrder fields, if any (Default value = None)
+      page_size: the requested number of items per page (Default value = None)
+      max_items: the max number of items to return (Default value = None)
+      offset: the offset relative to the first item in the item collection (Default value = 0)
+
+    Returns:
+      a generator for the returned personas
+
+    &#34;&#34;&#34;
+    if len(self.folders) &gt; 1:
+        log.debug(&#39;Searching for personas can only be done on a single folder&#39;)
+        return
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    if q.is_never():
+        log.debug(&#39;Query will never return results&#39;)
+        return
+    if shape not in SHAPE_CHOICES:
+        raise ValueError(&#34;&#39;shape&#39; %s must be one of %s&#34; % (shape, SHAPE_CHOICES))
+    if depth is None:
+        depth = self._get_default_item_traversal_depth()
+    if depth not in ITEM_TRAVERSAL_CHOICES:
+        raise ValueError(&#34;&#39;depth&#39; %s must be one of %s&#34; % (depth, ITEM_TRAVERSAL_CHOICES))
+    if additional_fields:
+        for f in additional_fields:
+            Persona.validate_field(field=f, version=self.account.version)
+            if f.field.is_complex:
+                raise ValueError(&#34;find_people() does not support field &#39;%s&#39;&#34; % f.field.name)
+
+    # Build up any restrictions
+    if q.is_empty():
+        restriction = None
+        query_string = None
+    elif q.query_string:
+        restriction = None
+        query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
     else:
-        for i in items:
-            if isinstance(i, Exception):
-                yield i
-            else:
-                yield BaseFolder.item_model_from_tag(i.tag).from_xml(elem=i, account=self.account)</code></pre>
+        restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        query_string = None
+    yield from FindPeople(account=self.account, chunk_size=page_size).call(
+            folder=self.folders,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            order_fields=order_fields,
+            shape=shape,
+            query_string=query_string,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.FolderCollection.get"><code class="name flex">
@@ -8132,12 +8422,11 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
         (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
     )
 
-    for f in GetFolder(account=self.account).call(
+    yield from GetFolder(account=self.account).call(
             folders=self.folders,
             additional_fields=additional_fields,
             shape=ID_ONLY,
-    ):
-        yield f</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.FolderCollection.none"><code class="name flex">
@@ -8153,6 +8442,19 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
     return QuerySet(self).none()</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.FolderCollection.people"><code class="name flex">
+<span>def <span class="ident">people</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def people(self):
+    return QuerySet(self).people()</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.FolderCollection.resolve"><code class="name flex">
 <span>def <span class="ident">resolve</span></span>(<span>self)</span>
 </code></dt>
@@ -8164,19 +8466,19 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
 </summary>
 <pre><code class="python">def resolve(self):
     # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
+    from .base import BaseFolder
     resolveable_folders = []
     for f in self.folders:
-        if not f.get_folder_allowed:
+        if isinstance(f, BaseFolder) and not f.get_folder_allowed:
             log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
             yield f
         else:
             resolveable_folders.append(f)
     # Fetch all properties for the remaining folders of folder IDs
     additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
-    for f in self.__class__(account=self.account, folders=resolveable_folders).get_folders(
+    yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
             additional_fields=additional_fields
-    ):
-        yield f</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.FolderCollection.validate_item_field"><code class="name flex">
@@ -8322,7 +8624,6 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
     &#34;&#34;&#34;Helper to mark the &#39;body&#39; field as a complex attribute.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/body
-
     &#34;&#34;&#34;
     body_type = &#39;HTML&#39;</code></pre>
 </details>
@@ -8387,7 +8688,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if getattr(self, k) != getattr(other, k):
                 return False
         return True
@@ -8432,18 +8733,9 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
-        items = list(
-            i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
-            for i in GetAttachment(account=self.parent_item.account).call(
-                items=[self.attachment_id], include_mime_content=True)
+        attachment = GetAttachment(account=self.parent_item.account).get(
+            items=[self.attachment_id], include_mime_content=True
         )
-        if len(items) != 1:
-            raise ValueError(&#39;Expected single item, got %s&#39; % items)
-        attachment = items[0]
-        if isinstance(attachment, Exception):
-            raise attachment
-        if attachment.item is None:
-            raise ValueError(&#39;GetAttachment returned no item&#39;)
         self._item = attachment.item
         return self._item
 
@@ -8515,18 +8807,9 @@ def item(self):
     # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
     if not self.parent_item or not self.parent_item.account:
         raise ValueError(&#39;%s must have an account&#39; % self.__class__.__name__)
-    items = list(
-        i if isinstance(i, Exception) else self.__class__.from_xml(elem=i, account=self.parent_item.account)
-        for i in GetAttachment(account=self.parent_item.account).call(
-            items=[self.attachment_id], include_mime_content=True)
+    attachment = GetAttachment(account=self.parent_item.account).get(
+        items=[self.attachment_id], include_mime_content=True
     )
-    if len(items) != 1:
-        raise ValueError(&#39;Expected single item, got %s&#39; % items)
-    attachment = items[0]
-    if isinstance(attachment, Exception):
-        raise attachment
-    if attachment.item is None:
-        raise ValueError(&#39;GetAttachment returned no item&#39;)
     self._item = attachment.item
     return self._item</code></pre>
 </details>
@@ -8568,7 +8851,6 @@ def item(self):
     &#34;&#34;&#34;&#39;id&#39; and &#39;changekey&#39; are UUIDs generated by Exchange
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemid
-
     &#34;&#34;&#34;
     ELEMENT_NAME = &#39;ItemId&#39;
 
@@ -8595,8 +8877,8 @@ def item(self):
 <ul class="hlist">
 <li><a title="exchangelib.properties.AssociatedCalendarItemId" href="properties.html#exchangelib.properties.AssociatedCalendarItemId">AssociatedCalendarItemId</a></li>
 <li><a title="exchangelib.properties.ConversationId" href="properties.html#exchangelib.properties.ConversationId">ConversationId</a></li>
-<li><a title="exchangelib.properties.DistinguishedFolderId" href="properties.html#exchangelib.properties.DistinguishedFolderId">DistinguishedFolderId</a></li>
 <li><a title="exchangelib.properties.FolderId" href="properties.html#exchangelib.properties.FolderId">FolderId</a></li>
+<li><a title="exchangelib.properties.MovedItemId" href="properties.html#exchangelib.properties.MovedItemId">MovedItemId</a></li>
 <li><a title="exchangelib.properties.OccurrenceItemId" href="properties.html#exchangelib.properties.OccurrenceItemId">OccurrenceItemId</a></li>
 <li><a title="exchangelib.properties.ParentFolderId" href="properties.html#exchangelib.properties.ParentFolderId">ParentFolderId</a></li>
 <li><a title="exchangelib.properties.ParentItemId" href="properties.html#exchangelib.properties.ParentItemId">ParentItemId</a></li>
@@ -8604,6 +8886,7 @@ def item(self):
 <li><a title="exchangelib.properties.RecurringMasterItemId" href="properties.html#exchangelib.properties.RecurringMasterItemId">RecurringMasterItemId</a></li>
 <li><a title="exchangelib.properties.ReferenceItemId" href="properties.html#exchangelib.properties.ReferenceItemId">ReferenceItemId</a></li>
 <li><a title="exchangelib.properties.RootItemId" href="properties.html#exchangelib.properties.RootItemId">RootItemId</a></li>
+<li><a title="exchangelib.properties.SourceId" href="properties.html#exchangelib.properties.SourceId">SourceId</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8670,7 +8953,9 @@ def item(self):
     FIELDS = Fields(
         TextField(&#39;name&#39;, field_uri=&#39;Name&#39;),
         EmailAddressField(&#39;email_address&#39;, field_uri=&#39;EmailAddress&#39;),
-        RoutingTypeField(&#39;routing_type&#39;, field_uri=&#39;RoutingType&#39;),
+        # RoutingType values are not restricted:
+        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/routingtype-emailaddresstype
+        TextField(&#39;routing_type&#39;, field_uri=&#39;RoutingType&#39;, default=&#39;SMTP&#39;),
         ChoiceField(&#39;mailbox_type&#39;, field_uri=&#39;MailboxType&#39;, choices=MAILBOX_TYPE_CHOICES, default=MAILBOX),
         EWSElementField(&#39;item_id&#39;, value_cls=ItemId, is_read_only=True),
     )
@@ -8700,7 +8985,11 @@ def item(self):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="exchangelib.properties.Address" href="properties.html#exchangelib.properties.Address">Address</a></li>
 <li><a title="exchangelib.properties.DLMailbox" href="properties.html#exchangelib.properties.DLMailbox">DLMailbox</a></li>
+<li><a title="exchangelib.properties.EmailAddress" href="properties.html#exchangelib.properties.EmailAddress">EmailAddress</a></li>
+<li><a title="exchangelib.properties.EmailAddressTypeValue" href="properties.html#exchangelib.properties.EmailAddressTypeValue">EmailAddressTypeValue</a></li>
+<li><a title="exchangelib.properties.PersonaPostalAddressTypeValue" href="properties.html#exchangelib.properties.PersonaPostalAddressTypeValue">PersonaPostalAddressTypeValue</a></li>
 <li><a title="exchangelib.properties.RecipientAddress" href="properties.html#exchangelib.properties.RecipientAddress">RecipientAddress</a></li>
 <li><a title="exchangelib.properties.Room" href="properties.html#exchangelib.properties.Room">Room</a></li>
 <li><a title="exchangelib.properties.RoomList" href="properties.html#exchangelib.properties.RoomList">RoomList</a></li>
@@ -8930,7 +9219,23 @@ def item(self):
         )
 
     def reply_all(self, subject, body):
-        self.create_reply_all(subject, body).send()</code></pre>
+        self.create_reply_all(subject, body).send()
+
+    def mark_as_junk(self, is_junk=True, move_item=True):
+        &#34;&#34;&#34;Mark or un-marks items as junk email.
+
+        :param is_junk: If True, the sender will be added from the blocked sender list. Otherwise, the sender will be
+        removed.
+        :param move_item: If true, the item will be moved to the junk folder.
+        :return:
+        &#34;&#34;&#34;
+        res = MarkAsJunk(account=self.account).get(
+            items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+        )
+        if res is None:
+            return
+        self.folder = self.account.junk if is_junk else self.account.inbox
+        self.id, self.changekey = res</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -9077,6 +9382,36 @@ def create_reply_all(self, subject, body):
         cc_recipients=self.cc_recipients,
         bcc_recipients=self.bcc_recipients,
     )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.Message.mark_as_junk"><code class="name flex">
+<span>def <span class="ident">mark_as_junk</span></span>(<span>self, is_junk=True, move_item=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Mark or un-marks items as junk email.</p>
+<p>:param is_junk: If True, the sender will be added from the blocked sender list. Otherwise, the sender will be
+removed.
+:param move_item: If true, the item will be moved to the junk folder.
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mark_as_junk(self, is_junk=True, move_item=True):
+    &#34;&#34;&#34;Mark or un-marks items as junk email.
+
+    :param is_junk: If True, the sender will be added from the blocked sender list. Otherwise, the sender will be
+    removed.
+    :param move_item: If true, the item will be moved to the junk folder.
+    :return:
+    &#34;&#34;&#34;
+    res = MarkAsJunk(account=self.account).get(
+        items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+    )
+    if res is None:
+        return
+    self.folder = self.account.junk if is_junk else self.account.inbox
+    self.id, self.changekey = res</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.Message.reply"><code class="name flex">
@@ -9262,7 +9597,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We&#39;re overiding a method so we have to keep the signature
+        # We&#39;re overriding a method so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9291,7 +9626,7 @@ to a CA bundle to use
 </summary>
 <pre><code class="python">def cert_verify(self, conn, url, verify, cert):
     # pylint: disable=unused-argument
-    # We&#39;re overiding a method so we have to keep the signature
+    # We&#39;re overriding a method so we have to keep the signature
     super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 </dd>
@@ -9483,13 +9818,13 @@ the associated auth code grant type for multi-tenant applications.</p>
     def _get_hash_values(self):
         # &#39;access_token&#39; may be refreshed once in a while. This should not affect the hash signature.
         # &#39;identity&#39; is just informational and should also not affect the hash signature.
-        return (getattr(self, k) for k in self.__dict__.keys() if k not in (&#39;_lock&#39;, &#39;identity&#39;, &#39;access_token&#39;))
+        return (getattr(self, k) for k in self.__dict__ if k not in (&#39;_lock&#39;, &#39;identity&#39;, &#39;access_token&#39;))
 
     def sig(self):
         # Like hash(self), but pulls in the access token. Protocol.refresh_credentials() uses this to find out
         # if the access_token needs to be refreshed.
         res = []
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if k in (&#39;_lock&#39;, &#39;identity&#39;):
                 continue
             if k == &#39;access_token&#39;:
@@ -9565,7 +9900,7 @@ the new token - just remember to call the super() method!</p>
     # Like hash(self), but pulls in the access token. Protocol.refresh_credentials() uses this to find out
     # if the access_token needs to be refreshed.
     res = []
-    for k in self.__dict__.keys():
+    for k in self.__dict__:
         if k in (&#39;_lock&#39;, &#39;identity&#39;):
             continue
         if k == &#39;access_token&#39;:
@@ -9623,7 +9958,7 @@ the new token - just remember to call the super() method!</p>
                 raise ValueError(&#34;&#39;start&#39; and &#39;end&#39; must be set when state is &#39;%s&#39;&#34; % self.SCHEDULED)
             if self.start &gt;= self.end:
                 raise ValueError(&#34;&#39;start&#39; must be before &#39;end&#39;&#34;)
-            if self.end &lt; UTC_NOW():
+            if self.end &lt; datetime.datetime.now(tz=UTC):
                 raise ValueError(&#34;&#39;end&#39; must be in the future&#34;)
         if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
             raise ValueError(&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not &#39;%s&#39;&#34; % self.DISABLED)
@@ -9775,7 +10110,7 @@ def from_xml(cls, elem, account):
             raise ValueError(&#34;&#39;start&#39; and &#39;end&#39; must be set when state is &#39;%s&#39;&#34; % self.SCHEDULED)
         if self.start &gt;= self.end:
             raise ValueError(&#34;&#39;start&#39; must be before &#39;end&#39;&#34;)
-        if self.end &lt; UTC_NOW():
+        if self.end &lt; datetime.datetime.now(tz=UTC):
             raise ValueError(&#34;&#39;end&#39; must be in the future&#34;)
     if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
         raise ValueError(&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not &#39;%s&#39;&#34; % self.DISABLED)</code></pre>
@@ -10365,7 +10700,6 @@ def from_xml(cls, elem, account):
 
     def _get_field_path(self, folders, applies_to, version):
         # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
-        from .fields import FieldPath
         for folder in folders:
             try:
                 if applies_to == Restriction.FOLDERS:
@@ -10390,15 +10724,12 @@ def from_xml(cls, elem, account):
             # __contains and __in are implemented as multiple leaves, with one value per leaf. clean() on list fields
             # only works on lists, so clean a one-element list.
             return clean_field.clean(value=[self.value], version=version)[0]
-        else:
-            return clean_field.clean(value=self.value, version=version)
+        return clean_field.clean(value=self.value, version=version)
 
     def xml_elem(self, folders, version, applies_to):
         # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
         # return None.
         from .indexed_properties import SingleFieldIndexedElement
-        from .extended_properties import ExtendedProperty
-        from .fields import DateTimeBackedDateField
         # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
         # This is done in _get_field_path() and _get_clean_value(), respectively.
         self._check_integrity()
@@ -10410,10 +10741,7 @@ def from_xml(cls, elem, account):
             elem = self._op_to_xml(self.op)
             field_path = self._get_field_path(folders, applies_to=applies_to, version=version)
             clean_value = self._get_clean_value(field_path=field_path, version=version)
-            if issubclass(field_path.field.value_cls, ExtendedProperty) and field_path.field.value_cls.is_binary_type():
-                # We need to base64-encode binary data
-                clean_value = base64.b64encode(clean_value.value).decode(&#39;ascii&#39;)
-            elif issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
+            if issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
                 # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
                 # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
                 field_path.label = clean_value.label
@@ -10819,8 +11147,6 @@ def from_xml(cls, elem, account):
     # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
     # return None.
     from .indexed_properties import SingleFieldIndexedElement
-    from .extended_properties import ExtendedProperty
-    from .fields import DateTimeBackedDateField
     # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
     # This is done in _get_field_path() and _get_clean_value(), respectively.
     self._check_integrity()
@@ -10832,10 +11158,7 @@ def from_xml(cls, elem, account):
         elem = self._op_to_xml(self.op)
         field_path = self._get_field_path(folders, applies_to=applies_to, version=version)
         clean_value = self._get_clean_value(field_path=field_path, version=version)
-        if issubclass(field_path.field.value_cls, ExtendedProperty) and field_path.field.value_cls.is_binary_type():
-            # We need to base64-encode binary data
-            clean_value = base64.b64encode(clean_value.value).decode(&#39;ascii&#39;)
-        elif issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
+        if issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
             # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
             # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
             field_path.label = clean_value.label
@@ -11151,7 +11474,7 @@ def response_tag(cls):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RootOfHierarchy(BaseFolder):
+<pre><code class="python">class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for folders that implement the root of a folder hierarchy&#34;&#34;&#34;
 
     # A list of wellknown, or &#34;distinguished&#34;, folders that are belong in this folder hierarchy. See
@@ -11204,8 +11527,10 @@ def response_tag(cls):
             raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
         return super().deregister(*args, **kwargs)
 
-    def get_folder(self, folder_id):
-        return self._folders_map.get(folder_id, None)
+    def get_folder(self, folder):
+        if not folder.id:
+            raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
+        return self._folders_map.get(folder.id, None)
 
     def add_folder(self, folder):
         if not folder.id:
@@ -11343,7 +11668,7 @@ def response_tag(cls):
           locale:
 
         &#34;&#34;&#34;
-        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETEABLE_FOLDERS:
+        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
@@ -11409,7 +11734,7 @@ def folder_cls_from_folder_name(cls, folder_name, locale):
       locale:
 
     &#34;&#34;&#34;
-    for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETEABLE_FOLDERS:
+    for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
         if folder_name.lower() in folder_cls.localized_names(locale):
             return folder_cls
     raise KeyError()</code></pre>
@@ -11590,7 +11915,7 @@ def root(self):
 </details>
 </dd>
 <dt id="exchangelib.RootOfHierarchy.get_folder"><code class="name flex">
-<span>def <span class="ident">get_folder</span></span>(<span>self, folder_id)</span>
+<span>def <span class="ident">get_folder</span></span>(<span>self, folder)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -11598,8 +11923,10 @@ def root(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_folder(self, folder_id):
-    return self._folders_map.get(folder_id, None)</code></pre>
+<pre><code class="python">def get_folder(self, folder):
+    if not folder.id:
+        raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
+    return self._folders_map.get(folder.id, None)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.RootOfHierarchy.refresh"><code class="name flex">
@@ -11658,7 +11985,6 @@ def root(self):
 <li><code><a title="exchangelib.folders.base.BaseFolder.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.child_folder_count" href="folders/base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.deregister" href="items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
-<li><code><a title="exchangelib.folders.base.BaseFolder.find_people" href="folders/base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_class" href="folders/base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_cls_from_container_class" href="folders/base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.is_distinguished" href="folders/base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
@@ -11792,7 +12118,7 @@ exposed for use when subclassing the
                 log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
                             self.COMPLETED, self.status)
                 self.status = self.COMPLETED
-            now = UTC_NOW()
+            now = datetime.datetime.now(tz=UTC)
             if (self.complete_date - now).total_seconds() &gt; 120:
                 # Reset complete_date values that are in the future
                 # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
@@ -11966,7 +12292,7 @@ exposed for use when subclassing the
             log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
                         self.COMPLETED, self.status)
             self.status = self.COMPLETED
-        now = UTC_NOW()
+        now = datetime.datetime.now(tz=UTC)
         if (self.complete_date - now).total_seconds() &gt; 120:
             # Reset complete_date values that are in the future
             # &#39;complete_date&#39; can be set automatically by the server. Allow some grace between local and server time
@@ -12153,7 +12479,6 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
 
     CalendarItem.register(&#39;global_object_id&#39;, GlobalObjectId)
     account.calendar.filter(global_object_id=GlobalObjectId(UID(&#39;261cbc18-1f65-5a0a-bd11-23b1e224cc2f&#39;)))
-
     &#34;&#34;&#34;
     _HEADER = binascii.hexlify(bytearray((
         0x04, 0x00, 0x00, 0x00,
@@ -12482,6 +12807,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Account.bulk_copy" href="#exchangelib.Account.bulk_copy">bulk_copy</a></code></li>
 <li><code><a title="exchangelib.Account.bulk_create" href="#exchangelib.Account.bulk_create">bulk_create</a></code></li>
 <li><code><a title="exchangelib.Account.bulk_delete" href="#exchangelib.Account.bulk_delete">bulk_delete</a></code></li>
+<li><code><a title="exchangelib.Account.bulk_mark_as_junk" href="#exchangelib.Account.bulk_mark_as_junk">bulk_mark_as_junk</a></code></li>
 <li><code><a title="exchangelib.Account.bulk_move" href="#exchangelib.Account.bulk_move">bulk_move</a></code></li>
 <li><code><a title="exchangelib.Account.bulk_send" href="#exchangelib.Account.bulk_send">bulk_send</a></code></li>
 <li><code><a title="exchangelib.Account.bulk_update" href="#exchangelib.Account.bulk_update">bulk_update</a></code></li>
@@ -12496,6 +12822,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Account.export" href="#exchangelib.Account.export">export</a></code></li>
 <li><code><a title="exchangelib.Account.favorites" href="#exchangelib.Account.favorites">favorites</a></code></li>
 <li><code><a title="exchangelib.Account.fetch" href="#exchangelib.Account.fetch">fetch</a></code></li>
+<li><code><a title="exchangelib.Account.fetch_personas" href="#exchangelib.Account.fetch_personas">fetch_personas</a></code></li>
 <li><code><a title="exchangelib.Account.im_contact_list" href="#exchangelib.Account.im_contact_list">im_contact_list</a></code></li>
 <li><code><a title="exchangelib.Account.inbox" href="#exchangelib.Account.inbox">inbox</a></code></li>
 <li><code><a title="exchangelib.Account.journal" href="#exchangelib.Account.journal">journal</a></code></li>
@@ -12550,12 +12877,12 @@ def fullname(self):
 <li><code><a title="exchangelib.BaseProtocol.USERAGENT" href="#exchangelib.BaseProtocol.USERAGENT">USERAGENT</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.auth_type" href="#exchangelib.BaseProtocol.auth_type">auth_type</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.close" href="#exchangelib.BaseProtocol.close">close</a></code></li>
+<li><code><a title="exchangelib.BaseProtocol.close_session" href="#exchangelib.BaseProtocol.close_session">close_session</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.create_oauth2_session" href="#exchangelib.BaseProtocol.create_oauth2_session">create_oauth2_session</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.create_session" href="#exchangelib.BaseProtocol.create_session">create_session</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.credentials" href="#exchangelib.BaseProtocol.credentials">credentials</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.decrease_poolsize" href="#exchangelib.BaseProtocol.decrease_poolsize">decrease_poolsize</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.get_adapter" href="#exchangelib.BaseProtocol.get_adapter">get_adapter</a></code></li>
-<li><code><a title="exchangelib.BaseProtocol.get_auth_type" href="#exchangelib.BaseProtocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.get_session" href="#exchangelib.BaseProtocol.get_session">get_session</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.increase_poolsize" href="#exchangelib.BaseProtocol.increase_poolsize">increase_poolsize</a></code></li>
 <li><code><a title="exchangelib.BaseProtocol.raw_session" href="#exchangelib.BaseProtocol.raw_session">raw_session</a></code></li>
@@ -12583,6 +12910,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Build.api_version" href="#exchangelib.Build.api_version">api_version</a></code></li>
 <li><code><a title="exchangelib.Build.from_hex_string" href="#exchangelib.Build.from_hex_string">from_hex_string</a></code></li>
 <li><code><a title="exchangelib.Build.from_xml" href="#exchangelib.Build.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.Build.fullname" href="#exchangelib.Build.fullname">fullname</a></code></li>
 <li><code><a title="exchangelib.Build.major_build" href="#exchangelib.Build.major_build">major_build</a></code></li>
 <li><code><a title="exchangelib.Build.major_version" href="#exchangelib.Build.major_version">major_version</a></code></li>
 <li><code><a title="exchangelib.Build.minor_build" href="#exchangelib.Build.minor_build">minor_build</a></code></li>
@@ -12771,6 +13099,8 @@ def fullname(self):
 <li><code><a title="exchangelib.EWSTimeZone.from_dateutil" href="#exchangelib.EWSTimeZone.from_dateutil">from_dateutil</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_ms_id" href="#exchangelib.EWSTimeZone.from_ms_id">from_ms_id</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_pytz" href="#exchangelib.EWSTimeZone.from_pytz">from_pytz</a></code></li>
+<li><code><a title="exchangelib.EWSTimeZone.from_timezone" href="#exchangelib.EWSTimeZone.from_timezone">from_timezone</a></code></li>
+<li><code><a title="exchangelib.EWSTimeZone.from_zoneinfo" href="#exchangelib.EWSTimeZone.from_zoneinfo">from_zoneinfo</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.fromutc" href="#exchangelib.EWSTimeZone.fromutc">fromutc</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.localize" href="#exchangelib.EWSTimeZone.localize">localize</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.localzone" href="#exchangelib.EWSTimeZone.localzone">localzone</a></code></li>
@@ -12790,7 +13120,6 @@ def fullname(self):
 <li><code><a title="exchangelib.ExtendedProperty.distinguished_property_set_id" href="#exchangelib.ExtendedProperty.distinguished_property_set_id">distinguished_property_set_id</a></code></li>
 <li><code><a title="exchangelib.ExtendedProperty.from_xml" href="#exchangelib.ExtendedProperty.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.ExtendedProperty.is_array_type" href="#exchangelib.ExtendedProperty.is_array_type">is_array_type</a></code></li>
-<li><code><a title="exchangelib.ExtendedProperty.is_binary_type" href="#exchangelib.ExtendedProperty.is_binary_type">is_binary_type</a></code></li>
 <li><code><a title="exchangelib.ExtendedProperty.is_property_instance" href="#exchangelib.ExtendedProperty.is_property_instance">is_property_instance</a></code></li>
 <li><code><a title="exchangelib.ExtendedProperty.properties_map" href="#exchangelib.ExtendedProperty.properties_map">properties_map</a></code></li>
 <li><code><a title="exchangelib.ExtendedProperty.property_id" href="#exchangelib.ExtendedProperty.property_id">property_id</a></code></li>
@@ -12809,6 +13138,7 @@ def fullname(self):
 <li>
 <h4><code><a title="exchangelib.FailFast" href="#exchangelib.FailFast">FailFast</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.FailFast.back_off" href="#exchangelib.FailFast.back_off">back_off</a></code></li>
 <li><code><a title="exchangelib.FailFast.back_off_until" href="#exchangelib.FailFast.back_off_until">back_off_until</a></code></li>
 <li><code><a title="exchangelib.FailFast.fail_fast" href="#exchangelib.FailFast.fail_fast">fail_fast</a></code></li>
 </ul>
@@ -12860,11 +13190,13 @@ def fullname(self):
 <li><code><a title="exchangelib.FolderCollection.filter" href="#exchangelib.FolderCollection.filter">filter</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.find_folders" href="#exchangelib.FolderCollection.find_folders">find_folders</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.find_items" href="#exchangelib.FolderCollection.find_items">find_items</a></code></li>
+<li><code><a title="exchangelib.FolderCollection.find_people" href="#exchangelib.FolderCollection.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.folders" href="#exchangelib.FolderCollection.folders">folders</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.get" href="#exchangelib.FolderCollection.get">get</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.get_folder_fields" href="#exchangelib.FolderCollection.get_folder_fields">get_folder_fields</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.get_folders" href="#exchangelib.FolderCollection.get_folders">get_folders</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.none" href="#exchangelib.FolderCollection.none">none</a></code></li>
+<li><code><a title="exchangelib.FolderCollection.people" href="#exchangelib.FolderCollection.people">people</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.resolve" href="#exchangelib.FolderCollection.resolve">resolve</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.supported_item_models" href="#exchangelib.FolderCollection.supported_item_models">supported_item_models</a></code></li>
 <li><code><a title="exchangelib.FolderCollection.validate_item_field" href="#exchangelib.FolderCollection.validate_item_field">validate_item_field</a></code></li>
@@ -12939,6 +13271,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Message.is_read" href="#exchangelib.Message.is_read">is_read</a></code></li>
 <li><code><a title="exchangelib.Message.is_read_receipt_requested" href="#exchangelib.Message.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
 <li><code><a title="exchangelib.Message.is_response_requested" href="#exchangelib.Message.is_response_requested">is_response_requested</a></code></li>
+<li><code><a title="exchangelib.Message.mark_as_junk" href="#exchangelib.Message.mark_as_junk">mark_as_junk</a></code></li>
 <li><code><a title="exchangelib.Message.message_id" href="#exchangelib.Message.message_id">message_id</a></code></li>
 <li><code><a title="exchangelib.Message.received_by" href="#exchangelib.Message.received_by">received_by</a></code></li>
 <li><code><a title="exchangelib.Message.received_representing" href="#exchangelib.Message.received_representing">received_representing</a></code></li>
@@ -13175,7 +13508,7 @@ def fullname(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.update_folder API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,12 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import logging
-
+<pre><code class="python">from .common import EWSAccountService, parse_folder_elem, to_item_id
+from ..fields import FieldPath
 from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, parse_folder_elem, to_item_id
-
-log = logging.getLogger(__name__)
 
 
 class UpdateFolder(EWSAccountService):
@@ -42,8 +39,8 @@ class UpdateFolder(EWSAccountService):
     def call(self, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(f[0] for f in folders)  # Convert to a list, in case &#39;folders&#39; is a generator
-        for folder, elem in zip(folders_list, self._get_elements(payload=self.get_payload(folders=folders))):
+        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        for (folder, _), elem in zip(folders_list, self._chunked_get_elements(self.get_payload, items=folders_list)):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     @staticmethod
@@ -68,7 +65,6 @@ class UpdateFolder(EWSAccountService):
         return set_xml_value(deletefolderfield, field_path, version=self.account.version)
 
     def _get_folder_update_elems(self, folder, fieldnames):
-        from ..fields import FieldPath
         folder_model = folder.__class__
         fieldnames_set = set(fieldnames)
 
@@ -89,14 +85,13 @@ class UpdateFolder(EWSAccountService):
             yield self._set_folder_elem(folder_model=folder_model, field_path=FieldPath(field=field), value=value)
 
     def get_payload(self, folders):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
+        from ..folders import BaseFolder, FolderId
         updatefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         folderchanges = create_element(&#39;m:FolderChanges&#39;)
         version = self.account.version
         for folder, fieldnames in folders:
-            log.debug(&#39;Updating folder %s fields %s&#39;, folder, fieldnames)
             folderchange = create_element(&#39;t:FolderChange&#39;)
-            if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+            if not isinstance(folder, (BaseFolder, FolderId)):
                 folder = to_item_id(folder, FolderId, version=version)
             set_xml_value(folderchange, folder, version=version)
             updates = create_element(&#39;t:Updates&#39;)
@@ -137,8 +132,8 @@ class UpdateFolder(EWSAccountService):
     def call(self, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(f[0] for f in folders)  # Convert to a list, in case &#39;folders&#39; is a generator
-        for folder, elem in zip(folders_list, self._get_elements(payload=self.get_payload(folders=folders))):
+        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        for (folder, _), elem in zip(folders_list, self._chunked_get_elements(self.get_payload, items=folders_list)):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     @staticmethod
@@ -163,7 +158,6 @@ class UpdateFolder(EWSAccountService):
         return set_xml_value(deletefolderfield, field_path, version=self.account.version)
 
     def _get_folder_update_elems(self, folder, fieldnames):
-        from ..fields import FieldPath
         folder_model = folder.__class__
         fieldnames_set = set(fieldnames)
 
@@ -184,14 +178,13 @@ class UpdateFolder(EWSAccountService):
             yield self._set_folder_elem(folder_model=folder_model, field_path=FieldPath(field=field), value=value)
 
     def get_payload(self, folders):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
+        from ..folders import BaseFolder, FolderId
         updatefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         folderchanges = create_element(&#39;m:FolderChanges&#39;)
         version = self.account.version
         for folder, fieldnames in folders:
-            log.debug(&#39;Updating folder %s fields %s&#39;, folder, fieldnames)
             folderchange = create_element(&#39;t:FolderChange&#39;)
-            if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+            if not isinstance(folder, (BaseFolder, FolderId)):
                 folder = to_item_id(folder, FolderId, version=version)
             set_xml_value(folderchange, folder, version=version)
             updates = create_element(&#39;t:Updates&#39;)
@@ -234,8 +227,8 @@ class UpdateFolder(EWSAccountService):
 <pre><code class="python">def call(self, folders):
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
-    folders_list = list(f[0] for f in folders)  # Convert to a list, in case &#39;folders&#39; is a generator
-    for folder, elem in zip(folders_list, self._get_elements(payload=self.get_payload(folders=folders))):
+    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+    for (folder, _), elem in zip(folders_list, self._chunked_get_elements(self.get_payload, items=folders_list)):
         yield parse_folder_elem(elem=elem, folder=folder, account=self.account)</code></pre>
 </details>
 </dd>
@@ -249,14 +242,13 @@ class UpdateFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders):
-    from ..folders import BaseFolder, FolderId, DistinguishedFolderId
+    from ..folders import BaseFolder, FolderId
     updatefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     folderchanges = create_element(&#39;m:FolderChanges&#39;)
     version = self.account.version
     for folder, fieldnames in folders:
-        log.debug(&#39;Updating folder %s fields %s&#39;, folder, fieldnames)
         folderchange = create_element(&#39;t:FolderChange&#39;)
-        if not isinstance(folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        if not isinstance(folder, (BaseFolder, FolderId)):
             folder = to_item_id(folder, FolderId, version=version)
         set_xml_value(folderchange, folder, version=version)
         updates = create_element(&#39;t:Updates&#39;)
@@ -275,7 +267,9 @@ class UpdateFolder(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -311,7 +305,7 @@ class UpdateFolder(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

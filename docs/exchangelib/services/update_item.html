@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.update_item API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -27,24 +27,24 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from collections import OrderedDict
-import logging
 
+from .common import EWSAccountService, to_item_id
 from ..ewsdatetime import EWSDate
+from ..fields import FieldPath, IndexedField
+from ..indexed_properties import MultiFieldIndexedElement
+from ..properties import ItemId
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013_SP1
-from .common import EWSAccountService, EWSPooledMixIn, to_item_id
-
-log = logging.getLogger(__name__)
 
 
-class UpdateItem(EWSAccountService, EWSPooledMixIn):
+class UpdateItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem&#34;&#34;&#34;
     SERVICE_NAME = &#39;UpdateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+        from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -62,13 +62,18 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        for elem in self._chunked_get_elements(
+            self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ))
+        ):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield Item.id_from_xml(elem)
 
     def _delete_item_elem(self, field_path):
         deleteitemfield = create_element(&#39;t:DeleteItemField&#39;)
@@ -116,11 +121,9 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             value = self._get_item_value(item, field)
             if value is None or (field.is_list and not value):
                 # A value of None or [] means we want to remove this field from the item
-                for elem in self._get_delete_item_elems(field=field):
-                    yield elem
+                yield from self._get_delete_item_elems(field=field)
             else:
-                for elem in self._get_set_item_elems(item_model=item.__class__, field=field, value=value):
-                    yield elem
+                yield from self._get_set_item_elems(item_model=item.__class__, field=field, value=value)
 
     def _get_item_value(self, item, field):
         from ..items import CalendarItem
@@ -136,15 +139,12 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         return value
 
     def _get_delete_item_elems(self, field):
-        from ..fields import FieldPath
         if field.is_required or field.is_required_after_save:
             raise ValueError(&#39;%s is a required field and may not be deleted&#39; % field.name)
         for field_path in FieldPath(field=field).expand(version=self.account.version):
             yield self._delete_item_elem(field_path=field_path)
 
     def _get_set_item_elems(self, item_model, field, value):
-        from ..fields import FieldPath, IndexedField
-        from ..indexed_properties import MultiFieldIndexedElement
         if isinstance(field, IndexedField):
             # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
             for v in value:
@@ -175,7 +175,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated. Returns the XML for an UpdateItem call.
         # an UpdateItem request.
-        from ..properties import ItemId
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
             updateitem = create_element(
                 &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -203,7 +202,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             if not fieldnames:
                 raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
             itemchange = create_element(&#39;t:ItemChange&#39;)
-            log.debug(&#39;Updating item %s fields %s&#39;, item, fieldnames)
             set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
             updates = create_element(&#39;t:Updates&#39;)
             for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):
@@ -235,14 +233,14 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UpdateItem(EWSAccountService, EWSPooledMixIn):
+<pre><code class="python">class UpdateItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem&#34;&#34;&#34;
     SERVICE_NAME = &#39;UpdateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+        from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -260,13 +258,18 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        return self._pool_requests(payload_func=self.get_payload, **dict(
+        for elem in self._chunked_get_elements(
+            self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ))
+        ):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield Item.id_from_xml(elem)
 
     def _delete_item_elem(self, field_path):
         deleteitemfield = create_element(&#39;t:DeleteItemField&#39;)
@@ -314,11 +317,9 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             value = self._get_item_value(item, field)
             if value is None or (field.is_list and not value):
                 # A value of None or [] means we want to remove this field from the item
-                for elem in self._get_delete_item_elems(field=field):
-                    yield elem
+                yield from self._get_delete_item_elems(field=field)
             else:
-                for elem in self._get_set_item_elems(item_model=item.__class__, field=field, value=value):
-                    yield elem
+                yield from self._get_set_item_elems(item_model=item.__class__, field=field, value=value)
 
     def _get_item_value(self, item, field):
         from ..items import CalendarItem
@@ -334,15 +335,12 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         return value
 
     def _get_delete_item_elems(self, field):
-        from ..fields import FieldPath
         if field.is_required or field.is_required_after_save:
             raise ValueError(&#39;%s is a required field and may not be deleted&#39; % field.name)
         for field_path in FieldPath(field=field).expand(version=self.account.version):
             yield self._delete_item_elem(field_path=field_path)
 
     def _get_set_item_elems(self, item_model, field, value):
-        from ..fields import FieldPath, IndexedField
-        from ..indexed_properties import MultiFieldIndexedElement
         if isinstance(field, IndexedField):
             # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
             for v in value:
@@ -373,7 +371,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated. Returns the XML for an UpdateItem call.
         # an UpdateItem request.
-        from ..properties import ItemId
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
             updateitem = create_element(
                 &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -401,7 +398,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
             if not fieldnames:
                 raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
             itemchange = create_element(&#39;t:ItemChange&#39;)
-            log.debug(&#39;Updating item %s fields %s&#39;, item, fieldnames)
             set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
             updates = create_element(&#39;t:Updates&#39;)
             for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):
@@ -416,7 +412,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
-<li><a title="exchangelib.services.common.EWSPooledMixIn" href="common.html#exchangelib.services.common.EWSPooledMixIn">EWSPooledMixIn</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -443,7 +438,7 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
 </summary>
 <pre><code class="python">def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
          suppress_read_receipts):
-    from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+    from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
         SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
     if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
         raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -461,13 +456,18 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
     if message_disposition == SEND_ONLY:
         raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-    return self._pool_requests(payload_func=self.get_payload, **dict(
+    for elem in self._chunked_get_elements(
+        self.get_payload,
         items=items,
         conflict_resolution=conflict_resolution,
         message_disposition=message_disposition,
         send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
         suppress_read_receipts=suppress_read_receipts,
-    ))</code></pre>
+    ):
+        if isinstance(elem, (Exception, type(None))):
+            yield elem
+            continue
+        yield Item.id_from_xml(elem)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.update_item.UpdateItem.get_payload"><code class="name flex">
@@ -484,7 +484,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
     # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
     # are the attribute names that were updated. Returns the XML for an UpdateItem call.
     # an UpdateItem request.
-    from ..properties import ItemId
     if self.account.version.build &gt;= EXCHANGE_2013_SP1:
         updateitem = create_element(
             &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -512,7 +511,6 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
         if not fieldnames:
             raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
         itemchange = create_element(&#39;t:ItemChange&#39;)
-        log.debug(&#39;Updating item %s fields %s&#39;, item, fieldnames)
         set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
         updates = create_element(&#39;t:Updates&#39;)
         for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):
@@ -530,7 +528,9 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -566,7 +566,7 @@ class UpdateItem(EWSAccountService, EWSPooledMixIn):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

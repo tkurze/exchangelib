@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.configuration API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -59,27 +59,31 @@ class Configuration:
         config = Configuration(auth_type=NTLM, ...)
         config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
 
-    Finally, you can use &#39;retry_policy&#39; to define a custom retry policy for handling server connection failures:
+    You can use &#39;retry_policy&#39; to define a custom retry policy for handling server connection failures:
 
         config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
 
+    &#39;max_connections&#39; defines the max number of connections allowed for this server. This may be restricted by
+    policies on the Exchange server.
     &#34;&#34;&#34;
 
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
-                 retry_policy=None):
+                 retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError(&#34;&#39;credentials&#39; %r must be a Credentials instance&#34; % credentials)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
             raise ValueError(&#34;&#39;auth_type&#39; %r must be one of %s&#34;
-                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP.keys()))))
+                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP))))
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
             raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
         if not isinstance(retry_policy, RetryPolicy):
             raise ValueError(&#34;&#39;retry_policy&#39; %r must be a RetryPolicy instance&#34; % retry_policy)
+        if not isinstance(max_connections, (int, type(None))):
+            raise ValueError(&#34;&#39;max_connections&#39; must be an integer&#34;)
         self._credentials = credentials
         if server:
             self.service_endpoint = &#39;https://%s/EWS/Exchange.asmx&#39; % server
@@ -88,6 +92,7 @@ class Configuration:
         self.auth_type = auth_type
         self.version = version
         self.retry_policy = retry_policy
+        self.max_connections = max_connections
 
     @property
     def credentials(self):
@@ -117,7 +122,7 @@ class Configuration:
 <dl>
 <dt id="exchangelib.configuration.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>credentials=None, server=None, service_endpoint=None, auth_type=None, version=None, retry_policy=None)</span>
+<span>(</span><span>credentials=None, server=None, service_endpoint=None, auth_type=None, version=None, retry_policy=None, max_connections=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Contains information needed to create an authenticated connection to an EWS endpoint.</p>
@@ -134,9 +139,11 @@ add the server version as a hint. This allows to skip the auth type and version 
 <pre><code>config = Configuration(auth_type=NTLM, ...)
 config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
 </code></pre>
-<p>Finally, you can use 'retry_policy' to define a custom retry policy for handling server connection failures:</p>
+<p>You can use 'retry_policy' to define a custom retry policy for handling server connection failures:</p>
 <pre><code>config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
-</code></pre></div>
+</code></pre>
+<p>'max_connections' defines the max number of connections allowed for this server. This may be restricted by
+policies on the Exchange server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -161,27 +168,31 @@ config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
         config = Configuration(auth_type=NTLM, ...)
         config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
 
-    Finally, you can use &#39;retry_policy&#39; to define a custom retry policy for handling server connection failures:
+    You can use &#39;retry_policy&#39; to define a custom retry policy for handling server connection failures:
 
         config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
 
+    &#39;max_connections&#39; defines the max number of connections allowed for this server. This may be restricted by
+    policies on the Exchange server.
     &#34;&#34;&#34;
 
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
-                 retry_policy=None):
+                 retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError(&#34;&#39;credentials&#39; %r must be a Credentials instance&#34; % credentials)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
             raise ValueError(&#34;&#39;auth_type&#39; %r must be one of %s&#34;
-                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP.keys()))))
+                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP))))
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
             raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
         if not isinstance(retry_policy, RetryPolicy):
             raise ValueError(&#34;&#39;retry_policy&#39; %r must be a RetryPolicy instance&#34; % retry_policy)
+        if not isinstance(max_connections, (int, type(None))):
+            raise ValueError(&#34;&#39;max_connections&#39; must be an integer&#34;)
         self._credentials = credentials
         if server:
             self.service_endpoint = &#39;https://%s/EWS/Exchange.asmx&#39; % server
@@ -190,6 +201,7 @@ config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
         self.auth_type = auth_type
         self.version = version
         self.retry_policy = retry_policy
+        self.max_connections = max_connections
 
     @property
     def credentials(self):
@@ -276,7 +288,7 @@ def credentials(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

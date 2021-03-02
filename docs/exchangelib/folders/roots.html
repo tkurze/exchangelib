@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.folders.roots API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,23 +26,24 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import logging
+<pre><code class="python">import abc
+import logging
 
+from .base import BaseFolder
+from .collections import FolderCollection
+from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
+    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
+from .queryset import SingleFolderQuerySet, SHALLOW
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, \
     ErrorInvalidOperation
 from ..fields import EffectiveRightsField
 from ..properties import Fields
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
-from .collections import FolderCollection
-from .base import BaseFolder
-from .known_folders import MsgFolderRoot, NON_DELETEABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
-    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-from .queryset import SingleFolderQuerySet, SHALLOW
 
 log = logging.getLogger(__name__)
 
 
-class RootOfHierarchy(BaseFolder):
+class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for folders that implement the root of a folder hierarchy&#34;&#34;&#34;
 
     # A list of wellknown, or &#34;distinguished&#34;, folders that are belong in this folder hierarchy. See
@@ -95,8 +96,10 @@ class RootOfHierarchy(BaseFolder):
             raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
         return super().deregister(*args, **kwargs)
 
-    def get_folder(self, folder_id):
-        return self._folders_map.get(folder_id, None)
+    def get_folder(self, folder):
+        if not folder.id:
+            raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
+        return self._folders_map.get(folder.id, None)
 
     def add_folder(self, folder):
         if not folder.id:
@@ -234,7 +237,7 @@ class RootOfHierarchy(BaseFolder):
           locale:
 
         &#34;&#34;&#34;
-        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETEABLE_FOLDERS:
+        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
@@ -281,8 +284,8 @@ class Root(RootOfHierarchy):
         # Try direct children of TOIS first. TOIS might not exist.
         try:
             return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-        except ErrorFolderNotFound:
-            # No candidates, or TOIS does ot exist
+        except (ErrorFolderNotFound, ErrorItemNotFound):
+            # No candidates, or TOIS does not exist, or we don&#39;t have access
             pass
 
         # No candidates in TOIS. Try direct children of root.
@@ -324,8 +327,7 @@ class PublicFoldersRoot(RootOfHierarchy):
         children = list(super().get_children(folder=folder))
         if children:
             # Return a generator like our parent does
-            for f in children:
-                yield f
+            yield from children
             return
 
         # Also return early if the server told us that there are no child folders.
@@ -348,8 +350,7 @@ class PublicFoldersRoot(RootOfHierarchy):
         self._subfolders.update(children_map)
 
         # Child folders have been cached now. Try super().get_children() again.
-        for f in super().get_children(folder=folder):
-            yield f
+        yield from super().get_children(folder=folder)
 
 
 class ArchiveRoot(RootOfHierarchy):
@@ -419,7 +420,6 @@ class ArchiveRoot(RootOfHierarchy):
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.effective_rights" href="#exchangelib.folders.roots.RootOfHierarchy.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name" href="#exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name">folder_cls_from_folder_name</a></code></li>
@@ -464,8 +464,7 @@ class ArchiveRoot(RootOfHierarchy):
         children = list(super().get_children(folder=folder))
         if children:
             # Return a generator like our parent does
-            for f in children:
-                yield f
+            yield from children
             return
 
         # Also return early if the server told us that there are no child folders.
@@ -488,8 +487,7 @@ class ArchiveRoot(RootOfHierarchy):
         self._subfolders.update(children_map)
 
         # Child folders have been cached now. Try super().get_children() again.
-        for f in super().get_children(folder=folder):
-            yield f</code></pre>
+        yield from super().get_children(folder=folder)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -534,8 +532,7 @@ class ArchiveRoot(RootOfHierarchy):
     children = list(super().get_children(folder=folder))
     if children:
         # Return a generator like our parent does
-        for f in children:
-            yield f
+        yield from children
         return
 
     # Also return early if the server told us that there are no child folders.
@@ -558,8 +555,7 @@ class ArchiveRoot(RootOfHierarchy):
     self._subfolders.update(children_map)
 
     # Child folders have been cached now. Try super().get_children() again.
-    for f in super().get_children(folder=folder):
-        yield f</code></pre>
+    yield from super().get_children(folder=folder)</code></pre>
 </details>
 </dd>
 </dl>
@@ -572,7 +568,6 @@ class ArchiveRoot(RootOfHierarchy):
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.effective_rights" href="#exchangelib.folders.roots.RootOfHierarchy.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name" href="#exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name">folder_cls_from_folder_name</a></code></li>
@@ -637,8 +632,8 @@ class ArchiveRoot(RootOfHierarchy):
         # Try direct children of TOIS first. TOIS might not exist.
         try:
             return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-        except ErrorFolderNotFound:
-            # No candidates, or TOIS does ot exist
+        except (ErrorFolderNotFound, ErrorItemNotFound):
+            # No candidates, or TOIS does not exist, or we don&#39;t have access
             pass
 
         # No candidates in TOIS. Try direct children of root.
@@ -735,8 +730,8 @@ def tois(self):
     # Try direct children of TOIS first. TOIS might not exist.
     try:
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-    except ErrorFolderNotFound:
-        # No candidates, or TOIS does ot exist
+    except (ErrorFolderNotFound, ErrorItemNotFound):
+        # No candidates, or TOIS does not exist, or we don&#39;t have access
         pass
 
     # No candidates in TOIS. Try direct children of root.
@@ -753,7 +748,6 @@ def tois(self):
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.effective_rights" href="#exchangelib.folders.roots.RootOfHierarchy.effective_rights">effective_rights</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name" href="#exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name">folder_cls_from_folder_name</a></code></li>
@@ -783,7 +777,7 @@ def tois(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RootOfHierarchy(BaseFolder):
+<pre><code class="python">class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for folders that implement the root of a folder hierarchy&#34;&#34;&#34;
 
     # A list of wellknown, or &#34;distinguished&#34;, folders that are belong in this folder hierarchy. See
@@ -836,8 +830,10 @@ def tois(self):
             raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
         return super().deregister(*args, **kwargs)
 
-    def get_folder(self, folder_id):
-        return self._folders_map.get(folder_id, None)
+    def get_folder(self, folder):
+        if not folder.id:
+            raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
+        return self._folders_map.get(folder.id, None)
 
     def add_folder(self, folder):
         if not folder.id:
@@ -975,7 +971,7 @@ def tois(self):
           locale:
 
         &#34;&#34;&#34;
-        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETEABLE_FOLDERS:
+        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
@@ -1041,7 +1037,7 @@ def folder_cls_from_folder_name(cls, folder_name, locale):
       locale:
 
     &#34;&#34;&#34;
-    for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETEABLE_FOLDERS:
+    for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
         if folder_name.lower() in folder_cls.localized_names(locale):
             return folder_cls
     raise KeyError()</code></pre>
@@ -1222,7 +1218,7 @@ def root(self):
 </details>
 </dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.get_folder"><code class="name flex">
-<span>def <span class="ident">get_folder</span></span>(<span>self, folder_id)</span>
+<span>def <span class="ident">get_folder</span></span>(<span>self, folder)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1230,8 +1226,10 @@ def root(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_folder(self, folder_id):
-    return self._folders_map.get(folder_id, None)</code></pre>
+<pre><code class="python">def get_folder(self, folder):
+    if not folder.id:
+        raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
+    return self._folders_map.get(folder.id, None)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.refresh"><code class="name flex">
@@ -1290,7 +1288,6 @@ def root(self):
 <li><code><a title="exchangelib.folders.base.BaseFolder.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.child_folder_count" href="base.html#exchangelib.folders.base.BaseFolder.child_folder_count">child_folder_count</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
-<li><code><a title="exchangelib.folders.base.BaseFolder.find_people" href="base.html#exchangelib.folders.base.BaseFolder.find_people">find_people</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_class">folder_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
@@ -1379,7 +1376,7 @@ def root(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

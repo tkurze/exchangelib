@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.items.base API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,7 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import logging
+<pre><code class="python">import abc
+import logging
 
 from ..extended_properties import ExtendedProperty
 from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
@@ -90,7 +91,7 @@ MOVE_TO_DELETED_ITEMS = &#39;MoveToDeletedItems&#39;
 DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
 
 
-class RegisterMixIn(IdChangeKeyMixIn):
+class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
@@ -143,7 +144,7 @@ class RegisterMixIn(IdChangeKeyMixIn):
         cls.remove_field(field)
 
 
-class BaseItem(RegisterMixIn):
+class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all other classes that implement EWS items&#34;&#34;&#34;
     ID_ELEMENT_CLS = ItemId
 
@@ -180,11 +181,8 @@ class BaseItem(RegisterMixIn):
         item.account = account
         return item
 
-    def to_id_xml(self, version):
-        return self._id.to_xml(version=version)
 
-
-class BaseReplyItem(EWSElement):
+class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for reply/forward elements that share the same fields&#34;&#34;&#34;
     FIELDS = Fields(
         CharField(&#39;subject&#39;, field_uri=&#39;Subject&#39;),
@@ -219,16 +217,13 @@ class BaseReplyItem(EWSElement):
                 raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
         expect_result = True if isinstance(self, CancelCalendarItem) else False
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=copy_to_folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
             expect_result=expect_result,
         )
-        if res is None:
-            return
-        return BulkCreateResult.from_xml(elem=res, account=self)
 
     @require_account
     def save(self, folder):
@@ -239,13 +234,12 @@ class BaseReplyItem(EWSElement):
           folder:
 
         &#34;&#34;&#34;
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=folder,
             message_disposition=SAVE_ONLY,
             send_meeting_invitations=SEND_TO_NONE,
         )
-        return BulkCreateResult.from_xml(elem=res, account=self)
 
 
 class BulkCreateResult(BaseItem):
@@ -283,7 +277,7 @@ class BulkCreateResult(BaseItem):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseItem(RegisterMixIn):
+<pre><code class="python">class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all other classes that implement EWS items&#34;&#34;&#34;
     ID_ELEMENT_CLS = ItemId
 
@@ -318,10 +312,7 @@ class BulkCreateResult(BaseItem):
     def from_xml(cls, elem, account):
         item = super().from_xml(elem=elem, account=account)
         item.account = account
-        return item
-
-    def to_id_xml(self, version):
-        return self._id.to_xml(version=version)</code></pre>
+        return item</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -377,22 +368,6 @@ def from_xml(cls, elem, account):
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.items.base.BaseItem.to_id_xml"><code class="name flex">
-<span>def <span class="ident">to_id_xml</span></span>(<span>self, version)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def to_id_xml(self, version):
-    return self._id.to_xml(version=version)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.items.base.RegisterMixIn" href="#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></b></code>:
@@ -417,7 +392,7 @@ def from_xml(cls, elem, account):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseReplyItem(EWSElement):
+<pre><code class="python">class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for reply/forward elements that share the same fields&#34;&#34;&#34;
     FIELDS = Fields(
         CharField(&#39;subject&#39;, field_uri=&#39;Subject&#39;),
@@ -452,16 +427,13 @@ def from_xml(cls, elem, account):
                 raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
         expect_result = True if isinstance(self, CancelCalendarItem) else False
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=copy_to_folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
             expect_result=expect_result,
         )
-        if res is None:
-            return
-        return BulkCreateResult.from_xml(elem=res, account=self)
 
     @require_account
     def save(self, folder):
@@ -472,13 +444,12 @@ def from_xml(cls, elem, account):
           folder:
 
         &#34;&#34;&#34;
-        res = CreateItem(account=self.account).get(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=folder,
             message_disposition=SAVE_ONLY,
             send_meeting_invitations=SEND_TO_NONE,
-        )
-        return BulkCreateResult.from_xml(elem=res, account=self)</code></pre>
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -576,13 +547,12 @@ def save(self, folder):
       folder:
 
     &#34;&#34;&#34;
-    res = CreateItem(account=self.account).get(
+    return CreateItem(account=self.account).get(
         items=[self],
         folder=folder,
         message_disposition=SAVE_ONLY,
         send_meeting_invitations=SEND_TO_NONE,
-    )
-    return BulkCreateResult.from_xml(elem=res, account=self)</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.send"><code class="name flex">
@@ -602,16 +572,13 @@ def send(self, save_copy=True, copy_to_folder=None):
             raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
     message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
     expect_result = True if isinstance(self, CancelCalendarItem) else False
-    res = CreateItem(account=self.account).get(
+    return CreateItem(account=self.account).get(
         items=[self],
         folder=copy_to_folder,
         message_disposition=message_disposition,
         send_meeting_invitations=SEND_TO_NONE,
         expect_result=expect_result,
-    )
-    if res is None:
-        return
-    return BulkCreateResult.from_xml(elem=res, account=self)</code></pre>
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -704,7 +671,7 @@ def send(self, save_copy=True, copy_to_folder=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RegisterMixIn(IdChangeKeyMixIn):
+<pre><code class="python">class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
@@ -875,13 +842,12 @@ def register(cls, attr_name, attr_cls):
 <ul>
 <li>
 <h4><code><a title="exchangelib.items.base.BaseItem" href="#exchangelib.items.base.BaseItem">BaseItem</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="exchangelib.items.base.BaseItem.FIELDS" href="#exchangelib.items.base.BaseItem.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseItem.ID_ELEMENT_CLS" href="#exchangelib.items.base.BaseItem.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseItem.account" href="#exchangelib.items.base.BaseItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseItem.folder" href="#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseItem.from_xml" href="#exchangelib.items.base.BaseItem.from_xml">from_xml</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseItem.to_id_xml" href="#exchangelib.items.base.BaseItem.to_id_xml">to_id_xml</a></code></li>
 </ul>
 </li>
 <li>
@@ -927,7 +893,7 @@ def register(cls, attr_name, attr_cls):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

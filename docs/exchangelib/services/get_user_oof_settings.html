@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.get_user_oof_settings API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,8 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value, MNS, TNS
-from .common import EWSAccountService
+<pre><code class="python">from .common import EWSAccountService
+from ..properties import AvailabilityMailbox
+from ..settings import OofSettings
+from ..util import create_element, set_xml_value, MNS, TNS
 
 
 class GetUserOofSettings(EWSAccountService):
@@ -39,30 +41,29 @@ class GetUserOofSettings(EWSAccountService):
     element_container_name = &#39;{%s}OofSettings&#39; % TNS
 
     def call(self, mailbox):
-        return self._get_elements(payload=self.get_payload(mailbox=mailbox))
+        for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield OofSettings.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, mailbox):
-        from ..properties import AvailabilityMailbox
         payload = create_element(&#39;m:%sRequest&#39; % self.SERVICE_NAME)
         return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
 
-    def _get_elements_in_response(self, response):
-        # This service only returns one result, but &#39;response&#39; is a list
-        from ..settings import OofSettings
-        if len(response) != 1:
-            raise ValueError(&#34;Expected &#39;response&#39; length 1, got %s&#34; % response)
-        for msg in response:
-            container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
-            if isinstance(container_or_exc, (bool, Exception)):
-                # pylint: disable=raising-bad-type
-                raise container_or_exc
-            yield OofSettings.from_xml(container_or_exc, account=self.account)
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        # This service only returns one result, directly in &#39;container&#39;
+        return [container]
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        response_message = message.find(&#39;{%s}ResponseMessage&#39; % MNS)
-        return super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )</code></pre>
+    def _get_element_container(self, message, name=None):
+        # This service returns the result container outside the response message
+        super()._get_element_container(message=message.find(self._response_message_tag()), name=None)
+        return message.find(name)
+
+    @staticmethod
+    def _response_message_tag():
+        return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 </section>
 <section>
@@ -94,30 +95,29 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     element_container_name = &#39;{%s}OofSettings&#39; % TNS
 
     def call(self, mailbox):
-        return self._get_elements(payload=self.get_payload(mailbox=mailbox))
+        for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield OofSettings.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, mailbox):
-        from ..properties import AvailabilityMailbox
         payload = create_element(&#39;m:%sRequest&#39; % self.SERVICE_NAME)
         return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
 
-    def _get_elements_in_response(self, response):
-        # This service only returns one result, but &#39;response&#39; is a list
-        from ..settings import OofSettings
-        if len(response) != 1:
-            raise ValueError(&#34;Expected &#39;response&#39; length 1, got %s&#34; % response)
-        for msg in response:
-            container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
-            if isinstance(container_or_exc, (bool, Exception)):
-                # pylint: disable=raising-bad-type
-                raise container_or_exc
-            yield OofSettings.from_xml(container_or_exc, account=self.account)
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        # This service only returns one result, directly in &#39;container&#39;
+        return [container]
 
-    def _get_element_container(self, message, response_message=None, name=None):
-        response_message = message.find(&#39;{%s}ResponseMessage&#39; % MNS)
-        return super()._get_element_container(
-            message=message, response_message=response_message, name=name
-        )</code></pre>
+    def _get_element_container(self, message, name=None):
+        # This service returns the result container outside the response message
+        super()._get_element_container(message=message.find(self._response_message_tag()), name=None)
+        return message.find(name)
+
+    @staticmethod
+    def _response_message_tag():
+        return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -147,7 +147,11 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, mailbox):
-    return self._get_elements(payload=self.get_payload(mailbox=mailbox))</code></pre>
+    for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield OofSettings.from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_user_oof_settings.GetUserOofSettings.get_payload"><code class="name flex">
@@ -160,7 +164,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, mailbox):
-    from ..properties import AvailabilityMailbox
     payload = create_element(&#39;m:%sRequest&#39; % self.SERVICE_NAME)
     return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)</code></pre>
 </details>
@@ -170,7 +173,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -206,7 +211,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

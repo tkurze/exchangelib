@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.move_item API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,8 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value, MNS
-from .common import EWSAccountService, create_item_ids_element
+<pre><code class="python">from .common import EWSAccountService, create_item_ids_element
+from ..util import create_element, set_xml_value, MNS
 
 
 class MoveItem(EWSAccountService):
@@ -36,13 +36,15 @@ class MoveItem(EWSAccountService):
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, to_folder):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        if not isinstance(to_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        from ..folders import BaseFolder, FolderId
+        from ..items import Item
+        if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-        return self._get_elements(payload=self.get_payload(
-            items=items,
-            to_folder=to_folder,
-        ))
+        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs
@@ -80,13 +82,15 @@ class MoveItem(EWSAccountService):
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, to_folder):
-        from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-        if not isinstance(to_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+        from ..folders import BaseFolder, FolderId
+        from ..items import Item
+        if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-        return self._get_elements(payload=self.get_payload(
-            items=items,
-            to_folder=to_folder,
-        ))
+        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs
@@ -130,13 +134,15 @@ class MoveItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, to_folder):
-    from ..folders import BaseFolder, FolderId, DistinguishedFolderId
-    if not isinstance(to_folder, (BaseFolder, FolderId, DistinguishedFolderId)):
+    from ..folders import BaseFolder, FolderId
+    from ..items import Item
+    if not isinstance(to_folder, (BaseFolder, FolderId)):
         raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-    return self._get_elements(payload=self.get_payload(
-        items=items,
-        to_folder=to_folder,
-    ))</code></pre>
+    for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        if isinstance(elem, (Exception, type(None))):
+            yield elem
+            continue
+        yield Item.id_from_xml(elem)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.move_item.MoveItem.get_payload"><code class="name flex">
@@ -164,7 +170,9 @@ class MoveItem(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -200,7 +208,7 @@ class MoveItem(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

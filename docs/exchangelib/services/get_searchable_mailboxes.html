@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.get_searchable_mailboxes API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,10 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..errors import MalformedResponseError
+<pre><code class="python">from .common import EWSService
+from ..errors import MalformedResponseError
+from ..properties import SearchableMailbox, FailedMailbox
 from ..util import create_element, add_xml_child, MNS
 from ..version import EXCHANGE_2013
-from .common import EWSService
 
 
 class GetSearchableMailboxes(EWSService):
@@ -40,11 +41,10 @@ class GetSearchableMailboxes(EWSService):
     SERVICE_NAME = &#39;GetSearchableMailboxes&#39;
     element_container_name = &#39;{%s}SearchableMailboxes&#39; % MNS
     failed_mailboxes_container_name = &#39;{%s}FailedMailboxes&#39; % MNS
+    supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
-        if self.protocol.version.build &lt; EXCHANGE_2013:
-            raise NotImplementedError(&#39;%s is only supported for Exchange 2013 servers and later&#39; % self.SERVICE_NAME)
-        from ..properties import SearchableMailbox, FailedMailbox
+        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
         for elem in self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,
                 expand_group_membership=expand_group_membership,
@@ -52,12 +52,7 @@ class GetSearchableMailboxes(EWSService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if elem.tag == SearchableMailbox.response_tag():
-                yield SearchableMailbox.from_xml(elem=elem, account=None)
-            elif elem.tag == FailedMailbox.response_tag():
-                yield FailedMailbox.from_xml(elem=elem, account=None)
-            else:
-                raise ValueError(&#34;Unknown element tag &#39;%s&#39;: (%s)&#34; % (elem.tag, elem))
+            yield cls_map[elem.tag].from_xml(elem=elem, account=None)
 
     def get_payload(self, search_filter, expand_group_membership):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -73,15 +68,14 @@ class GetSearchableMailboxes(EWSService):
                 try:
                     container_or_exc = self._get_element_container(message=msg, name=container_name)
                 except MalformedResponseError:
-                    # Responses bay contain no failed mailboxes. _get_element_container() does not accept this.
+                    # Responses may contain no failed mailboxes. _get_element_container() does not accept this.
                     if container_name == self.failed_mailboxes_container_name:
                         continue
                     raise
                 if isinstance(container_or_exc, (bool, Exception)):
                     yield container_or_exc
-                else:
-                    for c in self._get_elements_in_container(container=container_or_exc):
-                        yield c</code></pre>
+                    continue
+                yield from self._get_elements_in_container(container=container_or_exc)</code></pre>
 </details>
 </section>
 <section>
@@ -112,11 +106,10 @@ class GetSearchableMailboxes(EWSService):
     SERVICE_NAME = &#39;GetSearchableMailboxes&#39;
     element_container_name = &#39;{%s}SearchableMailboxes&#39; % MNS
     failed_mailboxes_container_name = &#39;{%s}FailedMailboxes&#39; % MNS
+    supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
-        if self.protocol.version.build &lt; EXCHANGE_2013:
-            raise NotImplementedError(&#39;%s is only supported for Exchange 2013 servers and later&#39; % self.SERVICE_NAME)
-        from ..properties import SearchableMailbox, FailedMailbox
+        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
         for elem in self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,
                 expand_group_membership=expand_group_membership,
@@ -124,12 +117,7 @@ class GetSearchableMailboxes(EWSService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if elem.tag == SearchableMailbox.response_tag():
-                yield SearchableMailbox.from_xml(elem=elem, account=None)
-            elif elem.tag == FailedMailbox.response_tag():
-                yield FailedMailbox.from_xml(elem=elem, account=None)
-            else:
-                raise ValueError(&#34;Unknown element tag &#39;%s&#39;: (%s)&#34; % (elem.tag, elem))
+            yield cls_map[elem.tag].from_xml(elem=elem, account=None)
 
     def get_payload(self, search_filter, expand_group_membership):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -145,15 +133,14 @@ class GetSearchableMailboxes(EWSService):
                 try:
                     container_or_exc = self._get_element_container(message=msg, name=container_name)
                 except MalformedResponseError:
-                    # Responses bay contain no failed mailboxes. _get_element_container() does not accept this.
+                    # Responses may contain no failed mailboxes. _get_element_container() does not accept this.
                     if container_name == self.failed_mailboxes_container_name:
                         continue
                     raise
                 if isinstance(container_or_exc, (bool, Exception)):
                     yield container_or_exc
-                else:
-                    for c in self._get_elements_in_container(container=container_or_exc):
-                        yield c</code></pre>
+                    continue
+                yield from self._get_elements_in_container(container=container_or_exc)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -173,6 +160,10 @@ class GetSearchableMailboxes(EWSService):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -186,9 +177,7 @@ class GetSearchableMailboxes(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, search_filter, expand_group_membership):
-    if self.protocol.version.build &lt; EXCHANGE_2013:
-        raise NotImplementedError(&#39;%s is only supported for Exchange 2013 servers and later&#39; % self.SERVICE_NAME)
-    from ..properties import SearchableMailbox, FailedMailbox
+    cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
     for elem in self._get_elements(payload=self.get_payload(
             search_filter=search_filter,
             expand_group_membership=expand_group_membership,
@@ -196,12 +185,7 @@ class GetSearchableMailboxes(EWSService):
         if isinstance(elem, Exception):
             yield elem
             continue
-        if elem.tag == SearchableMailbox.response_tag():
-            yield SearchableMailbox.from_xml(elem=elem, account=None)
-        elif elem.tag == FailedMailbox.response_tag():
-            yield FailedMailbox.from_xml(elem=elem, account=None)
-        else:
-            raise ValueError(&#34;Unknown element tag &#39;%s&#39;: (%s)&#34; % (elem.tag, elem))</code></pre>
+        yield cls_map[elem.tag].from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.get_payload"><code class="name flex">
@@ -227,7 +211,9 @@ class GetSearchableMailboxes(EWSService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -256,6 +242,7 @@ class GetSearchableMailboxes(EWSService):
 <li><code><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.element_container_name" href="#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.failed_mailboxes_container_name" href="#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.failed_mailboxes_container_name">failed_mailboxes_container_name</a></code></li>
 <li><code><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.get_payload" href="#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.supported_from" href="#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 </ul>
@@ -264,7 +251,7 @@ class GetSearchableMailboxes(EWSService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

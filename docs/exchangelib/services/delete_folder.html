@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.delete_folder API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,17 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element
-from .common import EWSAccountService, create_folder_ids_element
+<pre><code class="python">from .common import EWSAccountService, create_folder_ids_element
+from ..util import create_element
 
 
 class DeleteFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation&#34;&#34;&#34;
     SERVICE_NAME = &#39;DeleteFolder&#39;
-    element_container_name = None  # DeleteFolder doesn&#39;t return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, folders, delete_type):
-        return self._get_elements(payload=self.get_payload(folders=folders, delete_type=delete_type))
+        return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
 
     def get_payload(self, folders, delete_type):
         deletefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))
@@ -67,10 +67,10 @@ class DeleteFolder(EWSAccountService):
 <pre><code class="python">class DeleteFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation&#34;&#34;&#34;
     SERVICE_NAME = &#39;DeleteFolder&#39;
-    element_container_name = None  # DeleteFolder doesn&#39;t return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, folders, delete_type):
-        return self._get_elements(payload=self.get_payload(folders=folders, delete_type=delete_type))
+        return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
 
     def get_payload(self, folders, delete_type):
         deletefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))
@@ -89,7 +89,7 @@ class DeleteFolder(EWSAccountService):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.delete_folder.DeleteFolder.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
+<dt id="exchangelib.services.delete_folder.DeleteFolder.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -106,7 +106,7 @@ class DeleteFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, delete_type):
-    return self._get_elements(payload=self.get_payload(folders=folders, delete_type=delete_type))</code></pre>
+    return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.delete_folder.DeleteFolder.get_payload"><code class="name flex">
@@ -130,7 +130,9 @@ class DeleteFolder(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -156,8 +158,8 @@ class DeleteFolder(EWSAccountService):
 <ul class="">
 <li><code><a title="exchangelib.services.delete_folder.DeleteFolder.SERVICE_NAME" href="#exchangelib.services.delete_folder.DeleteFolder.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.delete_folder.DeleteFolder.call" href="#exchangelib.services.delete_folder.DeleteFolder.call">call</a></code></li>
-<li><code><a title="exchangelib.services.delete_folder.DeleteFolder.element_container_name" href="#exchangelib.services.delete_folder.DeleteFolder.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.delete_folder.DeleteFolder.get_payload" href="#exchangelib.services.delete_folder.DeleteFolder.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.delete_folder.DeleteFolder.returns_elements" href="#exchangelib.services.delete_folder.DeleteFolder.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>
 </ul>
@@ -166,7 +168,7 @@ class DeleteFolder(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.get_server_time_zones API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,22 +28,21 @@
 </summary>
 <pre><code class="python">import datetime
 
+from .common import EWSService
 from ..errors import NaiveDateTimeNotAllowed
 from ..ewsdatetime import EWSDateTime
 from ..fields import WEEKDAY_NAMES
 from ..util import create_element, set_xml_value, xml_text_to_value, peek, TNS, MNS
 from ..version import EXCHANGE_2010
-from .common import EWSService
 
 
 class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones&#34;&#34;&#34;
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
     element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
+    supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        if self.protocol.version.build &lt; EXCHANGE_2010:
-            raise NotImplementedError(&#39;%s is only supported for Exchange 2010 servers and later&#39; % self.SERVICE_NAME)
         return self._get_elements(payload=self.get_payload(
             timezones=timezones,
             return_full_timezone_data=return_full_timezone_data
@@ -164,10 +163,9 @@ class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones&#34;&#34;&#34;
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
     element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
+    supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        if self.protocol.version.build &lt; EXCHANGE_2010:
-            raise NotImplementedError(&#39;%s is only supported for Exchange 2010 servers and later&#39; % self.SERVICE_NAME)
         return self._get_elements(payload=self.get_payload(
             timezones=timezones,
             return_full_timezone_data=return_full_timezone_data
@@ -278,6 +276,10 @@ class GetServerTimeZones(EWSService):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.get_server_time_zones.GetServerTimeZones.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -291,8 +293,6 @@ class GetServerTimeZones(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, timezones=None, return_full_timezone_data=False):
-    if self.protocol.version.build &lt; EXCHANGE_2010:
-        raise NotImplementedError(&#39;%s is only supported for Exchange 2010 servers and later&#39; % self.SERVICE_NAME)
     return self._get_elements(payload=self.get_payload(
         timezones=timezones,
         return_full_timezone_data=return_full_timezone_data
@@ -329,7 +329,9 @@ class GetServerTimeZones(EWSService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -357,6 +359,7 @@ class GetServerTimeZones(EWSService):
 <li><code><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones.call" href="#exchangelib.services.get_server_time_zones.GetServerTimeZones.call">call</a></code></li>
 <li><code><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones.element_container_name" href="#exchangelib.services.get_server_time_zones.GetServerTimeZones.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones.get_payload" href="#exchangelib.services.get_server_time_zones.GetServerTimeZones.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones.supported_from" href="#exchangelib.services.get_server_time_zones.GetServerTimeZones.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 </ul>
@@ -365,7 +368,7 @@ class GetServerTimeZones(EWSService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

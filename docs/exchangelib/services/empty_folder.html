@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.empty_folder API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,18 +28,19 @@
 </summary>
 <pre><code class="python">from collections import OrderedDict
 
-from ..util import create_element
 from .common import EWSAccountService, create_folder_ids_element
+from ..util import create_element
 
 
 class EmptyFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder&#34;&#34;&#34;
     SERVICE_NAME = &#39;EmptyFolder&#39;
-    element_container_name = None  # EmptyFolder doesn&#39;t return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
-        return self._get_elements(payload=self.get_payload(folders=folders, delete_type=delete_type,
-                                                           delete_sub_folders=delete_sub_folders))
+        return self._chunked_get_elements(
+            self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
+        )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
         emptyfolder = create_element(
@@ -76,11 +77,12 @@ class EmptyFolder(EWSAccountService):
 <pre><code class="python">class EmptyFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder&#34;&#34;&#34;
     SERVICE_NAME = &#39;EmptyFolder&#39;
-    element_container_name = None  # EmptyFolder doesn&#39;t return a response object, just status in XML attrs
+    returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
-        return self._get_elements(payload=self.get_payload(folders=folders, delete_type=delete_type,
-                                                           delete_sub_folders=delete_sub_folders))
+        return self._chunked_get_elements(
+            self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
+        )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
         emptyfolder = create_element(
@@ -105,7 +107,7 @@ class EmptyFolder(EWSAccountService):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.empty_folder.EmptyFolder.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
+<dt id="exchangelib.services.empty_folder.EmptyFolder.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -122,8 +124,9 @@ class EmptyFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, delete_type, delete_sub_folders):
-    return self._get_elements(payload=self.get_payload(folders=folders, delete_type=delete_type,
-                                                       delete_sub_folders=delete_sub_folders))</code></pre>
+    return self._chunked_get_elements(
+        self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.empty_folder.EmptyFolder.get_payload"><code class="name flex">
@@ -153,7 +156,9 @@ class EmptyFolder(EWSAccountService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -179,8 +184,8 @@ class EmptyFolder(EWSAccountService):
 <ul class="">
 <li><code><a title="exchangelib.services.empty_folder.EmptyFolder.SERVICE_NAME" href="#exchangelib.services.empty_folder.EmptyFolder.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.empty_folder.EmptyFolder.call" href="#exchangelib.services.empty_folder.EmptyFolder.call">call</a></code></li>
-<li><code><a title="exchangelib.services.empty_folder.EmptyFolder.element_container_name" href="#exchangelib.services.empty_folder.EmptyFolder.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.empty_folder.EmptyFolder.get_payload" href="#exchangelib.services.empty_folder.EmptyFolder.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.empty_folder.EmptyFolder.returns_elements" href="#exchangelib.services.empty_folder.EmptyFolder.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>
 </ul>
@@ -189,7 +194,7 @@ class EmptyFolder(EWSAccountService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

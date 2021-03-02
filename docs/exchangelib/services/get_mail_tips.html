@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>exchangelib.services.get_mail_tips API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -26,8 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..util import create_element, set_xml_value, MNS
-from .common import EWSService
+<pre><code class="python">from .common import EWSService
+from ..properties import MailTips
+from ..util import create_element, set_xml_value, MNS
 
 
 class GetMailTips(EWSService):
@@ -35,15 +36,15 @@ class GetMailTips(EWSService):
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        from ..properties import MailTips
-        for elem in self._get_elements(payload=self.get_payload(
-                sending_as=sending_as,
-                recipients=recipients,
-                mail_tips_requested=mail_tips_requested,
-        )):
+        for elem in self._chunked_get_elements(
+            self.get_payload,
+            items=recipients,
+            sending_as=sending_as,
+            mail_tips_requested=mail_tips_requested,
+        ):
             yield MailTips.from_xml(elem=elem, account=None)
 
-    def get_payload(self, sending_as, recipients, mail_tips_requested):
+    def get_payload(self, recipients, sending_as,  mail_tips_requested):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
@@ -59,7 +60,6 @@ class GetMailTips(EWSService):
         return payload
 
     def _get_elements_in_response(self, response):
-        from ..properties import MailTips
         for msg in response:
             yield self._get_element_container(message=msg, name=MailTips.response_tag())
 
@@ -92,15 +92,15 @@ class GetMailTips(EWSService):
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        from ..properties import MailTips
-        for elem in self._get_elements(payload=self.get_payload(
-                sending_as=sending_as,
-                recipients=recipients,
-                mail_tips_requested=mail_tips_requested,
-        )):
+        for elem in self._chunked_get_elements(
+            self.get_payload,
+            items=recipients,
+            sending_as=sending_as,
+            mail_tips_requested=mail_tips_requested,
+        ):
             yield MailTips.from_xml(elem=elem, account=None)
 
-    def get_payload(self, sending_as, recipients, mail_tips_requested):
+    def get_payload(self, recipients, sending_as,  mail_tips_requested):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
@@ -116,7 +116,6 @@ class GetMailTips(EWSService):
         return payload
 
     def _get_elements_in_response(self, response):
-        from ..properties import MailTips
         for msg in response:
             yield self._get_element_container(message=msg, name=MailTips.response_tag())
 
@@ -147,17 +146,17 @@ class GetMailTips(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, sending_as, recipients, mail_tips_requested):
-    from ..properties import MailTips
-    for elem in self._get_elements(payload=self.get_payload(
-            sending_as=sending_as,
-            recipients=recipients,
-            mail_tips_requested=mail_tips_requested,
-    )):
+    for elem in self._chunked_get_elements(
+        self.get_payload,
+        items=recipients,
+        sending_as=sending_as,
+        mail_tips_requested=mail_tips_requested,
+    ):
         yield MailTips.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_mail_tips.GetMailTips.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, sending_as, recipients, mail_tips_requested)</span>
+<span>def <span class="ident">get_payload</span></span>(<span>self, recipients, sending_as, mail_tips_requested)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -165,7 +164,7 @@ class GetMailTips(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, sending_as, recipients, mail_tips_requested):
+<pre><code class="python">def get_payload(self, recipients, sending_as,  mail_tips_requested):
     payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     set_xml_value(payload, sending_as, version=self.protocol.version)
 
@@ -186,7 +185,9 @@ class GetMailTips(EWSService):
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
 <ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 </ul>
 </li>
 </ul>
@@ -221,7 +222,7 @@ class GetMailTips(EWSService):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>
