@@ -106,17 +106,7 @@ class EWSDateTime(datetime.datetime):
         elif isinstance(d.tzinfo, EWSTimeZone):
             tz = d.tzinfo
         else:
-            # Support some more tzinfo implementations. We could use isinstance(), but then we'd have to have pytz
-            # and dateutil as dependencies for this package.
-            tz_module = d.tzinfo.__class__.__module__.split('.')[0]
-            if tz_module == 'pytz':
-                tz = EWSTimeZone.from_pytz(d.tzinfo)
-            elif tz_module == 'dateutil':
-                tz = EWSTimeZone.from_dateutil(d.tzinfo)
-            elif tz_module in ('backports', 'zoneinfo'):
-                tz = EWSTimeZone(d.tzinfo.key)
-            else:
-                raise ValueError('Unsupported tzinfo value: %r' % d.tzinfo)
+            tz = EWSTimeZone.from_timezone(d.tzinfo)
         return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=tz)
 
     def astimezone(self, tz=None):
@@ -253,6 +243,26 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         return cls(key)
 
     @classmethod
+    def from_zoneinfo(cls, tz):
+        return cls(tz.key)
+
+    @classmethod
+    def from_timezone(cls, tz):
+        # Support multiple tzinfo implementations. We could use isinstance(), but then we'd have to have pytz
+        # and dateutil as dependencies for this package.
+        tz_module = tz.__class__.__module__.split('.')[0]
+        try:
+            return {
+                cls.__module__.split('.')[0]: lambda z: z,
+                'backports': cls.from_zoneinfo,
+                'dateutil': cls.from_dateutil,
+                'pytz': cls.from_pytz,
+                'zoneinfo': cls.from_zoneinfo,
+            }[tz_module](tz)
+        except KeyError:
+            raise TypeError('Unsupported tzinfo type: %r' % tz)
+
+    @classmethod
     def localzone(cls):
         try:
             tz = tzlocal.get_localzone()
@@ -260,7 +270,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
             # Older versions of tzlocal will raise a pytz exception. Let's not depend on pytz just for that.
             raise UnknownTimeZone("Failed to guess local timezone")
         # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
-        return cls(tz.key if hasattr(tz, 'key') else tz.zone)
+        return cls.from_timezone(tz)
 
     @classmethod
     def timezone(cls, location):
