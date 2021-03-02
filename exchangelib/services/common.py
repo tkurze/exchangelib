@@ -210,13 +210,35 @@ class EWSService(metaclass=abc.ABCMeta):
             except Exception:
                 # This may run from a thread pool, which obfuscates the stack trace. Print trace immediately.
                 account = self.account if isinstance(self, EWSAccountService) else None
-                log.warning('EWS %s, account %s: Exception in _get_elements: %s', self.protocol.service_endpoint,
-                            account, traceback.format_exc(20))
+                log.warning('Account %s: Exception in _get_elements: %s', account, traceback.format_exc(20))
                 raise
+
+    def _get_response_and_session(self, payload, api_version):
+        """Do send the actual HTTP request and get the response
+        """
+        return post_ratelimited(
+            protocol=self.protocol,
+            session=self.protocol.get_session(),
+            url=self.protocol.service_endpoint,
+            headers=self._headers,
+            data=wrap(
+                content=payload,
+                api_version=api_version,
+                account_to_impersonate=self._account_to_impersonate,
+                timezone=self._timezone,
+            ),
+            allow_redirects=False,
+            stream=self.streaming,
+        )
+
+    @property
+    def _api_versions_to_try(self):
+        # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
+        return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
 
     def _get_response_xml(self, payload, **parse_opts):
         """Sends the payload to the server and returns relevant elements from the result. Several things happen here:
-          * The payload is wrapped in SOAP headers
+          * The payload is wrapped in SOAP headers and sent to the server
           * The Exchange API version is negotiated and stored in the protocol object
           * Connection errors are handled and possibly reraised as ErrorServerBusy
           * SOAP errors are raised
@@ -225,63 +247,38 @@ class EWSService(metaclass=abc.ABCMeta):
         :param payload: The request payload, as an XML object
         :return: A generator of XML objects or None if the service does not return a result
         """
-        version_hint = self._version_hint
-        headers = self._headers
-        account_to_impersonate = self._account_to_impersonate
-        timezone = self._timezone
-
         # Microsoft really doesn't want to make our lives easy. The server may report one version in our initial version
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
-        api_versions = [version_hint.api_version] + [v for v in API_VERSIONS if v != version_hint.api_version]
-        for api_version in api_versions:
+        log.debug('Calling service %s', self.SERVICE_NAME)
+        for api_version in self._api_versions_to_try:
             log.debug('Trying API version %s', api_version)
-            r, session = post_ratelimited(
-                protocol=self.protocol,
-                session=self.protocol.get_session(),
-                url=self.protocol.service_endpoint,
-                headers=headers,
-                data=wrap(
-                    content=payload,
-                    api_version=api_version,
-                    account_to_impersonate=account_to_impersonate,
-                    timezone=timezone,
-                ),
-                allow_redirects=False,
-                stream=self.streaming,
-            )
-            # TODO: We should only release the session when we have fully consumed the response, but that requires fully
-            # consuming the generator returned by _get_soap_messages. The caller may not always do that. This
-            # seems to work anyway.
+            r, session = self._get_response_and_session(payload=payload, api_version=api_version)
+            # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
+            #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
+            #  that. Not doing so seems to not cause any trouble, though.
             self.protocol.release_session(session)
             if self.streaming:
                 # Let 'requests' decode raw data automatically
                 r.raw.decode_content = True
             try:
                 header, body = self._get_soap_parts(response=r, **parse_opts)
-            except ParseError as e:
+            except Exception:
                 r.close()  # Release memory
-                raise SOAPError('Bad SOAP response: %s' % e)
+                raise
             # The body may contain error messages from Exchange, but we still want to collect version info
             if header is not None:
-                try:
-                    self._update_api_version(version_hint=version_hint, api_version=api_version, header=header,
-                                             **parse_opts)
-                except TransportError as te:
-                    log.debug('Failed to update version info (%s)', te)
+                self._update_api_version(api_version=api_version, header=header, **parse_opts)
             try:
                 return self._get_soap_messages(body=body, **parse_opts)
-            except (ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion, ErrorInvalidRequest):
+            except (ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion, ErrorInvalidRequest,
+                    ErrorInvalidSchemaVersionForMailboxVersion):
                 # The guessed server version is wrong. Try the next version
                 log.debug('API version %s was invalid', api_version)
                 continue
-            except ErrorInvalidSchemaVersionForMailboxVersion:
-                # The guessed server version is wrong for this account. Try the next version
-                log.debug('API version %s was invalid', api_version)
-                continue
             except ErrorExceededConnectionCount as e:
-                # ErrorExceededConnectionCount indicates that the connecting user has too many open TCP connections to
-                # the server. Decrease our session pool size.
+                # This indicates that the connecting user has too many open TCP connections to the server. Decrease
+                # our session pool size.
                 try:
                     self.protocol.decrease_poolsize()
                     continue
@@ -293,7 +290,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS('Tried versions %s but all were invalid' % api_versions)
+        raise self.NO_VALID_SERVER_VERSIONS('Tried versions %s but all were invalid' % self._api_versions_to_try)
 
     def _handle_backoff(self, e):
         """Takes a request from the server to back off and checks the retry policy for what to do. Re-raises the
@@ -313,15 +310,19 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol.retry_policy.back_off(e.back_off)
         # We'll warn about this later if we actually need to sleep
 
-    def _update_api_version(self, version_hint, api_version, header, **parse_opts):
+    def _update_api_version(self, api_version, header, **parse_opts):
         """Parses the server version contained in SOAP headers and updates the version hint stored by the caller, if
         necessary.
         """
-        head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
-        if version_hint == head_version:
+        try:
+            head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
+        except TransportError as te:
+            log.debug('Failed to update version info (%s)', te)
+            return
+        if self._version_hint == head_version:
             # Nothing to do
             return
-        log.debug('Found new version (%s -> %s)', version_hint, head_version)
+        log.debug('Found new version (%s -> %s)', self._version_hint, head_version)
         # The api_version that worked was different than our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
@@ -348,7 +349,10 @@ class EWSService(metaclass=abc.ABCMeta):
     def _get_soap_parts(cls, response, **parse_opts):
         """Split the SOAP response into its headers an body elements
         """
-        root = to_xml(response.iter_content())
+        try:
+            root = to_xml(response.iter_content())
+        except ParseError as e:
+            raise SOAPError('Bad SOAP response: %s' % e)
         header = root.find('{%s}Header' % SOAPNS)
         if header is None:
             # This is normal when the response contains SOAP-level errors
@@ -575,6 +579,46 @@ class EWSService(metaclass=abc.ABCMeta):
             return [elem for elem in container]
         return [True]
 
+    def _get_elems_from_page(self, elem, max_items, total_item_count):
+        container = elem.find(self.element_container_name)
+        if container is None:
+            raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (
+                self.element_container_name, xml_to_str(elem)))
+        for e in self._get_elements_in_container(container=container):
+            if max_items and total_item_count >= max_items:
+                # No need to continue. Break out of elements loop
+                log.debug("'max_items' count reached (elements)")
+                break
+            yield e
+
+    def _get_pages(self, payload_func, kwargs, expected_message_count):
+        """Requests a page, or a list of pages if multiple collections are pages in a single request. Returns each page
+        """
+        payload = payload_func(**kwargs)
+        page_elems = list(self._get_elements(payload=payload))
+        if len(page_elems) != expected_message_count:
+            raise MalformedResponseError(
+                "Expected %s items in 'response', got %s" % (expected_message_count, len(page_elems))
+            )
+        return page_elems
+
+    @staticmethod
+    def _get_next_offset(paging_infos):
+        next_offsets = {p['next_offset'] for p in paging_infos if p['next_offset'] is not None}
+        if not next_offsets:
+            # Paging is done for all messages
+            return
+        # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
+        # because the collections that we are iterating may change while iterating. We'll do our best but we cannot
+        # guarantee 100% consistency when large collections are simultaneously being changed on the server.
+        #
+        # It's not possible to supply a per-folder offset when iterating multiple folders, so we'll just have to
+        # choose something that is most likely to work. Select the lowest of all the values to at least make sure
+        # we don't miss any items, although we may then get duplicates ¯\_(ツ)_/¯
+        if len(next_offsets) > 1:
+            log.warning('Inconsistent next_offset values: %r. Using lowest value', next_offsets)
+        return min(next_offsets)
+
     def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
         """Call a service that supports paging requests. Return a generator over all response items. Keeps track of
         all paging-related counters.
@@ -583,30 +627,16 @@ class EWSService(metaclass=abc.ABCMeta):
         common_next_offset = kwargs['offset']
         total_item_count = 0
         while True:
-            log.debug('EWS %s, service %s: Getting items at offset %s (max_items %s)', self.protocol.service_endpoint,
-                      self.SERVICE_NAME, common_next_offset, max_items)
+            log.debug('Getting page at offset %s (max_items %s)', common_next_offset, max_items)
             kwargs['offset'] = common_next_offset
-            payload = payload_func(**kwargs)
-            parsed_pages = list(self._get_elements(payload=payload))
-            if len(parsed_pages) != expected_message_count:
-                raise MalformedResponseError(
-                    "Expected %s items in 'response', got %s" % (expected_message_count, len(parsed_pages))
-                )
-            for (paging_container, next_offset), paging_info in zip(parsed_pages, paging_infos):
+            pages = self._get_pages(payload_func, kwargs, expected_message_count)
+            for (page, next_offset), paging_info in zip(pages, paging_infos):
                 paging_info['next_offset'] = next_offset
-                if isinstance(paging_container, Exception):
-                    yield paging_container
+                if isinstance(page, Exception):
+                    yield page
                     continue
-                if paging_container is not None:
-                    container = paging_container.find(self.element_container_name)
-                    if container is None:
-                        raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (
-                            self.element_container_name, xml_to_str(paging_container)))
-                    for elem in self._get_elements_in_container(container=container):
-                        if max_items and total_item_count >= max_items:
-                            # No need to continue. Break out of elements loop
-                            log.debug("'max_items' count reached (elements)")
-                            break
+                if page is not None:
+                    for elem in self._get_elems_from_page(page, max_items, total_item_count):
                         paging_info['item_count'] += 1
                         total_item_count += 1
                         yield elem
@@ -630,20 +660,10 @@ class EWSService(metaclass=abc.ABCMeta):
             if max_items and total_item_count >= max_items:
                 log.debug("'max_items' count reached (outer)")
                 break
-            next_offsets = {p['next_offset'] for p in paging_infos if p['next_offset'] is not None}
-            if not next_offsets:
+            common_next_offset = self._get_next_offset(paging_infos)
+            if common_next_offset is None:
                 # Paging is done for all messages
                 break
-            # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-            # because the collections that we are iterating may change while iterating. We'll do our best but we cannot
-            # guarantee 100% consistency when large collections are simultaneously being changed on the server.
-            #
-            # It's not possible to supply a per-folder offset when iterating multiple folders, so we'll just have to
-            # choose something that is most likely to work. Select the lowest of all the values to at least make sure
-            # we don't miss any items, although we may then get duplicates ¯\_(ツ)_/¯
-            if len(next_offsets) > 1:
-                log.warning('Inconsistent next_offset values: %r. Using lowest value', next_offsets)
-            common_next_offset = min(next_offsets)
 
     def _get_paging_values(self, elem):
         """Read paging information from the paging container element
@@ -658,7 +678,7 @@ class EWSService(metaclass=abc.ABCMeta):
         if not item_count:
             if next_offset is not None:
                 raise ValueError("Expected empty 'next_offset' when 'item_count' is 0")
-        log.debug('%s: Got page with next offset %s (last_page %s)', self.SERVICE_NAME, next_offset, is_last_page)
+        log.debug('Got page with next offset %s (last_page %s)', next_offset, is_last_page)
         return item_count, next_offset
 
     def _get_page(self, message):
