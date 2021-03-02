@@ -2,14 +2,18 @@
 
 # Measures bulk create and delete performance for different session pool sizes and payload chunksizes
 import copy
+import datetime
 import logging
 import os
 import time
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 
 from yaml import safe_load
 
-from exchangelib import DELEGATE, Configuration, Account, EWSDateTime, EWSTimeZone, CalendarItem, Credentials, \
-    FaultTolerance
+from exchangelib import DELEGATE, Configuration, Account, CalendarItem, Credentials, FaultTolerance
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -21,7 +25,7 @@ except FileNotFoundError:
     raise
 
 categories = ['perftest']
-tz = EWSTimeZone('America/New_York')
+tz = zoneinfo.ZoneInfo('America/New_York')
 
 verify_ssl = settings.get('verify_ssl', True)
 if not verify_ssl:
