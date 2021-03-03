@@ -1,21 +1,33 @@
+import logging
+
 from .common import EWSService
 from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
 from ..properties import Mailbox
 from ..util import create_element, set_xml_value, add_xml_child, MNS
 from ..version import EXCHANGE_2010_SP2
 
+log = logging.getLogger(__name__)
+
 
 class ResolveNames(EWSService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames"""
-    # TODO: Does not support paged responses yet. See example in issue #205
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation"""
     SERVICE_NAME = 'ResolveNames'
     element_container_name = '{%s}ResolutionSet' % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
+    # Note: paging information is returned as attrs on the 'ResolutionSet' element, but this service does not
+    # support the 'IndexedPageItemView' element, so it's not really a paging service. According to docs, at most
+    # 100 candidates are returned for a lookup.
+    supports_paging = False
 
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
         from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
+        if self.chunk_size > 100:
+            log.warning(
+                'Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup',
+                self.chunk_size, self.SERVICE_NAME
+            )
         if search_scope:
             if search_scope not in SEARCH_SCOPE_CHOICES:
                 raise ValueError("'search_scope' %s must be one if %s" % (search_scope, SEARCH_SCOPE_CHOICES))
