@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 
 from .ewsdatetime import EWSDateTime
-from .properties import EWSElement
+from .properties import EWSElement, ExtendedFieldURI
 from .util import create_element, add_xml_child, get_xml_attrs, get_xml_attr, set_xml_value, value_to_xml_text, \
     xml_text_to_value, is_iterable, TNS
 
@@ -190,31 +190,26 @@ class ExtendedProperty(EWSElement):
                     "'%s' value %r must be an instance of %s" % (self.__class__.__name__, self.value, python_type))
 
     @classmethod
+    def _normalize_obj(cls, obj):
+        # Sometimes, EWS will helpfully translate a 'distinguished_property_set_id' value to a 'property_set_id' value
+        # and vice versa. Align these values on an ExtendedFieldURI instance.
+        try:
+            obj.property_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP[obj.distinguished_property_set_id]
+        except KeyError:
+            try:
+                obj.distinguished_property_set_id = cls.DISTINGUISHED_SET_ID_TO_NAME_MAP[obj.property_set_id]
+            except KeyError:
+                pass
+        return obj
+
+    @classmethod
     def is_property_instance(cls, elem):
         # Returns whether an 'ExtendedProperty' element matches the definition for this class. Extended property fields
         # do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
         # field in the response.
-        # TODO: Rewrite to take advantage of exchangelib.properties.ExtendedFieldURI
-        extended_field_uri = elem.find('{%s}ExtendedFieldURI' % TNS)
-        cls_props = cls.properties_map()
-        elem_props = {k: extended_field_uri.get(k) for k in cls_props}
-        # Sometimes, EWS will helpfully translate a 'distinguished_property_set_id' value to a 'property_set_id' value
-        # and vice versa. Align these values.
-        cls_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(cls_props.get('DistinguishedPropertySetId'))
-        if cls_set_id:
-            cls_props['PropertySetId'] = cls_set_id
-        else:
-            cls_set_name = cls.DISTINGUISHED_SET_ID_TO_NAME_MAP.get(cls_props.get('PropertySetId', ''))
-            if cls_set_name:
-                cls_props['DistinguishedPropertySetId'] = cls_set_name
-        elem_set_id = cls.DISTINGUISHED_SET_NAME_TO_ID_MAP.get(elem_props.get('DistinguishedPropertySetId'))
-        if elem_set_id:
-            elem_props['PropertySetId'] = elem_set_id
-        else:
-            elem_set_name = cls.DISTINGUISHED_SET_ID_TO_NAME_MAP.get(elem_props.get('PropertySetId', ''))
-            if elem_set_name:
-                elem_props['DistinguishedPropertySetId'] = elem_set_name
-        return cls_props == elem_props
+        xml_obj = ExtendedFieldURI.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+        cls_obj = cls.as_object()
+        return cls._normalize_obj(cls_obj) == cls._normalize_obj(xml_obj)
 
     @classmethod
     def from_xml(cls, elem, account):
@@ -276,16 +271,16 @@ class ExtendedProperty(EWSElement):
         }[base_type]
 
     @classmethod
-    def properties_map(cls):
-        # EWS returns PropertySetId values in lowercase in XML
-        return {
-            'DistinguishedPropertySetId': cls.distinguished_property_set_id,
-            'PropertySetId': cls.property_set_id.lower() if cls.property_set_id else None,
-            'PropertyTag': cls.property_tag_as_hex(),
-            'PropertyName': cls.property_name,
-            'PropertyId': value_to_xml_text(cls.property_id) if cls.property_id else None,
-            'PropertyType': cls.property_type,
-        }
+    def as_object(cls):
+        # Return an object we can use to match with the incoming object from XML
+        return ExtendedFieldURI(
+            distinguished_property_set_id=cls.distinguished_property_set_id,
+            property_set_id=cls.property_set_id.lower() if cls.property_set_id else None,
+            property_tag=cls.property_tag_as_hex(),
+            property_name=cls.property_name,
+            property_id=value_to_xml_text(cls.property_id) if cls.property_id else None,
+            property_type=cls.property_type,
+        )
 
 
 class ExternId(ExtendedProperty):
