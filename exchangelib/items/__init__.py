@@ -6,7 +6,7 @@ from .base import RegisterMixIn, BulkCreateResult, MESSAGE_DISPOSITION_CHOICES, 
     DELETE_TYPE_CHOICES, HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS, SEND_TO_ALL_AND_SAVE_COPY, \
     SEND_AND_SAVE_COPY, SHAPE_CHOICES
 from .calendar_item import CalendarItem, AcceptItem, TentativelyAcceptItem, DeclineItem, CancelCalendarItem, \
-    MeetingRequest, MeetingResponse, MeetingCancellation, CONFERENCE_TYPES
+    MeetingMessage, MeetingRequest, MeetingResponse, MeetingCancellation, CONFERENCE_TYPES
 from .contact import Contact, Persona, DistributionList
 from .item import BaseItem, Item
 from .message import Message, ReplyToItem, ReplyAllToItem, ForwardItem
@@ -27,8 +27,8 @@ CONTACTS_ACTIVE_DIRECTORY = 'ContactsActiveDirectory'
 SEARCH_SCOPE_CHOICES = (ACTIVE_DIRECTORY, ACTIVE_DIRECTORY_CONTACTS, CONTACTS, CONTACTS_ACTIVE_DIRECTORY)
 
 
-ITEM_CLASSES = (Item, CalendarItem, Contact, DistributionList, Message, PostItem, Task, MeetingRequest, MeetingResponse,
-                MeetingCancellation)
+ITEM_CLASSES = (CalendarItem, Contact, DistributionList, Item, Message, MeetingMessage, MeetingRequest,
+                MeetingResponse, MeetingCancellation, PostItem, Task)
 
 __all__ = [
     'RegisterMixIn', 'MESSAGE_DISPOSITION_CHOICES', 'SAVE_ONLY', 'SEND_ONLY', 'SEND_AND_SAVE_COPY',

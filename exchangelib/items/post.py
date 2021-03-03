@@ -23,7 +23,6 @@ class PostItem(Item):
 
 class PostReplyItem(Item):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postreplyitem"""
-    # TODO: Untested and unfinished.
     ELEMENT_NAME = 'PostReplyItem'
 
     LOCAL_FIELDS = Message.LOCAL_FIELDS + Fields(

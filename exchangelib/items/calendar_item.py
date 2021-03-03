@@ -325,7 +325,6 @@ class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
 
 class MeetingMessage(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingmessage"""
-    # TODO: Untested - not sure if this is ever used
     ELEMENT_NAME = 'MeetingMessage'
 
     # FIELDS on this element are shuffled compared to other elements
