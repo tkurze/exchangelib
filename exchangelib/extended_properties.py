@@ -119,7 +119,7 @@ class ExtendedProperty(EWSElement):
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
                 raise ValueError(
-                    "'distinguished_property_set_id' value '%s' must be one of %s"
+                    "'distinguished_property_set_id' %r must be one of %s"
                     % (cls.distinguished_property_set_id, sorted(cls.DISTINGUISHED_SETS))
                 )
 
@@ -171,7 +171,7 @@ class ExtendedProperty(EWSElement):
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
             raise ValueError(
-                "'property_type' value '%s' must be one of %s" % (cls.property_type, sorted(cls.PROPERTY_TYPES))
+                "'property_type' %r must be one of %s" % (cls.property_type, sorted(cls.PROPERTY_TYPES))
             )
 
     def clean(self, version=None):

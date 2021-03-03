@@ -766,8 +766,8 @@ def create_folder_ids_element(tag, folders, version):
     return folder_ids
 
 
-def create_item_ids_element(items, version):
-    item_ids = create_element('m:ItemIds')
+def create_item_ids_element(items, version, tag='m:ItemIds'):
+    item_ids = create_element(tag)
     for item in items:
         set_xml_value(item_ids, to_item_id(item, ItemId, version=version), version=version)
     if not len(item_ids):

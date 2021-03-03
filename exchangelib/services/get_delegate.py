@@ -17,7 +17,8 @@ class GetDelegate(EWSAccountService):
             include_permissions=include_permissions,
         ):
             if isinstance(elem, Exception):
-                raise elem
+                yield elem
+                continue
             yield DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
