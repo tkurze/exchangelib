@@ -12,6 +12,9 @@ class GetRoomLists(EWSService):
 
     def call(self):
         for elem in self._get_elements(payload=self.get_payload()):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
