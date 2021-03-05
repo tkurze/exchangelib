@@ -15,7 +15,8 @@ from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderI
     UserConfigurationName, UserConfigurationNameMNS
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
-    CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration
+    CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
+    SubscribeToStreaming, Unsubscribe
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
@@ -497,6 +498,55 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         return DeleteUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
         )
+
+    @require_id
+    def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+        """Creates a pull subscription
+
+        :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPull.EVENT_TYPES
+        :param watermark: An event bookmark as returned by some sync services
+        :param timeout: Timeout of the subscription, in minutes. Timeout is reset when the server receives a
+        GetEvents for this subscription.
+        :return: The subscription ID and a watermark
+        """
+        return SubscribeToPull(account=self.account).get(
+            folders=[self], event_types=event_types, watermark=watermark, timeout=timeout,
+        )
+
+    @require_id
+    def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
+                          status_frequency=1):
+        """Creates a push subscription
+
+        :param callback_url: A client-defined URL that the server will call
+        :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPush.EVENT_TYPES
+        :param watermark: An event bookmark as returned by some sync services
+        :param status_frequency: The frequency, in minutes, that the callback URL will be called with.
+        :return: The subscription ID and a watermark
+        """
+        return SubscribeToPush(account=self.account).get(
+            folders=[self], event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            url=callback_url,
+        )
+
+    @require_id
+    def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+        """Creates a streaming subscription
+
+        :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPush.EVENT_TYPES
+        :param status_frequency: The frequency, in minutes, that the callback URL will be called with.
+        :return: The subscription ID
+        """
+        return SubscribeToStreaming(account=self.account).get(folders=[self], event_types=event_types)
+
+    def unsubscribe(self, subscription_id):
+        # TODO: Doesn't have anything to do with the folder. Move to somewhere else
+        """Unsubscribe. Only applies to pull notifications
+
+        :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push|streaming]()
+        :return: True
+        """
+        return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def __floordiv__(self, other):
         """Same as __truediv__ but does not touch the folder cache.

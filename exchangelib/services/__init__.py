@@ -1,5 +1,4 @@
-"""
-Implement a selection of EWS services (operations).
+"""Implement a selection of EWS services (operations).
 
 Exchange is very picky about things like the order of XML elements in SOAP requests, so we need to generate XML
 automatically instead of taking advantage of Python SOAP libraries and the WSDL file.
@@ -44,6 +43,8 @@ from .move_item import MoveItem
 from .resolve_names import ResolveNames
 from .send_item import SendItem
 from .set_user_oof_settings import SetUserOofSettings
+from .subscribe import SubscribeToStreaming, SubscribeToPull, SubscribeToPush
+from .unsubscribe import Unsubscribe
 from .update_folder import UpdateFolder
 from .update_item import UpdateItem
 from .update_user_configuration import UpdateUserConfiguration
@@ -86,6 +87,10 @@ __all__ = [
     'ResolveNames',
     'SendItem',
     'SetUserOofSettings',
+    'SubscribeToPull',
+    'SubscribeToPush',
+    'SubscribeToStreaming',
+    'Unsubscribe',
     'UpdateFolder',
     'UpdateItem',
     'UpdateUserConfiguration',
