@@ -107,12 +107,13 @@ class Attachment(EWSElement, metaclass=abc.ABCMeta):
 class FileAttachment(Attachment):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment"""
     ELEMENT_NAME = 'FileAttachment'
-    FIELDS = Attachment.FIELDS + Fields(
+    LOCAL_FIELDS = Fields(
         BooleanField('is_contact_photo', field_uri='IsContactPhoto'),
         Base64Field('_content', field_uri='Content'),
     )
+    FIELDS = Attachment.FIELDS + LOCAL_FIELDS
 
-    __slots__ = ('is_contact_photo', '_content', '_fp')
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS) + ('_fp',)
 
     def __init__(self, **kwargs):
         kwargs['_content'] = kwargs.pop('content', None)
@@ -181,11 +182,12 @@ class ItemAttachment(Attachment):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment"""
     ELEMENT_NAME = 'ItemAttachment'
     # noinspection PyTypeChecker
-    FIELDS = Attachment.FIELDS + Fields(
+    LOCAL_FIELDS = Fields(
         ItemField('_item', field_uri='Item'),
     )
+    FIELDS = Attachment.FIELDS + LOCAL_FIELDS
 
-    __slots__ = ('_item',)
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
 
     def __init__(self, **kwargs):
         kwargs['_item'] = kwargs.pop('item', None)
