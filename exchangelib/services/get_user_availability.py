@@ -47,6 +47,6 @@ class GetUserAvailability(EWSService):
             self._get_element_container(message=msg.find('{%s}ResponseMessage' % MNS))
             yield from self._get_elements_in_container(container=msg)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.find('{%s}FreeBusyView' % MNS)]

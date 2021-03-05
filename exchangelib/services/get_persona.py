@@ -23,8 +23,8 @@ class GetPersona(EWSAccountService):
         set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
         return payload
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         from ..items import Persona
         return container.findall('{%s}%s' % (MNS, Persona.ELEMENT_NAME))
 

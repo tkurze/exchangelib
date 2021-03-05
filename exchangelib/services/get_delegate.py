@@ -31,8 +31,8 @@ class GetDelegate(EWSAccountService):
             set_xml_value(payload, user_ids, version=self.protocol.version)
         return payload
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(DelegateUser.response_tag())
 
     @classmethod

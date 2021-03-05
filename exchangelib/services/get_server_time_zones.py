@@ -35,14 +35,15 @@ class GetServerTimeZones(EWSService):
                 payload.append(tz_ids)
         return payload
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         for timezonedef in container:
             tz_id = timezonedef.get('Id')
             tz_name = timezonedef.get('Name')
-            tz_periods = self._get_periods(timezonedef)
-            tz_transitions_groups = self._get_transitions_groups(timezonedef)
-            tz_transitions = self._get_transitions(timezonedef)
-            yield (tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups)
+            tz_periods = cls._get_periods(timezonedef)
+            tz_transitions_groups = cls._get_transitions_groups(timezonedef)
+            tz_transitions = cls._get_transitions(timezonedef)
+            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
     def _get_periods(timezonedef):

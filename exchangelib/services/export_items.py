@@ -21,5 +21,6 @@ class ExportItems(EWSAccountService):
     # We need to override this since ExportItemsResponseMessage is formatted a
     #  little bit differently. Namely, all we want is the 64bit string in the
     #  Data tag.
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.text]

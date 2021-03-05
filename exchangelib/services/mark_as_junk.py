@@ -14,8 +14,8 @@ class MarkAsJunk(EWSAccountService):
                 continue
             yield MovedItemId.id_from_xml(elem)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(MovedItemId.response_tag())
 
     def get_payload(self, items, is_junk, move_item):

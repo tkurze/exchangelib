@@ -15,8 +15,8 @@ class DeleteAttachment(EWSAccountService):
                 continue
             yield RootItemId.from_xml(elem=elem, account=self.account)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):

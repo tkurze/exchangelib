@@ -41,5 +41,6 @@ class UploadItems(EWSAccountService):
             itemselement.append(item)
         return uploaditems
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]

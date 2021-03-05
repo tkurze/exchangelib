@@ -39,7 +39,8 @@ class ConvertId(EWSService):
         convertid.append(item_ids)
         return convertid
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. 'ResponseCode'. Filter away those.
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
