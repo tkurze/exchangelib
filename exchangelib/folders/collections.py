@@ -8,7 +8,8 @@ from ..items import Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
 from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
-from ..services import FindFolder, GetFolder, FindItem, FindPeople
+from ..services import FindFolder, GetFolder, FindItem, FindPeople, \
+    SubscribeToPull, SubscribeToPush, SubscribeToStreaming
 from ..util import require_account
 
 log = logging.getLogger(__name__)
@@ -210,6 +211,14 @@ class FolderCollection(SearchableMixIn):
             offset=offset,
         )
 
+    def _get_single_folder(self):
+        if len(self.folders) > 1:
+            raise ValueError('Syncing folder hierarchy can only be done on a single folder')
+        if not self.folders:
+            log.debug('Folder list is empty')
+            return
+        return self.folders[0]
+
     def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                     page_size=None, max_items=None, offset=0):
         """Private method to call the FindPeople service
@@ -229,11 +238,8 @@ class FolderCollection(SearchableMixIn):
           a generator for the returned personas
 
         """
-        if len(self.folders) > 1:
-            log.debug('Searching for personas can only be done on a single folder')
-            return
-        if not self.folders:
-            log.debug('Folder list is empty')
+        folder = self._get_single_folder()
+        if not folder:
             return
         if q.is_never():
             log.debug('Query will never return results')
@@ -256,12 +262,12 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         elif q.query_string:
             restriction = None
-            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         else:
-            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=self.folders,
+                folder=[folder],
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -398,3 +404,27 @@ class FolderCollection(SearchableMixIn):
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
         )
+
+    def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+        if not self.folders:
+            log.debug('Folder list is empty')
+            return
+        yield from SubscribeToPull(account=self.account).call(
+            folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+        )
+
+    def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
+                          status_frequency=1):
+        if not self.folders:
+            log.debug('Folder list is empty')
+            return
+        yield from SubscribeToPush(account=self.account).call(
+            folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            url=callback_url,
+        )
+
+    def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+        if not self.folders:
+            log.debug('Folder list is empty')
+            return
+        yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)

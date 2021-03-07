@@ -509,9 +509,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         GetEvents for this subscription.
         :return: The subscription ID and a watermark
         """
-        return SubscribeToPull(account=self.account).get(
-            folders=[self], event_types=event_types, watermark=watermark, timeout=timeout,
-        )
+        s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
+            event_types=event_types, watermark=watermark, timeout=timeout,
+        ))
+        if len(s_ids) != 1:
+            raise ValueError('Expected result length 1, but got %s' % s_ids)
+        s_id = s_ids[0]
+        if isinstance(s_id, Exception):
+            raise s_id
+        return s_id
 
     @require_id
     def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
@@ -524,27 +530,41 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         :param status_frequency: The frequency, in minutes, that the callback URL will be called with.
         :return: The subscription ID and a watermark
         """
-        return SubscribeToPush(account=self.account).get(
-            folders=[self], event_types=event_types, watermark=watermark, status_frequency=status_frequency,
-            url=callback_url,
-        )
+        s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
+            event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
+        ))
+        if len(s_ids) != 1:
+            raise ValueError('Expected result length 1, but got %s' % s_ids)
+        s_id = s_ids[0]
+        if isinstance(s_id, Exception):
+            raise s_id
+        return s_id
 
     @require_id
     def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
         """Creates a streaming subscription
 
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPush.EVENT_TYPES
-        :param status_frequency: The frequency, in minutes, that the callback URL will be called with.
         :return: The subscription ID
         """
-        return SubscribeToStreaming(account=self.account).get(folders=[self], event_types=event_types)
+        s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(
+            event_types=event_types,
+        ))
+        if len(s_ids) != 1:
+            raise ValueError('Expected result length 1, but got %s' % s_ids)
+        s_id = s_ids[0]
+        if isinstance(s_id, Exception):
+            raise s_id
+        return s_id
 
     def unsubscribe(self, subscription_id):
-        # TODO: Doesn't have anything to do with the folder. Move to somewhere else
         """Unsubscribe. Only applies to pull notifications
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push|streaming]()
         :return: True
+
+        This method doesn't need the current folder instance, but it makes sense to keep the method along the other
+        sync methods.
         """
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 

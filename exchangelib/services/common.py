@@ -16,7 +16,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorCannotDeleteTaskOccurrence, ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence, \
     ErrorNoPublicFolderReplicaAvailable, MalformedResponseError, ErrorExceededConnectionCount, \
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
-    ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder
+    ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
 from ..transport import wrap, extra_headers
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
@@ -44,6 +44,7 @@ KNOWN_EXCEPTIONS = (
     ErrorInternalServerTransientError,
     ErrorInvalidChangeKey,
     ErrorInvalidLicense,
+    ErrorInvalidSubscription,
     ErrorItemNotFound,
     ErrorMailboxMoveInProgress,
     ErrorMailboxStoreUnavailable,
