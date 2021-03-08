@@ -505,9 +505,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
 # Use 'noterritory' unless you want to override the standard mapping
 # (in which case, '001').
 # TODO: A full list of the IANA names missing in CLDR can be found with:
-#
-#    sorted(set(zoneinfo.available_timezones()) - set(CLDR_TO_MS_TIMEZONE_MAP))
-#
+#  sorted(set(zoneinfo.available_timezones()) - set(CLDR_TO_MS_TIMEZONE_MAP))
 IANA_TO_MS_TIMEZONE_MAP = dict(
     CLDR_TO_MS_TIMEZONE_MAP,
     **{

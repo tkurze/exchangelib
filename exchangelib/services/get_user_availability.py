@@ -13,7 +13,7 @@ class GetUserAvailability(EWSService):
 
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+        #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
         for elem in self._get_elements(payload=self.get_payload(
             timezone=timezone,
             mailbox_data=mailbox_data,

@@ -77,7 +77,7 @@ class SimpleProtocol(AutodiscoverBase):
 class IntExtBase(AutodiscoverBase):
     FIELDS = Fields(
         # TODO: 'OWAUrl' also has an AuthenticationMethod enum-style XML attribute with values:
-        # WindowsIntegrated, FBA, NTLM, Digest, Basic
+        #  WindowsIntegrated, FBA, NTLM, Digest, Basic
         TextField('owa_url', field_uri='OWAUrl', namespace=RNS),
         EWSElementField('protocol', value_cls=SimpleProtocol),
     )
