@@ -3,20 +3,20 @@ import logging
 from fnmatch import fnmatch
 from operator import attrgetter
 
-from .collections import FolderCollection
+from .collections import FolderCollection, SyncCompleted
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder
+    ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
-from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
+from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, ID_ONLY, \
     SHALLOW as SHALLOW_ITEMS
 from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, Fields, UserConfiguration, \
     UserConfigurationName, UserConfigurationNameMNS
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
-    SubscribeToStreaming, Unsubscribe
+    Unsubscribe
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
@@ -55,13 +55,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         IntegerField('unread_count', field_uri='folder:UnreadCount', is_read_only=True),
     )
 
-    __slots__ = tuple(f.name for f in FIELDS) + ('is_distinguished',)
+    __slots__ = tuple(f.name for f in FIELDS) + ('is_distinguished', 'item_sync_state', 'folder_sync_state')
 
     # Used to register extended properties
     INSERT_AFTER_FIELD = 'child_folder_count'
 
     def __init__(self, **kwargs):
         self.is_distinguished = kwargs.pop('is_distinguished', False)
+        self.item_sync_state = kwargs.pop('item_sync_state', None)
+        self.folder_sync_state = kwargs.pop('folder_sync_state', None)
         super().__init__(**kwargs)
 
     @property
@@ -506,7 +508,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPull.EVENT_TYPES
         :param watermark: An event bookmark as returned by some sync services
         :param timeout: Timeout of the subscription, in minutes. Timeout is reset when the server receives a
-        GetEvents for this subscription.
+        GetEvents request for this subscription.
         :return: The subscription ID and a watermark
         """
         s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
@@ -560,13 +562,58 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     def unsubscribe(self, subscription_id):
         """Unsubscribe. Only applies to pull notifications
 
-        :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push|streaming]()
+        :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|streaming]()
         :return: True
 
         This method doesn't need the current folder instance, but it makes sense to keep the method along the other
         sync methods.
         """
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
+
+    def sync_items(self, sync_state=None, ignore=None, max_changes_returned=None, sync_scope=None):
+        """A generator of all item changes to a folder. If sync_state is specified, gets all item changes after
+        this sync state. After fully consuming the generator, self.item_sync_state will hold the new sync state.
+
+        :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
+        :param ignore:  A list of Item IDs to ignore in the sync
+        :param max_changes_returned: The max number of change
+        :param sync_scope: Specify whether to return just items, or items and folder associated information. Possible
+           values are specified in SyncFolderitems.SYNC_SCOPES
+        :return: A generator of (change_type, item) tuples
+        """
+        if not sync_state:
+            sync_state = self.item_sync_state
+        try:
+            yield from FolderCollection(account=self.account, folders=[self]).sync_items(
+                shape=ID_ONLY,
+                additional_fields=None,
+                sync_state=sync_state,
+                ignore=ignore,
+                max_changes_returned=max_changes_returned,
+                sync_scope=sync_scope,
+            )
+        except SyncCompleted as e:
+            # Set the new sync state on the folder instance
+            self.item_sync_state = e.sync_state
+
+    def sync_hierarchy(self, sync_state=None):
+        """A generator of all folder changes to a folder hierarchy. If sync_state is specified, gets all folder changes
+        after this sync state. After fully consuming the generator, self.folder_sync_state will hold the new sync state.
+
+        :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
+        :return:
+        """
+        if not sync_state:
+            sync_state = self.folder_sync_state
+        try:
+            yield from FolderCollection(account=self.account, folders=[self]).sync_hierarchy(
+                shape=ID_ONLY,
+                additional_fields=None,
+                sync_state=sync_state,
+            )
+        except SyncCompleted as e:
+            # Set the new sync state on the folder instance
+            self.folder_sync_state = e.sync_state
 
     def __floordiv__(self, other):
         """Same as __truediv__ but does not touch the folder cache.

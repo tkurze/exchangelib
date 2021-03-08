@@ -8,11 +8,18 @@ from ..items import Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
 from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
-from ..services import FindFolder, GetFolder, FindItem, FindPeople, \
+from ..services import FindFolder, GetFolder, FindItem, FindPeople, SyncFolderItems, SyncFolderHierarchy, \
     SubscribeToPull, SubscribeToPush, SubscribeToStreaming
 from ..util import require_account
 
 log = logging.getLogger(__name__)
+
+
+class SyncCompleted(Exception):
+    """This is a really ugly way of returning the sync state"""
+    def __init__(self, sync_state):
+        super().__init__(sync_state)
+        self.sync_state = sync_state
 
 
 class FolderCollection(SearchableMixIn):
@@ -428,3 +435,70 @@ class FolderCollection(SearchableMixIn):
             log.debug('Folder list is empty')
             return
         yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)
+
+    def sync_items(self, shape=ID_ONLY, additional_fields=None, sync_state=None, ignore=None, max_changes_returned=None,
+                   sync_scope=None):
+        folder = self._get_single_folder()
+        if not folder:
+            return
+        if shape not in SHAPE_CHOICES:
+            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
+        if additional_fields:
+            for f in additional_fields:
+                self.validate_item_field(field=f, version=self.account.version)
+        else:
+            # Default to all item fields
+            additional_fields = {FieldPath(field=f) for f in folder.allowed_item_fields(version=self.account.version)}
+
+        svc = SyncFolderItems(account=self.account)
+        while True:
+            yield from svc.call(
+                folder=folder,
+                shape=ID_ONLY,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+                ignore=ignore,
+                max_changes_returned=max_changes_returned,
+                sync_scope=sync_scope,
+            )
+            if svc.sync_state == sync_state:
+                # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+                break
+            sync_state = svc.sync_state  # Set the new sync state in the next call
+            if svc.includes_last_item_in_range:  # Try again if there are more items
+                break
+        raise SyncCompleted(sync_state=svc.sync_state)
+
+    def sync_hierarchy(self, shape=ID_ONLY, additional_fields=None, sync_state=None):
+        folder = self._get_single_folder()
+        if not folder:
+            return
+        if shape not in SHAPE_CHOICES:
+            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
+        if additional_fields:
+            for f in additional_fields:
+                folder.validate_field(field=f, version=self.account.version)
+        else:
+            # Default to all folder fields
+            additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=folder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        svc = SyncFolderHierarchy(account=self.account)
+        while True:
+            yield from svc.call(
+                folder=folder,
+                shape=shape,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+            )
+            if svc.sync_state == sync_state:
+                # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+                break
+            sync_state = svc.sync_state  # Set the new sync state in the next call
+            if svc.includes_last_item_in_range:  # Try again if there are more items
+                break
+        raise SyncCompleted(sync_state=svc.sync_state)

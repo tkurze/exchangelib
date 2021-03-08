@@ -44,6 +44,8 @@ from .resolve_names import ResolveNames
 from .send_item import SendItem
 from .set_user_oof_settings import SetUserOofSettings
 from .subscribe import SubscribeToStreaming, SubscribeToPull, SubscribeToPush
+from .sync_folder_hierarchy import SyncFolderHierarchy
+from .sync_folder_items import SyncFolderItems
 from .unsubscribe import Unsubscribe
 from .update_folder import UpdateFolder
 from .update_item import UpdateItem
@@ -90,6 +92,8 @@ __all__ = [
     'SubscribeToPull',
     'SubscribeToPush',
     'SubscribeToStreaming',
+    'SyncFolderHierarchy',
+    'SyncFolderItems',
     'Unsubscribe',
     'UpdateFolder',
     'UpdateItem',

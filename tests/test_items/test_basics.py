@@ -204,6 +204,9 @@ class BaseItemTest(EWSTest):
         item_kwargs['categories'] = categories or self.categories
         return self.ITEM_CLASS(folder=folder or self.test_folder, **item_kwargs)
 
+    def get_test_folder(self, folder=None):
+        return self.FOLDER_CLASS(parent=folder or self.test_folder, name=get_random_string(8))
+
     def get_item_by_id(self, item):
         res = list(self.account.fetch(ids=[item]))
         assert len(res) == 1
