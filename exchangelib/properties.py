@@ -1778,6 +1778,8 @@ class PostalAddressAttributedValue(EWSElement):
 
 
 class Event(EWSElement, metaclass=abc.ABCMeta):
+    """Base class for all event types
+    """
     FIELDS = Fields(
         CharField('watermark', field_uri='Watermark'),
     )
@@ -1785,7 +1787,8 @@ class Event(EWSElement, metaclass=abc.ABCMeta):
 
 
 class TimestampEvent(Event, metaclass=abc.ABCMeta):
-    # This event type is used for both item and folder events
+    """Base class for both item and folder events with a timestamp
+    """
     FOLDER = 'folder'
     ITEM = 'item'
 
@@ -1808,6 +1811,8 @@ class TimestampEvent(Event, metaclass=abc.ABCMeta):
 
 
 class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
+    """Base class for both item and folder copy/move events
+    """
     LOCAL_FIELDS = Fields(
         EWSElementField('old_item_id', field_uri='OldItemId', value_cls=ItemId),
         EWSElementField('old_folder_id', field_uri='OldFolderId', value_cls=FolderId),
@@ -1818,7 +1823,7 @@ class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
 
 
 class CopiedEvent(OldTimestampEvent):
-    """https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copiedevent"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copiedevent"""
     ELEMENT_NAME = 'CopiedEvent'
     __slots__ = tuple()
 
@@ -1854,6 +1859,7 @@ class MovedEvent(OldTimestampEvent):
 class NewMailEvent(Event):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/newmailevent"""
     ELEMENT_NAME = 'NewMailEvent'
+    __slots__ = tuple()
 
 
 class StatusEvent(Event):
