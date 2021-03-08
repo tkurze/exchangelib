@@ -570,12 +570,13 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         """
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
-    def sync_items(self, sync_state=None, ignore=None, max_changes_returned=None, sync_scope=None):
+    def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         """A generator of all item changes to a folder. If sync_state is specified, gets all item changes after
         this sync state. After fully consuming the generator, self.item_sync_state will hold the new sync state.
 
         :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
-        :param ignore:  A list of Item IDs to ignore in the sync
+        :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+        :param ignore: A list of Item IDs to ignore in the sync
         :param max_changes_returned: The max number of change
         :param sync_scope: Specify whether to return just items, or items and folder associated information. Possible
            values are specified in SyncFolderitems.SYNC_SCOPES
@@ -585,9 +586,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             sync_state = self.item_sync_state
         try:
             yield from FolderCollection(account=self.account, folders=[self]).sync_items(
-                shape=ID_ONLY,
-                additional_fields=None,
                 sync_state=sync_state,
+                only_fields=only_fields,
                 ignore=ignore,
                 max_changes_returned=max_changes_returned,
                 sync_scope=sync_scope,
@@ -596,20 +596,20 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             # Set the new sync state on the folder instance
             self.item_sync_state = e.sync_state
 
-    def sync_hierarchy(self, sync_state=None):
+    def sync_hierarchy(self, sync_state=None, only_fields=None):
         """A generator of all folder changes to a folder hierarchy. If sync_state is specified, gets all folder changes
         after this sync state. After fully consuming the generator, self.folder_sync_state will hold the new sync state.
 
         :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
+        :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
         :return:
         """
         if not sync_state:
             sync_state = self.folder_sync_state
         try:
             yield from FolderCollection(account=self.account, folders=[self]).sync_hierarchy(
-                shape=ID_ONLY,
-                additional_fields=None,
                 sync_state=sync_state,
+                only_fields=only_fields,
             )
         except SyncCompleted as e:
             # Set the new sync state on the folder instance

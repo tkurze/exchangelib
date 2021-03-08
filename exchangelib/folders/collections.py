@@ -436,19 +436,18 @@ class FolderCollection(SearchableMixIn):
             return
         yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)
 
-    def sync_items(self, shape=ID_ONLY, additional_fields=None, sync_state=None, ignore=None, max_changes_returned=None,
-                   sync_scope=None):
+    def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         folder = self._get_single_folder()
         if not folder:
             return
-        if shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
-        if additional_fields:
-            for f in additional_fields:
-                self.validate_item_field(field=f, version=self.account.version)
-        else:
-            # Default to all item fields
+        if only_fields is None:
+            # We didn't restrict list of field paths. Get all fields from the server, including extended properties.
             additional_fields = {FieldPath(field=f) for f in folder.allowed_item_fields(version=self.account.version)}
+        else:
+            for field in only_fields:
+                folder.validate_item_field(field=field, version=self.account.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
 
         svc = SyncFolderItems(account=self.account)
         while True:
@@ -469,18 +468,18 @@ class FolderCollection(SearchableMixIn):
                 break
         raise SyncCompleted(sync_state=svc.sync_state)
 
-    def sync_hierarchy(self, shape=ID_ONLY, additional_fields=None, sync_state=None):
+    def sync_hierarchy(self, sync_state=None, only_fields=None):
         folder = self._get_single_folder()
         if not folder:
             return
-        if shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
-        if additional_fields:
-            for f in additional_fields:
-                folder.validate_field(field=f, version=self.account.version)
-        else:
-            # Default to all folder fields
+        if only_fields is None:
+            # We didn't restrict list of field paths. Get all fields from the server, including extended properties.
             additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
+        else:
+            for f in only_fields:
+                folder.validate_field(field=f, version=self.account.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
 
         # Add required fields
         additional_fields.update(
@@ -491,7 +490,7 @@ class FolderCollection(SearchableMixIn):
         while True:
             yield from svc.call(
                 folder=folder,
-                shape=shape,
+                shape=ID_ONLY,
                 additional_fields=additional_fields,
                 sync_state=sync_state,
             )
