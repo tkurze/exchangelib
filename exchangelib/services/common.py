@@ -85,7 +85,7 @@ class EWSService(metaclass=abc.ABCMeta):
     # Marks services that need affinity to the backend server
     prefer_affinity = False
 
-    def __init__(self, protocol, chunk_size=None):
+    def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
         if not isinstance(self.chunk_size, int):
             raise ValueError("'chunk_size' %r must be an integer" % chunk_size)
@@ -96,6 +96,8 @@ class EWSService(metaclass=abc.ABCMeta):
                 '%r is only supported on %r and later' % (self.SERVICE_NAME, self.supported_from.fullname())
             )
         self.protocol = protocol
+        # Allow a service to override the default protocol timeout. Useful for streaming services
+        self.timeout = timeout
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
@@ -239,6 +241,7 @@ class EWSService(metaclass=abc.ABCMeta):
             ),
             allow_redirects=False,
             stream=self.streaming,
+            timeout=self.timeout or self.protocol.TIMEOUT,
         )
 
     @property

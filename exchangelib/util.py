@@ -666,7 +666,7 @@ except ImportError:
     pass
 
 
-def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False):
+def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
     """There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
     fails on all responses except HTTP 200. The other policy is intended for long-running tasks that need to respect
     rate-limiting errors from the server and paper over outages of up to 1 hour.
@@ -699,8 +699,11 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
       data:
       allow_redirects:  (Default value = False)
       stream:  (Default value = False)
+      timeout:
 
     """
+    if not timeout:
+        timeout = protocol.TIMEOUT
     thread_id = get_ident()
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
@@ -726,7 +729,7 @@ Response XML: %(xml_response)s'''
     log_vals = dict(
         retry=retry,
         wait=wait,
-        timeout=protocol.TIMEOUT,
+        timeout=timeout,
         session_id=session.session_id,
         thread_id=thread_id,
         auth=session.auth,
@@ -751,12 +754,12 @@ Response XML: %(xml_response)s'''
                 # We may have slept for a long time. Renew the session.
                 session = protocol.renew_session(session)
             log.debug('Session %s thread %s: retry %s timeout %s POST\'ing to %s after %ss wait', session.session_id,
-                      thread_id, retry, protocol.TIMEOUT, url, wait)
+                      thread_id, retry, timeout, url, wait)
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, headers={}, request_headers=headers)
             try:
-                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=protocol.TIMEOUT,
+                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout,
                                  stream=stream)
             except TLS_ERRORS as e:
                 # Don't retry on TLS errors. They will most likely be persistent.
