@@ -16,7 +16,7 @@ from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderI
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
-    Unsubscribe
+    Unsubscribe, GetEvents
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
@@ -614,6 +614,23 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         except SyncCompleted as e:
             # Set the new sync state on the folder instance
             self.folder_sync_state = e.sync_state
+
+    def get_events(self, subscription_id, watermark):
+        """
+
+        :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
+        :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+        :return: A Notification object containing a list of events
+
+        This method doesn't need the current folder instance, but it makes sense to keep the method along the other
+        sync methods.
+        """
+        svc = GetEvents(account=self.account)
+        while True:
+            notification = svc.get(subscription_id=subscription_id, watermark=watermark)
+            yield notification
+            if not notification.more_events:
+                break
 
     def __floordiv__(self, other):
         """Same as __truediv__ but does not touch the folder cache.

@@ -11,7 +11,8 @@ from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTim
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
     RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField, \
-    Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField, InvalidField, InvalidFieldForVersion
+    Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField, GenericEventListField, \
+    InvalidField, InvalidFieldForVersion
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
 from .version import Version, EXCHANGE_2013, Build
 
@@ -1773,4 +1774,110 @@ class PostalAddressAttributedValue(EWSElement):
         EWSElementListField('attributions', field_uri='Attributions', value_cls=Attribution),
     )
 
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class Event(EWSElement, metaclass=abc.ABCMeta):
+    FIELDS = Fields(
+        CharField('watermark', field_uri='Watermark'),
+    )
+    __slots__ = tuple(f.name for f in FIELDS)
+
+
+class TimestampEvent(Event, metaclass=abc.ABCMeta):
+    # This event type is used for both item and folder events
+    FOLDER = 'folder'
+    ITEM = 'item'
+
+    LOCAL_FIELDS = Fields(
+        DateTimeField('timestamp', field_uri='TimeStamp'),
+        EWSElementField('item_id', field_uri='ItemId', value_cls=ItemId),
+        EWSElementField('folder_id', field_uri='FolderId', value_cls=FolderId),
+        EWSElementField('parent_folder_id', field_uri='ParentFolderId', value_cls=ParentFolderId),
+    )
+    FIELDS = Event.FIELDS + LOCAL_FIELDS
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+    @property
+    def event_type(self):
+        if self.item_id is not None:
+            return self.ITEM
+        if self.folder_id is not None:
+            return self.FOLDER
+        return None  # Empty object
+
+
+class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
+    LOCAL_FIELDS = Fields(
+        EWSElementField('old_item_id', field_uri='OldItemId', value_cls=ItemId),
+        EWSElementField('old_folder_id', field_uri='OldFolderId', value_cls=FolderId),
+        EWSElementField('old_parent_folder_id', field_uri='OldParentFolderId', value_cls=ParentFolderId),
+    )
+    FIELDS = TimestampEvent.FIELDS + LOCAL_FIELDS
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+
+class CopiedEvent(OldTimestampEvent):
+    """https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copiedevent"""
+    ELEMENT_NAME = 'CopiedEvent'
+    __slots__ = tuple()
+
+
+class CreatedEvent(TimestampEvent):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createdevent"""
+    ELEMENT_NAME = 'CreatedEvent'
+    __slots__ = tuple()
+
+
+class DeletedEvent(TimestampEvent):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletedevent"""
+    ELEMENT_NAME = 'DeletedEvent'
+    __slots__ = tuple()
+
+
+class ModifiedEvent(TimestampEvent):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/modifiedevent"""
+    ELEMENT_NAME = 'ModifiedEvent'
+    LOCAL_FIELDS = Fields(
+        IntegerField('unread_count', field_uri='UnreadCount'),
+    )
+    FIELDS = TimestampEvent.FIELDS + LOCAL_FIELDS
+    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+
+
+class MovedEvent(OldTimestampEvent):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/movedevent"""
+    ELEMENT_NAME = 'MovedEvent'
+    __slots__ = tuple()
+
+
+class NewMailEvent(Event):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/newmailevent"""
+    ELEMENT_NAME = 'NewMailEvent'
+
+
+class StatusEvent(Event):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/statusevent"""
+    ELEMENT_NAME = 'StatusEvent'
+    __slots__ = tuple()
+
+
+class FreeBusyChangedEvent(TimestampEvent):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/freebusychangedevent"""
+    ELEMENT_NAME = 'FreeBusyChangedEvent'
+    __slots__ = tuple()
+
+
+class Notification(EWSElement):
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/notification-ex15websvcsotherref
+    """
+    ELEMENT_NAME = 'Notification'
+    NAMESPACE = MNS
+    FIELDS = Fields(
+        CharField('subscription_id', field_uri='SubscriptionId'),
+        CharField('previous_watermark', field_uri='PreviousWatermark'),
+        BooleanField('more_events', field_uri='MoreEvents'),
+        GenericEventListField('events'),
+    )
     __slots__ = tuple(f.name for f in FIELDS)

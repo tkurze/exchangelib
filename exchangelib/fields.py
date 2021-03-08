@@ -1550,3 +1550,35 @@ class PostalAddressAttributedValueField(EWSElementListField):
         from .properties import PostalAddressAttributedValue
         kwargs['value_cls'] = PostalAddressAttributedValue
         super().__init__(*args, **kwargs)
+
+
+class GenericEventListField(EWSElementField):
+    """A list field that can contain all subclasses of Event
+    """
+    is_list = True
+
+    @property
+    def _event_types_map(self):
+        return {v.response_tag(): v for v in self.value_classes}
+
+    def __init__(self, *args, **kwargs):
+        from .properties import CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, \
+            NewMailEvent, StatusEvent, FreeBusyChangedEvent
+        kwargs['value_cls'] = None  # Parent class requires this kwarg
+        kwargs['namespace'] = None  # Parent class requires this kwarg
+        super().__init__(*args, **kwargs)
+        self.value_classes = (
+            CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent,
+            FreeBusyChangedEvent,
+        )
+
+    def from_xml(self, elem, account):
+        events = []
+        for event in elem:
+            # This may or may not be an event element. Could also be other child elements of Notification
+            try:
+                value_cls = self._event_types_map[event.tag]
+            except KeyError:
+                continue
+            events.append(value_cls.from_xml(elem=event, account=account))
+        return events or self.default

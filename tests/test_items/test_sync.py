@@ -1,6 +1,7 @@
 from exchangelib.errors import ErrorInvalidSubscription
 from exchangelib.folders import Inbox
 from exchangelib.items import Message
+from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent
 
 from .test_basics import BaseItemTest
 from ..common import get_random_string
@@ -96,3 +97,70 @@ class SyncTest(BaseItemTest):
         change_type, i = changes[0]
         self.assertEqual(change_type, 'delete')
         self.assertEqual(i.id, i1_id)
+
+    @staticmethod
+    def _filter_events(events, event_cls, item_id):
+        return [e for e in events if isinstance(e, event_cls) and e.event_type == CreatedEvent.ITEM
+                and e.item_id.id == item_id]
+
+    def test_pull_notifications(self):
+        # Test that we can create a pull subscription, make changes and see the events by calling .get_events()
+        test_folder = self.account.drafts
+        subscription_id, watermark = test_folder.subscribe_to_pull()
+        notifications = list(test_folder.get_events(subscription_id, watermark))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        self.assertEqual(len(notification.events), 1)
+        status_event = notification.events[0]
+        self.assertIsInstance(status_event, StatusEvent)
+        # Set the new watermark
+        watermark = status_event.watermark
+
+        # Test that we see a create event
+        i1 = self.get_test_item(folder=test_folder).save()
+        import time
+        time.sleep(5)  # TODO: implement affinity
+        notifications = list(test_folder.get_events(subscription_id, watermark))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        created_events = self._filter_events(notification.events, CreatedEvent, i1.id)
+        self.assertEqual(len(created_events), 1)
+        created_event = created_events[0]
+        self.assertIsInstance(created_event, CreatedEvent)
+        self.assertEqual(created_event.item_id.id, i1.id)
+        # Set the new watermark
+        watermark = notification.events[-1].watermark
+
+        # Test that we see an update event
+        i1.subject = get_random_string(8)
+        i1.save(update_fields=['subject'])
+        import time
+        time.sleep(5)  # TODO: implement affinity
+        notifications = list(test_folder.get_events(subscription_id, watermark))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        modified_events = self._filter_events(notification.events, ModifiedEvent, i1.id)
+        self.assertEqual(len(modified_events), 1)
+        modified_event = modified_events[0]
+        self.assertIsInstance(modified_event, ModifiedEvent)
+        self.assertEqual(modified_event.item_id.id, i1.id)
+        # Set the new watermark
+        watermark = notification.events[-1].watermark
+
+        # Test that we see a delete event
+        i1_id = i1.id
+        i1.delete()
+        import time
+        time.sleep(5)  # TODO: implement affinity
+        notifications = list(test_folder.get_events(subscription_id, watermark))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        deleted_events = self._filter_events(notification.events, DeletedEvent, i1_id)
+        self.assertEqual(len(deleted_events), 1)
+        deleted_event = deleted_events[0]
+        self.assertIsInstance(deleted_event, DeletedEvent)
+        self.assertEqual(deleted_event.item_id.id, i1_id)
+        # Set the new watermark
+        watermark = notification.events[-1].watermark
+
+        test_folder.unsubscribe(subscription_id)
