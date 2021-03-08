@@ -11,6 +11,7 @@ class GetEvents(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation
     """
     SERVICE_NAME = 'GetEvents'
+    prefer_affinity = True
 
     def call(self, subscription_id, watermark):
         for elem in self._get_elements(payload=self.get_payload(

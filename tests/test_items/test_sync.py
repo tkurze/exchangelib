@@ -1,3 +1,5 @@
+import time
+
 from exchangelib.errors import ErrorInvalidSubscription
 from exchangelib.folders import Inbox
 from exchangelib.items import Message
@@ -118,8 +120,7 @@ class SyncTest(BaseItemTest):
 
         # Test that we see a create event
         i1 = self.get_test_item(folder=test_folder).save()
-        import time
-        time.sleep(5)  # TODO: implement affinity
+        time.sleep(5)  # TODO: For some reason, events do not trigger instantly
         notifications = list(test_folder.get_events(subscription_id, watermark))
         self.assertEqual(len(notifications), 1)
         notification = notifications[0]
@@ -134,8 +135,7 @@ class SyncTest(BaseItemTest):
         # Test that we see an update event
         i1.subject = get_random_string(8)
         i1.save(update_fields=['subject'])
-        import time
-        time.sleep(5)  # TODO: implement affinity
+        time.sleep(5)  # TODO: For some reason, events do not trigger instantly
         notifications = list(test_folder.get_events(subscription_id, watermark))
         self.assertEqual(len(notifications), 1)
         notification = notifications[0]
@@ -150,8 +150,7 @@ class SyncTest(BaseItemTest):
         # Test that we see a delete event
         i1_id = i1.id
         i1.delete()
-        import time
-        time.sleep(5)  # TODO: implement affinity
+        time.sleep(5)  # TODO: For some reason, events do not trigger instantly
         notifications = list(test_folder.get_events(subscription_id, watermark))
         self.assertEqual(len(notifications), 1)
         notification = notifications[0]

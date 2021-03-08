@@ -67,7 +67,7 @@ class GetAttachment(EWSAccountService):
         except ElementNotFound as enf:
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
-            # Wrap in DummyResponse because _get_soap_payload() expects an iter_content() method.
+            # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
             response = DummyResponse(url=None, headers=None, request_headers=None, content=enf.data)
             _, body = super()._get_soap_parts(response=response)
             res = super()._get_soap_messages(body=body)

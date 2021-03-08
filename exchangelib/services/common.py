@@ -18,7 +18,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
-from ..transport import wrap, extra_headers
+from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
     xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError
 from ..version import API_VERSIONS, Version
@@ -82,6 +82,8 @@ class EWSService(metaclass=abc.ABCMeta):
     supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
 
     def __init__(self, protocol, chunk_size=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
@@ -143,9 +145,14 @@ class EWSService(metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    @property
-    def _headers(self):
-        return extra_headers(primary_smtp_address=None)
+    def _extra_headers(self, session):
+        headers = {}
+        if self.prefer_affinity:
+            headers['X-PreferServerAffinity'] = 'True'
+        for cookie in session.cookies:
+            if cookie.name == 'X-BackEndCookie':
+                headers['X-BackEndOverrideCookie'] = cookie.value
+        return headers
 
     @property
     def _account_to_impersonate(self):
@@ -218,11 +225,12 @@ class EWSService(metaclass=abc.ABCMeta):
     def _get_response_and_session(self, payload, api_version):
         """Do send the actual HTTP request and get the response
         """
+        session = self.protocol.get_session()
         return post_ratelimited(
             protocol=self.protocol,
-            session=self.protocol.get_session(),
+            session=session,
             url=self.protocol.service_endpoint,
-            headers=self._headers,
+            headers=self._extra_headers(session),
             data=wrap(
                 content=payload,
                 api_version=api_version,
@@ -713,9 +721,12 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.account.version = value
 
-    @property
-    def _headers(self):
-        return extra_headers(primary_smtp_address=self.account.primary_smtp_address)
+    def _extra_headers(self, *args, **kwargs):
+        headers = super()._extra_headers(*args, **kwargs)
+        # See
+        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+        headers['X-AnchorMailbox'] = self.account.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):

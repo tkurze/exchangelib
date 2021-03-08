@@ -49,20 +49,6 @@ DEFAULT_ENCODING = 'utf-8'
 DEFAULT_HEADERS = {'Content-Type': 'text/xml; charset=%s' % DEFAULT_ENCODING, 'Accept-Encoding': 'gzip, deflate'}
 
 
-def extra_headers(primary_smtp_address):
-    """Generate extra HTTP headers
-
-    Args:
-      primary_smtp_address:
-
-    """
-    if primary_smtp_address:
-        # See
-        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
-        return {'X-AnchorMailbox': primary_smtp_address}
-    return None
-
-
 def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     """Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
     ExchangeImpersonation allows to act as the user we want to impersonate.
