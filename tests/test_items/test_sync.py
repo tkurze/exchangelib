@@ -159,7 +159,51 @@ class SyncTest(BaseItemTest):
         deleted_event = deleted_events[0]
         self.assertIsInstance(deleted_event, DeletedEvent)
         self.assertEqual(deleted_event.item_id.id, i1_id)
-        # Set the new watermark
-        watermark = notification.events[-1].watermark
+
+        test_folder.unsubscribe(subscription_id)
+
+    def test_streaming_notifications(self):
+        # Test that we can create a streaming subscription, make changes and see the events by calling
+        # .get_streaming_events()
+        test_folder = self.account.drafts
+        subscription_id = test_folder.subscribe_to_streaming()
+
+        # Test that we see a create event
+        i1 = self.get_test_item(folder=test_folder).save()
+        # 1 minute connection timeout
+        notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        created_events = self._filter_events(notification.events, CreatedEvent, i1.id)
+        self.assertEqual(len(created_events), 1)
+        created_event = created_events[0]
+        self.assertIsInstance(created_event, CreatedEvent)
+        self.assertEqual(created_event.item_id.id, i1.id)
+
+        # Test that we see an update event
+        i1.subject = get_random_string(8)
+        i1.save(update_fields=['subject'])
+        # 1 minute connection timeout
+        notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        modified_events = self._filter_events(notification.events, ModifiedEvent, i1.id)
+        self.assertEqual(len(modified_events), 1)
+        modified_event = modified_events[0]
+        self.assertIsInstance(modified_event, ModifiedEvent)
+        self.assertEqual(modified_event.item_id.id, i1.id)
+
+        # Test that we see a delete event
+        i1_id = i1.id
+        i1.delete()
+        # 1 minute connection timeout
+        notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
+        self.assertEqual(len(notifications), 1)
+        notification = notifications[0]
+        deleted_events = self._filter_events(notification.events, DeletedEvent, i1_id)
+        self.assertEqual(len(deleted_events), 1)
+        deleted_event = deleted_events[0]
+        self.assertIsInstance(deleted_event, DeletedEvent)
+        self.assertEqual(deleted_event.item_id.id, i1_id)
 
         test_folder.unsubscribe(subscription_id)

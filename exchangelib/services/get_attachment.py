@@ -35,7 +35,7 @@ class GetAttachment(EWSAccountService):
     def _update_api_version(self, api_version, header, **parse_opts):
         if not parse_opts.get('stream_file_content', False):
             return super()._update_api_version(api_version, header, **parse_opts)
-        # TODO: We're skipping this part in streaming mode because our streaming parser cannot parse the SOAP header
+        # TODO: We're skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
@@ -45,14 +45,13 @@ class GetAttachment(EWSAccountService):
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
-    @classmethod
-    def _get_soap_messages(cls, body, **parse_opts):
+    def _get_soap_messages(self, body, **parse_opts):
         if not parse_opts.get('stream_file_content', False):
             return super()._get_soap_messages(body, **parse_opts)
 
+        from ..attachments import FileAttachment
         # 'body' is actually the raw response passed on by '_get_soap_parts'
         r = body
-        from ..attachments import FileAttachment
         parser = StreamingBase64Parser()
         field = FileAttachment.get_field_by_fieldname('_content')
         handler = StreamingContentHandler(parser=parser, ns=field.namespace, element_name=field.field_uri)

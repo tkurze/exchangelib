@@ -36,6 +36,7 @@ from .get_room_lists import GetRoomLists
 from .get_rooms import GetRooms
 from .get_searchable_mailboxes import GetSearchableMailboxes
 from .get_server_time_zones import GetServerTimeZones
+from .get_streaming_events import GetStreamingEvents
 from .get_user_availability import GetUserAvailability
 from .get_user_configuration import GetUserConfiguration
 from .get_user_oof_settings import GetUserOofSettings
@@ -83,6 +84,7 @@ __all__ = [
     'GetRooms',
     'GetSearchableMailboxes',
     'GetServerTimeZones',
+    'GetStreamingEvents',
     'GetUserAvailability',
     'GetUserConfiguration',
     'GetUserOofSettings',

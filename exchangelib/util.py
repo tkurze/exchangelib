@@ -452,6 +452,51 @@ class BytesGeneratorIO(io.RawIOBase):
         super().close()
 
 
+class DocumentYielder:
+    """Looks for XML documents in a streaming HTTP response and yields them as they become available from the stream
+    """
+    def __init__(self, content_iterator, document_tag='Envelope'):
+        self._iterator = content_iterator
+        self._start_token = b'<%s' % document_tag.encode('utf-8')
+        self._end_token = b'/%s>' % document_tag.encode('utf-8')
+
+    def get_tag(self, stop_byte):
+        tag_buffer = [b'<']
+        while True:
+            c = next(self._iterator)
+            tag_buffer.append(c)
+            if c == stop_byte:
+                break
+        return b''.join(tag_buffer)
+
+    def __iter__(self):
+        """Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
+        collected it."""
+        doc_started = False
+        buffer = []
+        try:
+            while True:
+                c = next(self._iterator)
+                if not doc_started and c == b'<':
+                    tag = self.get_tag(stop_byte=b' ')
+                    if tag.startswith(self._start_token):
+                        # Start of document. Collect bytes from this point
+                        buffer.append(tag)
+                        doc_started = True
+                elif doc_started and c == b'<':
+                    tag = self.get_tag(stop_byte=b'>')
+                    buffer.append(tag)
+                    if tag.endswith(self._end_token):
+                        # End of document. Yield a valid document and reset the buffer
+                        yield b"<?xml version='1.0' encoding='utf-8'?>\n%s" % b''.join(buffer)
+                        doc_started = False
+                        buffer = []
+                elif doc_started:
+                    buffer.append(c)
+        except StopIteration:
+            return
+
+
 def to_xml(bytes_content):
     # Converts bytes or a generator of bytes to an XML tree
     # Exchange servers may spit out the weirdest XML. lxml is pretty good at recovering from errors

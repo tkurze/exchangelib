@@ -6,7 +6,7 @@ from operator import attrgetter
 from .collections import FolderCollection, SyncCompleted
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder
+    ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
@@ -16,7 +16,7 @@ from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderI
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
-    Unsubscribe, GetEvents
+    Unsubscribe, GetEvents, GetStreamingEvents
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
@@ -616,7 +616,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             self.folder_sync_state = e.sync_state
 
     def get_events(self, subscription_id, watermark):
-        """
+        """Get events since the given watermark. Non-blocking.
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
         :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
@@ -631,6 +631,25 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             yield notification
             if not notification.more_events:
                 break
+
+    def get_streaming_events(self, subscription_id, connection_timeout=1):
+        """Get events since the subscription was created, in streaming mode. This method will block as many minutes
+        as specified by 'connection_timeout'.
+
+        :param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
+        :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
+        is reached.
+        :return: A generator of Notification objects, each containing a list of events
+
+        This method doesn't need the current folder instance, but it makes sense to keep the method along the other
+        sync methods.
+        """
+        # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
+        request_timeout = connection_timeout*60 + 60
+        svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
+        yield from svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout)
+        if svc.error_subscription_ids:
+            raise ErrorInvalidSubscription('Invalid subscription IDs: %s' % svc.error_subscription_ids)
 
     def __floordiv__(self, other):
         """Same as __truediv__ but does not touch the folder cache.

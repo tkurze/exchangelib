@@ -375,24 +375,23 @@ class EWSService(metaclass=abc.ABCMeta):
             raise MalformedResponseError('No Body element in SOAP response')
         return header, body
 
-    @classmethod
-    def _get_soap_messages(cls, body, **parse_opts):
+    def _get_soap_messages(self, body, **parse_opts):
         """Returns the elements in the response containing the response messages. Raises any SOAP exceptions.
         """
-        response = body.find(cls._response_tag())
+        response = body.find(self._response_tag())
         if response is None:
             fault = body.find('{%s}Fault' % SOAPNS)
             if fault is None:
                 raise SOAPError(
-                    'Unknown SOAP response (expected %s or Fault): %s' % (cls._response_tag(), xml_to_str(body))
+                    'Unknown SOAP response (expected %s or Fault): %s' % (self._response_tag(), xml_to_str(body))
                 )
-            cls._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
-        response_messages = response.find(cls._response_messages_tag())
+            self._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
+        response_messages = response.find(self._response_messages_tag())
         if response_messages is None:
             # Result isn't delivered in a list of FooResponseMessages, but directly in the FooResponse. Consumers expect
             # a list, so return a list
             return [response]
-        return response_messages.findall(cls._response_message_tag())
+        return response_messages.findall(self._response_message_tag())
 
     @classmethod
     def _raise_soap_errors(cls, fault):
