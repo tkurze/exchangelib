@@ -6,10 +6,10 @@ from operator import attrgetter
 from .collections import FolderCollection, SyncCompleted
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription
+    ErrorDeleteDistinguishedFolder
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
-from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, ID_ONLY, \
+from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
     SHALLOW as SHALLOW_ITEMS
 from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, Fields, UserConfiguration, \
     UserConfigurationName, UserConfigurationNameMNS
