@@ -159,7 +159,9 @@ class SyncTest(BaseItemTest):
         # Test that we see a create event
         i1 = self.get_test_item(folder=test_folder).save()
         # 1 minute connection timeout
-        notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
+        notifications = list(test_folder.get_streaming_events(
+            subscription_id, connection_timeout=1, max_notifications_returned=1
+        ))
         created_event, _ = self._filter_events(notifications, CreatedEvent, i1.id)
         self.assertEqual(created_event.item_id.id, i1.id)
 
@@ -167,7 +169,9 @@ class SyncTest(BaseItemTest):
         i1.subject = get_random_string(8)
         i1.save(update_fields=['subject'])
         # 1 minute connection timeout
-        notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
+        notifications = list(test_folder.get_streaming_events(
+            subscription_id, connection_timeout=1, max_notifications_returned=1
+        ))
         modified_event, _ = self._filter_events(notifications, ModifiedEvent, i1.id)
         self.assertEqual(modified_event.item_id.id, i1.id)
 
@@ -175,7 +179,9 @@ class SyncTest(BaseItemTest):
         i1_id = i1.id
         i1.delete()
         # 1 minute connection timeout
-        notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
+        notifications = list(test_folder.get_streaming_events(
+            subscription_id, connection_timeout=1, max_notifications_returned=1
+        ))
         deleted_event, _ = self._filter_events(notifications, DeletedEvent, i1_id)
         self.assertEqual(deleted_event.item_id.id, i1_id)
 

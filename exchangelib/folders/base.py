@@ -634,13 +634,14 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             if not notification.more_events:
                 break
 
-    def get_streaming_events(self, subscription_id, connection_timeout=1):
+    def get_streaming_events(self, subscription_id, connection_timeout=1, max_notifications_returned=None):
         """Get events since the subscription was created, in streaming mode. This method will block as many minutes
         as specified by 'connection_timeout'.
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
         :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
         is reached.
+        :param max_notifications_returned: If specified, will exit after receiving this number of notifications
         :return: A generator of Notification objects, each containing a list of events
 
         This method doesn't need the current folder instance, but it makes sense to keep the method along the other
@@ -649,7 +650,13 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         request_timeout = connection_timeout*60 + 60
         svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
-        yield from svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout)
+        for i, notification in enumerate(
+                svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout),
+                start=1
+        ):
+            yield notification
+            if max_notifications_returned and i >= max_notifications_returned:
+                break
         if svc.error_subscription_ids:
             raise ErrorInvalidSubscription('Invalid subscription IDs: %s' % svc.error_subscription_ids)
 
