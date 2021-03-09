@@ -10,7 +10,7 @@ from ..fields import BooleanField, Base64Field, TextField, ChoiceField, URIField
 from ..properties import PersonaId, IdChangeKeyMixIn, Fields, CompleteName, Attribution, EmailAddress, Address, \
     FolderId
 from ..util import TNS
-from ..version import EXCHANGE_2010, EXCHANGE_2010_SP2, EXCHANGE_2013
+from ..version import EXCHANGE_2010, EXCHANGE_2010_SP2
 
 log = logging.getLogger(__name__)
 
@@ -62,25 +62,27 @@ class Contact(Item):
         DateTimeBackedDateField('wedding_anniversary', field_uri='contacts:WeddingAnniversary',
                                 default_time=datetime.time(11, 59)),
         BooleanField('has_picture', field_uri='contacts:HasPicture', supported_from=EXCHANGE_2010, is_read_only=True),
-        TextField('phonetic_full_name', field_uri='contacts:PhoneticFullName', supported_from=EXCHANGE_2013,
+        TextField('phonetic_full_name', field_uri='contacts:PhoneticFullName', supported_from=EXCHANGE_2010_SP2,
                   is_read_only=True),
-        TextField('phonetic_first_name', field_uri='contacts:PhoneticFirstName', supported_from=EXCHANGE_2013,
+        TextField('phonetic_first_name', field_uri='contacts:PhoneticFirstName', supported_from=EXCHANGE_2010_SP2,
                   is_read_only=True),
-        TextField('phonetic_last_name', field_uri='contacts:PhoneticLastName', supported_from=EXCHANGE_2013,
+        TextField('phonetic_last_name', field_uri='contacts:PhoneticLastName', supported_from=EXCHANGE_2010_SP2,
                   is_read_only=True),
-        EmailAddressField('email_alias', field_uri='contacts:Alias', is_read_only=True),
+        EmailAddressField('email_alias', field_uri='contacts:Alias', is_read_only=True,
+                          supported_from=EXCHANGE_2010_SP2),
         # 'notes' is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
         # put entries into the 'notes' form field into the 'body' field.
-        CharField('notes', field_uri='contacts:Notes', supported_from=EXCHANGE_2013, is_read_only=True),
+        CharField('notes', field_uri='contacts:Notes', supported_from=EXCHANGE_2010_SP2, is_read_only=True),
         # 'photo' is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
         # adds photos as FileAttachments on the contact item (with 'is_contact_photo=True'), which automatically flips
         # the 'has_picture' field.
-        Base64Field('photo', field_uri='contacts:Photo', is_read_only=True),
-        Base64Field('user_smime_certificate', field_uri='contacts:UserSMIMECertificate', is_read_only=True,
-                    supported_from=EXCHANGE_2010_SP2),
-        Base64Field('ms_exchange_certificate', field_uri='contacts:MSExchangeCertificate', is_read_only=True,
-                    supported_from=EXCHANGE_2010_SP2),
-        TextField('directory_id', field_uri='contacts:DirectoryId', supported_from=EXCHANGE_2013, is_read_only=True),
+        Base64Field('photo', field_uri='contacts:Photo', supported_from=EXCHANGE_2010_SP2, is_read_only=True),
+        Base64Field('user_smime_certificate', field_uri='contacts:UserSMIMECertificate',
+                    supported_from=EXCHANGE_2010_SP2, is_read_only=True),
+        Base64Field('ms_exchange_certificate', field_uri='contacts:MSExchangeCertificate',
+                    supported_from=EXCHANGE_2010_SP2, is_read_only=True),
+        TextField('directory_id', field_uri='contacts:DirectoryId', supported_from=EXCHANGE_2010_SP2,
+                  is_read_only=True),
         CharField('manager_mailbox', field_uri='contacts:ManagerMailbox', supported_from=EXCHANGE_2010_SP2,
                   is_read_only=True),
         CharField('direct_reports', field_uri='contacts:DirectReports', supported_from=EXCHANGE_2010_SP2,
