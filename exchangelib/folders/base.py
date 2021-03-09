@@ -6,7 +6,7 @@ from operator import attrgetter
 from .collections import FolderCollection, SyncCompleted
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription
+    ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
@@ -22,6 +22,8 @@ from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
 
 log = logging.getLogger(__name__)
+
+MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFolderReplicaAvailable)
 
 
 class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
@@ -759,7 +761,7 @@ class Folder(BaseFolder):
                 account=root.account,
                 folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
-        except ErrorFolderNotFound:
+        except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound('Could not find distinguished folder %r' % cls.DISTINGUISHED_FOLDER_ID)
 
     @property

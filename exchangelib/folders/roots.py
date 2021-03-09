@@ -1,13 +1,12 @@
 import abc
 import logging
 
-from .base import BaseFolder
+from .base import BaseFolder, MISSING_FOLDER_ERRORS
 from .collections import FolderCollection
 from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
     WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
 from .queryset import SingleFolderQuerySet, SHALLOW
-from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, \
-    ErrorInvalidOperation
+from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
 from ..properties import Fields
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
@@ -116,7 +115,7 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
                 account=account,
                 folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
-        except ErrorFolderNotFound:
+        except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound('Could not find distinguished folder %s' % cls.DISTINGUISHED_FOLDER_ID)
 
     def get_default_folder(self, folder_cls):
@@ -141,10 +140,10 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
             fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
-        except ErrorFolderNotFound:
+        except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound('No useable default %s folders' % folder_cls)
+        raise ErrorFolderNotFound('No usable default %s folders' % folder_cls)
 
     @property
     def _folders_map(self):
@@ -160,16 +159,13 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
             if cls.get_folder_allowed and cls.supports_version(self.account.version)
         ]
         for f in FolderCollection(account=self.account, folders=distinguished_folders).resolve():
-            if isinstance(f, (ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable)):
+            if isinstance(f, MISSING_FOLDER_ERRORS):
                 # This is just a distinguished folder the server does not have
                 continue
             if isinstance(f, ErrorInvalidOperation):
                 # This is probably a distinguished folder the server does not have. We previously tested the exact
                 # error message (f.value), but some Exchange servers return localized error messages, so that's not
                 # possible to do reliably.
-                continue
-            if isinstance(f, ErrorItemNotFound):
-                # Another way of telling us that this is a distinguished folder the server does not have
                 continue
             if isinstance(f, ErrorAccessDenied):
                 # We may not have GetFolder access, either to this folder or at all
@@ -236,7 +232,7 @@ class Root(RootOfHierarchy):
     def get_default_folder(self, folder_cls):
         try:
             return super().get_default_folder(folder_cls)
-        except ErrorFolderNotFound:
+        except MISSING_FOLDER_ERRORS:
             pass
 
         # Try to pick a suitable default folder. we do this by:
@@ -256,7 +252,7 @@ class Root(RootOfHierarchy):
         # Try direct children of TOIS first. TOIS might not exist.
         try:
             return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-        except (ErrorFolderNotFound, ErrorItemNotFound):
+        except MISSING_FOLDER_ERRORS:
             # No candidates, or TOIS does not exist, or we don't have access
             pass
 
@@ -281,7 +277,7 @@ class Root(RootOfHierarchy):
             else:
                 log.debug('Found cached %s folder with localized name', folder_cls)
             return candidates[0]
-        raise ErrorFolderNotFound('No useable default %s folders' % folder_cls)
+        raise ErrorFolderNotFound('No usable default %s folders' % folder_cls)
 
 
 class PublicFoldersRoot(RootOfHierarchy):
