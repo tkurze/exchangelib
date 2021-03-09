@@ -16,6 +16,7 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
     CREATE = 'create'
     UPDATE = 'update'
     DELETE = 'delete'
+    CHANGE_TYPES = (CREATE, UPDATE, DELETE)
     shape_tag = None
     last_in_range_name = None
 

@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+HEAD
+----
+-   Add support for synchronization, subscriptions and notifications. Both pull, push and streaming
+    notifications are supported.
+
+
 4.0.0
 -----
 -   Add a new `max_connections` option for the `Configuration` class, to increase the session pool size

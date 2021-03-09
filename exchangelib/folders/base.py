@@ -560,7 +560,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         return s_id
 
     def unsubscribe(self, subscription_id):
-        """Unsubscribe. Only applies to pull notifications
+        """Unsubscribe. Only applies to pull and streaming notifications
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|streaming]()
         :return: True

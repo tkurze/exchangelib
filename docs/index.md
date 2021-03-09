@@ -43,6 +43,7 @@ Apart from this documentation, we also provide online
 * [Mail tips](#mail-tips)
 * [Delegate information](#delegate-information)
 * [Export and upload](#export-and-upload)
+* [Synchronization, subscriptions and notifications](#synchronization-subscriptions-and-notifications)
 * [Non-account services](#non-account-services)
 * [Troubleshooting](#troubleshooting)
 * [Tests](#tests)
@@ -1332,6 +1333,76 @@ a = Account(...)
 items = a.inbox.all().only('id', 'changekey')
 data = a.export(items)  # Pass a list of Item instances or (item_id, changekey) tuples
 a.upload((a.inbox, d) for d in data)  # Restore the items. Expects a list of (folder, data) tuples
+```
+
+## Synchronization, subscriptions and notifications
+
+Methods for synchronization of folders and items, and for subscribing to, and receiving
+notifications, are available on the `Folder` model. An in-depth description of how to
+synchronize folders and items using EWS is available at
+https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/mailbox-synchronization-and-ews-in-exchange.
+A description of how to subscribe to notifications and receive notifications using EWS
+is available at
+https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/notification-subscriptions-mailbox-events-and-ews-in-exchange:
+
+```python
+from exchangelib import Account
+from exchangelib.properties import CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, \
+    MovedEvent, NewMailEvent, StatusEvent, FreeBusyChangedEvent
+
+a = Account(...)
+
+# Synchronize your local folder hierarchy underneath a.inbox
+for change_type, item in a.inbox.sync_hierarchy():
+    # Do something depending on the change types defined in SyncFolderHierarchy.CHANGE_TYPES
+    pass
+# The next time you call a.inbox.sync_hierarchy(), you will only get folder changes since
+# the last .sync_hierarchy() call.
+
+# Synchronize your local items within a.inbox
+for change_type, item in a.inbox.sync_items():
+    # Do something depending on the change types defined in SyncFolderItems.CHANGE_TYPES
+    pass
+# The next time you call a.inbox.sync_items(), you will only get item changes since the last
+# .sync_items() call.
+
+# Create a pull subscription that can be used to pull events from the server
+subscription_id, watermark = a.inbox.subscribe_to_pull()
+
+# Create a push subscription. The server will regularly send a request to the callback URL
+# to deliver changes or a status message.
+subscription_id, watermark = a.inbox.subscribe_to_push('https://my_app.example.com/callback_url')
+
+# Create a streaming subscription that can be used to stream events from the server
+subscription_id = a.inbox.subscribe_to_streaming()
+
+# Cancel the subscription. Does not apply to push subscriptions that cancel automatically after
+# a certain amount of failed attempts.
+a.inbox.unsubscribe(subscription_id)
+
+# Pull events from the server. This method returns Notification objects that contain events
+# in the 'events' attribute and a new watermark in the 'watermark' attribute.
+for notification in a.inbox.get_events(subscription_id, watermark):
+  for event in notification.events:
+    if isinstance(event, (CreatedEvent, ModifiedEvent)):
+        # Do something
+        pass
+    elif isinstance(event, (CopiedEvent, DeletedEvent)):
+        # Do something else
+        pass
+
+# Stream events from the server. This method returns Notification objects that contain events
+# in the 'events' attribute. Takes an optional 'connection_timeout' argument that defines how
+# long, in minutes, to keep the connection open. .get_streaming_events() will block while the
+# connection is open, yielding notifications as they become available on the request stream.
+for notification in a.inbox.get_streaming_events(subscription_id, connection_timeout=1):
+  for event in notification.events:
+    if isinstance(event, (MovedEvent, NewMailEvent)):
+        # Do something
+        pass
+    elif isinstance(event, (StatusEvent, FreeBusyChangedEvent)):
+        # Do something else
+        pass
 ```
 
 ## Non-account services
