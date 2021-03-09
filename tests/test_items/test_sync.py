@@ -100,64 +100,52 @@ class SyncTest(BaseItemTest):
         self.assertEqual(change_type, 'delete')
         self.assertEqual(i.id, i1_id)
 
-    @staticmethod
-    def _filter_events(events, event_cls, item_id):
-        return [e for e in events if isinstance(e, event_cls) and e.event_type == CreatedEvent.ITEM
-                and e.item_id.id == item_id]
+    def _filter_events(self, notifications, event_cls, item_id):
+        events = []
+        watermark = None
+        for notification in notifications:
+            for e in notification.events:
+                watermark = e.watermark
+                if not isinstance(e, event_cls):
+                    continue
+                if item_id is None:
+                    events.append(e)
+                    continue
+                if e.event_type == event_cls.ITEM and e.item_id.id == item_id:
+                    events.append(e)
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertIsInstance(event, event_cls)
+        return event, watermark
 
     def test_pull_notifications(self):
         # Test that we can create a pull subscription, make changes and see the events by calling .get_events()
         test_folder = self.account.drafts
         subscription_id, watermark = test_folder.subscribe_to_pull()
         notifications = list(test_folder.get_events(subscription_id, watermark))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        self.assertEqual(len(notification.events), 1)
-        status_event = notification.events[0]
-        self.assertIsInstance(status_event, StatusEvent)
-        # Set the new watermark
-        watermark = status_event.watermark
+        status_event, watermark = self._filter_events(notifications, StatusEvent, None)
 
         # Test that we see a create event
         i1 = self.get_test_item(folder=test_folder).save()
         time.sleep(5)  # TODO: For some reason, events do not trigger instantly
         notifications = list(test_folder.get_events(subscription_id, watermark))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        created_events = self._filter_events(notification.events, CreatedEvent, i1.id)
-        self.assertEqual(len(created_events), 1)
-        created_event = created_events[0]
-        self.assertIsInstance(created_event, CreatedEvent)
+        created_event, watermark = self._filter_events(notifications, CreatedEvent, i1.id)
         self.assertEqual(created_event.item_id.id, i1.id)
-        # Set the new watermark
-        watermark = notification.events[-1].watermark
 
         # Test that we see an update event
         i1.subject = get_random_string(8)
         i1.save(update_fields=['subject'])
         time.sleep(5)  # TODO: For some reason, events do not trigger instantly
         notifications = list(test_folder.get_events(subscription_id, watermark))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        modified_events = self._filter_events(notification.events, ModifiedEvent, i1.id)
-        self.assertEqual(len(modified_events), 1)
-        modified_event = modified_events[0]
-        self.assertIsInstance(modified_event, ModifiedEvent)
+        modified_event, watermark = self._filter_events(notifications, ModifiedEvent, i1.id)
         self.assertEqual(modified_event.item_id.id, i1.id)
-        # Set the new watermark
-        watermark = notification.events[-1].watermark
 
         # Test that we see a delete event
         i1_id = i1.id
         i1.delete()
         time.sleep(5)  # TODO: For some reason, events do not trigger instantly
         notifications = list(test_folder.get_events(subscription_id, watermark))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        deleted_events = self._filter_events(notification.events, DeletedEvent, i1_id)
-        self.assertEqual(len(deleted_events), 1)
-        deleted_event = deleted_events[0]
-        self.assertIsInstance(deleted_event, DeletedEvent)
+        deleted_event, watermark = self._filter_events(notifications, DeletedEvent, i1_id)
         self.assertEqual(deleted_event.item_id.id, i1_id)
 
         test_folder.unsubscribe(subscription_id)
@@ -172,12 +160,7 @@ class SyncTest(BaseItemTest):
         i1 = self.get_test_item(folder=test_folder).save()
         # 1 minute connection timeout
         notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        created_events = self._filter_events(notification.events, CreatedEvent, i1.id)
-        self.assertEqual(len(created_events), 1)
-        created_event = created_events[0]
-        self.assertIsInstance(created_event, CreatedEvent)
+        created_event, _ = self._filter_events(notifications, CreatedEvent, i1.id)
         self.assertEqual(created_event.item_id.id, i1.id)
 
         # Test that we see an update event
@@ -185,12 +168,7 @@ class SyncTest(BaseItemTest):
         i1.save(update_fields=['subject'])
         # 1 minute connection timeout
         notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        modified_events = self._filter_events(notification.events, ModifiedEvent, i1.id)
-        self.assertEqual(len(modified_events), 1)
-        modified_event = modified_events[0]
-        self.assertIsInstance(modified_event, ModifiedEvent)
+        modified_event, _ = self._filter_events(notifications, ModifiedEvent, i1.id)
         self.assertEqual(modified_event.item_id.id, i1.id)
 
         # Test that we see a delete event
@@ -198,12 +176,7 @@ class SyncTest(BaseItemTest):
         i1.delete()
         # 1 minute connection timeout
         notifications = list(test_folder.get_streaming_events(subscription_id, connection_timeout=1))
-        self.assertEqual(len(notifications), 1)
-        notification = notifications[0]
-        deleted_events = self._filter_events(notification.events, DeletedEvent, i1_id)
-        self.assertEqual(len(deleted_events), 1)
-        deleted_event = deleted_events[0]
-        self.assertIsInstance(deleted_event, DeletedEvent)
+        deleted_event, _ = self._filter_events(notifications, DeletedEvent, i1_id)
         self.assertEqual(deleted_event.item_id.id, i1_id)
 
         test_folder.unsubscribe(subscription_id)

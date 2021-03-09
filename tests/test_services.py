@@ -110,25 +110,28 @@ class ServicesTest(EWSTest):
     </s:Fault>
   </s:Body>
 </s:Envelope>"""
-        header, body = ResolveNames._get_soap_parts(response=MockResponse(soap_xml.format(
+        version = mock_version(build=EXCHANGE_2010)
+        protocol = mock_protocol(version=version, service_endpoint='example.com')
+        ws = GetRoomLists(protocol=protocol)
+        header, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='YYY', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')))
         with self.assertRaises(SOAPError) as e:
-            ResolveNames._get_soap_messages(body=body)
+            ws._get_soap_messages(body=body)
         self.assertIn('AAA', e.exception.args[0])
         self.assertIn('YYY', e.exception.args[0])
         self.assertIn('ZZZ', e.exception.args[0])
-        header, body = ResolveNames._get_soap_parts(response=MockResponse(soap_xml.format(
+        header, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='ErrorNonExistentMailbox', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')))
         with self.assertRaises(ErrorNonExistentMailbox) as e:
-            ResolveNames._get_soap_messages(body=body)
+            ws._get_soap_messages(body=body)
         self.assertIn('AAA', e.exception.args[0])
-        header, body = ResolveNames._get_soap_parts(response=MockResponse(soap_xml.format(
+        header, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='XXX', faultstring='AAA', responsecode='ErrorNonExistentMailbox', message='YYY'
             ).encode('utf-8')))
         with self.assertRaises(ErrorNonExistentMailbox) as e:
-            ResolveNames._get_soap_messages(body=body)
+            ws._get_soap_messages(body=body)
         self.assertIn('YYY', e.exception.args[0])
 
         # Test bad XML (no body)
@@ -142,7 +145,7 @@ class ServicesTest(EWSTest):
   </s:Body>
 </s:Envelope>"""
         with self.assertRaises(MalformedResponseError):
-            ResolveNames._get_soap_parts(response=MockResponse(soap_xml))
+            ws._get_soap_parts(response=MockResponse(soap_xml))
 
         # Test bad XML (no fault)
         soap_xml = b"""\
@@ -157,9 +160,9 @@ class ServicesTest(EWSTest):
     </s:Fault>
   </s:Body>
 </s:Envelope>"""
-        header, body = ResolveNames._get_soap_parts(response=MockResponse(soap_xml))
+        header, body = ws._get_soap_parts(response=MockResponse(soap_xml))
         with self.assertRaises(TransportError):
-            ResolveNames._get_soap_messages(body=body)
+            ws._get_soap_messages(body=body)
 
     def test_element_container(self):
         svc = ResolveNames(self.account.protocol)
