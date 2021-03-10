@@ -101,9 +101,8 @@ class EWSDateTime(datetime.datetime):
 
     def ewsformat(self):
         """ISO 8601 format to satisfy xs:datetime as interpreted by EWS. Examples:
-            2009-01-15T13:45:56Z
-            2009-01-15T13:45:56+01:00
-
+        * 2009-01-15T13:45:56Z
+        * 2009-01-15T13:45:56+01:00
         """
         if not self.tzinfo:
             raise ValueError('%r must be timezone-aware' % self)

@@ -1,5 +1,6 @@
-""" A dict to translate from IANA location name to Windows timezone name. Translations taken from
-http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml """
+"""A dict to translate from IANA location name to Windows timezone name. Translations taken from
+http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+"""
 import re
 
 import requests

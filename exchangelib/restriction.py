@@ -197,7 +197,8 @@ class Q:
 
     def _promote(self):
         """When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
-        child."""
+        child.
+        """
         if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
             return
 

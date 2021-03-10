@@ -59,7 +59,6 @@ class TasksTest(CommonItemTest):
         * The status property of a regenerating or nonregenerating recurrent task is set to Completed.
         * The start date or end date of a nonregenerating recurrent task is changed.
         """
-
         # Create a master non-regenerating item with 4 daily occurrences
         start = datetime.date(2016, 1, 1)
         recurrence = TaskRecurrence(pattern=DailyPattern(interval=1), start=start, number=4)

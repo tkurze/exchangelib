@@ -61,11 +61,10 @@ class FolderQuerySet:
         return new_qs
 
     def depth(self, depth):
-        """Specify the search depth (SHALLOW or DEEP)
+        """Specify the search depth. Possible values are: SHALLOW or DEEP
 
         Args:
           depth:
-
         """
         new_qs = self._copy_self()
         new_qs._depth = depth

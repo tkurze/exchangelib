@@ -181,12 +181,6 @@ class ExtendedPropertyTest(BaseItemTest):
             self.ITEM_CLASS.deregister(attr_name=attr_name)
 
     def test_extended_property_validation(self):
-        """
-        if cls.property_type not in cls.PROPERTY_TYPES:
-            raise ValueError(
-                "'property_type' value '%s' must be one of %s" % (cls.property_type, sorted(cls.PROPERTY_TYPES))
-            )
-        """
         # Must not have property_set_id or property_tag
         class TestProp1(ExtendedProperty):
             distinguished_property_set_id = 'XXX'

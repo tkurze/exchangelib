@@ -198,12 +198,10 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
 
     @require_account
     def save(self, folder):
-        """save reply/forward and retrieve the item result for further modification,
-        you may want to use account.drafts as the folder.
+        """Save the item for later modification. You may want to use account.drafts as the folder.
 
         Args:
           folder:
-
         """
         return CreateItem(account=self.account).get(
             items=[self],

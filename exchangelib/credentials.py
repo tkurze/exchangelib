@@ -71,12 +71,12 @@ class BaseCredentials(metaclass=abc.ABCMeta):
 
 
 class Credentials(BaseCredentials):
-    """Keeps login info the way Exchange likes it.
+    r"""Keeps login info the way Exchange likes it.
 
     Args:
       username: Usernames for authentication are of one of these forms:
     * PrimarySMTPAddress
-    * WINDOMAIN\\username
+    * WINDOMAIN\username
     * User Principal Name (UPN)
       password: Clear-text password
 

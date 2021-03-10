@@ -1503,8 +1503,7 @@ class PhoneNumber(EWSElement):
 
 class IdChangeKeyMixIn(EWSElement, metaclass=abc.ABCMeta):
     """Base class for classes that have a concept of 'id' and 'changekey' values. The values are actually stored on
-     a separate element but we add convenience methods to hide that fact.
-
+    a separate element but we add convenience methods to hide that fact.
     """
     ID_ELEMENT_CLS = None
 

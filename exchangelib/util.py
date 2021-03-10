@@ -477,7 +477,8 @@ class DocumentYielder:
 
     def __iter__(self):
         """Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
-        collected it."""
+        collected it.
+        """
         doc_started = False
         buffer = []
         try:
