@@ -643,15 +643,14 @@ class DateTimeField(FieldURIField):
             except ValueError as e:
                 if isinstance(e, NaiveDateTimeNotAllowed):
                     # We encountered a naive datetime
-                    local_dt = e.args[0]
                     if account:
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
-                        log.info('Found naive datetime %s on field %s. Assuming timezone %s', local_dt, self.name, tz)
-                        return local_dt.replace(tzinfo=tz)
+                        log.info('Found naive datetime %s on field %s. Assuming timezone %s', e.local_dt, self.name, tz)
+                        return e.local_dt.replace(tzinfo=tz)
                     # There's nothing we can do but return the naive date. It's better than assuming e.g. UTC.
-                    log.warning('Returning naive datetime %s on field %s', local_dt, self.name)
-                    return local_dt
+                    log.warning('Returning naive datetime %s on field %s', e.local_dt, self.name)
+                    return e.local_dt
                 log.info("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
                 return None
         return self.default
@@ -853,7 +852,7 @@ class ChoiceField(CharField):
         value = super().clean(value, version=version)
         if value is None:
             return None
-        valid_choices = list(c.value for c in self.choices)
+        valid_choices = [c.value for c in self.choices]
         if version:
             valid_choices_for_version = self.supported_choices(version=version)
             if value in valid_choices_for_version:
@@ -869,7 +868,7 @@ class ChoiceField(CharField):
         ))
 
     def supported_choices(self, version):
-        return list(c.value for c in self.choices if c.supports_version(version))
+        return [c.value for c in self.choices if c.supports_version(version)]
 
 
 FREE_BUSY_CHOICES = [Choice('Free'), Choice('Tentative'), Choice('Busy'), Choice('OOF'), Choice('NoData'),

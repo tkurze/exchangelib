@@ -179,7 +179,7 @@ class ServicesTest(EWSTest):
     </m:ResolveNamesResponse>
   </s:Body>
 </s:Envelope>"""
-        header, body = svc._get_soap_parts(response=MockResponse(soap_xml))
+        _, body = svc._get_soap_parts(response=MockResponse(soap_xml))
         resp = svc._get_soap_messages(body=body)
         with self.assertRaises(TransportError) as e:
             # Missing ResolutionSet elements

@@ -22,7 +22,7 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
 
     def _partial_call(self, payload_func, folders, event_types, **kwargs):
         if set(event_types) - set(self.EVENT_TYPES):
-            raise ValueError("'event_types' values must consist of values in %r", self.EVENT_TYPES)
+            raise ValueError("'event_types' values must consist of values in %s" % str(self.EVENT_TYPES))
         for elem in self._get_elements(payload=payload_func(folders=folders, event_types=event_types, **kwargs)):
             if isinstance(elem, Exception):
                 yield elem

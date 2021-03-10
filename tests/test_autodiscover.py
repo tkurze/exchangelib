@@ -306,7 +306,7 @@ class AutodiscoverTest(EWSTest):
 </Autodiscover>''')
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
         m.post('https://expr.example.com/EWS/Exchange.asmx', status_code=200)
-        ad_response, p = discovery.discover()
+        ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@example.com')
 
         # Make sure we discover an address redirect to the same domain. We have to mock the same URL with two different
@@ -345,7 +345,7 @@ class AutodiscoverTest(EWSTest):
             dict(status_code=200, content=redirect_addr_content),
             dict(status_code=200, content=settings_content),
         ])
-        ad_response, p = discovery.discover()
+        ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'redirected@%s' % self.domain)
         self.assertEqual(ad_response.ews_url, 'https://redirected.%s/EWS/Exchange.asmx' % self.domain)
 
@@ -403,7 +403,7 @@ class AutodiscoverTest(EWSTest):
 </Autodiscover>''')
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
         m.post('https://httpbin.org/EWS/Exchange.asmx', status_code=200)
-        ad_response, p = discovery.discover()
+        ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.httpbin.org')
         self.assertEqual(ad_response.ews_url, 'https://httpbin.org/EWS/Exchange.asmx')
 

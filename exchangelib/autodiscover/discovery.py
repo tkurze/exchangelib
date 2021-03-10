@@ -429,8 +429,7 @@ class Autodiscovery:
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
-        else:
-            return self._step_2(hostname=hostname)
+        return self._step_2(hostname=hostname)
 
     def _step_2(self, hostname):
         """The client sends an Autodiscover request to https://autodiscover.example.com/autodiscover/autodiscover.xml
@@ -447,8 +446,7 @@ class Autodiscovery:
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
-        else:
-            return self._step_3(hostname=hostname)
+        return self._step_3(hostname=hostname)
 
     def _step_3(self, hostname):
         """The client sends an unauth'ed GET method request to
@@ -479,12 +477,9 @@ class Autodiscovery:
                 is_valid_response, ad = self._attempt_response(url=redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                else:
-                    return self._step_4(hostname=hostname)
-            else:
                 return self._step_4(hostname=hostname)
-        else:
             return self._step_4(hostname=hostname)
+        return self._step_4(hostname=hostname)
 
     def _step_4(self, hostname):
         """The client performs a Domain Name System (DNS) query for an SRV record for _autodiscover._tcp.example.com.
@@ -517,10 +512,8 @@ class Autodiscovery:
             is_valid_response, ad = self._attempt_response(url=redirect_url)
             if is_valid_response:
                 return self._step_5(ad=ad)
-            else:
-                return self._step_6()
-        else:
             return self._step_6()
+        return self._step_6()
 
     def _step_5(self, ad):
         """When a valid Autodiscover request succeeds, the following sequence occurs:
@@ -554,14 +547,11 @@ class Autodiscovery:
                 is_valid_response, ad = self._attempt_response(url=ad_response.redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                else:
-                    return self._step_6()
-            else:
-                log.debug('Invalid redirect URL: %s', ad_response.redirect_url)
                 return self._step_6()
-        else:
-            # This could be an email redirect. Let outer layer handle this
-            return ad_response
+            log.debug('Invalid redirect URL: %s', ad_response.redirect_url)
+            return self._step_6()
+        # This could be an email redirect. Let outer layer handle this
+        return ad_response
 
     def _step_6(self):
         """If the client cannot contact the Autodiscover service, the client should ask the user for the Exchange server

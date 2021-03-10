@@ -811,10 +811,12 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
     elif isinstance(folder, DistinguishedFolderId):
         # We don't know the root, so assume account.root.
-        for folder_cls in account.root.WELLKNOWN_FOLDERS:
-            if folder_cls.DISTINGUISHED_FOLDER_ID == folder.id:
+        folder_cls = None
+        for cls in account.root.WELLKNOWN_FOLDERS:
+            if cls.DISTINGUISHED_FOLDER_ID == folder.id:
+                folder_cls = cls
                 break
-        else:
+        if not folder_cls:
             raise ValueError('Unknown distinguished folder ID: %s' % folder.id)
         f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
     else:

@@ -98,7 +98,12 @@ class AutoDiscoverRedirect(AutoDiscoverError):
 
 
 class NaiveDateTimeNotAllowed(ValueError):
-    pass
+    def __init__(self, local_dt):
+        super().__init__()
+        from .ewsdatetime import EWSDateTime
+        if not isinstance(local_dt, EWSDateTime):
+            raise ValueError("'local_dt' value %r must be an EWSDateTime" % local_dt)
+        self.local_dt = local_dt
 
 
 class UnknownTimeZone(EWSError):

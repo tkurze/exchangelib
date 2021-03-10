@@ -107,15 +107,15 @@ class ItemQuerySetTest(BaseItemTest):
 
         # Test .only() in combinations of 'id' and 'changekey', which are handled specially
         self.assertEqual(
-            list((i.id,) for i in qs.order_by('subject').only('id')),
+            [(i.id,) for i in qs.order_by('subject').only('id')],
             [(i.id,) for i in test_items]
         )
         self.assertEqual(
-            list((i.changekey,) for i in qs.order_by('subject').only('changekey')),
+            [(i.changekey,) for i in qs.order_by('subject').only('changekey')],
             [(i.changekey,) for i in test_items]
         )
         self.assertEqual(
-            list((i.id, i.changekey) for i in qs.order_by('subject').only('id', 'changekey')),
+            [(i.id, i.changekey) for i in qs.order_by('subject').only('id', 'changekey')],
             [(i.id, i.changekey) for i in test_items]
         )
 
@@ -207,9 +207,6 @@ class ItemQuerySetTest(BaseItemTest):
         qs = QuerySet(
             folder_collection=FolderCollection(account=self.account, folders=[self.test_folder])
         ).filter(categories__contains=self.categories).order_by('subject')
-        for _ in qs:
-            # Build up the cache
-            pass
         with self.assertRaises(MultipleObjectsReturned):
             qs.get()  # Get with a full cache
         self.assertEqual(qs[2].subject, 'Item 2')  # Index with a full cache

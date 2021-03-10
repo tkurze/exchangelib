@@ -1,3 +1,4 @@
+import abc
 import datetime
 from decimal import Decimal
 from keyword import kwlist
@@ -21,7 +22,7 @@ from ..common import EWSTest, get_random_string, get_random_datetime_range, get_
     get_random_decimal, get_random_choice, get_random_int, get_random_datetime
 
 
-class BaseItemTest(EWSTest):
+class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
     TEST_FOLDER = None
     FOLDER_CLASS = None
     ITEM_CLASS = None
@@ -254,7 +255,7 @@ class CommonItemTest(BaseItemTest):
                     # string.
                     try:
                         value_to_xml_text(filter_val)
-                    except NotImplementedError:
+                    except TypeError:
                         continue
 
                     f.is_searchable = True
@@ -297,7 +298,7 @@ class CommonItemTest(BaseItemTest):
                     if not matches and isinstance(f, BodyField):
                         # The body field is particularly nasty in this area. Give up
                         continue
-                    for i in range(5):
+                    for _ in range(5):
                         if matches:
                             break
                         time.sleep(2)

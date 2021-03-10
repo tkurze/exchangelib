@@ -123,7 +123,7 @@ class SyncTest(BaseItemTest):
         test_folder = self.account.drafts
         subscription_id, watermark = test_folder.subscribe_to_pull()
         notifications = list(test_folder.get_events(subscription_id, watermark))
-        status_event, watermark = self._filter_events(notifications, StatusEvent, None)
+        _, watermark = self._filter_events(notifications, StatusEvent, None)
 
         # Test that we see a create event
         i1 = self.get_test_item(folder=test_folder).save()

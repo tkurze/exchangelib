@@ -92,10 +92,10 @@ class ContactsTest(CommonItemTest):
         self.assertEqual(new_dl.members, None)
         dl.refresh()
 
-        dl.members = set(
-            # We set mailbox_type to OneOff because otherwise the email address must be an actual account
+        # We set mailbox_type to OneOff because otherwise the email address must be an actual account
+        dl.members = {
             Member(mailbox=Mailbox(email_address=get_random_email(), mailbox_type='OneOff')) for _ in range(4)
-        )
+        }
         dl.save()
         new_dl = self.test_folder.get(categories__contains=dl.categories)
         self.assertEqual({m.mailbox.email_address for m in new_dl.members}, dl.members)

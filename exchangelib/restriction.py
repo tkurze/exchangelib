@@ -184,15 +184,15 @@ class Q:
             elif self.conn_type == self.OR:
                 # Remove all 'never' args because all other args will decide the result. Keep one 'never' arg in case
                 # all args are 'never' args.
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                children = [a for a in children if not (isinstance(a, self.__class__) and a.is_never())]
                 if not children:
                     children = [self.__class__(conn_type=self.NEVER)]
             elif self.conn_type == self.NOT:
                 # Let's interpret 'not never' to mean 'always'. Remove all 'never' args
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                children = [a for a in children if not (isinstance(a, self.__class__) and a.is_never())]
 
         # Remove any empty Q elements in args before proceeding
-        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        children = [a for a in children if not (isinstance(a, self.__class__) and a.is_empty())]
         self.children = children
 
     def _promote(self):

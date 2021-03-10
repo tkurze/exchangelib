@@ -209,7 +209,7 @@ def value_to_xml_text(value):
         return value.id
     if isinstance(value, AssociatedCalendarItemId):
         return value.id
-    raise NotImplementedError('Unsupported type: %s (%s)' % (type(value), value))
+    raise TypeError('Unsupported type: %s (%s)' % (type(value), value))
 
 
 def xml_text_to_value(value, value_type):

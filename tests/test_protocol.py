@@ -65,7 +65,7 @@ class ProtocolTest(EWSTest):
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
         ))
 
-        for i in range(10):
+        for _ in range(10):
             p = Protocol(config=Configuration(
                 service_endpoint='https://example.com/Foo.asmx', credentials=Credentials(user, password),
                 auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
@@ -151,7 +151,7 @@ class ProtocolTest(EWSTest):
         # Test shortcut
         self.assertAlmostEqual(len(list(self.account.protocol.get_timezones())), 130, delta=30, msg=data)
         # Test translation to TimeZone objects
-        for tz_id, tz_name, periods, transitions, transitionsgroups in self.account.protocol.get_timezones(
+        for _, _, periods, transitions, transitionsgroups in self.account.protocol.get_timezones(
                 return_full_timezone_data=True):
             TimeZone.from_server_timezone(periods=periods, transitions=transitions, transitionsgroups=transitionsgroups,
                                           for_year=2018)

@@ -1,3 +1,4 @@
+import abc
 from collections import namedtuple
 import datetime
 from decimal import Decimal
@@ -55,7 +56,7 @@ class MockResponse(DummyResponse):
         super().__init__(url='', headers={}, request_headers={}, content=c)
 
 
-class TimedTestCase(unittest.TestCase):
+class TimedTestCase(unittest.TestCase, metaclass=abc.ABCMeta):
     SLOW_TEST_DURATION = 5  # Log tests that are slower than this value (in seconds)
 
     def setUp(self):
@@ -68,7 +69,7 @@ class TimedTestCase(unittest.TestCase):
             print("{:07.3f} : {}".format(t2, self.id()))
 
 
-class EWSTest(TimedTestCase):
+class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
     @classmethod
     def setUpClass(cls):
         # There's no official Exchange server we can test against, and we can't really provide credentials for our
@@ -192,10 +193,9 @@ class EWSTest(TimedTestCase):
                     Attendee(mailbox=mbx, response_type='Accept',
                              last_response_time=get_random_datetime(tz=self.account.default_timezone))
                 ]
-            else:
-                if get_random_bool():
-                    return [Attendee(mailbox=mbx, response_type='Accept')]
-                return [self.account.primary_smtp_address]
+            if get_random_bool():
+                return [Attendee(mailbox=mbx, response_type='Accept')]
+            return [self.account.primary_smtp_address]
         if isinstance(field, EmailAddressesField):
             addrs = []
             for label in EmailAddress.get_field_by_fieldname('label').supported_choices(version=self.account.version):

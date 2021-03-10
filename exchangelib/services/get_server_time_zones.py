@@ -108,6 +108,6 @@ class GetServerTimeZones(EWSService):
                     t_date = xml_text_to_value(transition.find('{%s}DateTime' % TNS).text, EWSDateTime).date()
                 except NaiveDateTimeNotAllowed as e:
                     # We encountered a naive datetime. Don't worry. we just need the date
-                    t_date = e.args[0].date()
+                    t_date = e.local_dt.date()
                 tz_transitions[tg_id] = t_date
         return tz_transitions

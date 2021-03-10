@@ -373,7 +373,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         if self.id in _seen:
             raise RecursionError('We already tried to wipe %s' % self)
         if _level > 16:
-            raise RecursionError('Max recursion level reached: %s', _level)
+            raise RecursionError('Max recursion level reached: %s' % _level)
         _seen.add(self.id)
         log.warning('Wiping %s', self)
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
@@ -798,13 +798,8 @@ class Folder(BaseFolder):
             raise ValueError("'root' %r must be a RootOfHierarchy instance" % self.root)
 
     @classmethod
-    def from_xml(cls, elem, account):
-        raise NotImplementedError('Use from_xml_with_root() instead')
-
-    @classmethod
     def from_xml_with_root(cls, elem, root):
-        kwargs = cls._kwargs_from_elem(elem=elem, account=root.account)
-        cls._clear(elem)
+        folder = cls.from_xml(elem=elem, account=root.account)
         folder_cls = cls
         if cls == Folder:
             # We were called on the generic Folder class. Try to find a more specific class to return objects as.
@@ -823,21 +818,21 @@ class Folder(BaseFolder):
             #
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
-            if kwargs['name']:
+            if folder.name:
                 try:
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                    folder_cls = root.folder_cls_from_folder_name(folder_name=kwargs['name'],
+                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name,
                                                                   locale=root.account.locale)
-                    log.debug('Folder class %s matches localized folder name %s', folder_cls, kwargs['name'])
+                    log.debug('Folder class %s matches localized folder name %s', folder_cls, folder.name)
                 except KeyError:
                     pass
-            if kwargs['folder_class'] and folder_cls == Folder:
+            if folder.folder_class and folder_cls == Folder:
                 try:
-                    folder_cls = cls.folder_cls_from_container_class(container_class=kwargs['folder_class'])
-                    log.debug('Folder class %s matches container class %s (%s)', folder_cls, kwargs['folder_class'],
-                              kwargs['name'])
+                    folder_cls = cls.folder_cls_from_container_class(container_class=folder.folder_class)
+                    log.debug('Folder class %s matches container class %s (%s)', folder_cls, folder.folder_class,
+                              folder.name)
                 except KeyError:
                     pass
             if folder_cls == Folder:
-                log.debug('Fallback to class Folder (folder_class %s, name %s)', kwargs['folder_class'], kwargs['name'])
-        return folder_cls(root=root, **kwargs)
+                log.debug('Fallback to class Folder (folder_class %s, name %s)', folder.folder_class, folder.name)
+        return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})
