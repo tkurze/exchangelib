@@ -291,13 +291,12 @@ class Autodiscovery:
         except UnauthorizedError:
             # Failed to guess the auth type
             auth_type = NOAUTH
-        if r.status_code in (301, 302):
-            if 'location' in r.headers:
-                # Make the redirect URL absolute
-                try:
-                    r.headers['location'] = get_redirect_url(r)
-                except TransportError:
-                    del r.headers['location']
+        if r.status_code in (301, 302) and 'location' in r.headers:
+            # Make the redirect URL absolute
+            try:
+                r.headers['location'] = get_redirect_url(r)
+            except TransportError:
+                del r.headers['location']
         return auth_type, r
 
     def _get_authenticated_response(self, protocol):
@@ -513,16 +512,15 @@ class Autodiscovery:
             srv_host = None
         if not srv_host:
             return self._step_6()
-        else:
-            redirect_url = 'https://%s/Autodiscover/Autodiscover.xml' % srv_host
-            if self._redirect_url_is_valid(url=redirect_url):
-                is_valid_response, ad = self._attempt_response(url=redirect_url)
-                if is_valid_response:
-                    return self._step_5(ad=ad)
-                else:
-                    return self._step_6()
+        redirect_url = 'https://%s/Autodiscover/Autodiscover.xml' % srv_host
+        if self._redirect_url_is_valid(url=redirect_url):
+            is_valid_response, ad = self._attempt_response(url=redirect_url)
+            if is_valid_response:
+                return self._step_5(ad=ad)
             else:
                 return self._step_6()
+        else:
+            return self._step_6()
 
     def _step_5(self, ad):
         """When a valid Autodiscover request succeeds, the following sequence occurs:

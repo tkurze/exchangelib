@@ -52,7 +52,7 @@ class EWSDate(datetime.date):
 
     @classmethod
     def from_date(cls, d):
-        if type(d) != datetime.date:
+        if type(d) is not datetime.date:
             raise ValueError("%r must be a date instance" % d)
         return cls(d.year, d.month, d.day)
 
@@ -113,7 +113,7 @@ class EWSDateTime(datetime.datetime):
 
     @classmethod
     def from_datetime(cls, d):
-        if type(d) != datetime.datetime:
+        if type(d) is not datetime.datetime:
             raise ValueError("%r must be a datetime instance" % d)
         if d.tzinfo is None:
             tz = None

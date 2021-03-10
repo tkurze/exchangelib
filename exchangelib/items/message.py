@@ -168,18 +168,18 @@ class ReplyToItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem"""
     ELEMENT_NAME = 'ReplyToItem'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class ReplyAllToItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem"""
     ELEMENT_NAME = 'ReplyAllToItem'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class ForwardItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem"""
     ELEMENT_NAME = 'ForwardItem'
 
-    __slots__ = tuple()
+    __slots__ = ()

@@ -418,7 +418,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 except (TypeError, AttributeError):
                     pass
                 raise ErrorServerBusy(msg, back_off=back_off)
-            elif code == 'ErrorSchemaValidation' and msg_xml is not None:
+            if code == 'ErrorSchemaValidation' and msg_xml is not None:
                 violation = get_xml_attr(msg_xml, '{%s}Violation' % TNS)
                 if violation is not None:
                     msg = '%s %s' % (msg, violation)
@@ -588,7 +588,7 @@ class EWSService(metaclass=abc.ABCMeta):
         raised.
         """
         if cls.returns_elements:
-            return [elem for elem in container]
+            return list(container)
         return [True]
 
     def _get_elems_from_page(self, elem, max_items, total_item_count):
@@ -666,8 +666,8 @@ class EWSService(metaclass=abc.ABCMeta):
                 if paging_info['next_offset'] != paging_info['item_count'] and (
                     not max_items or total_item_count < max_items
                 ):
-                    log.warning('Unexpected next offset: %s -> %s. Maybe the server-side collection has changed?'
-                                % (paging_info['item_count'], paging_info['next_offset']))
+                    log.warning('Unexpected next offset: %s -> %s. Maybe the server-side collection has changed?',
+                                paging_info['item_count'], paging_info['next_offset'])
             # Also break out of outer loop
             if max_items and total_item_count >= max_items:
                 log.debug("'max_items' count reached (outer)")
@@ -677,7 +677,8 @@ class EWSService(metaclass=abc.ABCMeta):
                 # Paging is done for all messages
                 break
 
-    def _get_paging_values(self, elem):
+    @staticmethod
+    def _get_paging_values(elem):
         """Read paging information from the paging container element
         """
         is_last_page = elem.get('IncludesLastItemInRange').lower() in ('true', '0')
@@ -687,9 +688,8 @@ class EWSService(metaclass=abc.ABCMeta):
             offset = '1'
         next_offset = None if is_last_page else int(offset)
         item_count = int(elem.get('TotalItemsInView'))
-        if not item_count:
-            if next_offset is not None:
-                raise ValueError("Expected empty 'next_offset' when 'item_count' is 0")
+        if not item_count and next_offset is not None:
+            raise ValueError("Expected empty 'next_offset' when 'item_count' is 0")
         log.debug('Got page with next offset %s (last_page %s)', next_offset, is_last_page)
         return item_count, next_offset
 

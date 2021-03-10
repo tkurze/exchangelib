@@ -221,7 +221,7 @@ class Root(RootOfHierarchy):
     """The root of the standard folder hierarchy"""
     DISTINGUISHED_FOLDER_ID = 'root'
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
-    __slots__ = tuple()
+    __slots__ = ()
 
     @property
     def tois(self):
@@ -285,7 +285,7 @@ class PublicFoldersRoot(RootOfHierarchy):
     DISTINGUISHED_FOLDER_ID = 'publicfoldersroot'
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
-    __slots__ = tuple()
+    __slots__ = ()
 
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
@@ -326,4 +326,4 @@ class ArchiveRoot(RootOfHierarchy):
     DISTINGUISHED_FOLDER_ID = 'archiveroot'
     supported_from = EXCHANGE_2010_SP1
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-    __slots__ = tuple()
+    __slots__ = ()

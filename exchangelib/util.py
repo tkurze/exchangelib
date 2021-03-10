@@ -466,7 +466,10 @@ class DocumentYielder:
     def get_tag(self, stop_byte):
         tag_buffer = [b'<']
         while True:
-            c = next(self._iterator)
+            try:
+                c = next(self._iterator)
+            except StopIteration:
+                break
             tag_buffer.append(c)
             if c == stop_byte:
                 break

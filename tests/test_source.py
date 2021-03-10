@@ -94,7 +94,7 @@ class CommonTest(EWSTest):
                     exchangelib.folders, exchangelib.items, exchangelib.properties):
             for k, v in vars(mod).items():
                 with self.subTest(k=k, v=v):
-                    if type(v) != type:
+                    if type(v) is not type:
                         continue
                     if not issubclass(v, EWSElement):
                         continue

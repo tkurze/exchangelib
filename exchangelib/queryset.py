@@ -591,7 +591,7 @@ class QuerySet(SearchableMixIn):
 
         """
         new_qs = self._copy_self()
-        new_qs.only_fields = tuple()
+        new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         new_qs.page_size = page_size
@@ -605,7 +605,7 @@ class QuerySet(SearchableMixIn):
 
     def _id_only_copy_self(self):
         new_qs = self._copy_self()
-        new_qs.only_fields = tuple()
+        new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         return new_qs

@@ -11,12 +11,12 @@ class IndexedElement(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element"""
     LABELS = set()
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class SingleFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element with a single field"""
-    __slots__ = tuple()
+    __slots__ = ()
 
     @classmethod
     def value_field(cls, version=None):
@@ -56,7 +56,7 @@ class PhoneNumber(SingleFieldIndexedElement):
 
 class MultiFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element with multiple fields"""
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class PhysicalAddress(MultiFieldIndexedElement):

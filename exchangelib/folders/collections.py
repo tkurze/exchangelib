@@ -311,7 +311,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_default_item_traversal_depth(self):
         # When searching folders, some folders require 'Shallow' and others 'Associated' traversal depth.
-        unique_depths = set(f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders)
+        unique_depths = {f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
@@ -321,7 +321,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require 'Shallow' and others 'Deep' traversal depth.
-        unique_depths = set(f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders)
+        unique_depths = {f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(

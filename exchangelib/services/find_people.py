@@ -91,13 +91,14 @@ class FindPeople(EWSAccountService):
             findpeople.append(query_string.to_xml(version=self.account.version))
         return findpeople
 
-    def _get_paging_values(self, elem):
+    @staticmethod
+    def _get_paging_values(elem):
         """The paging container element from FindPeople is slightly different than other paging containers.
         """
         item_count = int(elem.find('{%s}TotalNumberOfPeopleInView' % MNS).text)
         first_matching = int(elem.find('{%s}FirstMatchingRowIndex' % MNS).text)
         first_loaded = int(elem.find('{%s}FirstLoadedRowIndex' % MNS).text)
-        log.debug('%s: Got page with total items %s, first matching %s, first loaded %s ', self.SERVICE_NAME,
-                  item_count, first_matching, first_loaded)
+        log.debug('Got page with total items %s, first matching %s, first loaded %s ', item_count, first_matching,
+                  first_loaded)
         next_offset = None  # GetPersona does not support fetching more pages
         return item_count, next_offset

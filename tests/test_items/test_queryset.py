@@ -25,7 +25,7 @@ class ItemQuerySetTest(BaseItemTest):
         ).filter(categories__contains=self.categories)
         test_cat = self.categories[0]
         self.assertEqual(
-            set((i.subject, i.categories[0]) for i in qs),
+            {(i.subject, i.categories[0]) for i in qs},
             {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
         )
         self.assertEqual(
@@ -37,11 +37,11 @@ class ItemQuerySetTest(BaseItemTest):
             [('Item 2', test_cat)]
         )
         self.assertEqual(
-            set((i.subject, i.categories[0]) for i in qs.exclude(subject__startswith='Item 2')),
+            {(i.subject, i.categories[0]) for i in qs.exclude(subject__startswith='Item 2')},
             {('Item 0', test_cat), ('Item 1', test_cat), ('Item 3', test_cat)}
         )
         self.assertEqual(
-            set((i.subject, i.categories) for i in qs.only('subject')),
+            {(i.subject, i.categories) for i in qs.only('subject')},
             {('Item 0', None), ('Item 1', None), ('Item 2', None), ('Item 3', None)}
         )
         self.assertEqual(
@@ -63,7 +63,7 @@ class ItemQuerySetTest(BaseItemTest):
         with self.assertRaises(ValueError):
             list(qs.values([]))
         self.assertEqual(
-            [i for i in qs.order_by('subject').values('subject')],
+            list(qs.order_by('subject').values('subject')),
             [{'subject': 'Item 0'}, {'subject': 'Item 1'}, {'subject': 'Item 2'}, {'subject': 'Item 3'}]
         )
 
@@ -82,7 +82,7 @@ class ItemQuerySetTest(BaseItemTest):
         )
 
         self.assertEqual(
-            set(i for i in qs.values_list('subject')),
+            set(qs.values_list('subject')),
             {('Item 0',), ('Item 1',), ('Item 2',), ('Item 3',)}
         )
 
@@ -101,7 +101,7 @@ class ItemQuerySetTest(BaseItemTest):
         )
 
         self.assertEqual(
-            set(i.subject for i in qs.only('subject')),
+            {i.subject for i in qs.only('subject')},
             {'Item 0', 'Item 1', 'Item 2', 'Item 3'}
         )
 
@@ -132,7 +132,7 @@ class ItemQuerySetTest(BaseItemTest):
             [i.changekey for i in test_items]
         )
         self.assertEqual(
-            set(i for i in qs.values_list('subject', flat=True)),
+            set(qs.values_list('subject', flat=True)),
             {'Item 0', 'Item 1', 'Item 2', 'Item 3'}
         )
         self.assertEqual(
@@ -140,7 +140,7 @@ class ItemQuerySetTest(BaseItemTest):
             'Item 2'
         )
         self.assertEqual(
-            set((i.subject, i.categories[0]) for i in qs.exclude(subject__startswith='Item 2')),
+            {(i.subject, i.categories[0]) for i in qs.exclude(subject__startswith='Item 2')},
             {('Item 0', test_cat), ('Item 1', test_cat), ('Item 3', test_cat)}
         )
         # Test that we can sort on a field that we don't want
@@ -153,12 +153,12 @@ class ItemQuerySetTest(BaseItemTest):
             # iterator() is deprecated but we still want to test it. Silence the DeprecationWarning
             warnings.simplefilter("ignore")
             self.assertEqual(
-                set((i.subject, i.categories[0]) for i in qs.iterator()),
+                {(i.subject, i.categories[0]) for i in qs.iterator()},
                 {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
             )
             # Test that iterator() preserves the result format
             self.assertEqual(
-                set((i[0], i[1][0]) for i in qs.values_list('subject', 'categories').iterator()),
+                {(i[0], i[1][0]) for i in qs.values_list('subject', 'categories').iterator()},
                 {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
             )
         self.assertEqual(qs.get(subject='Item 3').subject, 'Item 3')

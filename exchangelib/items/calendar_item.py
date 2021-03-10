@@ -232,7 +232,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
             return meeting_tz_field
         if field_name == 'start':
             return start_tz_field
-        elif field_name == 'end':
+        if field_name == 'end':
             return end_tz_field
         raise ValueError('Unsupported field_name')
 
@@ -333,7 +333,7 @@ class MeetingMessage(BaseMeetingItem):
             break
     FIELDS = Item.FIELDS[:culture_idx + 1] + BaseMeetingItem.LOCAL_FIELDS + Item.FIELDS[culture_idx + 1:]
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class MeetingResponse(BaseMeetingItem):
@@ -363,7 +363,7 @@ class MeetingCancellation(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingcancellation"""
     ELEMENT_NAME = 'MeetingCancellation'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class BaseMeetingReplyItem(BaseItem, metaclass=abc.ABCMeta):
@@ -400,25 +400,25 @@ class AcceptItem(BaseMeetingReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptitem"""
     ELEMENT_NAME = 'AcceptItem'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class TentativelyAcceptItem(BaseMeetingReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/tentativelyacceptitem"""
     ELEMENT_NAME = 'TentativelyAcceptItem'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class DeclineItem(BaseMeetingReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/declineitem"""
     ELEMENT_NAME = 'DeclineItem'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class CancelCalendarItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/cancelcalendaritem"""
     ELEMENT_NAME = 'CancelCalendarItem'
     FIELDS = Fields(*(f for f in BaseReplyItem.FIELDS if f.name != 'author'))
-    __slots__ = tuple()
+    __slots__ = ()

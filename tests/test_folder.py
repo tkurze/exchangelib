@@ -464,32 +464,32 @@ class FolderTest(EWSTest):
         try:
             # Test all()
             self.assertSetEqual(
-                set(f.name for f in folder_qs.all()),
+                {f.name for f in folder_qs.all()},
                 {f.name for f in (f1, f2, f21, f22)}
             )
 
             # Test only()
             self.assertSetEqual(
-                set(f.name for f in folder_qs.only('name').all()),
+                {f.name for f in folder_qs.only('name').all()},
                 {f.name for f in (f1, f2, f21, f22)}
             )
             self.assertSetEqual(
-                set(f.child_folder_count for f in folder_qs.only('name').all()),
+                {f.child_folder_count for f in folder_qs.only('name').all()},
                 {None}
             )
             # Test depth()
             self.assertSetEqual(
-                set(f.name for f in folder_qs.depth(SHALLOW).all()),
+                {f.name for f in folder_qs.depth(SHALLOW).all()},
                 {f.name for f in (f1, f2)}
             )
 
             # Test filter()
             self.assertSetEqual(
-                set(f.name for f in folder_qs.filter(name=f1.name)),
+                {f.name for f in folder_qs.filter(name=f1.name)},
                 {f.name for f in (f1,)}
             )
             self.assertSetEqual(
-                set(f.name for f in folder_qs.filter(name__in=[f1.name, f2.name])),
+                {f.name for f in folder_qs.filter(name__in=[f1.name, f2.name])},
                 {f.name for f in (f1, f2)}
             )
 

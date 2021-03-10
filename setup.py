@@ -15,13 +15,12 @@ import os
 from setuptools import setup, find_packages
 
 
-__version__ = None
-with io.open(os.path.join(os.path.dirname(__file__), 'exchangelib/__init__.py'), encoding='utf-8') as f:
-    for l in f:
-        if not l.startswith('__version__'):
-            continue
-        __version__ = l.split('=')[1].strip(' "\'\n')
-        break
+def version():
+    with io.open(os.path.join(os.path.dirname(__file__), 'exchangelib/__init__.py'), encoding='utf-8') as f:
+        for line in f:
+            if not line.startswith('__version__'):
+                continue
+            return line.split('=')[1].strip(' "\'\n')
 
 
 def read(file_name):
@@ -31,7 +30,7 @@ def read(file_name):
 
 setup(
     name='exchangelib',
-    version=__version__,
+    version=version(),
     author='Erik Cederstrand',
     author_email='erik@cederstrand.dk',
     description='Client for Microsoft Exchange Web Services (EWS)',

@@ -569,7 +569,7 @@ class DateField(FieldURIField):
 
     def clean(self, value, version=None):
         # Allow plain datetime.date values as input
-        if type(value) == datetime.date:
+        if type(value) is datetime.date:
             value = self.value_cls.from_date(value)
         return super().clean(value=value, version=version)
 
@@ -631,7 +631,7 @@ class DateTimeField(FieldURIField):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
                 raise ValueError("Value '%s' on field '%s' must be timezone aware" % (value, self.name))
-            if type(value) == datetime.datetime:
+            if type(value) is datetime.datetime:
                 value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
 
@@ -1273,7 +1273,7 @@ class ExtendedPropertyField(Field):
             if self.is_required:
                 raise ValueError("'%s' is a required field" % self.name)
             return self.default
-        elif not isinstance(value, self.value_cls):
+        if not isinstance(value, self.value_cls):
             # Allow keeping ExtendedProperty field values as their simple Python type, but run clean() anyway
             tmp = self.value_cls(value)
             tmp.clean(version=version)
@@ -1425,7 +1425,12 @@ class TypeValueField(FieldURIField):
             # This is a single byte. Translate it to the 'Byte' type
             return 'Byte'
         if is_iterable(value):
-            value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+            # We don't allow generators as values, so keep the logic simple
+            try:
+                first = next(iter(value))
+            except StopIteration:
+                first = None
+            value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(first)]
             if value_type not in cls.TYPES_MAP:
                 raise ValueError('%r is not a supported type' % value)
             return value_type
@@ -1491,9 +1496,9 @@ class DictionaryField(FieldURIField):
         if isinstance(value, dict):
             cleaned = {}
             for k, v in value.items():
-                if type(k) == datetime.datetime:
+                if type(k) is datetime.datetime:
                     k = EWSDateTime.from_datetime(k)
-                if type(v) == datetime.datetime:
+                if type(v) is datetime.datetime:
                     v = EWSDateTime.from_datetime(v)
                 cleaned[k] = v
             value = cleaned

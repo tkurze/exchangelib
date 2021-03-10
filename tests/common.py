@@ -173,15 +173,13 @@ class EWSTest(TimedTestCase):
             # TODO: Mailbox has multiple optional args but vals must match server account, so we can't easily test
             if get_random_bool():
                 return [Mailbox(email_address=self.account.primary_smtp_address)]
-            else:
-                return [self.account.primary_smtp_address]
+            return [self.account.primary_smtp_address]
         if isinstance(field, MailboxField):
             # email_address must be a real account on the server(?)
             # TODO: Mailbox has multiple optional args but vals must match server account, so we can't easily test
             if get_random_bool():
                 return Mailbox(email_address=self.account.primary_smtp_address)
-            else:
-                return self.account.primary_smtp_address
+            return self.account.primary_smtp_address
         if isinstance(field, AttendeesField):
             # Attendee must refer to a real mailbox on the server(?). We're only sure to have one
             if get_random_bool():
@@ -197,8 +195,7 @@ class EWSTest(TimedTestCase):
             else:
                 if get_random_bool():
                     return [Attendee(mailbox=mbx, response_type='Accept')]
-                else:
-                    return [self.account.primary_smtp_address]
+                return [self.account.primary_smtp_address]
         if isinstance(field, EmailAddressesField):
             addrs = []
             for label in EmailAddress.get_field_by_fieldname('label').supported_choices(version=self.account.version):

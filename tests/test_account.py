@@ -55,18 +55,18 @@ class AccountTest(EWSTest):
         self.assertNotEqual(folder.id, None)
         self.assertEqual(folder.name.lower(), Calendar.localized_names(self.account.locale)[0])
 
-        class MockCalendar(Calendar):
+        class MockCalendar1(Calendar):
             @classmethod
             def get_distinguished(cls, root):
                 raise ErrorAccessDenied('foo')
 
         # Test an indirect folder lookup with FindItems
-        folder = self.account.root.get_default_folder(MockCalendar)
-        self.assertIsInstance(folder, MockCalendar)
+        folder = self.account.root.get_default_folder(MockCalendar1)
+        self.assertIsInstance(folder, MockCalendar1)
         self.assertEqual(folder.id, None)
-        self.assertEqual(folder.name, MockCalendar.DISTINGUISHED_FOLDER_ID)
+        self.assertEqual(folder.name, MockCalendar1.DISTINGUISHED_FOLDER_ID)
 
-        class MockCalendar(Calendar):
+        class MockCalendar2(Calendar):
             @classmethod
             def get_distinguished(cls, root):
                 raise ErrorFolderNotFound('foo')
@@ -74,15 +74,15 @@ class AccountTest(EWSTest):
         # Test using the one folder of this folder type
         with self.assertRaises(ErrorFolderNotFound):
             # This fails because there are no folders of type MockCalendar
-            self.account.root.get_default_folder(MockCalendar)
+            self.account.root.get_default_folder(MockCalendar2)
 
         _orig = Calendar.get_distinguished
         try:
-            Calendar.get_distinguished = MockCalendar.get_distinguished
+            Calendar.get_distinguished = MockCalendar2.get_distinguished
             folder = self.account.root.get_default_folder(Calendar)
             self.assertIsInstance(folder, Calendar)
             self.assertNotEqual(folder.id, None)
-            self.assertEqual(folder.name.lower(), MockCalendar.localized_names(self.account.locale)[0])
+            self.assertEqual(folder.name.lower(), MockCalendar2.localized_names(self.account.locale)[0])
         finally:
             Calendar.get_distinguished = _orig
 
@@ -161,7 +161,7 @@ class AccountTest(EWSTest):
         a = MockAccount(DELEGATE, 'foo@example.com', MockTZ('XXX'), protocol=p)
 
         ws = GetDelegate(account=a)
-        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        _, body = ws._get_soap_parts(response=MockResponse(xml))
         res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
         delegates = [DelegateUser.from_xml(elem=elem, account=a) for elem in res]
         self.assertListEqual(

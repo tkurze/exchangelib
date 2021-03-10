@@ -372,9 +372,8 @@ class Q:
             raise ValueError("'field_path' must be set")
         if self.op not in self.OP_TYPES:
             raise ValueError("'op' %s must be one of %s" % (self.op, self.OP_TYPES))
-        if self.op == self.EXISTS:
-            if self.value is not True:
-                raise ValueError("'value' must be True when operator is EXISTS")
+        if self.op == self.EXISTS and self.value is not True:
+            raise ValueError("'value' must be True when operator is EXISTS")
         if self.value is None:
             raise ValueError('Value for filter on field path "%s" cannot be None' % self.field_path)
         if is_iterable(self.value, generators_allowed=True):

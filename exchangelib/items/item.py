@@ -154,10 +154,11 @@ class Item(BaseItem):
             if f.is_read_only:
                 # These cannot be changed
                 continue
-            if f.is_required or f.is_required_after_save:
-                if getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name)):
-                    # These are required and cannot be deleted
-                    continue
+            if (f.is_required or f.is_required_after_save) and (
+                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+            ):
+                # These are required and cannot be deleted
+                continue
             if not self.is_draft and f.is_read_only_after_send:
                 # These cannot be changed when the item is no longer a draft
                 continue
@@ -204,7 +205,6 @@ class Item(BaseItem):
         # 'parent_item' should point to 'self', not 'fresh_item'. That way, 'fresh_item' can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
-        del res
 
     @require_id
     def copy(self, to_folder):

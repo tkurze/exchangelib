@@ -216,7 +216,8 @@ class BaseProtocol:
         except Full:
             log.debug('Server %s: Session pool was already full %s', self.server, session.session_id)
 
-    def close_session(self, session):
+    @staticmethod
+    def close_session(session):
         session.close()
         del session
 

@@ -127,8 +127,8 @@ class FolderQuerySet:
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
             complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=True)
         else:
-            non_complex_fields = set(f for f in self.only_fields if not f.field.is_complex)
-            complex_fields = set(f for f in self.only_fields if f.field.is_complex)
+            non_complex_fields = {f for f in self.only_fields if not f.field.is_complex}
+            complex_fields = {f for f in self.only_fields if f.field.is_complex}
 
         # First, fetch all non-complex fields using FindFolder. We do this because some folders do not support
         # GetFolder but we still want to get as much information as possible.

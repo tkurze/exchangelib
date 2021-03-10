@@ -28,12 +28,10 @@ class ResolveNames(EWSService):
                 'Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup',
                 self.chunk_size, self.SERVICE_NAME
             )
-        if search_scope:
-            if search_scope not in SEARCH_SCOPE_CHOICES:
-                raise ValueError("'search_scope' %s must be one if %s" % (search_scope, SEARCH_SCOPE_CHOICES))
-        if contact_data_shape:
-            if contact_data_shape not in SHAPE_CHOICES:
-                raise ValueError("'shape' %s must be one if %s" % (contact_data_shape, SHAPE_CHOICES))
+        if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
+            raise ValueError("'search_scope' %s must be one if %s" % (search_scope, SEARCH_SCOPE_CHOICES))
+        if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
+            raise ValueError("'shape' %s must be one if %s" % (contact_data_shape, SHAPE_CHOICES))
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,

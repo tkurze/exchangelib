@@ -188,87 +188,87 @@ class ExtendedPropertyTest(BaseItemTest):
             )
         """
         # Must not have property_set_id or property_tag
-        class TestProp(ExtendedProperty):
+        class TestProp1(ExtendedProperty):
             distinguished_property_set_id = 'XXX'
             property_set_id = 'YYY'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp1.validate_cls()
 
         # Must have property_id or property_name
-        class TestProp(ExtendedProperty):
+        class TestProp2(ExtendedProperty):
             distinguished_property_set_id = 'XXX'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp2.validate_cls()
 
         # distinguished_property_set_id must have a valid value
-        class TestProp(ExtendedProperty):
+        class TestProp3(ExtendedProperty):
             distinguished_property_set_id = 'XXX'
             property_id = 'YYY'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp3.validate_cls()
 
         # Must not have distinguished_property_set_id or property_tag
-        class TestProp(ExtendedProperty):
+        class TestProp4(ExtendedProperty):
             property_set_id = 'XXX'
             property_tag = 'YYY'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp4.validate_cls()
 
         # Must have property_id or property_name
-        class TestProp(ExtendedProperty):
+        class TestProp5(ExtendedProperty):
             property_set_id = 'XXX'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp5.validate_cls()
 
         # property_tag is only compatible with property_type
-        class TestProp(ExtendedProperty):
+        class TestProp6(ExtendedProperty):
             property_tag = 'XXX'
             property_set_id = 'YYY'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp6.validate_cls()
 
         # property_tag must be an integer or string that can be converted to int
-        class TestProp(ExtendedProperty):
+        class TestProp7(ExtendedProperty):
             property_tag = 'XXX'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp7.validate_cls()
 
         # property_tag must not be in the reserved range
-        class TestProp(ExtendedProperty):
+        class TestProp8(ExtendedProperty):
             property_tag = 0x8001
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp8.validate_cls()
 
         # Must not have property_id or property_tag
-        class TestProp(ExtendedProperty):
+        class TestProp9(ExtendedProperty):
             property_name = 'XXX'
             property_id = 'YYY'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp9.validate_cls()
 
         # Must have distinguished_property_set_id or property_set_id
-        class TestProp(ExtendedProperty):
+        class TestProp10(ExtendedProperty):
             property_name = 'XXX'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp10.validate_cls()
 
         # Must not have property_name or property_tag
-        class TestProp(ExtendedProperty):
+        class TestProp11(ExtendedProperty):
             property_id = 'XXX'
             property_name = 'YYY'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()  # This actually hits the check on property_name values
+            TestProp11.validate_cls()  # This actually hits the check on property_name values
 
         # Must have distinguished_property_set_id or property_set_id
-        class TestProp(ExtendedProperty):
+        class TestProp12(ExtendedProperty):
             property_id = 'XXX'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp12.validate_cls()
 
         # property_type must be a valid value
-        class TestProp(ExtendedProperty):
+        class TestProp13(ExtendedProperty):
             property_id = 'XXX'
             property_set_id = 'YYY'
             property_type = 'ZZZ'
         with self.assertRaises(ValueError):
-            TestProp.validate_cls()
+            TestProp13.validate_cls()

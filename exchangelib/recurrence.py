@@ -22,12 +22,12 @@ def _week_number_to_str(week_number):
 
 class Pattern(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring pattern elements"""
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class Regeneration(Pattern, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring regeneration elements"""
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class AbsoluteYearlyPattern(Pattern):
@@ -226,7 +226,7 @@ class DailyRegeneration(Regeneration):
 
 class Boundary(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring boundary elements"""
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class NoEndPattern(Boundary):
@@ -304,13 +304,13 @@ class Occurrence(IdChangeKeyMixIn):
 class FirstOccurrence(Occurrence):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/firstoccurrence"""
     ELEMENT_NAME = 'FirstOccurrence'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class LastOccurrence(Occurrence):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/lastoccurrence"""
     ELEMENT_NAME = 'LastOccurrence'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class DeletedOccurrence(EWSElement):
@@ -391,4 +391,4 @@ class TaskRecurrence(Recurrence):
     """
     PATTERN_CLASSES = PATTERN_CLASSES + REGENERATION_CLASSES
 
-    __slots__ = tuple()
+    __slots__ = ()

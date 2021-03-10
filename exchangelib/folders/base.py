@@ -43,7 +43,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     get_folder_allowed = True
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = DEEP_FOLDERS
     DEFAULT_ITEM_TRAVERSAL_DEPTH = SHALLOW_ITEMS
-    LOCALIZED_NAMES = dict()  # A map of (str)locale: (tuple)localized_folder_names
+    LOCALIZED_NAMES = {}  # A map of (str)locale: (tuple)localized_folder_names
     ITEM_MODEL_MAP = {cls.response_tag(): cls for cls in ITEM_CLASSES}
     ID_ELEMENT_CLS = FolderId
     FIELDS = Fields(
@@ -334,10 +334,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
                 if f.is_read_only:
                     # These cannot be changed
                     continue
-                if f.is_required or f.is_required_after_save:
-                    if getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name)):
-                        # These are required and cannot be deleted
-                        continue
+                if (f.is_required or f.is_required_after_save) and (
+                        getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+                ):
+                    # These are required and cannot be deleted
+                    continue
                 update_fields.append(f.name)
         res = UpdateFolder(account=self.account).get(folders=[(self, update_fields)])
         folder_id, changekey = res.id, res.changekey
@@ -389,7 +390,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             except (ErrorAccessDenied, ErrorCannotEmptyFolder):
                 log.warning('Not allowed to empty %s. Trying to delete items instead', self)
                 try:
-                    self.all().delete(**dict(page_size=page_size) if page_size else dict())
+                    self.all().delete(**dict(page_size=page_size) if page_size else {})
                 except (ErrorAccessDenied, ErrorCannotDeleteObject):
                     log.warning('Not allowed to delete items in %s', self)
         _level += 1
@@ -723,9 +724,8 @@ class Folder(BaseFolder):
                     raise ValueError("'parent.root' must match 'root'")
             else:
                 self.root = parent.root
-            if 'parent_folder_id' in kwargs:
-                if parent.id != kwargs['parent_folder_id']:
-                    raise ValueError("'parent_folder_id' must match 'parent' ID")
+            if 'parent_folder_id' in kwargs and parent.id != kwargs['parent_folder_id']:
+                raise ValueError("'parent_folder_id' must match 'parent' ID")
             kwargs['parent_folder_id'] = ParentFolderId(id=parent.id, changekey=parent.changekey)
         super().__init__(**kwargs)
 

@@ -48,7 +48,7 @@ class ServicesTest(EWSTest):
     </s:Fault>
   </s:Body>
 </s:Envelope>'''
-        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        _, body = ws._get_soap_parts(response=MockResponse(xml))
         with self.assertRaises(ErrorServerBusy) as e:
             ws._get_soap_messages(body=body)
         self.assertEqual(e.exception.back_off, 297.749)  # Test that we correctly parse the BackOffMilliseconds value
@@ -76,7 +76,7 @@ class ServicesTest(EWSTest):
         </m:FindFolderResponse>
     </s:Body>
 </s:Envelope>'''
-        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        _, body = ws._get_soap_parts(response=MockResponse(xml))
         # Just test that we can parse the error
         with self.assertRaises(ErrorTooManyObjectsOpened):
             list(ws._get_elements_in_response(response=ws._get_soap_messages(body=body)))
@@ -113,7 +113,7 @@ class ServicesTest(EWSTest):
         version = mock_version(build=EXCHANGE_2010)
         protocol = mock_protocol(version=version, service_endpoint='example.com')
         ws = GetRoomLists(protocol=protocol)
-        header, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
+        _, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='YYY', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')))
         with self.assertRaises(SOAPError) as e:
@@ -121,13 +121,13 @@ class ServicesTest(EWSTest):
         self.assertIn('AAA', e.exception.args[0])
         self.assertIn('YYY', e.exception.args[0])
         self.assertIn('ZZZ', e.exception.args[0])
-        header, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
+        _, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='ErrorNonExistentMailbox', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')))
         with self.assertRaises(ErrorNonExistentMailbox) as e:
             ws._get_soap_messages(body=body)
         self.assertIn('AAA', e.exception.args[0])
-        header, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
+        _, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
                 faultcode='XXX', faultstring='AAA', responsecode='ErrorNonExistentMailbox', message='YYY'
             ).encode('utf-8')))
         with self.assertRaises(ErrorNonExistentMailbox) as e:
@@ -160,7 +160,7 @@ class ServicesTest(EWSTest):
     </s:Fault>
   </s:Body>
 </s:Envelope>"""
-        header, body = ws._get_soap_parts(response=MockResponse(soap_xml))
+        _, body = ws._get_soap_parts(response=MockResponse(soap_xml))
         with self.assertRaises(TransportError):
             ws._get_soap_messages(body=body)
 

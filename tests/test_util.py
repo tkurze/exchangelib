@@ -43,7 +43,7 @@ class UtilTest(EWSTest):
         # Test peeking into various sequence types
 
         # tuple
-        is_empty, seq = peek(tuple())
+        is_empty, seq = peek(())
         self.assertEqual((is_empty, list(seq)), (True, []))
         is_empty, seq = peek((1, 2, 3))
         self.assertEqual((is_empty, list(seq)), (False, [1, 2, 3]))

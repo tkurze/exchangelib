@@ -172,7 +172,7 @@ class ContactsTest(CommonItemTest):
       </m:GetPersonaResponseMessage>
    </s:Body>
 </s:Envelope>'''
-        header, body = ws._get_soap_parts(response=MockResponse(xml))
+        _, body = ws._get_soap_parts(response=MockResponse(xml))
         res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
         personas = [Persona.from_xml(elem=elem, account=self.account) for elem in res]
         self.assertEqual(len(personas), 1)

@@ -291,7 +291,7 @@ class ExternId(ExtendedProperty):
     property_name = 'External ID'
     property_type = 'String'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class Flag(ExtendedProperty):
@@ -303,4 +303,4 @@ class Flag(ExtendedProperty):
     property_tag = 0x1090
     property_type = 'Integer'
 
-    __slots__ = tuple()
+    __slots__ = ()

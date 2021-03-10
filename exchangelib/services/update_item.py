@@ -103,7 +103,7 @@ class UpdateItem(EWSAccountService):
         if item.__class__ == CalendarItem:
             # For CalendarItem items where we update 'start' or 'end', we want to send values in the local timezone
             if field.name in ('start', 'end'):
-                if type(value) == EWSDate:
+                if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return item.date_to_datetime(field_name=field.name)
                 tz_field_name = item.tz_field_for_field_name(field.name).name

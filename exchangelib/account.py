@@ -124,7 +124,6 @@ class Account:
         else:
             if not config:
                 raise AttributeError('non-autodiscover requires a config')
-            primary_smtp_address = primary_smtp_address
             self.ad_response = None
             self.protocol = Protocol(config=config)
 
@@ -357,7 +356,7 @@ class Account:
 
         """
         return list(
-            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs={})
         )
 
     def upload(self, data, chunk_size=None):
@@ -379,7 +378,7 @@ class Account:
 
         """
         return list(
-            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs={})
         )
 
     def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,

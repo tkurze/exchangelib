@@ -34,13 +34,13 @@ class IntExtUrlBase(AutodiscoverBase):
 class AddressBook(IntExtUrlBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/addressbook-pox"""
     ELEMENT_NAME = 'AddressBook'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class MailStore(IntExtUrlBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailstore-pox"""
     ELEMENT_NAME = 'MailStore'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class NetworkRequirements(AutodiscoverBase):
@@ -88,13 +88,13 @@ class IntExtBase(AutodiscoverBase):
 class Internal(IntExtBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/internal-pox"""
     ELEMENT_NAME = 'Internal'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class External(IntExtBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/external-pox"""
     ELEMENT_NAME = 'External'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class Protocol(SimpleProtocol):

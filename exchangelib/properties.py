@@ -143,7 +143,7 @@ class EWSElement(metaclass=abc.ABCMeta):
 
     _fields_lock = Lock()
 
-    __slots__ = tuple()
+    __slots__ = ()
 
     def __init__(self, **kwargs):
         for f in self.FIELDS:
@@ -403,7 +403,7 @@ class ParentItemId(ItemId):
     ELEMENT_NAME = 'ParentItemId'
     NAMESPACE = MNS
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class RootItemId(ItemId):
@@ -418,7 +418,7 @@ class RootItemId(ItemId):
         IdField('changekey', field_uri=CHANGEKEY_ATTR, is_required=True),
     )
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class AssociatedCalendarItemId(ItemId):
@@ -426,7 +426,7 @@ class AssociatedCalendarItemId(ItemId):
     """
     ELEMENT_NAME = 'AssociatedCalendarItemId'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class ConversationId(ItemId):
@@ -434,21 +434,21 @@ class ConversationId(ItemId):
     ELEMENT_NAME = 'ConversationId'
 
     # ChangeKey attribute is sometimes required, see MSDN link
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class ParentFolderId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/parentfolderid"""
     ELEMENT_NAME = 'ParentFolderId'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class ReferenceItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/referenceitemid"""
     ELEMENT_NAME = 'ReferenceItemId'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class PersonaId(ItemId):
@@ -456,7 +456,7 @@ class PersonaId(ItemId):
     ELEMENT_NAME = 'PersonaId'
     NAMESPACE = MNS
 
-    __slots__ = tuple()
+    __slots__ = ()
 
     @classmethod
     def response_tag(cls):
@@ -468,14 +468,14 @@ class SourceId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sourceid"""
     ELEMENT_NAME = 'SourceId'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class FolderId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folderid"""
     ELEMENT_NAME = 'FolderId'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class RecurringMasterItemId(ItemId):
@@ -489,7 +489,7 @@ class RecurringMasterItemId(ItemId):
         IdField('changekey', field_uri=CHANGEKEY_ATTR, is_required=False),
     )
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class OccurrenceItemId(ItemId):
@@ -504,7 +504,7 @@ class OccurrenceItemId(ItemId):
         IntegerField('instance_index', field_uri='InstanceIndex', is_attribute=True, is_required=True, min=1),
     )
 
-    __slots__ = tuple() + ('instance_index',)
+    __slots__ = ('instance_index',)
 
 
 class MovedItemId(ItemId):
@@ -512,7 +512,7 @@ class MovedItemId(ItemId):
     ELEMENT_NAME = 'MovedItemId'
     NAMESPACE = MNS
 
-    __slots__ = tuple()
+    __slots__ = ()
 
     @classmethod
     def id_from_xml(cls, elem):
@@ -563,7 +563,7 @@ class Mailbox(EWSElement):
 class DLMailbox(Mailbox):
     """Like Mailbox, but creates elements in the 'messages' namespace when sending requests"""
     NAMESPACE = MNS
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class SendingAs(Mailbox):
@@ -573,7 +573,7 @@ class SendingAs(Mailbox):
     """
     ELEMENT_NAME = 'SendingAs'
     NAMESPACE = MNS
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class RecipientAddress(Mailbox):
@@ -583,7 +583,7 @@ class RecipientAddress(Mailbox):
     """
     ELEMENT_NAME = 'RecipientAddress'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class EmailAddress(Mailbox):
@@ -593,7 +593,7 @@ class EmailAddress(Mailbox):
     """
     ELEMENT_NAME = 'EmailAddress'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class Address(Mailbox):
@@ -603,7 +603,7 @@ class Address(Mailbox):
     """
     ELEMENT_NAME = 'Address'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class AvailabilityMailbox(EWSElement):
@@ -642,7 +642,7 @@ class Email(AvailabilityMailbox):
     """
     ELEMENT_NAME = 'Email'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class MailboxData(EWSElement):
@@ -758,13 +758,13 @@ class TimeZoneTransition(EWSElement, metaclass=abc.ABCMeta):
 class StandardTime(TimeZoneTransition):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/standardtime"""
     ELEMENT_NAME = 'StandardTime'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class DaylightTime(TimeZoneTransition):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/daylighttime"""
     ELEMENT_NAME = 'DaylightTime'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class TimeZone(EWSElement):
@@ -1007,7 +1007,7 @@ class RoomList(Mailbox):
     ELEMENT_NAME = 'RoomList'
     NAMESPACE = MNS
 
-    __slots__ = tuple()
+    __slots__ = ()
 
     @classmethod
     def response_tag(cls):
@@ -1020,7 +1020,7 @@ class Room(Mailbox):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/room"""
     ELEMENT_NAME = 'Room'
 
-    __slots__ = tuple()
+    __slots__ = ()
 
     @classmethod
     def from_xml(cls, elem, account):
@@ -1508,7 +1508,7 @@ class IdChangeKeyMixIn(EWSElement, metaclass=abc.ABCMeta):
     """
     ID_ELEMENT_CLS = None
 
-    __slots__ = tuple()
+    __slots__ = ()
 
     def __init__(self, **kwargs):
         _id = self.ID_ELEMENT_CLS(kwargs.pop('id', None), kwargs.pop('changekey', None))
@@ -1615,7 +1615,7 @@ class UserConfigurationNameMNS(UserConfigurationName):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfigurationname
     """
     NAMESPACE = MNS
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class UserConfiguration(IdChangeKeyMixIn):
@@ -1825,19 +1825,19 @@ class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
 class CopiedEvent(OldTimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copiedevent"""
     ELEMENT_NAME = 'CopiedEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class CreatedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createdevent"""
     ELEMENT_NAME = 'CreatedEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class DeletedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletedevent"""
     ELEMENT_NAME = 'DeletedEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class ModifiedEvent(TimestampEvent):
@@ -1853,25 +1853,25 @@ class ModifiedEvent(TimestampEvent):
 class MovedEvent(OldTimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/movedevent"""
     ELEMENT_NAME = 'MovedEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class NewMailEvent(Event):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/newmailevent"""
     ELEMENT_NAME = 'NewMailEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class StatusEvent(Event):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/statusevent"""
     ELEMENT_NAME = 'StatusEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class FreeBusyChangedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/freebusychangedevent"""
     ELEMENT_NAME = 'FreeBusyChangedEvent'
-    __slots__ = tuple()
+    __slots__ = ()
 
 
 class Notification(EWSElement):
