@@ -10,8 +10,7 @@ from ..fields import BooleanField, IntegerField, TextField, ChoiceField, URIFiel
     MessageHeaderField, AttachmentField, RecurrenceField, MailboxField, AttendeesField, Choice, OccurrenceField, \
     OccurrenceListField, TimeZoneField, CharField, EnumAsIntField, FreeBusyStatusField, ReferenceItemIdField, \
     AssociatedCalendarItemIdField, DateOrDateTimeField, EWSElementListField, AppointmentStateField
-from ..properties import Attendee, ReferenceItemId, AssociatedCalendarItemId, OccurrenceItemId, RecurringMasterItemId, \
-    Fields
+from ..properties import Attendee, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId, Fields
 from ..recurrence import FirstOccurrence, LastOccurrence, Occurrence, DeletedOccurrence
 from ..services import CreateItem
 from ..util import set_xml_value, require_account
@@ -283,8 +282,7 @@ class BaseMeetingItem(Item):
 
     """
     LOCAL_FIELDS = Message.LOCAL_FIELDS[:14] + Fields(
-        AssociatedCalendarItemIdField('associated_calendar_item_id', field_uri='meeting:AssociatedCalendarItemId',
-                                      value_cls=AssociatedCalendarItemId),
+        AssociatedCalendarItemIdField('associated_calendar_item_id', field_uri='meeting:AssociatedCalendarItemId'),
         BooleanField('is_delegated', field_uri='meeting:IsDelegated', is_read_only=True, default=False),
         BooleanField('is_out_of_date', field_uri='meeting:IsOutOfDate', is_read_only=True, default=False),
         BooleanField('has_been_processed', field_uri='meeting:HasBeenProcessed', is_read_only=True, default=False),
