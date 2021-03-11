@@ -173,8 +173,7 @@ class Q:
         self._promote()
 
     def _reduce_children(self):
-        """Looks at the children of this object and removes unnecessary items
-        """
+        """Looks at the children of this object and removes unnecessary items"""
         children = self.children
         if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
             # We have at least one 'never' arg

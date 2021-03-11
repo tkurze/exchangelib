@@ -27,7 +27,6 @@ class FindFolder(EWSAccountService):
 
         Returns:
           XML elements for the matching folders
-
         """
         from ..folders import Folder
         roots = {f.root for f in folders}

@@ -591,7 +591,6 @@ class PrettyXmlHandler(logging.StreamHandler):
 
         Args:
           record:
-
         """
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
             for key, value in record.args.items():

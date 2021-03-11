@@ -271,8 +271,6 @@ class EWSElement(metaclass=abc.ABCMeta):
 
         Args:
           version:
-
-
         """
         return tuple(f for f in cls.FIELDS if not f.is_attribute and f.supports_version(version))
 
@@ -291,7 +289,6 @@ class EWSElement(metaclass=abc.ABCMeta):
         Args:
           field:
           version:
-
         """
         if not isinstance(version, Version):
             raise ValueError("'version' %r must be a Version instance" % version)
@@ -316,7 +313,6 @@ class EWSElement(metaclass=abc.ABCMeta):
         Args:
           field:
           insert_after:
-
         """
         with cls._fields_lock:
             idx = cls.FIELDS.index_by_name(insert_after) + 1
@@ -331,7 +327,6 @@ class EWSElement(metaclass=abc.ABCMeta):
 
         Args:
           field:
-
         """
         with cls._fields_lock:
             # This class may not have its own FIELDS attribute. Make sure not to edit an attribute belonging to a parent
@@ -817,7 +812,6 @@ class TimeZone(EWSElement):
 
         Returns:
           A Microsoft timezone ID, as a string
-
         """
         candidates = set()
         for tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups in timezones:

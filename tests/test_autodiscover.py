@@ -418,9 +418,11 @@ class AutodiscoverTest(EWSTest):
         _orig = dns.resolver.Resolver
 
         class _Mock1:
-            def resolve(self, hostname, cat):
+            @staticmethod
+            def resolve(hostname, cat):
                 class A:
-                    def to_text(self):
+                    @staticmethod
+                    def to_text():
                         # Return a valid record
                         return '1 2 3 example.com.'
                 return [A()]
@@ -434,9 +436,11 @@ class AutodiscoverTest(EWSTest):
         )
 
         class _Mock2:
-            def resolve(self, hostname, cat):
+            @staticmethod
+            def resolve(hostname, cat):
                 class A:
-                    def to_text(self):
+                    @staticmethod
+                    def to_text():
                         # Return malformed data
                         return 'XXXXXXX'
                 return [A()]

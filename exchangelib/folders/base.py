@@ -165,7 +165,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             ├── Last Job
             ├── exchangelib issues
             └── Mom
-
         """
         tree = '%s\n' % self.name
         children = list(self.children)
@@ -211,7 +210,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
         Args:
           container_class:
-
         """
         from .known_folders import Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, \
             RecipientCache, RSSFeeds
@@ -408,7 +406,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     def test_access(self):
         """Does a simple FindItem to test (read) access to the folder. Maybe the account doesn't exist, maybe the
         service user doesn't have access to the calendar. This will throw the most common errors.
-
         """
         self.all().exists()
         return True
@@ -669,7 +666,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
         Args:
           other:
-
         """
         if other == '..':
             raise ValueError('Cannot get parent without a folder cache')
@@ -763,7 +759,6 @@ class Folder(BaseFolder):
 
         Args:
           root:
-
         """
         try:
             return cls.resolve(

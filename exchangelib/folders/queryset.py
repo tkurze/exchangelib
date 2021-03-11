@@ -43,7 +43,6 @@ class FolderQuerySet:
 
         Args:
           *args:
-
         """
         from .base import Folder
         # Subfolders will always be of class Folder
@@ -76,8 +75,6 @@ class FolderQuerySet:
         Args:
           *args:
           **kwargs:
-
-
         """
         from .collections import FolderCollection
         if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
@@ -108,7 +105,6 @@ class FolderQuerySet:
         Args:
           *args:
           **kwargs:
-
         """
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)

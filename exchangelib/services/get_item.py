@@ -18,7 +18,6 @@ class GetItem(EWSAccountService):
 
         Returns:
           XML elements for the items, in stable order
-
         """
         from ..folders.base import BaseFolder
         for elem in self._chunked_get_elements(

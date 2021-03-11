@@ -78,7 +78,6 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
         Args:
           attr_name:
           attr_cls:
-
         """
         if not cls.INSERT_AFTER_FIELD:
             raise ValueError('Class %s is missing INSERT_AFTER_FIELD value' % cls)
@@ -105,7 +104,6 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
 
         Args:
           attr_name:
-
         """
         try:
             field = cls.get_field_by_fieldname(attr_name)

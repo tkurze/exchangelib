@@ -23,7 +23,6 @@ class GetFolder(EWSAccountService):
 
         Returns:
           XML elements for the folders, in stable order
-
         """
         # We can't easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.

@@ -30,7 +30,6 @@ class FindItem(EWSAccountService):
 
         Returns:
           XML elements for the matching items
-
         """
         from ..folders.base import BaseFolder
         from ..items import Item, ID_ONLY

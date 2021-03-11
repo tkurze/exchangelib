@@ -38,7 +38,6 @@ class Identity:
           smtp_address: The (non-)primary email address associated with the account (Default value = None)
           upn:  (Default value = None)
           sid:  (Default value = None)
-
         """
         self.primary_smtp_address = primary_smtp_address
         self.smtp_address = smtp_address
@@ -78,7 +77,6 @@ class Account:
           locale: The locale of the user, e.g. 'en_US'. Defaults to the locale of the host, if available.
           default_timezone: EWS may return some datetime values without timezone information. In this case, we will
             assume values to be in the provided timezone. Defaults to the timezone of the host.
-
         """
         if '@' not in primary_smtp_address:
             raise ValueError("primary_smtp_address %r is not an email address" % primary_smtp_address)
@@ -353,7 +351,6 @@ class Account:
 
         Returns:
           A list of strings, the exported representation of the object
-
         """
         return list(
             self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs={})
@@ -375,7 +372,6 @@ class Account:
           (account.inbox, "XXYYZZ..."),
           (account.calendar, "ABCXYZ...")])
           -> [("idA", "changekey"), ("idB", "changekey"), ("idC", "changekey")]
-
         """
         return list(
             self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs={})
@@ -398,7 +394,6 @@ class Account:
           a list of either BulkCreateResult or exception instances in the same order as the input. The returned
           BulkCreateResult objects are normal Item objects except they only contain the 'id' and 'changekey'
           of the created item, and the 'id' of any attachments that were also created.
-
         """
         if isinstance(items, QuerySet):
             # bulk_create() on a queryset does not make sense because it returns items that have already been created
@@ -435,7 +430,6 @@ class Account:
 
         Returns:
           a list of either (id, changekey) tuples or exception instances, in the same order as the input
-
         """
         # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
         # fact, it could be dangerous if the queryset contains an '.only()'. This would wipe out certain fields
@@ -473,7 +467,6 @@ class Account:
 
         Returns:
           a list of either True or exception instances, in the same order as the input
-
         """
         log.debug(
             'Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)',
@@ -502,7 +495,6 @@ class Account:
 
         Returns:
           Status for each send operation, in the same order as the input
-
         """
         if copy_to_folder and not save_copy:
             raise AttributeError("'save_copy' must be True when 'copy_to_folder' is set")
@@ -524,7 +516,6 @@ class Account:
 
         Returns:
           Status for each send operation, in the same order as the input
-
         """
         return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
@@ -541,7 +532,6 @@ class Account:
         Returns:
           The new IDs of the moved items, in the same order as the input. If 'to_folder' is a public folder or a
           folder in a different mailbox, an empty list is returned.
-
         """
         return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
@@ -558,7 +548,6 @@ class Account:
 
         Returns:
           A list containing True or an exception instance in stable order of the requested items
-
         """
         return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
@@ -577,7 +566,6 @@ class Account:
         Returns:
           A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
           stable order of the requested items.
-
         """
         return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
             is_junk=is_junk,
@@ -595,7 +583,6 @@ class Account:
 
         Returns:
           A generator of Item objects, in the same order as the input
-
         """
         validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
         # 'ids' could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In

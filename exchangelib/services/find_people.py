@@ -32,7 +32,6 @@ class FindPeople(EWSAccountService):
 
         Returns:
           XML elements for the matching items
-
         """
         from ..items import Persona, ID_ONLY
         for elem in self._paged_call(
@@ -94,8 +93,7 @@ class FindPeople(EWSAccountService):
 
     @staticmethod
     def _get_paging_values(elem):
-        """The paging container element from FindPeople is slightly different than other paging containers.
-        """
+        """The paging container element from FindPeople is slightly different than other paging containers."""
         item_count = int(elem.find('{%s}TotalNumberOfPeopleInView' % MNS).text)
         first_matching = int(elem.find('{%s}FirstMatchingRowIndex' % MNS).text)
         first_loaded = int(elem.find('{%s}FirstLoadedRowIndex' % MNS).text)

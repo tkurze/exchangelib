@@ -147,8 +147,7 @@ class BaseProtocol:
         return self._session_pool_size
 
     def increase_poolsize(self):
-        """Increases the session pool size. We increase by one session per call.
-        """
+        """Increases the session pool size. We increase by one session per call."""
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
         if self._session_pool_size == self._session_pool_maxsize:
@@ -165,7 +164,6 @@ class BaseProtocol:
     def decrease_poolsize(self):
         """Decreases the session pool size in response to error messages from the server requesting to rate-limit
         requests. We decrease by one session per call.
-
         """
         # Take a single session from the pool and discard it. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must keep at least one session in the pool.
@@ -455,7 +453,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         Returns:
           A list of (tz_id, name, periods, transitions) tuples
-
         """
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -533,7 +530,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         Returns:
           A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
-
         """
         return list(ResolveNames(protocol=self).call(
             unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
@@ -548,7 +544,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         Returns:
           List of Mailbox items that are members of the distribution list
-
         """
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type='PublicDL')
@@ -564,7 +559,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         Returns:
           a list of SearchableMailbox, FailedMailbox or Exception instances
-
         """
         return list(GetSearchableMailboxes(protocol=self).call(
             search_filter=search_filter,
@@ -580,7 +574,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         Returns:
           a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-
         """
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 

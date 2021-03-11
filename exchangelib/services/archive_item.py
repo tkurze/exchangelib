@@ -19,7 +19,6 @@ class ArchiveItem(EWSAccountService):
 
         Returns:
           None
-
         """
         from ..items import Item
         for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):

@@ -106,7 +106,6 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
 
         Args:
           account:
-
         """
         if not cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError('Class %s must have a DISTINGUISHED_FOLDER_ID value' % cls)
@@ -203,7 +202,6 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
         Args:
           folder_name:
           locale:
-
         """
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):

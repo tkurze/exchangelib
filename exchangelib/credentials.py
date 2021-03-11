@@ -39,9 +39,7 @@ class BaseCredentials(metaclass=abc.ABCMeta):
 
         Args:
           session: requests session asking for refreshed credentials
-
         """
-        pass
 
     def _get_hash_values(self):
         return (getattr(self, k) for k in self.__dict__ if k != '_lock')
@@ -147,7 +145,6 @@ class OAuth2Credentials(BaseCredentials):
 
         Args:
           access_token: New token obtained by refreshing
-
         """
         # Ensure we don't update the object in the middle of a new session
         # being created, which could cause a race

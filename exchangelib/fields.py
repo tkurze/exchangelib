@@ -987,6 +987,7 @@ class EWSElementField(FieldURIField):
 
 class EWSElementListField(EWSElementField):
     """Like EWSElementField, but for lists of EWSElement objects"""
+
     is_list = True
     is_complex = True
 
@@ -1434,8 +1435,8 @@ class IdElementField(EWSElementField):
 
 
 class TypeValueField(FieldURIField):
-    """This field type has no value_cls because values may have many different types.
-    """
+    """This field type has no value_cls because values may have many different types."""
+
     TYPES_MAP = {
         'Boolean': bool,
         'Integer32': int,
@@ -1597,8 +1598,8 @@ class PostalAddressAttributedValueField(EWSElementListField):
 
 
 class GenericEventListField(EWSElementField):
-    """A list field that can contain all subclasses of Event
-    """
+    """A list field that can contain all subclasses of Event"""
+
     is_list = True
 
     @property

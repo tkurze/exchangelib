@@ -331,7 +331,6 @@ class Autodiscover(EWSElement):
 
         Args:
           bytes_content:
-
         """
         if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b'<Autodiscover '):
             raise ValueError('Response is not XML: %s' % bytes_content)

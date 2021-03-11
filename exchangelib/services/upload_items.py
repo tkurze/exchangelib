@@ -28,7 +28,6 @@ class UploadItems(EWSAccountService):
 
         Args:
           items:
-
         """
         uploaditems = create_element('m:%s' % self.SERVICE_NAME)
         itemselement = create_element('m:Items')

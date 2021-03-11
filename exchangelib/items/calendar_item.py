@@ -129,8 +129,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         Returns:
           is 1-based. No other field values are fetched from the server.
 
-          Only call this method on a recurring master.
-
+        Only call this method on a recurring master.
         """
         return self.__class__(
             account=self.account,
@@ -144,8 +143,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         Returns:
           other field values are fetched from the server.
 
-          Only call this method on an occurrence of a recurring master.
-
+        Only call this method on an occurrence of a recurring master.
         """
         return self.__class__(
             account=self.account,

@@ -423,8 +423,6 @@ class QuerySet(SearchableMixIn):
         Args:
           *args:
           **kwargs:
-
-
         """
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
@@ -437,8 +435,6 @@ class QuerySet(SearchableMixIn):
         Args:
           *args:
           **kwargs:
-
-
         """
         new_qs = self._copy_self()
         q = ~Q(*args, **kwargs)
@@ -456,7 +452,6 @@ class QuerySet(SearchableMixIn):
 
         Args:
           *args:
-
         """
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
@@ -475,7 +470,6 @@ class QuerySet(SearchableMixIn):
         Returns:
           in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
           implemented client-side and will therefore make the query greedy
-
         """
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
@@ -486,7 +480,7 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def reverse(self):
-        """ """
+        """Reverses the ordering of the queryset"""
         if not self.order_fields:
             raise ValueError('Reversing only makes sense if there are order_by fields')
         new_qs = self._copy_self()
@@ -499,8 +493,6 @@ class QuerySet(SearchableMixIn):
 
         Args:
           *args:
-
-
         """
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
@@ -520,7 +512,6 @@ class QuerySet(SearchableMixIn):
 
         Returns:
           Allow an arbitrary list of fields in *args, possibly ending with flat=True|False
-
         """
         flat = kwargs.pop('flat', False)
         if kwargs:
@@ -563,7 +554,6 @@ class QuerySet(SearchableMixIn):
         Args:
           *args:
           **kwargs:
-
         """
         if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
@@ -587,7 +577,6 @@ class QuerySet(SearchableMixIn):
 
         Args:
           page_size:  (Default value = 1000)
-
         """
         new_qs = self._copy_self()
         new_qs.only_fields = ()
@@ -616,7 +605,6 @@ class QuerySet(SearchableMixIn):
         Args:
           page_size:  (Default value = 1000)
           **delete_kwargs:
-
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -633,7 +621,6 @@ class QuerySet(SearchableMixIn):
         Args:
           page_size:  (Default value = 1000)
           **send_kwargs:
-
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -651,7 +638,6 @@ class QuerySet(SearchableMixIn):
           to_folder:
           page_size:  (Default value = 1000)
           **copy_kwargs:
-
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -669,7 +655,6 @@ class QuerySet(SearchableMixIn):
         Args:
           to_folder:
           page_size:  (Default value = 1000)
-
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -686,7 +671,6 @@ class QuerySet(SearchableMixIn):
         Args:
           to_folder:
           page_size:  (Default value = 1000)
-
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -703,7 +687,6 @@ class QuerySet(SearchableMixIn):
         Args:
           page_size:  (Default value = 1000)
           **mark_as_junk_kwargs:
-
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -732,13 +715,14 @@ def _get_value_or_default(item, field_order):
 
 
 def _default_field_value(field):
-    # Returns the default value of a field. If the field does not have a default value, try creating an empty instance
-    # of the field value class. If that doesn't work, there's really nothing we can do about it; we'll raise an error.
+    """Returns the default value of a field. If the field does not have a default value, try creating an empty instance
+    of the field value class. If that doesn't work, there's really nothing we can do about it; we'll raise an error.
+    """
     return field.default or ([field.value_cls()] if field.is_list else field.value_cls())
 
 
 def _rinse_item(i, fields_to_nullify):
-    # Set fields in fields_to_nullify to None. Make sure to accept exceptions.
+    """Set fields in fields_to_nullify to None. Make sure to accept exceptions."""
     if isinstance(i, Exception):
         return i
     for f in fields_to_nullify:

@@ -35,7 +35,6 @@ class FolderCollection(SearchableMixIn):
         Args:
           account: An Account object
           folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
-
         """
         self.account = account
         self._folders = folders
@@ -89,7 +88,6 @@ class FolderCollection(SearchableMixIn):
         Args:
           *args:
           **kwargs:
-
         """
         return QuerySet(self).filter(*args, **kwargs)
 
@@ -100,8 +98,8 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).people()
 
     def view(self, start, end, max_items=None, *args, **kwargs):
-        """Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
-        only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+        """Implements the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
+        only returns the master CalendarItem for recurring items, while 'view' unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
 
         Supports the same semantics as filter, except for 'start' and 'end' keyword attributes which are both required
@@ -118,7 +116,6 @@ class FolderCollection(SearchableMixIn):
           max_items:  (Default value = None)
           *args:
           **kwargs:
-
         """
         qs = QuerySet(self).filter(*args, **kwargs)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
@@ -165,7 +162,6 @@ class FolderCollection(SearchableMixIn):
 
         Returns:
           a generator for the returned item IDs or items
-
         """
         if not self.folders:
             log.debug('Folder list is empty')
@@ -224,7 +220,7 @@ class FolderCollection(SearchableMixIn):
             raise ValueError('Syncing folder hierarchy can only be done on a single folder')
         if not self.folders:
             log.debug('Folder list is empty')
-            return
+            return None
         return self.folders[0]
 
     def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
@@ -244,7 +240,6 @@ class FolderCollection(SearchableMixIn):
 
         Returns:
           a generator for the returned personas
-
         """
         folder = self._get_single_folder()
         if not folder:

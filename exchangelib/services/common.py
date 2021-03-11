@@ -127,11 +127,11 @@ class EWSService(metaclass=abc.ABCMeta):
         res = list(self.call(**kwargs))
         if expect_result is None and not res:
             # Allow empty result
-            return
+            return None
         if expect_result is False:
             if res:
                 raise ValueError('Expected result length 0, but got %r' % res)
-            return
+            return None
         if len(res) != 1:
             raise ValueError('Expected result length 1, but got %r' % res)
         if isinstance(res[0], Exception):
@@ -225,8 +225,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 raise
 
     def _get_response_and_session(self, payload, api_version):
-        """Do send the actual HTTP request and get the response
-        """
+        """Send the actual HTTP request and get the response"""
         session = self.protocol.get_session()
         return post_ratelimited(
             protocol=self.protocol,
@@ -342,26 +341,22 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _response_tag(cls):
-        """The name of the element containing the service response
-        """
+        """The name of the element containing the service response"""
         return '{%s}%sResponse' % (MNS, cls.SERVICE_NAME)
 
     @staticmethod
     def _response_messages_tag():
-        """The name of the element containing service response messages
-        """
+        """The name of the element containing service response messages"""
         return '{%s}ResponseMessages' % MNS
 
     @classmethod
     def _response_message_tag(cls):
-        """The name of the element of a single response message
-        """
+        """The name of the element of a single response message"""
         return '{%s}%sResponseMessage' % (MNS, cls.SERVICE_NAME)
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        """Split the SOAP response into its headers an body elements
-        """
+        """Split the SOAP response into its headers an body elements"""
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
@@ -376,8 +371,7 @@ class EWSService(metaclass=abc.ABCMeta):
         return header, body
 
     def _get_soap_messages(self, body, **parse_opts):
-        """Returns the elements in the response containing the response messages. Raises any SOAP exceptions.
-        """
+        """Returns the elements in the response containing the response messages. Raises any SOAP exceptions."""
         response = body.find(self._response_tag())
         if response is None:
             fault = body.find('{%s}Fault' % SOAPNS)
@@ -395,8 +389,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _raise_soap_errors(cls, fault):
-        """Parse error messages contained in SOAP headers and raise as exceptions defined in this package
-        """
+        """Parse error messages contained in SOAP headers and raise as exceptions defined in this package"""
         # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
         faultcode = get_xml_attr(fault, 'faultcode')
         faultstring = get_xml_attr(fault, 'faultstring')
@@ -493,8 +486,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_exception(code, text, msg_xml):
-        """Parse error messages contained in EWS responses and raise as exceptions defined in this package
-        """
+        """Parse error messages contained in EWS responses and raise as exceptions defined in this package"""
         if not code:
             return TransportError('Empty ResponseCode in ResponseMessage (MessageText: %s, MessageXml: %s)' % (
                 text, msg_xml))
@@ -604,7 +596,8 @@ class EWSService(metaclass=abc.ABCMeta):
             yield e
 
     def _get_pages(self, payload_func, kwargs, expected_message_count):
-        """Requests a page, or a list of pages if multiple collections are pages in a single request. Returns each page
+        """Requests a page, or a list of pages if multiple collections are pages in a single request. Returns each
+        page.
         """
         payload = payload_func(**kwargs)
         page_elems = list(self._get_elements(payload=payload))
@@ -619,7 +612,7 @@ class EWSService(metaclass=abc.ABCMeta):
         next_offsets = {p['next_offset'] for p in paging_infos if p['next_offset'] is not None}
         if not next_offsets:
             # Paging is done for all messages
-            return
+            return None
         # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
         # because the collections that we are iterating may change while iterating. We'll do our best but we cannot
         # guarantee 100% consistency when large collections are simultaneously being changed on the server.
@@ -679,8 +672,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_paging_values(elem):
-        """Read paging information from the paging container element
-        """
+        """Read paging information from the paging container element"""
         is_last_page = elem.get('IncludesLastItemInRange').lower() in ('true', '0')
         offset = elem.get('IndexedPagingOffset')
         if offset is None and not is_last_page:
@@ -694,8 +686,7 @@ class EWSService(metaclass=abc.ABCMeta):
         return item_count, next_offset
 
     def _get_page(self, message):
-        """Get a single page from a request message, and return the container and next offset
-        """
+        """Get a single page from a request message, and return the container and next offset"""
         paging_elem = self._get_element_container(message=message, name=self.paging_container_name)
         if isinstance(paging_elem, Exception):
             return paging_elem, None

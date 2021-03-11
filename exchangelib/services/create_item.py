@@ -68,7 +68,6 @@ class CreateItem(EWSAccountService):
           folder:
           message_disposition:
           send_meeting_invitations:
-
         """
         createitem = create_element(
             'm:%s' % self.SERVICE_NAME,
