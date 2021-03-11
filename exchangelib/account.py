@@ -343,7 +343,7 @@ class Account:
         yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
-        """Return export strings of the given items
+        """Return export strings of the given items.
 
         Args:
           items: An iterable containing the Items we want to export
@@ -414,7 +414,7 @@ class Account:
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
                     chunk_size=None):
-        """Bulk updates existing items
+        """Bulk update existing items.
 
         Args:
           items: a list of (Item, fieldnames) tuples, where 'Item' is an Item object, and 'fieldnames' is a list
@@ -452,7 +452,7 @@ class Account:
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
-        """Bulk deletes items.
+        """Bulk delete items.
 
         Args:
           ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -485,7 +485,7 @@ class Account:
         )
 
     def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
-        """Send existing draft messages. If requested, save a copy in 'copy_to_folder'
+        """Send existing draft messages. If requested, save a copy in 'copy_to_folder'.
 
         Args:
           ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -507,7 +507,7 @@ class Account:
         )
 
     def bulk_copy(self, ids, to_folder, chunk_size=None):
-        """Copy items to another folder
+        """Copy items to another folder.
 
         Args:
           ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -522,7 +522,7 @@ class Account:
         )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
-        """Move items to another folder
+        """Move items to another folder.
 
         Args:
           ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -573,7 +573,7 @@ class Account:
         )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
-        """Fetch items by ID
+        """Fetch items by ID.
 
         Args:
           ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -606,7 +606,7 @@ class Account:
         ))
 
     def fetch_personas(self, ids):
-        """Fetch personas by ID
+        """Fetch personas by ID.
 
         ids: an iterable of either (id, changekey) tuples or Persona objects.
         :return: A generator of Persona objects, in the same order as the input

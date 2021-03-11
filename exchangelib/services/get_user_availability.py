@@ -4,7 +4,7 @@ from ..util import create_element, set_xml_value, MNS
 
 
 class GetUserAvailability(EWSService):
-    """Get detailed availability information for a list of users
+    """Get detailed availability information for a list of users.
     MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation
     """

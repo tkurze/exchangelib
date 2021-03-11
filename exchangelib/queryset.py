@@ -528,7 +528,7 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def depth(self, depth):
-        """Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP
+        """Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP.
 
         Args:
           depth:
@@ -549,7 +549,7 @@ class QuerySet(SearchableMixIn):
     ###########################
 
     def get(self, *args, **kwargs):
-        """Assume the query will return exactly one item. Return that item
+        """Assume the query will return exactly one item. Return that item.
 
         Args:
           *args:

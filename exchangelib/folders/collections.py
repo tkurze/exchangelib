@@ -145,7 +145,7 @@ class FolderCollection(SearchableMixIn):
 
     def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                    calendar_view=None, page_size=None, max_items=None, offset=0):
-        """Private method to call the FindItem service
+        """Private method to call the FindItem service.
 
         Args:
           q: a Q instance containing any restrictions
@@ -225,7 +225,7 @@ class FolderCollection(SearchableMixIn):
 
     def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                     page_size=None, max_items=None, offset=0):
-        """Private method to call the FindPeople service
+        """Private method to call the FindPeople service.
 
         Args:
           q: a Q instance containing any restrictions

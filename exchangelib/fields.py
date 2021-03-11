@@ -839,7 +839,7 @@ class CharListField(CharField):
 
 
 class URIField(TextField):
-    """Helper to mark strings that must conform to xsd:anyURI
+    """Helper to mark strings that must conform to xsd:anyURI.
     If we want an URI validator, see http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri
     """
 

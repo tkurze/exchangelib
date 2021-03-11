@@ -450,7 +450,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return self.config.version
 
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
-        """Get timezone definitions from the server
+        """Get timezone definitions from the server.
 
         Args:
           timezones: A list of EWSDateTime instances. If None, fetches all timezones from server (Default value = None)
@@ -524,7 +524,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
-        """Resolve accounts on the server using partial account data, e.g. an email address or initials
+        """Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
         Args:
           names: A list of identifiers to query
@@ -542,7 +542,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         ))
 
     def expand_dl(self, distribution_list):
-        """Expand distribution list into it's members
+        """Expand distribution list into it's members.
 
         Args:
           distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list

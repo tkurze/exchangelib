@@ -321,7 +321,7 @@ class Autodiscovery:
         return r
 
     def _attempt_response(self, url):
-        """Return an (is_valid_response, response) tuple
+        """Return an (is_valid_response, response) tuple.
 
         Args:
           url:
@@ -553,7 +553,7 @@ class Autodiscovery:
 
 
 def _select_srv_host(srv_records):
-    """Select the record with the highest priority, that also supports TLS
+    """Select the record with the highest priority, that also supports TLS.
 
     Args:
       srv_records:

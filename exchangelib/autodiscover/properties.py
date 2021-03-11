@@ -274,7 +274,7 @@ class Response(AutodiscoverBase):
 
     @property
     def ews_url(self):
-        """Return the EWS URL contained in the response
+        """Return the EWS URL contained in the response.
 
         A response may contain a number of possible protocol types. EXPR is meant for EWS. See
         https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16

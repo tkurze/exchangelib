@@ -18,9 +18,8 @@ ACCESS_TYPES = (IMPERSONATION, DELEGATE)
 class BaseCredentials(metaclass=abc.ABCMeta):
     """Base for credential storage.
 
-    Establishes a method for refreshing credentials (mostly useful with
-    OAuth, which expires tokens relatively frequently) and provides a
-    lock for synchronizing access to the object around refreshes.
+    Establishes a method for refreshing credentials (mostly useful with OAuth, which expires tokens relatively
+    frequently) and provides a lock for synchronizing access to the object around refreshes.
     """
 
     def __init__(self):
@@ -32,10 +31,9 @@ class BaseCredentials(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def refresh(self, session):
-        """Obtain a new set of valid credentials. This is mostly intended
-        to support OAuth token refreshing, which can happen in long-
-        running applications or those that cache access tokens and so
-        might start with a token close to expiration.
+        """Obtain a new set of valid credentials. This is mostly intended to support OAuth token refreshing, which can
+        happen in long- running applications or those that cache access tokens and so might start with a token close to
+        expiration.
 
         Args:
           session: requests session asking for refreshed credentials
@@ -104,14 +102,11 @@ class Credentials(BaseCredentials):
 
 
 class OAuth2Credentials(BaseCredentials):
-    """Login info for OAuth 2.0 client credentials authentication, as well
-    as a base for other OAuth 2.0 grant types.
+    """Login info for OAuth 2.0 client credentials authentication, as well as a base for other OAuth 2.0 grant types.
 
-    This is primarily useful for in-house applications accessing data
-    from a single Microsoft account. For applications that will access
-    multiple tenants' data, the client credentials flow does not give
-    the application enough information to restrict end users' access to
-    the appropriate account. Use OAuth2AuthorizationCodeCredentials and
+    This is primarily useful for in-house applications accessing data from a single Microsoft account. For applications
+    that will access multiple tenants' data, the client credentials flow does not give the application enough
+    information to restrict end users' access to the appropriate account. Use OAuth2AuthorizationCodeCredentials and
     the associated auth code grant type for multi-tenant applications.
 
     Args:
@@ -131,9 +126,8 @@ class OAuth2Credentials(BaseCredentials):
         self.access_token = None
 
     def refresh(self, session):
-        # Creating a new session gets a new access token, so there's no
-        # work here to refresh the credentials. This implementation just
-        # makes sure we don't raise a NotImplementedError.
+        # Creating a new session gets a new access token, so there's no work here to refresh the credentials. This
+        # implementation just makes sure we don't raise a NotImplementedError.
         pass
 
     def on_token_auto_refreshed(self, access_token):
@@ -145,8 +139,7 @@ class OAuth2Credentials(BaseCredentials):
         Args:
           access_token: New token obtained by refreshing
         """
-        # Ensure we don't update the object in the middle of a new session
-        # being created, which could cause a race
+        # Ensure we don't update the object in the middle of a new session being created, which could cause a race.
         if not isinstance(access_token, dict):
             raise ValueError("'access_token' must be an OAuth2Token")
         with self.lock:
@@ -179,22 +172,18 @@ class OAuth2Credentials(BaseCredentials):
 
 
 class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
-    """Login info for OAuth 2.0 authentication using the authorization code
-    grant type. This can be used in one of several ways:
-    * Given an authorization code, client ID, and client secret, fetch a
-      token ourselves and refresh it as needed if supplied with a refresh
-      token.
-    * Given an existing access token, refresh token, client ID, and
-      client secret, use the access token until it expires and then
-      refresh it as needed.
-    * Given only an existing access token, use it until it expires. This
-      can be used to let the calling application refresh tokens itself
-      by subclassing and implementing refresh().
+    """Login info for OAuth 2.0 authentication using the authorization code grant type. This can be used in one of
+    several ways:
+    * Given an authorization code, client ID, and client secret, fetch a token ourselves and refresh it as needed if
+      supplied with a refresh token.
+    * Given an existing access token, refresh token, client ID, and client secret, use the access token until it
+      expires and then refresh it as needed.
+    * Given only an existing access token, use it until it expires. This can be used to let the calling application
+      refresh tokens itself by subclassing and implementing refresh().
 
-    Unlike the base (client credentials) grant, authorization code
-    credentials don't require a Microsoft tenant ID because each access
-    token (and the authorization code used to get the access token) is
-    restricted to a single tenant.
+    Unlike the base (client credentials) grant, authorization code credentials don't require a Microsoft tenant ID
+    because each access token (and the authorization code used to get the access token) is restricted to a single
+    tenant.
 
     Args:
       client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing

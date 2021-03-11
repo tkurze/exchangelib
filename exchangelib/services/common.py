@@ -180,7 +180,8 @@ class EWSService(metaclass=abc.ABCMeta):
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
-        """Like ._get_elements(), but Chop items list into suitable pieces
+        """Yield elements in a response. Like ._get_elements(), but chop items into suitable chunks and send multiple
+        requests.
 
         :param payload_func: A reference to .payload()
         :param items: An iterable of items (messages, folders, etc.) to process

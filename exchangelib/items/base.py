@@ -100,7 +100,7 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
 
     @classmethod
     def deregister(cls, attr_name):
-        """De-register an extended property that has been registered with register()
+        """De-register an extended property that has been registered with register().
 
         Args:
           attr_name:

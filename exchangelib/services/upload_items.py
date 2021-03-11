@@ -6,9 +6,8 @@ from ..util import create_element, set_xml_value, add_xml_child, MNS
 class UploadItems(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
 
-    This currently has the existing limitation of only being able to upload
-    items that do not yet exist in the database. The full spec also allows
-    actions "Update" and "UpdateOrCreate".
+    TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
+     database. The full spec also allows actions "Update" and "UpdateOrCreate".
     """
 
     SERVICE_NAME = 'UploadItems'
@@ -19,11 +18,10 @@ class UploadItems(EWSAccountService):
         return self._chunked_get_elements(self.get_payload, items=items)
 
     def get_payload(self, items):
-        """Upload given items to given account
+        """Upload given items to given account.
 
-        data is an iterable of tuples where the first element is a Folder
-        instance representing the ParentFolder that the item will be placed in
-        and the second element is a Data string returned from an ExportItems
+        'items' is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+        that the item will be placed in and the second element is a Data string returned from an ExportItems.
         call.
 
         Args:

@@ -60,7 +60,7 @@ class FolderQuerySet:
         return new_qs
 
     def depth(self, depth):
-        """Specify the search depth. Possible values are: SHALLOW or DEEP
+        """Specify the search depth. Possible values are: SHALLOW or DEEP.
 
         Args:
           depth:
@@ -100,7 +100,7 @@ class FolderQuerySet:
         return new_qs
 
     def filter(self, *args, **kwargs):
-        """Add restrictions to the folder search
+        """Add restrictions to the folder search.
 
         Args:
           *args:
