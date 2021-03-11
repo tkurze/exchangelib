@@ -388,6 +388,7 @@ class VoiceMail(WellknownFolder):
 
 class NonDeletableFolderMixin:
     """A mixin for non-wellknown folders than that are not deletable."""
+
     @property
     def is_deletable(self):
         return False

@@ -1,4 +1,5 @@
-"""The 'Subscribe' service has two different modes, pull and push, with different signatures. Implement as two classes.
+"""The 'Subscribe' service has two different modes, pull and push, with different signatures. Implement as two distinct
+classes.
 """
 import abc
 
