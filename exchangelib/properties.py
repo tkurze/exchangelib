@@ -423,7 +423,8 @@ class RootItemId(ItemId):
 
 
 class AssociatedCalendarItemId(ItemId):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/associatedcalendaritemid
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/associatedcalendaritemid
     """
 
     ELEMENT_NAME = 'AssociatedCalendarItemId'

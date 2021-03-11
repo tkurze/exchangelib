@@ -102,7 +102,7 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
 
     @classmethod
     def get_distinguished(cls, account):
-        """Gets the distinguished folder for this folder class
+        """Get the distinguished folder for this folder class.
 
         Args:
           account:
@@ -118,8 +118,9 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
             raise ErrorFolderNotFound('Could not find distinguished folder %s' % cls.DISTINGUISHED_FOLDER_ID)
 
     def get_default_folder(self, folder_cls):
-        # Returns the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
-        # folder was found, try as best we can to return the default folder of type 'folder_cls'
+        """Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
+        folder was found, try as best we can to return the default folder of type 'folder_cls'
+        """
         if not folder_cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError("'folder_cls' %s must have a DISTINGUISHED_FOLDER_ID value" % folder_cls)
         # Use cached distinguished folder instance, but only if cache has already been prepped. This is an optimization

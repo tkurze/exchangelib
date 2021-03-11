@@ -93,8 +93,9 @@ class Q:
         self._check_integrity()
 
     def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
-        # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
-        # generate.
+        """Generate Q objects corresponding to a single keyword argument. Make this a leaf if there are no children to
+        generate.
+        """
         key_parts = key.rsplit('__', 1)
         if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
             # This is a kwarg with a lookup at the end
@@ -210,8 +211,9 @@ class Q:
         self.children = q.children
 
     def clean(self, version):
-        # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
-        # validating. There's no reason to replicate much of that here.
+        """Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        validating. There's no reason to replicate much of that here.
+        """
         from .folders import Folder
         self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
 
@@ -557,5 +559,5 @@ class Restriction:
         return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)
 
     def __str__(self):
-        """Prints the XML syntax tree"""
+        """Print the XML syntax tree"""
         return xml_to_str(self.to_xml(version=self.folders[0].account.version))

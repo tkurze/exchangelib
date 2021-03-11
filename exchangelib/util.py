@@ -56,6 +56,7 @@ class ParseError(lxml.etree.ParseError):
 
 
 class ElementNotFound(Exception):
+    """Raised when the expected element was not found in a response stream"""
     def __init__(self, msg, data):
         super().__init__(msg)
         self.data = data
@@ -83,7 +84,7 @@ for item in ns_translation.items():
 
 
 def is_iterable(value, generators_allowed=False):
-    """Checks if value is a list-like object. Don't match generators and generator-like objects here by default, because
+    """Check if value is a list-like object. Don't match generators and generator-like objects here by default, because
     callers don't necessarily guarantee that they only iterate the value once. Take care to not match string types and
     bytes.
 
@@ -105,7 +106,7 @@ def is_iterable(value, generators_allowed=False):
 
 
 def chunkify(iterable, chunksize):
-    """Splits an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
+    """Split an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
 
     Args:
       iterable:
@@ -130,11 +131,10 @@ def chunkify(iterable, chunksize):
 
 
 def peek(iterable):
-    """Checks if an iterable is empty and returns status and the rewinded iterable
+    """Check if an iterable is empty and return status and the rewinded iterable.
 
     Args:
       iterable:
-
     """
     if hasattr(iterable, '__len__'):
         # tuple, list, set
@@ -155,7 +155,6 @@ def xml_to_str(tree, encoding=None, xml_declaration=False):
       tree:
       encoding:  (Default value = None)
       xml_declaration:  (Default value = False)
-
     """
     if xml_declaration and not encoding:
         raise ValueError("'xml_declaration' is not supported when 'encoding' is None")
@@ -376,7 +375,7 @@ class StreamingBase64Parser(DefusedExpatParser):
             raise ElementNotFound('The element to be streamed from was not found', data=bytes(data))
 
     def feed(self, data, isFinal=0):
-        # Like upstream, but yields the current content of the character buffer
+        """Yield the current content of the character buffer"""
         DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
         return self._decode_buffer()
 
@@ -502,7 +501,7 @@ class DocumentYielder:
 
 
 def to_xml(bytes_content):
-    # Converts bytes or a generator of bytes to an XML tree
+    """Convert bytes or a generator of bytes to an XML tree."""
     # Exchange servers may spit out the weirdest XML. lxml is pretty good at recovering from errors
     if isinstance(bytes_content, bytes):
         stream = io.BytesIO(bytes_content)
@@ -570,7 +569,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
     @classmethod
     def prettify_xml(cls, xml_bytes):
-        # Re-formats an XML document to a consistent style
+        """Re-format an XML document to a consistent style"""
         return lxml.etree.tostring(
             cls.parse_bytes(xml_bytes),
             xml_declaration=True,
@@ -580,7 +579,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
     @staticmethod
     def highlight_xml(xml_str):
-        # Highlights a string containing XML, using terminal color codes
+        """Highlight a string containing XML, using terminal color codes"""
         return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
@@ -608,7 +607,7 @@ class PrettyXmlHandler(logging.StreamHandler):
         return super().emit(record)
 
     def is_tty(self):
-        # Check if we're outputting to a terminal
+        """Check if we're outputting to a terminal"""
         try:
             return self.stream.isatty()
         except AttributeError:
@@ -633,11 +632,13 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
 
 
 class DummyRequest:
+    """A class to fake a requests Request object for functions that expect this"""
     def __init__(self, headers):
         self.headers = headers
 
 
 class DummyResponse:
+    """A class to fake a requests Response object for functions that expect this"""
     def __init__(self, url, headers, request_headers, content=b'', status_code=503, history=None):
         self.status_code = status_code
         self.url = url

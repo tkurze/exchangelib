@@ -138,8 +138,9 @@ class FileAttachment(Attachment):
 
     @property
     def content(self):
-        # Returns the attachment content. Stores a local copy of the content in case you want to upload the attachment
-        # again later.
+        """Return the attachment content. Stores a local copy of the content in case you want to upload the attachment
+        again later.
+        """
         if self.attachment_id is None:
             return self._content
         if self._content is not None:
@@ -151,7 +152,7 @@ class FileAttachment(Attachment):
 
     @content.setter
     def content(self, value):
-        # Replaces the attachment content
+        """Replace the attachment content"""
         if not isinstance(value, bytes):
             raise ValueError("'value' %r must be a bytes object" % value)
         self._content = value

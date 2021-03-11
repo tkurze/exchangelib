@@ -504,7 +504,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @require_id
     def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
-        """Creates a pull subscription
+        """Create a pull subscription.
 
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPull.EVENT_TYPES
         :param watermark: An event bookmark as returned by some sync services
@@ -525,7 +525,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     @require_id
     def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
                           status_frequency=1):
-        """Creates a push subscription
+        """Create a push subscription.
 
         :param callback_url: A client-defined URL that the server will call
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPush.EVENT_TYPES
@@ -545,7 +545,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @require_id
     def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
-        """Creates a streaming subscription
+        """Create a streaming subscription.
 
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPush.EVENT_TYPES
         :return: The subscription ID
@@ -572,7 +572,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
-        """A generator of all item changes to a folder. If sync_state is specified, gets all item changes after
+        """Return all item changes to a folder, as a generator. If sync_state is specified, get all item changes after
         this sync state. After fully consuming the generator, self.item_sync_state will hold the new sync state.
 
         :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
@@ -598,8 +598,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             self.item_sync_state = e.sync_state
 
     def sync_hierarchy(self, sync_state=None, only_fields=None):
-        """A generator of all folder changes to a folder hierarchy. If sync_state is specified, gets all folder changes
-        after this sync state. After fully consuming the generator, self.folder_sync_state will hold the new sync state.
+        """Return all folder changes to a folder hierarchy, as a generator. If sync_state is specified, get all folder
+        changes after this sync state. After fully consuming the generator, self.folder_sync_state will hold the new
+        sync state.
 
         :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
         :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
@@ -660,7 +661,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             raise ErrorInvalidSubscription('Invalid subscription IDs: %s' % svc.error_subscription_ids)
 
     def __floordiv__(self, other):
-        """Same as __truediv__ but does not touch the folder cache.
+        """Support the some_folder // 'child_folder' // 'child_of_child_folder' navigation syntax.
+
+        Works like as __truediv__ but does not touch the folder cache.
 
         This is useful if the folder hierarchy contains a huge number of folders and you don't want to fetch them all
 
@@ -680,7 +683,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
             raise ErrorFolderNotFound("No subfolder with name '%s'" % other)
 
     def __truediv__(self, other):
-        # Support the some_folder / 'child_folder' / 'child_of_child_folder' navigation syntax
+        """Support the some_folder / 'child_folder' / 'child_of_child_folder' navigation syntax."""
         if other == '..':
             if not self.parent:
                 raise ValueError('Already at top')
@@ -755,7 +758,7 @@ class Folder(BaseFolder):
 
     @classmethod
     def get_distinguished(cls, root):
-        """Gets the distinguished folder for this folder class
+        """Get the distinguished folder for this folder class.
 
         Args:
           root:

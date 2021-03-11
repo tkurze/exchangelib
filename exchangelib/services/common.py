@@ -60,6 +60,8 @@ KNOWN_EXCEPTIONS = (
 
 
 class EWSService(metaclass=abc.ABCMeta):
+    """Base class for all EWS services"""
+
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
     paging_container_name = None  # The name of the element that contains paging information and the paged results

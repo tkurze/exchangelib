@@ -408,8 +408,8 @@ class Autodiscovery:
         return records
 
     def _step_1(self, hostname):
-        """The client sends an Autodiscover request to https://example.com/autodiscover/autodiscover.xml and then does
-        one of the following:
+        """Perform step 1, where the client sends an Autodiscover request to
+        https://example.com/autodiscover/autodiscover.xml and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 2.
 
@@ -424,8 +424,8 @@ class Autodiscovery:
         return self._step_2(hostname=hostname)
 
     def _step_2(self, hostname):
-        """The client sends an Autodiscover request to https://autodiscover.example.com/autodiscover/autodiscover.xml
-        and then does one of the following:
+        """Perform step 2, where the client sends an Autodiscover request to
+        https://autodiscover.example.com/autodiscover/autodiscover.xml and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 3.
 
@@ -440,7 +440,7 @@ class Autodiscovery:
         return self._step_3(hostname=hostname)
 
     def _step_3(self, hostname):
-        """The client sends an unauth'ed GET method request to
+        """Perform step 3, where the client sends an unauth'ed GET method request to
         http://autodiscover.example.com/autodiscover/autodiscover.xml (Note that this is a non-HTTPS endpoint). The
         client then does one of the following:
             * If the GET request returns a 302 redirect response, it gets the redirection URL from the 'Location' HTTP
@@ -472,9 +472,10 @@ class Autodiscovery:
         return self._step_4(hostname=hostname)
 
     def _step_4(self, hostname):
-        """The client performs a Domain Name System (DNS) query for an SRV record for _autodiscover._tcp.example.com.
-        The query might return multiple records. The client selects only records that point to an SSL endpoint and that
-        have the highest priority and weight. One of the following actions then occurs:
+        """Perform step 4, where the client performs a Domain Name System (DNS) query for an SRV record for
+        _autodiscover._tcp.example.com. The query might return multiple records. The client selects only records that
+        point to an SSL endpoint and that have the highest priority and weight. One of the following actions then
+        occurs:
             * If no such records are returned, the client proceeds to step 6.
             * If records are returned, the application randomly chooses a record in the list and validates the endpoint
               that it points to by following the process described in the "Redirect Response" section. The client then
@@ -505,7 +506,7 @@ class Autodiscovery:
         return self._step_6()
 
     def _step_5(self, ad):
-        """When a valid Autodiscover request succeeds, the following sequence occurs:
+        """Perform step 5. When a valid Autodiscover request succeeds, the following sequence occurs:
             * If the server responds with an HTTP 302 redirect, the client validates the redirection URL according to
               the process defined in the "Redirect responses" and then does one of the following:
                 * If the redirection URL is valid, the client tries the URL and then does one of the following:
@@ -542,8 +543,9 @@ class Autodiscovery:
         return ad_response
 
     def _step_6(self):
-        """If the client cannot contact the Autodiscover service, the client should ask the user for the Exchange server
-        name and use it to construct an Exchange EWS URL. The client should try to use this URL for future requests.
+        """Perform step 6. If the client cannot contact the Autodiscover service, the client should ask the user for
+        the Exchange server name and use it to construct an Exchange EWS URL. The client should try to use this URL for
+        future requests.
         """
         raise AutoDiscoverFailed(
             'All steps in the autodiscover protocol failed for email %r. If you think this is an error, consider doing '

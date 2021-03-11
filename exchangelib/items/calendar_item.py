@@ -31,6 +31,8 @@ CALENDAR_ITEM_CHOICES = (SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER)
 
 
 class AcceptDeclineMixIn:
+    """A mixin for items that can be declined or accepted"""
+
     def accept(self, **kwargs):
         return AcceptItem(
             account=self.account,

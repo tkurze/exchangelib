@@ -125,9 +125,13 @@ class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
     __slots__ = tuple(f.name for f in FIELDS) + ('account', 'folder')
 
     def __init__(self, **kwargs):
-        # 'account' is optional but allows calling 'send()' and 'delete()'
-        # 'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
-        # we use folder.account.
+        """Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.
+
+        :param kwargs:
+            'account' is optional but allows calling 'send()' and 'delete()'
+            'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+                we use folder.account.
+        """
         from ..folders import BaseFolder
         from ..account import Account
         self.account = kwargs.pop('account', None)

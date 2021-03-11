@@ -205,9 +205,10 @@ class ExtendedProperty(EWSElement):
 
     @classmethod
     def is_property_instance(cls, elem):
-        # Returns whether an 'ExtendedProperty' element matches the definition for this class. Extended property fields
-        # do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
-        # field in the response.
+        """Return whether an 'ExtendedProperty' element matches the definition for this class. Extended property fields
+        do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
+        field in the response.
+        """
         xml_obj = ExtendedFieldURI.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
         cls_obj = cls.as_object()
         return cls._normalize_obj(cls_obj) == cls._normalize_obj(xml_obj)

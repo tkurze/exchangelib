@@ -357,7 +357,7 @@ class Account:
         )
 
     def upload(self, data, chunk_size=None):
-        """Adds objects retrieved from export into the given folders
+        """Upload objects retrieved from an export to the given folders.
 
         Args:
           data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
@@ -379,7 +379,7 @@ class Account:
 
     def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
                     chunk_size=None):
-        """Creates new items in 'folder'
+        """Create new items in 'folder'.
 
         Args:
           folder: the folder to create the items in

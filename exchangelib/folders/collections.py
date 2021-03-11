@@ -60,7 +60,7 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).none()
 
     def filter(self, *args, **kwargs):
-        """Finds items in the folder(s).
+        """Find items in the folder(s).
 
         Non-keyword args may be a list of Q instances.
 

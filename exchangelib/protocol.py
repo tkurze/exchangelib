@@ -417,6 +417,11 @@ class CachingProtocol(type):
 
 
 class Protocol(BaseProtocol, metaclass=CachingProtocol):
+    """A class to handle all the low-level communication with an Exchange server. Contains a session pool, knows how to
+    negotiate the authentication type of the server, refresh credentials, etc. Also contains methods for calling EWS
+    services that are not tied to an account.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._api_version_hint = None
