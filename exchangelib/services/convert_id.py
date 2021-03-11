@@ -5,7 +5,7 @@ from ..version import EXCHANGE_2007_SP1
 
 
 class ConvertId(EWSService):
-    """Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
+    """Take a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation

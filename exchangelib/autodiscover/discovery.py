@@ -321,7 +321,7 @@ class Autodiscovery:
         return r
 
     def _attempt_response(self, url):
-        """Returns a (is_valid_response, response) tuple
+        """Return an (is_valid_response, response) tuple
 
         Args:
           url:

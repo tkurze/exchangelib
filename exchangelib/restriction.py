@@ -173,7 +173,7 @@ class Q:
         self._promote()
 
     def _reduce_children(self):
-        """Looks at the children of this object and removes unnecessary items"""
+        """Look at the children of this object and remove unnecessary items"""
         children = self.children
         if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
             # We have at least one 'never' arg
@@ -303,11 +303,11 @@ class Q:
         return not self.children
 
     def is_empty(self):
-        """Returns True if this object is without any restrictions at all"""
+        """Return True if this object is without any restrictions at all"""
         return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
 
     def is_never(self):
-        """Returns True if this object has a restriction that will never match anything"""
+        """Return True if this object has a restriction that will never match anything"""
         return self.conn_type == self.NEVER
 
     def expr(self):

@@ -167,7 +167,8 @@ class EWSService(metaclass=abc.ABCMeta):
         return None
 
     def _response_generator(self, payload):
-        """Sends the payload to the server, and returns the response
+        """Send the payload to the server, and return the response.
+
         :param payload: payload as an XML object
         :return: the response, as XML objects
         """
@@ -189,8 +190,8 @@ class EWSService(metaclass=abc.ABCMeta):
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def _get_elements(self, payload):
-        """Sends the payload to be sent and parsed. Handles and re-raises exceptions that are not meant to be returned
-        to the caller as exception objects. Retries the request according to the retry policy.
+        """Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
+        to the caller as exception objects. Retry the request according to the retry policy.
         """
         while True:
             try:
@@ -249,7 +250,7 @@ class EWSService(metaclass=abc.ABCMeta):
         return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
 
     def _get_response_xml(self, payload, **parse_opts):
-        """Sends the payload to the server and returns relevant elements from the result. Several things happen here:
+        """Send the payload to the server and return relevant elements from the result. Several things happen here:
           * The payload is wrapped in SOAP headers and sent to the server
           * The Exchange API version is negotiated and stored in the protocol object
           * Connection errors are handled and possibly reraised as ErrorServerBusy
@@ -305,7 +306,7 @@ class EWSService(metaclass=abc.ABCMeta):
         raise self.NO_VALID_SERVER_VERSIONS('Tried versions %s but all were invalid' % self._api_versions_to_try)
 
     def _handle_backoff(self, e):
-        """Takes a request from the server to back off and checks the retry policy for what to do. Re-raises the
+        """Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
         exception if conditions are not met.
 
         :param e: An ErrorServerBusy instance
@@ -323,7 +324,7 @@ class EWSService(metaclass=abc.ABCMeta):
         # We'll warn about this later if we actually need to sleep
 
     def _update_api_version(self, api_version, header, **parse_opts):
-        """Parses the server version contained in SOAP headers and updates the version hint stored by the caller, if
+        """Parse the server version contained in SOAP headers and update the version hint stored by the caller, if
         necessary.
         """
         try:
@@ -341,17 +342,17 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _response_tag(cls):
-        """The name of the element containing the service response"""
+        """Return the name of the element containing the service response"""
         return '{%s}%sResponse' % (MNS, cls.SERVICE_NAME)
 
     @staticmethod
     def _response_messages_tag():
-        """The name of the element containing service response messages"""
+        """Return the name of the element containing service response messages"""
         return '{%s}ResponseMessages' % MNS
 
     @classmethod
     def _response_message_tag(cls):
-        """The name of the element of a single response message"""
+        """Return the name of the element of a single response message"""
         return '{%s}%sResponseMessage' % (MNS, cls.SERVICE_NAME)
 
     @classmethod
@@ -371,7 +372,7 @@ class EWSService(metaclass=abc.ABCMeta):
         return header, body
 
     def _get_soap_messages(self, body, **parse_opts):
-        """Returns the elements in the response containing the response messages. Raises any SOAP exceptions."""
+        """Return the elements in the response containing the response messages. Raises any SOAP exceptions."""
         response = body.find(self._response_tag())
         if response is None:
             fault = body.find('{%s}Fault' % SOAPNS)
@@ -427,7 +428,7 @@ class EWSService(metaclass=abc.ABCMeta):
             faultcode, faultstring, faultactor, detail))
 
     def _get_element_container(self, message, name=None):
-        """Returns the XML element in a response element that contains the elements we want the service to return. For
+        """Return the XML element in a response element that contains the elements we want the service to return. For
         example, in a GetFolder response, 'message' is the GetFolderResponseMessage element, and we return the 'Folders'
         element:
 
@@ -533,7 +534,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     code, text, msg_xml))
 
     def _get_elements_in_response(self, response):
-        """Takes a list of 'SomeServiceResponseMessage' elements and returns the elements in each response message that
+        """Take a list of 'SomeServiceResponseMessage' elements and return the elements in each response message that
         we want the service to return. With e.g. 'CreateItem', we get a list of 'CreateItemResponseMessage' elements
         and return the 'Message' elements.
 
@@ -567,7 +568,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        """Returns a list of response elements from an XML response element container. With e.g.
+        """Return a list of response elements from an XML response element container. With e.g.
         'CreateItem', 'Items' is the container element and we return the 'Message' child elements:
 
           <m:Items>
@@ -596,7 +597,7 @@ class EWSService(metaclass=abc.ABCMeta):
             yield e
 
     def _get_pages(self, payload_func, kwargs, expected_message_count):
-        """Requests a page, or a list of pages if multiple collections are pages in a single request. Returns each
+        """Request a page, or a list of pages if multiple collections are pages in a single request. Return each
         page.
         """
         payload = payload_func(**kwargs)

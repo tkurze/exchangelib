@@ -9,7 +9,7 @@ class GetItem(EWSAccountService):
     element_container_name = '{%s}Items' % MNS
 
     def call(self, items, additional_fields, shape):
-        """Returns all items in an account that correspond to a list of ID's, in stable order.
+        """Return all items in an account that correspond to a list of ID's, in stable order.
 
         Args:
           items: a list of (id, changekey) tuples or Item objects

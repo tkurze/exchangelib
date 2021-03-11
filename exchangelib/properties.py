@@ -283,7 +283,7 @@ class EWSElement(metaclass=abc.ABCMeta):
 
     @classmethod
     def validate_field(cls, field, version):
-        """Takes a list of fieldnames, Field or FieldPath objects pointing to item fields, and checks that they are
+        """Take a list of fieldnames, Field or FieldPath objects pointing to item fields, and check that they are
         valid for the given version.
 
         Args:
@@ -803,8 +803,8 @@ class TimeZone(EWSElement):
     __slots__ = tuple(f.name for f in FIELDS)
 
     def to_server_timezone(self, timezones, for_year):
-        """Returns the Microsoft timezone ID corresponding to this timezone. There may not be a match at all, and there
-        may be multiple matches. If so, we return a random timezone ID.
+        """Return the Microsoft timezone ID corresponding to this timezone. There may not be a match at all, and there
+        may be multiple matches. If so, return a random timezone ID.
 
         Args:
           timezones: A list of server timezones, as returned by Protocol.get_timezones(return_full_timezone_data=True)

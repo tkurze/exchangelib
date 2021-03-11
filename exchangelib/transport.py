@@ -103,12 +103,11 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
 
 
 def get_auth_instance(auth_type, **kwargs):
-    """Returns an *Auth instance suitable for the requests package
+    """Return an *Auth instance suitable for the requests package.
 
     Args:
       auth_type:
       **kwargs:
-
     """
     model = AUTH_TYPE_MAP[auth_type]
     if model is None:

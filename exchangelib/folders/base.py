@@ -156,7 +156,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         return FolderCollection(account=self.account, folders=self._glob(pattern))
 
     def tree(self):
-        """Returns a string representation of the folder structure of this folder. Example:
+        """Return a string representation of the folder structure of this folder. Example:
 
         root
         ├── inbox
@@ -205,7 +205,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
     @staticmethod
     def folder_cls_from_container_class(container_class):
-        """Returns a reasonable folder class given a container class, e.g. 'IPF.Note'. Don't iterate WELLKNOWN_FOLDERS
+        """Return a reasonable folder class given a container class, e.g. 'IPF.Note'. Don't iterate WELLKNOWN_FOLDERS
         because many folder classes have the same CONTAINER_CLASS.
 
         Args:

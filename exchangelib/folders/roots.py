@@ -195,7 +195,7 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
 
     @classmethod
     def folder_cls_from_folder_name(cls, folder_name, locale):
-        """Returns the folder class that matches a localized folder name.
+        """Return the folder class that matches a localized folder name.
 
         locale is a string, e.g. 'da_DK'
 

@@ -6,7 +6,7 @@ from ..version import EXCHANGE_2013_SP1
 
 
 class DeleteItem(EWSAccountService):
-    """Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
+    """Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
     (success[True|False], errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem

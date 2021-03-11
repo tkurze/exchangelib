@@ -442,7 +442,7 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def people(self):
-        """Changes the queryset to search the folder for Personas instead of Items"""
+        """Change the queryset to search the folder for Personas instead of Items"""
         new_qs = self._copy_self()
         new_qs.request_type = self.PERSONA
         return new_qs
@@ -616,7 +616,7 @@ class QuerySet(SearchableMixIn):
 
     def send(self, page_size=1000, **send_kwargs):
         """Send the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and send per request. We're only fetching the IDs, so keep it high
+        to fetch and send per request. We're only fetching the IDs, so keep it high.
 
         Args:
           page_size:  (Default value = 1000)
@@ -715,7 +715,7 @@ def _get_value_or_default(item, field_order):
 
 
 def _default_field_value(field):
-    """Returns the default value of a field. If the field does not have a default value, try creating an empty instance
+    """Return the default value of a field. If the field does not have a default value, try creating an empty instance
     of the field value class. If that doesn't work, there's really nothing we can do about it; we'll raise an error.
     """
     return field.default or ([field.value_cls()] if field.is_list else field.value_cls())

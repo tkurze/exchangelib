@@ -50,8 +50,8 @@ class CreateItem(EWSAccountService):
             yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        """Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-        convert items to XML Elements
+        """Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
 

@@ -459,7 +459,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         )
 
     def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view='DetailedMerged'):
-        """Returns free/busy information for a list of accounts
+        """Return free/busy information for a list of accounts.
 
         Args:
           accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
@@ -550,7 +550,9 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
 
     def get_searchable_mailboxes(self, search_filter=None, expand_group_membership=False):
-        """This method is only available to users who have been assigned the Discovery Management RBAC role. See
+        """Call the GetSearchableMailboxes service to get mailboxes that can be searched.
+
+        This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
         Args:
@@ -566,7 +568,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         ))
 
     def convert_ids(self, ids, destination_format):
-        """Converts item and folder IDs between multiple formats
+        """Convert item and folder IDs between multiple formats.
 
         Args:
           ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
@@ -697,7 +699,7 @@ class FaultTolerance(RetryPolicy):
 
     @property
     def back_off_until(self):
-        """Returns the back off value as a datetime. Resets the current back off value if it has expired."""
+        """Return the back off value as a datetime. Reset the current back off value if it has expired."""
         if self._back_off_until is None:
             return None
         with self._back_off_lock:

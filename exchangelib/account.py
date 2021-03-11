@@ -636,7 +636,7 @@ class Account:
 
     @property
     def delegates(self):
-        """Returns a list of DelegateUser objects representing the delegates that are set on this account"""
+        """Return a list of DelegateUser objects representing the delegates that are set on this account"""
         delegates = []
         for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
             if isinstance(d, Exception):

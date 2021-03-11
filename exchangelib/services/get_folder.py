@@ -14,7 +14,7 @@ class GetFolder(EWSAccountService):
     )
 
     def call(self, folders, additional_fields, shape):
-        """Takes a folder ID and returns the full information for that folder.
+        """Take a folder ID and returns the full information for that folder.
 
         Args:
           folders: a list of Folder objects

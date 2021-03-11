@@ -121,15 +121,16 @@ class CalendarItem(Item, AcceptDeclineMixIn):
     __slots__ = tuple(f.name for f in LOCAL_FIELDS)
 
     def occurrence(self, index):
-        """
-
-        Args:
-          index:
-
-        Returns:
-          is 1-based. No other field values are fetched from the server.
+        """Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
+        Call refresh() on the item do do so.
 
         Only call this method on a recurring master.
+
+        Args:
+          index: The index, which is 1-based
+
+        Returns:
+          The occurrence
         """
         return self.__class__(
             account=self.account,
@@ -138,12 +139,13 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         )
 
     def recurring_master(self):
-        """
+        """Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
+        Call refresh() on the item do do so.
+
+        Only call this method on an occurrence of a recurring master.
 
         Returns:
           other field values are fetched from the server.
-
-        Only call this method on an occurrence of a recurring master.
         """
         return self.__class__(
             account=self.account,
@@ -426,6 +428,7 @@ class DeclineItem(BaseMeetingReplyItem):
 
 class CancelCalendarItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/cancelcalendaritem"""
+
     ELEMENT_NAME = 'CancelCalendarItem'
     FIELDS = Fields(*(f for f in BaseReplyItem.FIELDS if f.name != 'author'))
     __slots__ = ()

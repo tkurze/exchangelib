@@ -453,7 +453,7 @@ class BytesGeneratorIO(io.RawIOBase):
 
 
 class DocumentYielder:
-    """Looks for XML documents in a streaming HTTP response and yields them as they become available from the stream"""
+    """Look for XML documents in a streaming HTTP response and yield them as they become available from the stream"""
 
     def __init__(self, content_iterator, document_tag='Envelope'):
         self._iterator = content_iterator

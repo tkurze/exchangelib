@@ -54,8 +54,8 @@ class TasksTest(CommonItemTest):
         self.assertEqual(item.percent_complete, Decimal(100))
 
     def test_recurring_item(self):
-        """Changes to an occurrence of a recurring task cause one-off tasks to be generated when the following updates
-        are made:
+        """Test that changes to an occurrence of a recurring task cause one-off tasks to be generated when the
+        following updates are made:
         * The status property of a regenerating or nonregenerating recurrent task is set to Completed.
         * The start date or end date of a nonregenerating recurrent task is changed.
         """
