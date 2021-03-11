@@ -57,6 +57,7 @@ class ParseError(lxml.etree.ParseError):
 
 class ElementNotFound(Exception):
     """Raised when the expected element was not found in a response stream"""
+
     def __init__(self, msg, data):
         super().__init__(msg)
         self.data = data
@@ -633,12 +634,14 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
 
 class DummyRequest:
     """A class to fake a requests Request object for functions that expect this"""
+
     def __init__(self, headers):
         self.headers = headers
 
 
 class DummyResponse:
     """A class to fake a requests Response object for functions that expect this"""
+
     def __init__(self, url, headers, request_headers, content=b'', status_code=503, history=None):
         self.status_code = status_code
         self.url = url

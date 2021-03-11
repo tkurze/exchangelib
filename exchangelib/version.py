@@ -206,7 +206,7 @@ class Version:
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
-        """Tries to ask the server which version it has. We haven't set up an Account object yet, so we generate requests
+        """Ask the server which version it has. We haven't set up an Account object yet, so we generate requests
         by hand. We only need a response header containing a ServerVersionInfo element.
 
         To get API version and build numbers from the server, we need to send a valid SOAP request. We can't do that

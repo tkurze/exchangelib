@@ -13,7 +13,7 @@ CLDR_WINZONE_VERSION = '2021a'
 
 
 def generate_map(timeout=10):
-    """Helper method to update the map if the CLDR database is updated
+    """Create a new CLDR_TO_MS_TIMEZONE_MAP map from the CLDR data. Used when the CLDR database is updated.
 
     Args:
       timeout:  (Default value = 10)

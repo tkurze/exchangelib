@@ -137,11 +137,10 @@ class OAuth2Credentials(BaseCredentials):
         pass
 
     def on_token_auto_refreshed(self, access_token):
-        """Called after the access token is refreshed (requests-oauthlib
-        can automatically refresh tokens if given an OAuth client ID and
-        secret, so this is how our copy of the token stays up-to-date).
-        Applications that cache access tokens can override this to store
-        the new token - just remember to call the super() method!
+        """Set the access_token. Called after the access token is refreshed (requests-oauthlib can automatically
+        refresh tokens if given an OAuth client ID and secret, so this is how our copy of the token stays up-to-date).
+        Applications that cache access tokens can override this to store the new token - just remember to call the
+        super() method.
 
         Args:
           access_token: New token obtained by refreshing

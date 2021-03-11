@@ -98,8 +98,8 @@ def split_field_path(field_path):
 
 
 def resolve_field_path(field_path, folder, strict=True):
-    """Takes the name of a field, or '__'-delimited path to a subfield, and returns the corresponding Field object,
-    label and SubField object
+    """Take the name of a field, or '__'-delimited path to a subfield, and return the corresponding Field object,
+    label and SubField object.
     """
     from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
     fieldname, label, subfieldname = split_field_path(field_path)
@@ -853,7 +853,7 @@ class CultureField(CharField):
 
 
 class Choice:
-    """Implements versioned choices for the ChoiceField field"""
+    """Implement versioned choices for the ChoiceField field"""
 
     def __init__(self, value, supported_from=None):
         self.value = value

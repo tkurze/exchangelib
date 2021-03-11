@@ -326,7 +326,7 @@ class Autodiscover(EWSElement):
 
     @classmethod
     def from_bytes(cls, bytes_content):
-        """An Autodiscover request and response example is available at:
+        """Create an instance from response bytes. An Autodiscover request and response example is available at:
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/pox-autodiscover-response-for-exchange
 
         Args:

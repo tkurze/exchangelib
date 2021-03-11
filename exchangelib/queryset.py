@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class SearchableMixIn(metaclass=abc.ABCMeta):
-    """Implements a search API for inheritance"""
+    """Implement a search API for inheritance"""
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):

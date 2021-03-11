@@ -17,6 +17,8 @@ from .common import EWSTest, MockResponse
 
 
 class AccountTest(EWSTest):
+    """Test features of the Account object"""
+
     def test_magic(self):
         self.account.fullname = 'John Doe'
         self.assertIn(self.account.primary_smtp_address, str(self.account))

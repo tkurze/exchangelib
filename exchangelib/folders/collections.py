@@ -30,7 +30,7 @@ class FolderCollection(SearchableMixIn):
     REQUIRED_FOLDER_FIELDS = ('name', 'folder_class')
 
     def __init__(self, account, folders):
-        """Implements a search API on a collection of folders
+        """Implement a search API on a collection of folders.
 
         Args:
           account: An Account object
@@ -98,7 +98,7 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).people()
 
     def view(self, start, end, max_items=None, *args, **kwargs):
-        """Implements the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
+        """Implement the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
         only returns the master CalendarItem for recurring items, while 'view' unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
 

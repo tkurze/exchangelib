@@ -533,7 +533,7 @@ class Q:
 
 
 class Restriction:
-    """Implements an EWS Restriction type."""
+    """Implement an EWS Restriction type."""
 
     # The type of item the restriction applies to
     FOLDERS = 'folders'
