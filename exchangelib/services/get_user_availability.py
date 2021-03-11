@@ -7,8 +7,8 @@ class GetUserAvailability(EWSService):
     """Get detailed availability information for a list of users
     MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation
-
     """
+
     SERVICE_NAME = 'GetUserAvailability'
 
     def call(self, timezone, mailbox_data, free_busy_view_options):

@@ -48,8 +48,8 @@ class QuerySet(SearchableMixIn):
     build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
-
     """
+
     VALUES = 'values'
     VALUES_LIST = 'values_list'
     FLAT = 'flat'

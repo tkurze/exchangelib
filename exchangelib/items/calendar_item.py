@@ -55,6 +55,7 @@ class AcceptDeclineMixIn:
 
 class CalendarItem(Item, AcceptDeclineMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendaritem"""
+
     ELEMENT_NAME = 'CalendarItem'
     LOCAL_FIELDS = Fields(
         TextField('uid', field_uri='calendar:UID', is_required_after_save=True, is_searchable=False),
@@ -279,8 +280,8 @@ class BaseMeetingItem(Item):
         when you send a calendar item to attendees; they are not explicitly created.
 
     Therefore BaseMeetingItem inherits from  EWSElement has no save() or send() method
-
     """
+
     LOCAL_FIELDS = Message.LOCAL_FIELDS[:14] + Fields(
         AssociatedCalendarItemIdField('associated_calendar_item_id', field_uri='meeting:AssociatedCalendarItemId'),
         BooleanField('is_delegated', field_uri='meeting:IsDelegated', is_read_only=True, default=False),
@@ -298,6 +299,7 @@ class BaseMeetingItem(Item):
 
 class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingrequest"""
+
     ELEMENT_NAME = 'MeetingRequest'
     LOCAL_FIELDS = Fields(
         ChoiceField('meeting_request_type', field_uri='meetingRequest:MeetingRequestType',
@@ -323,6 +325,7 @@ class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
 
 class MeetingMessage(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingmessage"""
+
     ELEMENT_NAME = 'MeetingMessage'
 
     # FIELDS on this element are shuffled compared to other elements
@@ -338,6 +341,7 @@ class MeetingMessage(BaseMeetingItem):
 
 class MeetingResponse(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingresponse"""
+
     ELEMENT_NAME = 'MeetingResponse'
     LOCAL_FIELDS = Fields(
         MailboxField('received_by', field_uri='message:ReceivedBy', is_read_only=True),
@@ -361,6 +365,7 @@ class MeetingResponse(BaseMeetingItem):
 
 class MeetingCancellation(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingcancellation"""
+
     ELEMENT_NAME = 'MeetingCancellation'
 
     __slots__ = ()
@@ -368,6 +373,7 @@ class MeetingCancellation(BaseMeetingItem):
 
 class BaseMeetingReplyItem(BaseItem, metaclass=abc.ABCMeta):
     """Base class for meeting request reply items that share the same fields (Accept, TentativelyAccept, Decline)"""
+
     FIELDS = Fields(
         CharField('item_class', field_uri='item:ItemClass', is_read_only=True),
         ChoiceField('sensitivity', field_uri='item:Sensitivity', choices={
@@ -398,6 +404,7 @@ class BaseMeetingReplyItem(BaseItem, metaclass=abc.ABCMeta):
 
 class AcceptItem(BaseMeetingReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptitem"""
+
     ELEMENT_NAME = 'AcceptItem'
 
     __slots__ = ()
@@ -405,6 +412,7 @@ class AcceptItem(BaseMeetingReplyItem):
 
 class TentativelyAcceptItem(BaseMeetingReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/tentativelyacceptitem"""
+
     ELEMENT_NAME = 'TentativelyAcceptItem'
 
     __slots__ = ()
@@ -412,6 +420,7 @@ class TentativelyAcceptItem(BaseMeetingReplyItem):
 
 class DeclineItem(BaseMeetingReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/declineitem"""
+
     ELEMENT_NAME = 'DeclineItem'
 
     __slots__ = ()

@@ -8,15 +8,17 @@ from .util import create_element, set_xml_value
 
 class OofSettings(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oofsettings"""
+
     ELEMENT_NAME = 'OofSettings'
     REQUEST_ELEMENT_NAME = 'UserOofSettings'
 
     ENABLED = 'Enabled'
     SCHEDULED = 'Scheduled'
     DISABLED = 'Disabled'
+    STATE_CHOICES = (ENABLED, SCHEDULED, DISABLED)
+
     FIELDS = Fields(
-        ChoiceField('state', field_uri='OofState', is_required=True,
-                    choices={Choice(ENABLED), Choice(SCHEDULED), Choice(DISABLED)}),
+        ChoiceField('state', field_uri='OofState', is_required=True, choices={Choice(c) for c in STATE_CHOICES}),
         ChoiceField('external_audience', field_uri='ExternalAudience',
                     choices={Choice('None'), Choice('Known'), Choice('All')}, default='All'),
         DateTimeField('start', field_uri='StartTime'),

@@ -118,8 +118,8 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
 
 class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
     """Base class for all other classes that implement EWS items"""
-    ID_ELEMENT_CLS = ItemId
 
+    ID_ELEMENT_CLS = ItemId
     FIELDS = Fields(
         IdElementField('_id', field_uri='item:ItemId', value_cls=ID_ELEMENT_CLS),
     )
@@ -156,6 +156,7 @@ class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
 
 class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
     """Base class for reply/forward elements that share the same fields"""
+
     FIELDS = Fields(
         CharField('subject', field_uri='Subject'),
         BodyField('body', field_uri='Body'),  # Accepts and returns Body or HTMLBody instances
@@ -213,6 +214,7 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
 
 class BulkCreateResult(BaseItem):
     """A dummy class to store return values from a CreateItem service call"""
+
     LOCAL_FIELDS = Fields(
         AttachmentField('attachments', field_uri='item:Attachments'),  # ItemAttachment or FileAttachment
     )

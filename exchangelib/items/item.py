@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 
 class Item(BaseItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item"""
-    ELEMENT_NAME = 'Item'
 
+    ELEMENT_NAME = 'Item'
     LOCAL_FIELDS = Fields(
         MimeContentField('mime_content', field_uri='item:MimeContent', is_read_only_after_send=True),
         EWSElementField('parent_folder_id', field_uri='item:ParentFolderId', value_cls=ParentFolderId,

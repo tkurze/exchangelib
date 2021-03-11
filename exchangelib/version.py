@@ -187,6 +187,7 @@ EXCHANGE_O365 = Build(15, 20)
 
 class Version:
     """Holds information about the server version"""
+
     __slots__ = ('build', 'api_version')
 
     def __init__(self, build, api_version=None):

@@ -59,19 +59,19 @@ WEEKDAYS = WEEKDAY_NAMES + EXTRA_WEEKDAY_OPTIONS
 
 
 class InvalidField(ValueError):
-    pass
+    """Used when a field name does not match any defined fields"""
 
 
 class InvalidFieldForVersion(ValueError):
-    pass
+    """Used when a field is not supported on the given Exchnage version"""
 
 
 class InvalidChoiceForVersion(ValueError):
-    pass
+    """Used when a value is not valid for an enum-type field"""
 
 
 def split_field_path(field_path):
-    """
+    """Split a string path into its field, label and subfield parts
 
     Args:
       field_path:
@@ -81,7 +81,6 @@ def split_field_path(field_path):
       'start' -> ('start', None, None)
       'phone_numbers__PrimaryPhone' -> ('phone_numbers', 'PrimaryPhone', None)
       'physical_addresses__Home__street' -> ('physical_addresses', 'Home', 'street')
-
     """
     if not isinstance(field_path, str):
         raise ValueError("Field path %r must be a string" % field_path)
@@ -99,8 +98,9 @@ def split_field_path(field_path):
 
 
 def resolve_field_path(field_path, folder, strict=True):
-    # Takes the name of a field, or '__'-delimited path to a subfield, and returns the corresponding Field object,
-    # label and SubField object
+    """Takes the name of a field, or '__'-delimited path to a subfield, and returns the corresponding Field object,
+    label and SubField object
+    """
     from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
     fieldname, label, subfieldname = split_field_path(field_path)
     field = folder.get_item_field_by_fieldname(fieldname)
@@ -159,7 +159,6 @@ class FieldPath:
     """Holds values needed to point to a single field. For indexed properties, we allow setting either field,
     field and label, or field, label and subfield. This allows pointing to either the full indexed property set, a
     property with a specific label, or a particular subfield field on that property.
-
     """
 
     def __init__(self, field, label=None, subfield=None):
@@ -266,6 +265,7 @@ class FieldOrder:
 
 class Field(metaclass=abc.ABCMeta):
     """Holds information related to an item field"""
+
     value_cls = None
     is_list = False
     # Is the field a complex EWS type? Quoting the EWS FindItem docs:
@@ -358,6 +358,11 @@ class Field(metaclass=abc.ABCMeta):
 
 
 class FieldURIField(Field):
+    """A field that has a FieldURI value in EWS. This means it's value is contained in an XML element or arrtibute. It
+    may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
+    'itemtype:FieldName'
+    """
+
     def __init__(self, *args, **kwargs):
         self.field_uri = kwargs.pop('field_uri', None)
         self.namespace = kwargs.pop('namespace', TNS)
@@ -412,14 +417,18 @@ class FieldURIField(Field):
 
 
 class BooleanField(FieldURIField):
+    """A field that handles boolean values"""
+
     value_cls = bool
 
 
 class OnOffField(BooleanField):
-    pass
+    """A field that handles boolean values that are On/Off instead of True/False"""
 
 
 class IntegerField(FieldURIField):
+    """A field that handles integer values"""
+
     value_cls = int
 
     def __init__(self, *args, **kwargs):
@@ -446,13 +455,14 @@ class IntegerField(FieldURIField):
 
 
 class DecimalField(IntegerField):
+    """A field that handles decimal values"""
+
     value_cls = Decimal
 
 
 class EnumField(IntegerField):
     """A field type where you can enter either the 1-based index in an enum (tuple), or the enum value. Values will be
     stored internally as integers but output in XML as strings.
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -513,6 +523,8 @@ class EnumField(IntegerField):
 
 
 class EnumListField(EnumField):
+    """Like EnumField, but for lists of enum values"""
+
     is_list = True
 
 
@@ -528,7 +540,8 @@ class EnumAsIntField(EnumField):
 
 
 class AppointmentStateField(IntegerField):
-    # MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate"""
+
     NONE = 'None'
     MEETING = 'Meeting'
     RECEIVED = 'Received'
@@ -548,6 +561,8 @@ class AppointmentStateField(IntegerField):
 
 
 class Base64Field(FieldURIField):
+    """A field that handles binary data and automatically Base64 encodes and decodes the data"""
+
     value_cls = bytes
     is_complex = True
 
@@ -558,13 +573,15 @@ class Base64Field(FieldURIField):
 
 
 class MimeContentField(Base64Field):
-    # This element has an optional 'CharacterSet' attribute, but it specifies the encoding of the base64-encoded
-    # string (which doesn't make sense since base64-encoded strings are always ASCII). We ignore it here because
-    # the decoded data could be in some other encoding, specified in the "Content-Type:" header.
-    pass
+    """Like Base64Field. This element has an optional 'CharacterSet' attribute, but it specifies the encoding of the
+    base64-encoded string (which doesn't make sense since base64-encoded strings are always ASCII). We ignore it here
+    because the decoded data could be in some other encoding, specified in the "Content-Type" HTTP header.
+    """
 
 
 class DateField(FieldURIField):
+    """A field that handles date values"""
+
     value_cls = EWSDate
 
     def clean(self, value, version=None):
@@ -575,7 +592,7 @@ class DateField(FieldURIField):
 
 
 class DateTimeBackedDateField(DateField):
-    # A field that acts like a date, but where values are sent to EWS as EWSDateTime.
+    """A field that acts like a date, but where values are sent to EWS as EWSDateTime."""
 
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
@@ -608,6 +625,8 @@ class DateTimeBackedDateField(DateField):
 
 
 class TimeField(FieldURIField):
+    """A field that handles time values"""
+
     value_cls = datetime.time
 
     def from_xml(self, elem, account):
@@ -625,6 +644,8 @@ class TimeField(FieldURIField):
 
 
 class DateTimeField(FieldURIField):
+    """A field that handles datetime values"""
+
     value_cls = EWSDateTime
 
     def clean(self, value, version=None):
@@ -665,7 +686,6 @@ class DateOrDateTimeField(DateTimeField):
     For all-day calendar items, we assume both start and end dates are inclusive.
 
     For filtering kwarg validation and other places where we must decide on a specific class, we settle on datetime.
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -689,6 +709,8 @@ class DateOrDateTimeField(DateTimeField):
 
 
 class TimeZoneField(FieldURIField):
+    """A field that handles timezone values"""
+
     value_cls = EWSTimeZone
 
     def clean(self, value, version=None):
@@ -721,11 +743,14 @@ class TimeZoneField(FieldURIField):
 
 class TextField(FieldURIField):
     """A field that stores a string value with no length limit"""
+
     value_cls = str
     is_complex = True
 
 
 class TextListField(TextField):
+    """Like TextField, but for lists of text"""
+
     is_list = True
 
     def from_xml(self, elem, account):
@@ -736,6 +761,8 @@ class TextListField(TextField):
 
 
 class MessageField(TextField):
+    """A field that handles the Message element"""
+
     INNER_ELEMENT_NAME = 'Message'
 
     def from_xml(self, elem, account):
@@ -756,6 +783,7 @@ class MessageField(TextField):
 
 class CharField(TextField):
     """A field that stores a string value with a limited length"""
+
     is_complex = False
 
     def __init__(self, *args, **kwargs):
@@ -782,7 +810,6 @@ class IdField(CharField):
     """A field to hold the 'Id' and 'Changekey' attributes on 'ItemId' type items. There is no guaranteed max length,
     but we can assume 512 bytes in practice. See
     https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-identifiers-in-exchange
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -793,6 +820,8 @@ class IdField(CharField):
 
 
 class CharListField(CharField):
+    """Like CharField, but for lists of strings"""
+
     is_list = True
 
     def __init__(self, *args, **kwargs):
@@ -812,19 +841,15 @@ class CharListField(CharField):
 class URIField(TextField):
     """Helper to mark strings that must conform to xsd:anyURI
     If we want an URI validator, see http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri
-
     """
-    pass
 
 
 class EmailAddressField(CharField):
     """A helper class used for email address string that we can use for email validation"""
-    pass
 
 
 class CultureField(CharField):
     """Helper to mark strings that are # RFC 1766 culture values."""
-    pass
 
 
 class Choice:
@@ -844,6 +869,8 @@ class Choice:
 
 
 class ChoiceField(CharField):
+    """Like CharField, but restricts the value to a limited set of strings"""
+
     def __init__(self, *args, **kwargs):
         self.choices = kwargs.pop('choices')
         super().__init__(*args, **kwargs)
@@ -876,12 +903,16 @@ FREE_BUSY_CHOICES = [Choice('Free'), Choice('Tentative'), Choice('Busy'), Choice
 
 
 class FreeBusyStatusField(ChoiceField):
+    """Like ChoiceField, but specifically for Free/Busy values"""
+
     def __init__(self, *args, **kwargs):
         kwargs['choices'] = set(FREE_BUSY_CHOICES)
         super().__init__(*args, **kwargs)
 
 
 class BodyField(TextField):
+    """A TextField with specific requirements for the Item body"""
+
     def __init__(self, *args, **kwargs):
         from .properties import Body
         self.value_cls = Body
@@ -916,6 +947,8 @@ class BodyField(TextField):
 
 
 class EWSElementField(FieldURIField):
+    """A generic field for any EWSElement object"""
+
     def __init__(self, *args, **kwargs):
         self._value_cls = kwargs.pop('value_cls')
         if 'namespace' not in kwargs:
@@ -953,6 +986,7 @@ class EWSElementField(FieldURIField):
 
 
 class EWSElementListField(EWSElementField):
+    """Like EWSElementField, but for lists of EWSElement objects"""
     is_list = True
     is_complex = True
 
@@ -1111,6 +1145,8 @@ class AttendeesField(EWSElementListField):
 
 
 class AttachmentField(EWSElementListField):
+    """A field for item attachments"""
+
     def __init__(self, *args, **kwargs):
         from .attachments import Attachment
         kwargs['value_cls'] = Attachment
@@ -1142,9 +1178,9 @@ class LabelField(ChoiceField):
 
 
 class SubField(Field):
-    namespace = TNS
+    """A field to hold the value on an SingleFieldIndexedElement"""
 
-    # A field to hold the value on an SingleFieldIndexedElement
+    namespace = TNS
     value_cls = str
 
     def from_xml(self, elem, account):
@@ -1164,6 +1200,7 @@ class SubField(Field):
 
 class EmailSubField(SubField):
     """A field to hold the value on an SingleFieldIndexedElement"""
+
     value_cls = str
 
     def from_xml(self, elem, account):
@@ -1172,6 +1209,7 @@ class EmailSubField(SubField):
 
 class NamedSubField(SubField):
     """A field to hold the value on an MultiFieldIndexedElement"""
+
     value_cls = str
 
     def __init__(self, *args, **kwargs):
@@ -1203,6 +1241,8 @@ class NamedSubField(SubField):
 
 
 class IndexedField(EWSElementField):
+    """A base class for all indexed fields"""
+
     PARENT_ELEMENT_NAME = None
 
     def to_xml(self, value, version):

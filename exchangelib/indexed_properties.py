@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 class IndexedElement(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element"""
+
     LABELS = set()
 
     __slots__ = ()
@@ -16,6 +17,7 @@ class IndexedElement(EWSElement, metaclass=abc.ABCMeta):
 
 class SingleFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element with a single field"""
+
     __slots__ = ()
 
     @classmethod
@@ -28,6 +30,7 @@ class SingleFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
 
 class EmailAddress(SingleFieldIndexedElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-emailaddress"""
+
     ELEMENT_NAME = 'Entry'
     LABEL_CHOICES = ('EmailAddress1', 'EmailAddress2', 'EmailAddress3')
     FIELDS = Fields(
@@ -40,6 +43,7 @@ class EmailAddress(SingleFieldIndexedElement):
 
 class PhoneNumber(SingleFieldIndexedElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber"""
+
     ELEMENT_NAME = 'Entry'
     FIELDS = Fields(
         LabelField('label', field_uri='Key', choices={
@@ -56,11 +60,13 @@ class PhoneNumber(SingleFieldIndexedElement):
 
 class MultiFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
     """Base class for all classes that implement an indexed element with multiple fields"""
+
     __slots__ = ()
 
 
 class PhysicalAddress(MultiFieldIndexedElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-physicaladdress"""
+
     ELEMENT_NAME = 'Entry'
     FIELDS = Fields(
         LabelField('label', field_uri='Key', choices={

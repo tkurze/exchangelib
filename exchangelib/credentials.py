@@ -21,7 +21,6 @@ class BaseCredentials(metaclass=abc.ABCMeta):
     Establishes a method for refreshing credentials (mostly useful with
     OAuth, which expires tokens relatively frequently) and provides a
     lock for synchronizing access to the object around refreshes.
-
     """
 
     def __init__(self):
@@ -79,8 +78,8 @@ class Credentials(BaseCredentials):
     * WINDOMAIN\username
     * User Principal Name (UPN)
       password: Clear-text password
-
     """
+
     EMAIL = 'email'
     DOMAIN = 'domain'
     UPN = 'upn'
@@ -122,7 +121,6 @@ class OAuth2Credentials(BaseCredentials):
       client_secret: Secret associated with the OAuth application
       tenant_id: Microsoft tenant ID of the account to access
       identity: An Identity object representing the account that these credentials are connected to.
-
     """
 
     def __init__(self, client_id, client_secret, tenant_id=None, identity=None):
@@ -210,7 +208,6 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
       access_token: Previously-obtained access token. If a token exists and the application will handle refreshing
         by itself (or opts not to handle it), this parameter alone is sufficient.
       identity: An Identity object representing the account that these credentials are connected to.
-
     """
 
     def __init__(self, authorization_code=None, access_token=None, **kwargs):

@@ -8,6 +8,7 @@ from ..util import create_element, MNS
 
 class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation"""
+
     SERVICE_NAME = 'Subscribe'
     EVENT_TYPES = (
         'CopiedEvent',

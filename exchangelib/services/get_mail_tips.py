@@ -5,6 +5,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class GetMailTips(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation"""
+
     SERVICE_NAME = 'GetMailTips'
 
     def call(self, sending_as, recipients, mail_tips_requested):

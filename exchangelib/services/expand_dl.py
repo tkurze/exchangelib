@@ -6,6 +6,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class ExpandDL(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation"""
+
     SERVICE_NAME = 'ExpandDL'
     element_container_name = '{%s}DLExpansion' % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults

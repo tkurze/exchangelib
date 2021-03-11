@@ -7,6 +7,7 @@ class Unsubscribe(EWSAccountService):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation
     """
+
     SERVICE_NAME = 'Unsubscribe'
     returns_elements = False
 

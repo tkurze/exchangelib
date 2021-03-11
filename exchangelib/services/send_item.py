@@ -4,6 +4,7 @@ from ..util import create_element, set_xml_value
 
 class SendItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation"""
+
     SERVICE_NAME = 'SendItem'
     returns_elements = False
 

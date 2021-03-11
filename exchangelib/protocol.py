@@ -359,6 +359,8 @@ class BaseProtocol:
 
 
 class CachingProtocol(type):
+    """A metaclass for Protocol that caches Protocol instances based on a server+username key"""
+
     _protocol_cache = {}
     _protocol_cache_lock = Lock()
 
@@ -624,6 +626,7 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
 class TLSClientAuth(requests.adapters.HTTPAdapter):
     """An HTTP adapter that implements Certificate Based Authentication (CBA)"""
+
     cert_file = None
 
     def init_poolmanager(self, *args, **kwargs):
@@ -633,6 +636,7 @@ class TLSClientAuth(requests.adapters.HTTPAdapter):
 
 class RetryPolicy(metaclass=abc.ABCMeta):
     """Stores retry logic used when faced with errors from the server"""
+
     @property
     @abc.abstractmethod
     def fail_fast(self):
@@ -657,6 +661,7 @@ class RetryPolicy(metaclass=abc.ABCMeta):
 
 class FailFast(RetryPolicy):
     """Fail immediately on server errors"""
+
     @property
     def fail_fast(self):
         return True
@@ -672,7 +677,6 @@ class FailFast(RetryPolicy):
 class FaultTolerance(RetryPolicy):
     """Enables fault-tolerant error handling. Tells internal methods to do an exponential back off when requests start
     failing, and wait up to max_wait seconds before failing.
-
     """
 
     # Back off 60 seconds if we didn't get an explicit suggested value

@@ -7,6 +7,7 @@ from ..version import EXCHANGE_2010
 
 class FindFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder"""
+
     SERVICE_NAME = 'FindFolder'
     element_container_name = '{%s}Folders' % TNS
     paging_container_name = '{%s}RootFolder' % MNS

@@ -6,6 +6,7 @@ from ..version import EXCHANGE_2007_SP1
 
 class GetDelegate(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation"""
+
     SERVICE_NAME = 'GetDelegate'
     supported_from = EXCHANGE_2007_SP1
 

@@ -12,6 +12,7 @@ class GetStreamingEvents(EWSAccountService):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation
     """
+
     SERVICE_NAME = 'GetStreamingEvents'
     element_container_name = '{%s}Notifications' % MNS
     streaming = True

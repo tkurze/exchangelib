@@ -5,6 +5,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class UpdateFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation"""
+
     SERVICE_NAME = 'UpdateFolder'
     element_container_name = '{%s}Folders' % MNS
 

@@ -6,6 +6,7 @@ from ..util import create_element
 class DeleteAttachment(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     """
+
     SERVICE_NAME = 'DeleteAttachment'
 
     def call(self, items):

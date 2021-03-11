@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 
 class FindPeople(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation"""
+
     SERVICE_NAME = 'FindPeople'
     element_container_name = '{%s}People' % MNS
     supported_from = EXCHANGE_2013

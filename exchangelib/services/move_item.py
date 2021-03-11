@@ -4,6 +4,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class MoveItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveitem-operation"""
+
     SERVICE_NAME = 'MoveItem'
     element_container_name = '{%s}Items' % MNS
 

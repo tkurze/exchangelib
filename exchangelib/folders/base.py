@@ -28,6 +28,7 @@ MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFo
 
 class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     """Base class for all classes that implement a folder"""
+
     ELEMENT_NAME = 'Folder'
     NAMESPACE = TNS
     # See https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid
@@ -706,6 +707,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
 class Folder(BaseFolder):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder"""
+
     LOCAL_FIELDS = Fields(
         PermissionSetField('permission_set', field_uri='folder:PermissionSet', supported_from=EXCHANGE_2007_SP1),
         EffectiveRightsField('effective_rights', field_uri='folder:EffectiveRights', is_read_only=True,

@@ -6,6 +6,7 @@ class DeleteUserConfiguration(EWSAccountService):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteuserconfiguration-operation
     """
+
     SERVICE_NAME = 'DeleteUserConfiguration'
     returns_elements = False
 

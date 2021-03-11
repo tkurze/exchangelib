@@ -219,6 +219,7 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
 
 class Root(RootOfHierarchy):
     """The root of the standard folder hierarchy"""
+
     DISTINGUISHED_FOLDER_ID = 'root'
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
     __slots__ = ()
@@ -282,6 +283,7 @@ class Root(RootOfHierarchy):
 
 class PublicFoldersRoot(RootOfHierarchy):
     """The root of the public folders hierarchy. Not available on all mailboxes"""
+
     DISTINGUISHED_FOLDER_ID = 'publicfoldersroot'
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
@@ -323,6 +325,7 @@ class PublicFoldersRoot(RootOfHierarchy):
 
 class ArchiveRoot(RootOfHierarchy):
     """The root of the archive folders hierarchy. Not available on all mailboxes"""
+
     DISTINGUISHED_FOLDER_ID = 'archiveroot'
     supported_from = EXCHANGE_2010_SP1
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT

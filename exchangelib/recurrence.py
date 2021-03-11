@@ -22,19 +22,22 @@ def _week_number_to_str(week_number):
 
 class Pattern(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring pattern elements"""
+
     __slots__ = ()
 
 
 class Regeneration(Pattern, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring regeneration elements"""
+
     __slots__ = ()
 
 
 class AbsoluteYearlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absoluteyearlyrecurrence
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absoluteyearlyrecurrence
     """
-    ELEMENT_NAME = 'AbsoluteYearlyRecurrence'
 
+    ELEMENT_NAME = 'AbsoluteYearlyRecurrence'
     FIELDS = Fields(
         # The day of month of an occurrence, in range 1 -> 31. If a particular month has less days than the day_of_month
         # value, the last day in the month is assumed
@@ -50,10 +53,11 @@ class AbsoluteYearlyPattern(Pattern):
 
 
 class RelativeYearlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativeyearlyrecurrence
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativeyearlyrecurrence
     """
-    ELEMENT_NAME = 'RelativeYearlyRecurrence'
 
+    ELEMENT_NAME = 'RelativeYearlyRecurrence'
     FIELDS = Fields(
         # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -> 7 (1 being Monday).
         # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
@@ -77,10 +81,11 @@ class RelativeYearlyPattern(Pattern):
 
 
 class AbsoluteMonthlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutemonthlyrecurrence
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutemonthlyrecurrence
     """
-    ELEMENT_NAME = 'AbsoluteMonthlyRecurrence'
 
+    ELEMENT_NAME = 'AbsoluteMonthlyRecurrence'
     FIELDS = Fields(
         # Interval, in months, in range 1 -> 99
         IntegerField('interval', field_uri='Interval', min=1, max=99, is_required=True),
@@ -96,10 +101,11 @@ class AbsoluteMonthlyPattern(Pattern):
 
 
 class RelativeMonthlyPattern(Pattern):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativemonthlyrecurrence
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/relativemonthlyrecurrence
     """
-    ELEMENT_NAME = 'RelativeMonthlyRecurrence'
 
+    ELEMENT_NAME = 'RelativeMonthlyRecurrence'
     FIELDS = Fields(
         # Interval, in months, in range 1 -> 99
         IntegerField('interval', field_uri='Interval', min=1, max=99, is_required=True),
@@ -124,8 +130,8 @@ class RelativeMonthlyPattern(Pattern):
 
 class WeeklyPattern(Pattern):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/weeklyrecurrence"""
-    ELEMENT_NAME = 'WeeklyRecurrence'
 
+    ELEMENT_NAME = 'WeeklyRecurrence'
     FIELDS = Fields(
         # Interval, in weeks, in range 1 -> 99
         IntegerField('interval', field_uri='Interval', min=1, max=99, is_required=True),
@@ -151,8 +157,8 @@ class WeeklyPattern(Pattern):
 
 class DailyPattern(Pattern):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/dailyrecurrence"""
-    ELEMENT_NAME = 'DailyRecurrence'
 
+    ELEMENT_NAME = 'DailyRecurrence'
     FIELDS = Fields(
         # Interval, in days, in range 1 -> 999
         IntegerField('interval', field_uri='Interval', min=1, max=999, is_required=True),
@@ -166,8 +172,8 @@ class DailyPattern(Pattern):
 
 class YearlyRegeneration(Regeneration):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/yearlyregeneration"""
-    ELEMENT_NAME = 'YearlyRegeneration'
 
+    ELEMENT_NAME = 'YearlyRegeneration'
     FIELDS = Fields(
         # Interval, in years
         IntegerField('interval', field_uri='Interval', min=1, is_required=True),
@@ -181,8 +187,8 @@ class YearlyRegeneration(Regeneration):
 
 class MonthlyRegeneration(Regeneration):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/monthlyregeneration"""
-    ELEMENT_NAME = 'MonthlyRegeneration'
 
+    ELEMENT_NAME = 'MonthlyRegeneration'
     FIELDS = Fields(
         # Interval, in months
         IntegerField('interval', field_uri='Interval', min=1, is_required=True),
@@ -196,8 +202,8 @@ class MonthlyRegeneration(Regeneration):
 
 class WeeklyRegeneration(Regeneration):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/weeklyregeneration"""
-    ELEMENT_NAME = 'WeeklyRegeneration'
 
+    ELEMENT_NAME = 'WeeklyRegeneration'
     FIELDS = Fields(
         # Interval, in weeks
         IntegerField('interval', field_uri='Interval', min=1, is_required=True),
@@ -211,8 +217,8 @@ class WeeklyRegeneration(Regeneration):
 
 class DailyRegeneration(Regeneration):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/dailyregeneration"""
-    ELEMENT_NAME = 'DailyRegeneration'
 
+    ELEMENT_NAME = 'DailyRegeneration'
     FIELDS = Fields(
         # Interval, in days
         IntegerField('interval', field_uri='Interval', min=1, is_required=True),
@@ -226,13 +232,14 @@ class DailyRegeneration(Regeneration):
 
 class Boundary(EWSElement, metaclass=abc.ABCMeta):
     """Base class for all classes implementing recurring boundary elements"""
+
     __slots__ = ()
 
 
 class NoEndPattern(Boundary):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/noendrecurrence"""
-    ELEMENT_NAME = 'NoEndRecurrence'
 
+    ELEMENT_NAME = 'NoEndRecurrence'
     FIELDS = Fields(
         # Start date, as EWSDate or EWSDateTime
         DateOrDateTimeField('start', field_uri='StartDate', is_required=True),
@@ -246,8 +253,8 @@ class NoEndPattern(Boundary):
 
 class EndDatePattern(Boundary):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/enddaterecurrence"""
-    ELEMENT_NAME = 'EndDateRecurrence'
 
+    ELEMENT_NAME = 'EndDateRecurrence'
     FIELDS = Fields(
         # Start date, as EWSDate or EWSDateTime
         DateOrDateTimeField('start', field_uri='StartDate', is_required=True),
@@ -263,8 +270,8 @@ class EndDatePattern(Boundary):
 
 class NumberedPattern(Boundary):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/numberedrecurrence"""
-    ELEMENT_NAME = 'NumberedRecurrence'
 
+    ELEMENT_NAME = 'NumberedRecurrence'
     FIELDS = Fields(
         # Start date, as EWSDate or EWSDateTime
         DateOrDateTimeField('start', field_uri='StartDate', is_required=True),
@@ -280,9 +287,9 @@ class NumberedPattern(Boundary):
 
 class Occurrence(IdChangeKeyMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/occurrence"""
+
     ELEMENT_NAME = 'Occurrence'
     ID_ELEMENT_CLS = ItemId
-
     FIELDS = Fields(
         IdElementField('_id', field_uri='ItemId', value_cls=ID_ELEMENT_CLS),
         # The modified start time of the item, as EWSDateTime
@@ -303,20 +310,22 @@ class Occurrence(IdChangeKeyMixIn):
 
 class FirstOccurrence(Occurrence):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/firstoccurrence"""
+
     ELEMENT_NAME = 'FirstOccurrence'
     __slots__ = ()
 
 
 class LastOccurrence(Occurrence):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/lastoccurrence"""
+
     ELEMENT_NAME = 'LastOccurrence'
     __slots__ = ()
 
 
 class DeletedOccurrence(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletedoccurrence"""
-    ELEMENT_NAME = 'DeletedOccurrence'
 
+    ELEMENT_NAME = 'DeletedOccurrence'
     FIELDS = Fields(
         # The modified start time of the item, as EWSDateTime
         DateTimeField('start', field_uri='Start'),
@@ -332,10 +341,11 @@ BOUNDARY_CLASSES = NoEndPattern, EndDatePattern, NumberedPattern
 
 
 class Recurrence(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-recurrencetype
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-recurrencetype
     """
-    ELEMENT_NAME = 'Recurrence'
 
+    ELEMENT_NAME = 'Recurrence'
     FIELDS = Fields(
         EWSElementField('pattern', value_cls=Pattern),
         EWSElementField('boundary', value_cls=Boundary),
@@ -387,8 +397,9 @@ class Recurrence(EWSElement):
 
 
 class TaskRecurrence(Recurrence):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-taskrecurrencetype
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-taskrecurrencetype
     """
-    PATTERN_CLASSES = PATTERN_CLASSES + REGENERATION_CLASSES
 
+    PATTERN_CLASSES = PATTERN_CLASSES + REGENERATION_CLASSES
     __slots__ = ()

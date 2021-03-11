@@ -706,8 +706,8 @@ class EWSService(metaclass=abc.ABCMeta):
 
 
 class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
-    """Base class for services that act on items concerning a single Mailbox on the server
-    """
+    """Base class for services that act on items concerning a single Mailbox on the server"""
+
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
 
     def __init__(self, *args, **kwargs):

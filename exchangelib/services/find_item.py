@@ -6,6 +6,7 @@ from ..util import create_element, set_xml_value, TNS, MNS
 
 class FindItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem"""
+
     SERVICE_NAME = 'FindItem'
     element_container_name = '{%s}Items' % TNS
     paging_container_name = '{%s}RootFolder' % MNS

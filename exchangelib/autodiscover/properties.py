@@ -13,6 +13,7 @@ class AutodiscoverBase(EWSElement):
 
 class User(AutodiscoverBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/user-pox"""
+
     ELEMENT_NAME = 'User'
     FIELDS = Fields(
         TextField('display_name', field_uri='DisplayName', namespace=RNS),
@@ -33,18 +34,21 @@ class IntExtUrlBase(AutodiscoverBase):
 
 class AddressBook(IntExtUrlBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/addressbook-pox"""
+
     ELEMENT_NAME = 'AddressBook'
     __slots__ = ()
 
 
 class MailStore(IntExtUrlBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailstore-pox"""
+
     ELEMENT_NAME = 'MailStore'
     __slots__ = ()
 
 
 class NetworkRequirements(AutodiscoverBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/networkrequirements-pox"""
+
     ELEMENT_NAME = 'NetworkRequirements'
     FIELDS = Fields(
         TextField('ipv4_start', field_uri='IPv4Start', namespace=RNS),
@@ -59,8 +63,8 @@ class SimpleProtocol(AutodiscoverBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/protocol-pox
 
     Used for the 'Internal' and 'External' elements that may contain a stripped-down version of the Protocol element.
-
     """
+
     ELEMENT_NAME = 'Protocol'
     WEB = 'WEB'
     EXCH = 'EXCH'
@@ -87,18 +91,21 @@ class IntExtBase(AutodiscoverBase):
 
 class Internal(IntExtBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/internal-pox"""
+
     ELEMENT_NAME = 'Internal'
     __slots__ = ()
 
 
 class External(IntExtBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/external-pox"""
+
     ELEMENT_NAME = 'External'
     __slots__ = ()
 
 
 class Protocol(SimpleProtocol):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/protocol-pox"""
+
     FIELDS = Fields(
         # Attribute 'Type' is ignored here. Has a name conflict with the child element and does not seem useful.
         TextField('version', field_uri='Version', is_attribute=True, namespace=RNS),
@@ -174,6 +181,7 @@ class Protocol(SimpleProtocol):
 
 class Error(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/error-pox"""
+
     ELEMENT_NAME = 'Error'
     NAMESPACE = AUTODISCOVER_BASE_NS
     FIELDS = Fields(
@@ -189,6 +197,7 @@ class Error(EWSElement):
 
 class Account(AutodiscoverBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/account-pox"""
+
     ELEMENT_NAME = 'Account'
     REDIRECT_URL = 'redirectUrl'
     REDIRECT_ADDR = 'redirectAddr'
@@ -226,6 +235,7 @@ class Account(AutodiscoverBase):
 
 class Response(AutodiscoverBase):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/response-pox"""
+
     ELEMENT_NAME = 'Response'
     FIELDS = Fields(
         EWSElementField('user', value_cls=User),
@@ -288,8 +298,8 @@ class ErrorResponse(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/response-pox
 
     Like 'Response', but with a different namespace.
-
     """
+
     ELEMENT_NAME = 'Response'
     NAMESPACE = AUTODISCOVER_BASE_NS
     FIELDS = Fields(

@@ -4,6 +4,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class CreateFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation"""
+
     SERVICE_NAME = 'CreateFolder'
     element_container_name = '{%s}Folders' % MNS
 

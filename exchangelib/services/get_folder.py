@@ -6,6 +6,7 @@ from ..util import create_element, MNS
 
 class GetFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder"""
+
     SERVICE_NAME = 'GetFolder'
     element_container_name = '{%s}Folders' % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (

@@ -7,8 +7,8 @@ from ..util import create_element, set_xml_value, MNS, TNS
 class GetUserOofSettings(EWSAccountService):
     """Get automatic reply settings for the specified mailbox.
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseroofsettings-operation
-
     """
+
     SERVICE_NAME = 'GetUserOofSettings'
     element_container_name = '{%s}OofSettings' % TNS
 

@@ -19,7 +19,8 @@ from .test_basics import CommonItemTest
 
 
 class GenericItemTest(CommonItemTest):
-    # Tests that don't need to be run for every single folder type
+    """Tests that don't need to be run for every single folder type"""
+
     TEST_FOLDER = 'inbox'
     FOLDER_CLASS = Inbox
     ITEM_CLASS = Message

@@ -53,7 +53,6 @@ def require_id(f):
 
 class ParseError(lxml.etree.ParseError):
     """Used to wrap lxml ParseError in our own class"""
-    pass
 
 
 class ElementNotFound(Exception):
@@ -297,7 +296,6 @@ def add_xml_child(tree, name, value):
 class StreamingContentHandler(xml.sax.handler.ContentHandler):
     """A SAX content handler that returns a character data for a single element back to the parser. The parser must have
     a 'buffer' attribute we can append data to.
-
     """
 
     def __init__(self, parser, ns, element_name):
@@ -409,7 +407,6 @@ class BytesGeneratorIO(io.RawIOBase):
     """A BytesIO that can produce bytes from a streaming HTTP request. Expects r.iter_content() as input
     lxml tries to be smart by calling `getvalue` when present, assuming that the entire string is in memory.
     Omitting `getvalue` forces lxml to stream the request through `read` avoiding the memory duplication.
-
     """
 
     def __init__(self, bytes_generator):
@@ -456,8 +453,8 @@ class BytesGeneratorIO(io.RawIOBase):
 
 
 class DocumentYielder:
-    """Looks for XML documents in a streaming HTTP response and yields them as they become available from the stream
-    """
+    """Looks for XML documents in a streaming HTTP response and yields them as they become available from the stream"""
+
     def __init__(self, content_iterator, document_tag='Envelope'):
         self._iterator = content_iterator
         self._start_token = b'<%s' % document_tag.encode('utf-8')
@@ -566,6 +563,7 @@ def is_xml(text, expected_prefix=b'<?xml'):
 
 class PrettyXmlHandler(logging.StreamHandler):
     """A steaming log handler that prettifies log statements containing XML when output is a terminal"""
+
     @staticmethod
     def parse_bytes(xml_bytes):
         return lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec

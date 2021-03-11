@@ -5,6 +5,7 @@ from ..util import create_element, add_xml_child, DummyResponse, StreamingBase64
 
 class GetAttachment(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation"""
+
     SERVICE_NAME = 'GetAttachment'
     element_container_name = '{%s}Attachments' % MNS
     streaming = True

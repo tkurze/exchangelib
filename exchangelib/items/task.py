@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 class Task(Item):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task"""
+
     ELEMENT_NAME = 'Task'
     NOT_STARTED = 'NotStarted'
     COMPLETED = 'Completed'

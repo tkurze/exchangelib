@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 class SyncCompleted(Exception):
     """This is a really ugly way of returning the sync state"""
+
     def __init__(self, sync_state):
         super().__init__(sync_state)
         self.sync_state = sync_state

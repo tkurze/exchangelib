@@ -7,8 +7,8 @@ from ..util import create_element, set_xml_value, MNS
 class SetUserOofSettings(EWSAccountService):
     """Set automatic replies for the specified mailbox.
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setuseroofsettings-operation
-
     """
+
     SERVICE_NAME = 'SetUserOofSettings'
     returns_elements = False
 

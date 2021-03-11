@@ -6,6 +6,7 @@ class CreateUserConfiguration(EWSAccountService):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createuserconfiguration-operation
     """
+
     SERVICE_NAME = 'CreateUserConfiguration'
     returns_elements = False
 

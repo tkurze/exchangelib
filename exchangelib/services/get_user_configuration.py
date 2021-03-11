@@ -14,6 +14,7 @@ class GetUserConfiguration(EWSAccountService):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
     """
+
     SERVICE_NAME = 'GetUserConfiguration'
 
     def call(self, user_configuration_name, properties):

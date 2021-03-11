@@ -5,8 +5,10 @@ from ..util import xml_text_to_value, peek, TNS, MNS
 
 
 class SyncFolderItems(SyncFolder):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderitems-operation
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderitems-operation
     """
+
     SERVICE_NAME = 'SyncFolderItems'
     SYNC_SCOPES = {
         'NormalItems',

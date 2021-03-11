@@ -9,8 +9,8 @@ class CreateItem(EWSAccountService):
     errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
-
     """
+
     SERVICE_NAME = 'CreateItem'
     element_container_name = '{%s}Items' % MNS
 

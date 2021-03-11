@@ -7,6 +7,7 @@ from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1
 
 class Calendar(Folder):
     """An interface for the Exchange calendar"""
+
     DISTINGUISHED_FOLDER_ID = 'calendar'
     CONTAINER_CLASS = 'IPF.Appointment'
     supported_item_models = (CalendarItem,)
@@ -178,6 +179,7 @@ class Contacts(Folder):
 
 class WellknownFolder(Folder):
     """A base class to use until we have a more specific folder implementation for this folder"""
+
     supported_item_models = ITEM_CLASSES
     __slots__ = ()
 
@@ -276,6 +278,7 @@ class LocalFailures(WellknownFolder):
 
 class MsgFolderRoot(WellknownFolder):
     """Also known as the 'Top of Information Store' folder"""
+
     DISTINGUISHED_FOLDER_ID = 'msgfolderroot'
     LOCALIZED_NAMES = {
         'zh_CN': ('信息存储顶部',),

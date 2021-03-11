@@ -4,6 +4,7 @@ from ..util import create_element, MNS
 
 class GetItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem"""
+
     SERVICE_NAME = 'GetItem'
     element_container_name = '{%s}Items' % MNS
 

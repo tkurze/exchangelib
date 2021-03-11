@@ -10,8 +10,8 @@ class DeleteItem(EWSAccountService):
     (success[True|False], errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-
     """
+
     SERVICE_NAME = 'DeleteItem'
     returns_elements = False
 

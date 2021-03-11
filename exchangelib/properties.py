@@ -70,6 +70,7 @@ class Body(str):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/body
     """
+
     body_type = 'Text'
 
     def __add__(self, other):
@@ -90,6 +91,7 @@ class HTMLBody(Body):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/body
     """
+
     body_type = 'HTML'
 
 
@@ -104,6 +106,7 @@ class UID(bytes):
     CalendarItem.register('global_object_id', GlobalObjectId)
     account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-bd11-23b1e224cc2f')))
     """
+
     _HEADER = binascii.hexlify(bytearray((
         0x04, 0x00, 0x00, 0x00,
         0x82, 0x00, 0xE0, 0x00,
@@ -137,6 +140,7 @@ class UID(bytes):
 
 class EWSElement(metaclass=abc.ABCMeta):
     """Base class for all XML element implementations"""
+
     ELEMENT_NAME = None  # The name of the XML tag
     FIELDS = Fields()  # A list of attributes supported by this item class, ordered the same way as in EWS documentation
     NAMESPACE = TNS  # The XML tag namespace. Either TNS or MNS
@@ -365,6 +369,7 @@ class EWSElement(metaclass=abc.ABCMeta):
 
 class MessageHeader(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/internetmessageheader"""
+
     ELEMENT_NAME = 'InternetMessageHeader'
 
     FIELDS = Fields(
@@ -380,8 +385,8 @@ class ItemId(EWSElement):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemid
     """
-    ELEMENT_NAME = 'ItemId'
 
+    ELEMENT_NAME = 'ItemId'
     ID_ATTR = 'Id'
     CHANGEKEY_ATTR = 'ChangeKey'
     FIELDS = Fields(
@@ -400,6 +405,7 @@ class ItemId(EWSElement):
 
 class ParentItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/parentitemid"""
+
     ELEMENT_NAME = 'ParentItemId'
     NAMESPACE = MNS
 
@@ -408,9 +414,9 @@ class ParentItemId(ItemId):
 
 class RootItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rootitemid"""
+
     ELEMENT_NAME = 'RootItemId'
     NAMESPACE = MNS
-
     ID_ATTR = 'RootItemId'
     CHANGEKEY_ATTR = 'RootItemChangeKey'
     FIELDS = Fields(
@@ -424,6 +430,7 @@ class RootItemId(ItemId):
 class AssociatedCalendarItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/associatedcalendaritemid
     """
+
     ELEMENT_NAME = 'AssociatedCalendarItemId'
 
     __slots__ = ()
@@ -431,6 +438,7 @@ class AssociatedCalendarItemId(ItemId):
 
 class ConversationId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/conversationid"""
+
     ELEMENT_NAME = 'ConversationId'
 
     # ChangeKey attribute is sometimes required, see MSDN link
@@ -439,6 +447,7 @@ class ConversationId(ItemId):
 
 class ParentFolderId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/parentfolderid"""
+
     ELEMENT_NAME = 'ParentFolderId'
 
     __slots__ = ()
@@ -446,6 +455,7 @@ class ParentFolderId(ItemId):
 
 class ReferenceItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/referenceitemid"""
+
     ELEMENT_NAME = 'ReferenceItemId'
 
     __slots__ = ()
@@ -453,6 +463,7 @@ class ReferenceItemId(ItemId):
 
 class PersonaId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/personaid"""
+
     ELEMENT_NAME = 'PersonaId'
     NAMESPACE = MNS
 
@@ -466,6 +477,7 @@ class PersonaId(ItemId):
 
 class SourceId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sourceid"""
+
     ELEMENT_NAME = 'SourceId'
 
     __slots__ = ()
@@ -473,6 +485,7 @@ class SourceId(ItemId):
 
 class FolderId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folderid"""
+
     ELEMENT_NAME = 'FolderId'
 
     __slots__ = ()
@@ -480,8 +493,8 @@ class FolderId(ItemId):
 
 class RecurringMasterItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringmasteritemid"""
-    ELEMENT_NAME = 'RecurringMasterItemId'
 
+    ELEMENT_NAME = 'RecurringMasterItemId'
     ID_ATTR = 'OccurrenceId'
     CHANGEKEY_ATTR = 'ChangeKey'
     FIELDS = Fields(
@@ -494,8 +507,8 @@ class RecurringMasterItemId(ItemId):
 
 class OccurrenceItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/occurrenceitemid"""
-    ELEMENT_NAME = 'OccurrenceItemId'
 
+    ELEMENT_NAME = 'OccurrenceItemId'
     ID_ATTR = 'RecurringMasterId'
     CHANGEKEY_ATTR = 'ChangeKey'
     FIELDS = Fields(
@@ -509,6 +522,7 @@ class OccurrenceItemId(ItemId):
 
 class MovedItemId(ItemId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveditemid"""
+
     ELEMENT_NAME = 'MovedItemId'
     NAMESPACE = MNS
 
@@ -522,6 +536,7 @@ class MovedItemId(ItemId):
 
 class Mailbox(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox"""
+
     ELEMENT_NAME = 'Mailbox'
     MAILBOX = 'Mailbox'
     ONE_OFF = 'OneOff'
@@ -562,6 +577,7 @@ class Mailbox(EWSElement):
 
 class DLMailbox(Mailbox):
     """Like Mailbox, but creates elements in the 'messages' namespace when sending requests"""
+
     NAMESPACE = MNS
     __slots__ = ()
 
@@ -571,6 +587,7 @@ class SendingAs(Mailbox):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendingas
     """
+
     ELEMENT_NAME = 'SendingAs'
     NAMESPACE = MNS
     __slots__ = ()
@@ -581,6 +598,7 @@ class RecipientAddress(Mailbox):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recipientaddress
     """
+
     ELEMENT_NAME = 'RecipientAddress'
 
     __slots__ = ()
@@ -591,6 +609,7 @@ class EmailAddress(Mailbox):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emailaddress-emailaddresstype
     """
+
     ELEMENT_NAME = 'EmailAddress'
 
     __slots__ = ()
@@ -601,6 +620,7 @@ class Address(Mailbox):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/address-emailaddresstype
     """
+
     ELEMENT_NAME = 'Address'
 
     __slots__ = ()
@@ -611,6 +631,7 @@ class AvailabilityMailbox(EWSElement):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox-availability
     """
+
     ELEMENT_NAME = 'Mailbox'
     FIELDS = Fields(
         TextField('name', field_uri='Name'),
@@ -638,8 +659,8 @@ class AvailabilityMailbox(EWSElement):
 class Email(AvailabilityMailbox):
     """Like AvailabilityMailbox, but with a different tag name
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/email-emailaddresstype
-
     """
+
     ELEMENT_NAME = 'Email'
 
     __slots__ = ()
@@ -647,6 +668,7 @@ class Email(AvailabilityMailbox):
 
 class MailboxData(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailboxdata"""
+
     ELEMENT_NAME = 'MailboxData'
     ATTENDEE_TYPES = {'Optional', 'Organizer', 'Required', 'Resource', 'Room'}
 
@@ -661,8 +683,8 @@ class MailboxData(EWSElement):
 
 class DistinguishedFolderId(FolderId):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid"""
-    ELEMENT_NAME = 'DistinguishedFolderId'
 
+    ELEMENT_NAME = 'DistinguishedFolderId'
     LOCAL_FIELDS = Fields(
         MailboxField('mailbox'),
     )
@@ -680,6 +702,7 @@ class DistinguishedFolderId(FolderId):
 
 class TimeWindow(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timewindow"""
+
     ELEMENT_NAME = 'TimeWindow'
     FIELDS = Fields(
         DateTimeField('start', field_uri='StartTime', is_required=True),
@@ -691,6 +714,7 @@ class TimeWindow(EWSElement):
 
 class FreeBusyViewOptions(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/freebusyviewoptions"""
+
     ELEMENT_NAME = 'FreeBusyViewOptions'
     REQUESTED_VIEWS = {'MergedOnly', 'FreeBusy', 'FreeBusyMerged', 'Detailed', 'DetailedMerged'}
     FIELDS = Fields(
@@ -707,6 +731,7 @@ class FreeBusyViewOptions(EWSElement):
 
 class Attendee(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attendee"""
+
     ELEMENT_NAME = 'Attendee'
 
     RESPONSE_TYPES = {'Unknown', 'Organizer', 'Tentative', 'Accept', 'Decline', 'NoResponseReceived'}
@@ -727,6 +752,7 @@ class Attendee(EWSElement):
 
 class TimeZoneTransition(EWSElement, metaclass=abc.ABCMeta):
     """Base class for StandardTime and DaylightTime classes"""
+
     FIELDS = Fields(
         IntegerField('bias', field_uri='Bias', is_required=True),  # Offset from the default bias, in minutes
         TimeField('time', field_uri='Time', is_required=True),
@@ -757,20 +783,22 @@ class TimeZoneTransition(EWSElement, metaclass=abc.ABCMeta):
 
 class StandardTime(TimeZoneTransition):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/standardtime"""
+
     ELEMENT_NAME = 'StandardTime'
     __slots__ = ()
 
 
 class DaylightTime(TimeZoneTransition):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/daylighttime"""
+
     ELEMENT_NAME = 'DaylightTime'
     __slots__ = ()
 
 
 class TimeZone(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezone-availability"""
-    ELEMENT_NAME = 'TimeZone'
 
+    ELEMENT_NAME = 'TimeZone'
     FIELDS = Fields(
         IntegerField('bias', field_uri='Bias', is_required=True),  # Standard (non-DST) offset from UTC, in minutes
         EWSElementField('standard_time', value_cls=StandardTime),
@@ -907,9 +935,9 @@ class TimeZone(EWSElement):
 
 class CalendarView(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarview"""
+
     ELEMENT_NAME = 'CalendarView'
     NAMESPACE = MNS
-
     FIELDS = Fields(
         DateTimeField('start', field_uri='StartDate', is_required=True, is_attribute=True),
         DateTimeField('end', field_uri='EndDate', is_required=True, is_attribute=True),
@@ -926,6 +954,7 @@ class CalendarView(EWSElement):
 
 class CalendarEventDetails(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendareventdetails"""
+
     ELEMENT_NAME = 'CalendarEventDetails'
     FIELDS = Fields(
         CharField('id', field_uri='ID'),
@@ -943,6 +972,7 @@ class CalendarEventDetails(EWSElement):
 
 class CalendarEvent(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarevent"""
+
     ELEMENT_NAME = 'CalendarEvent'
     FIELDS = Fields(
         DateTimeField('start', field_uri='StartTime'),
@@ -956,6 +986,7 @@ class CalendarEvent(EWSElement):
 
 class WorkingPeriod(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/workingperiod"""
+
     ELEMENT_NAME = 'WorkingPeriod'
     FIELDS = Fields(
         EnumListField('weekdays', field_uri='DayOfWeek', enum=WEEKDAY_NAMES, is_required=True),
@@ -968,6 +999,7 @@ class WorkingPeriod(EWSElement):
 
 class FreeBusyView(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/freebusyview"""
+
     ELEMENT_NAME = 'FreeBusyView'
     NAMESPACE = MNS
     FIELDS = Fields(
@@ -1004,6 +1036,7 @@ class FreeBusyView(EWSElement):
 
 class RoomList(Mailbox):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/roomlist"""
+
     ELEMENT_NAME = 'RoomList'
     NAMESPACE = MNS
 
@@ -1018,6 +1051,7 @@ class RoomList(Mailbox):
 
 class Room(Mailbox):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/room"""
+
     ELEMENT_NAME = 'Room'
 
     __slots__ = ()
@@ -1037,10 +1071,11 @@ class Room(Mailbox):
 
 
 class Member(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/member-ex15websvcsotherref
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/member-ex15websvcsotherref
     """
-    ELEMENT_NAME = 'Member'
 
+    ELEMENT_NAME = 'Member'
     FIELDS = Fields(
         MailboxField('mailbox', is_required=True),
         ChoiceField('status', field_uri='Status', choices={
@@ -1057,8 +1092,8 @@ class Member(EWSElement):
 
 class UserId(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userid"""
-    ELEMENT_NAME = 'UserId'
 
+    ELEMENT_NAME = 'UserId'
     FIELDS = Fields(
         CharField('sid', field_uri='SID'),
         EmailAddressField('primary_smtp_address', field_uri='PrimarySmtpAddress'),
@@ -1074,8 +1109,8 @@ class UserId(EWSElement):
 
 class Permission(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/permission"""
-    ELEMENT_NAME = 'Permission'
 
+    ELEMENT_NAME = 'Permission'
     PERMISSION_ENUM = {Choice('None'), Choice('Owned'), Choice('All')}
     FIELDS = Fields(
         ChoiceField('permission_level', field_uri='PermissionLevel', choices={
@@ -1100,8 +1135,8 @@ class Permission(EWSElement):
 
 class CalendarPermission(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarpermission"""
-    ELEMENT_NAME = 'Permission'
 
+    ELEMENT_NAME = 'Permission'
     PERMISSION_ENUM = {Choice('None'), Choice('Owned'), Choice('All')}
     FIELDS = Fields(
         ChoiceField('calendar_permission_level', field_uri='CalendarPermissionLevel', choices={
@@ -1119,7 +1154,6 @@ class PermissionSet(EWSElement):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/permissionset-permissionsettype
     and
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/permissionset-calendarpermissionsettype
-
     """
 
     # For simplicity, we implement the two distinct but equally names elements as one class.
@@ -1136,8 +1170,8 @@ class PermissionSet(EWSElement):
 
 class EffectiveRights(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/effectiverights"""
-    ELEMENT_NAME = 'EffectiveRights'
 
+    ELEMENT_NAME = 'EffectiveRights'
     FIELDS = Fields(
         BooleanField('create_associated', field_uri='CreateAssociated', default=False),
         BooleanField('create_contents', field_uri='CreateContents', default=False),
@@ -1156,6 +1190,7 @@ class EffectiveRights(EWSElement):
 
 class DelegatePermissions(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/delegatepermissions"""
+
     ELEMENT_NAME = 'DelegatePermissions'
     PERMISSION_LEVEL_CHOICES = {
             Choice('None'), Choice('Editor'), Choice('Reviewer'), Choice('Author'), Choice('Custom'),
@@ -1180,9 +1215,9 @@ class DelegatePermissions(EWSElement):
 
 class DelegateUser(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/delegateuser"""
+
     ELEMENT_NAME = 'DelegateUser'
     NAMESPACE = MNS
-
     FIELDS = Fields(
         EWSElementField('user_id', value_cls=UserId),
         EWSElementField('delegate_permissions', value_cls=DelegatePermissions),
@@ -1195,8 +1230,8 @@ class DelegateUser(EWSElement):
 
 class SearchableMailbox(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/searchablemailbox"""
-    ELEMENT_NAME = 'SearchableMailbox'
 
+    ELEMENT_NAME = 'SearchableMailbox'
     FIELDS = Fields(
         CharField('guid', field_uri='Guid'),
         EmailAddressField('primary_smtp_address', field_uri='PrimarySmtpAddress'),
@@ -1212,6 +1247,7 @@ class SearchableMailbox(EWSElement):
 
 class FailedMailbox(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/failedmailbox"""
+
     ELEMENT_NAME = 'FailedMailbox'
     FIELDS = Fields(
         CharField('mailbox', field_uri='Mailbox'),
@@ -1240,6 +1276,7 @@ MAIL_TIPS_TYPES = (
 
 class OutOfOffice(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/outofoffice"""
+
     ELEMENT_NAME = 'OutOfOffice'
 
     FIELDS = Fields(
@@ -1273,9 +1310,9 @@ class OutOfOffice(EWSElement):
 
 class MailTips(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailtips"""
+
     ELEMENT_NAME = 'MailTips'
     NAMESPACE = MNS
-
     FIELDS = Fields(
         RecipientAddressField('recipient_address'),
         ChoiceField('pending_mail_tips', field_uri='PendingMailTips', choices={Choice(c) for c in MAIL_TIPS_TYPES}),
@@ -1305,6 +1342,7 @@ ID_FORMATS = (ENTRY_ID, EWS_ID, EWS_LEGACY_ID, HEX_ENTRY_ID, OWA_ID, STORE_ID)
 
 class AlternateId(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/alternateid"""
+
     ELEMENT_NAME = 'AlternateId'
     FIELDS = Fields(
         CharField('id', field_uri='Id', is_required=True, is_attribute=True),
@@ -1324,6 +1362,7 @@ class AlternateId(EWSElement):
 
 class AlternatePublicFolderId(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/alternatepublicfolderid"""
+
     ELEMENT_NAME = 'AlternatePublicFolderId'
     FIELDS = Fields(
         CharField('folder_id', field_uri='FolderId', is_required=True, is_attribute=True),
@@ -1337,8 +1376,8 @@ class AlternatePublicFolderId(EWSElement):
 class AlternatePublicFolderItemId(EWSElement):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/alternatepublicfolderitemid
-
     """
+
     ELEMENT_NAME = 'AlternatePublicFolderItemId'
     FIELDS = Fields(
         CharField('folder_id', field_uri='FolderId', is_required=True, is_attribute=True),
@@ -1352,6 +1391,7 @@ class AlternatePublicFolderItemId(EWSElement):
 
 class FieldURI(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fielduri"""
+
     ELEMENT_NAME = 'FieldURI'
     FIELDS = Fields(
         CharField('field_uri', field_uri='FieldURI', is_attribute=True, is_required=True),
@@ -1362,6 +1402,7 @@ class FieldURI(EWSElement):
 
 class IndexedFieldURI(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/indexedfielduri"""
+
     ELEMENT_NAME = 'IndexedFieldURI'
     FIELDS = Fields(
         CharField('field_uri', field_uri='FieldURI', is_attribute=True, is_required=True),
@@ -1373,6 +1414,7 @@ class IndexedFieldURI(EWSElement):
 
 class ExtendedFieldURI(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/extendedfielduri"""
+
     ELEMENT_NAME = 'ExtendedFieldURI'
     FIELDS = Fields(
         CharField('distinguished_property_set_id', field_uri='DistinguishedPropertySetId', is_attribute=True),
@@ -1388,6 +1430,7 @@ class ExtendedFieldURI(EWSElement):
 
 class ExceptionFieldURI(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exceptionfielduri"""
+
     ELEMENT_NAME = 'ExceptionFieldURI'
     FIELDS = Fields(
         CharField('field_uri', field_uri='FieldURI', is_attribute=True, is_required=True),
@@ -1398,6 +1441,7 @@ class ExceptionFieldURI(EWSElement):
 
 class CompleteName(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/completename"""
+
     ELEMENT_NAME = 'CompleteName'
     FIELDS = Fields(
         CharField('title', field_uri='Title'),
@@ -1417,6 +1461,7 @@ class CompleteName(EWSElement):
 
 class ReminderMessageData(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/remindermessagedata"""
+
     ELEMENT_NAME = 'ReminderMessageData'
     FIELDS = Fields(
         CharField('reminder_text', field_uri='ReminderText'),
@@ -1432,6 +1477,7 @@ class ReminderMessageData(EWSElement):
 
 class AcceptSharingInvitation(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptsharinginvitation"""
+
     ELEMENT_NAME = 'AcceptSharingInvitation'
     FIELDS = Fields(
         ReferenceItemIdField('reference_item_id', field_uri='item:ReferenceItemId'),
@@ -1442,6 +1488,7 @@ class AcceptSharingInvitation(EWSElement):
 
 class SuppressReadReceipt(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suppressreadreceipt"""
+
     ELEMENT_NAME = 'SuppressReadReceipt'
     FIELDS = Fields(
         ReferenceItemIdField('reference_item_id', field_uri='item:ReferenceItemId'),
@@ -1452,6 +1499,7 @@ class SuppressReadReceipt(EWSElement):
 
 class RemoveItem(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/removeitem"""
+
     ELEMENT_NAME = 'RemoveItem'
     FIELDS = Fields(
         ReferenceItemIdField('reference_item_id', field_uri='item:ReferenceItemId'),
@@ -1462,6 +1510,7 @@ class RemoveItem(EWSElement):
 
 class ResponseObjects(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects"""
+
     ELEMENT_NAME = 'ResponseObjects'
     FIELDS = Fields(
         EWSElementField('accept_item', field_uri='AcceptItem', value_cls='AcceptItem',
@@ -1491,8 +1540,8 @@ class ResponseObjects(EWSElement):
 
 class PhoneNumber(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumber"""
-    ELEMENT_NAME = 'PhoneNumber'
 
+    ELEMENT_NAME = 'PhoneNumber'
     FIELDS = Fields(
         CharField('number', field_uri='Number'),
         CharField('type', field_uri='Type'),
@@ -1505,6 +1554,7 @@ class IdChangeKeyMixIn(EWSElement, metaclass=abc.ABCMeta):
     """Base class for classes that have a concept of 'id' and 'changekey' values. The values are actually stored on
     a separate element but we add convenience methods to hide that fact.
     """
+
     ID_ELEMENT_CLS = None
 
     __slots__ = ()
@@ -1570,6 +1620,7 @@ class IdChangeKeyMixIn(EWSElement, metaclass=abc.ABCMeta):
 
 class DictionaryEntry(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/dictionaryentry"""
+
     ELEMENT_NAME = 'DictionaryEntry'
     FIELDS = Fields(
         TypeValueField('key', field_uri='DictionaryKey'),
@@ -1581,9 +1632,9 @@ class DictionaryEntry(EWSElement):
 
 class UserConfigurationName(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfigurationname"""
+
     ELEMENT_NAME = 'UserConfigurationName'
     NAMESPACE = TNS
-
     FIELDS = Fields(
         CharField('name', field_uri='Name', is_attribute=True),
         EWSElementField('folder', value_cls=FolderId),
@@ -1613,16 +1664,17 @@ class UserConfigurationNameMNS(UserConfigurationName):
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfigurationname
     """
+
     NAMESPACE = MNS
     __slots__ = ()
 
 
 class UserConfiguration(IdChangeKeyMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userconfiguration"""
+
     ELEMENT_NAME = 'UserConfiguration'
     NAMESPACE = MNS
     ID_ELEMENT_CLS = ItemId
-
     FIELDS = Fields(
         IdElementField('_id', field_uri='ItemId', value_cls=ID_ELEMENT_CLS),
         EWSElementField('user_configuration_name', value_cls=UserConfigurationName),
@@ -1636,6 +1688,7 @@ class UserConfiguration(IdChangeKeyMixIn):
 
 class Attribution(IdChangeKeyMixIn):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumber"""
+
     ELEMENT_NAME = 'Attribution'
     ID_ELEMENT_CLS = SourceId
     FIELDS = Fields(
@@ -1652,8 +1705,10 @@ class Attribution(IdChangeKeyMixIn):
 
 
 class BodyContentValue(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-bodycontenttype
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-bodycontenttype
     """
+
     ELEMENT_NAME = 'Value'
     FIELDS = Fields(
         CharField('value', field_uri='Value'),
@@ -1664,8 +1719,10 @@ class BodyContentValue(EWSElement):
 
 
 class BodyContentAttributedValue(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/bodycontentattributedvalue
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/bodycontentattributedvalue
     """
+
     ELEMENT_NAME = 'BodyContentAttributedValue'
     FIELDS = Fields(
         EWSElementField('value', value_cls=BodyContentValue),
@@ -1676,8 +1733,10 @@ class BodyContentAttributedValue(EWSElement):
 
 
 class StringAttributedValue(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/stringattributedvalue
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/stringattributedvalue
     """
+
     ELEMENT_NAME = 'StringAttributedValue'
     FIELDS = Fields(
         CharField('value', field_uri='Value'),
@@ -1691,6 +1750,7 @@ class PersonaPhoneNumberTypeValue(EWSElement):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-personaphonenumbertype
     """
+
     ELEMENT_NAME = 'Value'
     FIELDS = Fields(
         CharField('number', field_uri='Number'),
@@ -1701,8 +1761,10 @@ class PersonaPhoneNumberTypeValue(EWSElement):
 
 
 class PhoneNumberAttributedValue(EWSElement):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumberattributedvalue
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/phonenumberattributedvalue
     """
+
     ELEMENT_NAME = 'PhoneNumberAttributedValue'
     FIELDS = Fields(
         EWSElementField('value', value_cls=PersonaPhoneNumberTypeValue),
@@ -1713,8 +1775,10 @@ class PhoneNumberAttributedValue(EWSElement):
 
 
 class EmailAddressTypeValue(Mailbox):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-emailaddresstype
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-emailaddresstype
     """
+
     ELEMENT_NAME = 'Value'
     LOCAL_FIELDS = Fields(
         TextField('original_display_name', field_uri='OriginalDisplayName'),
@@ -1728,6 +1792,7 @@ class EmailAddressAttributedValue(EWSElement):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emailaddressattributedvalue
     """
+
     ELEMENT_NAME = 'EmailAddressAttributedValue'
     FIELDS = Fields(
         EWSElementField('value', value_cls=EmailAddressTypeValue),
@@ -1741,6 +1806,7 @@ class PersonaPostalAddressTypeValue(Mailbox):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/value-personapostaladdresstype
     """
+
     ELEMENT_NAME = 'Value'
     FIELDS = Fields(
         TextField('street', field_uri='Street'),
@@ -1767,6 +1833,7 @@ class PostalAddressAttributedValue(EWSElement):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postaladdressattributedvalue
     """
+
     ELEMENT_NAME = 'PostalAddressAttributedValue'
     FIELDS = Fields(
         EWSElementField('value', value_cls=PersonaPostalAddressTypeValue),
@@ -1777,8 +1844,8 @@ class PostalAddressAttributedValue(EWSElement):
 
 
 class Event(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for all event types
-    """
+    """Base class for all event types"""
+
     FIELDS = Fields(
         CharField('watermark', field_uri='Watermark'),
     )
@@ -1786,8 +1853,8 @@ class Event(EWSElement, metaclass=abc.ABCMeta):
 
 
 class TimestampEvent(Event, metaclass=abc.ABCMeta):
-    """Base class for both item and folder events with a timestamp
-    """
+    """Base class for both item and folder events with a timestamp"""
+
     FOLDER = 'folder'
     ITEM = 'item'
 
@@ -1810,8 +1877,8 @@ class TimestampEvent(Event, metaclass=abc.ABCMeta):
 
 
 class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
-    """Base class for both item and folder copy/move events
-    """
+    """Base class for both item and folder copy/move events"""
+
     LOCAL_FIELDS = Fields(
         EWSElementField('old_item_id', field_uri='OldItemId', value_cls=ItemId),
         EWSElementField('old_folder_id', field_uri='OldFolderId', value_cls=FolderId),
@@ -1823,24 +1890,28 @@ class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
 
 class CopiedEvent(OldTimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copiedevent"""
+
     ELEMENT_NAME = 'CopiedEvent'
     __slots__ = ()
 
 
 class CreatedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createdevent"""
+
     ELEMENT_NAME = 'CreatedEvent'
     __slots__ = ()
 
 
 class DeletedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletedevent"""
+
     ELEMENT_NAME = 'DeletedEvent'
     __slots__ = ()
 
 
 class ModifiedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/modifiedevent"""
+
     ELEMENT_NAME = 'ModifiedEvent'
     LOCAL_FIELDS = Fields(
         IntegerField('unread_count', field_uri='UnreadCount'),
@@ -1851,24 +1922,28 @@ class ModifiedEvent(TimestampEvent):
 
 class MovedEvent(OldTimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/movedevent"""
+
     ELEMENT_NAME = 'MovedEvent'
     __slots__ = ()
 
 
 class NewMailEvent(Event):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/newmailevent"""
+
     ELEMENT_NAME = 'NewMailEvent'
     __slots__ = ()
 
 
 class StatusEvent(Event):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/statusevent"""
+
     ELEMENT_NAME = 'StatusEvent'
     __slots__ = ()
 
 
 class FreeBusyChangedEvent(TimestampEvent):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/freebusychangedevent"""
+
     ELEMENT_NAME = 'FreeBusyChangedEvent'
     __slots__ = ()
 
@@ -1877,6 +1952,7 @@ class Notification(EWSElement):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/notification-ex15websvcsotherref
     """
+
     ELEMENT_NAME = 'Notification'
     NAMESPACE = MNS
     FIELDS = Fields(

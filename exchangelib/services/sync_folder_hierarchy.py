@@ -9,8 +9,8 @@ log = logging.getLogger(__name__)
 
 
 class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
-    """Base class for SyncFolderHierarchy and SyncFolderItems
-    """
+    """Base class for SyncFolderHierarchy and SyncFolderItems"""
+
     element_container_name = '{%s}Changes' % MNS
     # Change types
     CREATE = 'create'
@@ -59,6 +59,7 @@ class SyncFolderHierarchy(SyncFolder):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderhierarchy-operation
     """
+
     SERVICE_NAME = 'SyncFolderHierarchy'
     shape_tag = 'm:FolderShape'
     last_in_range_name = '{%s}IncludesLastFolderInRange' % MNS

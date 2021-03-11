@@ -4,6 +4,7 @@ from ..util import create_element
 
 class DeleteFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation"""
+
     SERVICE_NAME = 'DeleteFolder'
     returns_elements = False
 

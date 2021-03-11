@@ -5,6 +5,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class GetPersona(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation"""
+
     SERVICE_NAME = 'GetPersona'
 
     def call(self, persona):

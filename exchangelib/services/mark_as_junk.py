@@ -5,6 +5,7 @@ from ..util import create_element
 
 class MarkAsJunk(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk"""
+
     SERVICE_NAME = 'MarkAsJunk'
 
     def call(self, items, is_junk, move_item):

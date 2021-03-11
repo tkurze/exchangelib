@@ -8,8 +8,10 @@ log = logging.getLogger(__name__)
 
 
 class GetEvents(EWSAccountService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation
     """
+
     SERVICE_NAME = 'GetEvents'
     prefer_affinity = True
 

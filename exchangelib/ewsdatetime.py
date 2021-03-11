@@ -204,8 +204,8 @@ class EWSDateTime(datetime.datetime):
 class EWSTimeZone(zoneinfo.ZoneInfo):
     """Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
     services.GetServerTimeZones.
-
     """
+
     IANA_TO_MS_MAP = IANA_TO_MS_TIMEZONE_MAP
     MS_TO_IANA_MAP = MS_TIMEZONE_TO_IANA_MAP
 

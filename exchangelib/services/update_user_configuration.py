@@ -6,6 +6,7 @@ class UpdateUserConfiguration(EWSAccountService):
     """MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation
     """
+
     SERVICE_NAME = 'UpdateUserConfiguration'
     returns_elements = False
 

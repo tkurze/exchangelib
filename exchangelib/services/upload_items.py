@@ -9,8 +9,8 @@ class UploadItems(EWSAccountService):
     This currently has the existing limitation of only being able to upload
     items that do not yet exist in the database. The full spec also allows
     actions "Update" and "UpdateOrCreate".
-
     """
+
     SERVICE_NAME = 'UploadItems'
     element_container_name = '{%s}ItemId' % MNS
 

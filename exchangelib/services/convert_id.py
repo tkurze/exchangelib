@@ -9,8 +9,8 @@ class ConvertId(EWSService):
     input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
-
     """
+
     SERVICE_NAME = 'ConvertId'
     supported_from = EXCHANGE_2007_SP1
 

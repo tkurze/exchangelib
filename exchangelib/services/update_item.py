@@ -11,6 +11,7 @@ from ..version import EXCHANGE_2013_SP1
 
 class UpdateItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem"""
+
     SERVICE_NAME = 'UpdateItem'
     element_container_name = '{%s}Items' % MNS
 

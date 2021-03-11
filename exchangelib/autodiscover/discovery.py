@@ -67,7 +67,6 @@ class Autodiscovery:
 
     WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
     implementation, start by doing an official test at https://testconnectivity.microsoft.com
-
     """
 
     # When connecting to servers that may not be serving the correct endpoint, we should use a retry policy that does
