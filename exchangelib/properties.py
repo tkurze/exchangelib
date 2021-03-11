@@ -803,7 +803,8 @@ class TimeZone(EWSElement):
         """Return the Microsoft timezone ID corresponding to this timezone. There may not be a match at all, and there
         may be multiple matches. If so, return a random timezone ID.
 
-        :param timezones: A list of server timezones, as returned by Protocol.get_timezones(return_full_timezone_data=True)
+        :param timezones: A list of server timezones, as returned by
+          Protocol.get_timezones(return_full_timezone_data=True)
         :param for_year: return: A Microsoft timezone ID, as a string
 
         :return: A Microsoft timezone ID, as a string
