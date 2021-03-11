@@ -530,7 +530,7 @@ class FolderTest(EWSTest):
             list(fld_qs.filter(XXX='XXX'))
 
     def test_user_configuration(self):
-        """Test that we can do CRUD operations on user configuration data"""
+        """Test that we can do CRUD operations on user configuration data."""
         # Create a test folder that we delete afterwards
         f = Messages(parent=self.account.inbox, name=get_random_string(16)).save()
         # The name must be fewer than 237 characters, can contain only the characters "A-Z", "a-z", "0-9", and ".",

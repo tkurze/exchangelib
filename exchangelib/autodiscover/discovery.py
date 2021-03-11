@@ -27,7 +27,7 @@ def discover(email, credentials=None, auth_type=None, retry_policy=None):
 
 
 class SrvRecord:
-    """A container for autodiscover-related SRV records in DNS"""
+    """A container for autodiscover-related SRV records in DNS."""
 
     def __init__(self, priority, weight, port, srv):
         self.priority = priority

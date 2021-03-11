@@ -21,13 +21,13 @@ def _week_number_to_str(week_number):
 
 
 class Pattern(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for all classes implementing recurring pattern elements"""
+    """Base class for all classes implementing recurring pattern elements."""
 
     __slots__ = ()
 
 
 class Regeneration(Pattern, metaclass=abc.ABCMeta):
-    """Base class for all classes implementing recurring regeneration elements"""
+    """Base class for all classes implementing recurring regeneration elements."""
 
     __slots__ = ()
 
@@ -231,7 +231,7 @@ class DailyRegeneration(Regeneration):
 
 
 class Boundary(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for all classes implementing recurring boundary elements"""
+    """Base class for all classes implementing recurring boundary elements."""
 
     __slots__ = ()
 

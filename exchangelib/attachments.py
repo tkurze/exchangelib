@@ -32,7 +32,7 @@ class AttachmentId(EWSElement):
 
 
 class Attachment(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for FileAttachment and ItemAttachment"""
+    """Base class for FileAttachment and ItemAttachment."""
 
     FIELDS = Fields(
         EWSElementField('attachment_id', value_cls=AttachmentId),
@@ -152,7 +152,7 @@ class FileAttachment(Attachment):
 
     @content.setter
     def content(self, value):
-        """Replace the attachment content"""
+        """Replace the attachment content."""
         if not isinstance(value, bytes):
             raise ValueError("'value' %r must be a bytes object" % value)
         self._content = value
@@ -228,7 +228,7 @@ class ItemAttachment(Attachment):
 
 
 class FileAttachmentIO(BytesIO):
-    """A BytesIO where the stream of data comes from the GetAttachment service"""
+    """A BytesIO where the stream of data comes from the GetAttachment service."""
 
     def __init__(self, *args, **kwargs):
         self._attachment = kwargs.pop('attachment')

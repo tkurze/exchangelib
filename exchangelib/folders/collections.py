@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class SyncCompleted(Exception):
-    """This is a really ugly way of returning the sync state"""
+    """This is a really ugly way of returning the sync state."""
 
     def __init__(self, sync_state):
         super().__init__(sync_state)
@@ -24,7 +24,7 @@ class SyncCompleted(Exception):
 
 
 class FolderCollection(SearchableMixIn):
-    """A class that implements an API for searching folders"""
+    """A class that implements an API for searching folders."""
 
     # These fields are required in a FindFolder or GetFolder call to properly identify folder types
     REQUIRED_FOLDER_FIELDS = ('name', 'folder_class')

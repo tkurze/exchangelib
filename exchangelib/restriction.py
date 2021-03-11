@@ -169,12 +169,12 @@ class Q:
         return []
 
     def reduce(self):
-        """Simplify this object, if possible"""
+        """Simplify this object, if possible."""
         self._reduce_children()
         self._promote()
 
     def _reduce_children(self):
-        """Look at the children of this object and remove unnecessary items"""
+        """Look at the children of this object and remove unnecessary items."""
         children = self.children
         if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
             # We have at least one 'never' arg
@@ -305,11 +305,11 @@ class Q:
         return not self.children
 
     def is_empty(self):
-        """Return True if this object is without any restrictions at all"""
+        """Return True if this object is without any restrictions at all."""
         return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
 
     def is_never(self):
-        """Return True if this object has a restriction that will never match anything"""
+        """Return True if this object has a restriction that will never match anything."""
         return self.conn_type == self.NEVER
 
     def expr(self):
@@ -559,5 +559,5 @@ class Restriction:
         return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)
 
     def __str__(self):
-        """Print the XML syntax tree"""
+        """Print the XML syntax tree."""
         return xml_to_str(self.to_xml(version=self.folders[0].account.version))

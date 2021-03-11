@@ -31,7 +31,7 @@ CALENDAR_ITEM_CHOICES = (SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER)
 
 
 class AcceptDeclineMixIn:
-    """A mixin for items that can be declined or accepted"""
+    """A mixin for items that can be declined or accepted."""
 
     def accept(self, **kwargs):
         return AcceptItem(
@@ -374,7 +374,7 @@ class MeetingCancellation(BaseMeetingItem):
 
 
 class BaseMeetingReplyItem(BaseItem, metaclass=abc.ABCMeta):
-    """Base class for meeting request reply items that share the same fields (Accept, TentativelyAccept, Decline)"""
+    """Base class for meeting request reply items that share the same fields (Accept, TentativelyAccept, Decline)."""
 
     FIELDS = Fields(
         CharField('item_class', field_uri='item:ItemClass', is_read_only=True),

@@ -39,7 +39,7 @@ API_VERSIONS = sorted({v[0] for v in VERSIONS.values()}, reverse=True)
 
 
 class Build:
-    """Holds methods for working with build numbers"""
+    """Holds methods for working with build numbers."""
 
     # List of build numbers here: https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
     API_VERSION_MAP = {
@@ -185,7 +185,7 @@ EXCHANGE_O365 = Build(15, 20)
 
 
 class Version:
-    """Holds information about the server version"""
+    """Holds information about the server version."""
 
     __slots__ = ('build', 'api_version')
 

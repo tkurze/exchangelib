@@ -27,7 +27,7 @@ MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFo
 
 
 class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
-    """Base class for all classes that implement a folder"""
+    """Base class for all classes that implement a folder."""
 
     ELEMENT_NAME = 'Folder'
     NAMESPACE = TNS

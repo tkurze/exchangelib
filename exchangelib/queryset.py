@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class SearchableMixIn(metaclass=abc.ABCMeta):
-    """Implement a search API for inheritance"""
+    """Implement a search API for inheritance."""
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):
@@ -442,13 +442,13 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def people(self):
-        """Change the queryset to search the folder for Personas instead of Items"""
+        """Change the queryset to search the folder for Personas instead of Items."""
         new_qs = self._copy_self()
         new_qs.request_type = self.PERSONA
         return new_qs
 
     def only(self, *args):
-        """Fetch only the specified field names. All other item fields will be 'None'
+        """Fetch only the specified field names. All other item fields will be 'None'.
 
         Args:
           *args:
@@ -480,7 +480,7 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def reverse(self):
-        """Reverses the ordering of the queryset"""
+        """Reverses the ordering of the queryset."""
         if not self.order_fields:
             raise ValueError('Reversing only makes sense if there are order_by fields')
         new_qs = self._copy_self()
@@ -586,7 +586,7 @@ class QuerySet(SearchableMixIn):
         return len(list(new_qs.__iter__()))
 
     def exists(self):
-        """Find out if the query contains any hits, with as little effort as possible"""
+        """Find out if the query contains any hits, with as little effort as possible."""
         new_qs = self._copy_self()
         new_qs.max_items = 1
         return new_qs.count(page_size=1) > 0
@@ -600,7 +600,7 @@ class QuerySet(SearchableMixIn):
 
     def delete(self, page_size=1000, **delete_kwargs):
         """Delete the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and delete per request. We're only fetching the IDs, so keep it high
+        to fetch and delete per request. We're only fetching the IDs, so keep it high.
 
         Args:
           page_size:  (Default value = 1000)
@@ -632,7 +632,7 @@ class QuerySet(SearchableMixIn):
 
     def copy(self, to_folder, page_size=1000, **copy_kwargs):
         """Copy the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and copy per request. We're only fetching the IDs, so keep it high
+        to fetch and copy per request. We're only fetching the IDs, so keep it high.
 
         Args:
           to_folder:
@@ -650,7 +650,7 @@ class QuerySet(SearchableMixIn):
 
     def move(self, to_folder, page_size=1000):
         """Move the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and move per request. We're only fetching the IDs, so keep it high
+        to fetch and move per request. We're only fetching the IDs, so keep it high.
 
         Args:
           to_folder:
@@ -666,7 +666,7 @@ class QuerySet(SearchableMixIn):
 
     def archive(self, to_folder, page_size=1000):
         """Archive the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and move per request. We're only fetching the IDs, so keep it high
+        to fetch and move per request. We're only fetching the IDs, so keep it high.
 
         Args:
           to_folder:
@@ -682,7 +682,7 @@ class QuerySet(SearchableMixIn):
 
     def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
         """Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
-        items to fetch and mark per request. We're only fetching the IDs, so keep it high
+        items to fetch and mark per request. We're only fetching the IDs, so keep it high.
 
         Args:
           page_size:  (Default value = 1000)

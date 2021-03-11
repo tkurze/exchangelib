@@ -626,7 +626,7 @@ class Account:
 
     @property
     def mail_tips(self):
-        """See self.oof_settings about caching considerations"""
+        """See self.oof_settings about caching considerations."""
         # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
         return GetMailTips(protocol=self.protocol).get(
             sending_as=SendingAs(email_address=self.primary_smtp_address),
@@ -636,7 +636,7 @@ class Account:
 
     @property
     def delegates(self):
-        """Return a list of DelegateUser objects representing the delegates that are set on this account"""
+        """Return a list of DelegateUser objects representing the delegates that are set on this account."""
         delegates = []
         for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
             if isinstance(d, Exception):

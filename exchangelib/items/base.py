@@ -64,7 +64,7 @@ DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
 
 
 class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
-    """Base class for classes that can change their list of supported fields dynamically"""
+    """Base class for classes that can change their list of supported fields dynamically."""
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
     __slots__ = ('__dict__',)
@@ -115,7 +115,7 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
 
 
 class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
-    """Base class for all other classes that implement EWS items"""
+    """Base class for all other classes that implement EWS items."""
 
     ID_ELEMENT_CLS = ItemId
     FIELDS = Fields(
@@ -157,7 +157,7 @@ class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
 
 
 class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for reply/forward elements that share the same fields"""
+    """Base class for reply/forward elements that share the same fields."""
 
     FIELDS = Fields(
         CharField('subject', field_uri='Subject'),
@@ -215,7 +215,7 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
 
 
 class BulkCreateResult(BaseItem):
-    """A dummy class to store return values from a CreateItem service call"""
+    """A dummy class to store return values from a CreateItem service call."""
 
     LOCAL_FIELDS = Fields(
         AttachmentField('attachments', field_uri='item:Attachments'),  # ItemAttachment or FileAttachment

@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class FolderQuerySet:
-    """A QuerySet-like class for finding subfolders of a folder collection"""
+    """A QuerySet-like class for finding subfolders of a folder collection."""
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
@@ -31,7 +31,7 @@ class FolderQuerySet:
         return self.__class__(folder_collection=self.folder_collection)
 
     def _copy_self(self):
-        """Chaining operations must make a copy of self before making any modifications"""
+        """Chaining operations must make a copy of self before making any modifications."""
         new_qs = self._copy_cls()
         new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
@@ -162,7 +162,7 @@ class FolderQuerySet:
 
 
 class SingleFolderQuerySet(FolderQuerySet):
-    """A helper class with simpler argument types"""
+    """A helper class with simpler argument types."""
 
     def __init__(self, account, folder):
         from .collections import FolderCollection

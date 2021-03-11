@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
-    """Base class for folders that implement the root of a folder hierarchy"""
+    """Base class for folders that implement the root of a folder hierarchy."""
 
     # A list of wellknown, or "distinguished", folders that are belong in this folder hierarchy. See
     # https://docs.microsoft.com/en-us/dotnet/api/microsoft.exchange.webservices.data.wellknownfoldername
@@ -217,7 +217,7 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
 
 
 class Root(RootOfHierarchy):
-    """The root of the standard folder hierarchy"""
+    """The root of the standard folder hierarchy."""
 
     DISTINGUISHED_FOLDER_ID = 'root'
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
@@ -281,7 +281,7 @@ class Root(RootOfHierarchy):
 
 
 class PublicFoldersRoot(RootOfHierarchy):
-    """The root of the public folders hierarchy. Not available on all mailboxes"""
+    """The root of the public folders hierarchy. Not available on all mailboxes."""
 
     DISTINGUISHED_FOLDER_ID = 'publicfoldersroot'
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
@@ -323,7 +323,7 @@ class PublicFoldersRoot(RootOfHierarchy):
 
 
 class ArchiveRoot(RootOfHierarchy):
-    """The root of the archive folders hierarchy. Not available on all mailboxes"""
+    """The root of the archive folders hierarchy. Not available on all mailboxes."""
 
     DISTINGUISHED_FOLDER_ID = 'archiveroot'
     supported_from = EXCHANGE_2010_SP1

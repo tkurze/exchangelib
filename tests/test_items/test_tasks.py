@@ -9,7 +9,7 @@ from .test_basics import CommonItemTest
 
 
 class TasksTest(CommonItemTest):
-    """Test Task instances and the Tasks folder"""
+    """Test Task instances and the Tasks folder."""
 
     TEST_FOLDER = 'tasks'
     FOLDER_CLASS = Tasks

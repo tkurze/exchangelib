@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class IndexedElement(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for all classes that implement an indexed element"""
+    """Base class for all classes that implement an indexed element."""
 
     LABELS = set()
 
@@ -16,7 +16,7 @@ class IndexedElement(EWSElement, metaclass=abc.ABCMeta):
 
 
 class SingleFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
-    """Base class for all classes that implement an indexed element with a single field"""
+    """Base class for all classes that implement an indexed element with a single field."""
 
     __slots__ = ()
 
@@ -59,7 +59,7 @@ class PhoneNumber(SingleFieldIndexedElement):
 
 
 class MultiFieldIndexedElement(IndexedElement, metaclass=abc.ABCMeta):
-    """Base class for all classes that implement an indexed element with multiple fields"""
+    """Base class for all classes that implement an indexed element with multiple fields."""
 
     __slots__ = ()
 

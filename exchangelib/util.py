@@ -52,11 +52,11 @@ def require_id(f):
 
 
 class ParseError(lxml.etree.ParseError):
-    """Used to wrap lxml ParseError in our own class"""
+    """Used to wrap lxml ParseError in our own class."""
 
 
 class ElementNotFound(Exception):
-    """Raised when the expected element was not found in a response stream"""
+    """Raised when the expected element was not found in a response stream."""
 
     def __init__(self, msg, data):
         super().__init__(msg)
@@ -344,7 +344,7 @@ def safe_b64decode(data):
 
 
 class StreamingBase64Parser(DefusedExpatParser):
-    """A SAX parser that returns a generator of base64-decoded character content"""
+    """A SAX parser that returns a generator of base64-decoded character content."""
 
     def __init__(self, *args, **kwargs):
         DefusedExpatParser.__init__(self, *args, **kwargs)
@@ -376,7 +376,7 @@ class StreamingBase64Parser(DefusedExpatParser):
             raise ElementNotFound('The element to be streamed from was not found', data=bytes(data))
 
     def feed(self, data, isFinal=0):
-        """Yield the current content of the character buffer"""
+        """Yield the current content of the character buffer."""
         DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
         return self._decode_buffer()
 
@@ -453,7 +453,7 @@ class BytesGeneratorIO(io.RawIOBase):
 
 
 class DocumentYielder:
-    """Look for XML documents in a streaming HTTP response and yield them as they become available from the stream"""
+    """Look for XML documents in a streaming HTTP response and yield them as they become available from the stream."""
 
     def __init__(self, content_iterator, document_tag='Envelope'):
         self._iterator = content_iterator
@@ -562,7 +562,7 @@ def is_xml(text, expected_prefix=b'<?xml'):
 
 
 class PrettyXmlHandler(logging.StreamHandler):
-    """A steaming log handler that prettifies log statements containing XML when output is a terminal"""
+    """A steaming log handler that prettifies log statements containing XML when output is a terminal."""
 
     @staticmethod
     def parse_bytes(xml_bytes):
@@ -570,7 +570,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
     @classmethod
     def prettify_xml(cls, xml_bytes):
-        """Re-format an XML document to a consistent style"""
+        """Re-format an XML document to a consistent style."""
         return lxml.etree.tostring(
             cls.parse_bytes(xml_bytes),
             xml_declaration=True,
@@ -580,7 +580,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
     @staticmethod
     def highlight_xml(xml_str):
-        """Highlight a string containing XML, using terminal color codes"""
+        """Highlight a string containing XML, using terminal color codes."""
         return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
@@ -608,7 +608,7 @@ class PrettyXmlHandler(logging.StreamHandler):
         return super().emit(record)
 
     def is_tty(self):
-        """Check if we're outputting to a terminal"""
+        """Check if we're outputting to a terminal."""
         try:
             return self.stream.isatty()
         except AttributeError:
@@ -616,7 +616,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
 
 class AnonymizingXmlHandler(PrettyXmlHandler):
-    """A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal"""
+    """A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal."""
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -633,14 +633,14 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
 
 
 class DummyRequest:
-    """A class to fake a requests Request object for functions that expect this"""
+    """A class to fake a requests Request object for functions that expect this."""
 
     def __init__(self, headers):
         self.headers = headers
 
 
 class DummyResponse:
-    """A class to fake a requests Response object for functions that expect this"""
+    """A class to fake a requests Response object for functions that expect this."""
 
     def __init__(self, url, headers, request_headers, content=b'', status_code=503, history=None):
         self.status_code = status_code

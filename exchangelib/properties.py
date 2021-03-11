@@ -139,7 +139,7 @@ class UID(bytes):
 
 
 class EWSElement(metaclass=abc.ABCMeta):
-    """Base class for all XML element implementations"""
+    """Base class for all XML element implementations."""
 
     ELEMENT_NAME = None  # The name of the XML tag
     FIELDS = Fields()  # A list of attributes supported by this item class, ordered the same way as in EWS documentation
@@ -572,14 +572,14 @@ class Mailbox(EWSElement):
 
 
 class DLMailbox(Mailbox):
-    """Like Mailbox, but creates elements in the 'messages' namespace when sending requests"""
+    """Like Mailbox, but creates elements in the 'messages' namespace when sending requests."""
 
     NAMESPACE = MNS
     __slots__ = ()
 
 
 class SendingAs(Mailbox):
-    """Like Mailbox, but creates elements in the 'messages' namespace when sending requests
+    """Like Mailbox, but creates elements in the 'messages' namespace when sending requests.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendingas
     """
@@ -747,7 +747,7 @@ class Attendee(EWSElement):
 
 
 class TimeZoneTransition(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for StandardTime and DaylightTime classes"""
+    """Base class for StandardTime and DaylightTime classes."""
 
     FIELDS = Fields(
         IntegerField('bias', field_uri='Bias', is_required=True),  # Offset from the default bias, in minutes
@@ -1839,7 +1839,7 @@ class PostalAddressAttributedValue(EWSElement):
 
 
 class Event(EWSElement, metaclass=abc.ABCMeta):
-    """Base class for all event types"""
+    """Base class for all event types."""
 
     FIELDS = Fields(
         CharField('watermark', field_uri='Watermark'),
@@ -1848,7 +1848,7 @@ class Event(EWSElement, metaclass=abc.ABCMeta):
 
 
 class TimestampEvent(Event, metaclass=abc.ABCMeta):
-    """Base class for both item and folder events with a timestamp"""
+    """Base class for both item and folder events with a timestamp."""
 
     FOLDER = 'folder'
     ITEM = 'item'
@@ -1872,7 +1872,7 @@ class TimestampEvent(Event, metaclass=abc.ABCMeta):
 
 
 class OldTimestampEvent(TimestampEvent, metaclass=abc.ABCMeta):
-    """Base class for both item and folder copy/move events"""
+    """Base class for both item and folder copy/move events."""
 
     LOCAL_FIELDS = Fields(
         EWSElementField('old_item_id', field_uri='OldItemId', value_cls=ItemId),

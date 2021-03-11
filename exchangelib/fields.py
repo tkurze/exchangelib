@@ -59,19 +59,19 @@ WEEKDAYS = WEEKDAY_NAMES + EXTRA_WEEKDAY_OPTIONS
 
 
 class InvalidField(ValueError):
-    """Used when a field name does not match any defined fields"""
+    """Used when a field name does not match any defined fields."""
 
 
 class InvalidFieldForVersion(ValueError):
-    """Used when a field is not supported on the given Exchnage version"""
+    """Used when a field is not supported on the given Exchnage version."""
 
 
 class InvalidChoiceForVersion(ValueError):
-    """Used when a value is not valid for an enum-type field"""
+    """Used when a value is not valid for an enum-type field."""
 
 
 def split_field_path(field_path):
-    """Split a string path into its field, label and subfield parts
+    """Split a string path into its field, label and subfield parts.
 
     Args:
       field_path:
@@ -240,7 +240,7 @@ class FieldPath:
 
 
 class FieldOrder:
-    """Holds values needed to call server-side sorting on a single field path"""
+    """Holds values needed to call server-side sorting on a single field path."""
 
     def __init__(self, field_path, reverse=False):
         if not isinstance(field_path, FieldPath):
@@ -264,7 +264,7 @@ class FieldOrder:
 
 
 class Field(metaclass=abc.ABCMeta):
-    """Holds information related to an item field"""
+    """Holds information related to an item field."""
 
     value_cls = None
     is_list = False
@@ -417,17 +417,17 @@ class FieldURIField(Field):
 
 
 class BooleanField(FieldURIField):
-    """A field that handles boolean values"""
+    """A field that handles boolean values."""
 
     value_cls = bool
 
 
 class OnOffField(BooleanField):
-    """A field that handles boolean values that are On/Off instead of True/False"""
+    """A field that handles boolean values that are On/Off instead of True/False."""
 
 
 class IntegerField(FieldURIField):
-    """A field that handles integer values"""
+    """A field that handles integer values."""
 
     value_cls = int
 
@@ -455,7 +455,7 @@ class IntegerField(FieldURIField):
 
 
 class DecimalField(IntegerField):
-    """A field that handles decimal values"""
+    """A field that handles decimal values."""
 
     value_cls = Decimal
 
@@ -523,13 +523,13 @@ class EnumField(IntegerField):
 
 
 class EnumListField(EnumField):
-    """Like EnumField, but for lists of enum values"""
+    """Like EnumField, but for lists of enum values."""
 
     is_list = True
 
 
 class EnumAsIntField(EnumField):
-    """Like EnumField, but communicates values with EWS in integers"""
+    """Like EnumField, but communicates values with EWS in integers."""
 
     def from_xml(self, elem, account):
         return super(EnumField, self).from_xml(elem=elem, account=account)
@@ -561,7 +561,7 @@ class AppointmentStateField(IntegerField):
 
 
 class Base64Field(FieldURIField):
-    """A field that handles binary data and automatically Base64 encodes and decodes the data"""
+    """A field that handles binary data and automatically Base64 encodes and decodes the data."""
 
     value_cls = bytes
     is_complex = True
@@ -580,7 +580,7 @@ class MimeContentField(Base64Field):
 
 
 class DateField(FieldURIField):
-    """A field that handles date values"""
+    """A field that handles date values."""
 
     value_cls = EWSDate
 
@@ -625,7 +625,7 @@ class DateTimeBackedDateField(DateField):
 
 
 class TimeField(FieldURIField):
-    """A field that handles time values"""
+    """A field that handles time values."""
 
     value_cls = datetime.time
 
@@ -644,7 +644,7 @@ class TimeField(FieldURIField):
 
 
 class DateTimeField(FieldURIField):
-    """A field that handles datetime values"""
+    """A field that handles datetime values."""
 
     value_cls = EWSDateTime
 
@@ -709,7 +709,7 @@ class DateOrDateTimeField(DateTimeField):
 
 
 class TimeZoneField(FieldURIField):
-    """A field that handles timezone values"""
+    """A field that handles timezone values."""
 
     value_cls = EWSTimeZone
 
@@ -742,14 +742,14 @@ class TimeZoneField(FieldURIField):
 
 
 class TextField(FieldURIField):
-    """A field that stores a string value with no length limit"""
+    """A field that stores a string value with no length limit."""
 
     value_cls = str
     is_complex = True
 
 
 class TextListField(TextField):
-    """Like TextField, but for lists of text"""
+    """Like TextField, but for lists of text."""
 
     is_list = True
 
@@ -761,7 +761,7 @@ class TextListField(TextField):
 
 
 class MessageField(TextField):
-    """A field that handles the Message element"""
+    """A field that handles the Message element."""
 
     INNER_ELEMENT_NAME = 'Message'
 
@@ -782,7 +782,7 @@ class MessageField(TextField):
 
 
 class CharField(TextField):
-    """A field that stores a string value with a limited length"""
+    """A field that stores a string value with a limited length."""
 
     is_complex = False
 
@@ -820,7 +820,7 @@ class IdField(CharField):
 
 
 class CharListField(CharField):
-    """Like CharField, but for lists of strings"""
+    """Like CharField, but for lists of strings."""
 
     is_list = True
 
@@ -845,7 +845,7 @@ class URIField(TextField):
 
 
 class EmailAddressField(CharField):
-    """A helper class used for email address string that we can use for email validation"""
+    """A helper class used for email address string that we can use for email validation."""
 
 
 class CultureField(CharField):
@@ -853,7 +853,7 @@ class CultureField(CharField):
 
 
 class Choice:
-    """Implement versioned choices for the ChoiceField field"""
+    """Implement versioned choices for the ChoiceField field."""
 
     def __init__(self, value, supported_from=None):
         self.value = value
@@ -869,7 +869,7 @@ class Choice:
 
 
 class ChoiceField(CharField):
-    """Like CharField, but restricts the value to a limited set of strings"""
+    """Like CharField, but restricts the value to a limited set of strings."""
 
     def __init__(self, *args, **kwargs):
         self.choices = kwargs.pop('choices')
@@ -903,7 +903,7 @@ FREE_BUSY_CHOICES = [Choice('Free'), Choice('Tentative'), Choice('Busy'), Choice
 
 
 class FreeBusyStatusField(ChoiceField):
-    """Like ChoiceField, but specifically for Free/Busy values"""
+    """Like ChoiceField, but specifically for Free/Busy values."""
 
     def __init__(self, *args, **kwargs):
         kwargs['choices'] = set(FREE_BUSY_CHOICES)
@@ -911,7 +911,7 @@ class FreeBusyStatusField(ChoiceField):
 
 
 class BodyField(TextField):
-    """A TextField with specific requirements for the Item body"""
+    """A TextField with specific requirements for the Item body."""
 
     def __init__(self, *args, **kwargs):
         from .properties import Body
@@ -947,7 +947,7 @@ class BodyField(TextField):
 
 
 class EWSElementField(FieldURIField):
-    """A generic field for any EWSElement object"""
+    """A generic field for any EWSElement object."""
 
     def __init__(self, *args, **kwargs):
         self._value_cls = kwargs.pop('value_cls')
@@ -986,7 +986,7 @@ class EWSElementField(FieldURIField):
 
 
 class EWSElementListField(EWSElementField):
-    """Like EWSElementField, but for lists of EWSElement objects"""
+    """Like EWSElementField, but for lists of EWSElement objects."""
 
     is_list = True
     is_complex = True
@@ -1056,7 +1056,7 @@ class MessageHeaderField(EWSElementListField):
 
 
 class BaseEmailField(EWSElementField):
-    """A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for"""
+    """A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for."""
 
     is_complex = True  # FindItem only returns the name, not the email address
 
@@ -1146,7 +1146,7 @@ class AttendeesField(EWSElementListField):
 
 
 class AttachmentField(EWSElementListField):
-    """A field for item attachments"""
+    """A field for item attachments."""
 
     def __init__(self, *args, **kwargs):
         from .attachments import Attachment
@@ -1168,7 +1168,7 @@ class AttachmentField(EWSElementListField):
 
 
 class LabelField(ChoiceField):
-    """A field to hold the label on an IndexedElement"""
+    """A field to hold the label on an IndexedElement."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1179,7 +1179,7 @@ class LabelField(ChoiceField):
 
 
 class SubField(Field):
-    """A field to hold the value on an SingleFieldIndexedElement"""
+    """A field to hold the value on an SingleFieldIndexedElement."""
 
     namespace = TNS
     value_cls = str
@@ -1200,7 +1200,7 @@ class SubField(Field):
 
 
 class EmailSubField(SubField):
-    """A field to hold the value on an SingleFieldIndexedElement"""
+    """A field to hold the value on an SingleFieldIndexedElement."""
 
     value_cls = str
 
@@ -1209,7 +1209,7 @@ class EmailSubField(SubField):
 
 
 class NamedSubField(SubField):
-    """A field to hold the value on an MultiFieldIndexedElement"""
+    """A field to hold the value on an MultiFieldIndexedElement."""
 
     value_cls = str
 
@@ -1242,7 +1242,7 @@ class NamedSubField(SubField):
 
 
 class IndexedField(EWSElementField):
-    """A base class for all indexed fields"""
+    """A base class for all indexed fields."""
 
     PARENT_ELEMENT_NAME = None
 
@@ -1598,7 +1598,7 @@ class PostalAddressAttributedValueField(EWSElementListField):
 
 
 class GenericEventListField(EWSElementField):
-    """A list field that can contain all subclasses of Event"""
+    """A list field that can contain all subclasses of Event."""
 
     is_list = True
 

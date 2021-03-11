@@ -15,12 +15,12 @@ log = logging.getLogger(__name__)
 
 
 class EWSDate(datetime.date):
-    """Extends the normal date implementation to satisfy EWS"""
+    """Extends the normal date implementation to satisfy EWS."""
 
     __slots__ = '_year', '_month', '_day', '_hashcode'
 
     def ewsformat(self):
-        """ISO 8601 format to satisfy xs:date as interpreted by EWS. Example: 2009-01-15"""
+        """ISO 8601 format to satisfy xs:date as interpreted by EWS. Example: 2009-01-15."""
         return self.isoformat()
 
     def __add__(self, other):
@@ -75,7 +75,7 @@ class EWSDate(datetime.date):
 
 
 class EWSDateTime(datetime.datetime):
-    """Extends the normal datetime implementation to satisfy EWS"""
+    """Extends the normal datetime implementation to satisfy EWS."""
 
     __slots__ = '_year', '_month', '_day', '_hour', '_minute', '_second', '_microsecond', '_tzinfo', '_hashcode'
 

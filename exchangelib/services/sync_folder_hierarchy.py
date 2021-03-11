@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
-    """Base class for SyncFolderHierarchy and SyncFolderItems"""
+    """Base class for SyncFolderHierarchy and SyncFolderItems."""
 
     element_container_name = '{%s}Changes' % MNS
     # Change types

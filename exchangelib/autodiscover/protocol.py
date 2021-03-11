@@ -2,7 +2,7 @@ from ..protocol import BaseProtocol
 
 
 class AutodiscoverProtocol(BaseProtocol):
-    """Protocol which implements the bare essentials for autodiscover"""
+    """Protocol which implements the bare essentials for autodiscover."""
 
     TIMEOUT = 10  # Seconds
 

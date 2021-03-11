@@ -60,7 +60,7 @@ KNOWN_EXCEPTIONS = (
 
 
 class EWSService(metaclass=abc.ABCMeta):
-    """Base class for all EWS services"""
+    """Base class for all EWS services."""
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
@@ -228,7 +228,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 raise
 
     def _get_response_and_session(self, payload, api_version):
-        """Send the actual HTTP request and get the response"""
+        """Send the actual HTTP request and get the response."""
         session = self.protocol.get_session()
         return post_ratelimited(
             protocol=self.protocol,
@@ -344,22 +344,22 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _response_tag(cls):
-        """Return the name of the element containing the service response"""
+        """Return the name of the element containing the service response."""
         return '{%s}%sResponse' % (MNS, cls.SERVICE_NAME)
 
     @staticmethod
     def _response_messages_tag():
-        """Return the name of the element containing service response messages"""
+        """Return the name of the element containing service response messages."""
         return '{%s}ResponseMessages' % MNS
 
     @classmethod
     def _response_message_tag(cls):
-        """Return the name of the element of a single response message"""
+        """Return the name of the element of a single response message."""
         return '{%s}%sResponseMessage' % (MNS, cls.SERVICE_NAME)
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        """Split the SOAP response into its headers an body elements"""
+        """Split the SOAP response into its headers an body elements."""
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
@@ -392,7 +392,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _raise_soap_errors(cls, fault):
-        """Parse error messages contained in SOAP headers and raise as exceptions defined in this package"""
+        """Parse error messages contained in SOAP headers and raise as exceptions defined in this package."""
         # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
         faultcode = get_xml_attr(fault, 'faultcode')
         faultstring = get_xml_attr(fault, 'faultstring')
@@ -489,7 +489,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_exception(code, text, msg_xml):
-        """Parse error messages contained in EWS responses and raise as exceptions defined in this package"""
+        """Parse error messages contained in EWS responses and raise as exceptions defined in this package."""
         if not code:
             return TransportError('Empty ResponseCode in ResponseMessage (MessageText: %s, MessageXml: %s)' % (
                 text, msg_xml))
@@ -675,7 +675,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_paging_values(elem):
-        """Read paging information from the paging container element"""
+        """Read paging information from the paging container element."""
         is_last_page = elem.get('IncludesLastItemInRange').lower() in ('true', '0')
         offset = elem.get('IndexedPagingOffset')
         if offset is None and not is_last_page:
@@ -689,7 +689,7 @@ class EWSService(metaclass=abc.ABCMeta):
         return item_count, next_offset
 
     def _get_page(self, message):
-        """Get a single page from a request message, and return the container and next offset"""
+        """Get a single page from a request message, and return the container and next offset."""
         paging_elem = self._get_element_container(message=message, name=self.paging_container_name)
         if isinstance(paging_elem, Exception):
             return paging_elem, None
@@ -700,7 +700,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
 
 class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
-    """Base class for services that act on items concerning a single Mailbox on the server"""
+    """Base class for services that act on items concerning a single Mailbox on the server."""
 
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
 

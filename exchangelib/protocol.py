@@ -33,7 +33,7 @@ def close_connections():
 
 
 class BaseProtocol:
-    """Base class for Protocol which implements the bare essentials"""
+    """Base class for Protocol which implements the bare essentials."""
 
     # The maximum number of sessions (== TCP connections, see below) we will open to this service endpoint. Keep this
     # low unless you have an agreement with the Exchange admin on the receiving end to hammer the server and
@@ -357,7 +357,7 @@ class BaseProtocol:
 
 
 class CachingProtocol(type):
-    """A metaclass for Protocol that caches Protocol instances based on a server+username key"""
+    """A metaclass for Protocol that caches Protocol instances based on a server+username key."""
 
     _protocol_cache = {}
     _protocol_cache_lock = Lock()
@@ -625,7 +625,7 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
 
 class TLSClientAuth(requests.adapters.HTTPAdapter):
-    """An HTTP adapter that implements Certificate Based Authentication (CBA)"""
+    """An HTTP adapter that implements Certificate Based Authentication (CBA)."""
 
     cert_file = None
 
@@ -635,7 +635,7 @@ class TLSClientAuth(requests.adapters.HTTPAdapter):
 
 
 class RetryPolicy(metaclass=abc.ABCMeta):
-    """Stores retry logic used when faced with errors from the server"""
+    """Stores retry logic used when faced with errors from the server."""
 
     @property
     @abc.abstractmethod
@@ -660,7 +660,7 @@ class RetryPolicy(metaclass=abc.ABCMeta):
 
 
 class FailFast(RetryPolicy):
-    """Fail immediately on server errors"""
+    """Fail immediately on server errors."""
 
     @property
     def fail_fast(self):
