@@ -19,19 +19,17 @@ class FindPeople(EWSAccountService):
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         """Find items in an account.
 
-        Args:
-          folder: the Folder object to query
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          restriction: a Restriction object for
-          order_fields: the fields to sort the results by
-          shape: The set of attributes to return
-          query_string: a QueryString object
-          depth: How deep in the folder structure to search for items
-          max_items: the max number of items to return
-          offset: the offset relative to the first item in the item collection. Usually 0.
+        :param folder: the Folder object to query
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param restriction: a Restriction object for
+        :param order_fields: the fields to sort the results by
+        :param shape: The set of attributes to return
+        :param query_string: a QueryString object
+        :param depth: How deep in the folder structure to search for items
+        :param max_items: the max number of items to return
+        :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-        Returns:
-          XML elements for the matching items
+        :return: XML elements for the matching items
         """
         from ..items import Persona, ID_ONLY
         for elem in self._paged_call(

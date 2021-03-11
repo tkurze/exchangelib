@@ -109,8 +109,7 @@ class Build:
             * The next bit contains a flag. Can be ignored
             * The next 15 bits contain the major build number
 
-        Args:
-          s:
+        :param s:
         """
         bin_s = '{:032b}'.format(int(s, 16))  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
@@ -213,9 +212,8 @@ class Version:
         without a valid API version. To solve this chicken-and-egg problem, we try all possible API versions that this
         package supports, until we get a valid response.
 
-        Args:
-          protocol:
-          api_version_hint:  (Default value = None)
+        :param protocol:
+        :param api_version_hint:  (Default value = None)
         """
         from .services import ResolveNames
         # The protocol doesn't have a version yet, so default to latest supported version if we don't have a hint.

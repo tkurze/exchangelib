@@ -269,8 +269,7 @@ class EWSElement(metaclass=abc.ABCMeta):
     def supported_fields(cls, version):
         """
 
-        Args:
-          version:
+        :param version:
         """
         return tuple(f for f in cls.FIELDS if not f.is_attribute and f.supports_version(version))
 
@@ -286,9 +285,8 @@ class EWSElement(metaclass=abc.ABCMeta):
         """Take a list of fieldnames, Field or FieldPath objects pointing to item fields, and check that they are
         valid for the given version.
 
-        Args:
-          field:
-          version:
+        :param field:
+        :param version:
         """
         if not isinstance(version, Version):
             raise ValueError("'version' %r must be a Version instance" % version)
@@ -310,9 +308,8 @@ class EWSElement(metaclass=abc.ABCMeta):
     def add_field(cls, field, insert_after):
         """Insert a new field at the preferred place in the tuple and update the slots cache.
 
-        Args:
-          field:
-          insert_after:
+        :param field:
+        :param insert_after:
         """
         with cls._fields_lock:
             idx = cls.FIELDS.index_by_name(insert_after) + 1
@@ -325,8 +322,7 @@ class EWSElement(metaclass=abc.ABCMeta):
     def remove_field(cls, field):
         """Remove the given field and and update the slots cache.
 
-        Args:
-          field:
+        :param field:
         """
         with cls._fields_lock:
             # This class may not have its own FIELDS attribute. Make sure not to edit an attribute belonging to a parent
@@ -807,12 +803,10 @@ class TimeZone(EWSElement):
         """Return the Microsoft timezone ID corresponding to this timezone. There may not be a match at all, and there
         may be multiple matches. If so, return a random timezone ID.
 
-        Args:
-          timezones: A list of server timezones, as returned by Protocol.get_timezones(return_full_timezone_data=True)
-          for_year: return: A Microsoft timezone ID, as a string
+        :param timezones: A list of server timezones, as returned by Protocol.get_timezones(return_full_timezone_data=True)
+        :param for_year: return: A Microsoft timezone ID, as a string
 
-        Returns:
-          A Microsoft timezone ID, as a string
+        :return: A Microsoft timezone ID, as a string
         """
         candidates = set()
         for tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups in timezones:

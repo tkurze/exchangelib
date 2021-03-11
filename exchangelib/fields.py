@@ -73,11 +73,9 @@ class InvalidChoiceForVersion(ValueError):
 def split_field_path(field_path):
     """Split a string path into its field, label and subfield parts.
 
-    Args:
-      field_path:
+    :param field_path:
 
-    Returns:
-      Examples:
+    :return Examples:
       'start' -> ('start', None, None)
       'phone_numbers__PrimaryPhone' -> ('phone_numbers', 'PrimaryPhone', None)
       'physical_addresses__Home__street' -> ('physical_addresses', 'Home', 'street')

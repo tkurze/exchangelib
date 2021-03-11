@@ -104,8 +104,7 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     def get_distinguished(cls, account):
         """Get the distinguished folder for this folder class.
 
-        Args:
-          account:
+        :param account:
         """
         if not cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError('Class %s must have a DISTINGUISHED_FOLDER_ID value' % cls)
@@ -198,11 +197,8 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     def folder_cls_from_folder_name(cls, folder_name, locale):
         """Return the folder class that matches a localized folder name.
 
-        locale is a string, e.g. 'da_DK'
-
-        Args:
-          folder_name:
-          locale:
+        :param folder_name:
+        :param locale: a string, e.g. 'da_DK'
         """
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):

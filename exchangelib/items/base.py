@@ -75,9 +75,9 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
     def register(cls, attr_name, attr_cls):
         """Register a custom extended property in this item class so they can be accessed just like any other attribute
 
-        Args:
-          attr_name:
-          attr_cls:
+        :param attr_name:
+        :param attr_cls:
+        :return:
         """
         if not cls.INSERT_AFTER_FIELD:
             raise ValueError('Class %s is missing INSERT_AFTER_FIELD value' % cls)
@@ -102,8 +102,8 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
     def deregister(cls, attr_name):
         """De-register an extended property that has been registered with register().
 
-        Args:
-          attr_name:
+        :param attr_name:
+        :return:
         """
         try:
             field = cls.get_field_by_fieldname(attr_name)
@@ -203,8 +203,8 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
     def save(self, folder):
         """Save the item for later modification. You may want to use account.drafts as the folder.
 
-        Args:
-          folder:
+        :param folder:
+        :return:
         """
         return CreateItem(account=self.account).get(
             items=[self],

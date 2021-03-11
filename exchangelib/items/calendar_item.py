@@ -128,11 +128,9 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
         Only call this method on a recurring master.
 
-        Args:
-          index: The index, which is 1-based
+        :param index: The index, which is 1-based
 
-        Returns:
-          The occurrence
+        :return The occurrence
         """
         return self.__class__(
             account=self.account,
@@ -146,8 +144,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
         Only call this method on an occurrence of a recurring master.
 
-        Returns:
-          other field values are fetched from the server.
+        :return: The master occurrence
         """
         return self.__class__(
             account=self.account,

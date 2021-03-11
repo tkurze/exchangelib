@@ -15,9 +15,8 @@ CLDR_WINZONE_VERSION = '2021a'
 def generate_map(timeout=10):
     """Create a new CLDR_TO_MS_TIMEZONE_MAP map from the CLDR data. Used when the CLDR database is updated.
 
-    Args:
-      timeout:  (Default value = 10)
-
+    :param timeout:  (Default value = 10)
+    :return:
     """
     r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
     if r.status_code != 200:

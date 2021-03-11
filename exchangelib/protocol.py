@@ -452,12 +452,11 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
         """Get timezone definitions from the server.
 
-        Args:
-          timezones: A list of EWSDateTime instances. If None, fetches all timezones from server (Default value = None)
-          return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
+        :param timezones: A list of EWSDateTime instances. If None, fetches all timezones from server
+          (Default value = None)
+        :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-        Returns:
-          A list of (tz_id, name, periods, transitions) tuples
+        :return: A list of (tz_id, name, periods, transitions) tuples
         """
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -466,18 +465,16 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view='DetailedMerged'):
         """Return free/busy information for a list of accounts.
 
-        Args:
-          accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
-            object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.
-          start: The start datetime of the request
-          end: The end datetime of the request
-          merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
-          requested_view: The type of information returned. Possible values are defined in the
-            FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')
+        :param accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an
+          Account object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a
+          boolean.
+        :param start: The start datetime of the request
+        :param end: The end datetime of the request
+        :param merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
+        :param requested_view: The type of information returned. Possible values are defined in the
+          FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')
 
-        Returns:
-          A generator of FreeBusyView objects
-
+        :return: A generator of FreeBusyView objects
         """
         from .account import Account
         for account, attendee_type, exclude_conflicts in accounts:
@@ -526,15 +523,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
         """Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
-        Args:
-          names: A list of identifiers to query
-          return_full_contact_data: If True, returns full contact data (Default value = False)
-          search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
-          shape: return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact)
-            items (Default value = None)
+        :param names: A list of identifiers to query
+        :param return_full_contact_data: If True, returns full contact data (Default value = False)
+        :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
+        :param shape: (Default value = None)
 
-        Returns:
-          A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
+        :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         """
         return list(ResolveNames(protocol=self).call(
             unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
@@ -544,11 +538,9 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def expand_dl(self, distribution_list):
         """Expand distribution list into it's members.
 
-        Args:
-          distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
+        :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
-        Returns:
-          List of Mailbox items that are members of the distribution list
+        :return: List of Mailbox items that are members of the distribution list
         """
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type='PublicDL')
@@ -560,12 +552,10 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-        Args:
-          search_filter: Is set, must be a single email alias (Default value = None)
-          expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
+        :param search_filter: Is set, must be a single email alias (Default value = None)
+        :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
-        Returns:
-          a list of SearchableMailbox, FailedMailbox or Exception instances
+        :return: a list of SearchableMailbox, FailedMailbox or Exception instances
         """
         return list(GetSearchableMailboxes(protocol=self).call(
             search_filter=search_filter,
@@ -575,12 +565,10 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def convert_ids(self, ids, destination_format):
         """Convert item and folder IDs between multiple formats.
 
-        Args:
-          ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-          destination_format: A string
+        :param ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
+        :param destination_format: A string
 
-        Returns:
-          a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
+        :return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
         """
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 

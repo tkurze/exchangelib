@@ -89,13 +89,10 @@ def is_iterable(value, generators_allowed=False):
     callers don't necessarily guarantee that they only iterate the value once. Take care to not match string types and
     bytes.
 
-    Args:
-      value: any type of object
-      generators_allowed: if True, generators will be treated as iterable (Default value = False)
+    :param value: any type of object
+    :param generators_allowed: if True, generators will be treated as iterable (Default value = False)
 
-    Returns:
-      True or False
-
+    :return: True or False
     """
     if generators_allowed:
         if not isinstance(value, (bytes, str)) and hasattr(value, '__iter__'):
@@ -109,10 +106,9 @@ def is_iterable(value, generators_allowed=False):
 def chunkify(iterable, chunksize):
     """Split an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
 
-    Args:
-      iterable:
-      chunksize:
-
+    :param iterable:
+    :param chunksize:
+    :return:
     """
     from .queryset import QuerySet
     if hasattr(iterable, '__getitem__') and not isinstance(iterable, QuerySet):
@@ -134,8 +130,8 @@ def chunkify(iterable, chunksize):
 def peek(iterable):
     """Check if an iterable is empty and return status and the rewinded iterable.
 
-    Args:
-      iterable:
+    :param iterable:
+    :return:
     """
     if hasattr(iterable, '__len__'):
         # tuple, list, set
@@ -152,10 +148,10 @@ def peek(iterable):
 def xml_to_str(tree, encoding=None, xml_declaration=False):
     """Serialize an XML tree. Returns unicode if 'encoding' is None. Otherwise, we return encoded 'bytes'.
 
-    Args:
-      tree:
-      encoding:  (Default value = None)
-      xml_declaration:  (Default value = False)
+    :param tree:
+    :param encoding:  (Default value = None)
+    :param xml_declaration:  (Default value = False)
+    :return:
     """
     if xml_declaration and not encoding:
         raise ValueError("'xml_declaration' is not supported when 'encoding' is None")
@@ -546,10 +542,9 @@ def to_xml(bytes_content):
 def is_xml(text, expected_prefix=b'<?xml'):
     """Lightweight test if response is an XML doc. It's better to be fast than correct here.
 
-    Args:
-      text: The string to check
-      expected_prefix: What to search for in the start if the string
-
+    :param text: The string to check
+    :param expected_prefix: What to search for in the start if the string
+    :return:
     """
     # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
@@ -589,8 +584,7 @@ class PrettyXmlHandler(logging.StreamHandler):
            * We're outputting to a terminal
            * The log message args is a dict containing keys starting with 'xml_' and values as bytes
 
-        Args:
-          record:
+        :param record:
         """
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
             for key, value in record.args.items():
@@ -744,16 +738,16 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     An additional resource on handling throttling policies and client back off strategies:
         https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-throttling-in-exchange
 
-    Args:
-      protocol:
-      session:
-      url:
-      headers:
-      data:
-      allow_redirects:  (Default value = False)
-      stream:  (Default value = False)
-      timeout:
+    :param protocol:
+    :param session:
+    :param url:
+    :param headers:
+    :param data:
+    :param allow_redirects:  (Default value = False)
+    :param stream:  (Default value = False)
+    :param timeout:
 
+    :return:
     """
     if not timeout:
         timeout = protocol.TIMEOUT

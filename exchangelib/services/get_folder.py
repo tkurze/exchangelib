@@ -16,13 +16,11 @@ class GetFolder(EWSAccountService):
     def call(self, folders, additional_fields, shape):
         """Take a folder ID and returns the full information for that folder.
 
-        Args:
-          folders: a list of Folder objects
-          additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
-          shape: The set of attributes to return
+        :param folders: a list of Folder objects
+        :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+        :param shape: The set of attributes to return
 
-        Returns:
-          XML elements for the folders, in stable order
+        :return: XML elements for the folders, in stable order
         """
         # We can't easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.

@@ -16,20 +16,18 @@ class FindItem(EWSAccountService):
              max_items, offset):
         """Find items in an account.
 
-        Args:
-          folders: the folders to act on
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          restriction: a Restriction object for
-          order_fields: the fields to sort the results by
-          shape: The set of attributes to return
-          query_string: a QueryString object
-          depth: How deep in the folder structure to search for items
-          calendar_view: If set, returns recurring calendar items unfolded
-          max_items: the max number of items to return
-          offset: the offset relative to the first item in the item collection. Usually 0.
+        :param folders: the folders to act on
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param restriction: a Restriction object for
+        :param order_fields: the fields to sort the results by
+        :param shape: The set of attributes to return
+        :param query_string: a QueryString object
+        :param depth: How deep in the folder structure to search for items
+        :param calendar_view: If set, returns recurring calendar items unfolded
+        :param max_items: the max number of items to return
+        :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-        Returns:
-          XML elements for the matching items
+        :return: XML elements for the matching items
         """
         from ..folders.base import BaseFolder
         from ..items import Item, ID_ONLY

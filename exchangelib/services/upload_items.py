@@ -24,8 +24,7 @@ class UploadItems(EWSAccountService):
         that the item will be placed in and the second element is a Data string returned from an ExportItems.
         call.
 
-        Args:
-          items:
+        :param items:
         """
         uploaditems = create_element('m:%s' % self.SERVICE_NAME)
         itemselement = create_element('m:Items')

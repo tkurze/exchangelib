@@ -418,24 +418,12 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def filter(self, *args, **kwargs):
-        """
-
-        Args:
-          *args:
-          **kwargs:
-        """
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
         new_qs.q = new_qs.q & q
         return new_qs
 
     def exclude(self, *args, **kwargs):
-        """
-
-        Args:
-          *args:
-          **kwargs:
-        """
         new_qs = self._copy_self()
         q = ~Q(*args, **kwargs)
         new_qs.q = new_qs.q & q
@@ -448,11 +436,7 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def only(self, *args):
-        """Fetch only the specified field names. All other item fields will be 'None'.
-
-        Args:
-          *args:
-        """
+        """Fetch only the specified field names. All other item fields will be 'None'."""
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -464,12 +448,8 @@ class QuerySet(SearchableMixIn):
     def order_by(self, *args):
         """
 
-        Args:
-          *args:
-
-        Returns:
-          in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
-          implemented client-side and will therefore make the query greedy
+        :return: The QuerySet in reverse order. EWS only supports server-side sorting on a single field. Sorting on
+          multiple fields is implemented client-side and will therefore make the query greedy.
         """
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
@@ -489,11 +469,6 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def values(self, *args):
-        """
-
-        Args:
-          *args:
-        """
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -504,14 +479,8 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def values_list(self, *args, **kwargs):
-        """Return the values of the specified field names as lists. If called with flat=True and only one field name,
-
-        Args:
-          *args:
-          **kwargs:
-
-        Returns:
-          Allow an arbitrary list of fields in *args, possibly ending with flat=True|False
+        """Return the values of the specified field names as a list of lists. If called with flat=True and only one
+        field name, returns a list of values.
         """
         flat = kwargs.pop('flat', False)
         if kwargs:
@@ -530,8 +499,7 @@ class QuerySet(SearchableMixIn):
     def depth(self, depth):
         """Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP.
 
-        Args:
-          depth:
+        :param depth:
         """
         new_qs = self._copy_self()
         new_qs._depth = depth
@@ -549,12 +517,7 @@ class QuerySet(SearchableMixIn):
     ###########################
 
     def get(self, *args, **kwargs):
-        """Assume the query will return exactly one item. Return that item.
-
-        Args:
-          *args:
-          **kwargs:
-        """
+        """Assume the query will return exactly one item. Return that item."""
         if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
@@ -575,8 +538,7 @@ class QuerySet(SearchableMixIn):
         """Get the query count, with as little effort as possible 'page_size' is the number of items to
         fetch from the server per request. We're only fetching the IDs, so keep it high
 
-        Args:
-          page_size:  (Default value = 1000)
+        :param page_size:  (Default value = 1000)
         """
         new_qs = self._copy_self()
         new_qs.only_fields = ()
@@ -602,9 +564,8 @@ class QuerySet(SearchableMixIn):
         """Delete the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and delete per request. We're only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **delete_kwargs:
+        :param page_size:  (Default value = 1000)
+        :param delete_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -618,9 +579,8 @@ class QuerySet(SearchableMixIn):
         """Send the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and send per request. We're only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **send_kwargs:
+        :param page_size:  (Default value = 1000)
+        :param send_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -634,10 +594,9 @@ class QuerySet(SearchableMixIn):
         """Copy the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and copy per request. We're only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-          **copy_kwargs:
+        :param to_folder:
+        :param page_size:  (Default value = 1000)
+        :param copy_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -652,9 +611,8 @@ class QuerySet(SearchableMixIn):
         """Move the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and move per request. We're only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
+        :param to_folder:
+        :param page_size: (Default value = 1000)
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -668,9 +626,8 @@ class QuerySet(SearchableMixIn):
         """Archive the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and move per request. We're only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
+        :param to_folder:
+        :param page_size: (Default value = 1000)
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -684,9 +641,8 @@ class QuerySet(SearchableMixIn):
         """Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
         items to fetch and mark per request. We're only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **mark_as_junk_kwargs:
+        :param page_size:  (Default value = 1000)
+        :param mark_as_junk_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size

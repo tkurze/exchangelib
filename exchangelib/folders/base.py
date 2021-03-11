@@ -208,8 +208,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         """Return a reasonable folder class given a container class, e.g. 'IPF.Note'. Don't iterate WELLKNOWN_FOLDERS
         because many folder classes have the same CONTAINER_CLASS.
 
-        Args:
-          container_class:
+        :param container_class:
+        :return:
         """
         from .known_folders import Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, \
             RecipientCache, RSSFeeds
@@ -667,8 +667,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 
         This is useful if the folder hierarchy contains a huge number of folders and you don't want to fetch them all
 
-        Args:
-          other:
+        :param other:
+        :return:
         """
         if other == '..':
             raise ValueError('Cannot get parent without a folder cache')
@@ -760,8 +760,8 @@ class Folder(BaseFolder):
     def get_distinguished(cls, root):
         """Get the distinguished folder for this folder class.
 
-        Args:
-          root:
+        :param root:
+        :return:
         """
         try:
             return cls.resolve(

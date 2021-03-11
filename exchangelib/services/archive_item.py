@@ -13,12 +13,10 @@ class ArchiveItem(EWSAccountService):
     def call(self, items, to_folder):
         """Move a list of items to a specific folder in the archive mailbox.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          to_folder:
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param to_folder:
 
-        Returns:
-          None
+        :return: None
         """
         from ..items import Item
         for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):

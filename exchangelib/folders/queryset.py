@@ -39,11 +39,7 @@ class FolderQuerySet:
         return new_qs
 
     def only(self, *args):
-        """Restrict the fields returned. 'name' and 'folder_class' are always returned.
-
-        Args:
-          *args:
-        """
+        """Restrict the fields returned. 'name' and 'folder_class' are always returned."""
         from .base import Folder
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
@@ -62,19 +58,15 @@ class FolderQuerySet:
     def depth(self, depth):
         """Specify the search depth. Possible values are: SHALLOW or DEEP.
 
-        Args:
-          depth:
+        :param depth:
         """
         new_qs = self._copy_self()
         new_qs._depth = depth
         return new_qs
 
     def get(self, *args, **kwargs):
-        """
-
-        Args:
-          *args:
-          **kwargs:
+        """Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
+        MultipleObjectsReturned if there are multiple results.
         """
         from .collections import FolderCollection
         if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
@@ -100,12 +92,7 @@ class FolderQuerySet:
         return new_qs
 
     def filter(self, *args, **kwargs):
-        """Add restrictions to the folder search.
-
-        Args:
-          *args:
-          **kwargs:
-        """
+        """Add restrictions to the folder search."""
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
         new_qs.q = new_qs.q & q

@@ -32,9 +32,8 @@ class FolderCollection(SearchableMixIn):
     def __init__(self, account, folders):
         """Implement a search API on a collection of folders.
 
-        Args:
-          account: An Account object
-          folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
+        :param account: An Account object
+        :param folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
         """
         self.account = account
         self._folders = folders
@@ -84,10 +83,6 @@ class FolderCollection(SearchableMixIn):
         'endswith' and 'iendswith' could be emulated by searching with 'contains' or 'icontains' and then
         post-processing items. Fetch the field in question with additional_fields and remove items where the search
         string is not a postfix.
-
-        Args:
-          *args:
-          **kwargs:
         """
         return QuerySet(self).filter(*args, **kwargs)
 
@@ -110,12 +105,10 @@ class FolderCollection(SearchableMixIn):
 
         'max_items' defines the maximum number of items returned in this view. Optional.
 
-        Args:
-          start:
-          end:
-          max_items:  (Default value = None)
-          *args:
-          **kwargs:
+        :param start:
+        :param end:
+        :param max_items:  (Default value = None)
+        :return:
         """
         qs = QuerySet(self).filter(*args, **kwargs)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
@@ -147,21 +140,19 @@ class FolderCollection(SearchableMixIn):
                    calendar_view=None, page_size=None, max_items=None, offset=0):
         """Private method to call the FindItem service.
 
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
-            we always return Item objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
-            that complex fields can only be fetched with fetch() (i.e. the GetItem service).
-          order_fields: the SortOrder fields, if any (Default value = None)
-          calendar_view: a CalendarView instance, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
+        :param q: a Q instance containing any restrictions
+        :param shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is
+          non-null, we always return Item objects. (Default value = ID_ONLY)
+        :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+        :param additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+          that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+        :param order_fields: the SortOrder fields, if any (Default value = None)
+        :param calendar_view: a CalendarView instance, if any (Default value = None)
+        :param page_size: the requested number of items per page (Default value = None)
+        :param max_items: the max number of items to return (Default value = None)
+        :param offset: the offset relative to the first item in the item collection (Default value = 0)
 
-        Returns:
-          a generator for the returned item IDs or items
+        :return: a generator for the returned item IDs or items
         """
         if not self.folders:
             log.debug('Folder list is empty')
@@ -227,19 +218,17 @@ class FolderCollection(SearchableMixIn):
                     page_size=None, max_items=None, offset=0):
         """Private method to call the FindPeople service.
 
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
-            non-null, we always return Persona objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties.
-          order_fields: the SortOrder fields, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
+        :param q: a Q instance containing any restrictions
+        :param shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+          non-null, we always return Persona objects. (Default value = ID_ONLY)
+        :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+        :param additional_fields: the extra properties we want on the return objects. Default is no properties.
+        :param order_fields: the SortOrder fields, if any (Default value = None)
+        :param page_size: the requested number of items per page (Default value = None)
+        :param max_items: the max number of items to return (Default value = None)
+        :param offset: the offset relative to the first item in the item collection (Default value = 0)
 
-        Returns:
-          a generator for the returned personas
+        :return: a generator for the returned personas
         """
         folder = self._get_single_folder()
         if not folder:

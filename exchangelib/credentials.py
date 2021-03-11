@@ -35,8 +35,8 @@ class BaseCredentials(metaclass=abc.ABCMeta):
         happen in long- running applications or those that cache access tokens and so might start with a token close to
         expiration.
 
-        Args:
-          session: requests session asking for refreshed credentials
+        :param session: requests session asking for refreshed credentials
+        :return:
         """
 
     def _get_hash_values(self):
@@ -68,8 +68,7 @@ class BaseCredentials(metaclass=abc.ABCMeta):
 class Credentials(BaseCredentials):
     r"""Keeps login info the way Exchange likes it.
 
-    Args:
-      username: Usernames for authentication are of one of these forms:
+    Usernames for authentication are of one of these forms:
     * PrimarySMTPAddress
     * WINDOMAIN\username
     * User Principal Name (UPN)
@@ -108,15 +107,16 @@ class OAuth2Credentials(BaseCredentials):
     that will access multiple tenants' data, the client credentials flow does not give the application enough
     information to restrict end users' access to the appropriate account. Use OAuth2AuthorizationCodeCredentials and
     the associated auth code grant type for multi-tenant applications.
-
-    Args:
-      client_id: ID of an authorized OAuth application
-      client_secret: Secret associated with the OAuth application
-      tenant_id: Microsoft tenant ID of the account to access
-      identity: An Identity object representing the account that these credentials are connected to.
     """
 
     def __init__(self, client_id, client_secret, tenant_id=None, identity=None):
+        """
+
+        :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
+        :param client_secret: Secret associated with the OAuth application
+        :param tenant_id: Microsoft tenant ID of the account to access
+        :param identity: An Identity object representing the account that these credentials are connected to.
+        """
         super().__init__()
         self.client_id = client_id
         self.client_secret = client_secret
@@ -136,8 +136,7 @@ class OAuth2Credentials(BaseCredentials):
         Applications that cache access tokens can override this to store the new token - just remember to call the
         super() method.
 
-        Args:
-          access_token: New token obtained by refreshing
+        :param access_token: New token obtained by refreshing
         """
         # Ensure we don't update the object in the middle of a new session being created, which could cause a race.
         if not isinstance(access_token, dict):
@@ -184,18 +183,20 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
     Unlike the base (client credentials) grant, authorization code credentials don't require a Microsoft tenant ID
     because each access token (and the authorization code used to get the access token) is restricted to a single
     tenant.
-
-    Args:
-      client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
-      client_secret: Secret associated with the OAuth application
-      authorization_code: Code obtained when authorizing the application to access an account. In combination with
-        client_id and client_secret, will be used to obtain an access token.
-      access_token: Previously-obtained access token. If a token exists and the application will handle refreshing
-        by itself (or opts not to handle it), this parameter alone is sufficient.
-      identity: An Identity object representing the account that these credentials are connected to.
     """
 
     def __init__(self, authorization_code=None, access_token=None, **kwargs):
+        """
+
+        :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
+        :param client_secret: Secret associated with the OAuth application
+        :param tenant_id: Microsoft tenant ID of the account to access
+        :param identity: An Identity object representing the account that these credentials are connected to.
+        :param authorization_code: Code obtained when authorizing the application to access an account. In combination
+          with client_id and client_secret, will be used to obtain an access token.
+        :param access_token: Previously-obtained access token. If a token exists and the application will handle
+          refreshing by itself (or opts not to handle it), this parameter alone is sufficient.
+        """
         super().__init__(**kwargs)
         self.authorization_code = authorization_code
         if access_token is not None and not isinstance(access_token, dict):

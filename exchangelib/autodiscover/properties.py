@@ -329,8 +329,8 @@ class Autodiscover(EWSElement):
         """Create an instance from response bytes. An Autodiscover request and response example is available at:
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/pox-autodiscover-response-for-exchange
 
-        Args:
-          bytes_content:
+        :param bytes_content:
+        :return:
         """
         if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b'<Autodiscover '):
             raise ValueError('Response is not XML: %s' % bytes_content)

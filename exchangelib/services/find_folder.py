@@ -16,17 +16,15 @@ class FindFolder(EWSAccountService):
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         """Find subfolders of a folder.
 
-        Args:
-          folders: the folders to act on
-          additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
-          restriction: Restriction object that defines the filters for the query
-          shape: The set of attributes to return
-          depth: How deep in the folder structure to search for folders
-          max_items: The maximum number of items to return
-          offset: the offset relative to the first item in the item collection. Usually 0.
+        :param folders: the folders to act on
+        :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+        :param restriction: Restriction object that defines the filters for the query
+        :param shape: The set of attributes to return
+        :param depth: How deep in the folder structure to search for folders
+        :param max_items: The maximum number of items to return
+        :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-        Returns:
-          XML elements for the matching folders
+        :return: XML elements for the matching folders
         """
         from ..folders import Folder
         roots = {f.root for f in folders}

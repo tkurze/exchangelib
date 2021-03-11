@@ -63,11 +63,10 @@ class CreateItem(EWSAccountService):
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation
         ). The last two are not supported yet.
 
-        Args:
-          items:
-          folder:
-          message_disposition:
-          send_meeting_invitations:
+        :param items:
+        :param folder:
+        :param message_disposition:
+        :param send_meeting_invitations:
         """
         createitem = create_element(
             'm:%s' % self.SERVICE_NAME,

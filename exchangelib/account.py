@@ -33,11 +33,11 @@ class Identity:
     def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
         """
 
-        Args:
-          primary_smtp_address: The primary email address associated with the account (Default value = None)
-          smtp_address: The (non-)primary email address associated with the account (Default value = None)
-          upn:  (Default value = None)
-          sid:  (Default value = None)
+        :param primary_smtp_address: The primary email address associated with the account (Default value = None)
+        :param smtp_address: The (non-)primary email address associated with the account (Default value = None)
+        :param upn: (Default value = None)
+        :param sid: (Default value = None)
+        :return:
         """
         self.primary_smtp_address = primary_smtp_address
         self.smtp_address = smtp_address
@@ -64,19 +64,19 @@ class Account:
                  config=None, locale=None, default_timezone=None):
         """
 
-        Args:
-          primary_smtp_address: The primary email address associated with the account on the Exchange server
-          fullname: The full name of the account. Optional. (Default value = None)
-          access_type: The access type granted to 'credentials' for this account. Valid options are 'delegate'
+        :param primary_smtp_address: The primary email address associated with the account on the Exchange server
+        :param fullname: The full name of the account. Optional. (Default value = None)
+        :param access_type: The access type granted to 'credentials' for this account. Valid options are 'delegate'
             and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.
-          autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+        :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
             (Default value = False)
-          credentials: A Credentials object containing valid credentials for this account. (Default value = None)
-          config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+        :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
+        :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
-          locale: The locale of the user, e.g. 'en_US'. Defaults to the locale of the host, if available.
-          default_timezone: EWS may return some datetime values without timezone information. In this case, we will
+        :param locale: The locale of the user, e.g. 'en_US'. Defaults to the locale of the host, if available.
+        :param default_timezone: EWS may return some datetime values without timezone information. In this case, we will
             assume values to be in the provided timezone. Defaults to the timezone of the host.
+        :return:
         """
         if '@' not in primary_smtp_address:
             raise ValueError("primary_smtp_address %r is not an email address" % primary_smtp_address)
@@ -345,12 +345,10 @@ class Account:
     def export(self, items, chunk_size=None):
         """Return export strings of the given items.
 
-        Args:
-          items: An iterable containing the Items we want to export
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param items: An iterable containing the Items we want to export
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list of strings, the exported representation of the object
+        :return: A list of strings, the exported representation of the object
         """
         return list(
             self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs={})
@@ -359,13 +357,11 @@ class Account:
     def upload(self, data, chunk_size=None):
         """Upload objects retrieved from an export to the given folders.
 
-        Args:
-          data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+        :param data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
             exports.
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list of tuples with the new ids and changekeys
+        :return: A list of tuples with the new ids and changekeys
 
           Example:
           account.upload([(account.inbox, "AABBCC..."),
@@ -381,17 +377,15 @@ class Account:
                     chunk_size=None):
         """Create new items in 'folder'.
 
-        Args:
-          folder: the folder to create the items in
-          items: an iterable of Item objects
-          message_disposition: only applicable to Message items. Possible values are specified in
+        :param folder: the folder to create the items in
+        :param items: an iterable of Item objects
+        :param message_disposition: only applicable to Message items. Possible values are specified in
             MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-          send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+        :param send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
             SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+        :return: a list of either BulkCreateResult or exception instances in the same order as the input. The returned
           BulkCreateResult objects are normal Item objects except they only contain the 'id' and 'changekey'
           of the created item, and the 'id' of any attachments that were also created.
         """
@@ -416,20 +410,18 @@ class Account:
                     chunk_size=None):
         """Bulk update existing items.
 
-        Args:
-          items: a list of (Item, fieldnames) tuples, where 'Item' is an Item object, and 'fieldnames' is a list
+        :param items: a list of (Item, fieldnames) tuples, where 'Item' is an Item object, and 'fieldnames' is a list
             containing the attributes on this Item object that we want to be updated.
-          conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+        :param conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
             (Default value = AUTO_RESOLVE)
-          message_disposition: only applicable to Message items. Possible values are specified in
+        :param message_disposition: only applicable to Message items. Possible values are specified in
             MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-          send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+        :param send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
             specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
-          suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either (id, changekey) tuples or exception instances, in the same order as the input
+        :return: a list of either (id, changekey) tuples or exception instances, in the same order as the input
         """
         # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
         # fact, it could be dangerous if the queryset contains an '.only()'. This would wipe out certain fields
@@ -454,19 +446,17 @@ class Account:
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
         """Bulk delete items.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
             (Default value = HARD_DELETE)
-          send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+        :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
             SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
-          affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+        :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
             AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
-          suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either True or exception instances, in the same order as the input
+        :return: a list of either True or exception instances, in the same order as the input
         """
         log.debug(
             'Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)',
@@ -487,14 +477,12 @@ class Account:
     def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
         """Send existing draft messages. If requested, save a copy in 'copy_to_folder'.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          save_copy: If true, saves a copy of the message (Default value = True)
-          copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param save_copy: If true, saves a copy of the message (Default value = True)
+        :param copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          Status for each send operation, in the same order as the input
+        :return: Status for each send operation, in the same order as the input
         """
         if copy_to_folder and not save_copy:
             raise AttributeError("'save_copy' must be True when 'copy_to_folder' is set")
@@ -509,13 +497,11 @@ class Account:
     def bulk_copy(self, ids, to_folder, chunk_size=None):
         """Copy items to another folder.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the copy operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the copy operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          Status for each send operation, in the same order as the input
+        :return: Status for each send operation, in the same order as the input
         """
         return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
@@ -524,13 +510,11 @@ class Account:
     def bulk_move(self, ids, to_folder, chunk_size=None):
         """Move items to another folder.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the copy operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the copy operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          The new IDs of the moved items, in the same order as the input. If 'to_folder' is a public folder or a
+        :return: The new IDs of the moved items, in the same order as the input. If 'to_folder' is a public folder or a
           folder in a different mailbox, an empty list is returned.
         """
         return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
@@ -541,13 +525,11 @@ class Account:
         """Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
         to work.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the archive operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the archive operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list containing True or an exception instance in stable order of the requested items
+        :return: A list containing True or an exception instance in stable order of the requested items
         """
         return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
@@ -557,15 +539,13 @@ class Account:
     def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
         """Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          is_junk: Whether the messages are junk or not
-          move_item: Whether to move the messages to the junk folder or not
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param is_junk: Whether the messages are junk or not
+        :param move_item: Whether to move the messages to the junk folder or not
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
-          stable order of the requested items.
+        :return: A list containing the new IDs of the moved items, if items were moved, or True, or an exception
+          instance, in stable order of the requested items.
         """
         return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
             is_junk=is_junk,
@@ -575,14 +555,12 @@ class Account:
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
         """Fetch items by ID.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          folder: used for validating 'only_fields' (Default value = None)
-          only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param folder: used for validating 'only_fields' (Default value = None)
+        :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A generator of Item objects, in the same order as the input
+        :return: A generator of Item objects, in the same order as the input
         """
         validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
         # 'ids' could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
@@ -608,7 +586,7 @@ class Account:
     def fetch_personas(self, ids):
         """Fetch personas by ID.
 
-        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :param ids: an iterable of either (id, changekey) tuples or Persona objects.
         :return: A generator of Persona objects, in the same order as the input
         """
         if isinstance(ids, QuerySet):

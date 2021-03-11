@@ -62,12 +62,10 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     TimeZoneContent element on MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
 
-    Args:
-      content:
-      api_version:
-      account_to_impersonate:  (Default value = None)
-      timezone:  (Default value = None)
-
+    :param content:
+    :param api_version:
+    :param account_to_impersonate:  (Default value = None)
+    :param timezone:  (Default value = None)
     """
     envelope = create_element('s:Envelope', nsmap=ns_translation)
     header = create_element('s:Header')
@@ -105,9 +103,8 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
 def get_auth_instance(auth_type, **kwargs):
     """Return an *Auth instance suitable for the requests package.
 
-    Args:
-      auth_type:
-      **kwargs:
+    :param auth_type:
+    :param kwargs:
     """
     model = AUTH_TYPE_MAP[auth_type]
     if model is None:

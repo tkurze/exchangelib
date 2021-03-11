@@ -11,13 +11,11 @@ class GetItem(EWSAccountService):
     def call(self, items, additional_fields, shape):
         """Return all items in an account that correspond to a list of ID's, in stable order.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          shape: The shape of returned objects
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param shape: The shape of returned objects
 
-        Returns:
-          XML elements for the items, in stable order
+        :return: XML elements for the items, in stable order
         """
         from ..folders.base import BaseFolder
         for elem in self._chunked_get_elements(
