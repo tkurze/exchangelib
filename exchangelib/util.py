@@ -902,17 +902,24 @@ def _may_retry_on_error(response, retry_policy, wait):
         # We lost patience. Session is cleaned up in outer loop
         raise RateLimitError(
             'Max timeout reached', url=response.url, status_code=response.status_code, total_wait=wait)
-    # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. Redirect to
-    # '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS certificate
-    # f*ckups on the Exchange server.
-    #
-    # "Server Error in '/EWS' Application" has been seen in highly concurrent settings.
-    if (response.status_code == 401) \
-            or (response.headers.get('connection') == 'close') \
-            or (response.status_code == 302 and response.headers.get('location', '').lower() ==
-                '/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx') \
-            or (response.status_code == 503) \
-            or (response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content):
+    if response.status_code == 401:
+        # EWS sometimes throws 401's when it wants us to throttle connections. OK to retry.
+        return True
+    if response.headers.get('connection') == 'close':
+        # Connection closed. OK to retry.
+        return True
+    if response.status_code == 302 and response.headers.get('location', '').lower() \
+            == '/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx':
+        # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
+        #
+        # Redirect to '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS
+        # certificate f*ckups on the Exchange server. We should not retry those.
+        return True
+    if response.status_code == 503:
+        # Internal server error. OK to retry.
+        return True
+    if response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content:
+        # "Server Error in '/EWS' Application" has been seen in highly concurrent settings. OK to retry.
         log.debug('Retry allowed: conditions met')
         return True
     return False
@@ -949,6 +956,7 @@ def _raise_response_errors(response, protocol):
         raise CASError(cas_error=cas_error, response=response)
     if response.status_code == 500 and (b'The specified server version is invalid' in response.content or
                                         b'ErrorInvalidSchemaVersionForMailboxVersion' in response.content):
+        # Another way of communicating invalid schema versions
         raise ErrorInvalidSchemaVersionForMailboxVersion('Invalid server version')
     if b'The referenced account is currently locked out' in response.content:
         raise TransportError('The service account is currently locked out')
