@@ -276,6 +276,8 @@ class Autodiscovery:
                     total_wait = time.monotonic() - t_start
                     if _may_retry_on_error(response=r, retry_policy=self.INITIAL_RETRY_POLICY, wait=total_wait):
                         log.debug("Connection error on URL %s (retry %s, error: %s). Cool down", url, retry, e)
+                        # Don't respect the 'Retry-After' header. We don't know if this is a useful endpoint, and we
+                        # want autodiscover to be reasonably fast.
                         self.INITIAL_RETRY_POLICY.back_off(self.RETRY_WAIT)
                         retry += 1
                         continue
