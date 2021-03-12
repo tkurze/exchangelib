@@ -848,6 +848,7 @@ Response XML: %(xml_response)s'''
                 r.close()  # Release memory
                 log.info("Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs",
                          session.session_id, thread_id, r.url, r.status_code, wait)
+                wait = _retry_after(r, wait)
                 protocol.retry_policy.back_off(wait)
                 retry += 1
                 wait *= 2  # Increase delay for every retry
@@ -964,9 +965,22 @@ def _raise_response_errors(response, protocol):
         # This is a login failure
         raise UnauthorizedError('Invalid credentials for %s' % response.url)
     if 'TimeoutException' in response.headers:
+        # A header set by us on CONNECTION_ERRORS
         raise response.headers['TimeoutException']
     # This could be anything. Let higher layers handle this
     raise TransportError(
         'Unknown failure in response. Code: %s headers: %s content: %s'
         % (response.status_code, response.headers, response.text)
     )
+
+
+def _retry_after(r, wait):
+    """Either return the Retry-After header vaue or the default wait, whichever is larger"""
+    try:
+        retry_after = int(r.headers.get('Retry-After', '0'))
+    except ValueError:
+        pass
+    else:
+        if retry_after > wait:
+            return retry_after
+    return wait
