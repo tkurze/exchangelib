@@ -209,12 +209,8 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
         return self.FOLDER_CLASS(parent=folder or self.test_folder, name=get_random_string(8))
 
     def get_item_by_id(self, item):
-        res = list(self.account.fetch(ids=[item]))
-        assert len(res) == 1
-        res = res[0]
-        if isinstance(res, Exception):
-            raise res
-        return res
+        _id, changekey = item if isinstance(item, tuple) else (item.id, item.changekey)
+        return self.account.root.get(id=_id, changekey=changekey)
 
 
 class CommonItemTest(BaseItemTest):

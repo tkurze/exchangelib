@@ -163,7 +163,6 @@ class EWSMeta(type, metaclass=abc.ABCMeta):
         for k in tuple(kwargs.keys()):
             v = kwargs[k]
             if isinstance(v, Field):
-                assert k != 'f', (name, kwargs.keys())
                 v.name = k
                 local_fields.append(v)
                 del kwargs[k]
