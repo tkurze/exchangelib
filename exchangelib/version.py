@@ -63,7 +63,7 @@ class Build:
         },
     }
 
-    __slots__ = ('major_version', 'minor_version', 'major_build', 'minor_build')
+    __slots__ = 'major_version', 'minor_version', 'major_build', 'minor_build'
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
@@ -186,7 +186,7 @@ EXCHANGE_O365 = Build(15, 20)
 class Version:
     """Holds information about the server version."""
 
-    __slots__ = ('build', 'api_version')
+    __slots__ = 'build', 'api_version'
 
     def __init__(self, build, api_version=None):
         if not isinstance(build, (Build, type(None))):

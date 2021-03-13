@@ -2,7 +2,7 @@ import datetime
 
 from .ewsdatetime import UTC
 from .fields import DateTimeField, MessageField, ChoiceField, Choice
-from .properties import EWSElement, OutOfOffice, Fields
+from .properties import EWSElement, OutOfOffice
 from .util import create_element, set_xml_value
 
 
@@ -17,17 +17,13 @@ class OofSettings(EWSElement):
     DISABLED = 'Disabled'
     STATE_CHOICES = (ENABLED, SCHEDULED, DISABLED)
 
-    FIELDS = Fields(
-        ChoiceField('state', field_uri='OofState', is_required=True, choices={Choice(c) for c in STATE_CHOICES}),
-        ChoiceField('external_audience', field_uri='ExternalAudience',
-                    choices={Choice('None'), Choice('Known'), Choice('All')}, default='All'),
-        DateTimeField('start', field_uri='StartTime'),
-        DateTimeField('end', field_uri='EndTime'),
-        MessageField('internal_reply', field_uri='InternalReply'),
-        MessageField('external_reply', field_uri='ExternalReply'),
-    )
-
-    __slots__ = tuple(f.name for f in FIELDS)
+    state = ChoiceField(field_uri='OofState', is_required=True, choices={Choice(c) for c in STATE_CHOICES})
+    external_audience = ChoiceField(field_uri='ExternalAudience',
+                                    choices={Choice('None'), Choice('Known'), Choice('All')}, default='All')
+    start = DateTimeField(field_uri='StartTime')
+    end = DateTimeField(field_uri='EndTime')
+    internal_reply = MessageField(field_uri='InternalReply')
+    external_reply = MessageField(field_uri='ExternalReply')
 
     def clean(self, version=None):
         super().clean(version=version)

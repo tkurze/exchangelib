@@ -3,7 +3,7 @@ import logging
 from .base import BaseReplyItem
 from .item import Item, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
-from ..properties import ReferenceItemId, ReminderMessageData, Fields
+from ..properties import ReferenceItemId, ReminderMessageData
 from ..services import SendItem, MarkAsJunk
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
@@ -17,35 +17,31 @@ class Message(Item):
     """
 
     ELEMENT_NAME = 'Message'
-    LOCAL_FIELDS = Fields(
-        MailboxField('sender', field_uri='message:Sender', is_read_only=True, is_read_only_after_send=True),
-        MailboxListField('to_recipients', field_uri='message:ToRecipients', is_read_only_after_send=True,
-                         is_searchable=False),
-        MailboxListField('cc_recipients', field_uri='message:CcRecipients', is_read_only_after_send=True,
-                         is_searchable=False),
-        MailboxListField('bcc_recipients', field_uri='message:BccRecipients', is_read_only_after_send=True,
-                         is_searchable=False),
-        BooleanField('is_read_receipt_requested', field_uri='message:IsReadReceiptRequested',
-                     is_required=True, default=False, is_read_only_after_send=True),
-        BooleanField('is_delivery_receipt_requested', field_uri='message:IsDeliveryReceiptRequested',
-                     is_required=True, default=False, is_read_only_after_send=True),
-        Base64Field('conversation_index', field_uri='message:ConversationIndex', is_read_only=True),
-        CharField('conversation_topic', field_uri='message:ConversationTopic', is_read_only=True),
-        # Rename 'From' to 'author'. We can't use fieldname 'from' since it's a Python keyword.
-        MailboxField('author', field_uri='message:From', is_read_only_after_send=True),
-        CharField('message_id', field_uri='message:InternetMessageId', is_read_only_after_send=True),
-        BooleanField('is_read', field_uri='message:IsRead', is_required=True, default=False),
-        BooleanField('is_response_requested', field_uri='message:IsResponseRequested', default=False, is_required=True),
-        TextField('references', field_uri='message:References'),
-        MailboxListField('reply_to', field_uri='message:ReplyTo', is_read_only_after_send=True, is_searchable=False),
-        MailboxField('received_by', field_uri='message:ReceivedBy', is_read_only=True),
-        MailboxField('received_representing', field_uri='message:ReceivedRepresenting', is_read_only=True),
-        EWSElementField('reminder_message_data', field_uri='message:ReminderMessageData',
-                        value_cls=ReminderMessageData, supported_from=EXCHANGE_2013_SP1, is_read_only=True),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    sender = MailboxField(field_uri='message:Sender', is_read_only=True, is_read_only_after_send=True)
+    to_recipients = MailboxListField(field_uri='message:ToRecipients', is_read_only_after_send=True,
+                                     is_searchable=False)
+    cc_recipients = MailboxListField(field_uri='message:CcRecipients', is_read_only_after_send=True,
+                                     is_searchable=False)
+    bcc_recipients = MailboxListField(field_uri='message:BccRecipients', is_read_only_after_send=True,
+                                      is_searchable=False)
+    is_read_receipt_requested = BooleanField(field_uri='message:IsReadReceiptRequested',
+                                             is_required=True, default=False, is_read_only_after_send=True)
+    is_delivery_receipt_requested = BooleanField(field_uri='message:IsDeliveryReceiptRequested', is_required=True,
+                                                 default=False, is_read_only_after_send=True)
+    conversation_index = Base64Field(field_uri='message:ConversationIndex', is_read_only=True)
+    conversation_topic = CharField(field_uri='message:ConversationTopic', is_read_only=True)
+    # Rename 'From' to 'author'. We can't use fieldname 'from' since it's a Python keyword.
+    author = MailboxField(field_uri='message:From', is_read_only_after_send=True)
+    message_id = CharField(field_uri='message:InternetMessageId', is_read_only_after_send=True)
+    is_read = BooleanField(field_uri='message:IsRead', is_required=True, default=False)
+    is_response_requested = BooleanField(field_uri='message:IsResponseRequested', default=False, is_required=True)
+    references = TextField(field_uri='message:References')
+    reply_to = MailboxListField(field_uri='message:ReplyTo', is_read_only_after_send=True, is_searchable=False)
+    received_by = MailboxField(field_uri='message:ReceivedBy', is_read_only=True)
+    received_representing = MailboxField(field_uri='message:ReceivedRepresenting', is_read_only=True)
+    reminder_message_data = EWSElementField(field_uri='message:ReminderMessageData', value_cls=ReminderMessageData,
+                                            supported_from=EXCHANGE_2013_SP1, is_read_only=True)
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
@@ -171,20 +167,14 @@ class ReplyToItem(BaseReplyItem):
 
     ELEMENT_NAME = 'ReplyToItem'
 
-    __slots__ = ()
-
 
 class ReplyAllToItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem"""
 
     ELEMENT_NAME = 'ReplyAllToItem'
 
-    __slots__ = ()
-
 
 class ForwardItem(BaseReplyItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem"""
 
     ELEMENT_NAME = 'ForwardItem'
-
-    __slots__ = ()

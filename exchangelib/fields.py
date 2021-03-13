@@ -274,7 +274,7 @@ class Field(metaclass=abc.ABCMeta):
     #
     is_complex = False
 
-    def __init__(self, name, is_required=False, is_required_after_save=False, is_read_only=False,
+    def __init__(self, name=None, is_required=False, is_required_after_save=False, is_read_only=False,
                  is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None,
                  supported_from=None, deprecated_from=None):
         self.name = name

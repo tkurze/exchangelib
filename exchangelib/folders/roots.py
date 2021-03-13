@@ -1,4 +1,3 @@
-import abc
 import logging
 
 from .base import BaseFolder, MISSING_FOLDER_ERRORS
@@ -8,13 +7,13 @@ from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDE
 from .queryset import SingleFolderQuerySet, SHALLOW
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
-from ..properties import Fields
+from ..properties import EWSMeta
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
 
 log = logging.getLogger(__name__)
 
 
-class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
+class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     """Base class for folders that implement the root of a folder hierarchy."""
 
     # A list of wellknown, or "distinguished", folders that are belong in this folder hierarchy. See
@@ -23,15 +22,13 @@ class RootOfHierarchy(BaseFolder, metaclass=abc.ABCMeta):
     # 'RootOfHierarchy' subclasses must not be in this list.
     WELLKNOWN_FOLDERS = []
 
-    LOCAL_FIELDS = Fields(
-        # This folder type also has 'folder:PermissionSet' on some server versions, but requesting it sometimes causes
-        # 'ErrorAccessDenied', as reported by some users. Ignore it entirely for root folders - it's usefulness is
-        # deemed minimal at best.
-        EffectiveRightsField('effective_rights', field_uri='folder:EffectiveRights', is_read_only=True,
-                             supported_from=EXCHANGE_2007_SP1),
-    )
-    FIELDS = BaseFolder.FIELDS + LOCAL_FIELDS
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS) + ('_account', '_subfolders')
+    # This folder type also has 'folder:PermissionSet' on some server versions, but requesting it sometimes causes
+    # 'ErrorAccessDenied', as reported by some users. Ignore it entirely for root folders - it's usefulness is
+    # deemed minimal at best.
+    effective_rights = EffectiveRightsField(field_uri='folder:EffectiveRights', is_read_only=True,
+                                            supported_from=EXCHANGE_2007_SP1)
+
+    __slots__ = '_account', '_subfolders'
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
     def __init__(self, **kwargs):
@@ -217,7 +214,6 @@ class Root(RootOfHierarchy):
 
     DISTINGUISHED_FOLDER_ID = 'root'
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
-    __slots__ = ()
 
     @property
     def tois(self):
@@ -282,7 +278,6 @@ class PublicFoldersRoot(RootOfHierarchy):
     DISTINGUISHED_FOLDER_ID = 'publicfoldersroot'
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
-    __slots__ = ()
 
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
@@ -324,4 +319,3 @@ class ArchiveRoot(RootOfHierarchy):
     DISTINGUISHED_FOLDER_ID = 'archiveroot'
     supported_from = EXCHANGE_2010_SP1
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-    __slots__ = ()

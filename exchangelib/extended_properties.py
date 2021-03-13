@@ -88,12 +88,12 @@ class ExtendedProperty(EWSElement):
     property_id = None  # integer as hex-formatted int (e.g. 0x8000) or normal int (32768)
     property_type = ''
 
-    __slots__ = ('value',)
+    __slots__ = 'value',
 
     def __init__(self, *args, **kwargs):
         if not kwargs:
             # Allow to set attributes without keyword
-            kwargs = dict(zip(self._slots_keys(), args))
+            kwargs = dict(zip(self._slots_keys, args))
         self.value = kwargs.pop('value')
         super().__init__(**kwargs)
 
@@ -294,8 +294,6 @@ class ExternId(ExtendedProperty):
     property_name = 'External ID'
     property_type = 'String'
 
-    __slots__ = ()
-
 
 class Flag(ExtendedProperty):
     """This property returns None for Not Flagged messages, 1 for Completed messages and 2 for Flagged messages.
@@ -306,5 +304,3 @@ class Flag(ExtendedProperty):
 
     property_tag = 0x1090
     property_type = 'Integer'
-
-    __slots__ = ()

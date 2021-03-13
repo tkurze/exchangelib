@@ -1,10 +1,9 @@
-import abc
 import logging
 
 from ..extended_properties import ExtendedProperty
 from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
     CharField, IdElementField, AttachmentField
-from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, Fields
+from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, EWSMeta
 from ..services import CreateItem
 from ..util import require_account
 from ..version import EXCHANGE_2007_SP1
@@ -63,11 +62,11 @@ MOVE_TO_DELETED_ITEMS = 'MoveToDeletedItems'
 DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
 
 
-class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
+class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
     """Base class for classes that can change their list of supported fields dynamically."""
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
-    __slots__ = ('__dict__',)
+    __slots__ = '__dict__',
 
     INSERT_AFTER_FIELD = None
 
@@ -114,15 +113,13 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
         cls.remove_field(field)
 
 
-class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
+class BaseItem(RegisterMixIn, metaclass=EWSMeta):
     """Base class for all other classes that implement EWS items."""
 
     ID_ELEMENT_CLS = ItemId
-    FIELDS = Fields(
-        IdElementField('_id', field_uri='item:ItemId', value_cls=ID_ELEMENT_CLS),
-    )
+    _id = IdElementField(field_uri='item:ItemId', value_cls=ID_ELEMENT_CLS)
 
-    __slots__ = tuple(f.name for f in FIELDS) + ('account', 'folder')
+    __slots__ = 'account', 'folder'
 
     def __init__(self, **kwargs):
         """Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.
@@ -156,25 +153,23 @@ class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
         return item
 
 
-class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
+class BaseReplyItem(EWSElement, metaclass=EWSMeta):
     """Base class for reply/forward elements that share the same fields."""
 
-    FIELDS = Fields(
-        CharField('subject', field_uri='Subject'),
-        BodyField('body', field_uri='Body'),  # Accepts and returns Body or HTMLBody instances
-        MailboxListField('to_recipients', field_uri='ToRecipients'),
-        MailboxListField('cc_recipients', field_uri='CcRecipients'),
-        MailboxListField('bcc_recipients', field_uri='BccRecipients'),
-        BooleanField('is_read_receipt_requested', field_uri='IsReadReceiptRequested'),
-        BooleanField('is_delivery_receipt_requested', field_uri='IsDeliveryReceiptRequested'),
-        MailboxField('author', field_uri='From'),
-        EWSElementField('reference_item_id', value_cls=ReferenceItemId),
-        BodyField('new_body', field_uri='NewBodyContent'),  # Accepts and returns Body or HTMLBody instances
-        MailboxField('received_by', field_uri='ReceivedBy', supported_from=EXCHANGE_2007_SP1),
-        MailboxField('received_by_representing', field_uri='ReceivedRepresenting', supported_from=EXCHANGE_2007_SP1),
-    )
+    subject = CharField(field_uri='Subject')
+    body = BodyField(field_uri='Body')  # Accepts and returns Body or HTMLBody instances
+    to_recipients = MailboxListField(field_uri='ToRecipients')
+    cc_recipients = MailboxListField(field_uri='CcRecipients')
+    bcc_recipients = MailboxListField(field_uri='BccRecipients')
+    is_read_receipt_requested = BooleanField(field_uri='IsReadReceiptRequested')
+    is_delivery_receipt_requested = BooleanField(field_uri='IsDeliveryReceiptRequested')
+    author = MailboxField(field_uri='From')
+    reference_item_id = EWSElementField(value_cls=ReferenceItemId)
+    new_body = BodyField(field_uri='NewBodyContent')  # Accepts and returns Body or HTMLBody instances
+    received_by = MailboxField(field_uri='ReceivedBy', supported_from=EXCHANGE_2007_SP1)
+    received_by_representing = MailboxField(field_uri='ReceivedRepresenting', supported_from=EXCHANGE_2007_SP1)
 
-    __slots__ = tuple(f.name for f in FIELDS) + ('account',)
+    __slots__ = 'account',
 
     def __init__(self, **kwargs):
         # 'account' is optional but allows calling 'send()' and 'save()'
@@ -217,15 +212,9 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
 class BulkCreateResult(BaseItem):
     """A dummy class to store return values from a CreateItem service call."""
 
-    LOCAL_FIELDS = Fields(
-        AttachmentField('attachments', field_uri='item:Attachments'),  # ItemAttachment or FileAttachment
-    )
-    FIELDS = BaseItem.FIELDS + LOCAL_FIELDS
-
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    attachments = AttachmentField(field_uri='item:Attachments')  # ItemAttachment or FileAttachment
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # pylint: disable=access-member-before-definition
         if self.attachments is None:
             self.attachments = []

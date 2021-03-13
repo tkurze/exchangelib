@@ -11,8 +11,8 @@ from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, P
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
     SHALLOW as SHALLOW_ITEMS
-from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, Fields, UserConfiguration, \
-    UserConfigurationName, UserConfigurationNameMNS
+from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, UserConfiguration, \
+    UserConfigurationName, UserConfigurationNameMNS, EWSMeta
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFolderReplicaAvailable)
 
 
-class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
+class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     """Base class for all classes that implement a folder."""
 
     ELEMENT_NAME = 'Folder'
@@ -47,18 +47,17 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
     LOCALIZED_NAMES = {}  # A map of (str)locale: (tuple)localized_folder_names
     ITEM_MODEL_MAP = {cls.response_tag(): cls for cls in ITEM_CLASSES}
     ID_ELEMENT_CLS = FolderId
-    FIELDS = Fields(
-        IdElementField('_id', field_uri='folder:FolderId', value_cls=ID_ELEMENT_CLS),
-        EWSElementField('parent_folder_id', field_uri='folder:ParentFolderId', value_cls=ParentFolderId,
-                        is_read_only=True),
-        CharField('folder_class', field_uri='folder:FolderClass', is_required_after_save=True),
-        CharField('name', field_uri='folder:DisplayName'),
-        IntegerField('total_count', field_uri='folder:TotalCount', is_read_only=True),
-        IntegerField('child_folder_count', field_uri='folder:ChildFolderCount', is_read_only=True),
-        IntegerField('unread_count', field_uri='folder:UnreadCount', is_read_only=True),
-    )
 
-    __slots__ = tuple(f.name for f in FIELDS) + ('is_distinguished', 'item_sync_state', 'folder_sync_state')
+    _id = IdElementField(field_uri='folder:FolderId', value_cls=ID_ELEMENT_CLS)
+    parent_folder_id = EWSElementField(field_uri='folder:ParentFolderId', value_cls=ParentFolderId,
+                                       is_read_only=True)
+    folder_class = CharField(field_uri='folder:FolderClass', is_required_after_save=True)
+    name = CharField(field_uri='folder:DisplayName')
+    total_count = IntegerField(field_uri='folder:TotalCount', is_read_only=True)
+    child_folder_count = IntegerField(field_uri='folder:ChildFolderCount', is_read_only=True)
+    unread_count = IntegerField(field_uri='folder:UnreadCount', is_read_only=True)
+
+    __slots__ = 'is_distinguished', 'item_sync_state', 'folder_sync_state'
 
     # Used to register extended properties
     INSERT_AFTER_FIELD = 'child_folder_count'
@@ -89,7 +88,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
         return not self.is_distinguished
 
     def clean(self, version=None):
-        # pylint: disable=access-member-before-definition
         super().clean(version=version)
         # Set a default folder class for new folders. A folder class cannot be changed after saving.
         if self.id is None and self.folder_class is None:
@@ -707,14 +705,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=abc.ABCMeta):
 class Folder(BaseFolder):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder"""
 
-    LOCAL_FIELDS = Fields(
-        PermissionSetField('permission_set', field_uri='folder:PermissionSet', supported_from=EXCHANGE_2007_SP1),
-        EffectiveRightsField('effective_rights', field_uri='folder:EffectiveRights', is_read_only=True,
-                             supported_from=EXCHANGE_2007_SP1),
-    )
-    FIELDS = BaseFolder.FIELDS + LOCAL_FIELDS
+    permission_set = PermissionSetField(field_uri='folder:PermissionSet', supported_from=EXCHANGE_2007_SP1)
+    effective_rights = EffectiveRightsField(field_uri='folder:EffectiveRights', is_read_only=True,
+                                            supported_from=EXCHANGE_2007_SP1)
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS) + ('_root',)
+    __slots__ = '_root',
 
     def __init__(self, **kwargs):
         self._root = kwargs.pop('root', None)  # This is a pointer to the root of the folder hierarchy
@@ -791,7 +786,6 @@ class Folder(BaseFolder):
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
-        # pylint: disable=access-member-before-definition
         from .roots import RootOfHierarchy
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):

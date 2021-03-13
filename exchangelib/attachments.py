@@ -1,11 +1,10 @@
-import abc
 import logging
 import mimetypes
 from io import BytesIO
 
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
     ItemField, IdField
-from .properties import EWSElement, Fields
+from .properties import EWSElement, EWSMeta
 from .services import GetAttachment, CreateAttachment, DeleteAttachment
 
 log = logging.getLogger(__name__)
@@ -22,30 +21,25 @@ class AttachmentId(EWSElement):
     ID_ATTR = 'Id'
     ROOT_ID_ATTR = 'RootItemId'
     ROOT_CHANGEKEY_ATTR = 'RootItemChangeKey'
-    FIELDS = Fields(
-        IdField('id', field_uri=ID_ATTR, is_required=True),
-        IdField('root_id', field_uri=ROOT_ID_ATTR),
-        IdField('root_changekey', field_uri=ROOT_CHANGEKEY_ATTR),
-    )
 
-    __slots__ = tuple(f.name for f in FIELDS)
+    id = IdField(field_uri=ID_ATTR, is_required=True)
+    root_id = IdField(field_uri=ROOT_ID_ATTR)
+    root_changekey = IdField(field_uri=ROOT_CHANGEKEY_ATTR)
 
 
-class Attachment(EWSElement, metaclass=abc.ABCMeta):
+class Attachment(EWSElement, metaclass=EWSMeta):
     """Base class for FileAttachment and ItemAttachment."""
 
-    FIELDS = Fields(
-        EWSElementField('attachment_id', value_cls=AttachmentId),
-        TextField('name', field_uri='Name'),
-        TextField('content_type', field_uri='ContentType'),
-        TextField('content_id', field_uri='ContentId'),
-        URIField('content_location', field_uri='ContentLocation'),
-        IntegerField('size', field_uri='Size', is_read_only=True),  # Attachment size in bytes
-        DateTimeField('last_modified_time', field_uri='LastModifiedTime'),
-        BooleanField('is_inline', field_uri='IsInline'),
-    )
+    attachment_id = EWSElementField(value_cls=AttachmentId)
+    name = TextField(field_uri='Name')
+    content_type = TextField(field_uri='ContentType')
+    content_id = TextField(field_uri='ContentId')
+    content_location = URIField(field_uri='ContentLocation')
+    size = IntegerField(field_uri='Size', is_read_only=True)  # Attachment size in bytes
+    last_modified_time = DateTimeField(field_uri='LastModifiedTime')
+    is_inline = BooleanField(field_uri='IsInline')
 
-    __slots__ = tuple(f.name for f in FIELDS) + ('parent_item',)
+    __slots__ = 'parent_item',
 
     def __init__(self, **kwargs):
         self.parent_item = kwargs.pop('parent_item', None)
@@ -55,7 +49,6 @@ class Attachment(EWSElement, metaclass=abc.ABCMeta):
         from .items import Item
         if self.parent_item is not None and not isinstance(self.parent_item, Item):
             raise ValueError("'parent_item' value %r must be an Item instance" % self.parent_item)
-        # pylint: disable=access-member-before-definition
         if self.content_type is None and self.name is not None:
             self.content_type = mimetypes.guess_type(self.name)[0] or 'application/octet-stream'
         super().clean(version=version)
@@ -97,7 +90,7 @@ class Attachment(EWSElement, metaclass=abc.ABCMeta):
         if self.attachment_id:
             return hash(self.attachment_id)
         # Be careful to avoid recursion on the back-reference to the parent item
-        return hash(tuple(getattr(self, f) for f in self._slots_keys() if f != 'parent_item'))
+        return hash(tuple(getattr(self, f) for f in self._slots_keys if f != 'parent_item'))
 
     def __repr__(self):
         return self.__class__.__name__ + '(%s)' % ', '.join(
@@ -109,13 +102,11 @@ class FileAttachment(Attachment):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment"""
 
     ELEMENT_NAME = 'FileAttachment'
-    LOCAL_FIELDS = Fields(
-        BooleanField('is_contact_photo', field_uri='IsContactPhoto'),
-        Base64Field('_content', field_uri='Content'),
-    )
-    FIELDS = Attachment.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS) + ('_fp',)
+    is_contact_photo = BooleanField(field_uri='IsContactPhoto')
+    _content = Base64Field(field_uri='Content')
+
+    __slots__ = '_fp',
 
     def __init__(self, **kwargs):
         kwargs['_content'] = kwargs.pop('content', None)
@@ -170,13 +161,13 @@ class FileAttachment(Attachment):
 
     def __getstate__(self):
         # The fp does not need to be pickled
-        state = {k: getattr(self, k) for k in self._slots_keys()}
+        state = {k: getattr(self, k) for k in self._slots_keys}
         del state['_fp']
         return state
 
     def __setstate__(self, state):
         # Restore the fp
-        for k in self._slots_keys():
+        for k in self._slots_keys:
             setattr(self, k, state.get(k))
         self._fp = None
 
@@ -185,13 +176,8 @@ class ItemAttachment(Attachment):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment"""
 
     ELEMENT_NAME = 'ItemAttachment'
-    # noinspection PyTypeChecker
-    LOCAL_FIELDS = Fields(
-        ItemField('_item', field_uri='Item'),
-    )
-    FIELDS = Attachment.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    _item = ItemField(field_uri='Item')
 
     def __init__(self, **kwargs):
         kwargs['_item'] = kwargs.pop('item', None)

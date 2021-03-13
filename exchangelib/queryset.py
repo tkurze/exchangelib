@@ -15,7 +15,7 @@ from .version import EXCHANGE_2010
 log = logging.getLogger(__name__)
 
 
-class SearchableMixIn(metaclass=abc.ABCMeta):
+class SearchableMixIn:
     """Implement a search API for inheritance."""
 
     @abc.abstractmethod

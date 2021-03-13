@@ -975,7 +975,7 @@ def _raise_response_errors(response, protocol):
 
 
 def _retry_after(r, wait):
-    """Either return the Retry-After header vaue or the default wait, whichever is larger"""
+    """Either return the Retry-After header value or the default wait, whichever is larger."""
     try:
         retry_after = int(r.headers.get('Retry-After', '0'))
     except ValueError:
