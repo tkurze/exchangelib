@@ -264,7 +264,6 @@ class FolderTest(EWSTest):
         orig_name = self.account.root.name
         self.account.root.name = 'xxx'
         self.account.root.refresh()
-        self.assertIsNone(self.account.root._subfolders)
         self.assertEqual(self.account.root.name, orig_name)
 
         folder = Folder()
@@ -345,7 +344,7 @@ class FolderTest(EWSTest):
         )
 
     def test_double_div_navigation(self):
-        self.account.root.refresh()  # Clear the cache
+        self.account.root.clear_cache()  # Clear the cache
 
         # Test normal navigation
         self.assertEqual(

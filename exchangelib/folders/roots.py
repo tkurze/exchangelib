@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import Lock
 
 from .base import BaseFolder, MISSING_FOLDER_ERRORS
 from .collections import FolderCollection
@@ -21,6 +22,8 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     # and https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid
     # 'RootOfHierarchy' subclasses must not be in this list.
     WELLKNOWN_FOLDERS = []
+
+    _subfolders_lock = Lock()
 
     # This folder type also has 'folder:PermissionSet' on some server versions, but requesting it sometimes causes
     # 'ErrorAccessDenied', as reported by some users. Ignore it entirely for root folders - it's usefulness is
@@ -47,10 +50,6 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     @property
     def parent(self):
         return None
-
-    def refresh(self):
-        self._subfolders = None
-        super().refresh()
 
     @classmethod
     def register(cls, *args, **kwargs):
@@ -88,7 +87,8 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             pass
 
     def clear_cache(self):
-        self._subfolders = None
+        with self._subfolders_lock:
+            self._subfolders = None
 
     def get_children(self, folder):
         for f in self._folders_map.values():
@@ -181,7 +181,8 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
                 # Already exists. Probably a distinguished folder
                 continue
             folders_map[f.id] = f
-        self._subfolders = folders_map
+        with self._subfolders_lock:
+            self._subfolders = folders_map
         return folders_map
 
     @classmethod
@@ -307,7 +308,8 @@ class PublicFoldersRoot(RootOfHierarchy):
             pass
 
         # Let's update the cache atomically, to avoid partial reads of the cache.
-        self._subfolders.update(children_map)
+        with self._subfolders_lock:
+            self._subfolders.update(children_map)
 
         # Child folders have been cached now. Try super().get_children() again.
         yield from super().get_children(folder=folder)
