@@ -1,10 +1,10 @@
 Change Log
 ==========
 
-HEAD
-----
+4.1.0
+-----
 -   Add support for synchronization, subscriptions and notifications. Both pull, push and streaming
-    notifications are supported.
+    notifications are supported. See https://ecederstrand.github.io/exchangelib/#synchronization-subscriptions-and-notifications
 
 
 4.0.0
