@@ -583,7 +583,8 @@ ews_now = EWSDateTime.from_datetime(py_dt)
 # account.folders[Calendar].
 #
 # You can create, update and delete single items:
-from exchangelib import Account, CalendarItem, Message, Mailbox, FileAttachment, HTMLBody
+from exchangelib import Account, CalendarItem, Message, Mailbox, \
+  FileAttachment, HTMLBody
 from exchangelib.items import SEND_ONLY_TO_ALL, SEND_ONLY_TO_CHANGED
 from exchangelib.properties import DistinguishedFolderId
 
