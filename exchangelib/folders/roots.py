@@ -146,44 +146,44 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         if self._subfolders is not None:
             return self._subfolders
 
-        # Map root, and all subfolders of root, at arbitrary depth by folder ID. First get distinguished folders, so we
-        # are sure to apply the correct Folder class, then fetch all subfolders of this root.
-        folders_map = {self.id: self}
-        distinguished_folders = [
-            cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-            for cls in self.WELLKNOWN_FOLDERS
-            if cls.get_folder_allowed and cls.supports_version(self.account.version)
-        ]
-        for f in FolderCollection(account=self.account, folders=distinguished_folders).resolve():
-            if isinstance(f, MISSING_FOLDER_ERRORS):
-                # This is just a distinguished folder the server does not have
-                continue
-            if isinstance(f, ErrorInvalidOperation):
-                # This is probably a distinguished folder the server does not have. We previously tested the exact
-                # error message (f.value), but some Exchange servers return localized error messages, so that's not
-                # possible to do reliably.
-                continue
-            if isinstance(f, ErrorAccessDenied):
-                # We may not have GetFolder access, either to this folder or at all
-                continue
-            if isinstance(f, Exception):
-                raise f
-            folders_map[f.id] = f
-        for f in SingleFolderQuerySet(account=self.account, folder=self).depth(
-                self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-        ).all():
-            if isinstance(f, ErrorAccessDenied):
-                # We may not have FindFolder access, or GetFolder access, either to this folder or at all
-                continue
-            if isinstance(f, Exception):
-                raise f
-            if f.id in folders_map:
-                # Already exists. Probably a distinguished folder
-                continue
-            folders_map[f.id] = f
         with self._subfolders_lock:
+            # Map root, and all subfolders of root, at arbitrary depth by folder ID. First get distinguished folders,
+            # so we are sure to apply the correct Folder class, then fetch all subfolders of this root.
+            folders_map = {self.id: self}
+            distinguished_folders = [
+                cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                for cls in self.WELLKNOWN_FOLDERS
+                if cls.get_folder_allowed and cls.supports_version(self.account.version)
+            ]
+            for f in FolderCollection(account=self.account, folders=distinguished_folders).resolve():
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # This is just a distinguished folder the server does not have
+                    continue
+                if isinstance(f, ErrorInvalidOperation):
+                    # This is probably a distinguished folder the server does not have. We previously tested the exact
+                    # error message (f.value), but some Exchange servers return localized error messages, so that's not
+                    # possible to do reliably.
+                    continue
+                if isinstance(f, ErrorAccessDenied):
+                    # We may not have GetFolder access, either to this folder or at all
+                    continue
+                if isinstance(f, Exception):
+                    raise f
+                folders_map[f.id] = f
+            for f in SingleFolderQuerySet(account=self.account, folder=self).depth(
+                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
+            ).all():
+                if isinstance(f, ErrorAccessDenied):
+                    # We may not have FindFolder access, or GetFolder access, either to this folder or at all
+                    continue
+                if isinstance(f, Exception):
+                    raise f
+                if f.id in folders_map:
+                    # Already exists. Probably a distinguished folder
+                    continue
+                folders_map[f.id] = f
             self._subfolders = folders_map
-        return folders_map
+            return folders_map
 
     @classmethod
     def from_xml(cls, elem, account):
