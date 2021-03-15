@@ -379,16 +379,16 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 self.empty(delete_sub_folders=False)
             else:
                 self.empty(delete_sub_folders=True)
-        except (ErrorAccessDenied, ErrorCannotEmptyFolder):
+        except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
             try:
                 if has_distinguished_subfolders:
                     raise  # We already tried this
                 self.empty(delete_sub_folders=False)
-            except (ErrorAccessDenied, ErrorCannotEmptyFolder):
+            except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
                 log.warning('Not allowed to empty %s. Trying to delete items instead', self)
                 try:
                     self.all().delete(**dict(page_size=page_size) if page_size else {})
-                except (ErrorAccessDenied, ErrorCannotDeleteObject):
+                except (ErrorAccessDenied, ErrorCannotDeleteObject, ErrorItemNotFound):
                     log.warning('Not allowed to delete items in %s', self)
         _level += 1
         for f in self.children:
