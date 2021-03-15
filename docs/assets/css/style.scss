@@ -3,13 +3,15 @@
 
 @import "{{ site.theme }}";
 
-section {
-  width:850px;
-  float:right;
-  padding-bottom:50px;
-}
+@media not screen and (device-width:768px) {
+  section {
+    width:850px;
+    float:right;
+    padding-bottom:50px;
+  }
 
-.wrapper {
-  width:1210px;
-  margin:0 auto;
+  .wrapper {
+    width:1210px;
+    margin:0 auto;
+  }
 }
