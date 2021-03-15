@@ -64,7 +64,7 @@ def close_connections():
 
 
 class BaseProtocol:
-    &#34;&#34;&#34;Base class for Protocol which implements the bare essentials&#34;&#34;&#34;
+    &#34;&#34;&#34;Base class for Protocol which implements the bare essentials.&#34;&#34;&#34;
 
     # The maximum number of sessions (== TCP connections, see below) we will open to this service endpoint. Keep this
     # low unless you have an agreement with the Exchange admin on the receiving end to hammer the server and
@@ -178,8 +178,7 @@ class BaseProtocol:
         return self._session_pool_size
 
     def increase_poolsize(self):
-        &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.&#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
         if self._session_pool_size == self._session_pool_maxsize:
@@ -196,7 +195,6 @@ class BaseProtocol:
     def decrease_poolsize(self):
         &#34;&#34;&#34;Decreases the session pool size in response to error messages from the server requesting to rate-limit
         requests. We decrease by one session per call.
-
         &#34;&#34;&#34;
         # Take a single session from the pool and discard it. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must keep at least one session in the pool.
@@ -247,7 +245,8 @@ class BaseProtocol:
         except Full:
             log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
 
-    def close_session(self, session):
+    @staticmethod
+    def close_session(session):
         session.close()
         del session
 
@@ -389,6 +388,8 @@ class BaseProtocol:
 
 
 class CachingProtocol(type):
+    &#34;&#34;&#34;A metaclass for Protocol that caches Protocol instances based on a server+username key.&#34;&#34;&#34;
+
     _protocol_cache = {}
     _protocol_cache_lock = Lock()
 
@@ -447,6 +448,11 @@ class CachingProtocol(type):
 
 
 class Protocol(BaseProtocol, metaclass=CachingProtocol):
+    &#34;&#34;&#34;A class to handle all the low-level communication with an Exchange server. Contains a session pool, knows how to
+    negotiate the authentication type of the server, refresh credentials, etc. Also contains methods for calling EWS
+    services that are not tied to an account.
+    &#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._api_version_hint = None
@@ -475,35 +481,31 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return self.config.version
 
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
-        &#34;&#34;&#34;Get timezone definitions from the server
+        &#34;&#34;&#34;Get timezone definitions from the server.
 
-        Args:
-          timezones: A list of EWSDateTime instances. If None, fetches all timezones from server (Default value = None)
-          return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
+        :param timezones: A list of EWSDateTime instances. If None, fetches all timezones from server
+          (Default value = None)
+        :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-        Returns:
-          A list of (tz_id, name, periods, transitions) tuples
-
+        :return: A list of (tz_id, name, periods, transitions) tuples
         &#34;&#34;&#34;
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
         )
 
     def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view=&#39;DetailedMerged&#39;):
-        &#34;&#34;&#34;Returns free/busy information for a list of accounts
+        &#34;&#34;&#34;Return free/busy information for a list of accounts.
 
-        Args:
-          accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
-            object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.
-          start: The start datetime of the request
-          end: The end datetime of the request
-          merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
-          requested_view: The type of information returned. Possible values are defined in the
-            FreeBusyViewOptions.requested_view choices. (Default value = &#39;DetailedMerged&#39;)
+        :param accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an
+          Account object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a
+          boolean.
+        :param start: The start datetime of the request
+        :param end: The end datetime of the request
+        :param merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
+        :param requested_view: The type of information returned. Possible values are defined in the
+          FreeBusyViewOptions.requested_view choices. (Default value = &#39;DetailedMerged&#39;)
 
-        Returns:
-          A generator of FreeBusyView objects
-
+        :return: A generator of FreeBusyView objects
         &#34;&#34;&#34;
         from .account import Account
         for account, attendee_type, exclude_conflicts in accounts:
@@ -550,18 +552,14 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
-        &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials
+        &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
-        Args:
-          names: A list of identifiers to query
-          return_full_contact_data: If True, returns full contact data (Default value = False)
-          search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
-          shape: return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact)
-            items (Default value = None)
+        :param names: A list of identifiers to query
+        :param return_full_contact_data: If True, returns full contact data (Default value = False)
+        :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
+        :param shape: (Default value = None)
 
-        Returns:
-          A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
-
+        :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         &#34;&#34;&#34;
         return list(ResolveNames(protocol=self).call(
             unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
@@ -569,30 +567,26 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         ))
 
     def expand_dl(self, distribution_list):
-        &#34;&#34;&#34;Expand distribution list into it&#39;s members
+        &#34;&#34;&#34;Expand distribution list into it&#39;s members.
 
-        Args:
-          distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
+        :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
-        Returns:
-          List of Mailbox items that are members of the distribution list
-
+        :return: List of Mailbox items that are members of the distribution list
         &#34;&#34;&#34;
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type=&#39;PublicDL&#39;)
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
 
     def get_searchable_mailboxes(self, search_filter=None, expand_group_membership=False):
-        &#34;&#34;&#34;This method is only available to users who have been assigned the Discovery Management RBAC role. See
+        &#34;&#34;&#34;Call the GetSearchableMailboxes service to get mailboxes that can be searched.
+
+        This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-        Args:
-          search_filter: Is set, must be a single email alias (Default value = None)
-          expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
+        :param search_filter: Is set, must be a single email alias (Default value = None)
+        :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
-        Returns:
-          a list of SearchableMailbox, FailedMailbox or Exception instances
-
+        :return: a list of SearchableMailbox, FailedMailbox or Exception instances
         &#34;&#34;&#34;
         return list(GetSearchableMailboxes(protocol=self).call(
             search_filter=search_filter,
@@ -600,15 +594,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         ))
 
     def convert_ids(self, ids, destination_format):
-        &#34;&#34;&#34;Converts item and folder IDs between multiple formats
+        &#34;&#34;&#34;Convert item and folder IDs between multiple formats.
 
-        Args:
-          ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-          destination_format: A string
+        :param ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
+        :param destination_format: A string
 
-        Returns:
-          a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-
+        :return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
         &#34;&#34;&#34;
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
@@ -653,7 +644,8 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
 
 class TLSClientAuth(requests.adapters.HTTPAdapter):
-    &#34;&#34;&#34;An HTTP adapter that implements Certificate Based Authentication (CBA)&#34;&#34;&#34;
+    &#34;&#34;&#34;An HTTP adapter that implements Certificate Based Authentication (CBA).&#34;&#34;&#34;
+
     cert_file = None
 
     def init_poolmanager(self, *args, **kwargs):
@@ -662,7 +654,8 @@ class TLSClientAuth(requests.adapters.HTTPAdapter):
 
 
 class RetryPolicy(metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Stores retry logic used when faced with errors from the server&#34;&#34;&#34;
+    &#34;&#34;&#34;Stores retry logic used when faced with errors from the server.&#34;&#34;&#34;
+
     @property
     @abc.abstractmethod
     def fail_fast(self):
@@ -686,7 +679,8 @@ class RetryPolicy(metaclass=abc.ABCMeta):
 
 
 class FailFast(RetryPolicy):
-    &#34;&#34;&#34;Fail immediately on server errors&#34;&#34;&#34;
+    &#34;&#34;&#34;Fail immediately on server errors.&#34;&#34;&#34;
+
     @property
     def fail_fast(self):
         return True
@@ -702,7 +696,6 @@ class FailFast(RetryPolicy):
 class FaultTolerance(RetryPolicy):
     &#34;&#34;&#34;Enables fault-tolerant error handling. Tells internal methods to do an exponential back off when requests start
     failing, and wait up to max_wait seconds before failing.
-
     &#34;&#34;&#34;
 
     # Back off 60 seconds if we didn&#39;t get an explicit suggested value
@@ -730,7 +723,7 @@ class FaultTolerance(RetryPolicy):
 
     @property
     def back_off_until(self):
-        &#34;&#34;&#34;Returns the back off value as a datetime. Resets the current back off value if it has expired.&#34;&#34;&#34;
+        &#34;&#34;&#34;Return the back off value as a datetime. Reset the current back off value if it has expired.&#34;&#34;&#34;
         if self._back_off_until is None:
             return None
         with self._back_off_lock:
@@ -784,13 +777,13 @@ class FaultTolerance(RetryPolicy):
 <span>(</span><span>config)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for Protocol which implements the bare essentials</p></div>
+<div class="desc"><p>Base class for Protocol which implements the bare essentials.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BaseProtocol:
-    &#34;&#34;&#34;Base class for Protocol which implements the bare essentials&#34;&#34;&#34;
+    &#34;&#34;&#34;Base class for Protocol which implements the bare essentials.&#34;&#34;&#34;
 
     # The maximum number of sessions (== TCP connections, see below) we will open to this service endpoint. Keep this
     # low unless you have an agreement with the Exchange admin on the receiving end to hammer the server and
@@ -904,8 +897,7 @@ class FaultTolerance(RetryPolicy):
         return self._session_pool_size
 
     def increase_poolsize(self):
-        &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.&#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
         if self._session_pool_size == self._session_pool_maxsize:
@@ -922,7 +914,6 @@ class FaultTolerance(RetryPolicy):
     def decrease_poolsize(self):
         &#34;&#34;&#34;Decreases the session pool size in response to error messages from the server requesting to rate-limit
         requests. We decrease by one session per call.
-
         &#34;&#34;&#34;
         # Take a single session from the pool and discard it. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must keep at least one session in the pool.
@@ -973,7 +964,8 @@ class FaultTolerance(RetryPolicy):
         except Full:
             log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
 
-    def close_session(self, session):
+    @staticmethod
+    def close_session(session):
         session.close()
         del session
 
@@ -1172,6 +1164,21 @@ s.mount('http://', a)</p>
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="exchangelib.protocol.BaseProtocol.close_session"><code class="name flex">
+<span>def <span class="ident">close_session</span></span>(<span>session)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def close_session(session):
+    session.close()
+    del session</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.protocol.BaseProtocol.get_adapter"><code class="name flex">
 <span>def <span class="ident">get_adapter</span></span>(<span>)</span>
 </code></dt>
@@ -1311,20 +1318,6 @@ def session_pool_size(self):
             break</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.protocol.BaseProtocol.close_session"><code class="name flex">
-<span>def <span class="ident">close_session</span></span>(<span>self, session)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def close_session(self, session):
-    session.close()
-    del session</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.protocol.BaseProtocol.create_oauth2_session"><code class="name flex">
 <span>def <span class="ident">create_oauth2_session</span></span>(<span>self)</span>
 </code></dt>
@@ -1454,7 +1447,6 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">def decrease_poolsize(self):
     &#34;&#34;&#34;Decreases the session pool size in response to error messages from the server requesting to rate-limit
     requests. We decrease by one session per call.
-
     &#34;&#34;&#34;
     # Take a single session from the pool and discard it. We need to protect this with a lock while we are changing
     # the pool size variable, to avoid race conditions. We must keep at least one session in the pool.
@@ -1515,8 +1507,7 @@ requests. We decrease by one session per call.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def increase_poolsize(self):
-    &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.&#34;&#34;&#34;
     # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
     # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
     if self._session_pool_size == self._session_pool_maxsize:
@@ -1615,14 +1606,14 @@ requests. We decrease by one session per call.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>type(object_or_name, bases, dict)
-type(object) -&gt; the object's type
-type(name, bases, dict) -&gt; a new type</p></div>
+<div class="desc"><p>A metaclass for Protocol that caches Protocol instances based on a server+username key.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CachingProtocol(type):
+    &#34;&#34;&#34;A metaclass for Protocol that caches Protocol instances based on a server+username key.&#34;&#34;&#34;
+
     _protocol_cache = {}
     _protocol_cache_lock = Lock()
 
@@ -1713,13 +1704,14 @@ def clear_cache(mcs):
 <span>class <span class="ident">FailFast</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Fail immediately on server errors</p></div>
+<div class="desc"><p>Fail immediately on server errors.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FailFast(RetryPolicy):
-    &#34;&#34;&#34;Fail immediately on server errors&#34;&#34;&#34;
+    &#34;&#34;&#34;Fail immediately on server errors.&#34;&#34;&#34;
+
     @property
     def fail_fast(self):
         return True
@@ -1793,7 +1785,6 @@ failing, and wait up to max_wait seconds before failing.</p></div>
 <pre><code class="python">class FaultTolerance(RetryPolicy):
     &#34;&#34;&#34;Enables fault-tolerant error handling. Tells internal methods to do an exponential back off when requests start
     failing, and wait up to max_wait seconds before failing.
-
     &#34;&#34;&#34;
 
     # Back off 60 seconds if we didn&#39;t get an explicit suggested value
@@ -1821,7 +1812,7 @@ failing, and wait up to max_wait seconds before failing.</p></div>
 
     @property
     def back_off_until(self):
-        &#34;&#34;&#34;Returns the back off value as a datetime. Resets the current back off value if it has expired.&#34;&#34;&#34;
+        &#34;&#34;&#34;Return the back off value as a datetime. Reset the current back off value if it has expired.&#34;&#34;&#34;
         if self._back_off_until is None:
             return None
         with self._back_off_lock:
@@ -1859,14 +1850,14 @@ failing, and wait up to max_wait seconds before failing.</p></div>
 <dl>
 <dt id="exchangelib.protocol.FaultTolerance.back_off_until"><code class="name">var <span class="ident">back_off_until</span></code></dt>
 <dd>
-<div class="desc"><p>Returns the back off value as a datetime. Resets the current back off value if it has expired.</p></div>
+<div class="desc"><p>Return the back off value as a datetime. Reset the current back off value if it has expired.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def back_off_until(self):
-    &#34;&#34;&#34;Returns the back off value as a datetime. Resets the current back off value if it has expired.&#34;&#34;&#34;
+    &#34;&#34;&#34;Return the back off value as a datetime. Reset the current back off value if it has expired.&#34;&#34;&#34;
     if self._back_off_until is None:
         return None
     with self._back_off_lock:
@@ -1967,12 +1958,19 @@ to a CA bundle to use
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for Protocol which implements the bare essentials</p></div>
+<div class="desc"><p>A class to handle all the low-level communication with an Exchange server. Contains a session pool, knows how to
+negotiate the authentication type of the server, refresh credentials, etc. Also contains methods for calling EWS
+services that are not tied to an account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Protocol(BaseProtocol, metaclass=CachingProtocol):
+    &#34;&#34;&#34;A class to handle all the low-level communication with an Exchange server. Contains a session pool, knows how to
+    negotiate the authentication type of the server, refresh credentials, etc. Also contains methods for calling EWS
+    services that are not tied to an account.
+    &#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._api_version_hint = None
@@ -2001,35 +1999,31 @@ to a CA bundle to use
         return self.config.version
 
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
-        &#34;&#34;&#34;Get timezone definitions from the server
+        &#34;&#34;&#34;Get timezone definitions from the server.
 
-        Args:
-          timezones: A list of EWSDateTime instances. If None, fetches all timezones from server (Default value = None)
-          return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
+        :param timezones: A list of EWSDateTime instances. If None, fetches all timezones from server
+          (Default value = None)
+        :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-        Returns:
-          A list of (tz_id, name, periods, transitions) tuples
-
+        :return: A list of (tz_id, name, periods, transitions) tuples
         &#34;&#34;&#34;
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
         )
 
     def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view=&#39;DetailedMerged&#39;):
-        &#34;&#34;&#34;Returns free/busy information for a list of accounts
+        &#34;&#34;&#34;Return free/busy information for a list of accounts.
 
-        Args:
-          accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
-            object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.
-          start: The start datetime of the request
-          end: The end datetime of the request
-          merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
-          requested_view: The type of information returned. Possible values are defined in the
-            FreeBusyViewOptions.requested_view choices. (Default value = &#39;DetailedMerged&#39;)
+        :param accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an
+          Account object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a
+          boolean.
+        :param start: The start datetime of the request
+        :param end: The end datetime of the request
+        :param merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
+        :param requested_view: The type of information returned. Possible values are defined in the
+          FreeBusyViewOptions.requested_view choices. (Default value = &#39;DetailedMerged&#39;)
 
-        Returns:
-          A generator of FreeBusyView objects
-
+        :return: A generator of FreeBusyView objects
         &#34;&#34;&#34;
         from .account import Account
         for account, attendee_type, exclude_conflicts in accounts:
@@ -2076,18 +2070,14 @@ to a CA bundle to use
         return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
-        &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials
+        &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
-        Args:
-          names: A list of identifiers to query
-          return_full_contact_data: If True, returns full contact data (Default value = False)
-          search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
-          shape: return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact)
-            items (Default value = None)
+        :param names: A list of identifiers to query
+        :param return_full_contact_data: If True, returns full contact data (Default value = False)
+        :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
+        :param shape: (Default value = None)
 
-        Returns:
-          A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
-
+        :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         &#34;&#34;&#34;
         return list(ResolveNames(protocol=self).call(
             unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
@@ -2095,30 +2085,26 @@ to a CA bundle to use
         ))
 
     def expand_dl(self, distribution_list):
-        &#34;&#34;&#34;Expand distribution list into it&#39;s members
+        &#34;&#34;&#34;Expand distribution list into it&#39;s members.
 
-        Args:
-          distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
+        :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
-        Returns:
-          List of Mailbox items that are members of the distribution list
-
+        :return: List of Mailbox items that are members of the distribution list
         &#34;&#34;&#34;
         if isinstance(distribution_list, str):
             distribution_list = DLMailbox(email_address=distribution_list, mailbox_type=&#39;PublicDL&#39;)
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
 
     def get_searchable_mailboxes(self, search_filter=None, expand_group_membership=False):
-        &#34;&#34;&#34;This method is only available to users who have been assigned the Discovery Management RBAC role. See
+        &#34;&#34;&#34;Call the GetSearchableMailboxes service to get mailboxes that can be searched.
+
+        This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-        Args:
-          search_filter: Is set, must be a single email alias (Default value = None)
-          expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
+        :param search_filter: Is set, must be a single email alias (Default value = None)
+        :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
-        Returns:
-          a list of SearchableMailbox, FailedMailbox or Exception instances
-
+        :return: a list of SearchableMailbox, FailedMailbox or Exception instances
         &#34;&#34;&#34;
         return list(GetSearchableMailboxes(protocol=self).call(
             search_filter=search_filter,
@@ -2126,15 +2112,12 @@ to a CA bundle to use
         ))
 
     def convert_ids(self, ids, destination_format):
-        &#34;&#34;&#34;Converts item and folder IDs between multiple formats
+        &#34;&#34;&#34;Convert item and folder IDs between multiple formats.
 
-        Args:
-          ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-          destination_format: A string
+        :param ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
+        :param destination_format: A string
 
-        Returns:
-          a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-
+        :return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
         &#34;&#34;&#34;
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
@@ -2199,30 +2182,21 @@ def version(self):
 <span>def <span class="ident">convert_ids</span></span>(<span>self, ids, destination_format)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Converts item and folder IDs between multiple formats</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances</dd>
-<dt><strong><code>destination_format</code></strong></dt>
-<dd>A string</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances</p></div>
+<div class="desc"><p>Convert item and folder IDs between multiple formats.</p>
+<p>:param ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
+:param destination_format: A string</p>
+<p>:return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def convert_ids(self, ids, destination_format):
-    &#34;&#34;&#34;Converts item and folder IDs between multiple formats
+    &#34;&#34;&#34;Convert item and folder IDs between multiple formats.
 
-    Args:
-      ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-      destination_format: A string
+    :param ids: a list of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
+    :param destination_format: A string
 
-    Returns:
-      a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
-
+    :return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
     &#34;&#34;&#34;
     return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)</code></pre>
 </details>
@@ -2231,27 +2205,19 @@ def version(self):
 <span>def <span class="ident">expand_dl</span></span>(<span>self, distribution_list)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Expand distribution list into it's members</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>distribution_list</code></strong></dt>
-<dd>SMTP address of the distribution list to expand, or a DLMailbox representing the list</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>List of Mailbox items that are members of the distribution list</p></div>
+<div class="desc"><p>Expand distribution list into it's members.</p>
+<p>:param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list</p>
+<p>:return: List of Mailbox items that are members of the distribution list</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def expand_dl(self, distribution_list):
-    &#34;&#34;&#34;Expand distribution list into it&#39;s members
+    &#34;&#34;&#34;Expand distribution list into it&#39;s members.
 
-    Args:
-      distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
+    :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
-    Returns:
-      List of Mailbox items that are members of the distribution list
-
+    :return: List of Mailbox items that are members of the distribution list
     &#34;&#34;&#34;
     if isinstance(distribution_list, str):
         distribution_list = DLMailbox(email_address=distribution_list, mailbox_type=&#39;PublicDL&#39;)
@@ -2281,43 +2247,33 @@ def version(self):
 <span>def <span class="ident">get_free_busy_info</span></span>(<span>self, accounts, start, end, merged_free_busy_interval=30, requested_view='DetailedMerged')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns free/busy information for a list of accounts</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>accounts</code></strong></dt>
-<dd>A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
-object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.</dd>
-<dt><strong><code>start</code></strong></dt>
-<dd>The start datetime of the request</dd>
-<dt><strong><code>end</code></strong></dt>
-<dd>The end datetime of the request</dd>
-<dt><strong><code>merged_free_busy_interval</code></strong></dt>
-<dd>The interval, in minutes, of merged free/busy information (Default value = 30)</dd>
-<dt><strong><code>requested_view</code></strong></dt>
-<dd>The type of information returned. Possible values are defined in the
-FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A generator of FreeBusyView objects</p></div>
+<div class="desc"><p>Return free/busy information for a list of accounts.</p>
+<p>:param accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an
+Account object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a
+boolean.
+:param start: The start datetime of the request
+:param end: The end datetime of the request
+:param merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
+:param requested_view: The type of information returned. Possible values are defined in the
+FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</p>
+<p>:return: A generator of FreeBusyView objects</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view=&#39;DetailedMerged&#39;):
-    &#34;&#34;&#34;Returns free/busy information for a list of accounts
+    &#34;&#34;&#34;Return free/busy information for a list of accounts.
 
-    Args:
-      accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an Account
-        object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a boolean.
-      start: The start datetime of the request
-      end: The end datetime of the request
-      merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
-      requested_view: The type of information returned. Possible values are defined in the
-        FreeBusyViewOptions.requested_view choices. (Default value = &#39;DetailedMerged&#39;)
+    :param accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an
+      Account object or a string, attendee_type is a MailboxData.attendee_type choice, and exclude_conflicts is a
+      boolean.
+    :param start: The start datetime of the request
+    :param end: The end datetime of the request
+    :param merged_free_busy_interval: The interval, in minutes, of merged free/busy information (Default value = 30)
+    :param requested_view: The type of information returned. Possible values are defined in the
+      FreeBusyViewOptions.requested_view choices. (Default value = &#39;DetailedMerged&#39;)
 
-    Returns:
-      A generator of FreeBusyView objects
-
+    :return: A generator of FreeBusyView objects
     &#34;&#34;&#34;
     from .account import Account
     for account, attendee_type, exclude_conflicts in accounts:
@@ -2388,32 +2344,26 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <span>def <span class="ident">get_searchable_mailboxes</span></span>(<span>self, search_filter=None, expand_group_membership=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This method is only available to users who have been assigned the Discovery Management RBAC role. See
+<div class="desc"><p>Call the GetSearchableMailboxes service to get mailboxes that can be searched.</p>
+<p>This method is only available to users who have been assigned the Discovery Management RBAC role. See
 <a href="https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo">https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo</a></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>search_filter</code></strong></dt>
-<dd>Is set, must be a single email alias (Default value = None)</dd>
-<dt><strong><code>expand_group_membership</code></strong></dt>
-<dd>If True, returned distribution lists are expanded (Default value = False)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a list of SearchableMailbox, FailedMailbox or Exception instances</p></div>
+<p>:param search_filter: Is set, must be a single email alias (Default value = None)
+:param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)</p>
+<p>:return: a list of SearchableMailbox, FailedMailbox or Exception instances</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_searchable_mailboxes(self, search_filter=None, expand_group_membership=False):
-    &#34;&#34;&#34;This method is only available to users who have been assigned the Discovery Management RBAC role. See
+    &#34;&#34;&#34;Call the GetSearchableMailboxes service to get mailboxes that can be searched.
+
+    This method is only available to users who have been assigned the Discovery Management RBAC role. See
     https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-    Args:
-      search_filter: Is set, must be a single email alias (Default value = None)
-      expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
+    :param search_filter: Is set, must be a single email alias (Default value = None)
+    :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
-    Returns:
-      a list of SearchableMailbox, FailedMailbox or Exception instances
-
+    :return: a list of SearchableMailbox, FailedMailbox or Exception instances
     &#34;&#34;&#34;
     return list(GetSearchableMailboxes(protocol=self).call(
         search_filter=search_filter,
@@ -2425,30 +2375,23 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <span>def <span class="ident">get_timezones</span></span>(<span>self, timezones=None, return_full_timezone_data=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get timezone definitions from the server</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>timezones</code></strong></dt>
-<dd>A list of EWSDateTime instances. If None, fetches all timezones from server (Default value = None)</dd>
-<dt><strong><code>return_full_timezone_data</code></strong></dt>
-<dd>If true, also returns periods and transitions (Default value = False)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list of (tz_id, name, periods, transitions) tuples</p></div>
+<div class="desc"><p>Get timezone definitions from the server.</p>
+<p>:param timezones: A list of EWSDateTime instances. If None, fetches all timezones from server
+(Default value = None)
+:param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)</p>
+<p>:return: A list of (tz_id, name, periods, transitions) tuples</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_timezones(self, timezones=None, return_full_timezone_data=False):
-    &#34;&#34;&#34;Get timezone definitions from the server
+    &#34;&#34;&#34;Get timezone definitions from the server.
 
-    Args:
-      timezones: A list of EWSDateTime instances. If None, fetches all timezones from server (Default value = None)
-      return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
+    :param timezones: A list of EWSDateTime instances. If None, fetches all timezones from server
+      (Default value = None)
+    :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-    Returns:
-      A list of (tz_id, name, periods, transitions) tuples
-
+    :return: A list of (tz_id, name, periods, transitions) tuples
     &#34;&#34;&#34;
     return GetServerTimeZones(protocol=self).call(
         timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -2459,38 +2402,25 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <span>def <span class="ident">resolve_names</span></span>(<span>self, names, return_full_contact_data=False, search_scope=None, shape=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Resolve accounts on the server using partial account data, e.g. an email address or initials</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>names</code></strong></dt>
-<dd>A list of identifiers to query</dd>
-<dt><strong><code>return_full_contact_data</code></strong></dt>
-<dd>If True, returns full contact data (Default value = False)</dd>
-<dt><strong><code>search_scope</code></strong></dt>
-<dd>The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact)
-items (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items</p></div>
+<div class="desc"><p>Resolve accounts on the server using partial account data, e.g. an email address or initials.</p>
+<p>:param names: A list of identifiers to query
+:param return_full_contact_data: If True, returns full contact data (Default value = False)
+:param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
+:param shape: (Default value = None)</p>
+<p>:return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
-    &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials
+    &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
-    Args:
-      names: A list of identifiers to query
-      return_full_contact_data: If True, returns full contact data (Default value = False)
-      search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
-      shape: return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact)
-        items (Default value = None)
+    :param names: A list of identifiers to query
+    :param return_full_contact_data: If True, returns full contact data (Default value = False)
+    :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
+    :param shape: (Default value = None)
 
-    Returns:
-      A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
-
+    :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
     &#34;&#34;&#34;
     return list(ResolveNames(protocol=self).call(
         unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
@@ -2514,13 +2444,14 @@ items (Default value = None)</dd>
 <span>class <span class="ident">RetryPolicy</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Stores retry logic used when faced with errors from the server</p></div>
+<div class="desc"><p>Stores retry logic used when faced with errors from the server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RetryPolicy(metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Stores retry logic used when faced with errors from the server&#34;&#34;&#34;
+    &#34;&#34;&#34;Stores retry logic used when faced with errors from the server.&#34;&#34;&#34;
+
     @property
     @abc.abstractmethod
     def fail_fast(self):
@@ -2601,13 +2532,14 @@ def back_off(self, seconds):
 <span>(</span><span>pool_connections=10, pool_maxsize=10, max_retries=0, pool_block=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An HTTP adapter that implements Certificate Based Authentication (CBA)</p></div>
+<div class="desc"><p>An HTTP adapter that implements Certificate Based Authentication (CBA).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TLSClientAuth(requests.adapters.HTTPAdapter):
-    &#34;&#34;&#34;An HTTP adapter that implements Certificate Based Authentication (CBA)&#34;&#34;&#34;
+    &#34;&#34;&#34;An HTTP adapter that implements Certificate Based Authentication (CBA).&#34;&#34;&#34;
+
     cert_file = None
 
     def init_poolmanager(self, *args, **kwargs):

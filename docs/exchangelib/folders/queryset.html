@@ -44,7 +44,7 @@ log = logging.getLogger(__name__)
 
 
 class FolderQuerySet:
-    &#34;&#34;&#34;A QuerySet-like class for finding subfolders of a folder collection&#34;&#34;&#34;
+    &#34;&#34;&#34;A QuerySet-like class for finding subfolders of a folder collection.&#34;&#34;&#34;
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
@@ -59,7 +59,7 @@ class FolderQuerySet:
         return self.__class__(folder_collection=self.folder_collection)
 
     def _copy_self(self):
-        &#34;&#34;&#34;Chaining operations must make a copy of self before making any modifications&#34;&#34;&#34;
+        &#34;&#34;&#34;Chaining operations must make a copy of self before making any modifications.&#34;&#34;&#34;
         new_qs = self._copy_cls()
         new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
@@ -67,12 +67,7 @@ class FolderQuerySet:
         return new_qs
 
     def only(self, *args):
-        &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.
-
-        Args:
-          *args:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
         from .base import Folder
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
@@ -89,24 +84,17 @@ class FolderQuerySet:
         return new_qs
 
     def depth(self, depth):
-        &#34;&#34;&#34;Specify the search depth (SHALLOW or DEEP)
+        &#34;&#34;&#34;Specify the search depth. Possible values are: SHALLOW or DEEP.
 
-        Args:
-          depth:
-
+        :param depth:
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs._depth = depth
         return new_qs
 
     def get(self, *args, **kwargs):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-          **kwargs:
-
-
+        &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
+        MultipleObjectsReturned if there are multiple results.
         &#34;&#34;&#34;
         from .collections import FolderCollection
         if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
@@ -132,13 +120,7 @@ class FolderQuerySet:
         return new_qs
 
     def filter(self, *args, **kwargs):
-        &#34;&#34;&#34;Add restrictions to the folder search
-
-        Args:
-          *args:
-          **kwargs:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Add restrictions to the folder search.&#34;&#34;&#34;
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
         new_qs.q = new_qs.q &amp; q
@@ -155,8 +137,8 @@ class FolderQuerySet:
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
             complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=True)
         else:
-            non_complex_fields = set(f for f in self.only_fields if not f.field.is_complex)
-            complex_fields = set(f for f in self.only_fields if f.field.is_complex)
+            non_complex_fields = {f for f in self.only_fields if not f.field.is_complex}
+            complex_fields = {f for f in self.only_fields if f.field.is_complex}
 
         # First, fetch all non-complex fields using FindFolder. We do this because some folders do not support
         # GetFolder but we still want to get as much information as possible.
@@ -195,7 +177,7 @@ class FolderQuerySet:
 
 
 class SingleFolderQuerySet(FolderQuerySet):
-    &#34;&#34;&#34;A helper class with simpler argument types&#34;&#34;&#34;
+    &#34;&#34;&#34;A helper class with simpler argument types.&#34;&#34;&#34;
 
     def __init__(self, account, folder):
         from .collections import FolderCollection
@@ -220,13 +202,13 @@ class SingleFolderQuerySet(FolderQuerySet):
 <span>(</span><span>folder_collection)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A QuerySet-like class for finding subfolders of a folder collection</p></div>
+<div class="desc"><p>A QuerySet-like class for finding subfolders of a folder collection.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FolderQuerySet:
-    &#34;&#34;&#34;A QuerySet-like class for finding subfolders of a folder collection&#34;&#34;&#34;
+    &#34;&#34;&#34;A QuerySet-like class for finding subfolders of a folder collection.&#34;&#34;&#34;
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
@@ -241,7 +223,7 @@ class SingleFolderQuerySet(FolderQuerySet):
         return self.__class__(folder_collection=self.folder_collection)
 
     def _copy_self(self):
-        &#34;&#34;&#34;Chaining operations must make a copy of self before making any modifications&#34;&#34;&#34;
+        &#34;&#34;&#34;Chaining operations must make a copy of self before making any modifications.&#34;&#34;&#34;
         new_qs = self._copy_cls()
         new_qs.q = deepcopy(self.q)
         new_qs.only_fields = self.only_fields
@@ -249,12 +231,7 @@ class SingleFolderQuerySet(FolderQuerySet):
         return new_qs
 
     def only(self, *args):
-        &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.
-
-        Args:
-          *args:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
         from .base import Folder
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
@@ -271,24 +248,17 @@ class SingleFolderQuerySet(FolderQuerySet):
         return new_qs
 
     def depth(self, depth):
-        &#34;&#34;&#34;Specify the search depth (SHALLOW or DEEP)
+        &#34;&#34;&#34;Specify the search depth. Possible values are: SHALLOW or DEEP.
 
-        Args:
-          depth:
-
+        :param depth:
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs._depth = depth
         return new_qs
 
     def get(self, *args, **kwargs):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-          **kwargs:
-
-
+        &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
+        MultipleObjectsReturned if there are multiple results.
         &#34;&#34;&#34;
         from .collections import FolderCollection
         if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
@@ -314,13 +284,7 @@ class SingleFolderQuerySet(FolderQuerySet):
         return new_qs
 
     def filter(self, *args, **kwargs):
-        &#34;&#34;&#34;Add restrictions to the folder search
-
-        Args:
-          *args:
-          **kwargs:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Add restrictions to the folder search.&#34;&#34;&#34;
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
         new_qs.q = new_qs.q &amp; q
@@ -337,8 +301,8 @@ class SingleFolderQuerySet(FolderQuerySet):
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
             complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=True)
         else:
-            non_complex_fields = set(f for f in self.only_fields if not f.field.is_complex)
-            complex_fields = set(f for f in self.only_fields if f.field.is_complex)
+            non_complex_fields = {f for f in self.only_fields if not f.field.is_complex}
+            complex_fields = {f for f in self.only_fields if f.field.is_complex}
 
         # First, fetch all non-complex fields using FindFolder. We do this because some folders do not support
         # GetFolder but we still want to get as much information as possible.
@@ -400,19 +364,16 @@ class SingleFolderQuerySet(FolderQuerySet):
 <span>def <span class="ident">depth</span></span>(<span>self, depth)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Specify the search depth (SHALLOW or DEEP)</p>
-<h2 id="args">Args</h2>
-<p>depth:</p></div>
+<div class="desc"><p>Specify the search depth. Possible values are: SHALLOW or DEEP.</p>
+<p>:param depth:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def depth(self, depth):
-    &#34;&#34;&#34;Specify the search depth (SHALLOW or DEEP)
+    &#34;&#34;&#34;Specify the search depth. Possible values are: SHALLOW or DEEP.
 
-    Args:
-      depth:
-
+    :param depth:
     &#34;&#34;&#34;
     new_qs = self._copy_self()
     new_qs._depth = depth
@@ -423,22 +384,13 @@ class SingleFolderQuerySet(FolderQuerySet):
 <span>def <span class="ident">filter</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Add restrictions to the folder search</p>
-<h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p></div>
+<div class="desc"><p>Add restrictions to the folder search.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def filter(self, *args, **kwargs):
-    &#34;&#34;&#34;Add restrictions to the folder search
-
-    Args:
-      *args:
-      **kwargs:
-
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Add restrictions to the folder search.&#34;&#34;&#34;
     new_qs = self._copy_self()
     q = Q(*args, **kwargs)
     new_qs.q = new_qs.q &amp; q
@@ -449,21 +401,15 @@ class SingleFolderQuerySet(FolderQuerySet):
 <span>def <span class="ident">get</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p></div>
+<div class="desc"><p>Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
+MultipleObjectsReturned if there are multiple results.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get(self, *args, **kwargs):
-    &#34;&#34;&#34;
-
-    Args:
-      *args:
-      **kwargs:
-
-
+    &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
+    MultipleObjectsReturned if there are multiple results.
     &#34;&#34;&#34;
     from .collections import FolderCollection
     if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
@@ -488,20 +434,13 @@ class SingleFolderQuerySet(FolderQuerySet):
 <span>def <span class="ident">only</span></span>(<span>self, *args)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Restrict the fields returned. 'name' and 'folder_class' are always returned.</p>
-<h2 id="args">Args</h2>
-<p>*args:</p></div>
+<div class="desc"><p>Restrict the fields returned. 'name' and 'folder_class' are always returned.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def only(self, *args):
-    &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.
-
-    Args:
-      *args:
-
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
     from .base import Folder
     # Subfolders will always be of class Folder
     all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
@@ -525,13 +464,13 @@ class SingleFolderQuerySet(FolderQuerySet):
 <span>(</span><span>account, folder)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A helper class with simpler argument types</p></div>
+<div class="desc"><p>A helper class with simpler argument types.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SingleFolderQuerySet(FolderQuerySet):
-    &#34;&#34;&#34;A helper class with simpler argument types&#34;&#34;&#34;
+    &#34;&#34;&#34;A helper class with simpler argument types.&#34;&#34;&#34;
 
     def __init__(self, account, folder):
         from .collections import FolderCollection

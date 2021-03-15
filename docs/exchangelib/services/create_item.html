@@ -33,12 +33,12 @@ from ..util import create_element, set_xml_value, MNS
 
 
 class CreateItem(EWSAccountService):
-    &#34;&#34;&#34;Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
+    &#34;&#34;&#34;Take a folder and a list of items. Return the result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CreateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -78,8 +78,8 @@ class CreateItem(EWSAccountService):
             yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-        convert items to XML Elements
+        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
 
@@ -91,12 +91,10 @@ class CreateItem(EWSAccountService):
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation
         ). The last two are not supported yet.
 
-        Args:
-          items:
-          folder:
-          message_disposition:
-          send_meeting_invitations:
-
+        :param items:
+        :param folder:
+        :param message_disposition:
+        :param send_meeting_invitations:
         &#34;&#34;&#34;
         createitem = create_element(
             &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -134,7 +132,7 @@ class CreateItem(EWSAccountService):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
+<div class="desc"><p>Take a folder and a list of items. Return the result of creation as a list of tuples (success[True|False],
 errormessage), in the same order as the input list.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem</a></p></div>
 <details class="source">
@@ -142,12 +140,12 @@ errormessage), in the same order as the input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CreateItem(EWSAccountService):
-    &#34;&#34;&#34;Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
+    &#34;&#34;&#34;Take a folder and a list of items. Return the result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CreateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -187,8 +185,8 @@ errormessage), in the same order as the input list.</p>
             yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-        convert items to XML Elements
+        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
 
@@ -200,12 +198,10 @@ errormessage), in the same order as the input list.</p>
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation
         ). The last two are not supported yet.
 
-        Args:
-          items:
-          folder:
-          message_disposition:
-          send_meeting_invitations:
-
+        :param items:
+        :param folder:
+        :param message_disposition:
+        :param send_meeting_invitations:
         &#34;&#34;&#34;
         createitem = create_element(
             &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -295,8 +291,8 @@ errormessage), in the same order as the input list.</p>
 <span>def <span class="ident">get_payload</span></span>(<span>self, items, folder, message_disposition, send_meeting_invitations)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-convert items to XML Elements</p>
+<div class="desc"><p>Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+convert items to XML Elements.</p>
 <p>MessageDisposition is only applicable to email messages, where it is required.</p>
 <p>SendMeetingInvitations is required for calendar items. It is also applicable to tasks, meeting request
 responses (see
@@ -305,18 +301,17 @@ responses (see
 invitation accepts (see
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation</a>
 ). The last two are not supported yet.</p>
-<h2 id="args">Args</h2>
-<p>items:
-folder:
-message_disposition:
-send_meeting_invitations:</p></div>
+<p>:param items:
+:param folder:
+:param message_disposition:
+:param send_meeting_invitations:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-    &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-    convert items to XML Elements
+    &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+    convert items to XML Elements.
 
     MessageDisposition is only applicable to email messages, where it is required.
 
@@ -328,12 +323,10 @@ send_meeting_invitations:</p></div>
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation
     ). The last two are not supported yet.
 
-    Args:
-      items:
-      folder:
-      message_disposition:
-      send_meeting_invitations:
-
+    :param items:
+    :param folder:
+    :param message_disposition:
+    :param send_meeting_invitations:
     &#34;&#34;&#34;
     createitem = create_element(
         &#39;m:%s&#39; % self.SERVICE_NAME,

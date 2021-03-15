@@ -83,7 +83,7 @@ class Q:
                     LOOKUP_IEXACT, LOOKUP_CONTAINS, LOOKUP_ICONTAINS, LOOKUP_STARTSWITH, LOOKUP_ISTARTSWITH,
                     LOOKUP_EXISTS}
 
-    __slots__ = (&#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;)
+    __slots__ = &#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;
 
     def __init__(self, *args, **kwargs):
         self.conn_type = kwargs.pop(&#39;conn_type&#39;, self.AND)
@@ -121,8 +121,9 @@ class Q:
         self._check_integrity()
 
     def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
-        # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
-        # generate.
+        &#34;&#34;&#34;Generate Q objects corresponding to a single keyword argument. Make this a leaf if there are no children to
+        generate.
+        &#34;&#34;&#34;
         key_parts = key.rsplit(&#39;__&#39;, 1)
         if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
             # This is a kwarg with a lookup at the end
@@ -196,13 +197,12 @@ class Q:
         return []
 
     def reduce(self):
-        &#34;&#34;&#34;Simplify this object, if possible&#34;&#34;&#34;
+        &#34;&#34;&#34;Simplify this object, if possible.&#34;&#34;&#34;
         self._reduce_children()
         self._promote()
 
     def _reduce_children(self):
-        &#34;&#34;&#34;Looks at the children of this object and removes unnecessary items
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Look at the children of this object and remove unnecessary items.&#34;&#34;&#34;
         children = self.children
         if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
             # We have at least one &#39;never&#39; arg
@@ -212,20 +212,21 @@ class Q:
             elif self.conn_type == self.OR:
                 # Remove all &#39;never&#39; args because all other args will decide the result. Keep one &#39;never&#39; arg in case
                 # all args are &#39;never&#39; args.
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                children = [a for a in children if not (isinstance(a, self.__class__) and a.is_never())]
                 if not children:
                     children = [self.__class__(conn_type=self.NEVER)]
             elif self.conn_type == self.NOT:
                 # Let&#39;s interpret &#39;not never&#39; to mean &#39;always&#39;. Remove all &#39;never&#39; args
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                children = [a for a in children if not (isinstance(a, self.__class__) and a.is_never())]
 
         # Remove any empty Q elements in args before proceeding
-        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        children = [a for a in children if not (isinstance(a, self.__class__) and a.is_empty())]
         self.children = children
 
     def _promote(self):
         &#34;&#34;&#34;When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
-        child.&#34;&#34;&#34;
+        child.
+        &#34;&#34;&#34;
         if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
             return
 
@@ -238,8 +239,9 @@ class Q:
         self.children = q.children
 
     def clean(self, version):
-        # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
-        # validating. There&#39;s no reason to replicate much of that here.
+        &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        validating. There&#39;s no reason to replicate much of that here.
+        &#34;&#34;&#34;
         from .folders import Folder
         self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
 
@@ -331,11 +333,11 @@ class Q:
         return not self.children
 
     def is_empty(self):
-        &#34;&#34;&#34;Returns True if this object is without any restrictions at all&#34;&#34;&#34;
+        &#34;&#34;&#34;Return True if this object is without any restrictions at all.&#34;&#34;&#34;
         return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
 
     def is_never(self):
-        &#34;&#34;&#34;Returns True if this object has a restriction that will never match anything&#34;&#34;&#34;
+        &#34;&#34;&#34;Return True if this object has a restriction that will never match anything.&#34;&#34;&#34;
         return self.conn_type == self.NEVER
 
     def expr(self):
@@ -400,9 +402,8 @@ class Q:
             raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
         if self.op not in self.OP_TYPES:
             raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (self.op, self.OP_TYPES))
-        if self.op == self.EXISTS:
-            if self.value is not True:
-                raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
+        if self.op == self.EXISTS and self.value is not True:
+            raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
         if self.value is None:
             raise ValueError(&#39;Value for filter on field path &#34;%s&#34; cannot be None&#39; % self.field_path)
         if is_iterable(self.value, generators_allowed=True):
@@ -560,7 +561,7 @@ class Q:
 
 
 class Restriction:
-    &#34;&#34;&#34;Implements an EWS Restriction type.&#34;&#34;&#34;
+    &#34;&#34;&#34;Implement an EWS Restriction type.&#34;&#34;&#34;
 
     # The type of item the restriction applies to
     FOLDERS = &#39;folders&#39;
@@ -586,7 +587,7 @@ class Restriction:
         return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)
 
     def __str__(self):
-        &#34;&#34;&#34;Prints the XML syntax tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Print the XML syntax tree.&#34;&#34;&#34;
         return xml_to_str(self.to_xml(version=self.folders[0].account.version))</code></pre>
 </details>
 </section>
@@ -655,7 +656,7 @@ class Restriction:
                     LOOKUP_IEXACT, LOOKUP_CONTAINS, LOOKUP_ICONTAINS, LOOKUP_STARTSWITH, LOOKUP_ISTARTSWITH,
                     LOOKUP_EXISTS}
 
-    __slots__ = (&#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;)
+    __slots__ = &#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;
 
     def __init__(self, *args, **kwargs):
         self.conn_type = kwargs.pop(&#39;conn_type&#39;, self.AND)
@@ -693,8 +694,9 @@ class Restriction:
         self._check_integrity()
 
     def _get_children_from_kwarg(self, key, value, is_single_kwarg=False):
-        # Generates Q objects corresponding to a single keyword argument. Makes this a leaf if there are no children to
-        # generate.
+        &#34;&#34;&#34;Generate Q objects corresponding to a single keyword argument. Make this a leaf if there are no children to
+        generate.
+        &#34;&#34;&#34;
         key_parts = key.rsplit(&#39;__&#39;, 1)
         if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
             # This is a kwarg with a lookup at the end
@@ -768,13 +770,12 @@ class Restriction:
         return []
 
     def reduce(self):
-        &#34;&#34;&#34;Simplify this object, if possible&#34;&#34;&#34;
+        &#34;&#34;&#34;Simplify this object, if possible.&#34;&#34;&#34;
         self._reduce_children()
         self._promote()
 
     def _reduce_children(self):
-        &#34;&#34;&#34;Looks at the children of this object and removes unnecessary items
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Look at the children of this object and remove unnecessary items.&#34;&#34;&#34;
         children = self.children
         if any((isinstance(a, self.__class__) and a.is_never()) for a in children):
             # We have at least one &#39;never&#39; arg
@@ -784,20 +785,21 @@ class Restriction:
             elif self.conn_type == self.OR:
                 # Remove all &#39;never&#39; args because all other args will decide the result. Keep one &#39;never&#39; arg in case
                 # all args are &#39;never&#39; args.
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                children = [a for a in children if not (isinstance(a, self.__class__) and a.is_never())]
                 if not children:
                     children = [self.__class__(conn_type=self.NEVER)]
             elif self.conn_type == self.NOT:
                 # Let&#39;s interpret &#39;not never&#39; to mean &#39;always&#39;. Remove all &#39;never&#39; args
-                children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_never()))
+                children = [a for a in children if not (isinstance(a, self.__class__) and a.is_never())]
 
         # Remove any empty Q elements in args before proceeding
-        children = list(a for a in children if not (isinstance(a, self.__class__) and a.is_empty()))
+        children = [a for a in children if not (isinstance(a, self.__class__) and a.is_empty())]
         self.children = children
 
     def _promote(self):
         &#34;&#34;&#34;When we only have one child and no expression on ourselves, we are a no-op. Flatten by taking over the only
-        child.&#34;&#34;&#34;
+        child.
+        &#34;&#34;&#34;
         if len(self.children) != 1 or self.field_path is not None or self.conn_type == self.NOT:
             return
 
@@ -810,8 +812,9 @@ class Restriction:
         self.children = q.children
 
     def clean(self, version):
-        # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
-        # validating. There&#39;s no reason to replicate much of that here.
+        &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        validating. There&#39;s no reason to replicate much of that here.
+        &#34;&#34;&#34;
         from .folders import Folder
         self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
 
@@ -903,11 +906,11 @@ class Restriction:
         return not self.children
 
     def is_empty(self):
-        &#34;&#34;&#34;Returns True if this object is without any restrictions at all&#34;&#34;&#34;
+        &#34;&#34;&#34;Return True if this object is without any restrictions at all.&#34;&#34;&#34;
         return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER
 
     def is_never(self):
-        &#34;&#34;&#34;Returns True if this object has a restriction that will never match anything&#34;&#34;&#34;
+        &#34;&#34;&#34;Return True if this object has a restriction that will never match anything.&#34;&#34;&#34;
         return self.conn_type == self.NEVER
 
     def expr(self):
@@ -972,9 +975,8 @@ class Restriction:
             raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
         if self.op not in self.OP_TYPES:
             raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (self.op, self.OP_TYPES))
-        if self.op == self.EXISTS:
-            if self.value is not True:
-                raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
+        if self.op == self.EXISTS and self.value is not True:
+            raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
         if self.value is None:
             raise ValueError(&#39;Value for filter on field path &#34;%s&#34; cannot be None&#39; % self.field_path)
         if is_iterable(self.value, generators_allowed=True):
@@ -1306,14 +1308,16 @@ class Restriction:
 <span>def <span class="ident">clean</span></span>(<span>self, version)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+validating. There's no reason to replicate much of that here.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clean(self, version):
-    # Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
-    # validating. There&#39;s no reason to replicate much of that here.
+    &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+    validating. There&#39;s no reason to replicate much of that here.
+    &#34;&#34;&#34;
     from .folders import Folder
     self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)</code></pre>
 </details>
@@ -1354,13 +1358,13 @@ class Restriction:
 <span>def <span class="ident">is_empty</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns True if this object is without any restrictions at all</p></div>
+<div class="desc"><p>Return True if this object is without any restrictions at all.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_empty(self):
-    &#34;&#34;&#34;Returns True if this object is without any restrictions at all&#34;&#34;&#34;
+    &#34;&#34;&#34;Return True if this object is without any restrictions at all.&#34;&#34;&#34;
     return self.is_leaf() and self.field_path is None and self.query_string is None and self.conn_type != self.NEVER</code></pre>
 </details>
 </dd>
@@ -1381,13 +1385,13 @@ class Restriction:
 <span>def <span class="ident">is_never</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns True if this object has a restriction that will never match anything</p></div>
+<div class="desc"><p>Return True if this object has a restriction that will never match anything.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_never(self):
-    &#34;&#34;&#34;Returns True if this object has a restriction that will never match anything&#34;&#34;&#34;
+    &#34;&#34;&#34;Return True if this object has a restriction that will never match anything.&#34;&#34;&#34;
     return self.conn_type == self.NEVER</code></pre>
 </details>
 </dd>
@@ -1395,13 +1399,13 @@ class Restriction:
 <span>def <span class="ident">reduce</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Simplify this object, if possible</p></div>
+<div class="desc"><p>Simplify this object, if possible.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reduce(self):
-    &#34;&#34;&#34;Simplify this object, if possible&#34;&#34;&#34;
+    &#34;&#34;&#34;Simplify this object, if possible.&#34;&#34;&#34;
     self._reduce_children()
     self._promote()</code></pre>
 </details>
@@ -1500,13 +1504,13 @@ class Restriction:
 <span>(</span><span>q, folders, applies_to)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Implements an EWS Restriction type.</p></div>
+<div class="desc"><p>Implement an EWS Restriction type.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Restriction:
-    &#34;&#34;&#34;Implements an EWS Restriction type.&#34;&#34;&#34;
+    &#34;&#34;&#34;Implement an EWS Restriction type.&#34;&#34;&#34;
 
     # The type of item the restriction applies to
     FOLDERS = &#39;folders&#39;
@@ -1532,7 +1536,7 @@ class Restriction:
         return self.q.to_xml(folders=self.folders, version=version, applies_to=self.applies_to)
 
     def __str__(self):
-        &#34;&#34;&#34;Prints the XML syntax tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Print the XML syntax tree.&#34;&#34;&#34;
         return xml_to_str(self.to_xml(version=self.folders[0].account.version))</code></pre>
 </details>
 <h3>Class variables</h3>

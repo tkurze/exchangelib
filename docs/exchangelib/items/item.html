@@ -44,70 +44,66 @@ log = logging.getLogger(__name__)
 
 class Item(BaseItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;Item&#39;
 
-    LOCAL_FIELDS = Fields(
-        MimeContentField(&#39;mime_content&#39;, field_uri=&#39;item:MimeContent&#39;, is_read_only_after_send=True),
-        EWSElementField(&#39;parent_folder_id&#39;, field_uri=&#39;item:ParentFolderId&#39;, value_cls=ParentFolderId,
-                        is_read_only=True),
-        CharField(&#39;item_class&#39;, field_uri=&#39;item:ItemClass&#39;, is_read_only=True),
-        CharField(&#39;subject&#39;, field_uri=&#39;item:Subject&#39;),
-        ChoiceField(&#39;sensitivity&#39;, field_uri=&#39;item:Sensitivity&#39;, choices={
-            Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
-        }, is_required=True, default=&#39;Normal&#39;),
-        TextField(&#39;text_body&#39;, field_uri=&#39;item:TextBody&#39;, is_read_only=True, supported_from=EXCHANGE_2013),
-        BodyField(&#39;body&#39;, field_uri=&#39;item:Body&#39;),  # Accepts and returns Body or HTMLBody instances
-        AttachmentField(&#39;attachments&#39;, field_uri=&#39;item:Attachments&#39;),  # ItemAttachment or FileAttachment
-        DateTimeField(&#39;datetime_received&#39;, field_uri=&#39;item:DateTimeReceived&#39;, is_read_only=True),
-        IntegerField(&#39;size&#39;, field_uri=&#39;item:Size&#39;, is_read_only=True),  # Item size in bytes
-        CharListField(&#39;categories&#39;, field_uri=&#39;item:Categories&#39;),
-        ChoiceField(&#39;importance&#39;, field_uri=&#39;item:Importance&#39;, choices={
-            Choice(&#39;Low&#39;), Choice(&#39;Normal&#39;), Choice(&#39;High&#39;)
-        }, is_required=True, default=&#39;Normal&#39;),
-        TextField(&#39;in_reply_to&#39;, field_uri=&#39;item:InReplyTo&#39;),
-        BooleanField(&#39;is_submitted&#39;, field_uri=&#39;item:IsSubmitted&#39;, is_read_only=True),
-        BooleanField(&#39;is_draft&#39;, field_uri=&#39;item:IsDraft&#39;, is_read_only=True),
-        BooleanField(&#39;is_from_me&#39;, field_uri=&#39;item:IsFromMe&#39;, is_read_only=True),
-        BooleanField(&#39;is_resend&#39;, field_uri=&#39;item:IsResend&#39;, is_read_only=True),
-        BooleanField(&#39;is_unmodified&#39;, field_uri=&#39;item:IsUnmodified&#39;, is_read_only=True),
-        MessageHeaderField(&#39;headers&#39;, field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True),
-        DateTimeField(&#39;datetime_sent&#39;, field_uri=&#39;item:DateTimeSent&#39;, is_read_only=True),
-        DateTimeField(&#39;datetime_created&#39;, field_uri=&#39;item:DateTimeCreated&#39;, is_read_only=True),
-        EWSElementField(&#39;response_objects&#39;, field_uri=&#39;item:ResponseObjects&#39;, value_cls=ResponseObjects,
-                        is_read_only=True,),
-        # Placeholder for ResponseObjects
-        DateTimeField(&#39;reminder_due_by&#39;, field_uri=&#39;item:ReminderDueBy&#39;, is_required_after_save=True,
-                      is_searchable=False),
-        BooleanField(&#39;reminder_is_set&#39;, field_uri=&#39;item:ReminderIsSet&#39;, is_required=True, default=False),
-        IntegerField(&#39;reminder_minutes_before_start&#39;, field_uri=&#39;item:ReminderMinutesBeforeStart&#39;,
-                     is_required_after_save=True, min=0, default=0),
-        TextField(&#39;display_cc&#39;, field_uri=&#39;item:DisplayCc&#39;, is_read_only=True),
-        TextField(&#39;display_to&#39;, field_uri=&#39;item:DisplayTo&#39;, is_read_only=True),
-        BooleanField(&#39;has_attachments&#39;, field_uri=&#39;item:HasAttachments&#39;, is_read_only=True),
-        # ExtendedProperty fields go here
-        CultureField(&#39;culture&#39;, field_uri=&#39;item:Culture&#39;, is_required_after_save=True, is_searchable=False),
-        EffectiveRightsField(&#39;effective_rights&#39;, field_uri=&#39;item:EffectiveRights&#39;, is_read_only=True),
-        CharField(&#39;last_modified_name&#39;, field_uri=&#39;item:LastModifiedName&#39;, is_read_only=True),
-        DateTimeField(&#39;last_modified_time&#39;, field_uri=&#39;item:LastModifiedTime&#39;, is_read_only=True),
-        BooleanField(&#39;is_associated&#39;, field_uri=&#39;item:IsAssociated&#39;, is_read_only=True, supported_from=EXCHANGE_2010),
-        URIField(&#39;web_client_read_form_query_string&#39;, field_uri=&#39;item:WebClientReadFormQueryString&#39;,
-                 is_read_only=True, supported_from=EXCHANGE_2010),
-        URIField(&#39;web_client_edit_form_query_string&#39;, field_uri=&#39;item:WebClientEditFormQueryString&#39;,
-                 is_read_only=True, supported_from=EXCHANGE_2010),
-        EWSElementField(&#39;conversation_id&#39;, field_uri=&#39;item:ConversationId&#39;, value_cls=ConversationId,
-                        is_read_only=True, supported_from=EXCHANGE_2010),
-        BodyField(&#39;unique_body&#39;, field_uri=&#39;item:UniqueBody&#39;, is_read_only=True, supported_from=EXCHANGE_2010),
-    )
-    FIELDS = LOCAL_FIELDS[0:1] + BaseItem.FIELDS + LOCAL_FIELDS[1:]
+    mime_content = MimeContentField(field_uri=&#39;item:MimeContent&#39;, is_read_only_after_send=True)
+    _id = BaseItem.FIELDS[&#39;_id&#39;]
+    parent_folder_id = EWSElementField(field_uri=&#39;item:ParentFolderId&#39;, value_cls=ParentFolderId, is_read_only=True)
+    item_class = CharField(field_uri=&#39;item:ItemClass&#39;, is_read_only=True)
+    subject = CharField(field_uri=&#39;item:Subject&#39;)
+    sensitivity = ChoiceField(field_uri=&#39;item:Sensitivity&#39;, choices={
+        Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
+    }, is_required=True, default=&#39;Normal&#39;)
+    text_body = TextField(field_uri=&#39;item:TextBody&#39;, is_read_only=True, supported_from=EXCHANGE_2013)
+    body = BodyField(field_uri=&#39;item:Body&#39;)  # Accepts and returns Body or HTMLBody instances
+    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
+    datetime_received = DateTimeField(field_uri=&#39;item:DateTimeReceived&#39;, is_read_only=True)
+    size = IntegerField(field_uri=&#39;item:Size&#39;, is_read_only=True)  # Item size in bytes
+    categories = CharListField(field_uri=&#39;item:Categories&#39;)
+    importance = ChoiceField(field_uri=&#39;item:Importance&#39;, choices={
+        Choice(&#39;Low&#39;), Choice(&#39;Normal&#39;), Choice(&#39;High&#39;)
+    }, is_required=True, default=&#39;Normal&#39;)
+    in_reply_to = TextField(field_uri=&#39;item:InReplyTo&#39;)
+    is_submitted = BooleanField(field_uri=&#39;item:IsSubmitted&#39;, is_read_only=True)
+    is_draft = BooleanField(field_uri=&#39;item:IsDraft&#39;, is_read_only=True)
+    is_from_me = BooleanField(field_uri=&#39;item:IsFromMe&#39;, is_read_only=True)
+    is_resend = BooleanField(field_uri=&#39;item:IsResend&#39;, is_read_only=True)
+    is_unmodified = BooleanField(field_uri=&#39;item:IsUnmodified&#39;, is_read_only=True)
+    headers = MessageHeaderField(field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True)
+    datetime_sent = DateTimeField(field_uri=&#39;item:DateTimeSent&#39;, is_read_only=True)
+    datetime_created = DateTimeField(field_uri=&#39;item:DateTimeCreated&#39;, is_read_only=True)
+    response_objects = EWSElementField(field_uri=&#39;item:ResponseObjects&#39;, value_cls=ResponseObjects,
+                                       is_read_only=True,)
+    # Placeholder for ResponseObjects
+    reminder_due_by = DateTimeField(field_uri=&#39;item:ReminderDueBy&#39;, is_required_after_save=True, is_searchable=False)
+    reminder_is_set = BooleanField(field_uri=&#39;item:ReminderIsSet&#39;, is_required=True, default=False)
+    reminder_minutes_before_start = IntegerField(field_uri=&#39;item:ReminderMinutesBeforeStart&#39;,
+                                                 is_required_after_save=True, min=0, default=0)
+    display_cc = TextField(field_uri=&#39;item:DisplayCc&#39;, is_read_only=True)
+    display_to = TextField(field_uri=&#39;item:DisplayTo&#39;, is_read_only=True)
+    has_attachments = BooleanField(field_uri=&#39;item:HasAttachments&#39;, is_read_only=True)
+    # ExtendedProperty fields go here
+    culture = CultureField(field_uri=&#39;item:Culture&#39;, is_required_after_save=True, is_searchable=False)
+    effective_rights = EffectiveRightsField(field_uri=&#39;item:EffectiveRights&#39;, is_read_only=True)
+    last_modified_name = CharField(field_uri=&#39;item:LastModifiedName&#39;, is_read_only=True)
+    last_modified_time = DateTimeField(field_uri=&#39;item:LastModifiedTime&#39;, is_read_only=True)
+    is_associated = BooleanField(field_uri=&#39;item:IsAssociated&#39;, is_read_only=True, supported_from=EXCHANGE_2010)
+    web_client_read_form_query_string = URIField(field_uri=&#39;item:WebClientReadFormQueryString&#39;, is_read_only=True,
+                                                 supported_from=EXCHANGE_2010)
+    web_client_edit_form_query_string = URIField(field_uri=&#39;item:WebClientEditFormQueryString&#39;, is_read_only=True,
+                                                 supported_from=EXCHANGE_2010)
+    conversation_id = EWSElementField(field_uri=&#39;item:ConversationId&#39;, value_cls=ConversationId,
+                                      is_read_only=True, supported_from=EXCHANGE_2010)
+    unique_body = BodyField(field_uri=&#39;item:UniqueBody&#39;, is_read_only=True, supported_from=EXCHANGE_2010)
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    FIELDS = Fields()
 
     # Used to register extended properties
     INSERT_AFTER_FIELD = &#39;has_attachments&#39;
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # pylint: disable=access-member-before-definition
         if self.attachments:
             for a in self.attachments:
                 if a.parent_item:
@@ -182,10 +178,11 @@ class Item(BaseItem):
             if f.is_read_only:
                 # These cannot be changed
                 continue
-            if f.is_required or f.is_required_after_save:
-                if getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name)):
-                    # These are required and cannot be deleted
-                    continue
+            if (f.is_required or f.is_required_after_save) and (
+                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+            ):
+                # These are required and cannot be deleted
+                continue
             if not self.is_draft and f.is_read_only_after_send:
                 # These cannot be changed when the item is no longer a draft
                 continue
@@ -232,7 +229,6 @@ class Item(BaseItem):
         # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
-        del res
 
     @require_id
     def copy(self, to_folder):
@@ -301,9 +297,7 @@ class Item(BaseItem):
 
         Adding attachments to an existing item will update the changekey of the item.
 
-        Args:
-          attachments:
-
+        :param attachments:
         &#34;&#34;&#34;
         if not is_iterable(attachments, generators_allowed=True):
             attachments = [attachments]
@@ -323,9 +317,7 @@ class Item(BaseItem):
 
         Removing attachments from an existing item will update the changekey of the item.
 
-        Args:
-          attachments:
-
+        :param attachments:
         &#34;&#34;&#34;
         if not is_iterable(attachments, generators_allowed=True):
             attachments = [attachments]
@@ -378,77 +370,78 @@ class Item(BaseItem):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item</a></p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Item(BaseItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;Item&#39;
 
-    LOCAL_FIELDS = Fields(
-        MimeContentField(&#39;mime_content&#39;, field_uri=&#39;item:MimeContent&#39;, is_read_only_after_send=True),
-        EWSElementField(&#39;parent_folder_id&#39;, field_uri=&#39;item:ParentFolderId&#39;, value_cls=ParentFolderId,
-                        is_read_only=True),
-        CharField(&#39;item_class&#39;, field_uri=&#39;item:ItemClass&#39;, is_read_only=True),
-        CharField(&#39;subject&#39;, field_uri=&#39;item:Subject&#39;),
-        ChoiceField(&#39;sensitivity&#39;, field_uri=&#39;item:Sensitivity&#39;, choices={
-            Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
-        }, is_required=True, default=&#39;Normal&#39;),
-        TextField(&#39;text_body&#39;, field_uri=&#39;item:TextBody&#39;, is_read_only=True, supported_from=EXCHANGE_2013),
-        BodyField(&#39;body&#39;, field_uri=&#39;item:Body&#39;),  # Accepts and returns Body or HTMLBody instances
-        AttachmentField(&#39;attachments&#39;, field_uri=&#39;item:Attachments&#39;),  # ItemAttachment or FileAttachment
-        DateTimeField(&#39;datetime_received&#39;, field_uri=&#39;item:DateTimeReceived&#39;, is_read_only=True),
-        IntegerField(&#39;size&#39;, field_uri=&#39;item:Size&#39;, is_read_only=True),  # Item size in bytes
-        CharListField(&#39;categories&#39;, field_uri=&#39;item:Categories&#39;),
-        ChoiceField(&#39;importance&#39;, field_uri=&#39;item:Importance&#39;, choices={
-            Choice(&#39;Low&#39;), Choice(&#39;Normal&#39;), Choice(&#39;High&#39;)
-        }, is_required=True, default=&#39;Normal&#39;),
-        TextField(&#39;in_reply_to&#39;, field_uri=&#39;item:InReplyTo&#39;),
-        BooleanField(&#39;is_submitted&#39;, field_uri=&#39;item:IsSubmitted&#39;, is_read_only=True),
-        BooleanField(&#39;is_draft&#39;, field_uri=&#39;item:IsDraft&#39;, is_read_only=True),
-        BooleanField(&#39;is_from_me&#39;, field_uri=&#39;item:IsFromMe&#39;, is_read_only=True),
-        BooleanField(&#39;is_resend&#39;, field_uri=&#39;item:IsResend&#39;, is_read_only=True),
-        BooleanField(&#39;is_unmodified&#39;, field_uri=&#39;item:IsUnmodified&#39;, is_read_only=True),
-        MessageHeaderField(&#39;headers&#39;, field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True),
-        DateTimeField(&#39;datetime_sent&#39;, field_uri=&#39;item:DateTimeSent&#39;, is_read_only=True),
-        DateTimeField(&#39;datetime_created&#39;, field_uri=&#39;item:DateTimeCreated&#39;, is_read_only=True),
-        EWSElementField(&#39;response_objects&#39;, field_uri=&#39;item:ResponseObjects&#39;, value_cls=ResponseObjects,
-                        is_read_only=True,),
-        # Placeholder for ResponseObjects
-        DateTimeField(&#39;reminder_due_by&#39;, field_uri=&#39;item:ReminderDueBy&#39;, is_required_after_save=True,
-                      is_searchable=False),
-        BooleanField(&#39;reminder_is_set&#39;, field_uri=&#39;item:ReminderIsSet&#39;, is_required=True, default=False),
-        IntegerField(&#39;reminder_minutes_before_start&#39;, field_uri=&#39;item:ReminderMinutesBeforeStart&#39;,
-                     is_required_after_save=True, min=0, default=0),
-        TextField(&#39;display_cc&#39;, field_uri=&#39;item:DisplayCc&#39;, is_read_only=True),
-        TextField(&#39;display_to&#39;, field_uri=&#39;item:DisplayTo&#39;, is_read_only=True),
-        BooleanField(&#39;has_attachments&#39;, field_uri=&#39;item:HasAttachments&#39;, is_read_only=True),
-        # ExtendedProperty fields go here
-        CultureField(&#39;culture&#39;, field_uri=&#39;item:Culture&#39;, is_required_after_save=True, is_searchable=False),
-        EffectiveRightsField(&#39;effective_rights&#39;, field_uri=&#39;item:EffectiveRights&#39;, is_read_only=True),
-        CharField(&#39;last_modified_name&#39;, field_uri=&#39;item:LastModifiedName&#39;, is_read_only=True),
-        DateTimeField(&#39;last_modified_time&#39;, field_uri=&#39;item:LastModifiedTime&#39;, is_read_only=True),
-        BooleanField(&#39;is_associated&#39;, field_uri=&#39;item:IsAssociated&#39;, is_read_only=True, supported_from=EXCHANGE_2010),
-        URIField(&#39;web_client_read_form_query_string&#39;, field_uri=&#39;item:WebClientReadFormQueryString&#39;,
-                 is_read_only=True, supported_from=EXCHANGE_2010),
-        URIField(&#39;web_client_edit_form_query_string&#39;, field_uri=&#39;item:WebClientEditFormQueryString&#39;,
-                 is_read_only=True, supported_from=EXCHANGE_2010),
-        EWSElementField(&#39;conversation_id&#39;, field_uri=&#39;item:ConversationId&#39;, value_cls=ConversationId,
-                        is_read_only=True, supported_from=EXCHANGE_2010),
-        BodyField(&#39;unique_body&#39;, field_uri=&#39;item:UniqueBody&#39;, is_read_only=True, supported_from=EXCHANGE_2010),
-    )
-    FIELDS = LOCAL_FIELDS[0:1] + BaseItem.FIELDS + LOCAL_FIELDS[1:]
+    mime_content = MimeContentField(field_uri=&#39;item:MimeContent&#39;, is_read_only_after_send=True)
+    _id = BaseItem.FIELDS[&#39;_id&#39;]
+    parent_folder_id = EWSElementField(field_uri=&#39;item:ParentFolderId&#39;, value_cls=ParentFolderId, is_read_only=True)
+    item_class = CharField(field_uri=&#39;item:ItemClass&#39;, is_read_only=True)
+    subject = CharField(field_uri=&#39;item:Subject&#39;)
+    sensitivity = ChoiceField(field_uri=&#39;item:Sensitivity&#39;, choices={
+        Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
+    }, is_required=True, default=&#39;Normal&#39;)
+    text_body = TextField(field_uri=&#39;item:TextBody&#39;, is_read_only=True, supported_from=EXCHANGE_2013)
+    body = BodyField(field_uri=&#39;item:Body&#39;)  # Accepts and returns Body or HTMLBody instances
+    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
+    datetime_received = DateTimeField(field_uri=&#39;item:DateTimeReceived&#39;, is_read_only=True)
+    size = IntegerField(field_uri=&#39;item:Size&#39;, is_read_only=True)  # Item size in bytes
+    categories = CharListField(field_uri=&#39;item:Categories&#39;)
+    importance = ChoiceField(field_uri=&#39;item:Importance&#39;, choices={
+        Choice(&#39;Low&#39;), Choice(&#39;Normal&#39;), Choice(&#39;High&#39;)
+    }, is_required=True, default=&#39;Normal&#39;)
+    in_reply_to = TextField(field_uri=&#39;item:InReplyTo&#39;)
+    is_submitted = BooleanField(field_uri=&#39;item:IsSubmitted&#39;, is_read_only=True)
+    is_draft = BooleanField(field_uri=&#39;item:IsDraft&#39;, is_read_only=True)
+    is_from_me = BooleanField(field_uri=&#39;item:IsFromMe&#39;, is_read_only=True)
+    is_resend = BooleanField(field_uri=&#39;item:IsResend&#39;, is_read_only=True)
+    is_unmodified = BooleanField(field_uri=&#39;item:IsUnmodified&#39;, is_read_only=True)
+    headers = MessageHeaderField(field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True)
+    datetime_sent = DateTimeField(field_uri=&#39;item:DateTimeSent&#39;, is_read_only=True)
+    datetime_created = DateTimeField(field_uri=&#39;item:DateTimeCreated&#39;, is_read_only=True)
+    response_objects = EWSElementField(field_uri=&#39;item:ResponseObjects&#39;, value_cls=ResponseObjects,
+                                       is_read_only=True,)
+    # Placeholder for ResponseObjects
+    reminder_due_by = DateTimeField(field_uri=&#39;item:ReminderDueBy&#39;, is_required_after_save=True, is_searchable=False)
+    reminder_is_set = BooleanField(field_uri=&#39;item:ReminderIsSet&#39;, is_required=True, default=False)
+    reminder_minutes_before_start = IntegerField(field_uri=&#39;item:ReminderMinutesBeforeStart&#39;,
+                                                 is_required_after_save=True, min=0, default=0)
+    display_cc = TextField(field_uri=&#39;item:DisplayCc&#39;, is_read_only=True)
+    display_to = TextField(field_uri=&#39;item:DisplayTo&#39;, is_read_only=True)
+    has_attachments = BooleanField(field_uri=&#39;item:HasAttachments&#39;, is_read_only=True)
+    # ExtendedProperty fields go here
+    culture = CultureField(field_uri=&#39;item:Culture&#39;, is_required_after_save=True, is_searchable=False)
+    effective_rights = EffectiveRightsField(field_uri=&#39;item:EffectiveRights&#39;, is_read_only=True)
+    last_modified_name = CharField(field_uri=&#39;item:LastModifiedName&#39;, is_read_only=True)
+    last_modified_time = DateTimeField(field_uri=&#39;item:LastModifiedTime&#39;, is_read_only=True)
+    is_associated = BooleanField(field_uri=&#39;item:IsAssociated&#39;, is_read_only=True, supported_from=EXCHANGE_2010)
+    web_client_read_form_query_string = URIField(field_uri=&#39;item:WebClientReadFormQueryString&#39;, is_read_only=True,
+                                                 supported_from=EXCHANGE_2010)
+    web_client_edit_form_query_string = URIField(field_uri=&#39;item:WebClientEditFormQueryString&#39;, is_read_only=True,
+                                                 supported_from=EXCHANGE_2010)
+    conversation_id = EWSElementField(field_uri=&#39;item:ConversationId&#39;, value_cls=ConversationId,
+                                      is_read_only=True, supported_from=EXCHANGE_2010)
+    unique_body = BodyField(field_uri=&#39;item:UniqueBody&#39;, is_read_only=True, supported_from=EXCHANGE_2010)
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    FIELDS = Fields()
 
     # Used to register extended properties
     INSERT_AFTER_FIELD = &#39;has_attachments&#39;
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # pylint: disable=access-member-before-definition
         if self.attachments:
             for a in self.attachments:
                 if a.parent_item:
@@ -523,10 +516,11 @@ class Item(BaseItem):
             if f.is_read_only:
                 # These cannot be changed
                 continue
-            if f.is_required or f.is_required_after_save:
-                if getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name)):
-                    # These are required and cannot be deleted
-                    continue
+            if (f.is_required or f.is_required_after_save) and (
+                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+            ):
+                # These are required and cannot be deleted
+                continue
             if not self.is_draft and f.is_read_only_after_send:
                 # These cannot be changed when the item is no longer a draft
                 continue
@@ -573,7 +567,6 @@ class Item(BaseItem):
         # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
-        del res
 
     @require_id
     def copy(self, to_folder):
@@ -642,9 +635,7 @@ class Item(BaseItem):
 
         Adding attachments to an existing item will update the changekey of the item.
 
-        Args:
-          attachments:
-
+        :param attachments:
         &#34;&#34;&#34;
         if not is_iterable(attachments, generators_allowed=True):
             attachments = [attachments]
@@ -664,9 +655,7 @@ class Item(BaseItem):
 
         Removing attachments from an existing item will update the changekey of the item.
 
-        Args:
-          attachments:
-
+        :param attachments:
         &#34;&#34;&#34;
         if not is_iterable(attachments, generators_allowed=True):
             attachments = [attachments]
@@ -736,160 +725,156 @@ class Item(BaseItem):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.item.Item.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.items.item.Item.attachments"><code class="name">var <span class="ident">attachments</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.body"><code class="name">var <span class="ident">body</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.categories"><code class="name">var <span class="ident">categories</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.conversation_id"><code class="name">var <span class="ident">conversation_id</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.culture"><code class="name">var <span class="ident">culture</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.datetime_created"><code class="name">var <span class="ident">datetime_created</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.datetime_received"><code class="name">var <span class="ident">datetime_received</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.datetime_sent"><code class="name">var <span class="ident">datetime_sent</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.display_cc"><code class="name">var <span class="ident">display_cc</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.display_to"><code class="name">var <span class="ident">display_to</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.effective_rights"><code class="name">var <span class="ident">effective_rights</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.has_attachments"><code class="name">var <span class="ident">has_attachments</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.headers"><code class="name">var <span class="ident">headers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.importance"><code class="name">var <span class="ident">importance</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.in_reply_to"><code class="name">var <span class="ident">in_reply_to</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.is_associated"><code class="name">var <span class="ident">is_associated</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.is_draft"><code class="name">var <span class="ident">is_draft</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.is_from_me"><code class="name">var <span class="ident">is_from_me</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.is_resend"><code class="name">var <span class="ident">is_resend</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.is_submitted"><code class="name">var <span class="ident">is_submitted</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.is_unmodified"><code class="name">var <span class="ident">is_unmodified</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.item_class"><code class="name">var <span class="ident">item_class</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.last_modified_name"><code class="name">var <span class="ident">last_modified_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.last_modified_time"><code class="name">var <span class="ident">last_modified_time</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.mime_content"><code class="name">var <span class="ident">mime_content</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.parent_folder_id"><code class="name">var <span class="ident">parent_folder_id</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.reminder_due_by"><code class="name">var <span class="ident">reminder_due_by</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.reminder_is_set"><code class="name">var <span class="ident">reminder_is_set</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.reminder_minutes_before_start"><code class="name">var <span class="ident">reminder_minutes_before_start</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.response_objects"><code class="name">var <span class="ident">response_objects</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.sensitivity"><code class="name">var <span class="ident">sensitivity</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.size"><code class="name">var <span class="ident">size</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.subject"><code class="name">var <span class="ident">subject</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.text_body"><code class="name">var <span class="ident">text_body</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.unique_body"><code class="name">var <span class="ident">unique_body</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.web_client_edit_form_query_string"><code class="name">var <span class="ident">web_client_edit_form_query_string</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.item.Item.web_client_read_form_query_string"><code class="name">var <span class="ident">web_client_read_form_query_string</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -916,8 +901,7 @@ def archive(self, to_folder):
 attachments will be created on the server immediately. If the item has not yet been saved, the attachments will
 be created on the server when the item is saved.</p>
 <p>Adding attachments to an existing item will update the changekey of the item.</p>
-<h2 id="args">Args</h2>
-<p>attachments:</p></div>
+<p>:param attachments:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -929,9 +913,7 @@ be created on the server when the item is saved.</p>
 
     Adding attachments to an existing item will update the changekey of the item.
 
-    Args:
-      attachments:
-
+    :param attachments:
     &#34;&#34;&#34;
     if not is_iterable(attachments, generators_allowed=True):
         attachments = [attachments]
@@ -1012,8 +994,7 @@ def create_forward(self, subject, body, to_recipients, cc_recipients=None, bcc_r
 attachments will be deleted on the server immediately. If the item has not yet been saved, the attachments will
 simply not be created on the server the item is saved.</p>
 <p>Removing attachments from an existing item will update the changekey of the item.</p>
-<h2 id="args">Args</h2>
-<p>attachments:</p></div>
+<p>:param attachments:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1025,9 +1006,7 @@ simply not be created on the server the item is saved.</p>
 
     Removing attachments from an existing item will update the changekey of the item.
 
-    Args:
-      attachments:
-
+    :param attachments:
     &#34;&#34;&#34;
     if not is_iterable(attachments, generators_allowed=True):
         attachments = [attachments]
@@ -1131,8 +1110,7 @@ def refresh(self):
         setattr(self, f.name, getattr(res, f.name))
     # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
     for a in self.attachments:
-        a.parent_item = self
-    del res</code></pre>
+        a.parent_item = self</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.item.Item.save"><code class="name flex">
@@ -1244,7 +1222,6 @@ def refresh(self):
 <li><code><a title="exchangelib.items.item.Item.ELEMENT_NAME" href="#exchangelib.items.item.Item.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.FIELDS" href="#exchangelib.items.item.Item.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.INSERT_AFTER_FIELD" href="#exchangelib.items.item.Item.INSERT_AFTER_FIELD">INSERT_AFTER_FIELD</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.LOCAL_FIELDS" href="#exchangelib.items.item.Item.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.archive" href="#exchangelib.items.item.Item.archive">archive</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.attach" href="#exchangelib.items.item.Item.attach">attach</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.attachments" href="#exchangelib.items.item.Item.attachments">attachments</a></code></li>

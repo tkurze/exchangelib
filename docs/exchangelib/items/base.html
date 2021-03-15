@@ -26,13 +26,12 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import abc
-import logging
+<pre><code class="python">import logging
 
 from ..extended_properties import ExtendedProperty
 from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
     CharField, IdElementField, AttachmentField
-from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, Fields
+from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, EWSMeta
 from ..services import CreateItem
 from ..util import require_account
 from ..version import EXCHANGE_2007_SP1
@@ -91,11 +90,11 @@ MOVE_TO_DELETED_ITEMS = &#39;MoveToDeletedItems&#39;
 DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
 
 
-class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically&#34;&#34;&#34;
+class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically.&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
-    __slots__ = (&#39;__dict__&#39;,)
+    __slots__ = &#39;__dict__&#39;,
 
     INSERT_AFTER_FIELD = None
 
@@ -103,10 +102,9 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
     def register(cls, attr_name, attr_cls):
         &#34;&#34;&#34;Register a custom extended property in this item class so they can be accessed just like any other attribute
 
-        Args:
-          attr_name:
-          attr_cls:
-
+        :param attr_name:
+        :param attr_cls:
+        :return:
         &#34;&#34;&#34;
         if not cls.INSERT_AFTER_FIELD:
             raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
@@ -129,11 +127,10 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
 
     @classmethod
     def deregister(cls, attr_name):
-        &#34;&#34;&#34;De-register an extended property that has been registered with register()
+        &#34;&#34;&#34;De-register an extended property that has been registered with register().
 
-        Args:
-          attr_name:
-
+        :param attr_name:
+        :return:
         &#34;&#34;&#34;
         try:
             field = cls.get_field_by_fieldname(attr_name)
@@ -144,20 +141,22 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
         cls.remove_field(field)
 
 
-class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for all other classes that implement EWS items&#34;&#34;&#34;
+class BaseItem(RegisterMixIn, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for all other classes that implement EWS items.&#34;&#34;&#34;
+
     ID_ELEMENT_CLS = ItemId
+    _id = IdElementField(field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS)
 
-    FIELDS = Fields(
-        IdElementField(&#39;_id&#39;, field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS),
-    )
-
-    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;, &#39;folder&#39;)
+    __slots__ = &#39;account&#39;, &#39;folder&#39;
 
     def __init__(self, **kwargs):
-        # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
-        # &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
-        # we use folder.account.
+        &#34;&#34;&#34;Pick out optional &#39;account&#39; and &#39;folder&#39; kwargs, and pass the rest to the parent class.
+
+        :param kwargs:
+            &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
+            &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
+                we use folder.account.
+        &#34;&#34;&#34;
         from ..folders import BaseFolder
         from ..account import Account
         self.account = kwargs.pop(&#39;account&#39;, None)
@@ -182,24 +181,23 @@ class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
         return item
 
 
-class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for reply/forward elements that share the same fields&#34;&#34;&#34;
-    FIELDS = Fields(
-        CharField(&#39;subject&#39;, field_uri=&#39;Subject&#39;),
-        BodyField(&#39;body&#39;, field_uri=&#39;Body&#39;),  # Accepts and returns Body or HTMLBody instances
-        MailboxListField(&#39;to_recipients&#39;, field_uri=&#39;ToRecipients&#39;),
-        MailboxListField(&#39;cc_recipients&#39;, field_uri=&#39;CcRecipients&#39;),
-        MailboxListField(&#39;bcc_recipients&#39;, field_uri=&#39;BccRecipients&#39;),
-        BooleanField(&#39;is_read_receipt_requested&#39;, field_uri=&#39;IsReadReceiptRequested&#39;),
-        BooleanField(&#39;is_delivery_receipt_requested&#39;, field_uri=&#39;IsDeliveryReceiptRequested&#39;),
-        MailboxField(&#39;author&#39;, field_uri=&#39;From&#39;),
-        EWSElementField(&#39;reference_item_id&#39;, value_cls=ReferenceItemId),
-        BodyField(&#39;new_body&#39;, field_uri=&#39;NewBodyContent&#39;),  # Accepts and returns Body or HTMLBody instances
-        MailboxField(&#39;received_by&#39;, field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1),
-        MailboxField(&#39;received_by_representing&#39;, field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1),
-    )
+class BaseReplyItem(EWSElement, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for reply/forward elements that share the same fields.&#34;&#34;&#34;
 
-    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;,)
+    subject = CharField(field_uri=&#39;Subject&#39;)
+    body = BodyField(field_uri=&#39;Body&#39;)  # Accepts and returns Body or HTMLBody instances
+    to_recipients = MailboxListField(field_uri=&#39;ToRecipients&#39;)
+    cc_recipients = MailboxListField(field_uri=&#39;CcRecipients&#39;)
+    bcc_recipients = MailboxListField(field_uri=&#39;BccRecipients&#39;)
+    is_read_receipt_requested = BooleanField(field_uri=&#39;IsReadReceiptRequested&#39;)
+    is_delivery_receipt_requested = BooleanField(field_uri=&#39;IsDeliveryReceiptRequested&#39;)
+    author = MailboxField(field_uri=&#39;From&#39;)
+    reference_item_id = EWSElementField(value_cls=ReferenceItemId)
+    new_body = BodyField(field_uri=&#39;NewBodyContent&#39;)  # Accepts and returns Body or HTMLBody instances
+    received_by = MailboxField(field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1)
+    received_by_representing = MailboxField(field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1)
+
+    __slots__ = &#39;account&#39;,
 
     def __init__(self, **kwargs):
         # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;save()&#39;
@@ -212,11 +210,10 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
     @require_account
     def send(self, save_copy=True, copy_to_folder=None):
         from .calendar_item import CancelCalendarItem
-        if copy_to_folder:
-            if not save_copy:
-                raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+        if copy_to_folder and not save_copy:
+            raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
-        expect_result = True if isinstance(self, CancelCalendarItem) else False
+        expect_result = bool(isinstance(self, CancelCalendarItem))
         return CreateItem(account=self.account).get(
             items=[self],
             folder=copy_to_folder,
@@ -227,12 +224,10 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
 
     @require_account
     def save(self, folder):
-        &#34;&#34;&#34;save reply/forward and retrieve the item result for further modification,
-        you may want to use account.drafts as the folder.
+        &#34;&#34;&#34;Save the item for later modification. You may want to use account.drafts as the folder.
 
-        Args:
-          folder:
-
+        :param folder:
+        :return:
         &#34;&#34;&#34;
         return CreateItem(account=self.account).get(
             items=[self],
@@ -243,17 +238,12 @@ class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
 
 
 class BulkCreateResult(BaseItem):
-    &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call&#34;&#34;&#34;
-    LOCAL_FIELDS = Fields(
-        AttachmentField(&#39;attachments&#39;, field_uri=&#39;item:Attachments&#39;),  # ItemAttachment or FileAttachment
-    )
-    FIELDS = BaseItem.FIELDS + LOCAL_FIELDS
+    &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call.&#34;&#34;&#34;
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # pylint: disable=access-member-before-definition
         if self.attachments is None:
             self.attachments = []</code></pre>
 </details>
@@ -272,25 +262,32 @@ class BulkCreateResult(BaseItem):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all other classes that implement EWS items</p></div>
+<div class="desc"><p>Base class for all other classes that implement EWS items.</p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseItem(RegisterMixIn, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for all other classes that implement EWS items&#34;&#34;&#34;
+<pre><code class="python">class BaseItem(RegisterMixIn, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for all other classes that implement EWS items.&#34;&#34;&#34;
+
     ID_ELEMENT_CLS = ItemId
+    _id = IdElementField(field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS)
 
-    FIELDS = Fields(
-        IdElementField(&#39;_id&#39;, field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS),
-    )
-
-    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;, &#39;folder&#39;)
+    __slots__ = &#39;account&#39;, &#39;folder&#39;
 
     def __init__(self, **kwargs):
-        # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
-        # &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
-        # we use folder.account.
+        &#34;&#34;&#34;Pick out optional &#39;account&#39; and &#39;folder&#39; kwargs, and pass the rest to the parent class.
+
+        :param kwargs:
+            &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
+            &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
+                we use folder.account.
+        &#34;&#34;&#34;
         from ..folders import BaseFolder
         from ..account import Account
         self.account = kwargs.pop(&#39;account&#39;, None)
@@ -334,7 +331,7 @@ class BulkCreateResult(BaseItem):
 </dd>
 <dt id="exchangelib.items.base.BaseItem.ID_ELEMENT_CLS"><code class="name">var <span class="ident">ID_ELEMENT_CLS</span></code></dt>
 <dd>
-<div class="desc"><p>'id' and 'changekey' are UUIDs generated by Exchange</p>
+<div class="desc"><p>'id' and 'changekey' are UUIDs generated by Exchange.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemid</a></p></div>
 </dd>
 </dl>
@@ -387,29 +384,28 @@ def from_xml(cls, elem, account):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for reply/forward elements that share the same fields</p></div>
+<div class="desc"><p>Base class for reply/forward elements that share the same fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseReplyItem(EWSElement, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for reply/forward elements that share the same fields&#34;&#34;&#34;
-    FIELDS = Fields(
-        CharField(&#39;subject&#39;, field_uri=&#39;Subject&#39;),
-        BodyField(&#39;body&#39;, field_uri=&#39;Body&#39;),  # Accepts and returns Body or HTMLBody instances
-        MailboxListField(&#39;to_recipients&#39;, field_uri=&#39;ToRecipients&#39;),
-        MailboxListField(&#39;cc_recipients&#39;, field_uri=&#39;CcRecipients&#39;),
-        MailboxListField(&#39;bcc_recipients&#39;, field_uri=&#39;BccRecipients&#39;),
-        BooleanField(&#39;is_read_receipt_requested&#39;, field_uri=&#39;IsReadReceiptRequested&#39;),
-        BooleanField(&#39;is_delivery_receipt_requested&#39;, field_uri=&#39;IsDeliveryReceiptRequested&#39;),
-        MailboxField(&#39;author&#39;, field_uri=&#39;From&#39;),
-        EWSElementField(&#39;reference_item_id&#39;, value_cls=ReferenceItemId),
-        BodyField(&#39;new_body&#39;, field_uri=&#39;NewBodyContent&#39;),  # Accepts and returns Body or HTMLBody instances
-        MailboxField(&#39;received_by&#39;, field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1),
-        MailboxField(&#39;received_by_representing&#39;, field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1),
-    )
+<pre><code class="python">class BaseReplyItem(EWSElement, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for reply/forward elements that share the same fields.&#34;&#34;&#34;
 
-    __slots__ = tuple(f.name for f in FIELDS) + (&#39;account&#39;,)
+    subject = CharField(field_uri=&#39;Subject&#39;)
+    body = BodyField(field_uri=&#39;Body&#39;)  # Accepts and returns Body or HTMLBody instances
+    to_recipients = MailboxListField(field_uri=&#39;ToRecipients&#39;)
+    cc_recipients = MailboxListField(field_uri=&#39;CcRecipients&#39;)
+    bcc_recipients = MailboxListField(field_uri=&#39;BccRecipients&#39;)
+    is_read_receipt_requested = BooleanField(field_uri=&#39;IsReadReceiptRequested&#39;)
+    is_delivery_receipt_requested = BooleanField(field_uri=&#39;IsDeliveryReceiptRequested&#39;)
+    author = MailboxField(field_uri=&#39;From&#39;)
+    reference_item_id = EWSElementField(value_cls=ReferenceItemId)
+    new_body = BodyField(field_uri=&#39;NewBodyContent&#39;)  # Accepts and returns Body or HTMLBody instances
+    received_by = MailboxField(field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1)
+    received_by_representing = MailboxField(field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1)
+
+    __slots__ = &#39;account&#39;,
 
     def __init__(self, **kwargs):
         # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;save()&#39;
@@ -422,11 +418,10 @@ def from_xml(cls, elem, account):
     @require_account
     def send(self, save_copy=True, copy_to_folder=None):
         from .calendar_item import CancelCalendarItem
-        if copy_to_folder:
-            if not save_copy:
-                raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+        if copy_to_folder and not save_copy:
+            raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
-        expect_result = True if isinstance(self, CancelCalendarItem) else False
+        expect_result = bool(isinstance(self, CancelCalendarItem))
         return CreateItem(account=self.account).get(
             items=[self],
             folder=copy_to_folder,
@@ -437,12 +432,10 @@ def from_xml(cls, elem, account):
 
     @require_account
     def save(self, folder):
-        &#34;&#34;&#34;save reply/forward and retrieve the item result for further modification,
-        you may want to use account.drafts as the folder.
+        &#34;&#34;&#34;Save the item for later modification. You may want to use account.drafts as the folder.
 
-        Args:
-          folder:
-
+        :param folder:
+        :return:
         &#34;&#34;&#34;
         return CreateItem(account=self.account).get(
             items=[self],
@@ -477,51 +470,51 @@ def from_xml(cls, elem, account):
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.author"><code class="name">var <span class="ident">author</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.bcc_recipients"><code class="name">var <span class="ident">bcc_recipients</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.body"><code class="name">var <span class="ident">body</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.cc_recipients"><code class="name">var <span class="ident">cc_recipients</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested"><code class="name">var <span class="ident">is_delivery_receipt_requested</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested"><code class="name">var <span class="ident">is_read_receipt_requested</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.new_body"><code class="name">var <span class="ident">new_body</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.received_by_representing"><code class="name">var <span class="ident">received_by_representing</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.reference_item_id"><code class="name">var <span class="ident">reference_item_id</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.subject"><code class="name">var <span class="ident">subject</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.base.BaseReplyItem.to_recipients"><code class="name">var <span class="ident">to_recipients</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -530,22 +523,19 @@ def from_xml(cls, elem, account):
 <span>def <span class="ident">save</span></span>(<span>self, folder)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>save reply/forward and retrieve the item result for further modification,
-you may want to use account.drafts as the folder.</p>
-<h2 id="args">Args</h2>
-<p>folder:</p></div>
+<div class="desc"><p>Save the item for later modification. You may want to use account.drafts as the folder.</p>
+<p>:param folder:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_account
 def save(self, folder):
-    &#34;&#34;&#34;save reply/forward and retrieve the item result for further modification,
-    you may want to use account.drafts as the folder.
+    &#34;&#34;&#34;Save the item for later modification. You may want to use account.drafts as the folder.
 
-    Args:
-      folder:
-
+    :param folder:
+    :return:
     &#34;&#34;&#34;
     return CreateItem(account=self.account).get(
         items=[self],
@@ -567,11 +557,10 @@ def save(self, folder):
 <pre><code class="python">@require_account
 def send(self, save_copy=True, copy_to_folder=None):
     from .calendar_item import CancelCalendarItem
-    if copy_to_folder:
-        if not save_copy:
-            raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
+    if copy_to_folder and not save_copy:
+        raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
     message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
-    expect_result = True if isinstance(self, CancelCalendarItem) else False
+    expect_result = bool(isinstance(self, CancelCalendarItem))
     return CreateItem(account=self.account).get(
         items=[self],
         folder=copy_to_folder,
@@ -599,23 +588,23 @@ def send(self, save_copy=True, copy_to_folder=None):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A dummy class to store return values from a CreateItem service call</p></div>
+<div class="desc"><p>A dummy class to store return values from a CreateItem service call.</p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BulkCreateResult(BaseItem):
-    &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call&#34;&#34;&#34;
-    LOCAL_FIELDS = Fields(
-        AttachmentField(&#39;attachments&#39;, field_uri=&#39;item:Attachments&#39;),  # ItemAttachment or FileAttachment
-    )
-    FIELDS = BaseItem.FIELDS + LOCAL_FIELDS
+    &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call.&#34;&#34;&#34;
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # pylint: disable=access-member-before-definition
         if self.attachments is None:
             self.attachments = []</code></pre>
 </details>
@@ -632,16 +621,12 @@ def send(self, save_copy=True, copy_to_folder=None):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.base.BulkCreateResult.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.items.base.BulkCreateResult.attachments"><code class="name">var <span class="ident">attachments</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -666,16 +651,16 @@ def send(self, save_copy=True, copy_to_folder=None):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes that can change their list of supported fields dynamically</p></div>
+<div class="desc"><p>Base class for classes that can change their list of supported fields dynamically.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RegisterMixIn(IdChangeKeyMixIn, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically&#34;&#34;&#34;
+<pre><code class="python">class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically.&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
-    __slots__ = (&#39;__dict__&#39;,)
+    __slots__ = &#39;__dict__&#39;,
 
     INSERT_AFTER_FIELD = None
 
@@ -683,10 +668,9 @@ def send(self, save_copy=True, copy_to_folder=None):
     def register(cls, attr_name, attr_cls):
         &#34;&#34;&#34;Register a custom extended property in this item class so they can be accessed just like any other attribute
 
-        Args:
-          attr_name:
-          attr_cls:
-
+        :param attr_name:
+        :param attr_cls:
+        :return:
         &#34;&#34;&#34;
         if not cls.INSERT_AFTER_FIELD:
             raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
@@ -709,11 +693,10 @@ def send(self, save_copy=True, copy_to_folder=None):
 
     @classmethod
     def deregister(cls, attr_name):
-        &#34;&#34;&#34;De-register an extended property that has been registered with register()
+        &#34;&#34;&#34;De-register an extended property that has been registered with register().
 
-        Args:
-          attr_name:
-
+        :param attr_name:
+        :return:
         &#34;&#34;&#34;
         try:
             field = cls.get_field_by_fieldname(attr_name)
@@ -746,20 +729,19 @@ def send(self, save_copy=True, copy_to_folder=None):
 <span>def <span class="ident">deregister</span></span>(<span>attr_name)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>De-register an extended property that has been registered with register()</p>
-<h2 id="args">Args</h2>
-<p>attr_name:</p></div>
+<div class="desc"><p>De-register an extended property that has been registered with register().</p>
+<p>:param attr_name:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
 def deregister(cls, attr_name):
-    &#34;&#34;&#34;De-register an extended property that has been registered with register()
+    &#34;&#34;&#34;De-register an extended property that has been registered with register().
 
-    Args:
-      attr_name:
-
+    :param attr_name:
+    :return:
     &#34;&#34;&#34;
     try:
         field = cls.get_field_by_fieldname(attr_name)
@@ -775,9 +757,9 @@ def deregister(cls, attr_name):
 </code></dt>
 <dd>
 <div class="desc"><p>Register a custom extended property in this item class so they can be accessed just like any other attribute</p>
-<h2 id="args">Args</h2>
-<p>attr_name:
-attr_cls:</p></div>
+<p>:param attr_name:
+:param attr_cls:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -786,10 +768,9 @@ attr_cls:</p></div>
 def register(cls, attr_name, attr_cls):
     &#34;&#34;&#34;Register a custom extended property in this item class so they can be accessed just like any other attribute
 
-    Args:
-      attr_name:
-      attr_cls:
-
+    :param attr_name:
+    :param attr_cls:
+    :return:
     &#34;&#34;&#34;
     if not cls.INSERT_AFTER_FIELD:
         raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
@@ -875,7 +856,6 @@ def register(cls, attr_name, attr_cls):
 <h4><code><a title="exchangelib.items.base.BulkCreateResult" href="#exchangelib.items.base.BulkCreateResult">BulkCreateResult</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.items.base.BulkCreateResult.FIELDS" href="#exchangelib.items.base.BulkCreateResult.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.base.BulkCreateResult.LOCAL_FIELDS" href="#exchangelib.items.base.BulkCreateResult.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.base.BulkCreateResult.attachments" href="#exchangelib.items.base.BulkCreateResult.attachments">attachments</a></code></li>
 </ul>
 </li>

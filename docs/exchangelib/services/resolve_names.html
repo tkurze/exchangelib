@@ -26,30 +26,41 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
+<pre><code class="python">import logging
+
+from .common import EWSService
 from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
 from ..properties import Mailbox
 from ..util import create_element, set_xml_value, add_xml_child, MNS
 from ..version import EXCHANGE_2010_SP2
 
+log = logging.getLogger(__name__)
+
 
 class ResolveNames(EWSService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames&#34;&#34;&#34;
-    # TODO: Does not support paged responses yet. See example in issue #205
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ResolveNames&#39;
     element_container_name = &#39;{%s}ResolutionSet&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
+    # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
+    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service. According to docs, at most
+    # 100 candidates are returned for a lookup.
+    supports_paging = False
 
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
         from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
-        if search_scope:
-            if search_scope not in SEARCH_SCOPE_CHOICES:
-                raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
-        if contact_data_shape:
-            if contact_data_shape not in SHAPE_CHOICES:
-                raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
+        if self.chunk_size &gt; 100:
+            log.warning(
+                &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
+                self.chunk_size, self.SERVICE_NAME
+            )
+        if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
+            raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
+        if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,
@@ -106,31 +117,38 @@ class ResolveNames(EWSService):
 <dl>
 <dt id="exchangelib.services.resolve_names.ResolveNames"><code class="flex name class">
 <span>class <span class="ident">ResolveNames</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ResolveNames(EWSService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames&#34;&#34;&#34;
-    # TODO: Does not support paged responses yet. See example in issue #205
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ResolveNames&#39;
     element_container_name = &#39;{%s}ResolutionSet&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
+    # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
+    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service. According to docs, at most
+    # 100 candidates are returned for a lookup.
+    supports_paging = False
 
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
         from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
-        if search_scope:
-            if search_scope not in SEARCH_SCOPE_CHOICES:
-                raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
-        if contact_data_shape:
-            if contact_data_shape not in SHAPE_CHOICES:
-                raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
+        if self.chunk_size &gt; 100:
+            log.warning(
+                &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
+                self.chunk_size, self.SERVICE_NAME
+            )
+        if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
+            raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
+        if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,
@@ -197,6 +215,10 @@ class ResolveNames(EWSService):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.resolve_names.ResolveNames.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -212,12 +234,15 @@ class ResolveNames(EWSService):
 <pre><code class="python">def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
          contact_data_shape=None):
     from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
-    if search_scope:
-        if search_scope not in SEARCH_SCOPE_CHOICES:
-            raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
-    if contact_data_shape:
-        if contact_data_shape not in SHAPE_CHOICES:
-            raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
+    if self.chunk_size &gt; 100:
+        log.warning(
+            &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
+            self.chunk_size, self.SERVICE_NAME
+        )
+    if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
+        raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
+    if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
+        raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
     for elem in self._chunked_get_elements(
         self.get_payload,
         items=unresolved_entries,
@@ -310,6 +335,7 @@ class ResolveNames(EWSService):
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.call" href="#exchangelib.services.resolve_names.ResolveNames.call">call</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.element_container_name" href="#exchangelib.services.resolve_names.ResolveNames.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.get_payload" href="#exchangelib.services.resolve_names.ResolveNames.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.resolve_names.ResolveNames.supports_paging" href="#exchangelib.services.resolve_names.ResolveNames.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 </ul>

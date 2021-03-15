@@ -33,6 +33,7 @@ from ..version import EXCHANGE_2013
 
 class ArchiveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ArchiveItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
     supported_from = EXCHANGE_2013
@@ -40,13 +41,10 @@ class ArchiveItem(EWSAccountService):
     def call(self, items, to_folder):
         &#34;&#34;&#34;Move a list of items to a specific folder in the archive mailbox.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          to_folder:
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param to_folder:
 
-        Returns:
-          None
-
+        :return: None
         &#34;&#34;&#34;
         from ..items import Item
         for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
@@ -86,6 +84,7 @@ class ArchiveItem(EWSAccountService):
 </summary>
 <pre><code class="python">class ArchiveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ArchiveItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
     supported_from = EXCHANGE_2013
@@ -93,13 +92,10 @@ class ArchiveItem(EWSAccountService):
     def call(self, items, to_folder):
         &#34;&#34;&#34;Move a list of items to a specific folder in the archive mailbox.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          to_folder:
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param to_folder:
 
-        Returns:
-          None
-
+        :return: None
         &#34;&#34;&#34;
         from ..items import Item
         for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
@@ -144,14 +140,9 @@ class ArchiveItem(EWSAccountService):
 </code></dt>
 <dd>
 <div class="desc"><p>Move a list of items to a specific folder in the archive mailbox.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>items</code></strong></dt>
-<dd>a list of (id, changekey) tuples or Item objects</dd>
-</dl>
-<p>to_folder:</p>
-<h2 id="returns">Returns</h2>
-<p>None</p></div>
+<p>:param items: a list of (id, changekey) tuples or Item objects
+:param to_folder:</p>
+<p>:return: None</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -159,13 +150,10 @@ class ArchiveItem(EWSAccountService):
 <pre><code class="python">def call(self, items, to_folder):
     &#34;&#34;&#34;Move a list of items to a specific folder in the archive mailbox.
 
-    Args:
-      items: a list of (id, changekey) tuples or Item objects
-      to_folder:
+    :param items: a list of (id, changekey) tuples or Item objects
+    :param to_folder:
 
-    Returns:
-      None
-
+    :return: None
     &#34;&#34;&#34;
     from ..items import Item
     for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):

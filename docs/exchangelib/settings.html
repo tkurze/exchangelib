@@ -30,30 +30,28 @@
 
 from .ewsdatetime import UTC
 from .fields import DateTimeField, MessageField, ChoiceField, Choice
-from .properties import EWSElement, OutOfOffice, Fields
+from .properties import EWSElement, OutOfOffice
 from .util import create_element, set_xml_value
 
 
 class OofSettings(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oofsettings&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;OofSettings&#39;
     REQUEST_ELEMENT_NAME = &#39;UserOofSettings&#39;
 
     ENABLED = &#39;Enabled&#39;
     SCHEDULED = &#39;Scheduled&#39;
     DISABLED = &#39;Disabled&#39;
-    FIELDS = Fields(
-        ChoiceField(&#39;state&#39;, field_uri=&#39;OofState&#39;, is_required=True,
-                    choices={Choice(ENABLED), Choice(SCHEDULED), Choice(DISABLED)}),
-        ChoiceField(&#39;external_audience&#39;, field_uri=&#39;ExternalAudience&#39;,
-                    choices={Choice(&#39;None&#39;), Choice(&#39;Known&#39;), Choice(&#39;All&#39;)}, default=&#39;All&#39;),
-        DateTimeField(&#39;start&#39;, field_uri=&#39;StartTime&#39;),
-        DateTimeField(&#39;end&#39;, field_uri=&#39;EndTime&#39;),
-        MessageField(&#39;internal_reply&#39;, field_uri=&#39;InternalReply&#39;),
-        MessageField(&#39;external_reply&#39;, field_uri=&#39;ExternalReply&#39;),
-    )
+    STATE_CHOICES = (ENABLED, SCHEDULED, DISABLED)
 
-    __slots__ = tuple(f.name for f in FIELDS)
+    state = ChoiceField(field_uri=&#39;OofState&#39;, is_required=True, choices={Choice(c) for c in STATE_CHOICES})
+    external_audience = ChoiceField(field_uri=&#39;ExternalAudience&#39;,
+                                    choices={Choice(&#39;None&#39;), Choice(&#39;Known&#39;), Choice(&#39;All&#39;)}, default=&#39;All&#39;)
+    start = DateTimeField(field_uri=&#39;StartTime&#39;)
+    end = DateTimeField(field_uri=&#39;EndTime&#39;)
+    internal_reply = MessageField(field_uri=&#39;InternalReply&#39;)
+    external_reply = MessageField(field_uri=&#39;ExternalReply&#39;)
 
     def clean(self, version=None):
         super().clean(version=version)
@@ -137,24 +135,22 @@ class OofSettings(EWSElement):
 </summary>
 <pre><code class="python">class OofSettings(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oofsettings&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;OofSettings&#39;
     REQUEST_ELEMENT_NAME = &#39;UserOofSettings&#39;
 
     ENABLED = &#39;Enabled&#39;
     SCHEDULED = &#39;Scheduled&#39;
     DISABLED = &#39;Disabled&#39;
-    FIELDS = Fields(
-        ChoiceField(&#39;state&#39;, field_uri=&#39;OofState&#39;, is_required=True,
-                    choices={Choice(ENABLED), Choice(SCHEDULED), Choice(DISABLED)}),
-        ChoiceField(&#39;external_audience&#39;, field_uri=&#39;ExternalAudience&#39;,
-                    choices={Choice(&#39;None&#39;), Choice(&#39;Known&#39;), Choice(&#39;All&#39;)}, default=&#39;All&#39;),
-        DateTimeField(&#39;start&#39;, field_uri=&#39;StartTime&#39;),
-        DateTimeField(&#39;end&#39;, field_uri=&#39;EndTime&#39;),
-        MessageField(&#39;internal_reply&#39;, field_uri=&#39;InternalReply&#39;),
-        MessageField(&#39;external_reply&#39;, field_uri=&#39;ExternalReply&#39;),
-    )
+    STATE_CHOICES = (ENABLED, SCHEDULED, DISABLED)
 
-    __slots__ = tuple(f.name for f in FIELDS)
+    state = ChoiceField(field_uri=&#39;OofState&#39;, is_required=True, choices={Choice(c) for c in STATE_CHOICES})
+    external_audience = ChoiceField(field_uri=&#39;ExternalAudience&#39;,
+                                    choices={Choice(&#39;None&#39;), Choice(&#39;Known&#39;), Choice(&#39;All&#39;)}, default=&#39;All&#39;)
+    start = DateTimeField(field_uri=&#39;StartTime&#39;)
+    end = DateTimeField(field_uri=&#39;EndTime&#39;)
+    internal_reply = MessageField(field_uri=&#39;InternalReply&#39;)
+    external_reply = MessageField(field_uri=&#39;ExternalReply&#39;)
 
     def clean(self, version=None):
         super().clean(version=version)
@@ -246,6 +242,10 @@ class OofSettings(EWSElement):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.settings.OofSettings.STATE_CHOICES"><code class="name">var <span class="ident">STATE_CHOICES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
@@ -274,27 +274,27 @@ def from_xml(cls, elem, account):
 <dl>
 <dt id="exchangelib.settings.OofSettings.end"><code class="name">var <span class="ident">end</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.settings.OofSettings.external_audience"><code class="name">var <span class="ident">external_audience</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.settings.OofSettings.external_reply"><code class="name">var <span class="ident">external_reply</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.settings.OofSettings.internal_reply"><code class="name">var <span class="ident">internal_reply</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.settings.OofSettings.start"><code class="name">var <span class="ident">start</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.settings.OofSettings.state"><code class="name">var <span class="ident">state</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -395,6 +395,7 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.settings.OofSettings.FIELDS" href="#exchangelib.settings.OofSettings.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.settings.OofSettings.REQUEST_ELEMENT_NAME" href="#exchangelib.settings.OofSettings.REQUEST_ELEMENT_NAME">REQUEST_ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.settings.OofSettings.SCHEDULED" href="#exchangelib.settings.OofSettings.SCHEDULED">SCHEDULED</a></code></li>
+<li><code><a title="exchangelib.settings.OofSettings.STATE_CHOICES" href="#exchangelib.settings.OofSettings.STATE_CHOICES">STATE_CHOICES</a></code></li>
 <li><code><a title="exchangelib.settings.OofSettings.clean" href="#exchangelib.settings.OofSettings.clean">clean</a></code></li>
 <li><code><a title="exchangelib.settings.OofSettings.end" href="#exchangelib.settings.OofSettings.end">end</a></code></li>
 <li><code><a title="exchangelib.settings.OofSettings.external_audience" href="#exchangelib.settings.OofSettings.external_audience">external_audience</a></code></li>

@@ -35,7 +35,7 @@ import requests_oauthlib
 
 from .errors import UnauthorizedError, TransportError
 from .util import create_element, add_xml_child, xml_to_str, ns_translation, _may_retry_on_error, _back_off_if_needed, \
-    DummyResponse, CONNECTION_ERRORS
+    _retry_after, DummyResponse, CONNECTION_ERRORS
 
 log = logging.getLogger(__name__)
 
@@ -77,20 +77,6 @@ DEFAULT_ENCODING = &#39;utf-8&#39;
 DEFAULT_HEADERS = {&#39;Content-Type&#39;: &#39;text/xml; charset=%s&#39; % DEFAULT_ENCODING, &#39;Accept-Encoding&#39;: &#39;gzip, deflate&#39;}
 
 
-def extra_headers(primary_smtp_address):
-    &#34;&#34;&#34;Generate extra HTTP headers
-
-    Args:
-      primary_smtp_address:
-
-    &#34;&#34;&#34;
-    if primary_smtp_address:
-        # See
-        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
-        return {&#39;X-AnchorMailbox&#39;: primary_smtp_address}
-    return None
-
-
 def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
     ExchangeImpersonation allows to act as the user we want to impersonate.
@@ -104,12 +90,10 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     TimeZoneContent element on MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
 
-    Args:
-      content:
-      api_version:
-      account_to_impersonate:  (Default value = None)
-      timezone:  (Default value = None)
-
+    :param content:
+    :param api_version:
+    :param account_to_impersonate:  (Default value = None)
+    :param timezone:  (Default value = None)
     &#34;&#34;&#34;
     envelope = create_element(&#39;s:Envelope&#39;, nsmap=ns_translation)
     header = create_element(&#39;s:Header&#39;)
@@ -145,12 +129,10 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
 
 
 def get_auth_instance(auth_type, **kwargs):
-    &#34;&#34;&#34;Returns an *Auth instance suitable for the requests package
+    &#34;&#34;&#34;Return an *Auth instance suitable for the requests package.
 
-    Args:
-      auth_type:
-      **kwargs:
-
+    :param auth_type:
+    :param kwargs:
     &#34;&#34;&#34;
     model = AUTH_TYPE_MAP[auth_type]
     if model is None:
@@ -192,13 +174,13 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
                     total_wait = time.monotonic() - t_start
                     r = DummyResponse(url=service_endpoint, headers={}, request_headers=headers)
                     if _may_retry_on_error(response=r, retry_policy=retry_policy, wait=total_wait):
+                        wait = _retry_after(r, wait)
                         log.info(&#34;Connection error on URL %s (retry %s, error: %s). Cool down %s secs&#34;,
                                  service_endpoint, retry, e, wait)
                         retry_policy.back_off(wait)
                         retry += 1
                         continue
-                    else:
-                        raise TransportError(str(e)) from e
+                    raise TransportError(str(e)) from e
         if r.status_code not in (200, 401):
             log.debug(&#39;Unexpected response: %s %s&#39;, r.status_code, r.reason)
             continue
@@ -248,7 +230,7 @@ def _tokenize(val):
                 auth_methods.append(auth_method)
             auth_method = &#39;&#39;
             continue
-        elif c == &#39;&#34;&#39;:
+        if c == &#39;&#34;&#39;:
             auth_method += c
             if quote:
                 auth_methods.append(auth_method)
@@ -301,50 +283,22 @@ def dummy_xml(api_version, name):
     ), api_version=api_version)</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.transport.extra_headers"><code class="name flex">
-<span>def <span class="ident">extra_headers</span></span>(<span>primary_smtp_address)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Generate extra HTTP headers</p>
-<h2 id="args">Args</h2>
-<p>primary_smtp_address:</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def extra_headers(primary_smtp_address):
-    &#34;&#34;&#34;Generate extra HTTP headers
-
-    Args:
-      primary_smtp_address:
-
-    &#34;&#34;&#34;
-    if primary_smtp_address:
-        # See
-        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
-        return {&#39;X-AnchorMailbox&#39;: primary_smtp_address}
-    return None</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.transport.get_auth_instance"><code class="name flex">
 <span>def <span class="ident">get_auth_instance</span></span>(<span>auth_type, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns an *Auth instance suitable for the requests package</p>
-<h2 id="args">Args</h2>
-<p>auth_type:
-**kwargs:</p></div>
+<div class="desc"><p>Return an *Auth instance suitable for the requests package.</p>
+<p>:param auth_type:
+:param kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_auth_instance(auth_type, **kwargs):
-    &#34;&#34;&#34;Returns an *Auth instance suitable for the requests package
+    &#34;&#34;&#34;Return an *Auth instance suitable for the requests package.
 
-    Args:
-      auth_type:
-      **kwargs:
-
+    :param auth_type:
+    :param kwargs:
     &#34;&#34;&#34;
     model = AUTH_TYPE_MAP[auth_type]
     if model is None:
@@ -430,13 +384,13 @@ def dummy_xml(api_version, name):
                     total_wait = time.monotonic() - t_start
                     r = DummyResponse(url=service_endpoint, headers={}, request_headers=headers)
                     if _may_retry_on_error(response=r, retry_policy=retry_policy, wait=total_wait):
+                        wait = _retry_after(r, wait)
                         log.info(&#34;Connection error on URL %s (retry %s, error: %s). Cool down %s secs&#34;,
                                  service_endpoint, retry, e, wait)
                         retry_policy.back_off(wait)
                         retry += 1
                         continue
-                    else:
-                        raise TransportError(str(e)) from e
+                    raise TransportError(str(e)) from e
         if r.status_code not in (200, 401):
             log.debug(&#39;Unexpected response: %s %s&#39;, r.status_code, r.reason)
             continue
@@ -461,15 +415,12 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation</a></p>
 <p>TimeZoneContent element on MSDN:
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext</a></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>content:</dt>
-<dt>api_version:</dt>
-<dt><strong><code>account_to_impersonate</code></strong></dt>
-<dd>(Default value = None)</dd>
-<dt><strong><code>timezone</code></strong></dt>
-<dd>(Default value = None)</dd>
-</dl></div>
+<p>:param content:
+:param api_version:
+:param account_to_impersonate:
+(Default value = None)
+:param timezone:
+(Default value = None)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -487,12 +438,10 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
     TimeZoneContent element on MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
 
-    Args:
-      content:
-      api_version:
-      account_to_impersonate:  (Default value = None)
-      timezone:  (Default value = None)
-
+    :param content:
+    :param api_version:
+    :param account_to_impersonate:  (Default value = None)
+    :param timezone:  (Default value = None)
     &#34;&#34;&#34;
     envelope = create_element(&#39;s:Envelope&#39;, nsmap=ns_translation)
     header = create_element(&#39;s:Header&#39;)
@@ -546,7 +495,6 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="exchangelib.transport.dummy_xml" href="#exchangelib.transport.dummy_xml">dummy_xml</a></code></li>
-<li><code><a title="exchangelib.transport.extra_headers" href="#exchangelib.transport.extra_headers">extra_headers</a></code></li>
 <li><code><a title="exchangelib.transport.get_auth_instance" href="#exchangelib.transport.get_auth_instance">get_auth_instance</a></code></li>
 <li><code><a title="exchangelib.transport.get_auth_method_from_response" href="#exchangelib.transport.get_auth_method_from_response">get_auth_method_from_response</a></code></li>
 <li><code><a title="exchangelib.transport.get_service_authtype" href="#exchangelib.transport.get_service_authtype">get_service_authtype</a></code></li>

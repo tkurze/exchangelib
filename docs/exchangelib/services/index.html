@@ -31,8 +31,7 @@ automatically instead of taking advantage of Python SOAP libraries and the WSDL 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;
-Implement a selection of EWS services (operations).
+<pre><code class="python">&#34;&#34;&#34;Implement a selection of EWS services (operations).
 
 Exchange is very picky about things like the order of XML elements in SOAP requests, so we need to generate XML
 automatically instead of taking advantage of Python SOAP libraries and the WSDL file.
@@ -61,6 +60,7 @@ from .find_item import FindItem
 from .find_people import FindPeople
 from .get_attachment import GetAttachment
 from .get_delegate import GetDelegate
+from .get_events import GetEvents
 from .get_folder import GetFolder
 from .get_item import GetItem
 from .get_mail_tips import GetMailTips
@@ -69,6 +69,7 @@ from .get_room_lists import GetRoomLists
 from .get_rooms import GetRooms
 from .get_searchable_mailboxes import GetSearchableMailboxes
 from .get_server_time_zones import GetServerTimeZones
+from .get_streaming_events import GetStreamingEvents
 from .get_user_availability import GetUserAvailability
 from .get_user_configuration import GetUserConfiguration
 from .get_user_oof_settings import GetUserOofSettings
@@ -77,6 +78,10 @@ from .move_item import MoveItem
 from .resolve_names import ResolveNames
 from .send_item import SendItem
 from .set_user_oof_settings import SetUserOofSettings
+from .subscribe import SubscribeToStreaming, SubscribeToPull, SubscribeToPush
+from .sync_folder_hierarchy import SyncFolderHierarchy
+from .sync_folder_items import SyncFolderItems
+from .unsubscribe import Unsubscribe
 from .update_folder import UpdateFolder
 from .update_item import UpdateItem
 from .update_user_configuration import UpdateUserConfiguration
@@ -103,6 +108,7 @@ __all__ = [
     &#39;FindPeople&#39;,
     &#39;GetAttachment&#39;,
     &#39;GetDelegate&#39;,
+    &#39;GetEvents&#39;,
     &#39;GetFolder&#39;,
     &#39;GetItem&#39;,
     &#39;GetMailTips&#39;,
@@ -111,6 +117,7 @@ __all__ = [
     &#39;GetRooms&#39;,
     &#39;GetSearchableMailboxes&#39;,
     &#39;GetServerTimeZones&#39;,
+    &#39;GetStreamingEvents&#39;,
     &#39;GetUserAvailability&#39;,
     &#39;GetUserConfiguration&#39;,
     &#39;GetUserOofSettings&#39;,
@@ -119,6 +126,12 @@ __all__ = [
     &#39;ResolveNames&#39;,
     &#39;SendItem&#39;,
     &#39;SetUserOofSettings&#39;,
+    &#39;SubscribeToPull&#39;,
+    &#39;SubscribeToPush&#39;,
+    &#39;SubscribeToStreaming&#39;,
+    &#39;SyncFolderHierarchy&#39;,
+    &#39;SyncFolderItems&#39;,
+    &#39;Unsubscribe&#39;,
     &#39;UpdateFolder&#39;,
     &#39;UpdateItem&#39;,
     &#39;UpdateUserConfiguration&#39;,
@@ -209,6 +222,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="exchangelib.services.get_events" href="get_events.html">exchangelib.services.get_events</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="exchangelib.services.get_folder" href="get_folder.html">exchangelib.services.get_folder</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -241,6 +258,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="exchangelib.services.get_streaming_events" href="get_streaming_events.html">exchangelib.services.get_streaming_events</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="exchangelib.services.get_user_availability" href="get_user_availability.html">exchangelib.services.get_user_availability</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -270,6 +291,23 @@ __all__ = [
 <div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="exchangelib.services.set_user_oof_settings" href="set_user_oof_settings.html">exchangelib.services.set_user_oof_settings</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="exchangelib.services.subscribe" href="subscribe.html">exchangelib.services.subscribe</a></code></dt>
+<dd>
+<div class="desc"><p>The 'Subscribe' service has two different modes, pull and push, with different signatures. Implement as two distinct
+classes.</p></div>
+</dd>
+<dt><code class="name"><a title="exchangelib.services.sync_folder_hierarchy" href="sync_folder_hierarchy.html">exchangelib.services.sync_folder_hierarchy</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="exchangelib.services.sync_folder_items" href="sync_folder_items.html">exchangelib.services.sync_folder_items</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="exchangelib.services.unsubscribe" href="unsubscribe.html">exchangelib.services.unsubscribe</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -310,6 +348,7 @@ __all__ = [
 </summary>
 <pre><code class="python">class ArchiveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ArchiveItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
     supported_from = EXCHANGE_2013
@@ -317,13 +356,10 @@ __all__ = [
     def call(self, items, to_folder):
         &#34;&#34;&#34;Move a list of items to a specific folder in the archive mailbox.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          to_folder:
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param to_folder:
 
-        Returns:
-          None
-
+        :return: None
         &#34;&#34;&#34;
         from ..items import Item
         for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
@@ -368,14 +404,9 @@ __all__ = [
 </code></dt>
 <dd>
 <div class="desc"><p>Move a list of items to a specific folder in the archive mailbox.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>items</code></strong></dt>
-<dd>a list of (id, changekey) tuples or Item objects</dd>
-</dl>
-<p>to_folder:</p>
-<h2 id="returns">Returns</h2>
-<p>None</p></div>
+<p>:param items: a list of (id, changekey) tuples or Item objects
+:param to_folder:</p>
+<p>:return: None</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -383,13 +414,10 @@ __all__ = [
 <pre><code class="python">def call(self, items, to_folder):
     &#34;&#34;&#34;Move a list of items to a specific folder in the archive mailbox.
 
-    Args:
-      items: a list of (id, changekey) tuples or Item objects
-      to_folder:
+    :param items: a list of (id, changekey) tuples or Item objects
+    :param to_folder:
 
-    Returns:
-      None
-
+    :return: None
     &#34;&#34;&#34;
     from ..items import Item
     for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
@@ -432,10 +460,10 @@ __all__ = [
 </dd>
 <dt id="exchangelib.services.ConvertId"><code class="flex name class">
 <span>class <span class="ident">ConvertId</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
+<div class="desc"><p>Take a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
 input list.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation</a></p></div>
 <details class="source">
@@ -443,12 +471,12 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ConvertId(EWSService):
-    &#34;&#34;&#34;Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
+    &#34;&#34;&#34;Take a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ConvertId&#39;
     supported_from = EXCHANGE_2007_SP1
 
@@ -477,7 +505,8 @@ input list.</p>
         convertid.append(item_ids)
         return convertid
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
@@ -569,6 +598,7 @@ input list.</p>
 </summary>
 <pre><code class="python">class CopyItem(move_item.MoveItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copyitem-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CopyItem&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -600,14 +630,17 @@ input list.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation</a></p></div>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CreateAttachment(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CreateAttachment&#39;
     element_container_name = &#39;{%s}Attachments&#39; % MNS
 
@@ -723,6 +756,7 @@ input list.</p>
 </summary>
 <pre><code class="python">class CreateFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CreateFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
 
@@ -817,7 +851,7 @@ input list.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
+<div class="desc"><p>Take a folder and a list of items. Return the result of creation as a list of tuples (success[True|False],
 errormessage), in the same order as the input list.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem</a></p></div>
 <details class="source">
@@ -825,12 +859,12 @@ errormessage), in the same order as the input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CreateItem(EWSAccountService):
-    &#34;&#34;&#34;Takes folder and a list of items. Returns result of creation as a list of tuples (success[True|False],
+    &#34;&#34;&#34;Take a folder and a list of items. Return the result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CreateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -870,8 +904,8 @@ errormessage), in the same order as the input list.</p>
             yield BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-        convert items to XML Elements
+        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
 
@@ -883,12 +917,10 @@ errormessage), in the same order as the input list.</p>
         https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation
         ). The last two are not supported yet.
 
-        Args:
-          items:
-          folder:
-          message_disposition:
-          send_meeting_invitations:
-
+        :param items:
+        :param folder:
+        :param message_disposition:
+        :param send_meeting_invitations:
         &#34;&#34;&#34;
         createitem = create_element(
             &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -978,8 +1010,8 @@ errormessage), in the same order as the input list.</p>
 <span>def <span class="ident">get_payload</span></span>(<span>self, items, folder, message_disposition, send_meeting_invitations)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-convert items to XML Elements</p>
+<div class="desc"><p>Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+convert items to XML Elements.</p>
 <p>MessageDisposition is only applicable to email messages, where it is required.</p>
 <p>SendMeetingInvitations is required for calendar items. It is also applicable to tasks, meeting request
 responses (see
@@ -988,18 +1020,17 @@ responses (see
 invitation accepts (see
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation</a>
 ). The last two are not supported yet.</p>
-<h2 id="args">Args</h2>
-<p>items:
-folder:
-message_disposition:
-send_meeting_invitations:</p></div>
+<p>:param items:
+:param folder:
+:param message_disposition:
+:param send_meeting_invitations:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-    &#34;&#34;&#34;Takes a list of Item objects (CalendarItem, Message etc) and returns the XML for a CreateItem request.
-    convert items to XML Elements
+    &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+    convert items to XML Elements.
 
     MessageDisposition is only applicable to email messages, where it is required.
 
@@ -1011,12 +1042,10 @@ send_meeting_invitations:</p></div>
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-acceptsharinginvitation
     ). The last two are not supported yet.
 
-    Args:
-      items:
-      folder:
-      message_disposition:
-      send_meeting_invitations:
-
+    :param items:
+    :param folder:
+    :param message_disposition:
+    :param send_meeting_invitations:
     &#34;&#34;&#34;
     createitem = create_element(
         &#39;m:%s&#39; % self.SERVICE_NAME,
@@ -1067,6 +1096,7 @@ send_meeting_invitations:</p></div>
     &#34;&#34;&#34;MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createuserconfiguration-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;CreateUserConfiguration&#39;
     returns_elements = False
 
@@ -1141,14 +1171,17 @@ send_meeting_invitations:</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation</a></p></div>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DeleteAttachment(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteAttachment&#39;
 
     def call(self, items):
@@ -1158,8 +1191,8 @@ send_meeting_invitations:</p></div>
                 continue
             yield RootItemId.from_xml(elem=elem, account=self.account)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
@@ -1239,6 +1272,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class DeleteFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteFolder&#39;
     returns_elements = False
 
@@ -1315,7 +1349,7 @@ send_meeting_invitations:</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
+<div class="desc"><p>Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
 (success[True|False], errormessage), in the same order as the input list.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem</a></p></div>
 <details class="source">
@@ -1323,12 +1357,12 @@ send_meeting_invitations:</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DeleteItem(EWSAccountService):
-    &#34;&#34;&#34;Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
+    &#34;&#34;&#34;Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
     (success[True|False], errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteItem&#39;
     returns_elements = False
 
@@ -1501,6 +1535,7 @@ send_meeting_invitations:</p></div>
     &#34;&#34;&#34;MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteuserconfiguration-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteUserConfiguration&#39;
     returns_elements = False
 
@@ -1582,6 +1617,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class EmptyFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;EmptyFolder&#39;
     returns_elements = False
 
@@ -1671,7 +1707,7 @@ send_meeting_invitations:</p></div>
 </dd>
 <dt id="exchangelib.services.ExpandDL"><code class="flex name class">
 <span>class <span class="ident">ExpandDL</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation</a></p></div>
@@ -1681,6 +1717,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class ExpandDL(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ExpandDL&#39;
     element_container_name = &#39;{%s}DLExpansion&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
@@ -1777,6 +1814,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class ExportItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exportitems-operation&#34;&#34;&#34;
+
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
     SERVICE_NAME = &#39;ExportItems&#39;
     element_container_name = &#39;{%s}Data&#39; % MNS
@@ -1793,7 +1831,8 @@ send_meeting_invitations:</p></div>
     # We need to override this since ExportItemsResponseMessage is formatted a
     #  little bit differently. Namely, all we want is the 64bit string in the
     #  Data tag.
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.text]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1871,6 +1910,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class FindFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;FindFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % TNS
     paging_container_name = &#39;{%s}RootFolder&#39; % MNS
@@ -1879,18 +1919,15 @@ send_meeting_invitations:</p></div>
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         &#34;&#34;&#34;Find subfolders of a folder.
 
-        Args:
-          folders: the folders to act on
-          additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
-          restriction: Restriction object that defines the filters for the query
-          shape: The set of attributes to return
-          depth: How deep in the folder structure to search for folders
-          max_items: The maximum number of items to return
-          offset: the offset relative to the first item in the item collection. Usually 0.
+        :param folders: the folders to act on
+        :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+        :param restriction: Restriction object that defines the filters for the query
+        :param shape: The set of attributes to return
+        :param depth: How deep in the folder structure to search for folders
+        :param max_items: The maximum number of items to return
+        :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-        Returns:
-          XML elements for the matching folders
-
+        :return: XML elements for the matching folders
         &#34;&#34;&#34;
         from ..folders import Folder
         roots = {f.root for f in folders}
@@ -1973,25 +2010,14 @@ send_meeting_invitations:</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Find subfolders of a folder.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>folders</code></strong></dt>
-<dd>the folders to act on</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra fields that should be returned with the folder, as FieldPath objects</dd>
-<dt><strong><code>restriction</code></strong></dt>
-<dd>Restriction object that defines the filters for the query</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>The set of attributes to return</dd>
-<dt><strong><code>depth</code></strong></dt>
-<dd>How deep in the folder structure to search for folders</dd>
-<dt><strong><code>max_items</code></strong></dt>
-<dd>The maximum number of items to return</dd>
-<dt><strong><code>offset</code></strong></dt>
-<dd>the offset relative to the first item in the item collection. Usually 0.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>XML elements for the matching folders</p></div>
+<p>:param folders: the folders to act on
+:param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+:param restriction: Restriction object that defines the filters for the query
+:param shape: The set of attributes to return
+:param depth: How deep in the folder structure to search for folders
+:param max_items: The maximum number of items to return
+:param offset: the offset relative to the first item in the item collection. Usually 0.</p>
+<p>:return: XML elements for the matching folders</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1999,18 +2025,15 @@ send_meeting_invitations:</p></div>
 <pre><code class="python">def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
     &#34;&#34;&#34;Find subfolders of a folder.
 
-    Args:
-      folders: the folders to act on
-      additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
-      restriction: Restriction object that defines the filters for the query
-      shape: The set of attributes to return
-      depth: How deep in the folder structure to search for folders
-      max_items: The maximum number of items to return
-      offset: the offset relative to the first item in the item collection. Usually 0.
+    :param folders: the folders to act on
+    :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+    :param restriction: Restriction object that defines the filters for the query
+    :param shape: The set of attributes to return
+    :param depth: How deep in the folder structure to search for folders
+    :param max_items: The maximum number of items to return
+    :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-    Returns:
-      XML elements for the matching folders
-
+    :return: XML elements for the matching folders
     &#34;&#34;&#34;
     from ..folders import Folder
     roots = {f.root for f in folders}
@@ -2097,6 +2120,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class FindItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;FindItem&#39;
     element_container_name = &#39;{%s}Items&#39; % TNS
     paging_container_name = &#39;{%s}RootFolder&#39; % MNS
@@ -2106,21 +2130,18 @@ send_meeting_invitations:</p></div>
              max_items, offset):
         &#34;&#34;&#34;Find items in an account.
 
-        Args:
-          folders: the folders to act on
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          restriction: a Restriction object for
-          order_fields: the fields to sort the results by
-          shape: The set of attributes to return
-          query_string: a QueryString object
-          depth: How deep in the folder structure to search for items
-          calendar_view: If set, returns recurring calendar items unfolded
-          max_items: the max number of items to return
-          offset: the offset relative to the first item in the item collection. Usually 0.
+        :param folders: the folders to act on
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param restriction: a Restriction object for
+        :param order_fields: the fields to sort the results by
+        :param shape: The set of attributes to return
+        :param query_string: a QueryString object
+        :param depth: How deep in the folder structure to search for items
+        :param calendar_view: If set, returns recurring calendar items unfolded
+        :param max_items: the max number of items to return
+        :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-        Returns:
-          XML elements for the matching items
-
+        :return: XML elements for the matching items
         &#34;&#34;&#34;
         from ..folders.base import BaseFolder
         from ..items import Item, ID_ONLY
@@ -2216,31 +2237,17 @@ send_meeting_invitations:</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Find items in an account.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>folders</code></strong></dt>
-<dd>the folders to act on</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra fields that should be returned with the item, as FieldPath objects</dd>
-<dt><strong><code>restriction</code></strong></dt>
-<dd>a Restriction object for</dd>
-<dt><strong><code>order_fields</code></strong></dt>
-<dd>the fields to sort the results by</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>The set of attributes to return</dd>
-<dt><strong><code>query_string</code></strong></dt>
-<dd>a QueryString object</dd>
-<dt><strong><code>depth</code></strong></dt>
-<dd>How deep in the folder structure to search for items</dd>
-<dt><strong><code>calendar_view</code></strong></dt>
-<dd>If set, returns recurring calendar items unfolded</dd>
-<dt><strong><code>max_items</code></strong></dt>
-<dd>the max number of items to return</dd>
-<dt><strong><code>offset</code></strong></dt>
-<dd>the offset relative to the first item in the item collection. Usually 0.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>XML elements for the matching items</p></div>
+<p>:param folders: the folders to act on
+:param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+:param restriction: a Restriction object for
+:param order_fields: the fields to sort the results by
+:param shape: The set of attributes to return
+:param query_string: a QueryString object
+:param depth: How deep in the folder structure to search for items
+:param calendar_view: If set, returns recurring calendar items unfolded
+:param max_items: the max number of items to return
+:param offset: the offset relative to the first item in the item collection. Usually 0.</p>
+<p>:return: XML elements for the matching items</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2249,21 +2256,18 @@ send_meeting_invitations:</p></div>
          max_items, offset):
     &#34;&#34;&#34;Find items in an account.
 
-    Args:
-      folders: the folders to act on
-      additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-      restriction: a Restriction object for
-      order_fields: the fields to sort the results by
-      shape: The set of attributes to return
-      query_string: a QueryString object
-      depth: How deep in the folder structure to search for items
-      calendar_view: If set, returns recurring calendar items unfolded
-      max_items: the max number of items to return
-      offset: the offset relative to the first item in the item collection. Usually 0.
+    :param folders: the folders to act on
+    :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+    :param restriction: a Restriction object for
+    :param order_fields: the fields to sort the results by
+    :param shape: The set of attributes to return
+    :param query_string: a QueryString object
+    :param depth: How deep in the folder structure to search for items
+    :param calendar_view: If set, returns recurring calendar items unfolded
+    :param max_items: the max number of items to return
+    :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-    Returns:
-      XML elements for the matching items
-
+    :return: XML elements for the matching items
     &#34;&#34;&#34;
     from ..folders.base import BaseFolder
     from ..items import Item, ID_ONLY
@@ -2363,6 +2367,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class FindPeople(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;FindPeople&#39;
     element_container_name = &#39;{%s}People&#39; % MNS
     supported_from = EXCHANGE_2013
@@ -2371,20 +2376,17 @@ send_meeting_invitations:</p></div>
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         &#34;&#34;&#34;Find items in an account.
 
-        Args:
-          folder: the Folder object to query
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          restriction: a Restriction object for
-          order_fields: the fields to sort the results by
-          shape: The set of attributes to return
-          query_string: a QueryString object
-          depth: How deep in the folder structure to search for items
-          max_items: the max number of items to return
-          offset: the offset relative to the first item in the item collection. Usually 0.
+        :param folder: the Folder object to query
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param restriction: a Restriction object for
+        :param order_fields: the fields to sort the results by
+        :param shape: The set of attributes to return
+        :param query_string: a QueryString object
+        :param depth: How deep in the folder structure to search for items
+        :param max_items: the max number of items to return
+        :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-        Returns:
-          XML elements for the matching items
-
+        :return: XML elements for the matching items
         &#34;&#34;&#34;
         from ..items import Persona, ID_ONLY
         for elem in self._paged_call(
@@ -2444,14 +2446,14 @@ send_meeting_invitations:</p></div>
             findpeople.append(query_string.to_xml(version=self.account.version))
         return findpeople
 
-    def _get_paging_values(self, elem):
-        &#34;&#34;&#34;The paging container element from FindPeople is slightly different than other paging containers.
-        &#34;&#34;&#34;
+    @staticmethod
+    def _get_paging_values(elem):
+        &#34;&#34;&#34;Find paging values. The paging element from FindPeople is different from other paging containers.&#34;&#34;&#34;
         item_count = int(elem.find(&#39;{%s}TotalNumberOfPeopleInView&#39; % MNS).text)
         first_matching = int(elem.find(&#39;{%s}FirstMatchingRowIndex&#39; % MNS).text)
         first_loaded = int(elem.find(&#39;{%s}FirstLoadedRowIndex&#39; % MNS).text)
-        log.debug(&#39;%s: Got page with total items %s, first matching %s, first loaded %s &#39;, self.SERVICE_NAME,
-                  item_count, first_matching, first_loaded)
+        log.debug(&#39;Got page with total items %s, first matching %s, first loaded %s &#39;, item_count, first_matching,
+                  first_loaded)
         next_offset = None  # GetPersona does not support fetching more pages
         return item_count, next_offset</code></pre>
 </details>
@@ -2486,29 +2488,16 @@ send_meeting_invitations:</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Find items in an account.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>folder</code></strong></dt>
-<dd>the Folder object to query</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra fields that should be returned with the item, as FieldPath objects</dd>
-<dt><strong><code>restriction</code></strong></dt>
-<dd>a Restriction object for</dd>
-<dt><strong><code>order_fields</code></strong></dt>
-<dd>the fields to sort the results by</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>The set of attributes to return</dd>
-<dt><strong><code>query_string</code></strong></dt>
-<dd>a QueryString object</dd>
-<dt><strong><code>depth</code></strong></dt>
-<dd>How deep in the folder structure to search for items</dd>
-<dt><strong><code>max_items</code></strong></dt>
-<dd>the max number of items to return</dd>
-<dt><strong><code>offset</code></strong></dt>
-<dd>the offset relative to the first item in the item collection. Usually 0.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>XML elements for the matching items</p></div>
+<p>:param folder: the Folder object to query
+:param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+:param restriction: a Restriction object for
+:param order_fields: the fields to sort the results by
+:param shape: The set of attributes to return
+:param query_string: a QueryString object
+:param depth: How deep in the folder structure to search for items
+:param max_items: the max number of items to return
+:param offset: the offset relative to the first item in the item collection. Usually 0.</p>
+<p>:return: XML elements for the matching items</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2516,20 +2505,17 @@ send_meeting_invitations:</p></div>
 <pre><code class="python">def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
     &#34;&#34;&#34;Find items in an account.
 
-    Args:
-      folder: the Folder object to query
-      additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-      restriction: a Restriction object for
-      order_fields: the fields to sort the results by
-      shape: The set of attributes to return
-      query_string: a QueryString object
-      depth: How deep in the folder structure to search for items
-      max_items: the max number of items to return
-      offset: the offset relative to the first item in the item collection. Usually 0.
+    :param folder: the Folder object to query
+    :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+    :param restriction: a Restriction object for
+    :param order_fields: the fields to sort the results by
+    :param shape: The set of attributes to return
+    :param query_string: a QueryString object
+    :param depth: How deep in the folder structure to search for items
+    :param max_items: the max number of items to return
+    :param offset: the offset relative to the first item in the item collection. Usually 0.
 
-    Returns:
-      XML elements for the matching items
-
+    :return: XML elements for the matching items
     &#34;&#34;&#34;
     from ..items import Persona, ID_ONLY
     for elem in self._paged_call(
@@ -2624,6 +2610,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetAttachment(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetAttachment&#39;
     element_container_name = &#39;{%s}Attachments&#39; % MNS
     streaming = True
@@ -2642,7 +2629,7 @@ send_meeting_invitations:</p></div>
     def get_payload(self, items, include_mime_content):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         # TODO: Support additional properties of AttachmentShape. See
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
+        #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
         if include_mime_content:
             attachment_shape = create_element(&#39;m:AttachmentShape&#39;)
             add_xml_child(attachment_shape, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
@@ -2651,10 +2638,10 @@ send_meeting_invitations:</p></div>
         payload.append(attachment_ids)
         return payload
 
-    def _update_api_version(self, version_hint, api_version, header, **parse_opts):
+    def _update_api_version(self, api_version, header, **parse_opts):
         if not parse_opts.get(&#39;stream_file_content&#39;, False):
-            return super()._update_api_version(version_hint, api_version, header, **parse_opts)
-        # TODO: We&#39;re skipping this part in streaming mode because our streaming parser cannot parse the SOAP header
+            super()._update_api_version(api_version, header, **parse_opts)
+        # TODO: We&#39;re skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
@@ -2664,14 +2651,13 @@ send_meeting_invitations:</p></div>
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
-    @classmethod
-    def _get_soap_messages(cls, body, **parse_opts):
+    def _get_soap_messages(self, body, **parse_opts):
         if not parse_opts.get(&#39;stream_file_content&#39;, False):
             return super()._get_soap_messages(body, **parse_opts)
 
+        from ..attachments import FileAttachment
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
-        from ..attachments import FileAttachment
         parser = StreamingBase64Parser()
         field = FileAttachment.get_field_by_fieldname(&#39;_content&#39;)
         handler = StreamingContentHandler(parser=parser, ns=field.namespace, element_name=field.field_uri)
@@ -2686,7 +2672,7 @@ send_meeting_invitations:</p></div>
         except ElementNotFound as enf:
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
-            # Wrap in DummyResponse because _get_soap_payload() expects an iter_content() method.
+            # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
             response = DummyResponse(url=None, headers=None, request_headers=None, content=enf.data)
             _, body = super()._get_soap_parts(response=response)
             res = super()._get_soap_messages(body=body)
@@ -2751,7 +2737,7 @@ send_meeting_invitations:</p></div>
 <pre><code class="python">def get_payload(self, items, include_mime_content):
     payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     # TODO: Support additional properties of AttachmentShape. See
-    # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
+    #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
     if include_mime_content:
         attachment_shape = create_element(&#39;m:AttachmentShape&#39;)
         add_xml_child(attachment_shape, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
@@ -2778,7 +2764,7 @@ send_meeting_invitations:</p></div>
     except ElementNotFound as enf:
         # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
         # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
-        # Wrap in DummyResponse because _get_soap_payload() expects an iter_content() method.
+        # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
         response = DummyResponse(url=None, headers=None, request_headers=None, content=enf.data)
         _, body = super()._get_soap_parts(response=response)
         res = super()._get_soap_messages(body=body)
@@ -2813,6 +2799,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetDelegate&#39;
     supported_from = EXCHANGE_2007_SP1
 
@@ -2824,7 +2811,8 @@ send_meeting_invitations:</p></div>
             include_permissions=include_permissions,
         ):
             if isinstance(elem, Exception):
-                raise elem
+                yield elem
+                continue
             yield DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
@@ -2837,8 +2825,8 @@ send_meeting_invitations:</p></div>
             set_xml_value(payload, user_ids, version=self.protocol.version)
         return payload
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(DelegateUser.response_tag())
 
     @classmethod
@@ -2880,7 +2868,8 @@ send_meeting_invitations:</p></div>
         include_permissions=include_permissions,
     ):
         if isinstance(elem, Exception):
-            raise elem
+            yield elem
+            continue
         yield DelegateUser.from_xml(elem=elem, account=self.account)</code></pre>
 </details>
 </dd>
@@ -2916,6 +2905,109 @@ send_meeting_invitations:</p></div>
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.services.GetEvents"><code class="flex name class">
+<span>class <span class="ident">GetEvents</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GetEvents(EWSAccountService):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#39;GetEvents&#39;
+    prefer_affinity = True
+
+    def call(self, subscription_id, watermark):
+        for elem in self._get_elements(payload=self.get_payload(
+                subscription_id=subscription_id, watermark=watermark,
+        )):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield Notification.from_xml(elem=elem, account=None)
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        return container.findall(Notification.response_tag())
+
+    def get_payload(self, subscription_id, watermark):
+        getstreamingevents = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        add_xml_child(getstreamingevents, &#39;m:SubscriptionId&#39;, subscription_id)
+        add_xml_child(getstreamingevents, &#39;m:Watermark&#39;, watermark)
+        return getstreamingevents</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.GetEvents.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetEvents.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.GetEvents.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, subscription_id, watermark)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, subscription_id, watermark):
+    for elem in self._get_elements(payload=self.get_payload(
+            subscription_id=subscription_id, watermark=watermark,
+    )):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield Notification.from_xml(elem=elem, account=None)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.GetEvents.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, subscription_id, watermark)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, subscription_id, watermark):
+    getstreamingevents = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    add_xml_child(getstreamingevents, &#39;m:SubscriptionId&#39;, subscription_id)
+    add_xml_child(getstreamingevents, &#39;m:Watermark&#39;, watermark)
+    return getstreamingevents</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.services.GetFolder"><code class="flex name class">
 <span>class <span class="ident">GetFolder</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -2928,6 +3020,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
@@ -2935,16 +3028,13 @@ send_meeting_invitations:</p></div>
     )
 
     def call(self, folders, additional_fields, shape):
-        &#34;&#34;&#34;Takes a folder ID and returns the full information for that folder.
+        &#34;&#34;&#34;Take a folder ID and returns the full information for that folder.
 
-        Args:
-          folders: a list of Folder objects
-          additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
-          shape: The set of attributes to return
+        :param folders: a list of Folder objects
+        :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+        :param shape: The set of attributes to return
 
-        Returns:
-          XML elements for the folders, in stable order
-
+        :return: XML elements for the folders, in stable order
         &#34;&#34;&#34;
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
@@ -2993,33 +3083,23 @@ send_meeting_invitations:</p></div>
 <span>def <span class="ident">call</span></span>(<span>self, folders, additional_fields, shape)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a folder ID and returns the full information for that folder.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>folders</code></strong></dt>
-<dd>a list of Folder objects</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra fields that should be returned with the folder, as FieldPath objects</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>The set of attributes to return</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>XML elements for the folders, in stable order</p></div>
+<div class="desc"><p>Take a folder ID and returns the full information for that folder.</p>
+<p>:param folders: a list of Folder objects
+:param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+:param shape: The set of attributes to return</p>
+<p>:return: XML elements for the folders, in stable order</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, additional_fields, shape):
-    &#34;&#34;&#34;Takes a folder ID and returns the full information for that folder.
+    &#34;&#34;&#34;Take a folder ID and returns the full information for that folder.
 
-    Args:
-      folders: a list of Folder objects
-      additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
-      shape: The set of attributes to return
+    :param folders: a list of Folder objects
+    :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
+    :param shape: The set of attributes to return
 
-    Returns:
-      XML elements for the folders, in stable order
-
+    :return: XML elements for the folders, in stable order
     &#34;&#34;&#34;
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
@@ -3077,20 +3157,18 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, additional_fields, shape):
-        &#34;&#34;&#34;Returns all items in an account that correspond to a list of ID&#39;s, in stable order.
+        &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          shape: The shape of returned objects
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param shape: The shape of returned objects
 
-        Returns:
-          XML elements for the items, in stable order
-
+        :return: XML elements for the items, in stable order
         &#34;&#34;&#34;
         from ..folders.base import BaseFolder
         for elem in self._chunked_get_elements(
@@ -3133,33 +3211,23 @@ send_meeting_invitations:</p></div>
 <span>def <span class="ident">call</span></span>(<span>self, items, additional_fields, shape)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns all items in an account that correspond to a list of ID's, in stable order.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>items</code></strong></dt>
-<dd>a list of (id, changekey) tuples or Item objects</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra fields that should be returned with the item, as FieldPath objects</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>The shape of returned objects</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>XML elements for the items, in stable order</p></div>
+<div class="desc"><p>Return all items in an account that correspond to a list of ID's, in stable order.</p>
+<p>:param items: a list of (id, changekey) tuples or Item objects
+:param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+:param shape: The shape of returned objects</p>
+<p>:return: XML elements for the items, in stable order</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, additional_fields, shape):
-    &#34;&#34;&#34;Returns all items in an account that correspond to a list of ID&#39;s, in stable order.
+    &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
 
-    Args:
-      items: a list of (id, changekey) tuples or Item objects
-      additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-      shape: The shape of returned objects
+    :param items: a list of (id, changekey) tuples or Item objects
+    :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+    :param shape: The shape of returned objects
 
-    Returns:
-      XML elements for the items, in stable order
-
+    :return: XML elements for the items, in stable order
     &#34;&#34;&#34;
     from ..folders.base import BaseFolder
     for elem in self._chunked_get_elements(
@@ -3205,7 +3273,7 @@ send_meeting_invitations:</p></div>
 </dd>
 <dt id="exchangelib.services.GetMailTips"><code class="flex name class">
 <span>class <span class="ident">GetMailTips</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation</a></p></div>
@@ -3215,6 +3283,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetMailTips(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
@@ -3224,6 +3293,9 @@ send_meeting_invitations:</p></div>
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
         ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
@@ -3278,6 +3350,9 @@ send_meeting_invitations:</p></div>
         sending_as=sending_as,
         mail_tips_requested=mail_tips_requested,
     ):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
         yield MailTips.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>
@@ -3330,6 +3405,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetPersona(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetPersona&#39;
 
     def call(self, persona):
@@ -3348,8 +3424,8 @@ send_meeting_invitations:</p></div>
         set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
         return payload
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         from ..items import Persona
         return container.findall(&#39;{%s}%s&#39; % (MNS, Persona.ELEMENT_NAME))
 
@@ -3421,7 +3497,7 @@ send_meeting_invitations:</p></div>
 </dd>
 <dt id="exchangelib.services.GetRoomLists"><code class="flex name class">
 <span>class <span class="ident">GetRoomLists</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists</a></p></div>
@@ -3431,12 +3507,16 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetRoomLists(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetRoomLists&#39;
     element_container_name = &#39;{%s}RoomLists&#39; % MNS
     supported_from = EXCHANGE_2010
 
     def call(self):
         for elem in self._get_elements(payload=self.get_payload()):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
@@ -3474,6 +3554,9 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">def call(self):
     for elem in self._get_elements(payload=self.get_payload()):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
         yield RoomList.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>
@@ -3504,7 +3587,7 @@ send_meeting_invitations:</p></div>
 </dd>
 <dt id="exchangelib.services.GetRooms"><code class="flex name class">
 <span>class <span class="ident">GetRooms</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms</a></p></div>
@@ -3514,12 +3597,16 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetRooms&#39;
     element_container_name = &#39;{%s}Rooms&#39; % MNS
     supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
         for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, roomlist):
@@ -3559,6 +3646,9 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">def call(self, roomlist):
     for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
         yield Room.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>
@@ -3591,7 +3681,7 @@ send_meeting_invitations:</p></div>
 </dd>
 <dt id="exchangelib.services.GetSearchableMailboxes"><code class="flex name class">
 <span>class <span class="ident">GetSearchableMailboxes</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN:
@@ -3603,8 +3693,8 @@ send_meeting_invitations:</p></div>
 <pre><code class="python">class GetSearchableMailboxes(EWSService):
     &#34;&#34;&#34;MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getsearchablemailboxes-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetSearchableMailboxes&#39;
     element_container_name = &#39;{%s}SearchableMailboxes&#39; % MNS
     failed_mailboxes_container_name = &#39;{%s}FailedMailboxes&#39; % MNS
@@ -3722,7 +3812,7 @@ send_meeting_invitations:</p></div>
 </dd>
 <dt id="exchangelib.services.GetServerTimeZones"><code class="flex name class">
 <span>class <span class="ident">GetServerTimeZones</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones</a></p></div>
@@ -3732,6 +3822,7 @@ send_meeting_invitations:</p></div>
 </summary>
 <pre><code class="python">class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
     element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
     supported_from = EXCHANGE_2010
@@ -3757,14 +3848,15 @@ send_meeting_invitations:</p></div>
                 payload.append(tz_ids)
         return payload
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         for timezonedef in container:
             tz_id = timezonedef.get(&#39;Id&#39;)
             tz_name = timezonedef.get(&#39;Name&#39;)
-            tz_periods = self._get_periods(timezonedef)
-            tz_transitions_groups = self._get_transitions_groups(timezonedef)
-            tz_transitions = self._get_transitions(timezonedef)
-            yield (tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups)
+            tz_periods = cls._get_periods(timezonedef)
+            tz_transitions_groups = cls._get_transitions_groups(timezonedef)
+            tz_transitions = cls._get_transitions(timezonedef)
+            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
     def _get_periods(timezonedef):
@@ -3829,7 +3921,7 @@ send_meeting_invitations:</p></div>
                     t_date = xml_text_to_value(transition.find(&#39;{%s}DateTime&#39; % TNS).text, EWSDateTime).date()
                 except NaiveDateTimeNotAllowed as e:
                     # We encountered a naive datetime. Don&#39;t worry. we just need the date
-                    t_date = e.args[0].date()
+                    t_date = e.local_dt.date()
                 tz_transitions[tg_id] = t_date
         return tz_transitions</code></pre>
 </details>
@@ -3907,12 +3999,192 @@ send_meeting_invitations:</p></div>
 </li>
 </ul>
 </dd>
-<dt id="exchangelib.services.GetUserAvailability"><code class="flex name class">
-<span>class <span class="ident">GetUserAvailability</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<dt id="exchangelib.services.GetStreamingEvents"><code class="flex name class">
+<span>class <span class="ident">GetStreamingEvents</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get detailed availability information for a list of users
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GetStreamingEvents(EWSAccountService):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#39;GetStreamingEvents&#39;
+    element_container_name = &#39;{%s}Notifications&#39; % MNS
+    streaming = True
+    prefer_affinity = True
+
+    # Connection status values
+    OK = &#39;OK&#39;
+    CLOSED = &#39;Closed&#39;
+
+    def __init__(self, *args, **kwargs):
+        # These values are set each time call() is consumed
+        self.connection_status = None
+        self.error_subscription_ids = []
+        super().__init__(*args, **kwargs)
+
+    def call(self, subscription_ids, connection_timeout):
+        if connection_timeout &lt; 1:
+            raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
+        for elem in self._get_elements(payload=self.get_payload(
+                subscription_ids=subscription_ids, connection_timeout=connection_timeout,
+        )):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield Notification.from_xml(elem=elem, account=None)
+
+    @classmethod
+    def _get_soap_parts(cls, response, **parse_opts):
+        # Pass the response unaltered. We want to use our custom document yielder
+        return None, response
+
+    def _get_soap_messages(self, body, **parse_opts):
+        # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;. We want to continuously read the content,
+        # looking for complete XML documents. When we have a full document, we want to parse it as if it was a normal
+        # XML response.
+        r = body
+        for i, doc in enumerate(DocumentYielder(r.iter_content()), start=1):
+            xml_log.debug(&#39;&#39;&#39;Response XML (docs received: %(i)s): %(xml_response)s&#39;&#39;&#39;, dict(i=i, xml_response=doc))
+            response = DummyResponse(url=None, headers=None, request_headers=None, content=doc)
+            try:
+                _, body = super()._get_soap_parts(response=response, **parse_opts)
+            except Exception:
+                r.close()  # Release memory
+                raise
+            # TODO: We&#39;re skipping ._update_api_version() here because we don&#39;t have access to the &#39;api_version&#39; used.
+            # TODO: We should be doing a lot of error handling for ._get_soap_messages().
+            yield from super()._get_soap_messages(body=body, **parse_opts)
+            if self.connection_status == self.CLOSED:
+                # Don&#39;t wait for the TCP connection to timeout
+                break
+
+    def _get_element_container(self, message, name=None):
+        error_ids_elem = message.find(&#39;{%s}ErrorSubscriptionIds&#39; % MNS)
+        if error_ids_elem is not None:
+            self.error_subscription_ids = get_xml_attrs(error_ids_elem, &#39;{%s}ErrorSubscriptionId&#39; % MNS)
+            log.debug(&#39;These subscription IDs are invalid: %s&#39;, self.error_subscription_ids)
+        self.connection_status = get_xml_attr(message, &#39;{%s}ConnectionStatus&#39; % MNS)  # Either &#39;OK&#39; or &#39;Closed&#39;
+        log.debug(&#39;Connection status is: %s&#39;, self.connection_status)
+        # Upstream expects to find a &#39;name&#39; tag but our response does not always have it. Return an empty element.
+        if message.find(name) is None:
+            return []
+        return super()._get_element_container(message=message, name=name)
+
+    def get_payload(self, subscription_ids, connection_timeout):
+        getstreamingevents = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+        for subscription_id in subscription_ids:
+            add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+        if not len(subscriptions_elem):
+            raise ValueError(&#39;&#34;subscription_ids&#34; must not be empty&#39;)
+
+        getstreamingevents.append(subscriptions_elem)
+        add_xml_child(getstreamingevents, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+        return getstreamingevents</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.GetStreamingEvents.CLOSED"><code class="name">var <span class="ident">CLOSED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetStreamingEvents.OK"><code class="name">var <span class="ident">OK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetStreamingEvents.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetStreamingEvents.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetStreamingEvents.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetStreamingEvents.streaming"><code class="name">var <span class="ident">streaming</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.GetStreamingEvents.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, subscription_ids, connection_timeout)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, subscription_ids, connection_timeout):
+    if connection_timeout &lt; 1:
+        raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
+    for elem in self._get_elements(payload=self.get_payload(
+            subscription_ids=subscription_ids, connection_timeout=connection_timeout,
+    )):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        yield Notification.from_xml(elem=elem, account=None)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.GetStreamingEvents.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, subscription_ids, connection_timeout)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, subscription_ids, connection_timeout):
+    getstreamingevents = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+    for subscription_id in subscription_ids:
+        add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+    if not len(subscriptions_elem):
+        raise ValueError(&#39;&#34;subscription_ids&#34; must not be empty&#39;)
+
+    getstreamingevents.append(subscriptions_elem)
+    add_xml_child(getstreamingevents, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+    return getstreamingevents</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.GetUserAvailability"><code class="flex name class">
+<span>class <span class="ident">GetUserAvailability</span></span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get detailed availability information for a list of users.
 MSDN:
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation</a></p></div>
 <details class="source">
@@ -3920,16 +4192,16 @@ MSDN:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GetUserAvailability(EWSService):
-    &#34;&#34;&#34;Get detailed availability information for a list of users
+    &#34;&#34;&#34;Get detailed availability information for a list of users.
     MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserAvailability&#39;
 
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+        #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
         for elem in self._get_elements(payload=self.get_payload(
             timezone=timezone,
             mailbox_data=mailbox_data,
@@ -3963,8 +4235,8 @@ MSDN:
             self._get_element_container(message=msg.find(&#39;{%s}ResponseMessage&#39; % MNS))
             yield from self._get_elements_in_container(container=msg)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.find(&#39;{%s}FreeBusyView&#39; % MNS)]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3991,7 +4263,7 @@ MSDN:
 </summary>
 <pre><code class="python">def call(self, timezone, mailbox_data, free_busy_view_options):
     # TODO: Also supports SuggestionsViewOptions, see
-    # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+    #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
     for elem in self._get_elements(payload=self.get_payload(
         timezone=timezone,
         mailbox_data=mailbox_data,
@@ -4047,7 +4319,9 @@ MSDN:
 </summary>
 <pre><code class="python">class GetUserConfiguration(EWSAccountService):
     &#34;&#34;&#34;MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation&#34;&#34;&#34;
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
+    &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserConfiguration&#39;
 
     def call(self, user_configuration_name, properties):
@@ -4152,8 +4426,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class GetUserOofSettings(EWSAccountService):
     &#34;&#34;&#34;Get automatic reply settings for the specified mailbox.
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseroofsettings-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserOofSettings&#39;
     element_container_name = &#39;{%s}OofSettings&#39; % TNS
 
@@ -4255,6 +4529,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class MarkAsJunk(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;MarkAsJunk&#39;
 
     def call(self, items, is_junk, move_item):
@@ -4264,8 +4539,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
                 continue
             yield MovedItemId.id_from_xml(elem)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(MovedItemId.response_tag())
 
     def get_payload(self, items, is_junk, move_item):
@@ -4353,6 +4628,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class MoveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveitem-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;MoveItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -4454,31 +4730,38 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </dd>
 <dt id="exchangelib.services.ResolveNames"><code class="flex name class">
 <span>class <span class="ident">ResolveNames</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ResolveNames(EWSService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames&#34;&#34;&#34;
-    # TODO: Does not support paged responses yet. See example in issue #205
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ResolveNames&#39;
     element_container_name = &#39;{%s}ResolutionSet&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
+    # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
+    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service. According to docs, at most
+    # 100 candidates are returned for a lookup.
+    supports_paging = False
 
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
         from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
-        if search_scope:
-            if search_scope not in SEARCH_SCOPE_CHOICES:
-                raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
-        if contact_data_shape:
-            if contact_data_shape not in SHAPE_CHOICES:
-                raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
+        if self.chunk_size &gt; 100:
+            log.warning(
+                &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
+                self.chunk_size, self.SERVICE_NAME
+            )
+        if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
+            raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
+        if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
+            raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
         for elem in self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,
@@ -4545,6 +4828,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.ResolveNames.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -4560,12 +4847,15 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
          contact_data_shape=None):
     from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
-    if search_scope:
-        if search_scope not in SEARCH_SCOPE_CHOICES:
-            raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
-    if contact_data_shape:
-        if contact_data_shape not in SHAPE_CHOICES:
-            raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
+    if self.chunk_size &gt; 100:
+        log.warning(
+            &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
+            self.chunk_size, self.SERVICE_NAME
+        )
+    if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
+        raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
+    if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
+        raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
     for elem in self._chunked_get_elements(
         self.get_payload,
         items=unresolved_entries,
@@ -4645,6 +4935,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class SendItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;SendItem&#39;
     returns_elements = False
 
@@ -4750,8 +5041,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class SetUserOofSettings(EWSAccountService):
     &#34;&#34;&#34;Set automatic replies for the specified mailbox.
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setuseroofsettings-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;SetUserOofSettings&#39;
     returns_elements = False
 
@@ -4839,6 +5130,684 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.services.SubscribeToPull"><code class="flex name class">
+<span>class <span class="ident">SubscribeToPull</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SubscribeToPull(Subscribe):
+    subscription_request_elem_tag = &#39;m:PullSubscriptionRequest&#39;
+
+    def call(self, folders, event_types, watermark, timeout):
+        yield from self._partial_call(
+            payload_func=self.get_payload, folders=folders, event_types=event_types, timeout=timeout,
+            watermark=watermark,
+        )
+
+    def get_payload(self, folders, event_types, watermark, timeout):
+        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        request_elem = self._partial_payload(folders=folders, event_types=event_types)
+        if watermark:
+            add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
+        add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
+        subscribe.append(request_elem)
+        return subscribe</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.SubscribeToPull.subscription_request_elem_tag"><code class="name">var <span class="ident">subscription_request_elem_tag</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.SubscribeToPull.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, folders, event_types, watermark, timeout)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, folders, event_types, watermark, timeout):
+    yield from self._partial_call(
+        payload_func=self.get_payload, folders=folders, event_types=event_types, timeout=timeout,
+        watermark=watermark,
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.SubscribeToPull.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, folders, event_types, watermark, timeout)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, folders, event_types, watermark, timeout):
+    subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    request_elem = self._partial_payload(folders=folders, event_types=event_types)
+    if watermark:
+        add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
+    add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
+    subscribe.append(request_elem)
+    return subscribe</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.subscribe.Subscribe.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.SubscribeToPush"><code class="flex name class">
+<span>class <span class="ident">SubscribeToPush</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SubscribeToPush(Subscribe):
+    subscription_request_elem_tag = &#39;m:PushSubscriptionRequest&#39;
+
+    def call(self, folders, event_types, watermark, status_frequency, url):
+        yield from self._partial_call(
+            payload_func=self.get_payload, folders=folders, event_types=event_types,
+            status_frequency=status_frequency, url=url, watermark=watermark,
+        )
+
+    def get_payload(self, folders, event_types, watermark, status_frequency, url):
+        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        request_elem = self._partial_payload(folders=folders, event_types=event_types)
+        if watermark:
+            add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
+        add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
+        add_xml_child(request_elem, &#39;t:URL&#39;, url)
+        subscribe.append(request_elem)
+        return subscribe</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.SubscribeToPush.subscription_request_elem_tag"><code class="name">var <span class="ident">subscription_request_elem_tag</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.SubscribeToPush.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, folders, event_types, watermark, status_frequency, url)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, folders, event_types, watermark, status_frequency, url):
+    yield from self._partial_call(
+        payload_func=self.get_payload, folders=folders, event_types=event_types,
+        status_frequency=status_frequency, url=url, watermark=watermark,
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.SubscribeToPush.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, folders, event_types, watermark, status_frequency, url)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, folders, event_types, watermark, status_frequency, url):
+    subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    request_elem = self._partial_payload(folders=folders, event_types=event_types)
+    if watermark:
+        add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
+    add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
+    add_xml_child(request_elem, &#39;t:URL&#39;, url)
+    subscribe.append(request_elem)
+    return subscribe</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.subscribe.Subscribe.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.SubscribeToStreaming"><code class="flex name class">
+<span>class <span class="ident">SubscribeToStreaming</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SubscribeToStreaming(Subscribe):
+    subscription_request_elem_tag = &#39;m:StreamingSubscriptionRequest&#39;
+
+    def call(self, folders, event_types):
+        yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        return [container.find(&#39;{%s}SubscriptionId&#39; % MNS).text]
+
+    def get_payload(self, folders, event_types):
+        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        request_elem = self._partial_payload(folders=folders, event_types=event_types)
+        subscribe.append(request_elem)
+        return subscribe</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.SubscribeToStreaming.subscription_request_elem_tag"><code class="name">var <span class="ident">subscription_request_elem_tag</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.SubscribeToStreaming.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, folders, event_types)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, folders, event_types):
+    yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.SubscribeToStreaming.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, folders, event_types)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, folders, event_types):
+    subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    request_elem = self._partial_payload(folders=folders, event_types=event_types)
+    subscribe.append(request_elem)
+    return subscribe</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.subscribe.Subscribe.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.SyncFolderHierarchy"><code class="flex name class">
+<span>class <span class="ident">SyncFolderHierarchy</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderhierarchy-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderhierarchy-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SyncFolderHierarchy(SyncFolder):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderhierarchy-operation
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#39;SyncFolderHierarchy&#39;
+    shape_tag = &#39;m:FolderShape&#39;
+    last_in_range_name = &#39;{%s}IncludesLastFolderInRange&#39; % MNS
+
+    def call(self, folder, shape, additional_fields, sync_state):
+        self.sync_state = sync_state
+        change_types = self._change_types_map()
+        for elem in self._get_elements(payload=self.get_payload(
+                folder=folder,
+                shape=shape,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+        )):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            change_type = change_types[elem.tag]
+            if change_type == self.DELETE:
+                folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+            else:
+                # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+                # contain multiple folder types, each with their own tag.
+                folder_elem = elem[0]
+                folder = parse_folder_elem(elem=folder_elem, folder=folder, account=self.account)
+            yield change_type, folder
+
+    def get_payload(self, folder, shape, additional_fields, sync_state):
+        return self._partial_get_payload(
+            folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.SyncFolderHierarchy.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderHierarchy.last_in_range_name"><code class="name">var <span class="ident">last_in_range_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderHierarchy.shape_tag"><code class="name">var <span class="ident">shape_tag</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.SyncFolderHierarchy.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, folder, shape, additional_fields, sync_state)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, folder, shape, additional_fields, sync_state):
+    self.sync_state = sync_state
+    change_types = self._change_types_map()
+    for elem in self._get_elements(payload=self.get_payload(
+            folder=folder,
+            shape=shape,
+            additional_fields=additional_fields,
+            sync_state=sync_state,
+    )):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        change_type = change_types[elem.tag]
+        if change_type == self.DELETE:
+            folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+        else:
+            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+            # contain multiple folder types, each with their own tag.
+            folder_elem = elem[0]
+            folder = parse_folder_elem(elem=folder_elem, folder=folder, account=self.account)
+        yield change_type, folder</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.SyncFolderHierarchy.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, folder, shape, additional_fields, sync_state)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, folder, shape, additional_fields, sync_state):
+    return self._partial_get_payload(
+        folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
+    )</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems"><code class="flex name class">
+<span>class <span class="ident">SyncFolderItems</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderitems-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderitems-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SyncFolderItems(SyncFolder):
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderitems-operation
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#39;SyncFolderItems&#39;
+    SYNC_SCOPES = {
+        &#39;NormalItems&#39;,
+        &#39;NormalAndAssociatedItems&#39;,
+    }
+    # Extra change type
+    READ_FLAG_CHANGE = &#39;read_flag_change&#39;
+    CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)
+    shape_tag = &#39;m:ItemShape&#39;
+    last_in_range_name = &#39;{%s}IncludesLastItemInRange&#39; % MNS
+
+    def _change_types_map(self):
+        res = super()._change_types_map()
+        res[&#39;{%s}ReadFlagChange&#39; % TNS] = self.READ_FLAG_CHANGE
+        return res
+
+    def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
+        from ..folders.base import BaseFolder
+        self.sync_state = sync_state
+        if max_changes_returned is None:
+            max_changes_returned = self.chunk_size
+        if max_changes_returned &lt;= 0:
+            raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
+        if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
+            raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
+        change_types = self._change_types_map()
+        for elem in self._get_elements(payload=self.get_payload(
+                folder=folder,
+                shape=shape,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+                ignore=ignore,
+                max_changes_returned=max_changes_returned,
+                sync_scope=sync_scope,
+        )):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            change_type = change_types[elem.tag]
+            if change_type == self.READ_FLAG_CHANGE:
+                item = (
+                    ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
+                    xml_text_to_value(elem.find(&#39;t:IsRead&#39;).text, bool)
+                )
+            elif change_type == self.DELETE:
+                item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
+            else:
+                # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+                # contain multiple item types, each with their own tag.
+                item_elem = elem[0]
+                item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
+            yield change_type, item
+
+    def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
+        syncfolderitems = self._partial_get_payload(
+            folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
+        )
+        is_empty, ignore = (True, None) if ignore is None else peek(ignore)
+        if not is_empty:
+            item_ids = create_item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;)
+            syncfolderitems.append(item_ids)
+        add_xml_child(syncfolderitems, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+        if sync_scope:
+            add_xml_child(syncfolderitems, &#39;m:SyncScope&#39;, sync_scope)
+        return syncfolderitems</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.SyncFolderItems.CHANGE_TYPES"><code class="name">var <span class="ident">CHANGE_TYPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems.READ_FLAG_CHANGE"><code class="name">var <span class="ident">READ_FLAG_CHANGE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems.SYNC_SCOPES"><code class="name">var <span class="ident">SYNC_SCOPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems.last_in_range_name"><code class="name">var <span class="ident">last_in_range_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems.shape_tag"><code class="name">var <span class="ident">shape_tag</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.SyncFolderItems.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
+    from ..folders.base import BaseFolder
+    self.sync_state = sync_state
+    if max_changes_returned is None:
+        max_changes_returned = self.chunk_size
+    if max_changes_returned &lt;= 0:
+        raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
+    if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
+        raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
+    change_types = self._change_types_map()
+    for elem in self._get_elements(payload=self.get_payload(
+            folder=folder,
+            shape=shape,
+            additional_fields=additional_fields,
+            sync_state=sync_state,
+            ignore=ignore,
+            max_changes_returned=max_changes_returned,
+            sync_scope=sync_scope,
+    )):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
+        change_type = change_types[elem.tag]
+        if change_type == self.READ_FLAG_CHANGE:
+            item = (
+                ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
+                xml_text_to_value(elem.find(&#39;t:IsRead&#39;).text, bool)
+            )
+        elif change_type == self.DELETE:
+            item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
+        else:
+            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+            # contain multiple item types, each with their own tag.
+            item_elem = elem[0]
+            item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
+        yield change_type, item</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.SyncFolderItems.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
+    syncfolderitems = self._partial_get_payload(
+        folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
+    )
+    is_empty, ignore = (True, None) if ignore is None else peek(ignore)
+    if not is_empty:
+        item_ids = create_item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;)
+        syncfolderitems.append(item_ids)
+    add_xml_child(syncfolderitems, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+    if sync_scope:
+        add_xml_child(syncfolderitems, &#39;m:SyncScope&#39;, sync_scope)
+    return syncfolderitems</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.Unsubscribe"><code class="flex name class">
+<span>class <span class="ident">Unsubscribe</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unsubscribing is only valid for pull and streaming notifications.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Unsubscribe(EWSAccountService):
+    &#34;&#34;&#34;Unsubscribing is only valid for pull and streaming notifications.
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#39;Unsubscribe&#39;
+    returns_elements = False
+
+    def call(self, subscription_id):
+        return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
+
+    def get_payload(self, subscription_id):
+        unsubscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        add_xml_child(unsubscribe, &#39;m:SubscriptionId&#39;, subscription_id)
+        return unsubscribe</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.Unsubscribe.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.Unsubscribe.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.Unsubscribe.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, subscription_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, subscription_id):
+    return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.Unsubscribe.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, subscription_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, subscription_id):
+    unsubscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    add_xml_child(unsubscribe, &#39;m:SubscriptionId&#39;, subscription_id)
+    return unsubscribe</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.services.UpdateFolder"><code class="flex name class">
 <span>class <span class="ident">UpdateFolder</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -4851,6 +5820,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class UpdateFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UpdateFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
 
@@ -5011,6 +5981,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class UpdateItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UpdateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -5103,7 +6074,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         if item.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
             if field.name in (&#39;start&#39;, &#39;end&#39;):
-                if type(value) == EWSDate:
+                if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return item.date_to_datetime(field_name=field.name)
                 tz_field_name = item.tz_field_for_field_name(field.name).name
@@ -5326,6 +6297,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     &#34;&#34;&#34;MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UpdateUserConfiguration&#39;
     returns_elements = False
 
@@ -5401,9 +6373,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation</a></p>
-<p>This currently has the existing limitation of only being able to upload
-items that do not yet exist in the database. The full spec also allows
-actions "Update" and "UpdateOrCreate".</p></div>
+<p>TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
+database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5411,11 +6382,10 @@ actions "Update" and "UpdateOrCreate".</p></div>
 <pre><code class="python">class UploadItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
 
-    This currently has the existing limitation of only being able to upload
-    items that do not yet exist in the database. The full spec also allows
-    actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
-
+    TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
+     database. The full spec also allows actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UploadItems&#39;
     element_container_name = &#39;{%s}ItemId&#39; % MNS
 
@@ -5424,16 +6394,13 @@ actions "Update" and "UpdateOrCreate".</p></div>
         return self._chunked_get_elements(self.get_payload, items=items)
 
     def get_payload(self, items):
-        &#34;&#34;&#34;Upload given items to given account
+        &#34;&#34;&#34;Upload given items to given account.
 
-        data is an iterable of tuples where the first element is a Folder
-        instance representing the ParentFolder that the item will be placed in
-        and the second element is a Data string returned from an ExportItems
+        &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+        that the item will be placed in and the second element is a Data string returned from an ExportItems.
         call.
 
-        Args:
-          items:
-
+        :param items:
         &#34;&#34;&#34;
         uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         itemselement = create_element(&#39;m:Items&#39;)
@@ -5446,7 +6413,8 @@ actions "Update" and "UpdateOrCreate".</p></div>
             itemselement.append(item)
         return uploaditems
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5485,28 +6453,23 @@ actions "Update" and "UpdateOrCreate".</p></div>
 <span>def <span class="ident">get_payload</span></span>(<span>self, items)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Upload given items to given account</p>
-<p>data is an iterable of tuples where the first element is a Folder
-instance representing the ParentFolder that the item will be placed in
-and the second element is a Data string returned from an ExportItems
+<div class="desc"><p>Upload given items to given account.</p>
+<p>'items' is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+that the item will be placed in and the second element is a Data string returned from an ExportItems.
 call.</p>
-<h2 id="args">Args</h2>
-<p>items:</p></div>
+<p>:param items:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items):
-    &#34;&#34;&#34;Upload given items to given account
+    &#34;&#34;&#34;Upload given items to given account.
 
-    data is an iterable of tuples where the first element is a Folder
-    instance representing the ParentFolder that the item will be placed in
-    and the second element is a Data string returned from an ExportItems
+    &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+    that the item will be placed in and the second element is a Data string returned from an ExportItems.
     call.
 
-    Args:
-      items:
-
+    :param items:
     &#34;&#34;&#34;
     uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     itemselement = create_element(&#39;m:Items&#39;)
@@ -5568,6 +6531,7 @@ call.</p>
 <li><code><a title="exchangelib.services.find_people" href="find_people.html">exchangelib.services.find_people</a></code></li>
 <li><code><a title="exchangelib.services.get_attachment" href="get_attachment.html">exchangelib.services.get_attachment</a></code></li>
 <li><code><a title="exchangelib.services.get_delegate" href="get_delegate.html">exchangelib.services.get_delegate</a></code></li>
+<li><code><a title="exchangelib.services.get_events" href="get_events.html">exchangelib.services.get_events</a></code></li>
 <li><code><a title="exchangelib.services.get_folder" href="get_folder.html">exchangelib.services.get_folder</a></code></li>
 <li><code><a title="exchangelib.services.get_item" href="get_item.html">exchangelib.services.get_item</a></code></li>
 <li><code><a title="exchangelib.services.get_mail_tips" href="get_mail_tips.html">exchangelib.services.get_mail_tips</a></code></li>
@@ -5576,6 +6540,7 @@ call.</p>
 <li><code><a title="exchangelib.services.get_rooms" href="get_rooms.html">exchangelib.services.get_rooms</a></code></li>
 <li><code><a title="exchangelib.services.get_searchable_mailboxes" href="get_searchable_mailboxes.html">exchangelib.services.get_searchable_mailboxes</a></code></li>
 <li><code><a title="exchangelib.services.get_server_time_zones" href="get_server_time_zones.html">exchangelib.services.get_server_time_zones</a></code></li>
+<li><code><a title="exchangelib.services.get_streaming_events" href="get_streaming_events.html">exchangelib.services.get_streaming_events</a></code></li>
 <li><code><a title="exchangelib.services.get_user_availability" href="get_user_availability.html">exchangelib.services.get_user_availability</a></code></li>
 <li><code><a title="exchangelib.services.get_user_configuration" href="get_user_configuration.html">exchangelib.services.get_user_configuration</a></code></li>
 <li><code><a title="exchangelib.services.get_user_oof_settings" href="get_user_oof_settings.html">exchangelib.services.get_user_oof_settings</a></code></li>
@@ -5584,6 +6549,10 @@ call.</p>
 <li><code><a title="exchangelib.services.resolve_names" href="resolve_names.html">exchangelib.services.resolve_names</a></code></li>
 <li><code><a title="exchangelib.services.send_item" href="send_item.html">exchangelib.services.send_item</a></code></li>
 <li><code><a title="exchangelib.services.set_user_oof_settings" href="set_user_oof_settings.html">exchangelib.services.set_user_oof_settings</a></code></li>
+<li><code><a title="exchangelib.services.subscribe" href="subscribe.html">exchangelib.services.subscribe</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy" href="sync_folder_hierarchy.html">exchangelib.services.sync_folder_hierarchy</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_items" href="sync_folder_items.html">exchangelib.services.sync_folder_items</a></code></li>
+<li><code><a title="exchangelib.services.unsubscribe" href="unsubscribe.html">exchangelib.services.unsubscribe</a></code></li>
 <li><code><a title="exchangelib.services.update_folder" href="update_folder.html">exchangelib.services.update_folder</a></code></li>
 <li><code><a title="exchangelib.services.update_item" href="update_item.html">exchangelib.services.update_item</a></code></li>
 <li><code><a title="exchangelib.services.update_user_configuration" href="update_user_configuration.html">exchangelib.services.update_user_configuration</a></code></li>
@@ -5772,6 +6741,15 @@ call.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.services.GetEvents" href="#exchangelib.services.GetEvents">GetEvents</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.GetEvents.SERVICE_NAME" href="#exchangelib.services.GetEvents.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.GetEvents.call" href="#exchangelib.services.GetEvents.call">call</a></code></li>
+<li><code><a title="exchangelib.services.GetEvents.get_payload" href="#exchangelib.services.GetEvents.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.GetEvents.prefer_affinity" href="#exchangelib.services.GetEvents.prefer_affinity">prefer_affinity</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.services.GetFolder" href="#exchangelib.services.GetFolder">GetFolder</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.services.GetFolder.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.GetFolder.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
@@ -5848,6 +6826,19 @@ call.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.services.GetStreamingEvents" href="#exchangelib.services.GetStreamingEvents">GetStreamingEvents</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.GetStreamingEvents.CLOSED" href="#exchangelib.services.GetStreamingEvents.CLOSED">CLOSED</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.OK" href="#exchangelib.services.GetStreamingEvents.OK">OK</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.SERVICE_NAME" href="#exchangelib.services.GetStreamingEvents.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.call" href="#exchangelib.services.GetStreamingEvents.call">call</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.element_container_name" href="#exchangelib.services.GetStreamingEvents.element_container_name">element_container_name</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.get_payload" href="#exchangelib.services.GetStreamingEvents.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.prefer_affinity" href="#exchangelib.services.GetStreamingEvents.prefer_affinity">prefer_affinity</a></code></li>
+<li><code><a title="exchangelib.services.GetStreamingEvents.streaming" href="#exchangelib.services.GetStreamingEvents.streaming">streaming</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.services.GetUserAvailability" href="#exchangelib.services.GetUserAvailability">GetUserAvailability</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.services.GetUserAvailability.SERVICE_NAME" href="#exchangelib.services.GetUserAvailability.SERVICE_NAME">SERVICE_NAME</a></code></li>
@@ -5898,6 +6889,7 @@ call.</p>
 <li><code><a title="exchangelib.services.ResolveNames.call" href="#exchangelib.services.ResolveNames.call">call</a></code></li>
 <li><code><a title="exchangelib.services.ResolveNames.element_container_name" href="#exchangelib.services.ResolveNames.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.ResolveNames.get_payload" href="#exchangelib.services.ResolveNames.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.ResolveNames.supports_paging" href="#exchangelib.services.ResolveNames.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 <li>
@@ -5916,6 +6908,62 @@ call.</p>
 <li><code><a title="exchangelib.services.SetUserOofSettings.call" href="#exchangelib.services.SetUserOofSettings.call">call</a></code></li>
 <li><code><a title="exchangelib.services.SetUserOofSettings.get_payload" href="#exchangelib.services.SetUserOofSettings.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.SetUserOofSettings.returns_elements" href="#exchangelib.services.SetUserOofSettings.returns_elements">returns_elements</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.SubscribeToPull" href="#exchangelib.services.SubscribeToPull">SubscribeToPull</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.SubscribeToPull.call" href="#exchangelib.services.SubscribeToPull.call">call</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToPull.get_payload" href="#exchangelib.services.SubscribeToPull.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToPull.subscription_request_elem_tag" href="#exchangelib.services.SubscribeToPull.subscription_request_elem_tag">subscription_request_elem_tag</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.SubscribeToPush" href="#exchangelib.services.SubscribeToPush">SubscribeToPush</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.SubscribeToPush.call" href="#exchangelib.services.SubscribeToPush.call">call</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToPush.get_payload" href="#exchangelib.services.SubscribeToPush.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToPush.subscription_request_elem_tag" href="#exchangelib.services.SubscribeToPush.subscription_request_elem_tag">subscription_request_elem_tag</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.SubscribeToStreaming" href="#exchangelib.services.SubscribeToStreaming">SubscribeToStreaming</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.SubscribeToStreaming.call" href="#exchangelib.services.SubscribeToStreaming.call">call</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToStreaming.get_payload" href="#exchangelib.services.SubscribeToStreaming.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToStreaming.subscription_request_elem_tag" href="#exchangelib.services.SubscribeToStreaming.subscription_request_elem_tag">subscription_request_elem_tag</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.SyncFolderHierarchy" href="#exchangelib.services.SyncFolderHierarchy">SyncFolderHierarchy</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.SyncFolderHierarchy.SERVICE_NAME" href="#exchangelib.services.SyncFolderHierarchy.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderHierarchy.call" href="#exchangelib.services.SyncFolderHierarchy.call">call</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderHierarchy.get_payload" href="#exchangelib.services.SyncFolderHierarchy.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderHierarchy.last_in_range_name" href="#exchangelib.services.SyncFolderHierarchy.last_in_range_name">last_in_range_name</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderHierarchy.shape_tag" href="#exchangelib.services.SyncFolderHierarchy.shape_tag">shape_tag</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.SyncFolderItems" href="#exchangelib.services.SyncFolderItems">SyncFolderItems</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.services.SyncFolderItems.CHANGE_TYPES" href="#exchangelib.services.SyncFolderItems.CHANGE_TYPES">CHANGE_TYPES</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.READ_FLAG_CHANGE" href="#exchangelib.services.SyncFolderItems.READ_FLAG_CHANGE">READ_FLAG_CHANGE</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.SERVICE_NAME" href="#exchangelib.services.SyncFolderItems.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.SYNC_SCOPES" href="#exchangelib.services.SyncFolderItems.SYNC_SCOPES">SYNC_SCOPES</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.call" href="#exchangelib.services.SyncFolderItems.call">call</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.get_payload" href="#exchangelib.services.SyncFolderItems.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.last_in_range_name" href="#exchangelib.services.SyncFolderItems.last_in_range_name">last_in_range_name</a></code></li>
+<li><code><a title="exchangelib.services.SyncFolderItems.shape_tag" href="#exchangelib.services.SyncFolderItems.shape_tag">shape_tag</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.Unsubscribe" href="#exchangelib.services.Unsubscribe">Unsubscribe</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.Unsubscribe.SERVICE_NAME" href="#exchangelib.services.Unsubscribe.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.Unsubscribe.call" href="#exchangelib.services.Unsubscribe.call">call</a></code></li>
+<li><code><a title="exchangelib.services.Unsubscribe.get_payload" href="#exchangelib.services.Unsubscribe.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.Unsubscribe.returns_elements" href="#exchangelib.services.Unsubscribe.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>
 <li>

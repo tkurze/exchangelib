@@ -29,8 +29,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34; A dict to translate from IANA location name to Windows timezone name. Translations taken from
-http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml &#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;A dict to translate from IANA location name to Windows timezone name. Translations taken from
+http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+&#34;&#34;&#34;
 import re
 
 import requests
@@ -43,11 +44,10 @@ CLDR_WINZONE_VERSION = &#39;2021a&#39;
 
 
 def generate_map(timeout=10):
-    &#34;&#34;&#34;Helper method to update the map if the CLDR database is updated
+    &#34;&#34;&#34;Create a new CLDR_TO_MS_TIMEZONE_MAP map from the CLDR data. Used when the CLDR database is updated.
 
-    Args:
-      timeout:  (Default value = 10)
-
+    :param timeout:  (Default value = 10)
+    :return:
     &#34;&#34;&#34;
     r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
     if r.status_code != 200:
@@ -536,9 +536,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
 # Use &#39;noterritory&#39; unless you want to override the standard mapping
 # (in which case, &#39;001&#39;).
 # TODO: A full list of the IANA names missing in CLDR can be found with:
-#
-#    sorted(set(zoneinfo.available_timezones()) - set(CLDR_TO_MS_TIMEZONE_MAP))
-#
+#  sorted(set(zoneinfo.available_timezones()) - set(CLDR_TO_MS_TIMEZONE_MAP))
 IANA_TO_MS_TIMEZONE_MAP = dict(
     CLDR_TO_MS_TIMEZONE_MAP,
     **{
@@ -568,22 +566,19 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
 <span>def <span class="ident">generate_map</span></span>(<span>timeout=10)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper method to update the map if the CLDR database is updated</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>timeout</code></strong></dt>
-<dd>(Default value = 10)</dd>
-</dl></div>
+<div class="desc"><p>Create a new CLDR_TO_MS_TIMEZONE_MAP map from the CLDR data. Used when the CLDR database is updated.</p>
+<p>:param timeout:
+(Default value = 10)
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def generate_map(timeout=10):
-    &#34;&#34;&#34;Helper method to update the map if the CLDR database is updated
+    &#34;&#34;&#34;Create a new CLDR_TO_MS_TIMEZONE_MAP map from the CLDR data. Used when the CLDR database is updated.
 
-    Args:
-      timeout:  (Default value = 10)
-
+    :param timeout:  (Default value = 10)
+    :return:
     &#34;&#34;&#34;
     r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
     if r.status_code != 200:

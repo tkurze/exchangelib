@@ -32,16 +32,16 @@ from ..util import create_element, set_xml_value, MNS
 
 
 class GetUserAvailability(EWSService):
-    &#34;&#34;&#34;Get detailed availability information for a list of users
+    &#34;&#34;&#34;Get detailed availability information for a list of users.
     MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserAvailability&#39;
 
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+        #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
         for elem in self._get_elements(payload=self.get_payload(
             timezone=timezone,
             mailbox_data=mailbox_data,
@@ -75,8 +75,8 @@ class GetUserAvailability(EWSService):
             self._get_element_container(message=msg.find(&#39;{%s}ResponseMessage&#39; % MNS))
             yield from self._get_elements_in_container(container=msg)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.find(&#39;{%s}FreeBusyView&#39; % MNS)]</code></pre>
 </details>
 </section>
@@ -91,10 +91,10 @@ class GetUserAvailability(EWSService):
 <dl>
 <dt id="exchangelib.services.get_user_availability.GetUserAvailability"><code class="flex name class">
 <span>class <span class="ident">GetUserAvailability</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get detailed availability information for a list of users
+<div class="desc"><p>Get detailed availability information for a list of users.
 MSDN:
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation</a></p></div>
 <details class="source">
@@ -102,16 +102,16 @@ MSDN:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GetUserAvailability(EWSService):
-    &#34;&#34;&#34;Get detailed availability information for a list of users
+    &#34;&#34;&#34;Get detailed availability information for a list of users.
     MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserAvailability&#39;
 
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+        #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
         for elem in self._get_elements(payload=self.get_payload(
             timezone=timezone,
             mailbox_data=mailbox_data,
@@ -145,8 +145,8 @@ MSDN:
             self._get_element_container(message=msg.find(&#39;{%s}ResponseMessage&#39; % MNS))
             yield from self._get_elements_in_container(container=msg)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.find(&#39;{%s}FreeBusyView&#39; % MNS)]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -173,7 +173,7 @@ MSDN:
 </summary>
 <pre><code class="python">def call(self, timezone, mailbox_data, free_busy_view_options):
     # TODO: Also supports SuggestionsViewOptions, see
-    # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+    #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
     for elem in self._get_elements(payload=self.get_payload(
         timezone=timezone,
         mailbox_data=mailbox_data,

@@ -33,6 +33,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class GetMailTips(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
@@ -42,6 +43,9 @@ class GetMailTips(EWSService):
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
         ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
@@ -79,7 +83,7 @@ class GetMailTips(EWSService):
 <dl>
 <dt id="exchangelib.services.get_mail_tips.GetMailTips"><code class="flex name class">
 <span>class <span class="ident">GetMailTips</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation</a></p></div>
@@ -89,6 +93,7 @@ class GetMailTips(EWSService):
 </summary>
 <pre><code class="python">class GetMailTips(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
@@ -98,6 +103,9 @@ class GetMailTips(EWSService):
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
         ):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
@@ -152,6 +160,9 @@ class GetMailTips(EWSService):
         sending_as=sending_as,
         mail_tips_requested=mail_tips_requested,
     ):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
         yield MailTips.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>

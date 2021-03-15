@@ -61,12 +61,11 @@ class Identity:
     def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
         &#34;&#34;&#34;
 
-        Args:
-          primary_smtp_address: The primary email address associated with the account (Default value = None)
-          smtp_address: The (non-)primary email address associated with the account (Default value = None)
-          upn:  (Default value = None)
-          sid:  (Default value = None)
-
+        :param primary_smtp_address: The primary email address associated with the account (Default value = None)
+        :param smtp_address: The (non-)primary email address associated with the account (Default value = None)
+        :param upn: (Default value = None)
+        :param sid: (Default value = None)
+        :return:
         &#34;&#34;&#34;
         self.primary_smtp_address = primary_smtp_address
         self.smtp_address = smtp_address
@@ -93,20 +92,19 @@ class Account:
                  config=None, locale=None, default_timezone=None):
         &#34;&#34;&#34;
 
-        Args:
-          primary_smtp_address: The primary email address associated with the account on the Exchange server
-          fullname: The full name of the account. Optional. (Default value = None)
-          access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
+        :param primary_smtp_address: The primary email address associated with the account on the Exchange server
+        :param fullname: The full name of the account. Optional. (Default value = None)
+        :param access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
             and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
-          autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+        :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
             (Default value = False)
-          credentials: A Credentials object containing valid credentials for this account. (Default value = None)
-          config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+        :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
+        :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
-          locale: The locale of the user, e.g. &#39;en_US&#39;. Defaults to the locale of the host, if available.
-          default_timezone: EWS may return some datetime values without timezone information. In this case, we will
+        :param locale: The locale of the user, e.g. &#39;en_US&#39;. Defaults to the locale of the host, if available.
+        :param default_timezone: EWS may return some datetime values without timezone information. In this case, we will
             assume values to be in the provided timezone. Defaults to the timezone of the host.
-
+        :return:
         &#34;&#34;&#34;
         if &#39;@&#39; not in primary_smtp_address:
             raise ValueError(&#34;primary_smtp_address %r is not an email address&#34; % primary_smtp_address)
@@ -152,7 +150,6 @@ class Account:
         else:
             if not config:
                 raise AttributeError(&#39;non-autodiscover requires a config&#39;)
-            primary_smtp_address = primary_smtp_address
             self.ad_response = None
             self.protocol = Protocol(config=config)
 
@@ -374,60 +371,51 @@ class Account:
         yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
-        &#34;&#34;&#34;Return export strings of the given items
+        &#34;&#34;&#34;Return export strings of the given items.
 
-        Args:
-          items: An iterable containing the Items we want to export
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param items: An iterable containing the Items we want to export
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list of strings, the exported representation of the object
-
+        :return: A list of strings, the exported representation of the object
         &#34;&#34;&#34;
         return list(
-            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs={})
         )
 
     def upload(self, data, chunk_size=None):
-        &#34;&#34;&#34;Adds objects retrieved from export into the given folders
+        &#34;&#34;&#34;Upload objects retrieved from an export to the given folders.
 
-        Args:
-          data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+        :param data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
             exports.
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list of tuples with the new ids and changekeys
+        :return: A list of tuples with the new ids and changekeys
 
           Example:
           account.upload([(account.inbox, &#34;AABBCC...&#34;),
           (account.inbox, &#34;XXYYZZ...&#34;),
           (account.calendar, &#34;ABCXYZ...&#34;)])
           -&gt; [(&#34;idA&#34;, &#34;changekey&#34;), (&#34;idB&#34;, &#34;changekey&#34;), (&#34;idC&#34;, &#34;changekey&#34;)]
-
         &#34;&#34;&#34;
         return list(
-            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs={})
         )
 
     def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
                     chunk_size=None):
-        &#34;&#34;&#34;Creates new items in &#39;folder&#39;
+        &#34;&#34;&#34;Create new items in &#39;folder&#39;.
 
-        Args:
-          folder: the folder to create the items in
-          items: an iterable of Item objects
-          message_disposition: only applicable to Message items. Possible values are specified in
+        :param folder: the folder to create the items in
+        :param items: an iterable of Item objects
+        :param message_disposition: only applicable to Message items. Possible values are specified in
             MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-          send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+        :param send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
             SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+        :return: a list of either BulkCreateResult or exception instances in the same order as the input. The returned
           BulkCreateResult objects are normal Item objects except they only contain the &#39;id&#39; and &#39;changekey&#39;
           of the created item, and the &#39;id&#39; of any attachments that were also created.
-
         &#34;&#34;&#34;
         if isinstance(items, QuerySet):
             # bulk_create() on a queryset does not make sense because it returns items that have already been created
@@ -448,23 +436,20 @@ class Account:
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
                     chunk_size=None):
-        &#34;&#34;&#34;Bulk updates existing items
+        &#34;&#34;&#34;Bulk update existing items.
 
-        Args:
-          items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
+        :param items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
             containing the attributes on this Item object that we want to be updated.
-          conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+        :param conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
             (Default value = AUTO_RESOLVE)
-          message_disposition: only applicable to Message items. Possible values are specified in
+        :param message_disposition: only applicable to Message items. Possible values are specified in
             MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-          send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+        :param send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
             specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
-          suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either (id, changekey) tuples or exception instances, in the same order as the input
-
+        :return: a list of either (id, changekey) tuples or exception instances, in the same order as the input
         &#34;&#34;&#34;
         # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
         # fact, it could be dangerous if the queryset contains an &#39;.only()&#39;. This would wipe out certain fields
@@ -487,22 +472,19 @@ class Account:
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
-        &#34;&#34;&#34;Bulk deletes items.
+        &#34;&#34;&#34;Bulk delete items.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
             (Default value = HARD_DELETE)
-          send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+        :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
             SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
-          affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+        :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
             AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
-          suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either True or exception instances, in the same order as the input
-
+        :return: a list of either True or exception instances, in the same order as the input
         &#34;&#34;&#34;
         log.debug(
             &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
@@ -521,17 +503,14 @@ class Account:
         )
 
     def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
-        &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;
+        &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          save_copy: If true, saves a copy of the message (Default value = True)
-          copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param save_copy: If true, saves a copy of the message (Default value = True)
+        :param copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          Status for each send operation, in the same order as the input
-
+        :return: Status for each send operation, in the same order as the input
         &#34;&#34;&#34;
         if copy_to_folder and not save_copy:
             raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
@@ -544,33 +523,27 @@ class Account:
         )
 
     def bulk_copy(self, ids, to_folder, chunk_size=None):
-        &#34;&#34;&#34;Copy items to another folder
+        &#34;&#34;&#34;Copy items to another folder.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the copy operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the copy operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          Status for each send operation, in the same order as the input
-
+        :return: Status for each send operation, in the same order as the input
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
         )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
-        &#34;&#34;&#34;Move items to another folder
+        &#34;&#34;&#34;Move items to another folder.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the copy operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the copy operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
+        :return: The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
           folder in a different mailbox, an empty list is returned.
-
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
@@ -580,14 +553,11 @@ class Account:
         &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
         to work.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the archive operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the archive operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list containing True or an exception instance in stable order of the requested items
-
+        :return: A list containing True or an exception instance in stable order of the requested items
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
@@ -597,16 +567,13 @@ class Account:
     def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
         &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          is_junk: Whether the messages are junk or not
-          move_item: Whether to move the messages to the junk folder or not
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param is_junk: Whether the messages are junk or not
+        :param move_item: Whether to move the messages to the junk folder or not
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
-          stable order of the requested items.
-
+        :return: A list containing the new IDs of the moved items, if items were moved, or True, or an exception
+          instance, in stable order of the requested items.
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
             is_junk=is_junk,
@@ -614,17 +581,14 @@ class Account:
         )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
-        &#34;&#34;&#34;Fetch items by ID
+        &#34;&#34;&#34;Fetch items by ID.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          folder: used for validating &#39;only_fields&#39; (Default value = None)
-          only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param folder: used for validating &#39;only_fields&#39; (Default value = None)
+        :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A generator of Item objects, in the same order as the input
-
+        :return: A generator of Item objects, in the same order as the input
         &#34;&#34;&#34;
         validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
         # &#39;ids&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
@@ -648,9 +612,9 @@ class Account:
         ))
 
     def fetch_personas(self, ids):
-        &#34;&#34;&#34;Fetch personas by ID
+        &#34;&#34;&#34;Fetch personas by ID.
 
-        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :param ids: an iterable of either (id, changekey) tuples or Persona objects.
         :return: A generator of Persona objects, in the same order as the input
         &#34;&#34;&#34;
         if isinstance(ids, QuerySet):
@@ -668,7 +632,7 @@ class Account:
 
     @property
     def mail_tips(self):
-        &#34;&#34;&#34;See self.oof_settings about caching considerations&#34;&#34;&#34;
+        &#34;&#34;&#34;See self.oof_settings about caching considerations.&#34;&#34;&#34;
         # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
         return GetMailTips(protocol=self.protocol).get(
             sending_as=SendingAs(email_address=self.primary_smtp_address),
@@ -678,8 +642,13 @@ class Account:
 
     @property
     def delegates(self):
-        &#34;&#34;&#34;Returns a list of DelegateUser objects representing the delegates that are set on this account&#34;&#34;&#34;
-        return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))
+        &#34;&#34;&#34;Return a list of DelegateUser objects representing the delegates that are set on this account.&#34;&#34;&#34;
+        delegates = []
+        for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
+            if isinstance(d, Exception):
+                raise d
+            delegates.append(d)
+        return delegates
 
     def __str__(self):
         txt = &#39;%s&#39; % self.primary_smtp_address
@@ -703,29 +672,19 @@ class Account:
 </code></dt>
 <dd>
 <div class="desc"><p>Models an Exchange server user account.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>primary_smtp_address</code></strong></dt>
-<dd>The primary email address associated with the account on the Exchange server</dd>
-<dt><strong><code>fullname</code></strong></dt>
-<dd>The full name of the account. Optional. (Default value = None)</dd>
-<dt><strong><code>access_type</code></strong></dt>
-<dd>The access type granted to 'credentials' for this account. Valid options are 'delegate'
-and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.</dd>
-<dt><strong><code>autodiscover</code></strong></dt>
-<dd>Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-(Default value = False)</dd>
-<dt><strong><code>credentials</code></strong></dt>
-<dd>A Credentials object containing valid credentials for this account. (Default value = None)</dd>
-<dt><strong><code>config</code></strong></dt>
-<dd>A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
-(Default value = None)</dd>
-<dt><strong><code>locale</code></strong></dt>
-<dd>The locale of the user, e.g. 'en_US'. Defaults to the locale of the host, if available.</dd>
-<dt><strong><code>default_timezone</code></strong></dt>
-<dd>EWS may return some datetime values without timezone information. In this case, we will
-assume values to be in the provided timezone. Defaults to the timezone of the host.</dd>
-</dl></div>
+<p>:param primary_smtp_address: The primary email address associated with the account on the Exchange server
+:param fullname: The full name of the account. Optional. (Default value = None)
+:param access_type: The access type granted to 'credentials' for this account. Valid options are 'delegate'
+and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.
+:param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+(Default value = False)
+:param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
+:param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+(Default value = None)
+:param locale: The locale of the user, e.g. 'en_US'. Defaults to the locale of the host, if available.
+:param default_timezone: EWS may return some datetime values without timezone information. In this case, we will
+assume values to be in the provided timezone. Defaults to the timezone of the host.
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -737,20 +696,19 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                  config=None, locale=None, default_timezone=None):
         &#34;&#34;&#34;
 
-        Args:
-          primary_smtp_address: The primary email address associated with the account on the Exchange server
-          fullname: The full name of the account. Optional. (Default value = None)
-          access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
+        :param primary_smtp_address: The primary email address associated with the account on the Exchange server
+        :param fullname: The full name of the account. Optional. (Default value = None)
+        :param access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
             and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
-          autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
+        :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
             (Default value = False)
-          credentials: A Credentials object containing valid credentials for this account. (Default value = None)
-          config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
+        :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
+        :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
-          locale: The locale of the user, e.g. &#39;en_US&#39;. Defaults to the locale of the host, if available.
-          default_timezone: EWS may return some datetime values without timezone information. In this case, we will
+        :param locale: The locale of the user, e.g. &#39;en_US&#39;. Defaults to the locale of the host, if available.
+        :param default_timezone: EWS may return some datetime values without timezone information. In this case, we will
             assume values to be in the provided timezone. Defaults to the timezone of the host.
-
+        :return:
         &#34;&#34;&#34;
         if &#39;@&#39; not in primary_smtp_address:
             raise ValueError(&#34;primary_smtp_address %r is not an email address&#34; % primary_smtp_address)
@@ -796,7 +754,6 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         else:
             if not config:
                 raise AttributeError(&#39;non-autodiscover requires a config&#39;)
-            primary_smtp_address = primary_smtp_address
             self.ad_response = None
             self.protocol = Protocol(config=config)
 
@@ -1018,60 +975,51 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         yield from service_cls(account=self, chunk_size=chunk_size).call(**kwargs)
 
     def export(self, items, chunk_size=None):
-        &#34;&#34;&#34;Return export strings of the given items
+        &#34;&#34;&#34;Return export strings of the given items.
 
-        Args:
-          items: An iterable containing the Items we want to export
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param items: An iterable containing the Items we want to export
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list of strings, the exported representation of the object
-
+        :return: A list of strings, the exported representation of the object
         &#34;&#34;&#34;
         return list(
-            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+            self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs={})
         )
 
     def upload(self, data, chunk_size=None):
-        &#34;&#34;&#34;Adds objects retrieved from export into the given folders
+        &#34;&#34;&#34;Upload objects retrieved from an export to the given folders.
 
-        Args:
-          data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+        :param data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
             exports.
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list of tuples with the new ids and changekeys
+        :return: A list of tuples with the new ids and changekeys
 
           Example:
           account.upload([(account.inbox, &#34;AABBCC...&#34;),
           (account.inbox, &#34;XXYYZZ...&#34;),
           (account.calendar, &#34;ABCXYZ...&#34;)])
           -&gt; [(&#34;idA&#34;, &#34;changekey&#34;), (&#34;idB&#34;, &#34;changekey&#34;), (&#34;idC&#34;, &#34;changekey&#34;)]
-
         &#34;&#34;&#34;
         return list(
-            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs={})
         )
 
     def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
                     chunk_size=None):
-        &#34;&#34;&#34;Creates new items in &#39;folder&#39;
+        &#34;&#34;&#34;Create new items in &#39;folder&#39;.
 
-        Args:
-          folder: the folder to create the items in
-          items: an iterable of Item objects
-          message_disposition: only applicable to Message items. Possible values are specified in
+        :param folder: the folder to create the items in
+        :param items: an iterable of Item objects
+        :param message_disposition: only applicable to Message items. Possible values are specified in
             MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-          send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+        :param send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
             SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+        :return: a list of either BulkCreateResult or exception instances in the same order as the input. The returned
           BulkCreateResult objects are normal Item objects except they only contain the &#39;id&#39; and &#39;changekey&#39;
           of the created item, and the &#39;id&#39; of any attachments that were also created.
-
         &#34;&#34;&#34;
         if isinstance(items, QuerySet):
             # bulk_create() on a queryset does not make sense because it returns items that have already been created
@@ -1092,23 +1040,20 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
     def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                     send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
                     chunk_size=None):
-        &#34;&#34;&#34;Bulk updates existing items
+        &#34;&#34;&#34;Bulk update existing items.
 
-        Args:
-          items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
+        :param items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
             containing the attributes on this Item object that we want to be updated.
-          conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+        :param conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
             (Default value = AUTO_RESOLVE)
-          message_disposition: only applicable to Message items. Possible values are specified in
+        :param message_disposition: only applicable to Message items. Possible values are specified in
             MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-          send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+        :param send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
             specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
-          suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either (id, changekey) tuples or exception instances, in the same order as the input
-
+        :return: a list of either (id, changekey) tuples or exception instances, in the same order as the input
         &#34;&#34;&#34;
         # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
         # fact, it could be dangerous if the queryset contains an &#39;.only()&#39;. This would wipe out certain fields
@@ -1131,22 +1076,19 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                     affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
-        &#34;&#34;&#34;Bulk deletes items.
+        &#34;&#34;&#34;Bulk delete items.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
             (Default value = HARD_DELETE)
-          send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+        :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
             SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
-          affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+        :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
             AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
-          suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          a list of either True or exception instances, in the same order as the input
-
+        :return: a list of either True or exception instances, in the same order as the input
         &#34;&#34;&#34;
         log.debug(
             &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
@@ -1165,17 +1107,14 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         )
 
     def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
-        &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;
+        &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          save_copy: If true, saves a copy of the message (Default value = True)
-          copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param save_copy: If true, saves a copy of the message (Default value = True)
+        :param copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          Status for each send operation, in the same order as the input
-
+        :return: Status for each send operation, in the same order as the input
         &#34;&#34;&#34;
         if copy_to_folder and not save_copy:
             raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
@@ -1188,33 +1127,27 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         )
 
     def bulk_copy(self, ids, to_folder, chunk_size=None):
-        &#34;&#34;&#34;Copy items to another folder
+        &#34;&#34;&#34;Copy items to another folder.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the copy operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the copy operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          Status for each send operation, in the same order as the input
-
+        :return: Status for each send operation, in the same order as the input
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
         )))
 
     def bulk_move(self, ids, to_folder, chunk_size=None):
-        &#34;&#34;&#34;Move items to another folder
+        &#34;&#34;&#34;Move items to another folder.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the copy operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the copy operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
+        :return: The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
           folder in a different mailbox, an empty list is returned.
-
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
@@ -1224,14 +1157,11 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
         to work.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          to_folder: The destination folder of the archive operation
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param to_folder: The destination folder of the archive operation
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list containing True or an exception instance in stable order of the requested items
-
+        :return: A list containing True or an exception instance in stable order of the requested items
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
                 to_folder=to_folder,
@@ -1241,16 +1171,13 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
     def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
         &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          is_junk: Whether the messages are junk or not
-          move_item: Whether to move the messages to the junk folder or not
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param is_junk: Whether the messages are junk or not
+        :param move_item: Whether to move the messages to the junk folder or not
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
-          stable order of the requested items.
-
+        :return: A list containing the new IDs of the moved items, if items were moved, or True, or an exception
+          instance, in stable order of the requested items.
         &#34;&#34;&#34;
         return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
             is_junk=is_junk,
@@ -1258,17 +1185,14 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         )))
 
     def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
-        &#34;&#34;&#34;Fetch items by ID
+        &#34;&#34;&#34;Fetch items by ID.
 
-        Args:
-          ids: an iterable of either (id, changekey) tuples or Item objects.
-          folder: used for validating &#39;only_fields&#39; (Default value = None)
-          only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
-          chunk_size: The number of items to send to the server in a single request (Default value = None)
+        :param ids: an iterable of either (id, changekey) tuples or Item objects.
+        :param folder: used for validating &#39;only_fields&#39; (Default value = None)
+        :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+        :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-        Returns:
-          A generator of Item objects, in the same order as the input
-
+        :return: A generator of Item objects, in the same order as the input
         &#34;&#34;&#34;
         validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
         # &#39;ids&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
@@ -1292,9 +1216,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         ))
 
     def fetch_personas(self, ids):
-        &#34;&#34;&#34;Fetch personas by ID
+        &#34;&#34;&#34;Fetch personas by ID.
 
-        ids: an iterable of either (id, changekey) tuples or Persona objects.
+        :param ids: an iterable of either (id, changekey) tuples or Persona objects.
         :return: A generator of Persona objects, in the same order as the input
         &#34;&#34;&#34;
         if isinstance(ids, QuerySet):
@@ -1312,7 +1236,7 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 
     @property
     def mail_tips(self):
-        &#34;&#34;&#34;See self.oof_settings about caching considerations&#34;&#34;&#34;
+        &#34;&#34;&#34;See self.oof_settings about caching considerations.&#34;&#34;&#34;
         # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
         return GetMailTips(protocol=self.protocol).get(
             sending_as=SendingAs(email_address=self.primary_smtp_address),
@@ -1322,8 +1246,13 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 
     @property
     def delegates(self):
-        &#34;&#34;&#34;Returns a list of DelegateUser objects representing the delegates that are set on this account&#34;&#34;&#34;
-        return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))
+        &#34;&#34;&#34;Return a list of DelegateUser objects representing the delegates that are set on this account.&#34;&#34;&#34;
+        delegates = []
+        for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
+            if isinstance(d, Exception):
+                raise d
+            delegates.append(d)
+        return delegates
 
     def __str__(self):
         txt = &#39;%s&#39; % self.primary_smtp_address
@@ -1634,15 +1563,20 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 </dd>
 <dt id="exchangelib.account.Account.delegates"><code class="name">var <span class="ident">delegates</span></code></dt>
 <dd>
-<div class="desc"><p>Returns a list of DelegateUser objects representing the delegates that are set on this account</p></div>
+<div class="desc"><p>Return a list of DelegateUser objects representing the delegates that are set on this account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def delegates(self):
-    &#34;&#34;&#34;Returns a list of DelegateUser objects representing the delegates that are set on this account&#34;&#34;&#34;
-    return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))</code></pre>
+    &#34;&#34;&#34;Return a list of DelegateUser objects representing the delegates that are set on this account.&#34;&#34;&#34;
+    delegates = []
+    for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
+        if isinstance(d, Exception):
+            raise d
+        delegates.append(d)
+    return delegates</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.directory"><code class="name">var <span class="ident">directory</span></code></dt>
@@ -1843,14 +1777,14 @@ def domain(self):
 </dd>
 <dt id="exchangelib.account.Account.mail_tips"><code class="name">var <span class="ident">mail_tips</span></code></dt>
 <dd>
-<div class="desc"><p>See self.oof_settings about caching considerations</p></div>
+<div class="desc"><p>See self.oof_settings about caching considerations.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def mail_tips(self):
-    &#34;&#34;&#34;See self.oof_settings about caching considerations&#34;&#34;&#34;
+    &#34;&#34;&#34;See self.oof_settings about caching considerations.&#34;&#34;&#34;
     # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
     return GetMailTips(protocol=self.protocol).get(
         sending_as=SendingAs(email_address=self.primary_smtp_address),
@@ -2381,17 +2315,10 @@ def primary_smtp_address(self):
 <dd>
 <div class="desc"><p>Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
 to work.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>to_folder</code></strong></dt>
-<dd>The destination folder of the archive operation</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list containing True or an exception instance in stable order of the requested items</p></div>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param to_folder: The destination folder of the archive operation
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: A list containing True or an exception instance in stable order of the requested items</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2400,14 +2327,11 @@ to work.</p>
     &#34;&#34;&#34;Archive items to a folder in the archive mailbox. An archive mailbox must be enabled in order for this
     to work.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      to_folder: The destination folder of the archive operation
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param to_folder: The destination folder of the archive operation
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      A list containing True or an exception instance in stable order of the requested items
-
+    :return: A list containing True or an exception instance in stable order of the requested items
     &#34;&#34;&#34;
     return list(self._consume_item_service(service_cls=ArchiveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
             to_folder=to_folder,
@@ -2419,33 +2343,23 @@ to work.</p>
 <span>def <span class="ident">bulk_copy</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Copy items to another folder</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>to_folder</code></strong></dt>
-<dd>The destination folder of the copy operation</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Status for each send operation, in the same order as the input</p></div>
+<div class="desc"><p>Copy items to another folder.</p>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param to_folder: The destination folder of the copy operation
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: Status for each send operation, in the same order as the input</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bulk_copy(self, ids, to_folder, chunk_size=None):
-    &#34;&#34;&#34;Copy items to another folder
+    &#34;&#34;&#34;Copy items to another folder.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      to_folder: The destination folder of the copy operation
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param to_folder: The destination folder of the copy operation
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      Status for each send operation, in the same order as the input
-
+    :return: Status for each send operation, in the same order as the input
     &#34;&#34;&#34;
     return list(self._consume_item_service(service_cls=CopyItem, items=ids, chunk_size=chunk_size, kwargs=dict(
         to_folder=to_folder,
@@ -2456,24 +2370,15 @@ to work.</p>
 <span>def <span class="ident">bulk_create</span></span>(<span>self, folder, items, message_disposition='SaveOnly', send_meeting_invitations='SendToNone', chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Creates new items in 'folder'</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>folder</code></strong></dt>
-<dd>the folder to create the items in</dd>
-<dt><strong><code>items</code></strong></dt>
-<dd>an iterable of Item objects</dd>
-<dt><strong><code>message_disposition</code></strong></dt>
-<dd>only applicable to Message items. Possible values are specified in
-MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)</dd>
-<dt><strong><code>send_meeting_invitations</code></strong></dt>
-<dd>only applicable to CalendarItem items. Possible values are specified in
-SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+<div class="desc"><p>Create new items in 'folder'.</p>
+<p>:param folder: the folder to create the items in
+:param items: an iterable of Item objects
+:param message_disposition: only applicable to Message items. Possible values are specified in
+MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+:param send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: a list of either BulkCreateResult or exception instances in the same order as the input. The returned
 BulkCreateResult objects are normal Item objects except they only contain the 'id' and 'changekey'
 of the created item, and the 'id' of any attachments that were also created.</p></div>
 <details class="source">
@@ -2482,22 +2387,19 @@ of the created item, and the 'id' of any attachments that were also created.</p>
 </summary>
 <pre><code class="python">def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
                 chunk_size=None):
-    &#34;&#34;&#34;Creates new items in &#39;folder&#39;
+    &#34;&#34;&#34;Create new items in &#39;folder&#39;.
 
-    Args:
-      folder: the folder to create the items in
-      items: an iterable of Item objects
-      message_disposition: only applicable to Message items. Possible values are specified in
+    :param folder: the folder to create the items in
+    :param items: an iterable of Item objects
+    :param message_disposition: only applicable to Message items. Possible values are specified in
         MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-      send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
+    :param send_meeting_invitations: only applicable to CalendarItem items. Possible values are specified in
         SEND_MEETING_INVITATIONS_CHOICES (Default value = SEND_TO_NONE)
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      a list of either BulkCreateResult or exception instances in the same order as the input. The returned
+    :return: a list of either BulkCreateResult or exception instances in the same order as the input. The returned
       BulkCreateResult objects are normal Item objects except they only contain the &#39;id&#39; and &#39;changekey&#39;
       of the created item, and the &#39;id&#39; of any attachments that were also created.
-
     &#34;&#34;&#34;
     if isinstance(items, QuerySet):
         # bulk_create() on a queryset does not make sense because it returns items that have already been created
@@ -2520,49 +2422,36 @@ of the created item, and the 'id' of any attachments that were also created.</p>
 <span>def <span class="ident">bulk_delete</span></span>(<span>self, ids, delete_type='HardDelete', send_meeting_cancellations='SendToNone', affected_task_occurrences='AllOccurrences', suppress_read_receipts=True, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Bulk deletes items.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>delete_type</code></strong></dt>
-<dd>the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
-(Default value = HARD_DELETE)</dd>
-<dt><strong><code>send_meeting_cancellations</code></strong></dt>
-<dd>only applicable to CalendarItem. Possible values are specified in
-SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)</dd>
-<dt><strong><code>affected_task_occurrences</code></strong></dt>
-<dd>only applicable for recurring Task items. Possible values are specified in
-AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)</dd>
-<dt><strong><code>suppress_read_receipts</code></strong></dt>
-<dd>only supported from Exchange 2013. True or False. (Default value = True)</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a list of either True or exception instances, in the same order as the input</p></div>
+<div class="desc"><p>Bulk delete items.</p>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+(Default value = HARD_DELETE)
+:param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
+:param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+:param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: a list of either True or exception instances, in the same order as the input</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
                 affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
-    &#34;&#34;&#34;Bulk deletes items.
+    &#34;&#34;&#34;Bulk delete items.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param delete_type: the type of delete to perform. Possible values are specified in DELETE_TYPE_CHOICES
         (Default value = HARD_DELETE)
-      send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
+    :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
         SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
-      affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
+    :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
         AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
-      suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      a list of either True or exception instances, in the same order as the input
-
+    :return: a list of either True or exception instances, in the same order as the input
     &#34;&#34;&#34;
     log.debug(
         &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
@@ -2586,20 +2475,12 @@ AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)</dd>
 </code></dt>
 <dd>
 <div class="desc"><p>Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>is_junk</code></strong></dt>
-<dd>Whether the messages are junk or not</dd>
-<dt><strong><code>move_item</code></strong></dt>
-<dd>Whether to move the messages to the junk folder or not</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
-stable order of the requested items.</p></div>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param is_junk: Whether the messages are junk or not
+:param move_item: Whether to move the messages to the junk folder or not
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: A list containing the new IDs of the moved items, if items were moved, or True, or an exception
+instance, in stable order of the requested items.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2607,16 +2488,13 @@ stable order of the requested items.</p></div>
 <pre><code class="python">def bulk_mark_as_junk(self, ids, is_junk, move_item, chunk_size=None):
     &#34;&#34;&#34;Mark or un-mark message items as junk email and add or remove the sender from the blocked sender list.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      is_junk: Whether the messages are junk or not
-      move_item: Whether to move the messages to the junk folder or not
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param is_junk: Whether the messages are junk or not
+    :param move_item: Whether to move the messages to the junk folder or not
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      A list containing the new IDs of the moved items, if items were moved, or True, or an exception instance, in
-      stable order of the requested items.
-
+    :return: A list containing the new IDs of the moved items, if items were moved, or True, or an exception
+      instance, in stable order of the requested items.
     &#34;&#34;&#34;
     return list(self._consume_item_service(service_cls=MarkAsJunk, items=ids, chunk_size=chunk_size, kwargs=dict(
         is_junk=is_junk,
@@ -2628,35 +2506,25 @@ stable order of the requested items.</p></div>
 <span>def <span class="ident">bulk_move</span></span>(<span>self, ids, to_folder, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Move items to another folder</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>to_folder</code></strong></dt>
-<dd>The destination folder of the copy operation</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>The new IDs of the moved items, in the same order as the input. If 'to_folder' is a public folder or a
+<div class="desc"><p>Move items to another folder.</p>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param to_folder: The destination folder of the copy operation
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: The new IDs of the moved items, in the same order as the input. If 'to_folder' is a public folder or a
 folder in a different mailbox, an empty list is returned.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bulk_move(self, ids, to_folder, chunk_size=None):
-    &#34;&#34;&#34;Move items to another folder
+    &#34;&#34;&#34;Move items to another folder.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      to_folder: The destination folder of the copy operation
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param to_folder: The destination folder of the copy operation
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
+    :return: The new IDs of the moved items, in the same order as the input. If &#39;to_folder&#39; is a public folder or a
       folder in a different mailbox, an empty list is returned.
-
     &#34;&#34;&#34;
     return list(self._consume_item_service(service_cls=MoveItem, items=ids, chunk_size=chunk_size, kwargs=dict(
         to_folder=to_folder,
@@ -2667,36 +2535,25 @@ folder in a different mailbox, an empty list is returned.</p></div>
 <span>def <span class="ident">bulk_send</span></span>(<span>self, ids, save_copy=True, copy_to_folder=None, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Send existing draft messages. If requested, save a copy in 'copy_to_folder'</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>save_copy</code></strong></dt>
-<dd>If true, saves a copy of the message (Default value = True)</dd>
-<dt><strong><code>copy_to_folder</code></strong></dt>
-<dd>If requested, save a copy of the message in this folder. Default is the Sent folder</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Status for each send operation, in the same order as the input</p></div>
+<div class="desc"><p>Send existing draft messages. If requested, save a copy in 'copy_to_folder'.</p>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param save_copy: If true, saves a copy of the message (Default value = True)
+:param copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: Status for each send operation, in the same order as the input</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bulk_send(self, ids, save_copy=True, copy_to_folder=None, chunk_size=None):
-    &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;
+    &#34;&#34;&#34;Send existing draft messages. If requested, save a copy in &#39;copy_to_folder&#39;.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      save_copy: If true, saves a copy of the message (Default value = True)
-      copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param save_copy: If true, saves a copy of the message (Default value = True)
+    :param copy_to_folder: If requested, save a copy of the message in this folder. Default is the Sent folder
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      Status for each send operation, in the same order as the input
-
+    :return: Status for each send operation, in the same order as the input
     &#34;&#34;&#34;
     if copy_to_folder and not save_copy:
         raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
@@ -2713,28 +2570,18 @@ folder in a different mailbox, an empty list is returned.</p></div>
 <span>def <span class="ident">bulk_update</span></span>(<span>self, items, conflict_resolution='AutoResolve', message_disposition='SaveOnly', send_meeting_invitations_or_cancellations='SendToNone', suppress_read_receipts=True, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Bulk updates existing items</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>items</code></strong></dt>
-<dd>a list of (Item, fieldnames) tuples, where 'Item' is an Item object, and 'fieldnames' is a list
-containing the attributes on this Item object that we want to be updated.</dd>
-<dt><strong><code>conflict_resolution</code></strong></dt>
-<dd>Possible values are specified in CONFLICT_RESOLUTION_CHOICES
-(Default value = AUTO_RESOLVE)</dd>
-<dt><strong><code>message_disposition</code></strong></dt>
-<dd>only applicable to Message items. Possible values are specified in
-MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)</dd>
-<dt><strong><code>send_meeting_invitations_or_cancellations</code></strong></dt>
-<dd>only applicable to CalendarItem items. Possible values are
-specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)</dd>
-<dt><strong><code>suppress_read_receipts</code></strong></dt>
-<dd>nly supported from Exchange 2013. True or False (Default value = True)</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a list of either (id, changekey) tuples or exception instances, in the same order as the input</p></div>
+<div class="desc"><p>Bulk update existing items.</p>
+<p>:param items: a list of (Item, fieldnames) tuples, where 'Item' is an Item object, and 'fieldnames' is a list
+containing the attributes on this Item object that we want to be updated.
+:param conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+(Default value = AUTO_RESOLVE)
+:param message_disposition: only applicable to Message items. Possible values are specified in
+MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
+:param send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
+:param suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: a list of either (id, changekey) tuples or exception instances, in the same order as the input</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2742,23 +2589,20 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 <pre><code class="python">def bulk_update(self, items, conflict_resolution=AUTO_RESOLVE, message_disposition=SAVE_ONLY,
                 send_meeting_invitations_or_cancellations=SEND_TO_NONE, suppress_read_receipts=True,
                 chunk_size=None):
-    &#34;&#34;&#34;Bulk updates existing items
+    &#34;&#34;&#34;Bulk update existing items.
 
-    Args:
-      items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
+    :param items: a list of (Item, fieldnames) tuples, where &#39;Item&#39; is an Item object, and &#39;fieldnames&#39; is a list
         containing the attributes on this Item object that we want to be updated.
-      conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
+    :param conflict_resolution: Possible values are specified in CONFLICT_RESOLUTION_CHOICES
         (Default value = AUTO_RESOLVE)
-      message_disposition: only applicable to Message items. Possible values are specified in
+    :param message_disposition: only applicable to Message items. Possible values are specified in
         MESSAGE_DISPOSITION_CHOICES (Default value = SAVE_ONLY)
-      send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
+    :param send_meeting_invitations_or_cancellations: only applicable to CalendarItem items. Possible values are
         specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value = SEND_TO_NONE)
-      suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param suppress_read_receipts: nly supported from Exchange 2013. True or False (Default value = True)
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      a list of either (id, changekey) tuples or exception instances, in the same order as the input
-
+    :return: a list of either (id, changekey) tuples or exception instances, in the same order as the input
     &#34;&#34;&#34;
     # bulk_update() on a queryset does not make sense because there would be no opportunity to alter the items. In
     # fact, it could be dangerous if the queryset contains an &#39;.only()&#39;. This would wipe out certain fields
@@ -2784,33 +2628,24 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 <span>def <span class="ident">export</span></span>(<span>self, items, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return export strings of the given items</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>items</code></strong></dt>
-<dd>An iterable containing the Items we want to export</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list of strings, the exported representation of the object</p></div>
+<div class="desc"><p>Return export strings of the given items.</p>
+<p>:param items: An iterable containing the Items we want to export
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: A list of strings, the exported representation of the object</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def export(self, items, chunk_size=None):
-    &#34;&#34;&#34;Return export strings of the given items
+    &#34;&#34;&#34;Return export strings of the given items.
 
-    Args:
-      items: An iterable containing the Items we want to export
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param items: An iterable containing the Items we want to export
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      A list of strings, the exported representation of the object
-
+    :return: A list of strings, the exported representation of the object
     &#34;&#34;&#34;
     return list(
-        self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs=dict())
+        self._consume_item_service(service_cls=ExportItems, items=items, chunk_size=chunk_size, kwargs={})
     )</code></pre>
 </details>
 </dd>
@@ -2818,36 +2653,25 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 <span>def <span class="ident">fetch</span></span>(<span>self, ids, folder=None, only_fields=None, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Fetch items by ID</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>ids</code></strong></dt>
-<dd>an iterable of either (id, changekey) tuples or Item objects.</dd>
-<dt><strong><code>folder</code></strong></dt>
-<dd>used for validating 'only_fields' (Default value = None)</dd>
-<dt><strong><code>only_fields</code></strong></dt>
-<dd>A list of string or FieldPath items specifying the fields to fetch. Default to all fields</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A generator of Item objects, in the same order as the input</p></div>
+<div class="desc"><p>Fetch items by ID.</p>
+<p>:param ids: an iterable of either (id, changekey) tuples or Item objects.
+:param folder: used for validating 'only_fields' (Default value = None)
+:param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: A generator of Item objects, in the same order as the input</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fetch(self, ids, folder=None, only_fields=None, chunk_size=None):
-    &#34;&#34;&#34;Fetch items by ID
+    &#34;&#34;&#34;Fetch items by ID.
 
-    Args:
-      ids: an iterable of either (id, changekey) tuples or Item objects.
-      folder: used for validating &#39;only_fields&#39; (Default value = None)
-      only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param ids: an iterable of either (id, changekey) tuples or Item objects.
+    :param folder: used for validating &#39;only_fields&#39; (Default value = None)
+    :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      A generator of Item objects, in the same order as the input
-
+    :return: A generator of Item objects, in the same order as the input
     &#34;&#34;&#34;
     validation_folder = folder or Folder(root=self.root)  # Default to a folder type that supports all item types
     # &#39;ids&#39; could be an unevaluated QuerySet, e.g. if we ended up here via `fetch(ids=some_folder.filter(...))`. In
@@ -2875,17 +2699,17 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 <span>def <span class="ident">fetch_personas</span></span>(<span>self, ids)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Fetch personas by ID</p>
-<p>ids: an iterable of either (id, changekey) tuples or Persona objects.
+<div class="desc"><p>Fetch personas by ID.</p>
+<p>:param ids: an iterable of either (id, changekey) tuples or Persona objects.
 :return: A generator of Persona objects, in the same order as the input</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fetch_personas(self, ids):
-    &#34;&#34;&#34;Fetch personas by ID
+    &#34;&#34;&#34;Fetch personas by ID.
 
-    ids: an iterable of either (id, changekey) tuples or Persona objects.
+    :param ids: an iterable of either (id, changekey) tuples or Persona objects.
     :return: A generator of Persona objects, in the same order as the input
     &#34;&#34;&#34;
     if isinstance(ids, QuerySet):
@@ -2906,17 +2730,11 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 <span>def <span class="ident">upload</span></span>(<span>self, data, chunk_size=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Adds objects retrieved from export into the given folders</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>data</code></strong></dt>
-<dd>An iterable of tuples containing the folder we want to upload the data to and the string outputs of
-exports.</dd>
-<dt><strong><code>chunk_size</code></strong></dt>
-<dd>The number of items to send to the server in a single request (Default value = None)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list of tuples with the new ids and changekeys</p>
+<div class="desc"><p>Upload objects retrieved from an export to the given folders.</p>
+<p>:param data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+exports.
+:param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
+<p>:return: A list of tuples with the new ids and changekeys</p>
 <p>Example:
 account.upload([(account.inbox, "AABBCC&hellip;"),
 (account.inbox, "XXYYZZ&hellip;"),
@@ -2927,25 +2745,22 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def upload(self, data, chunk_size=None):
-    &#34;&#34;&#34;Adds objects retrieved from export into the given folders
+    &#34;&#34;&#34;Upload objects retrieved from an export to the given folders.
 
-    Args:
-      data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
+    :param data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
         exports.
-      chunk_size: The number of items to send to the server in a single request (Default value = None)
+    :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
-    Returns:
-      A list of tuples with the new ids and changekeys
+    :return: A list of tuples with the new ids and changekeys
 
       Example:
       account.upload([(account.inbox, &#34;AABBCC...&#34;),
       (account.inbox, &#34;XXYYZZ...&#34;),
       (account.calendar, &#34;ABCXYZ...&#34;)])
       -&gt; [(&#34;idA&#34;, &#34;changekey&#34;), (&#34;idB&#34;, &#34;changekey&#34;), (&#34;idC&#34;, &#34;changekey&#34;)]
-
     &#34;&#34;&#34;
     return list(
-        self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs=dict())
+        self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs={})
     )</code></pre>
 </details>
 </dd>
@@ -2957,17 +2772,11 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
 </code></dt>
 <dd>
 <div class="desc"><p>Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>primary_smtp_address</code></strong></dt>
-<dd>The primary email address associated with the account (Default value = None)</dd>
-<dt><strong><code>smtp_address</code></strong></dt>
-<dd>The (non-)primary email address associated with the account (Default value = None)</dd>
-<dt><strong><code>upn</code></strong></dt>
-<dd>(Default value = None)</dd>
-<dt><strong><code>sid</code></strong></dt>
-<dd>(Default value = None)</dd>
-</dl></div>
+<p>:param primary_smtp_address: The primary email address associated with the account (Default value = None)
+:param smtp_address: The (non-)primary email address associated with the account (Default value = None)
+:param upn: (Default value = None)
+:param sid: (Default value = None)
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2978,12 +2787,11 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
     def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
         &#34;&#34;&#34;
 
-        Args:
-          primary_smtp_address: The primary email address associated with the account (Default value = None)
-          smtp_address: The (non-)primary email address associated with the account (Default value = None)
-          upn:  (Default value = None)
-          sid:  (Default value = None)
-
+        :param primary_smtp_address: The primary email address associated with the account (Default value = None)
+        :param smtp_address: The (non-)primary email address associated with the account (Default value = None)
+        :param upn: (Default value = None)
+        :param sid: (Default value = None)
+        :return:
         &#34;&#34;&#34;
         self.primary_smtp_address = primary_smtp_address
         self.smtp_address = smtp_address

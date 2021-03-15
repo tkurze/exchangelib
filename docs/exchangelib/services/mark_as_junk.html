@@ -33,6 +33,7 @@ from ..util import create_element
 
 class MarkAsJunk(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;MarkAsJunk&#39;
 
     def call(self, items, is_junk, move_item):
@@ -42,8 +43,8 @@ class MarkAsJunk(EWSAccountService):
                 continue
             yield MovedItemId.id_from_xml(elem)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(MovedItemId.response_tag())
 
     def get_payload(self, items, is_junk, move_item):
@@ -78,6 +79,7 @@ class MarkAsJunk(EWSAccountService):
 </summary>
 <pre><code class="python">class MarkAsJunk(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;MarkAsJunk&#39;
 
     def call(self, items, is_junk, move_item):
@@ -87,8 +89,8 @@ class MarkAsJunk(EWSAccountService):
                 continue
             yield MovedItemId.id_from_xml(elem)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(MovedItemId.response_tag())
 
     def get_payload(self, items, is_junk, move_item):

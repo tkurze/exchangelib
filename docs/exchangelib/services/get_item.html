@@ -32,20 +32,18 @@ from ..util import create_element, MNS
 
 class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, additional_fields, shape):
-        &#34;&#34;&#34;Returns all items in an account that correspond to a list of ID&#39;s, in stable order.
+        &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          shape: The shape of returned objects
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param shape: The shape of returned objects
 
-        Returns:
-          XML elements for the items, in stable order
-
+        :return: XML elements for the items, in stable order
         &#34;&#34;&#34;
         from ..folders.base import BaseFolder
         for elem in self._chunked_get_elements(
@@ -88,20 +86,18 @@ class GetItem(EWSAccountService):
 </summary>
 <pre><code class="python">class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
     def call(self, items, additional_fields, shape):
-        &#34;&#34;&#34;Returns all items in an account that correspond to a list of ID&#39;s, in stable order.
+        &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
 
-        Args:
-          items: a list of (id, changekey) tuples or Item objects
-          additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-          shape: The shape of returned objects
+        :param items: a list of (id, changekey) tuples or Item objects
+        :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+        :param shape: The shape of returned objects
 
-        Returns:
-          XML elements for the items, in stable order
-
+        :return: XML elements for the items, in stable order
         &#34;&#34;&#34;
         from ..folders.base import BaseFolder
         for elem in self._chunked_get_elements(
@@ -144,33 +140,23 @@ class GetItem(EWSAccountService):
 <span>def <span class="ident">call</span></span>(<span>self, items, additional_fields, shape)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns all items in an account that correspond to a list of ID's, in stable order.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>items</code></strong></dt>
-<dd>a list of (id, changekey) tuples or Item objects</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra fields that should be returned with the item, as FieldPath objects</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>The shape of returned objects</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>XML elements for the items, in stable order</p></div>
+<div class="desc"><p>Return all items in an account that correspond to a list of ID's, in stable order.</p>
+<p>:param items: a list of (id, changekey) tuples or Item objects
+:param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+:param shape: The shape of returned objects</p>
+<p>:return: XML elements for the items, in stable order</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, additional_fields, shape):
-    &#34;&#34;&#34;Returns all items in an account that correspond to a list of ID&#39;s, in stable order.
+    &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
 
-    Args:
-      items: a list of (id, changekey) tuples or Item objects
-      additional_fields: the extra fields that should be returned with the item, as FieldPath objects
-      shape: The shape of returned objects
+    :param items: a list of (id, changekey) tuples or Item objects
+    :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
+    :param shape: The shape of returned objects
 
-    Returns:
-      XML elements for the items, in stable order
-
+    :return: XML elements for the items, in stable order
     &#34;&#34;&#34;
     from ..folders.base import BaseFolder
     for elem in self._chunked_get_elements(

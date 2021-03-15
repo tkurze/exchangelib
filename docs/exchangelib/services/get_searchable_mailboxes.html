@@ -36,8 +36,8 @@ from ..version import EXCHANGE_2013
 class GetSearchableMailboxes(EWSService):
     &#34;&#34;&#34;MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getsearchablemailboxes-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetSearchableMailboxes&#39;
     element_container_name = &#39;{%s}SearchableMailboxes&#39; % MNS
     failed_mailboxes_container_name = &#39;{%s}FailedMailboxes&#39; % MNS
@@ -89,7 +89,7 @@ class GetSearchableMailboxes(EWSService):
 <dl>
 <dt id="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes"><code class="flex name class">
 <span>class <span class="ident">GetSearchableMailboxes</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN:
@@ -101,8 +101,8 @@ class GetSearchableMailboxes(EWSService):
 <pre><code class="python">class GetSearchableMailboxes(EWSService):
     &#34;&#34;&#34;MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getsearchablemailboxes-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetSearchableMailboxes&#39;
     element_container_name = &#39;{%s}SearchableMailboxes&#39; % MNS
     failed_mailboxes_container_name = &#39;{%s}FailedMailboxes&#39; % MNS

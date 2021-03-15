@@ -44,9 +44,9 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorCannotDeleteTaskOccurrence, ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence, \
     ErrorNoPublicFolderReplicaAvailable, MalformedResponseError, ErrorExceededConnectionCount, \
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
-    ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder
+    ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
-from ..transport import wrap, extra_headers
+from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
     xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError
 from ..version import API_VERSIONS, Version
@@ -72,6 +72,8 @@ KNOWN_EXCEPTIONS = (
     ErrorInternalServerTransientError,
     ErrorInvalidChangeKey,
     ErrorInvalidLicense,
+    ErrorInvalidSubscription,
+    ErrorInvalidWatermark,
     ErrorItemNotFound,
     ErrorMailboxMoveInProgress,
     ErrorMailboxStoreUnavailable,
@@ -86,6 +88,8 @@ KNOWN_EXCEPTIONS = (
 
 
 class EWSService(metaclass=abc.ABCMeta):
+    &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
+
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
     paging_container_name = None  # The name of the element that contains paging information and the paged results
@@ -108,8 +112,10 @@ class EWSService(metaclass=abc.ABCMeta):
     supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
 
-    def __init__(self, protocol, chunk_size=None):
+    def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
         if not isinstance(self.chunk_size, int):
             raise ValueError(&#34;&#39;chunk_size&#39; %r must be an integer&#34; % chunk_size)
@@ -120,6 +126,8 @@ class EWSService(metaclass=abc.ABCMeta):
                 &#39;%r is only supported on %r and later&#39; % (self.SERVICE_NAME, self.supported_from.fullname())
             )
         self.protocol = protocol
+        # Allow a service to override the default protocol timeout. Useful for streaming services
+        self.timeout = timeout
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
@@ -149,11 +157,11 @@ class EWSService(metaclass=abc.ABCMeta):
         res = list(self.call(**kwargs))
         if expect_result is None and not res:
             # Allow empty result
-            return
+            return None
         if expect_result is False:
             if res:
                 raise ValueError(&#39;Expected result length 0, but got %r&#39; % res)
-            return
+            return None
         if len(res) != 1:
             raise ValueError(&#39;Expected result length 1, but got %r&#39; % res)
         if isinstance(res[0], Exception):
@@ -169,9 +177,14 @@ class EWSService(metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    @property
-    def _headers(self):
-        return extra_headers(primary_smtp_address=None)
+    def _extra_headers(self, session):
+        headers = {}
+        if self.prefer_affinity:
+            headers[&#39;X-PreferServerAffinity&#39;] = &#39;True&#39;
+        for cookie in session.cookies:
+            if cookie.name == &#39;X-BackEndCookie&#39;:
+                headers[&#39;X-BackEndOverrideCookie&#39;] = cookie.value
+        return headers
 
     @property
     def _account_to_impersonate(self):
@@ -184,7 +197,8 @@ class EWSService(metaclass=abc.ABCMeta):
         return None
 
     def _response_generator(self, payload):
-        &#34;&#34;&#34;Sends the payload to the server, and returns the response
+        &#34;&#34;&#34;Send the payload to the server, and return the response.
+
         :param payload: payload as an XML object
         :return: the response, as XML objects
         &#34;&#34;&#34;
@@ -194,7 +208,8 @@ class EWSService(metaclass=abc.ABCMeta):
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
-        &#34;&#34;&#34;Like ._get_elements(), but Chop items list into suitable pieces
+        &#34;&#34;&#34;Yield elements in a response. Like ._get_elements(), but chop items into suitable chunks and send multiple
+        requests.
 
         :param payload_func: A reference to .payload()
         :param items: An iterable of items (messages, folders, etc.) to process
@@ -206,8 +221,8 @@ class EWSService(metaclass=abc.ABCMeta):
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def _get_elements(self, payload):
-        &#34;&#34;&#34;Sends the payload to be sent and parsed. Handles and re-raises exceptions that are not meant to be returned
-        to the caller as exception objects. Retries the request according to the retry policy.
+        &#34;&#34;&#34;Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
+        to the caller as exception objects. Retry the request according to the retry policy.
         &#34;&#34;&#34;
         while True:
             try:
@@ -238,13 +253,36 @@ class EWSService(metaclass=abc.ABCMeta):
             except Exception:
                 # This may run from a thread pool, which obfuscates the stack trace. Print trace immediately.
                 account = self.account if isinstance(self, EWSAccountService) else None
-                log.warning(&#39;EWS %s, account %s: Exception in _get_elements: %s&#39;, self.protocol.service_endpoint,
-                            account, traceback.format_exc(20))
+                log.warning(&#39;Account %s: Exception in _get_elements: %s&#39;, account, traceback.format_exc(20))
                 raise
 
+    def _get_response_and_session(self, payload, api_version):
+        &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
+        session = self.protocol.get_session()
+        return post_ratelimited(
+            protocol=self.protocol,
+            session=session,
+            url=self.protocol.service_endpoint,
+            headers=self._extra_headers(session),
+            data=wrap(
+                content=payload,
+                api_version=api_version,
+                account_to_impersonate=self._account_to_impersonate,
+                timezone=self._timezone,
+            ),
+            allow_redirects=False,
+            stream=self.streaming,
+            timeout=self.timeout or self.protocol.TIMEOUT,
+        )
+
+    @property
+    def _api_versions_to_try(self):
+        # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
+        return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
+
     def _get_response_xml(self, payload, **parse_opts):
-        &#34;&#34;&#34;Sends the payload to the server and returns relevant elements from the result. Several things happen here:
-          * The payload is wrapped in SOAP headers
+        &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
+          * The payload is wrapped in SOAP headers and sent to the server
           * The Exchange API version is negotiated and stored in the protocol object
           * Connection errors are handled and possibly reraised as ErrorServerBusy
           * SOAP errors are raised
@@ -253,63 +291,38 @@ class EWSService(metaclass=abc.ABCMeta):
         :param payload: The request payload, as an XML object
         :return: A generator of XML objects or None if the service does not return a result
         &#34;&#34;&#34;
-        version_hint = self._version_hint
-        headers = self._headers
-        account_to_impersonate = self._account_to_impersonate
-        timezone = self._timezone
-
         # Microsoft really doesn&#39;t want to make our lives easy. The server may report one version in our initial version
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
-        api_versions = [version_hint.api_version] + [v for v in API_VERSIONS if v != version_hint.api_version]
-        for api_version in api_versions:
+        log.debug(&#39;Calling service %s&#39;, self.SERVICE_NAME)
+        for api_version in self._api_versions_to_try:
             log.debug(&#39;Trying API version %s&#39;, api_version)
-            r, session = post_ratelimited(
-                protocol=self.protocol,
-                session=self.protocol.get_session(),
-                url=self.protocol.service_endpoint,
-                headers=headers,
-                data=wrap(
-                    content=payload,
-                    api_version=api_version,
-                    account_to_impersonate=account_to_impersonate,
-                    timezone=timezone,
-                ),
-                allow_redirects=False,
-                stream=self.streaming,
-            )
-            # TODO: We should only release the session when we have fully consumed the response, but that requires fully
-            # consuming the generator returned by _get_soap_messages. The caller may not always do that. This
-            # seems to work anyway.
+            r, session = self._get_response_and_session(payload=payload, api_version=api_version)
+            # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
+            #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
+            #  that. Not doing so seems to not cause any trouble, though.
             self.protocol.release_session(session)
             if self.streaming:
                 # Let &#39;requests&#39; decode raw data automatically
                 r.raw.decode_content = True
             try:
                 header, body = self._get_soap_parts(response=r, **parse_opts)
-            except ParseError as e:
+            except Exception:
                 r.close()  # Release memory
-                raise SOAPError(&#39;Bad SOAP response: %s&#39; % e)
+                raise
             # The body may contain error messages from Exchange, but we still want to collect version info
             if header is not None:
-                try:
-                    self._update_api_version(version_hint=version_hint, api_version=api_version, header=header,
-                                             **parse_opts)
-                except TransportError as te:
-                    log.debug(&#39;Failed to update version info (%s)&#39;, te)
+                self._update_api_version(api_version=api_version, header=header, **parse_opts)
             try:
                 return self._get_soap_messages(body=body, **parse_opts)
-            except (ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion, ErrorInvalidRequest):
+            except (ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion, ErrorInvalidRequest,
+                    ErrorInvalidSchemaVersionForMailboxVersion):
                 # The guessed server version is wrong. Try the next version
                 log.debug(&#39;API version %s was invalid&#39;, api_version)
                 continue
-            except ErrorInvalidSchemaVersionForMailboxVersion:
-                # The guessed server version is wrong for this account. Try the next version
-                log.debug(&#39;API version %s was invalid&#39;, api_version)
-                continue
             except ErrorExceededConnectionCount as e:
-                # ErrorExceededConnectionCount indicates that the connecting user has too many open TCP connections to
-                # the server. Decrease our session pool size.
+                # This indicates that the connecting user has too many open TCP connections to the server. Decrease
+                # our session pool size.
                 try:
                     self.protocol.decrease_poolsize()
                     continue
@@ -321,10 +334,10 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(&#39;Tried versions %s but all were invalid&#39; % api_versions)
+        raise self.NO_VALID_SERVER_VERSIONS(&#39;Tried versions %s but all were invalid&#39; % self._api_versions_to_try)
 
     def _handle_backoff(self, e):
-        &#34;&#34;&#34;Takes a request from the server to back off and checks the retry policy for what to do. Re-raises the
+        &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
         exception if conditions are not met.
 
         :param e: An ErrorServerBusy instance
@@ -341,42 +354,45 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol.retry_policy.back_off(e.back_off)
         # We&#39;ll warn about this later if we actually need to sleep
 
-    def _update_api_version(self, version_hint, api_version, header, **parse_opts):
-        &#34;&#34;&#34;Parses the server version contained in SOAP headers and updates the version hint stored by the caller, if
+    def _update_api_version(self, api_version, header, **parse_opts):
+        &#34;&#34;&#34;Parse the server version contained in SOAP headers and update the version hint stored by the caller, if
         necessary.
         &#34;&#34;&#34;
-        head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
-        if version_hint == head_version:
+        try:
+            head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
+        except TransportError as te:
+            log.debug(&#39;Failed to update version info (%s)&#39;, te)
+            return
+        if self._version_hint == head_version:
             # Nothing to do
             return
-        log.debug(&#39;Found new version (%s -&gt; %s)&#39;, version_hint, head_version)
+        log.debug(&#39;Found new version (%s -&gt; %s)&#39;, self._version_hint, head_version)
         # The api_version that worked was different than our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
 
     @classmethod
     def _response_tag(cls):
-        &#34;&#34;&#34;The name of the element containing the service response
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
         return &#39;{%s}%sResponse&#39; % (MNS, cls.SERVICE_NAME)
 
     @staticmethod
     def _response_messages_tag():
-        &#34;&#34;&#34;The name of the element containing service response messages
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the name of the element containing service response messages.&#34;&#34;&#34;
         return &#39;{%s}ResponseMessages&#39; % MNS
 
     @classmethod
     def _response_message_tag(cls):
-        &#34;&#34;&#34;The name of the element of a single response message
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the name of the element of a single response message.&#34;&#34;&#34;
         return &#39;{%s}%sResponseMessage&#39; % (MNS, cls.SERVICE_NAME)
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        &#34;&#34;&#34;Split the SOAP response into its headers an body elements
-        &#34;&#34;&#34;
-        root = to_xml(response.iter_content())
+        &#34;&#34;&#34;Split the SOAP response into its headers an body elements.&#34;&#34;&#34;
+        try:
+            root = to_xml(response.iter_content())
+        except ParseError as e:
+            raise SOAPError(&#39;Bad SOAP response: %s&#39; % e)
         header = root.find(&#39;{%s}Header&#39; % SOAPNS)
         if header is None:
             # This is normal when the response contains SOAP-level errors
@@ -386,29 +402,26 @@ class EWSService(metaclass=abc.ABCMeta):
             raise MalformedResponseError(&#39;No Body element in SOAP response&#39;)
         return header, body
 
-    @classmethod
-    def _get_soap_messages(cls, body, **parse_opts):
-        &#34;&#34;&#34;Returns the elements in the response containing the response messages. Raises any SOAP exceptions.
-        &#34;&#34;&#34;
-        response = body.find(cls._response_tag())
+    def _get_soap_messages(self, body, **parse_opts):
+        &#34;&#34;&#34;Return the elements in the response containing the response messages. Raises any SOAP exceptions.&#34;&#34;&#34;
+        response = body.find(self._response_tag())
         if response is None:
             fault = body.find(&#39;{%s}Fault&#39; % SOAPNS)
             if fault is None:
                 raise SOAPError(
-                    &#39;Unknown SOAP response (expected %s or Fault): %s&#39; % (cls._response_tag(), xml_to_str(body))
+                    &#39;Unknown SOAP response (expected %s or Fault): %s&#39; % (self._response_tag(), xml_to_str(body))
                 )
-            cls._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
-        response_messages = response.find(cls._response_messages_tag())
+            self._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
+        response_messages = response.find(self._response_messages_tag())
         if response_messages is None:
             # Result isn&#39;t delivered in a list of FooResponseMessages, but directly in the FooResponse. Consumers expect
             # a list, so return a list
             return [response]
-        return response_messages.findall(cls._response_message_tag())
+        return response_messages.findall(self._response_message_tag())
 
     @classmethod
     def _raise_soap_errors(cls, fault):
-        &#34;&#34;&#34;Parse error messages contained in SOAP headers and raise as exceptions defined in this package
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Parse error messages contained in SOAP headers and raise as exceptions defined in this package.&#34;&#34;&#34;
         # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
         faultcode = get_xml_attr(fault, &#39;faultcode&#39;)
         faultstring = get_xml_attr(fault, &#39;faultstring&#39;)
@@ -430,7 +443,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 except (TypeError, AttributeError):
                     pass
                 raise ErrorServerBusy(msg, back_off=back_off)
-            elif code == &#39;ErrorSchemaValidation&#39; and msg_xml is not None:
+            if code == &#39;ErrorSchemaValidation&#39; and msg_xml is not None:
                 violation = get_xml_attr(msg_xml, &#39;{%s}Violation&#39; % TNS)
                 if violation is not None:
                     msg = &#39;%s %s&#39; % (msg, violation)
@@ -446,7 +459,7 @@ class EWSService(metaclass=abc.ABCMeta):
             faultcode, faultstring, faultactor, detail))
 
     def _get_element_container(self, message, name=None):
-        &#34;&#34;&#34;Returns the XML element in a response element that contains the elements we want the service to return. For
+        &#34;&#34;&#34;Return the XML element in a response element that contains the elements we want the service to return. For
         example, in a GetFolder response, &#39;message&#39; is the GetFolderResponseMessage element, and we return the &#39;Folders&#39;
         element:
 
@@ -505,8 +518,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_exception(code, text, msg_xml):
-        &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package.&#34;&#34;&#34;
         if not code:
             return TransportError(&#39;Empty ResponseCode in ResponseMessage (MessageText: %s, MessageXml: %s)&#39; % (
                 text, msg_xml))
@@ -553,7 +565,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     code, text, msg_xml))
 
     def _get_elements_in_response(self, response):
-        &#34;&#34;&#34;Takes a list of &#39;SomeServiceResponseMessage&#39; elements and returns the elements in each response message that
+        &#34;&#34;&#34;Take a list of &#39;SomeServiceResponseMessage&#39; elements and return the elements in each response message that
         we want the service to return. With e.g. &#39;CreateItem&#39;, we get a list of &#39;CreateItemResponseMessage&#39; elements
         and return the &#39;Message&#39; elements.
 
@@ -587,7 +599,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        &#34;&#34;&#34;Returns a list of response elements from an XML response element container. With e.g.
+        &#34;&#34;&#34;Return a list of response elements from an XML response element container. With e.g.
         &#39;CreateItem&#39;, &#39;Items&#39; is the container element and we return the &#39;Message&#39; child elements:
 
           &lt;m:Items&gt;
@@ -600,8 +612,49 @@ class EWSService(metaclass=abc.ABCMeta):
         raised.
         &#34;&#34;&#34;
         if cls.returns_elements:
-            return [elem for elem in container]
+            return list(container)
         return [True]
+
+    def _get_elems_from_page(self, elem, max_items, total_item_count):
+        container = elem.find(self.element_container_name)
+        if container is None:
+            raise MalformedResponseError(&#39;No %s elements in ResponseMessage (%s)&#39; % (
+                self.element_container_name, xml_to_str(elem)))
+        for e in self._get_elements_in_container(container=container):
+            if max_items and total_item_count &gt;= max_items:
+                # No need to continue. Break out of elements loop
+                log.debug(&#34;&#39;max_items&#39; count reached (elements)&#34;)
+                break
+            yield e
+
+    def _get_pages(self, payload_func, kwargs, expected_message_count):
+        &#34;&#34;&#34;Request a page, or a list of pages if multiple collections are pages in a single request. Return each
+        page.
+        &#34;&#34;&#34;
+        payload = payload_func(**kwargs)
+        page_elems = list(self._get_elements(payload=payload))
+        if len(page_elems) != expected_message_count:
+            raise MalformedResponseError(
+                &#34;Expected %s items in &#39;response&#39;, got %s&#34; % (expected_message_count, len(page_elems))
+            )
+        return page_elems
+
+    @staticmethod
+    def _get_next_offset(paging_infos):
+        next_offsets = {p[&#39;next_offset&#39;] for p in paging_infos if p[&#39;next_offset&#39;] is not None}
+        if not next_offsets:
+            # Paging is done for all messages
+            return None
+        # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
+        # because the collections that we are iterating may change while iterating. We&#39;ll do our best but we cannot
+        # guarantee 100% consistency when large collections are simultaneously being changed on the server.
+        #
+        # It&#39;s not possible to supply a per-folder offset when iterating multiple folders, so we&#39;ll just have to
+        # choose something that is most likely to work. Select the lowest of all the values to at least make sure
+        # we don&#39;t miss any items, although we may then get duplicates ¯\_(ツ)_/¯
+        if len(next_offsets) &gt; 1:
+            log.warning(&#39;Inconsistent next_offset values: %r. Using lowest value&#39;, next_offsets)
+        return min(next_offsets)
 
     def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
         &#34;&#34;&#34;Call a service that supports paging requests. Return a generator over all response items. Keeps track of
@@ -611,30 +664,16 @@ class EWSService(metaclass=abc.ABCMeta):
         common_next_offset = kwargs[&#39;offset&#39;]
         total_item_count = 0
         while True:
-            log.debug(&#39;EWS %s, service %s: Getting items at offset %s (max_items %s)&#39;, self.protocol.service_endpoint,
-                      self.SERVICE_NAME, common_next_offset, max_items)
+            log.debug(&#39;Getting page at offset %s (max_items %s)&#39;, common_next_offset, max_items)
             kwargs[&#39;offset&#39;] = common_next_offset
-            payload = payload_func(**kwargs)
-            parsed_pages = list(self._get_elements(payload=payload))
-            if len(parsed_pages) != expected_message_count:
-                raise MalformedResponseError(
-                    &#34;Expected %s items in &#39;response&#39;, got %s&#34; % (expected_message_count, len(parsed_pages))
-                )
-            for (paging_container, next_offset), paging_info in zip(parsed_pages, paging_infos):
+            pages = self._get_pages(payload_func, kwargs, expected_message_count)
+            for (page, next_offset), paging_info in zip(pages, paging_infos):
                 paging_info[&#39;next_offset&#39;] = next_offset
-                if isinstance(paging_container, Exception):
-                    yield paging_container
+                if isinstance(page, Exception):
+                    yield page
                     continue
-                if paging_container is not None:
-                    container = paging_container.find(self.element_container_name)
-                    if container is None:
-                        raise MalformedResponseError(&#39;No %s elements in ResponseMessage (%s)&#39; % (
-                            self.element_container_name, xml_to_str(paging_container)))
-                    for elem in self._get_elements_in_container(container=container):
-                        if max_items and total_item_count &gt;= max_items:
-                            # No need to continue. Break out of elements loop
-                            log.debug(&#34;&#39;max_items&#39; count reached (elements)&#34;)
-                            break
+                if page is not None:
+                    for elem in self._get_elems_from_page(page, max_items, total_item_count):
                         paging_info[&#39;item_count&#39;] += 1
                         total_item_count += 1
                         yield elem
@@ -652,30 +691,20 @@ class EWSService(metaclass=abc.ABCMeta):
                 if paging_info[&#39;next_offset&#39;] != paging_info[&#39;item_count&#39;] and (
                     not max_items or total_item_count &lt; max_items
                 ):
-                    log.warning(&#39;Unexpected next offset: %s -&gt; %s. Maybe the server-side collection has changed?&#39;
-                                % (paging_info[&#39;item_count&#39;], paging_info[&#39;next_offset&#39;]))
+                    log.warning(&#39;Unexpected next offset: %s -&gt; %s. Maybe the server-side collection has changed?&#39;,
+                                paging_info[&#39;item_count&#39;], paging_info[&#39;next_offset&#39;])
             # Also break out of outer loop
             if max_items and total_item_count &gt;= max_items:
                 log.debug(&#34;&#39;max_items&#39; count reached (outer)&#34;)
                 break
-            next_offsets = {p[&#39;next_offset&#39;] for p in paging_infos if p[&#39;next_offset&#39;] is not None}
-            if not next_offsets:
+            common_next_offset = self._get_next_offset(paging_infos)
+            if common_next_offset is None:
                 # Paging is done for all messages
                 break
-            # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-            # because the collections that we are iterating may change while iterating. We&#39;ll do our best but we cannot
-            # guarantee 100% consistency when large collections are simultaneously being changed on the server.
-            #
-            # It&#39;s not possible to supply a per-folder offset when iterating multiple folders, so we&#39;ll just have to
-            # choose something that is most likely to work. Select the lowest of all the values to at least make sure
-            # we don&#39;t miss any items, although we may then get duplicates ¯\_(ツ)_/¯
-            if len(next_offsets) &gt; 1:
-                log.warning(&#39;Inconsistent next_offset values: %r. Using lowest value&#39;, next_offsets)
-            common_next_offset = min(next_offsets)
 
-    def _get_paging_values(self, elem):
-        &#34;&#34;&#34;Read paging information from the paging container element
-        &#34;&#34;&#34;
+    @staticmethod
+    def _get_paging_values(elem):
+        &#34;&#34;&#34;Read paging information from the paging container element.&#34;&#34;&#34;
         is_last_page = elem.get(&#39;IncludesLastItemInRange&#39;).lower() in (&#39;true&#39;, &#39;0&#39;)
         offset = elem.get(&#39;IndexedPagingOffset&#39;)
         if offset is None and not is_last_page:
@@ -683,15 +712,13 @@ class EWSService(metaclass=abc.ABCMeta):
             offset = &#39;1&#39;
         next_offset = None if is_last_page else int(offset)
         item_count = int(elem.get(&#39;TotalItemsInView&#39;))
-        if not item_count:
-            if next_offset is not None:
-                raise ValueError(&#34;Expected empty &#39;next_offset&#39; when &#39;item_count&#39; is 0&#34;)
-        log.debug(&#39;%s: Got page with next offset %s (last_page %s)&#39;, self.SERVICE_NAME, next_offset, is_last_page)
+        if not item_count and next_offset is not None:
+            raise ValueError(&#34;Expected empty &#39;next_offset&#39; when &#39;item_count&#39; is 0&#34;)
+        log.debug(&#39;Got page with next offset %s (last_page %s)&#39;, next_offset, is_last_page)
         return item_count, next_offset
 
     def _get_page(self, message):
-        &#34;&#34;&#34;Get a single page from a request message, and return the container and next offset
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Get a single page from a request message, and return the container and next offset.&#34;&#34;&#34;
         paging_elem = self._get_element_container(message=message, name=self.paging_container_name)
         if isinstance(paging_elem, Exception):
             return paging_elem, None
@@ -702,8 +729,8 @@ class EWSService(metaclass=abc.ABCMeta):
 
 
 class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for services that act on items concerning a single Mailbox on the server
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Base class for services that act on items concerning a single Mailbox on the server.&#34;&#34;&#34;
+
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
 
     def __init__(self, *args, **kwargs):
@@ -719,9 +746,12 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.account.version = value
 
-    @property
-    def _headers(self):
-        return extra_headers(primary_smtp_address=self.account.primary_smtp_address)
+    def _extra_headers(self, *args, **kwargs):
+        headers = super()._extra_headers(*args, **kwargs)
+        # See
+        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+        headers[&#39;X-AnchorMailbox&#39;] = self.account.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):
@@ -774,8 +804,8 @@ def create_folder_ids_element(tag, folders, version):
     return folder_ids
 
 
-def create_item_ids_element(items, version):
-    item_ids = create_element(&#39;m:ItemIds&#39;)
+def create_item_ids_element(items, version, tag=&#39;m:ItemIds&#39;):
+    item_ids = create_element(tag)
     for item in items:
         set_xml_value(item_ids, to_item_id(item, ItemId, version=version), version=version)
     if not len(item_ids):
@@ -804,10 +834,12 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
     elif isinstance(folder, DistinguishedFolderId):
         # We don&#39;t know the root, so assume account.root.
-        for folder_cls in account.root.WELLKNOWN_FOLDERS:
-            if folder_cls.DISTINGUISHED_FOLDER_ID == folder.id:
+        folder_cls = None
+        for cls in account.root.WELLKNOWN_FOLDERS:
+            if cls.DISTINGUISHED_FOLDER_ID == folder.id:
+                folder_cls = cls
                 break
-        else:
+        if not folder_cls:
             raise ValueError(&#39;Unknown distinguished folder ID: %s&#39; % folder.id)
         f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
     else:
@@ -869,7 +901,7 @@ def parse_folder_elem(elem, folder, account):
 </details>
 </dd>
 <dt id="exchangelib.services.common.create_item_ids_element"><code class="name flex">
-<span>def <span class="ident">create_item_ids_element</span></span>(<span>items, version)</span>
+<span>def <span class="ident">create_item_ids_element</span></span>(<span>items, version, tag='m:ItemIds')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -877,8 +909,8 @@ def parse_folder_elem(elem, folder, account):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def create_item_ids_element(items, version):
-    item_ids = create_element(&#39;m:ItemIds&#39;)
+<pre><code class="python">def create_item_ids_element(items, version, tag=&#39;m:ItemIds&#39;):
+    item_ids = create_element(tag)
     for item in items:
         set_xml_value(item_ids, to_item_id(item, ItemId, version=version), version=version)
     if not len(item_ids):
@@ -925,10 +957,12 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
     elif isinstance(folder, DistinguishedFolderId):
         # We don&#39;t know the root, so assume account.root.
-        for folder_cls in account.root.WELLKNOWN_FOLDERS:
-            if folder_cls.DISTINGUISHED_FOLDER_ID == folder.id:
+        folder_cls = None
+        for cls in account.root.WELLKNOWN_FOLDERS:
+            if cls.DISTINGUISHED_FOLDER_ID == folder.id:
+                folder_cls = cls
                 break
-        else:
+        if not folder_cls:
             raise ValueError(&#39;Unknown distinguished folder ID: %s&#39; % folder.id)
         f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
     else:
@@ -977,14 +1011,14 @@ def parse_folder_elem(elem, folder, account):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for services that act on items concerning a single Mailbox on the server</p></div>
+<div class="desc"><p>Base class for services that act on items concerning a single Mailbox on the server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Base class for services that act on items concerning a single Mailbox on the server
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Base class for services that act on items concerning a single Mailbox on the server.&#34;&#34;&#34;
+
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
 
     def __init__(self, *args, **kwargs):
@@ -1000,9 +1034,12 @@ def parse_folder_elem(elem, folder, account):
     def _version_hint(self, value):
         self.account.version = value
 
-    @property
-    def _headers(self):
-        return extra_headers(primary_smtp_address=self.account.primary_smtp_address)
+    def _extra_headers(self, *args, **kwargs):
+        headers = super()._extra_headers(*args, **kwargs)
+        # See
+        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+        headers[&#39;X-AnchorMailbox&#39;] = self.account.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):
@@ -1036,15 +1073,20 @@ def parse_folder_elem(elem, folder, account):
 <li><a title="exchangelib.services.find_people.FindPeople" href="find_people.html#exchangelib.services.find_people.FindPeople">FindPeople</a></li>
 <li><a title="exchangelib.services.get_attachment.GetAttachment" href="get_attachment.html#exchangelib.services.get_attachment.GetAttachment">GetAttachment</a></li>
 <li><a title="exchangelib.services.get_delegate.GetDelegate" href="get_delegate.html#exchangelib.services.get_delegate.GetDelegate">GetDelegate</a></li>
+<li><a title="exchangelib.services.get_events.GetEvents" href="get_events.html#exchangelib.services.get_events.GetEvents">GetEvents</a></li>
 <li><a title="exchangelib.services.get_folder.GetFolder" href="get_folder.html#exchangelib.services.get_folder.GetFolder">GetFolder</a></li>
 <li><a title="exchangelib.services.get_item.GetItem" href="get_item.html#exchangelib.services.get_item.GetItem">GetItem</a></li>
 <li><a title="exchangelib.services.get_persona.GetPersona" href="get_persona.html#exchangelib.services.get_persona.GetPersona">GetPersona</a></li>
+<li><a title="exchangelib.services.get_streaming_events.GetStreamingEvents" href="get_streaming_events.html#exchangelib.services.get_streaming_events.GetStreamingEvents">GetStreamingEvents</a></li>
 <li><a title="exchangelib.services.get_user_configuration.GetUserConfiguration" href="get_user_configuration.html#exchangelib.services.get_user_configuration.GetUserConfiguration">GetUserConfiguration</a></li>
 <li><a title="exchangelib.services.get_user_oof_settings.GetUserOofSettings" href="get_user_oof_settings.html#exchangelib.services.get_user_oof_settings.GetUserOofSettings">GetUserOofSettings</a></li>
 <li><a title="exchangelib.services.mark_as_junk.MarkAsJunk" href="mark_as_junk.html#exchangelib.services.mark_as_junk.MarkAsJunk">MarkAsJunk</a></li>
 <li><a title="exchangelib.services.move_item.MoveItem" href="move_item.html#exchangelib.services.move_item.MoveItem">MoveItem</a></li>
 <li><a title="exchangelib.services.send_item.SendItem" href="send_item.html#exchangelib.services.send_item.SendItem">SendItem</a></li>
 <li><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings" href="set_user_oof_settings.html#exchangelib.services.set_user_oof_settings.SetUserOofSettings">SetUserOofSettings</a></li>
+<li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
+<li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
+<li><a title="exchangelib.services.unsubscribe.Unsubscribe" href="unsubscribe.html#exchangelib.services.unsubscribe.Unsubscribe">Unsubscribe</a></li>
 <li><a title="exchangelib.services.update_folder.UpdateFolder" href="update_folder.html#exchangelib.services.update_folder.UpdateFolder">UpdateFolder</a></li>
 <li><a title="exchangelib.services.update_item.UpdateItem" href="update_item.html#exchangelib.services.update_item.UpdateItem">UpdateItem</a></li>
 <li><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration" href="update_user_configuration.html#exchangelib.services.update_user_configuration.UpdateUserConfiguration">UpdateUserConfiguration</a></li>
@@ -1063,15 +1105,17 @@ def parse_folder_elem(elem, folder, account):
 </dd>
 <dt id="exchangelib.services.common.EWSService"><code class="flex name class">
 <span>class <span class="ident">EWSService</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Base class for all EWS services.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EWSService(metaclass=abc.ABCMeta):
+    &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
+
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
     paging_container_name = None  # The name of the element that contains paging information and the paged results
@@ -1094,8 +1138,10 @@ def parse_folder_elem(elem, folder, account):
     supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
 
-    def __init__(self, protocol, chunk_size=None):
+    def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
         if not isinstance(self.chunk_size, int):
             raise ValueError(&#34;&#39;chunk_size&#39; %r must be an integer&#34; % chunk_size)
@@ -1106,6 +1152,8 @@ def parse_folder_elem(elem, folder, account):
                 &#39;%r is only supported on %r and later&#39; % (self.SERVICE_NAME, self.supported_from.fullname())
             )
         self.protocol = protocol
+        # Allow a service to override the default protocol timeout. Useful for streaming services
+        self.timeout = timeout
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
@@ -1135,11 +1183,11 @@ def parse_folder_elem(elem, folder, account):
         res = list(self.call(**kwargs))
         if expect_result is None and not res:
             # Allow empty result
-            return
+            return None
         if expect_result is False:
             if res:
                 raise ValueError(&#39;Expected result length 0, but got %r&#39; % res)
-            return
+            return None
         if len(res) != 1:
             raise ValueError(&#39;Expected result length 1, but got %r&#39; % res)
         if isinstance(res[0], Exception):
@@ -1155,9 +1203,14 @@ def parse_folder_elem(elem, folder, account):
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    @property
-    def _headers(self):
-        return extra_headers(primary_smtp_address=None)
+    def _extra_headers(self, session):
+        headers = {}
+        if self.prefer_affinity:
+            headers[&#39;X-PreferServerAffinity&#39;] = &#39;True&#39;
+        for cookie in session.cookies:
+            if cookie.name == &#39;X-BackEndCookie&#39;:
+                headers[&#39;X-BackEndOverrideCookie&#39;] = cookie.value
+        return headers
 
     @property
     def _account_to_impersonate(self):
@@ -1170,7 +1223,8 @@ def parse_folder_elem(elem, folder, account):
         return None
 
     def _response_generator(self, payload):
-        &#34;&#34;&#34;Sends the payload to the server, and returns the response
+        &#34;&#34;&#34;Send the payload to the server, and return the response.
+
         :param payload: payload as an XML object
         :return: the response, as XML objects
         &#34;&#34;&#34;
@@ -1180,7 +1234,8 @@ def parse_folder_elem(elem, folder, account):
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
-        &#34;&#34;&#34;Like ._get_elements(), but Chop items list into suitable pieces
+        &#34;&#34;&#34;Yield elements in a response. Like ._get_elements(), but chop items into suitable chunks and send multiple
+        requests.
 
         :param payload_func: A reference to .payload()
         :param items: An iterable of items (messages, folders, etc.) to process
@@ -1192,8 +1247,8 @@ def parse_folder_elem(elem, folder, account):
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def _get_elements(self, payload):
-        &#34;&#34;&#34;Sends the payload to be sent and parsed. Handles and re-raises exceptions that are not meant to be returned
-        to the caller as exception objects. Retries the request according to the retry policy.
+        &#34;&#34;&#34;Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
+        to the caller as exception objects. Retry the request according to the retry policy.
         &#34;&#34;&#34;
         while True:
             try:
@@ -1224,13 +1279,36 @@ def parse_folder_elem(elem, folder, account):
             except Exception:
                 # This may run from a thread pool, which obfuscates the stack trace. Print trace immediately.
                 account = self.account if isinstance(self, EWSAccountService) else None
-                log.warning(&#39;EWS %s, account %s: Exception in _get_elements: %s&#39;, self.protocol.service_endpoint,
-                            account, traceback.format_exc(20))
+                log.warning(&#39;Account %s: Exception in _get_elements: %s&#39;, account, traceback.format_exc(20))
                 raise
 
+    def _get_response_and_session(self, payload, api_version):
+        &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
+        session = self.protocol.get_session()
+        return post_ratelimited(
+            protocol=self.protocol,
+            session=session,
+            url=self.protocol.service_endpoint,
+            headers=self._extra_headers(session),
+            data=wrap(
+                content=payload,
+                api_version=api_version,
+                account_to_impersonate=self._account_to_impersonate,
+                timezone=self._timezone,
+            ),
+            allow_redirects=False,
+            stream=self.streaming,
+            timeout=self.timeout or self.protocol.TIMEOUT,
+        )
+
+    @property
+    def _api_versions_to_try(self):
+        # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
+        return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
+
     def _get_response_xml(self, payload, **parse_opts):
-        &#34;&#34;&#34;Sends the payload to the server and returns relevant elements from the result. Several things happen here:
-          * The payload is wrapped in SOAP headers
+        &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
+          * The payload is wrapped in SOAP headers and sent to the server
           * The Exchange API version is negotiated and stored in the protocol object
           * Connection errors are handled and possibly reraised as ErrorServerBusy
           * SOAP errors are raised
@@ -1239,63 +1317,38 @@ def parse_folder_elem(elem, folder, account):
         :param payload: The request payload, as an XML object
         :return: A generator of XML objects or None if the service does not return a result
         &#34;&#34;&#34;
-        version_hint = self._version_hint
-        headers = self._headers
-        account_to_impersonate = self._account_to_impersonate
-        timezone = self._timezone
-
         # Microsoft really doesn&#39;t want to make our lives easy. The server may report one version in our initial version
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
-        api_versions = [version_hint.api_version] + [v for v in API_VERSIONS if v != version_hint.api_version]
-        for api_version in api_versions:
+        log.debug(&#39;Calling service %s&#39;, self.SERVICE_NAME)
+        for api_version in self._api_versions_to_try:
             log.debug(&#39;Trying API version %s&#39;, api_version)
-            r, session = post_ratelimited(
-                protocol=self.protocol,
-                session=self.protocol.get_session(),
-                url=self.protocol.service_endpoint,
-                headers=headers,
-                data=wrap(
-                    content=payload,
-                    api_version=api_version,
-                    account_to_impersonate=account_to_impersonate,
-                    timezone=timezone,
-                ),
-                allow_redirects=False,
-                stream=self.streaming,
-            )
-            # TODO: We should only release the session when we have fully consumed the response, but that requires fully
-            # consuming the generator returned by _get_soap_messages. The caller may not always do that. This
-            # seems to work anyway.
+            r, session = self._get_response_and_session(payload=payload, api_version=api_version)
+            # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
+            #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
+            #  that. Not doing so seems to not cause any trouble, though.
             self.protocol.release_session(session)
             if self.streaming:
                 # Let &#39;requests&#39; decode raw data automatically
                 r.raw.decode_content = True
             try:
                 header, body = self._get_soap_parts(response=r, **parse_opts)
-            except ParseError as e:
+            except Exception:
                 r.close()  # Release memory
-                raise SOAPError(&#39;Bad SOAP response: %s&#39; % e)
+                raise
             # The body may contain error messages from Exchange, but we still want to collect version info
             if header is not None:
-                try:
-                    self._update_api_version(version_hint=version_hint, api_version=api_version, header=header,
-                                             **parse_opts)
-                except TransportError as te:
-                    log.debug(&#39;Failed to update version info (%s)&#39;, te)
+                self._update_api_version(api_version=api_version, header=header, **parse_opts)
             try:
                 return self._get_soap_messages(body=body, **parse_opts)
-            except (ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion, ErrorInvalidRequest):
+            except (ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion, ErrorInvalidRequest,
+                    ErrorInvalidSchemaVersionForMailboxVersion):
                 # The guessed server version is wrong. Try the next version
                 log.debug(&#39;API version %s was invalid&#39;, api_version)
                 continue
-            except ErrorInvalidSchemaVersionForMailboxVersion:
-                # The guessed server version is wrong for this account. Try the next version
-                log.debug(&#39;API version %s was invalid&#39;, api_version)
-                continue
             except ErrorExceededConnectionCount as e:
-                # ErrorExceededConnectionCount indicates that the connecting user has too many open TCP connections to
-                # the server. Decrease our session pool size.
+                # This indicates that the connecting user has too many open TCP connections to the server. Decrease
+                # our session pool size.
                 try:
                     self.protocol.decrease_poolsize()
                     continue
@@ -1307,10 +1360,10 @@ def parse_folder_elem(elem, folder, account):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(&#39;Tried versions %s but all were invalid&#39; % api_versions)
+        raise self.NO_VALID_SERVER_VERSIONS(&#39;Tried versions %s but all were invalid&#39; % self._api_versions_to_try)
 
     def _handle_backoff(self, e):
-        &#34;&#34;&#34;Takes a request from the server to back off and checks the retry policy for what to do. Re-raises the
+        &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
         exception if conditions are not met.
 
         :param e: An ErrorServerBusy instance
@@ -1327,42 +1380,45 @@ def parse_folder_elem(elem, folder, account):
         self.protocol.retry_policy.back_off(e.back_off)
         # We&#39;ll warn about this later if we actually need to sleep
 
-    def _update_api_version(self, version_hint, api_version, header, **parse_opts):
-        &#34;&#34;&#34;Parses the server version contained in SOAP headers and updates the version hint stored by the caller, if
+    def _update_api_version(self, api_version, header, **parse_opts):
+        &#34;&#34;&#34;Parse the server version contained in SOAP headers and update the version hint stored by the caller, if
         necessary.
         &#34;&#34;&#34;
-        head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
-        if version_hint == head_version:
+        try:
+            head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
+        except TransportError as te:
+            log.debug(&#39;Failed to update version info (%s)&#39;, te)
+            return
+        if self._version_hint == head_version:
             # Nothing to do
             return
-        log.debug(&#39;Found new version (%s -&gt; %s)&#39;, version_hint, head_version)
+        log.debug(&#39;Found new version (%s -&gt; %s)&#39;, self._version_hint, head_version)
         # The api_version that worked was different than our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
 
     @classmethod
     def _response_tag(cls):
-        &#34;&#34;&#34;The name of the element containing the service response
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
         return &#39;{%s}%sResponse&#39; % (MNS, cls.SERVICE_NAME)
 
     @staticmethod
     def _response_messages_tag():
-        &#34;&#34;&#34;The name of the element containing service response messages
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the name of the element containing service response messages.&#34;&#34;&#34;
         return &#39;{%s}ResponseMessages&#39; % MNS
 
     @classmethod
     def _response_message_tag(cls):
-        &#34;&#34;&#34;The name of the element of a single response message
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the name of the element of a single response message.&#34;&#34;&#34;
         return &#39;{%s}%sResponseMessage&#39; % (MNS, cls.SERVICE_NAME)
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        &#34;&#34;&#34;Split the SOAP response into its headers an body elements
-        &#34;&#34;&#34;
-        root = to_xml(response.iter_content())
+        &#34;&#34;&#34;Split the SOAP response into its headers an body elements.&#34;&#34;&#34;
+        try:
+            root = to_xml(response.iter_content())
+        except ParseError as e:
+            raise SOAPError(&#39;Bad SOAP response: %s&#39; % e)
         header = root.find(&#39;{%s}Header&#39; % SOAPNS)
         if header is None:
             # This is normal when the response contains SOAP-level errors
@@ -1372,29 +1428,26 @@ def parse_folder_elem(elem, folder, account):
             raise MalformedResponseError(&#39;No Body element in SOAP response&#39;)
         return header, body
 
-    @classmethod
-    def _get_soap_messages(cls, body, **parse_opts):
-        &#34;&#34;&#34;Returns the elements in the response containing the response messages. Raises any SOAP exceptions.
-        &#34;&#34;&#34;
-        response = body.find(cls._response_tag())
+    def _get_soap_messages(self, body, **parse_opts):
+        &#34;&#34;&#34;Return the elements in the response containing the response messages. Raises any SOAP exceptions.&#34;&#34;&#34;
+        response = body.find(self._response_tag())
         if response is None:
             fault = body.find(&#39;{%s}Fault&#39; % SOAPNS)
             if fault is None:
                 raise SOAPError(
-                    &#39;Unknown SOAP response (expected %s or Fault): %s&#39; % (cls._response_tag(), xml_to_str(body))
+                    &#39;Unknown SOAP response (expected %s or Fault): %s&#39; % (self._response_tag(), xml_to_str(body))
                 )
-            cls._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
-        response_messages = response.find(cls._response_messages_tag())
+            self._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
+        response_messages = response.find(self._response_messages_tag())
         if response_messages is None:
             # Result isn&#39;t delivered in a list of FooResponseMessages, but directly in the FooResponse. Consumers expect
             # a list, so return a list
             return [response]
-        return response_messages.findall(cls._response_message_tag())
+        return response_messages.findall(self._response_message_tag())
 
     @classmethod
     def _raise_soap_errors(cls, fault):
-        &#34;&#34;&#34;Parse error messages contained in SOAP headers and raise as exceptions defined in this package
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Parse error messages contained in SOAP headers and raise as exceptions defined in this package.&#34;&#34;&#34;
         # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
         faultcode = get_xml_attr(fault, &#39;faultcode&#39;)
         faultstring = get_xml_attr(fault, &#39;faultstring&#39;)
@@ -1416,7 +1469,7 @@ def parse_folder_elem(elem, folder, account):
                 except (TypeError, AttributeError):
                     pass
                 raise ErrorServerBusy(msg, back_off=back_off)
-            elif code == &#39;ErrorSchemaValidation&#39; and msg_xml is not None:
+            if code == &#39;ErrorSchemaValidation&#39; and msg_xml is not None:
                 violation = get_xml_attr(msg_xml, &#39;{%s}Violation&#39; % TNS)
                 if violation is not None:
                     msg = &#39;%s %s&#39; % (msg, violation)
@@ -1432,7 +1485,7 @@ def parse_folder_elem(elem, folder, account):
             faultcode, faultstring, faultactor, detail))
 
     def _get_element_container(self, message, name=None):
-        &#34;&#34;&#34;Returns the XML element in a response element that contains the elements we want the service to return. For
+        &#34;&#34;&#34;Return the XML element in a response element that contains the elements we want the service to return. For
         example, in a GetFolder response, &#39;message&#39; is the GetFolderResponseMessage element, and we return the &#39;Folders&#39;
         element:
 
@@ -1491,8 +1544,7 @@ def parse_folder_elem(elem, folder, account):
 
     @staticmethod
     def _get_exception(code, text, msg_xml):
-        &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package.&#34;&#34;&#34;
         if not code:
             return TransportError(&#39;Empty ResponseCode in ResponseMessage (MessageText: %s, MessageXml: %s)&#39; % (
                 text, msg_xml))
@@ -1539,7 +1591,7 @@ def parse_folder_elem(elem, folder, account):
                     code, text, msg_xml))
 
     def _get_elements_in_response(self, response):
-        &#34;&#34;&#34;Takes a list of &#39;SomeServiceResponseMessage&#39; elements and returns the elements in each response message that
+        &#34;&#34;&#34;Take a list of &#39;SomeServiceResponseMessage&#39; elements and return the elements in each response message that
         we want the service to return. With e.g. &#39;CreateItem&#39;, we get a list of &#39;CreateItemResponseMessage&#39; elements
         and return the &#39;Message&#39; elements.
 
@@ -1573,7 +1625,7 @@ def parse_folder_elem(elem, folder, account):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        &#34;&#34;&#34;Returns a list of response elements from an XML response element container. With e.g.
+        &#34;&#34;&#34;Return a list of response elements from an XML response element container. With e.g.
         &#39;CreateItem&#39;, &#39;Items&#39; is the container element and we return the &#39;Message&#39; child elements:
 
           &lt;m:Items&gt;
@@ -1586,8 +1638,49 @@ def parse_folder_elem(elem, folder, account):
         raised.
         &#34;&#34;&#34;
         if cls.returns_elements:
-            return [elem for elem in container]
+            return list(container)
         return [True]
+
+    def _get_elems_from_page(self, elem, max_items, total_item_count):
+        container = elem.find(self.element_container_name)
+        if container is None:
+            raise MalformedResponseError(&#39;No %s elements in ResponseMessage (%s)&#39; % (
+                self.element_container_name, xml_to_str(elem)))
+        for e in self._get_elements_in_container(container=container):
+            if max_items and total_item_count &gt;= max_items:
+                # No need to continue. Break out of elements loop
+                log.debug(&#34;&#39;max_items&#39; count reached (elements)&#34;)
+                break
+            yield e
+
+    def _get_pages(self, payload_func, kwargs, expected_message_count):
+        &#34;&#34;&#34;Request a page, or a list of pages if multiple collections are pages in a single request. Return each
+        page.
+        &#34;&#34;&#34;
+        payload = payload_func(**kwargs)
+        page_elems = list(self._get_elements(payload=payload))
+        if len(page_elems) != expected_message_count:
+            raise MalformedResponseError(
+                &#34;Expected %s items in &#39;response&#39;, got %s&#34; % (expected_message_count, len(page_elems))
+            )
+        return page_elems
+
+    @staticmethod
+    def _get_next_offset(paging_infos):
+        next_offsets = {p[&#39;next_offset&#39;] for p in paging_infos if p[&#39;next_offset&#39;] is not None}
+        if not next_offsets:
+            # Paging is done for all messages
+            return None
+        # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
+        # because the collections that we are iterating may change while iterating. We&#39;ll do our best but we cannot
+        # guarantee 100% consistency when large collections are simultaneously being changed on the server.
+        #
+        # It&#39;s not possible to supply a per-folder offset when iterating multiple folders, so we&#39;ll just have to
+        # choose something that is most likely to work. Select the lowest of all the values to at least make sure
+        # we don&#39;t miss any items, although we may then get duplicates ¯\_(ツ)_/¯
+        if len(next_offsets) &gt; 1:
+            log.warning(&#39;Inconsistent next_offset values: %r. Using lowest value&#39;, next_offsets)
+        return min(next_offsets)
 
     def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
         &#34;&#34;&#34;Call a service that supports paging requests. Return a generator over all response items. Keeps track of
@@ -1597,30 +1690,16 @@ def parse_folder_elem(elem, folder, account):
         common_next_offset = kwargs[&#39;offset&#39;]
         total_item_count = 0
         while True:
-            log.debug(&#39;EWS %s, service %s: Getting items at offset %s (max_items %s)&#39;, self.protocol.service_endpoint,
-                      self.SERVICE_NAME, common_next_offset, max_items)
+            log.debug(&#39;Getting page at offset %s (max_items %s)&#39;, common_next_offset, max_items)
             kwargs[&#39;offset&#39;] = common_next_offset
-            payload = payload_func(**kwargs)
-            parsed_pages = list(self._get_elements(payload=payload))
-            if len(parsed_pages) != expected_message_count:
-                raise MalformedResponseError(
-                    &#34;Expected %s items in &#39;response&#39;, got %s&#34; % (expected_message_count, len(parsed_pages))
-                )
-            for (paging_container, next_offset), paging_info in zip(parsed_pages, paging_infos):
+            pages = self._get_pages(payload_func, kwargs, expected_message_count)
+            for (page, next_offset), paging_info in zip(pages, paging_infos):
                 paging_info[&#39;next_offset&#39;] = next_offset
-                if isinstance(paging_container, Exception):
-                    yield paging_container
+                if isinstance(page, Exception):
+                    yield page
                     continue
-                if paging_container is not None:
-                    container = paging_container.find(self.element_container_name)
-                    if container is None:
-                        raise MalformedResponseError(&#39;No %s elements in ResponseMessage (%s)&#39; % (
-                            self.element_container_name, xml_to_str(paging_container)))
-                    for elem in self._get_elements_in_container(container=container):
-                        if max_items and total_item_count &gt;= max_items:
-                            # No need to continue. Break out of elements loop
-                            log.debug(&#34;&#39;max_items&#39; count reached (elements)&#34;)
-                            break
+                if page is not None:
+                    for elem in self._get_elems_from_page(page, max_items, total_item_count):
                         paging_info[&#39;item_count&#39;] += 1
                         total_item_count += 1
                         yield elem
@@ -1638,30 +1717,20 @@ def parse_folder_elem(elem, folder, account):
                 if paging_info[&#39;next_offset&#39;] != paging_info[&#39;item_count&#39;] and (
                     not max_items or total_item_count &lt; max_items
                 ):
-                    log.warning(&#39;Unexpected next offset: %s -&gt; %s. Maybe the server-side collection has changed?&#39;
-                                % (paging_info[&#39;item_count&#39;], paging_info[&#39;next_offset&#39;]))
+                    log.warning(&#39;Unexpected next offset: %s -&gt; %s. Maybe the server-side collection has changed?&#39;,
+                                paging_info[&#39;item_count&#39;], paging_info[&#39;next_offset&#39;])
             # Also break out of outer loop
             if max_items and total_item_count &gt;= max_items:
                 log.debug(&#34;&#39;max_items&#39; count reached (outer)&#34;)
                 break
-            next_offsets = {p[&#39;next_offset&#39;] for p in paging_infos if p[&#39;next_offset&#39;] is not None}
-            if not next_offsets:
+            common_next_offset = self._get_next_offset(paging_infos)
+            if common_next_offset is None:
                 # Paging is done for all messages
                 break
-            # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-            # because the collections that we are iterating may change while iterating. We&#39;ll do our best but we cannot
-            # guarantee 100% consistency when large collections are simultaneously being changed on the server.
-            #
-            # It&#39;s not possible to supply a per-folder offset when iterating multiple folders, so we&#39;ll just have to
-            # choose something that is most likely to work. Select the lowest of all the values to at least make sure
-            # we don&#39;t miss any items, although we may then get duplicates ¯\_(ツ)_/¯
-            if len(next_offsets) &gt; 1:
-                log.warning(&#39;Inconsistent next_offset values: %r. Using lowest value&#39;, next_offsets)
-            common_next_offset = min(next_offsets)
 
-    def _get_paging_values(self, elem):
-        &#34;&#34;&#34;Read paging information from the paging container element
-        &#34;&#34;&#34;
+    @staticmethod
+    def _get_paging_values(elem):
+        &#34;&#34;&#34;Read paging information from the paging container element.&#34;&#34;&#34;
         is_last_page = elem.get(&#39;IncludesLastItemInRange&#39;).lower() in (&#39;true&#39;, &#39;0&#39;)
         offset = elem.get(&#39;IndexedPagingOffset&#39;)
         if offset is None and not is_last_page:
@@ -1669,15 +1738,13 @@ def parse_folder_elem(elem, folder, account):
             offset = &#39;1&#39;
         next_offset = None if is_last_page else int(offset)
         item_count = int(elem.get(&#39;TotalItemsInView&#39;))
-        if not item_count:
-            if next_offset is not None:
-                raise ValueError(&#34;Expected empty &#39;next_offset&#39; when &#39;item_count&#39; is 0&#34;)
-        log.debug(&#39;%s: Got page with next offset %s (last_page %s)&#39;, self.SERVICE_NAME, next_offset, is_last_page)
+        if not item_count and next_offset is not None:
+            raise ValueError(&#34;Expected empty &#39;next_offset&#39; when &#39;item_count&#39; is 0&#34;)
+        log.debug(&#39;Got page with next offset %s (last_page %s)&#39;, next_offset, is_last_page)
         return item_count, next_offset
 
     def _get_page(self, message):
-        &#34;&#34;&#34;Get a single page from a request message, and return the container and next offset
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Get a single page from a request message, and return the container and next offset.&#34;&#34;&#34;
         paging_elem = self._get_element_container(message=message, name=self.paging_container_name)
         if isinstance(paging_elem, Exception):
             return paging_elem, None
@@ -1729,6 +1796,10 @@ def parse_folder_elem(elem, folder, account):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.common.EWSService.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.common.EWSService.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1772,11 +1843,11 @@ zero or one when expect_result=None. Returns either one object or None.</p>
     res = list(self.call(**kwargs))
     if expect_result is None and not res:
         # Allow empty result
-        return
+        return None
     if expect_result is False:
         if res:
             raise ValueError(&#39;Expected result length 0, but got %r&#39; % res)
-        return
+        return None
     if len(res) != 1:
         raise ValueError(&#39;Expected result length 1, but got %r&#39; % res)
     if isinstance(res[0], Exception):
@@ -1826,6 +1897,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.element_container_name" href="#exchangelib.services.common.EWSService.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.paging_container_name" href="#exchangelib.services.common.EWSService.paging_container_name">paging_container_name</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.prefer_affinity" href="#exchangelib.services.common.EWSService.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.returns_elements" href="#exchangelib.services.common.EWSService.returns_elements">returns_elements</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.streaming" href="#exchangelib.services.common.EWSService.streaming">streaming</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.supported_from" href="#exchangelib.services.common.EWSService.supported_from">supported_from</a></code></li>

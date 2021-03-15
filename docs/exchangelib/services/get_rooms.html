@@ -34,12 +34,16 @@ from ..version import EXCHANGE_2010
 
 class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetRooms&#39;
     element_container_name = &#39;{%s}Rooms&#39; % MNS
     supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
         for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, roomlist):
@@ -59,7 +63,7 @@ class GetRooms(EWSService):
 <dl>
 <dt id="exchangelib.services.get_rooms.GetRooms"><code class="flex name class">
 <span>class <span class="ident">GetRooms</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms</a></p></div>
@@ -69,12 +73,16 @@ class GetRooms(EWSService):
 </summary>
 <pre><code class="python">class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetRooms&#39;
     element_container_name = &#39;{%s}Rooms&#39; % MNS
     supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
         for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, roomlist):
@@ -114,6 +122,9 @@ class GetRooms(EWSService):
 </summary>
 <pre><code class="python">def call(self, roomlist):
     for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
+        if isinstance(elem, Exception):
+            yield elem
+            continue
         yield Room.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </dd>

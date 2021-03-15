@@ -80,11 +80,12 @@ def require_id(f):
 
 
 class ParseError(lxml.etree.ParseError):
-    &#34;&#34;&#34;Used to wrap lxml ParseError in our own class&#34;&#34;&#34;
-    pass
+    &#34;&#34;&#34;Used to wrap lxml ParseError in our own class.&#34;&#34;&#34;
 
 
 class ElementNotFound(Exception):
+    &#34;&#34;&#34;Raised when the expected element was not found in a response stream.&#34;&#34;&#34;
+
     def __init__(self, msg, data):
         super().__init__(msg)
         self.data = data
@@ -112,17 +113,14 @@ for item in ns_translation.items():
 
 
 def is_iterable(value, generators_allowed=False):
-    &#34;&#34;&#34;Checks if value is a list-like object. Don&#39;t match generators and generator-like objects here by default, because
+    &#34;&#34;&#34;Check if value is a list-like object. Don&#39;t match generators and generator-like objects here by default, because
     callers don&#39;t necessarily guarantee that they only iterate the value once. Take care to not match string types and
     bytes.
 
-    Args:
-      value: any type of object
-      generators_allowed: if True, generators will be treated as iterable (Default value = False)
+    :param value: any type of object
+    :param generators_allowed: if True, generators will be treated as iterable (Default value = False)
 
-    Returns:
-      True or False
-
+    :return: True or False
     &#34;&#34;&#34;
     if generators_allowed:
         if not isinstance(value, (bytes, str)) and hasattr(value, &#39;__iter__&#39;):
@@ -134,12 +132,11 @@ def is_iterable(value, generators_allowed=False):
 
 
 def chunkify(iterable, chunksize):
-    &#34;&#34;&#34;Splits an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
+    &#34;&#34;&#34;Split an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
 
-    Args:
-      iterable:
-      chunksize:
-
+    :param iterable:
+    :param chunksize:
+    :return:
     &#34;&#34;&#34;
     from .queryset import QuerySet
     if hasattr(iterable, &#39;__getitem__&#39;) and not isinstance(iterable, QuerySet):
@@ -159,11 +156,10 @@ def chunkify(iterable, chunksize):
 
 
 def peek(iterable):
-    &#34;&#34;&#34;Checks if an iterable is empty and returns status and the rewinded iterable
+    &#34;&#34;&#34;Check if an iterable is empty and return status and the rewinded iterable.
 
-    Args:
-      iterable:
-
+    :param iterable:
+    :return:
     &#34;&#34;&#34;
     if hasattr(iterable, &#39;__len__&#39;):
         # tuple, list, set
@@ -180,11 +176,10 @@ def peek(iterable):
 def xml_to_str(tree, encoding=None, xml_declaration=False):
     &#34;&#34;&#34;Serialize an XML tree. Returns unicode if &#39;encoding&#39; is None. Otherwise, we return encoded &#39;bytes&#39;.
 
-    Args:
-      tree:
-      encoding:  (Default value = None)
-      xml_declaration:  (Default value = False)
-
+    :param tree:
+    :param encoding:  (Default value = None)
+    :param xml_declaration:  (Default value = False)
+    :return:
     &#34;&#34;&#34;
     if xml_declaration and not encoding:
         raise ValueError(&#34;&#39;xml_declaration&#39; is not supported when &#39;encoding&#39; is None&#34;)
@@ -207,7 +202,8 @@ def get_xml_attrs(tree, name):
 def value_to_xml_text(value):
     from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
     from .indexed_properties import PhoneNumber, EmailAddress
-    from .properties import Mailbox, Attendee, ConversationId
+    from .properties import Mailbox, AssociatedCalendarItemId, Attendee, ConversationId
+    # We can&#39;t just create a map and look up with type(value) because we want to support subtypes
     if isinstance(value, str):
         return safe_xml_value(value)
     if isinstance(value, bool):
@@ -234,7 +230,9 @@ def value_to_xml_text(value):
         return value.mailbox.email_address
     if isinstance(value, ConversationId):
         return value.id
-    raise NotImplementedError(&#39;Unsupported type: %s (%s)&#39; % (type(value), value))
+    if isinstance(value, AssociatedCalendarItemId):
+        return value.id
+    raise TypeError(&#39;Unsupported type: %s (%s)&#39; % (type(value), value))
 
 
 def xml_text_to_value(value, value_type):
@@ -322,7 +320,6 @@ def add_xml_child(tree, name, value):
 class StreamingContentHandler(xml.sax.handler.ContentHandler):
     &#34;&#34;&#34;A SAX content handler that returns a character data for a single element back to the parser. The parser must have
     a &#39;buffer&#39; attribute we can append data to.
-
     &#34;&#34;&#34;
 
     def __init__(self, parser, ns, element_name):
@@ -371,7 +368,7 @@ def safe_b64decode(data):
 
 
 class StreamingBase64Parser(DefusedExpatParser):
-    &#34;&#34;&#34;A SAX parser that returns a generator of base64-decoded character content&#34;&#34;&#34;
+    &#34;&#34;&#34;A SAX parser that returns a generator of base64-decoded character content.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         DefusedExpatParser.__init__(self, *args, **kwargs)
@@ -403,7 +400,7 @@ class StreamingBase64Parser(DefusedExpatParser):
             raise ElementNotFound(&#39;The element to be streamed from was not found&#39;, data=bytes(data))
 
     def feed(self, data, isFinal=0):
-        # Like upstream, but yields the current content of the character buffer
+        &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
         DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
         return self._decode_buffer()
 
@@ -434,7 +431,6 @@ class BytesGeneratorIO(io.RawIOBase):
     &#34;&#34;&#34;A BytesIO that can produce bytes from a streaming HTTP request. Expects r.iter_content() as input
     lxml tries to be smart by calling `getvalue` when present, assuming that the entire string is in memory.
     Omitting `getvalue` forces lxml to stream the request through `read` avoiding the memory duplication.
-
     &#34;&#34;&#34;
 
     def __init__(self, bytes_generator):
@@ -480,8 +476,57 @@ class BytesGeneratorIO(io.RawIOBase):
         super().close()
 
 
+class DocumentYielder:
+    &#34;&#34;&#34;Look for XML documents in a streaming HTTP response and yield them as they become available from the stream.&#34;&#34;&#34;
+
+    def __init__(self, content_iterator, document_tag=&#39;Envelope&#39;):
+        self._iterator = content_iterator
+        self._start_token = b&#39;&lt;%s&#39; % document_tag.encode(&#39;utf-8&#39;)
+        self._end_token = b&#39;/%s&gt;&#39; % document_tag.encode(&#39;utf-8&#39;)
+
+    def get_tag(self, stop_byte):
+        tag_buffer = [b&#39;&lt;&#39;]
+        while True:
+            try:
+                c = next(self._iterator)
+            except StopIteration:
+                break
+            tag_buffer.append(c)
+            if c == stop_byte:
+                break
+        return b&#39;&#39;.join(tag_buffer)
+
+    def __iter__(self):
+        &#34;&#34;&#34;Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
+        collected it.
+        &#34;&#34;&#34;
+        doc_started = False
+        buffer = []
+        try:
+            while True:
+                c = next(self._iterator)
+                if not doc_started and c == b&#39;&lt;&#39;:
+                    tag = self.get_tag(stop_byte=b&#39; &#39;)
+                    if tag.startswith(self._start_token):
+                        # Start of document. Collect bytes from this point
+                        buffer.append(tag)
+                        doc_started = True
+                elif doc_started and c == b&#39;&lt;&#39;:
+                    tag = self.get_tag(stop_byte=b&#39;&gt;&#39;)
+                    buffer.append(tag)
+                    if tag.endswith(self._end_token):
+                        # End of document. Yield a valid document and reset the buffer
+                        yield b&#34;&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&gt;\n%s&#34; % b&#39;&#39;.join(buffer)
+                        doc_started = False
+                        buffer = []
+                elif doc_started:
+                    buffer.append(c)
+        except StopIteration:
+            return
+
+
 def to_xml(bytes_content):
-    # Converts bytes or a generator of bytes to an XML tree
+    &#34;&#34;&#34;Convert bytes or a generator of bytes to an XML tree.&#34;&#34;&#34;
     # Exchange servers may spit out the weirdest XML. lxml is pretty good at recovering from errors
     if isinstance(bytes_content, bytes):
         stream = io.BytesIO(bytes_content)
@@ -525,10 +570,9 @@ def to_xml(bytes_content):
 def is_xml(text, expected_prefix=b&#39;&lt;?xml&#39;):
     &#34;&#34;&#34;Lightweight test if response is an XML doc. It&#39;s better to be fast than correct here.
 
-    Args:
-      text: The string to check
-      expected_prefix: What to search for in the start if the string
-
+    :param text: The string to check
+    :param expected_prefix: What to search for in the start if the string
+    :return:
     &#34;&#34;&#34;
     # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
@@ -541,14 +585,15 @@ def is_xml(text, expected_prefix=b&#39;&lt;?xml&#39;):
 
 
 class PrettyXmlHandler(logging.StreamHandler):
-    &#34;&#34;&#34;A steaming log handler that prettifies log statements containing XML when output is a terminal&#34;&#34;&#34;
+    &#34;&#34;&#34;A steaming log handler that prettifies log statements containing XML when output is a terminal.&#34;&#34;&#34;
+
     @staticmethod
     def parse_bytes(xml_bytes):
         return lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
 
     @classmethod
     def prettify_xml(cls, xml_bytes):
-        # Re-formats an XML document to a consistent style
+        &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
         return lxml.etree.tostring(
             cls.parse_bytes(xml_bytes),
             xml_declaration=True,
@@ -558,7 +603,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
     @staticmethod
     def highlight_xml(xml_str):
-        # Highlights a string containing XML, using terminal color codes
+        &#34;&#34;&#34;Highlight a string containing XML, using terminal color codes.&#34;&#34;&#34;
         return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
@@ -567,9 +612,7 @@ class PrettyXmlHandler(logging.StreamHandler):
            * We&#39;re outputting to a terminal
            * The log message args is a dict containing keys starting with &#39;xml_&#39; and values as bytes
 
-        Args:
-          record:
-
+        :param record:
         &#34;&#34;&#34;
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
             for key, value in record.args.items():
@@ -587,7 +630,7 @@ class PrettyXmlHandler(logging.StreamHandler):
         return super().emit(record)
 
     def is_tty(self):
-        # Check if we&#39;re outputting to a terminal
+        &#34;&#34;&#34;Check if we&#39;re outputting to a terminal.&#34;&#34;&#34;
         try:
             return self.stream.isatty()
         except AttributeError:
@@ -595,7 +638,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
 
 class AnonymizingXmlHandler(PrettyXmlHandler):
-    &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal&#34;&#34;&#34;
+    &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.&#34;&#34;&#34;
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -612,11 +655,15 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
 
 
 class DummyRequest:
+    &#34;&#34;&#34;A class to fake a requests Request object for functions that expect this.&#34;&#34;&#34;
+
     def __init__(self, headers):
         self.headers = headers
 
 
 class DummyResponse:
+    &#34;&#34;&#34;A class to fake a requests Response object for functions that expect this.&#34;&#34;&#34;
+
     def __init__(self, url, headers, request_headers, content=b&#39;&#39;, status_code=503, history=None):
         self.status_code = status_code
         self.url = url
@@ -694,7 +741,7 @@ except ImportError:
     pass
 
 
-def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False):
+def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
     &#34;&#34;&#34;There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
     fails on all responses except HTTP 200. The other policy is intended for long-running tasks that need to respect
     rate-limiting errors from the server and paper over outages of up to 1 hour.
@@ -719,16 +766,19 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     An additional resource on handling throttling policies and client back off strategies:
         https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-throttling-in-exchange
 
-    Args:
-      protocol:
-      session:
-      url:
-      headers:
-      data:
-      allow_redirects:  (Default value = False)
-      stream:  (Default value = False)
+    :param protocol:
+    :param session:
+    :param url:
+    :param headers:
+    :param data:
+    :param allow_redirects:  (Default value = False)
+    :param stream:  (Default value = False)
+    :param timeout:
 
+    :return:
     &#34;&#34;&#34;
+    if not timeout:
+        timeout = protocol.TIMEOUT
     thread_id = get_ident()
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
@@ -754,7 +804,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     log_vals = dict(
         retry=retry,
         wait=wait,
-        timeout=protocol.TIMEOUT,
+        timeout=timeout,
         session_id=session.session_id,
         thread_id=thread_id,
         auth=session.auth,
@@ -779,12 +829,12 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 # We may have slept for a long time. Renew the session.
                 session = protocol.renew_session(session)
             log.debug(&#39;Session %s thread %s: retry %s timeout %s POST\&#39;ing to %s after %ss wait&#39;, session.session_id,
-                      thread_id, retry, protocol.TIMEOUT, url, wait)
+                      thread_id, retry, timeout, url, wait)
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, headers={}, request_headers=headers)
             try:
-                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=protocol.TIMEOUT,
+                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout,
                                  stream=stream)
             except TLS_ERRORS as e:
                 # Don&#39;t retry on TLS errors. They will most likely be persistent.
@@ -826,6 +876,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 r.close()  # Release memory
                 log.info(&#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
                          session.session_id, thread_id, r.url, r.status_code, wait)
+                wait = _retry_after(r, wait)
                 protocol.retry_policy.back_off(wait)
                 retry += 1
                 wait *= 2  # Increase delay for every retry
@@ -880,17 +931,24 @@ def _may_retry_on_error(response, retry_policy, wait):
         # We lost patience. Session is cleaned up in outer loop
         raise RateLimitError(
             &#39;Max timeout reached&#39;, url=response.url, status_code=response.status_code, total_wait=wait)
-    # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. Redirect to
-    # &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS certificate
-    # f*ckups on the Exchange server.
-    #
-    # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings.
-    if (response.status_code == 401) \
-            or (response.headers.get(&#39;connection&#39;) == &#39;close&#39;) \
-            or (response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() ==
-                &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;) \
-            or (response.status_code == 503) \
-            or (response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content):
+    if response.status_code == 401:
+        # EWS sometimes throws 401&#39;s when it wants us to throttle connections. OK to retry.
+        return True
+    if response.headers.get(&#39;connection&#39;) == &#39;close&#39;:
+        # Connection closed. OK to retry.
+        return True
+    if response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() \
+            == &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;:
+        # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
+        #
+        # Redirect to &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS
+        # certificate f*ckups on the Exchange server. We should not retry those.
+        return True
+    if response.status_code == 503:
+        # Internal server error. OK to retry.
+        return True
+    if response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content:
+        # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings. OK to retry.
         log.debug(&#39;Retry allowed: conditions met&#39;)
         return True
     return False
@@ -927,6 +985,7 @@ def _raise_response_errors(response, protocol):
         raise CASError(cas_error=cas_error, response=response)
     if response.status_code == 500 and (b&#39;The specified server version is invalid&#39; in response.content or
                                         b&#39;ErrorInvalidSchemaVersionForMailboxVersion&#39; in response.content):
+        # Another way of communicating invalid schema versions
         raise ErrorInvalidSchemaVersionForMailboxVersion(&#39;Invalid server version&#39;)
     if b&#39;The referenced account is currently locked out&#39; in response.content:
         raise TransportError(&#39;The service account is currently locked out&#39;)
@@ -934,12 +993,25 @@ def _raise_response_errors(response, protocol):
         # This is a login failure
         raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
     if &#39;TimeoutException&#39; in response.headers:
+        # A header set by us on CONNECTION_ERRORS
         raise response.headers[&#39;TimeoutException&#39;]
     # This could be anything. Let higher layers handle this
     raise TransportError(
         &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
         % (response.status_code, response.headers, response.text)
-    )</code></pre>
+    )
+
+
+def _retry_after(r, wait):
+    &#34;&#34;&#34;Either return the Retry-After header value or the default wait, whichever is larger.&#34;&#34;&#34;
+    try:
+        retry_after = int(r.headers.get(&#39;Retry-After&#39;, &#39;0&#39;))
+    except ValueError:
+        pass
+    else:
+        if retry_after &gt; wait:
+            return retry_after
+    return wait</code></pre>
 </details>
 </section>
 <section>
@@ -968,21 +1040,20 @@ def _raise_response_errors(response, protocol):
 <span>def <span class="ident">chunkify</span></span>(<span>iterable, chunksize)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Splits an iterable into chunks of size <code>chunksize</code>. The last chunk may be smaller than <code>chunksize</code>.</p>
-<h2 id="args">Args</h2>
-<p>iterable:
-chunksize:</p></div>
+<div class="desc"><p>Split an iterable into chunks of size <code>chunksize</code>. The last chunk may be smaller than <code>chunksize</code>.</p>
+<p>:param iterable:
+:param chunksize:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def chunkify(iterable, chunksize):
-    &#34;&#34;&#34;Splits an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
+    &#34;&#34;&#34;Split an iterable into chunks of size ``chunksize``. The last chunk may be smaller than ``chunksize``.
 
-    Args:
-      iterable:
-      chunksize:
-
+    :param iterable:
+    :param chunksize:
+    :return:
     &#34;&#34;&#34;
     from .queryset import QuerySet
     if hasattr(iterable, &#39;__getitem__&#39;) and not isinstance(iterable, QuerySet):
@@ -1113,34 +1184,25 @@ chunksize:</p></div>
 <span>def <span class="ident">is_iterable</span></span>(<span>value, generators_allowed=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Checks if value is a list-like object. Don't match generators and generator-like objects here by default, because
+<div class="desc"><p>Check if value is a list-like object. Don't match generators and generator-like objects here by default, because
 callers don't necessarily guarantee that they only iterate the value once. Take care to not match string types and
 bytes.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>value</code></strong></dt>
-<dd>any type of object</dd>
-<dt><strong><code>generators_allowed</code></strong></dt>
-<dd>if True, generators will be treated as iterable (Default value = False)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>True or False</p></div>
+<p>:param value: any type of object
+:param generators_allowed: if True, generators will be treated as iterable (Default value = False)</p>
+<p>:return: True or False</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_iterable(value, generators_allowed=False):
-    &#34;&#34;&#34;Checks if value is a list-like object. Don&#39;t match generators and generator-like objects here by default, because
+    &#34;&#34;&#34;Check if value is a list-like object. Don&#39;t match generators and generator-like objects here by default, because
     callers don&#39;t necessarily guarantee that they only iterate the value once. Take care to not match string types and
     bytes.
 
-    Args:
-      value: any type of object
-      generators_allowed: if True, generators will be treated as iterable (Default value = False)
+    :param value: any type of object
+    :param generators_allowed: if True, generators will be treated as iterable (Default value = False)
 
-    Returns:
-      True or False
-
+    :return: True or False
     &#34;&#34;&#34;
     if generators_allowed:
         if not isinstance(value, (bytes, str)) and hasattr(value, &#39;__iter__&#39;):
@@ -1156,13 +1218,9 @@ bytes.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Lightweight test if response is an XML doc. It's better to be fast than correct here.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>text</code></strong></dt>
-<dd>The string to check</dd>
-<dt><strong><code>expected_prefix</code></strong></dt>
-<dd>What to search for in the start if the string</dd>
-</dl></div>
+<p>:param text: The string to check
+:param expected_prefix: What to search for in the start if the string
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1170,10 +1228,9 @@ bytes.</p>
 <pre><code class="python">def is_xml(text, expected_prefix=b&#39;&lt;?xml&#39;):
     &#34;&#34;&#34;Lightweight test if response is an XML doc. It&#39;s better to be fast than correct here.
 
-    Args:
-      text: The string to check
-      expected_prefix: What to search for in the start if the string
-
+    :param text: The string to check
+    :param expected_prefix: What to search for in the start if the string
+    :return:
     &#34;&#34;&#34;
     # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
@@ -1189,19 +1246,18 @@ bytes.</p>
 <span>def <span class="ident">peek</span></span>(<span>iterable)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Checks if an iterable is empty and returns status and the rewinded iterable</p>
-<h2 id="args">Args</h2>
-<p>iterable:</p></div>
+<div class="desc"><p>Check if an iterable is empty and return status and the rewinded iterable.</p>
+<p>:param iterable:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def peek(iterable):
-    &#34;&#34;&#34;Checks if an iterable is empty and returns status and the rewinded iterable
+    &#34;&#34;&#34;Check if an iterable is empty and return status and the rewinded iterable.
 
-    Args:
-      iterable:
-
+    :param iterable:
+    :return:
     &#34;&#34;&#34;
     if hasattr(iterable, &#39;__len__&#39;):
         # tuple, list, set
@@ -1216,7 +1272,7 @@ bytes.</p>
 </details>
 </dd>
 <dt id="exchangelib.util.post_ratelimited"><code class="name flex">
-<span>def <span class="ident">post_ratelimited</span></span>(<span>protocol, session, url, headers, data, allow_redirects=False, stream=False)</span>
+<span>def <span class="ident">post_ratelimited</span></span>(<span>protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
@@ -1237,23 +1293,22 @@ malfunctions. The only cure is to stop making requests.</p>
 intend to raise an exception. We give up on max_wait timeout, not number of retries.</p>
 <p>An additional resource on handling throttling policies and client back off strategies:
 <a href="https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-throttling-in-exchange">https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-throttling-in-exchange</a></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>protocol:</dt>
-<dt>session:</dt>
-<dt>url:</dt>
-<dt>headers:</dt>
-<dt>data:</dt>
-<dt><strong><code>allow_redirects</code></strong></dt>
-<dd>(Default value = False)</dd>
-<dt><strong><code>stream</code></strong></dt>
-<dd>(Default value = False)</dd>
-</dl></div>
+<p>:param protocol:
+:param session:
+:param url:
+:param headers:
+:param data:
+:param allow_redirects:
+(Default value = False)
+:param stream:
+(Default value = False)
+:param timeout:</p>
+<p>:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False):
+<pre><code class="python">def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
     &#34;&#34;&#34;There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
     fails on all responses except HTTP 200. The other policy is intended for long-running tasks that need to respect
     rate-limiting errors from the server and paper over outages of up to 1 hour.
@@ -1278,16 +1333,19 @@ intend to raise an exception. We give up on max_wait timeout, not number of retr
     An additional resource on handling throttling policies and client back off strategies:
         https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-throttling-in-exchange
 
-    Args:
-      protocol:
-      session:
-      url:
-      headers:
-      data:
-      allow_redirects:  (Default value = False)
-      stream:  (Default value = False)
+    :param protocol:
+    :param session:
+    :param url:
+    :param headers:
+    :param data:
+    :param allow_redirects:  (Default value = False)
+    :param stream:  (Default value = False)
+    :param timeout:
 
+    :return:
     &#34;&#34;&#34;
+    if not timeout:
+        timeout = protocol.TIMEOUT
     thread_id = get_ident()
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
@@ -1313,7 +1371,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     log_vals = dict(
         retry=retry,
         wait=wait,
-        timeout=protocol.TIMEOUT,
+        timeout=timeout,
         session_id=session.session_id,
         thread_id=thread_id,
         auth=session.auth,
@@ -1338,12 +1396,12 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 # We may have slept for a long time. Renew the session.
                 session = protocol.renew_session(session)
             log.debug(&#39;Session %s thread %s: retry %s timeout %s POST\&#39;ing to %s after %ss wait&#39;, session.session_id,
-                      thread_id, retry, protocol.TIMEOUT, url, wait)
+                      thread_id, retry, timeout, url, wait)
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, headers={}, request_headers=headers)
             try:
-                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=protocol.TIMEOUT,
+                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout,
                                  stream=stream)
             except TLS_ERRORS as e:
                 # Don&#39;t retry on TLS errors. They will most likely be persistent.
@@ -1385,6 +1443,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 r.close()  # Release memory
                 log.info(&#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
                          session.session_id, thread_id, r.url, r.status_code, wait)
+                wait = _retry_after(r, wait)
                 protocol.retry_policy.back_off(wait)
                 retry += 1
                 wait *= 2  # Increase delay for every retry
@@ -1568,13 +1627,13 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <span>def <span class="ident">to_xml</span></span>(<span>bytes_content)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Convert bytes or a generator of bytes to an XML tree.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_xml(bytes_content):
-    # Converts bytes or a generator of bytes to an XML tree
+    &#34;&#34;&#34;Convert bytes or a generator of bytes to an XML tree.&#34;&#34;&#34;
     # Exchange servers may spit out the weirdest XML. lxml is pretty good at recovering from errors
     if isinstance(bytes_content, bytes):
         stream = io.BytesIO(bytes_content)
@@ -1627,7 +1686,8 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <pre><code class="python">def value_to_xml_text(value):
     from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
     from .indexed_properties import PhoneNumber, EmailAddress
-    from .properties import Mailbox, Attendee, ConversationId
+    from .properties import Mailbox, AssociatedCalendarItemId, Attendee, ConversationId
+    # We can&#39;t just create a map and look up with type(value) because we want to support subtypes
     if isinstance(value, str):
         return safe_xml_value(value)
     if isinstance(value, bool):
@@ -1654,7 +1714,9 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         return value.mailbox.email_address
     if isinstance(value, ConversationId):
         return value.id
-    raise NotImplementedError(&#39;Unsupported type: %s (%s)&#39; % (type(value), value))</code></pre>
+    if isinstance(value, AssociatedCalendarItemId):
+        return value.id
+    raise TypeError(&#39;Unsupported type: %s (%s)&#39; % (type(value), value))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.xml_text_to_value"><code class="name flex">
@@ -1695,14 +1757,12 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 </code></dt>
 <dd>
 <div class="desc"><p>Serialize an XML tree. Returns unicode if 'encoding' is None. Otherwise, we return encoded 'bytes'.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>tree:</dt>
-<dt><strong><code>encoding</code></strong></dt>
-<dd>(Default value = None)</dd>
-<dt><strong><code>xml_declaration</code></strong></dt>
-<dd>(Default value = False)</dd>
-</dl></div>
+<p>:param tree:
+:param encoding:
+(Default value = None)
+:param xml_declaration:
+(Default value = False)
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1710,11 +1770,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <pre><code class="python">def xml_to_str(tree, encoding=None, xml_declaration=False):
     &#34;&#34;&#34;Serialize an XML tree. Returns unicode if &#39;encoding&#39; is None. Otherwise, we return encoded &#39;bytes&#39;.
 
-    Args:
-      tree:
-      encoding:  (Default value = None)
-      xml_declaration:  (Default value = False)
-
+    :param tree:
+    :param encoding:  (Default value = None)
+    :param xml_declaration:  (Default value = False)
+    :return:
     &#34;&#34;&#34;
     if xml_declaration and not encoding:
         raise ValueError(&#34;&#39;xml_declaration&#39; is not supported when &#39;encoding&#39; is None&#34;)
@@ -1733,7 +1792,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <span>(</span><span>forbidden_strings, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal</p>
+<div class="desc"><p>A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.</p>
 <p>Initialize the handler.</p>
 <p>If stream is not specified, sys.stderr is used.</p></div>
 <details class="source">
@@ -1741,7 +1800,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AnonymizingXmlHandler(PrettyXmlHandler):
-    &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal&#34;&#34;&#34;
+    &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.&#34;&#34;&#34;
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -1790,6 +1849,9 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <li><code><b><a title="exchangelib.util.PrettyXmlHandler" href="#exchangelib.util.PrettyXmlHandler">PrettyXmlHandler</a></b></code>:
 <ul class="hlist">
 <li><code><a title="exchangelib.util.PrettyXmlHandler.emit" href="#exchangelib.util.PrettyXmlHandler.emit">emit</a></code></li>
+<li><code><a title="exchangelib.util.PrettyXmlHandler.highlight_xml" href="#exchangelib.util.PrettyXmlHandler.highlight_xml">highlight_xml</a></code></li>
+<li><code><a title="exchangelib.util.PrettyXmlHandler.is_tty" href="#exchangelib.util.PrettyXmlHandler.is_tty">is_tty</a></code></li>
+<li><code><a title="exchangelib.util.PrettyXmlHandler.prettify_xml" href="#exchangelib.util.PrettyXmlHandler.prettify_xml">prettify_xml</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1810,7 +1872,6 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
     &#34;&#34;&#34;A BytesIO that can produce bytes from a streaming HTTP request. Expects r.iter_content() as input
     lxml tries to be smart by calling `getvalue` when present, assuming that the entire string is in memory.
     Omitting `getvalue` forces lxml to stream the request through `read` avoiding the memory duplication.
-
     &#34;&#34;&#34;
 
     def __init__(self, bytes_generator):
@@ -1944,9 +2005,68 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 </dd>
 </dl>
 </dd>
-<dt id="exchangelib.util.DummyRequest"><code class="flex name class">
-<span>class <span class="ident">DummyRequest</span></span>
-<span>(</span><span>headers)</span>
+<dt id="exchangelib.util.DocumentYielder"><code class="flex name class">
+<span>class <span class="ident">DocumentYielder</span></span>
+<span>(</span><span>content_iterator, document_tag='Envelope')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Look for XML documents in a streaming HTTP response and yield them as they become available from the stream.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DocumentYielder:
+    &#34;&#34;&#34;Look for XML documents in a streaming HTTP response and yield them as they become available from the stream.&#34;&#34;&#34;
+
+    def __init__(self, content_iterator, document_tag=&#39;Envelope&#39;):
+        self._iterator = content_iterator
+        self._start_token = b&#39;&lt;%s&#39; % document_tag.encode(&#39;utf-8&#39;)
+        self._end_token = b&#39;/%s&gt;&#39; % document_tag.encode(&#39;utf-8&#39;)
+
+    def get_tag(self, stop_byte):
+        tag_buffer = [b&#39;&lt;&#39;]
+        while True:
+            try:
+                c = next(self._iterator)
+            except StopIteration:
+                break
+            tag_buffer.append(c)
+            if c == stop_byte:
+                break
+        return b&#39;&#39;.join(tag_buffer)
+
+    def __iter__(self):
+        &#34;&#34;&#34;Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
+        collected it.
+        &#34;&#34;&#34;
+        doc_started = False
+        buffer = []
+        try:
+            while True:
+                c = next(self._iterator)
+                if not doc_started and c == b&#39;&lt;&#39;:
+                    tag = self.get_tag(stop_byte=b&#39; &#39;)
+                    if tag.startswith(self._start_token):
+                        # Start of document. Collect bytes from this point
+                        buffer.append(tag)
+                        doc_started = True
+                elif doc_started and c == b&#39;&lt;&#39;:
+                    tag = self.get_tag(stop_byte=b&#39;&gt;&#39;)
+                    buffer.append(tag)
+                    if tag.endswith(self._end_token):
+                        # End of document. Yield a valid document and reset the buffer
+                        yield b&#34;&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&gt;\n%s&#34; % b&#39;&#39;.join(buffer)
+                        doc_started = False
+                        buffer = []
+                elif doc_started:
+                    buffer.append(c)
+        except StopIteration:
+            return</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.util.DocumentYielder.get_tag"><code class="name flex">
+<span>def <span class="ident">get_tag</span></span>(<span>self, stop_byte)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1954,7 +2074,34 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <summary>
 <span>Expand source code</span>
 </summary>
+<pre><code class="python">def get_tag(self, stop_byte):
+    tag_buffer = [b&#39;&lt;&#39;]
+    while True:
+        try:
+            c = next(self._iterator)
+        except StopIteration:
+            break
+        tag_buffer.append(c)
+        if c == stop_byte:
+            break
+    return b&#39;&#39;.join(tag_buffer)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="exchangelib.util.DummyRequest"><code class="flex name class">
+<span>class <span class="ident">DummyRequest</span></span>
+<span>(</span><span>headers)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A class to fake a requests Request object for functions that expect this.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class DummyRequest:
+    &#34;&#34;&#34;A class to fake a requests Request object for functions that expect this.&#34;&#34;&#34;
+
     def __init__(self, headers):
         self.headers = headers</code></pre>
 </details>
@@ -1964,12 +2111,14 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>(</span><span>url, headers, request_headers, content=b'', status_code=503, history=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>A class to fake a requests Response object for functions that expect this.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DummyResponse:
+    &#34;&#34;&#34;A class to fake a requests Response object for functions that expect this.&#34;&#34;&#34;
+
     def __init__(self, url, headers, request_headers, content=b&#39;&#39;, status_code=503, history=None):
         self.status_code = status_code
         self.url = url
@@ -2020,12 +2169,14 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>(</span><span>msg, data)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<div class="desc"><p>Raised when the expected element was not found in a response stream.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ElementNotFound(Exception):
+    &#34;&#34;&#34;Raised when the expected element was not found in a response stream.&#34;&#34;&#34;
+
     def __init__(self, msg, data):
         super().__init__(msg)
         self.data = data</code></pre>
@@ -2041,14 +2192,13 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>(</span><span>message, code, line, column, filename=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Used to wrap lxml ParseError in our own class</p></div>
+<div class="desc"><p>Used to wrap lxml ParseError in our own class.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ParseError(lxml.etree.ParseError):
-    &#34;&#34;&#34;Used to wrap lxml ParseError in our own class&#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;Used to wrap lxml ParseError in our own class.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2066,7 +2216,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>(</span><span>stream=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A steaming log handler that prettifies log statements containing XML when output is a terminal</p>
+<div class="desc"><p>A steaming log handler that prettifies log statements containing XML when output is a terminal.</p>
 <p>Initialize the handler.</p>
 <p>If stream is not specified, sys.stderr is used.</p></div>
 <details class="source">
@@ -2074,14 +2224,15 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PrettyXmlHandler(logging.StreamHandler):
-    &#34;&#34;&#34;A steaming log handler that prettifies log statements containing XML when output is a terminal&#34;&#34;&#34;
+    &#34;&#34;&#34;A steaming log handler that prettifies log statements containing XML when output is a terminal.&#34;&#34;&#34;
+
     @staticmethod
     def parse_bytes(xml_bytes):
         return lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
 
     @classmethod
     def prettify_xml(cls, xml_bytes):
-        # Re-formats an XML document to a consistent style
+        &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
         return lxml.etree.tostring(
             cls.parse_bytes(xml_bytes),
             xml_declaration=True,
@@ -2091,7 +2242,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 
     @staticmethod
     def highlight_xml(xml_str):
-        # Highlights a string containing XML, using terminal color codes
+        &#34;&#34;&#34;Highlight a string containing XML, using terminal color codes.&#34;&#34;&#34;
         return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()
 
     def emit(self, record):
@@ -2100,9 +2251,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
            * We&#39;re outputting to a terminal
            * The log message args is a dict containing keys starting with &#39;xml_&#39; and values as bytes
 
-        Args:
-          record:
-
+        :param record:
         &#34;&#34;&#34;
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
             for key, value in record.args.items():
@@ -2120,7 +2269,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         return super().emit(record)
 
     def is_tty(self):
-        # Check if we&#39;re outputting to a terminal
+        &#34;&#34;&#34;Check if we&#39;re outputting to a terminal.&#34;&#34;&#34;
         try:
             return self.stream.isatty()
         except AttributeError:
@@ -2142,14 +2291,14 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>def <span class="ident">highlight_xml</span></span>(<span>xml_str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Highlight a string containing XML, using terminal color codes.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
 def highlight_xml(xml_str):
-    # Highlights a string containing XML, using terminal color codes
+    &#34;&#34;&#34;Highlight a string containing XML, using terminal color codes.&#34;&#34;&#34;
     return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()</code></pre>
 </details>
 </dd>
@@ -2171,14 +2320,14 @@ def parse_bytes(xml_bytes):
 <span>def <span class="ident">prettify_xml</span></span>(<span>xml_bytes)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Re-format an XML document to a consistent style.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
 def prettify_xml(cls, xml_bytes):
-    # Re-formats an XML document to a consistent style
+    &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
     return lxml.etree.tostring(
         cls.parse_bytes(xml_bytes),
         xml_declaration=True,
@@ -2198,8 +2347,7 @@ def prettify_xml(cls, xml_bytes):
 * This is a DEBUG message
 * We're outputting to a terminal
 * The log message args is a dict containing keys starting with 'xml_' and values as bytes</p>
-<h2 id="args">Args</h2>
-<p>record:</p></div>
+<p>:param record:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2210,9 +2358,7 @@ def prettify_xml(cls, xml_bytes):
        * We&#39;re outputting to a terminal
        * The log message args is a dict containing keys starting with &#39;xml_&#39; and values as bytes
 
-    Args:
-      record:
-
+    :param record:
     &#34;&#34;&#34;
     if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
         for key, value in record.args.items():
@@ -2234,13 +2380,13 @@ def prettify_xml(cls, xml_bytes):
 <span>def <span class="ident">is_tty</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Check if we're outputting to a terminal.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_tty(self):
-    # Check if we&#39;re outputting to a terminal
+    &#34;&#34;&#34;Check if we&#39;re outputting to a terminal.&#34;&#34;&#34;
     try:
         return self.stream.isatty()
     except AttributeError:
@@ -2254,13 +2400,13 @@ def prettify_xml(cls, xml_bytes):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A SAX parser that returns a generator of base64-decoded character content</p></div>
+<div class="desc"><p>A SAX parser that returns a generator of base64-decoded character content.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class StreamingBase64Parser(DefusedExpatParser):
-    &#34;&#34;&#34;A SAX parser that returns a generator of base64-decoded character content&#34;&#34;&#34;
+    &#34;&#34;&#34;A SAX parser that returns a generator of base64-decoded character content.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         DefusedExpatParser.__init__(self, *args, **kwargs)
@@ -2292,7 +2438,7 @@ def prettify_xml(cls, xml_bytes):
             raise ElementNotFound(&#39;The element to be streamed from was not found&#39;, data=bytes(data))
 
     def feed(self, data, isFinal=0):
-        # Like upstream, but yields the current content of the character buffer
+        &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
         DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
         return self._decode_buffer()
 
@@ -2324,17 +2470,13 @@ def prettify_xml(cls, xml_bytes):
 <span>def <span class="ident">feed</span></span>(<span>self, data, isFinal=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This method gives the raw XML data in the data parameter to
-the parser and makes it parse the data, emitting the
-corresponding events. It is allowed for XML constructs to be
-split across several calls to feed.</p>
-<p>feed may raise SAXException.</p></div>
+<div class="desc"><p>Yield the current content of the character buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def feed(self, data, isFinal=0):
-    # Like upstream, but yields the current content of the character buffer
+    &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
     DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
     return self._decode_buffer()</code></pre>
 </details>
@@ -2388,7 +2530,6 @@ a 'buffer' attribute we can append data to.</p></div>
 <pre><code class="python">class StreamingContentHandler(xml.sax.handler.ContentHandler):
     &#34;&#34;&#34;A SAX content handler that returns a character data for a single element back to the parser. The parser must have
     a &#39;buffer&#39; attribute we can append data to.
-
     &#34;&#34;&#34;
 
     def __init__(self, parser, ns, element_name):
@@ -2538,6 +2679,12 @@ no namespace.</p></div>
 <li><code><a title="exchangelib.util.BytesGeneratorIO.read" href="#exchangelib.util.BytesGeneratorIO.read">read</a></code></li>
 <li><code><a title="exchangelib.util.BytesGeneratorIO.readable" href="#exchangelib.util.BytesGeneratorIO.readable">readable</a></code></li>
 <li><code><a title="exchangelib.util.BytesGeneratorIO.tell" href="#exchangelib.util.BytesGeneratorIO.tell">tell</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.util.DocumentYielder" href="#exchangelib.util.DocumentYielder">DocumentYielder</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.util.DocumentYielder.get_tag" href="#exchangelib.util.DocumentYielder.get_tag">get_tag</a></code></li>
 </ul>
 </li>
 <li>

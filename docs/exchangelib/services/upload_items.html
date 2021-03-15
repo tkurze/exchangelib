@@ -34,11 +34,10 @@ from ..util import create_element, set_xml_value, add_xml_child, MNS
 class UploadItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
 
-    This currently has the existing limitation of only being able to upload
-    items that do not yet exist in the database. The full spec also allows
-    actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
-
+    TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
+     database. The full spec also allows actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UploadItems&#39;
     element_container_name = &#39;{%s}ItemId&#39; % MNS
 
@@ -47,16 +46,13 @@ class UploadItems(EWSAccountService):
         return self._chunked_get_elements(self.get_payload, items=items)
 
     def get_payload(self, items):
-        &#34;&#34;&#34;Upload given items to given account
+        &#34;&#34;&#34;Upload given items to given account.
 
-        data is an iterable of tuples where the first element is a Folder
-        instance representing the ParentFolder that the item will be placed in
-        and the second element is a Data string returned from an ExportItems
+        &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+        that the item will be placed in and the second element is a Data string returned from an ExportItems.
         call.
 
-        Args:
-          items:
-
+        :param items:
         &#34;&#34;&#34;
         uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         itemselement = create_element(&#39;m:Items&#39;)
@@ -69,7 +65,8 @@ class UploadItems(EWSAccountService):
             itemselement.append(item)
         return uploaditems
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]</code></pre>
 </details>
 </section>
@@ -88,9 +85,8 @@ class UploadItems(EWSAccountService):
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation</a></p>
-<p>This currently has the existing limitation of only being able to upload
-items that do not yet exist in the database. The full spec also allows
-actions "Update" and "UpdateOrCreate".</p></div>
+<p>TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
+database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -98,11 +94,10 @@ actions "Update" and "UpdateOrCreate".</p></div>
 <pre><code class="python">class UploadItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
 
-    This currently has the existing limitation of only being able to upload
-    items that do not yet exist in the database. The full spec also allows
-    actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
-
+    TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
+     database. The full spec also allows actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UploadItems&#39;
     element_container_name = &#39;{%s}ItemId&#39; % MNS
 
@@ -111,16 +106,13 @@ actions "Update" and "UpdateOrCreate".</p></div>
         return self._chunked_get_elements(self.get_payload, items=items)
 
     def get_payload(self, items):
-        &#34;&#34;&#34;Upload given items to given account
+        &#34;&#34;&#34;Upload given items to given account.
 
-        data is an iterable of tuples where the first element is a Folder
-        instance representing the ParentFolder that the item will be placed in
-        and the second element is a Data string returned from an ExportItems
+        &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+        that the item will be placed in and the second element is a Data string returned from an ExportItems.
         call.
 
-        Args:
-          items:
-
+        :param items:
         &#34;&#34;&#34;
         uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         itemselement = create_element(&#39;m:Items&#39;)
@@ -133,7 +125,8 @@ actions "Update" and "UpdateOrCreate".</p></div>
             itemselement.append(item)
         return uploaditems
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -172,28 +165,23 @@ actions "Update" and "UpdateOrCreate".</p></div>
 <span>def <span class="ident">get_payload</span></span>(<span>self, items)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Upload given items to given account</p>
-<p>data is an iterable of tuples where the first element is a Folder
-instance representing the ParentFolder that the item will be placed in
-and the second element is a Data string returned from an ExportItems
+<div class="desc"><p>Upload given items to given account.</p>
+<p>'items' is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+that the item will be placed in and the second element is a Data string returned from an ExportItems.
 call.</p>
-<h2 id="args">Args</h2>
-<p>items:</p></div>
+<p>:param items:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items):
-    &#34;&#34;&#34;Upload given items to given account
+    &#34;&#34;&#34;Upload given items to given account.
 
-    data is an iterable of tuples where the first element is a Folder
-    instance representing the ParentFolder that the item will be placed in
-    and the second element is a Data string returned from an ExportItems
+    &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
+    that the item will be placed in and the second element is a Data string returned from an ExportItems.
     call.
 
-    Args:
-      items:
-
+    :param items:
     &#34;&#34;&#34;
     uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     itemselement = create_element(&#39;m:Items&#39;)

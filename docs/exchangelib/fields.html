@@ -87,29 +87,26 @@ WEEKDAYS = WEEKDAY_NAMES + EXTRA_WEEKDAY_OPTIONS
 
 
 class InvalidField(ValueError):
-    pass
+    &#34;&#34;&#34;Used when a field name does not match any defined fields.&#34;&#34;&#34;
 
 
 class InvalidFieldForVersion(ValueError):
-    pass
+    &#34;&#34;&#34;Used when a field is not supported on the given Exchnage version.&#34;&#34;&#34;
 
 
 class InvalidChoiceForVersion(ValueError):
-    pass
+    &#34;&#34;&#34;Used when a value is not valid for an enum-type field.&#34;&#34;&#34;
 
 
 def split_field_path(field_path):
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Split a string path into its field, label and subfield parts.
 
-    Args:
-      field_path:
+    :param field_path:
 
-    Returns:
-      Examples:
+    :return Examples:
       &#39;start&#39; -&gt; (&#39;start&#39;, None, None)
       &#39;phone_numbers__PrimaryPhone&#39; -&gt; (&#39;phone_numbers&#39;, &#39;PrimaryPhone&#39;, None)
       &#39;physical_addresses__Home__street&#39; -&gt; (&#39;physical_addresses&#39;, &#39;Home&#39;, &#39;street&#39;)
-
     &#34;&#34;&#34;
     if not isinstance(field_path, str):
         raise ValueError(&#34;Field path %r must be a string&#34; % field_path)
@@ -127,8 +124,9 @@ def split_field_path(field_path):
 
 
 def resolve_field_path(field_path, folder, strict=True):
-    # Takes the name of a field, or &#39;__&#39;-delimited path to a subfield, and returns the corresponding Field object,
-    # label and SubField object
+    &#34;&#34;&#34;Take the name of a field, or &#39;__&#39;-delimited path to a subfield, and return the corresponding Field object,
+    label and SubField object.
+    &#34;&#34;&#34;
     from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
     fieldname, label, subfieldname = split_field_path(field_path)
     field = folder.get_item_field_by_fieldname(fieldname)
@@ -187,7 +185,6 @@ class FieldPath:
     &#34;&#34;&#34;Holds values needed to point to a single field. For indexed properties, we allow setting either field,
     field and label, or field, label and subfield. This allows pointing to either the full indexed property set, a
     property with a specific label, or a particular subfield field on that property.
-
     &#34;&#34;&#34;
 
     def __init__(self, field, label=None, subfield=None):
@@ -269,7 +266,7 @@ class FieldPath:
 
 
 class FieldOrder:
-    &#34;&#34;&#34;Holds values needed to call server-side sorting on a single field path&#34;&#34;&#34;
+    &#34;&#34;&#34;Holds values needed to call server-side sorting on a single field path.&#34;&#34;&#34;
 
     def __init__(self, field_path, reverse=False):
         if not isinstance(field_path, FieldPath):
@@ -293,7 +290,8 @@ class FieldOrder:
 
 
 class Field(metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Holds information related to an item field&#34;&#34;&#34;
+    &#34;&#34;&#34;Holds information related to an item field.&#34;&#34;&#34;
+
     value_cls = None
     is_list = False
     # Is the field a complex EWS type? Quoting the EWS FindItem docs:
@@ -304,7 +302,7 @@ class Field(metaclass=abc.ABCMeta):
     #
     is_complex = False
 
-    def __init__(self, name, is_required=False, is_required_after_save=False, is_read_only=False,
+    def __init__(self, name=None, is_required=False, is_required_after_save=False, is_read_only=False,
                  is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None,
                  supported_from=None, deprecated_from=None):
         self.name = name
@@ -386,6 +384,11 @@ class Field(metaclass=abc.ABCMeta):
 
 
 class FieldURIField(Field):
+    &#34;&#34;&#34;A field that has a FieldURI value in EWS. This means it&#39;s value is contained in an XML element or arrtibute. It
+    may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
+    &#39;itemtype:FieldName&#39;
+    &#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         self.field_uri = kwargs.pop(&#39;field_uri&#39;, None)
         self.namespace = kwargs.pop(&#39;namespace&#39;, TNS)
@@ -440,14 +443,18 @@ class FieldURIField(Field):
 
 
 class BooleanField(FieldURIField):
+    &#34;&#34;&#34;A field that handles boolean values.&#34;&#34;&#34;
+
     value_cls = bool
 
 
 class OnOffField(BooleanField):
-    pass
+    &#34;&#34;&#34;A field that handles boolean values that are On/Off instead of True/False.&#34;&#34;&#34;
 
 
 class IntegerField(FieldURIField):
+    &#34;&#34;&#34;A field that handles integer values.&#34;&#34;&#34;
+
     value_cls = int
 
     def __init__(self, *args, **kwargs):
@@ -474,13 +481,14 @@ class IntegerField(FieldURIField):
 
 
 class DecimalField(IntegerField):
+    &#34;&#34;&#34;A field that handles decimal values.&#34;&#34;&#34;
+
     value_cls = Decimal
 
 
 class EnumField(IntegerField):
     &#34;&#34;&#34;A field type where you can enter either the 1-based index in an enum (tuple), or the enum value. Values will be
     stored internally as integers but output in XML as strings.
-
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -541,11 +549,13 @@ class EnumField(IntegerField):
 
 
 class EnumListField(EnumField):
+    &#34;&#34;&#34;Like EnumField, but for lists of enum values.&#34;&#34;&#34;
+
     is_list = True
 
 
 class EnumAsIntField(EnumField):
-    &#34;&#34;&#34;Like EnumField, but communicates values with EWS in integers&#34;&#34;&#34;
+    &#34;&#34;&#34;Like EnumField, but communicates values with EWS in integers.&#34;&#34;&#34;
 
     def from_xml(self, elem, account):
         return super(EnumField, self).from_xml(elem=elem, account=account)
@@ -556,7 +566,8 @@ class EnumAsIntField(EnumField):
 
 
 class AppointmentStateField(IntegerField):
-    # MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate&#34;&#34;&#34;
+
     NONE = &#39;None&#39;
     MEETING = &#39;Meeting&#39;
     RECEIVED = &#39;Received&#39;
@@ -576,6 +587,8 @@ class AppointmentStateField(IntegerField):
 
 
 class Base64Field(FieldURIField):
+    &#34;&#34;&#34;A field that handles binary data and automatically Base64 encodes and decodes the data.&#34;&#34;&#34;
+
     value_cls = bytes
     is_complex = True
 
@@ -586,24 +599,26 @@ class Base64Field(FieldURIField):
 
 
 class MimeContentField(Base64Field):
-    # This element has an optional &#39;CharacterSet&#39; attribute, but it specifies the encoding of the base64-encoded
-    # string (which doesn&#39;t make sense since base64-encoded strings are always ASCII). We ignore it here because
-    # the decoded data could be in some other encoding, specified in the &#34;Content-Type:&#34; header.
-    pass
+    &#34;&#34;&#34;Like Base64Field. This element has an optional &#39;CharacterSet&#39; attribute, but it specifies the encoding of the
+    base64-encoded string (which doesn&#39;t make sense since base64-encoded strings are always ASCII). We ignore it here
+    because the decoded data could be in some other encoding, specified in the &#34;Content-Type&#34; HTTP header.
+    &#34;&#34;&#34;
 
 
 class DateField(FieldURIField):
+    &#34;&#34;&#34;A field that handles date values.&#34;&#34;&#34;
+
     value_cls = EWSDate
 
     def clean(self, value, version=None):
         # Allow plain datetime.date values as input
-        if type(value) == datetime.date:
+        if type(value) is datetime.date:
             value = self.value_cls.from_date(value)
         return super().clean(value=value, version=version)
 
 
 class DateTimeBackedDateField(DateField):
-    # A field that acts like a date, but where values are sent to EWS as EWSDateTime.
+    &#34;&#34;&#34;A field that acts like a date, but where values are sent to EWS as EWSDateTime.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
@@ -636,6 +651,8 @@ class DateTimeBackedDateField(DateField):
 
 
 class TimeField(FieldURIField):
+    &#34;&#34;&#34;A field that handles time values.&#34;&#34;&#34;
+
     value_cls = datetime.time
 
     def from_xml(self, elem, account):
@@ -653,13 +670,15 @@ class TimeField(FieldURIField):
 
 
 class DateTimeField(FieldURIField):
+    &#34;&#34;&#34;A field that handles datetime values.&#34;&#34;&#34;
+
     value_cls = EWSDateTime
 
     def clean(self, value, version=None):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
                 raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
-            if type(value) == datetime.datetime:
+            if type(value) is datetime.datetime:
                 value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
 
@@ -671,15 +690,14 @@ class DateTimeField(FieldURIField):
             except ValueError as e:
                 if isinstance(e, NaiveDateTimeNotAllowed):
                     # We encountered a naive datetime
-                    local_dt = e.args[0]
                     if account:
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
-                        log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, local_dt, self.name, tz)
-                        return local_dt.replace(tzinfo=tz)
+                        log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, e.local_dt, self.name, tz)
+                        return e.local_dt.replace(tzinfo=tz)
                     # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                    log.warning(&#39;Returning naive datetime %s on field %s&#39;, local_dt, self.name)
-                    return local_dt
+                    log.warning(&#39;Returning naive datetime %s on field %s&#39;, e.local_dt, self.name)
+                    return e.local_dt
                 log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
                 return None
         return self.default
@@ -694,7 +712,6 @@ class DateOrDateTimeField(DateTimeField):
     For all-day calendar items, we assume both start and end dates are inclusive.
 
     For filtering kwarg validation and other places where we must decide on a specific class, we settle on datetime.
-
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -718,6 +735,8 @@ class DateOrDateTimeField(DateTimeField):
 
 
 class TimeZoneField(FieldURIField):
+    &#34;&#34;&#34;A field that handles timezone values.&#34;&#34;&#34;
+
     value_cls = EWSTimeZone
 
     def clean(self, value, version=None):
@@ -749,12 +768,15 @@ class TimeZoneField(FieldURIField):
 
 
 class TextField(FieldURIField):
-    &#34;&#34;&#34;A field that stores a string value with no length limit&#34;&#34;&#34;
+    &#34;&#34;&#34;A field that stores a string value with no length limit.&#34;&#34;&#34;
+
     value_cls = str
     is_complex = True
 
 
 class TextListField(TextField):
+    &#34;&#34;&#34;Like TextField, but for lists of text.&#34;&#34;&#34;
+
     is_list = True
 
     def from_xml(self, elem, account):
@@ -765,6 +787,8 @@ class TextListField(TextField):
 
 
 class MessageField(TextField):
+    &#34;&#34;&#34;A field that handles the Message element.&#34;&#34;&#34;
+
     INNER_ELEMENT_NAME = &#39;Message&#39;
 
     def from_xml(self, elem, account):
@@ -784,7 +808,8 @@ class MessageField(TextField):
 
 
 class CharField(TextField):
-    &#34;&#34;&#34;A field that stores a string value with a limited length&#34;&#34;&#34;
+    &#34;&#34;&#34;A field that stores a string value with a limited length.&#34;&#34;&#34;
+
     is_complex = False
 
     def __init__(self, *args, **kwargs):
@@ -811,7 +836,6 @@ class IdField(CharField):
     &#34;&#34;&#34;A field to hold the &#39;Id&#39; and &#39;Changekey&#39; attributes on &#39;ItemId&#39; type items. There is no guaranteed max length,
     but we can assume 512 bytes in practice. See
     https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-identifiers-in-exchange
-
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -822,6 +846,8 @@ class IdField(CharField):
 
 
 class CharListField(CharField):
+    &#34;&#34;&#34;Like CharField, but for lists of strings.&#34;&#34;&#34;
+
     is_list = True
 
     def __init__(self, *args, **kwargs):
@@ -839,25 +865,21 @@ class CharListField(CharField):
 
 
 class URIField(TextField):
-    &#34;&#34;&#34;Helper to mark strings that must conform to xsd:anyURI
+    &#34;&#34;&#34;Helper to mark strings that must conform to xsd:anyURI.
     If we want an URI validator, see http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri
-
     &#34;&#34;&#34;
-    pass
 
 
 class EmailAddressField(CharField):
-    &#34;&#34;&#34;A helper class used for email address string that we can use for email validation&#34;&#34;&#34;
-    pass
+    &#34;&#34;&#34;A helper class used for email address string that we can use for email validation.&#34;&#34;&#34;
 
 
 class CultureField(CharField):
     &#34;&#34;&#34;Helper to mark strings that are # RFC 1766 culture values.&#34;&#34;&#34;
-    pass
 
 
 class Choice:
-    &#34;&#34;&#34;Implements versioned choices for the ChoiceField field&#34;&#34;&#34;
+    &#34;&#34;&#34;Implement versioned choices for the ChoiceField field.&#34;&#34;&#34;
 
     def __init__(self, value, supported_from=None):
         self.value = value
@@ -873,6 +895,8 @@ class Choice:
 
 
 class ChoiceField(CharField):
+    &#34;&#34;&#34;Like CharField, but restricts the value to a limited set of strings.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         self.choices = kwargs.pop(&#39;choices&#39;)
         super().__init__(*args, **kwargs)
@@ -881,7 +905,7 @@ class ChoiceField(CharField):
         value = super().clean(value, version=version)
         if value is None:
             return None
-        valid_choices = list(c.value for c in self.choices)
+        valid_choices = [c.value for c in self.choices]
         if version:
             valid_choices_for_version = self.supported_choices(version=version)
             if value in valid_choices_for_version:
@@ -897,7 +921,7 @@ class ChoiceField(CharField):
         ))
 
     def supported_choices(self, version):
-        return list(c.value for c in self.choices if c.supports_version(version))
+        return [c.value for c in self.choices if c.supports_version(version)]
 
 
 FREE_BUSY_CHOICES = [Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Busy&#39;), Choice(&#39;OOF&#39;), Choice(&#39;NoData&#39;),
@@ -905,12 +929,16 @@ FREE_BUSY_CHOICES = [Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice
 
 
 class FreeBusyStatusField(ChoiceField):
+    &#34;&#34;&#34;Like ChoiceField, but specifically for Free/Busy values.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         kwargs[&#39;choices&#39;] = set(FREE_BUSY_CHOICES)
         super().__init__(*args, **kwargs)
 
 
 class BodyField(TextField):
+    &#34;&#34;&#34;A TextField with specific requirements for the Item body.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         from .properties import Body
         self.value_cls = Body
@@ -945,6 +973,8 @@ class BodyField(TextField):
 
 
 class EWSElementField(FieldURIField):
+    &#34;&#34;&#34;A generic field for any EWSElement object.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         self._value_cls = kwargs.pop(&#39;value_cls&#39;)
         if &#39;namespace&#39; not in kwargs:
@@ -982,6 +1012,8 @@ class EWSElementField(FieldURIField):
 
 
 class EWSElementListField(EWSElementField):
+    &#34;&#34;&#34;Like EWSElementField, but for lists of EWSElement objects.&#34;&#34;&#34;
+
     is_list = True
     is_complex = True
 
@@ -1050,7 +1082,7 @@ class MessageHeaderField(EWSElementListField):
 
 
 class BaseEmailField(EWSElementField):
-    &#34;&#34;&#34;A base class for EWSElement classes that have an &#39;email_address&#39; field that we want to provide helpers for&#34;&#34;&#34;
+    &#34;&#34;&#34;A base class for EWSElement classes that have an &#39;email_address&#39; field that we want to provide helpers for.&#34;&#34;&#34;
 
     is_complex = True  # FindItem only returns the name, not the email address
 
@@ -1140,6 +1172,8 @@ class AttendeesField(EWSElementListField):
 
 
 class AttachmentField(EWSElementListField):
+    &#34;&#34;&#34;A field for item attachments.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         from .attachments import Attachment
         kwargs[&#39;value_cls&#39;] = Attachment
@@ -1160,7 +1194,7 @@ class AttachmentField(EWSElementListField):
 
 
 class LabelField(ChoiceField):
-    &#34;&#34;&#34;A field to hold the label on an IndexedElement&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the label on an IndexedElement.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1171,9 +1205,9 @@ class LabelField(ChoiceField):
 
 
 class SubField(Field):
-    namespace = TNS
+    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement.&#34;&#34;&#34;
 
-    # A field to hold the value on an SingleFieldIndexedElement
+    namespace = TNS
     value_cls = str
 
     def from_xml(self, elem, account):
@@ -1192,7 +1226,8 @@ class SubField(Field):
 
 
 class EmailSubField(SubField):
-    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement.&#34;&#34;&#34;
+
     value_cls = str
 
     def from_xml(self, elem, account):
@@ -1200,7 +1235,8 @@ class EmailSubField(SubField):
 
 
 class NamedSubField(SubField):
-    &#34;&#34;&#34;A field to hold the value on an MultiFieldIndexedElement&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the value on an MultiFieldIndexedElement.&#34;&#34;&#34;
+
     value_cls = str
 
     def __init__(self, *args, **kwargs):
@@ -1232,6 +1268,8 @@ class NamedSubField(SubField):
 
 
 class IndexedField(EWSElementField):
+    &#34;&#34;&#34;A base class for all indexed fields.&#34;&#34;&#34;
+
     PARENT_ELEMENT_NAME = None
 
     def to_xml(self, value, version):
@@ -1301,7 +1339,7 @@ class ExtendedPropertyField(Field):
             if self.is_required:
                 raise ValueError(&#34;&#39;%s&#39; is a required field&#34; % self.name)
             return self.default
-        elif not isinstance(value, self.value_cls):
+        if not isinstance(value, self.value_cls):
             # Allow keeping ExtendedProperty field values as their simple Python type, but run clean() anyway
             tmp = self.value_cls(value)
             tmp.clean(version=version)
@@ -1423,8 +1461,8 @@ class IdElementField(EWSElementField):
 
 
 class TypeValueField(FieldURIField):
-    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.&#34;&#34;&#34;
+
     TYPES_MAP = {
         &#39;Boolean&#39;: bool,
         &#39;Integer32&#39;: int,
@@ -1453,7 +1491,12 @@ class TypeValueField(FieldURIField):
             # This is a single byte. Translate it to the &#39;Byte&#39; type
             return &#39;Byte&#39;
         if is_iterable(value):
-            value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+            # We don&#39;t allow generators as values, so keep the logic simple
+            try:
+                first = next(iter(value))
+            except StopIteration:
+                first = None
+            value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(first)]
             if value_type not in cls.TYPES_MAP:
                 raise ValueError(&#39;%r is not a supported type&#39; % value)
             return value_type
@@ -1519,9 +1562,9 @@ class DictionaryField(FieldURIField):
         if isinstance(value, dict):
             cleaned = {}
             for k, v in value.items():
-                if type(k) == datetime.datetime:
+                if type(k) is datetime.datetime:
                     k = EWSDateTime.from_datetime(k)
-                if type(v) == datetime.datetime:
+                if type(v) is datetime.datetime:
                     v = EWSDateTime.from_datetime(v)
                 cleaned[k] = v
             value = cleaned
@@ -1577,7 +1620,39 @@ class PostalAddressAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import PostalAddressAttributedValue
         kwargs[&#39;value_cls&#39;] = PostalAddressAttributedValue
-        super().__init__(*args, **kwargs)</code></pre>
+        super().__init__(*args, **kwargs)
+
+
+class GenericEventListField(EWSElementField):
+    &#34;&#34;&#34;A list field that can contain all subclasses of Event.&#34;&#34;&#34;
+
+    is_list = True
+
+    @property
+    def _event_types_map(self):
+        return {v.response_tag(): v for v in self.value_classes}
+
+    def __init__(self, *args, **kwargs):
+        from .properties import CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, \
+            NewMailEvent, StatusEvent, FreeBusyChangedEvent
+        kwargs[&#39;value_cls&#39;] = None  # Parent class requires this kwarg
+        kwargs[&#39;namespace&#39;] = None  # Parent class requires this kwarg
+        super().__init__(*args, **kwargs)
+        self.value_classes = (
+            CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent,
+            FreeBusyChangedEvent,
+        )
+
+    def from_xml(self, elem, account):
+        events = []
+        for event in elem:
+            # This may or may not be an event element. Could also be other child elements of Notification
+            try:
+                value_cls = self._event_types_map[event.tag]
+            except KeyError:
+                continue
+            events.append(value_cls.from_xml(elem=event, account=account))
+        return events or self.default</code></pre>
 </details>
 </section>
 <section>
@@ -1591,14 +1666,16 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>def <span class="ident">resolve_field_path</span></span>(<span>field_path, folder, strict=True)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Take the name of a field, or '__'-delimited path to a subfield, and return the corresponding Field object,
+label and SubField object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def resolve_field_path(field_path, folder, strict=True):
-    # Takes the name of a field, or &#39;__&#39;-delimited path to a subfield, and returns the corresponding Field object,
-    # label and SubField object
+    &#34;&#34;&#34;Take the name of a field, or &#39;__&#39;-delimited path to a subfield, and return the corresponding Field object,
+    label and SubField object.
+    &#34;&#34;&#34;
     from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
     fieldname, label, subfieldname = split_field_path(field_path)
     field = folder.get_item_field_by_fieldname(fieldname)
@@ -1657,10 +1734,9 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>def <span class="ident">split_field_path</span></span>(<span>field_path)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<p>field_path:</p>
-<h2 id="returns">Returns</h2>
-<p>Examples:
+<div class="desc"><p>Split a string path into its field, label and subfield parts.</p>
+<p>:param field_path:</p>
+<p>:return Examples:
 'start' -&gt; ('start', None, None)
 'phone_numbers__PrimaryPhone' -&gt; ('phone_numbers', 'PrimaryPhone', None)
 'physical_addresses__Home__street' -&gt; ('physical_addresses', 'Home', 'street')</p></div>
@@ -1669,17 +1745,14 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def split_field_path(field_path):
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Split a string path into its field, label and subfield parts.
 
-    Args:
-      field_path:
+    :param field_path:
 
-    Returns:
-      Examples:
+    :return Examples:
       &#39;start&#39; -&gt; (&#39;start&#39;, None, None)
       &#39;phone_numbers__PrimaryPhone&#39; -&gt; (&#39;phone_numbers&#39;, &#39;PrimaryPhone&#39;, None)
       &#39;physical_addresses__Home__street&#39; -&gt; (&#39;physical_addresses&#39;, &#39;Home&#39;, &#39;street&#39;)
-
     &#34;&#34;&#34;
     if not isinstance(field_path, str):
         raise ValueError(&#34;Field path %r must be a string&#34; % field_path)
@@ -1706,13 +1779,14 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AppointmentStateField(IntegerField):
-    # MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate&#34;&#34;&#34;
+
     NONE = &#39;None&#39;
     MEETING = &#39;Meeting&#39;
     RECEIVED = &#39;Received&#39;
@@ -1792,7 +1866,7 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1843,12 +1917,14 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field for item attachments.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AttachmentField(EWSElementListField):
+    &#34;&#34;&#34;A field for item attachments.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         from .attachments import Attachment
         kwargs[&#39;value_cls&#39;] = Attachment
@@ -1906,7 +1982,7 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1957,12 +2033,14 @@ class PostalAddressAttributedValueField(EWSElementListField):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles binary data and automatically Base64 encodes and decodes the data.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Base64Field(FieldURIField):
+    &#34;&#34;&#34;A field that handles binary data and automatically Base64 encodes and decodes the data.&#34;&#34;&#34;
+
     value_cls = bytes
     is_complex = True
 
@@ -2006,13 +2084,13 @@ bytes() -&gt; empty bytes object</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for</p></div>
+<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BaseEmailField(EWSElementField):
-    &#34;&#34;&#34;A base class for EWSElement classes that have an &#39;email_address&#39; field that we want to provide helpers for&#34;&#34;&#34;
+    &#34;&#34;&#34;A base class for EWSElement classes that have an &#39;email_address&#39; field that we want to provide helpers for.&#34;&#34;&#34;
 
     is_complex = True  # FindItem only returns the name, not the email address
 
@@ -2108,7 +2186,7 @@ bytes() -&gt; empty bytes object</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2140,12 +2218,14 @@ bytes() -&gt; empty bytes object</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with no length limit</p></div>
+<div class="desc"><p>A TextField with specific requirements for the Item body.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BodyField(TextField):
+    &#34;&#34;&#34;A TextField with specific requirements for the Item body.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         from .properties import Body
         self.value_cls = Body
@@ -2258,12 +2338,14 @@ bytes() -&gt; empty bytes object</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles boolean values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BooleanField(FieldURIField):
+    &#34;&#34;&#34;A field that handles boolean values.&#34;&#34;&#34;
+
     value_cls = bool</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2291,7 +2373,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>A field that stores a string value with a limited length.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2353,13 +2435,14 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>A field that stores a string value with a limited length.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CharField(TextField):
-    &#34;&#34;&#34;A field that stores a string value with a limited length&#34;&#34;&#34;
+    &#34;&#34;&#34;A field that stores a string value with a limited length.&#34;&#34;&#34;
+
     is_complex = False
 
     def __init__(self, *args, **kwargs):
@@ -2442,12 +2525,14 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>Like CharField, but for lists of strings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CharListField(CharField):
+    &#34;&#34;&#34;Like CharField, but for lists of strings.&#34;&#34;&#34;
+
     is_list = True
 
     def __init__(self, *args, **kwargs):
@@ -2527,13 +2612,13 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>(</span><span>value, supported_from=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Implements versioned choices for the ChoiceField field</p></div>
+<div class="desc"><p>Implement versioned choices for the ChoiceField field.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Choice:
-    &#34;&#34;&#34;Implements versioned choices for the ChoiceField field&#34;&#34;&#34;
+    &#34;&#34;&#34;Implement versioned choices for the ChoiceField field.&#34;&#34;&#34;
 
     def __init__(self, value, supported_from=None):
         self.value = value
@@ -2574,12 +2659,14 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>Like CharField, but restricts the value to a limited set of strings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ChoiceField(CharField):
+    &#34;&#34;&#34;Like CharField, but restricts the value to a limited set of strings.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         self.choices = kwargs.pop(&#39;choices&#39;)
         super().__init__(*args, **kwargs)
@@ -2588,7 +2675,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
         value = super().clean(value, version=version)
         if value is None:
             return None
-        valid_choices = list(c.value for c in self.choices)
+        valid_choices = [c.value for c in self.choices]
         if version:
             valid_choices_for_version = self.supported_choices(version=version)
             if value in valid_choices_for_version:
@@ -2604,7 +2691,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
         ))
 
     def supported_choices(self, version):
-        return list(c.value for c in self.choices if c.supports_version(version))</code></pre>
+        return [c.value for c in self.choices if c.supports_version(version)]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2634,7 +2721,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
     value = super().clean(value, version=version)
     if value is None:
         return None
-    valid_choices = list(c.value for c in self.choices)
+    valid_choices = [c.value for c in self.choices]
     if version:
         valid_choices_for_version = self.supported_choices(version=version)
         if value in valid_choices_for_version:
@@ -2660,7 +2747,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def supported_choices(self, version):
-    return list(c.value for c in self.choices if c.supports_version(version))</code></pre>
+    return [c.value for c in self.choices if c.supports_version(version)]</code></pre>
 </details>
 </dd>
 </dl>
@@ -2684,8 +2771,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CultureField(CharField):
-    &#34;&#34;&#34;Helper to mark strings that are # RFC 1766 culture values.&#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;Helper to mark strings that are # RFC 1766 culture values.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2708,17 +2794,19 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles date values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DateField(FieldURIField):
+    &#34;&#34;&#34;A field that handles date values.&#34;&#34;&#34;
+
     value_cls = EWSDate
 
     def clean(self, value, version=None):
         # Allow plain datetime.date values as input
-        if type(value) == datetime.date:
+        if type(value) is datetime.date:
             value = self.value_cls.from_date(value)
         return super().clean(value=value, version=version)</code></pre>
 </details>
@@ -2735,7 +2823,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <dl>
 <dt id="exchangelib.fields.DateField.value_cls"><code class="name">var <span class="ident">value_cls</span></code></dt>
 <dd>
-<div class="desc"><p>Extends the normal date implementation to satisfy EWS</p></div>
+<div class="desc"><p>Extends the normal date implementation to satisfy EWS.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -2751,7 +2839,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
     # Allow plain datetime.date values as input
-    if type(value) == datetime.date:
+    if type(value) is datetime.date:
         value = self.value_cls.from_date(value)
     return super().clean(value=value, version=version)</code></pre>
 </details>
@@ -2782,7 +2870,6 @@ the recurring item is a task or a calendar item.</p>
     For all-day calendar items, we assume both start and end dates are inclusive.
 
     For filtering kwarg validation and other places where we must decide on a specific class, we settle on datetime.
-
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -2861,13 +2948,13 @@ the recurring item is a task or a calendar item.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that acts like a date, but where values are sent to EWS as EWSDateTime.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DateTimeBackedDateField(DateField):
-    # A field that acts like a date, but where values are sent to EWS as EWSDateTime.
+    &#34;&#34;&#34;A field that acts like a date, but where values are sent to EWS as EWSDateTime.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
@@ -2973,19 +3060,21 @@ the recurring item is a task or a calendar item.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles datetime values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DateTimeField(FieldURIField):
+    &#34;&#34;&#34;A field that handles datetime values.&#34;&#34;&#34;
+
     value_cls = EWSDateTime
 
     def clean(self, value, version=None):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
                 raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
-            if type(value) == datetime.datetime:
+            if type(value) is datetime.datetime:
                 value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
 
@@ -2997,15 +3086,14 @@ the recurring item is a task or a calendar item.</p>
             except ValueError as e:
                 if isinstance(e, NaiveDateTimeNotAllowed):
                     # We encountered a naive datetime
-                    local_dt = e.args[0]
                     if account:
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
-                        log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, local_dt, self.name, tz)
-                        return local_dt.replace(tzinfo=tz)
+                        log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, e.local_dt, self.name, tz)
+                        return e.local_dt.replace(tzinfo=tz)
                     # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                    log.warning(&#39;Returning naive datetime %s on field %s&#39;, local_dt, self.name)
-                    return local_dt
+                    log.warning(&#39;Returning naive datetime %s on field %s&#39;, e.local_dt, self.name)
+                    return e.local_dt
                 log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
                 return None
         return self.default</code></pre>
@@ -3023,7 +3111,7 @@ the recurring item is a task or a calendar item.</p>
 <dl>
 <dt id="exchangelib.fields.DateTimeField.value_cls"><code class="name">var <span class="ident">value_cls</span></code></dt>
 <dd>
-<div class="desc"><p>Extends the normal datetime implementation to satisfy EWS</p></div>
+<div class="desc"><p>Extends the normal datetime implementation to satisfy EWS.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -3041,7 +3129,7 @@ the recurring item is a task or a calendar item.</p>
     if isinstance(value, datetime.datetime):
         if not value.tzinfo:
             raise ValueError(&#34;Value &#39;%s&#39; on field &#39;%s&#39; must be timezone aware&#34; % (value, self.name))
-        if type(value) == datetime.datetime:
+        if type(value) is datetime.datetime:
             value = self.value_cls.from_datetime(value)
     return super().clean(value, version=version)</code></pre>
 </details>
@@ -3063,15 +3151,14 @@ the recurring item is a task or a calendar item.</p>
         except ValueError as e:
             if isinstance(e, NaiveDateTimeNotAllowed):
                 # We encountered a naive datetime
-                local_dt = e.args[0]
                 if account:
                     # Convert to timezone-aware datetime using the default timezone of the account
                     tz = account.default_timezone
-                    log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, local_dt, self.name, tz)
-                    return local_dt.replace(tzinfo=tz)
+                    log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, e.local_dt, self.name, tz)
+                    return e.local_dt.replace(tzinfo=tz)
                 # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                log.warning(&#39;Returning naive datetime %s on field %s&#39;, local_dt, self.name)
-                return local_dt
+                log.warning(&#39;Returning naive datetime %s on field %s&#39;, e.local_dt, self.name)
+                return e.local_dt
             log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
             return None
     return self.default</code></pre>
@@ -3084,12 +3171,14 @@ the recurring item is a task or a calendar item.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles decimal values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DecimalField(IntegerField):
+    &#34;&#34;&#34;A field that handles decimal values.&#34;&#34;&#34;
+
     value_cls = Decimal</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3112,7 +3201,9 @@ the recurring item is a task or a calendar item.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that has a FieldURI value in EWS. This means it's value is contained in an XML element or arrtibute. It
+may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
+'itemtype:FieldName'</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3135,9 +3226,9 @@ the recurring item is a task or a calendar item.</p>
         if isinstance(value, dict):
             cleaned = {}
             for k, v in value.items():
-                if type(k) == datetime.datetime:
+                if type(k) is datetime.datetime:
                     k = EWSDateTime.from_datetime(k)
-                if type(v) == datetime.datetime:
+                if type(v) is datetime.datetime:
                     v = EWSDateTime.from_datetime(v)
                 cleaned[k] = v
             value = cleaned
@@ -3186,9 +3277,9 @@ dict(one=1, two=2)</p></div>
     if isinstance(value, dict):
         cleaned = {}
         for k, v in value.items():
-            if type(k) == datetime.datetime:
+            if type(k) is datetime.datetime:
                 k = EWSDateTime.from_datetime(k)
-            if type(v) == datetime.datetime:
+            if type(v) is datetime.datetime:
                 v = EWSDateTime.from_datetime(v)
             cleaned[k] = v
         value = cleaned
@@ -3239,12 +3330,14 @@ dict(one=1, two=2)</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EWSElementField(FieldURIField):
+    &#34;&#34;&#34;A generic field for any EWSElement object.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         self._value_cls = kwargs.pop(&#39;value_cls&#39;)
         if &#39;namespace&#39; not in kwargs:
@@ -3292,6 +3385,7 @@ dict(one=1, two=2)</p></div>
 <li><a title="exchangelib.fields.BodyContentAttributedValueField" href="#exchangelib.fields.BodyContentAttributedValueField">BodyContentAttributedValueField</a></li>
 <li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
 <li><a title="exchangelib.fields.EffectiveRightsField" href="#exchangelib.fields.EffectiveRightsField">EffectiveRightsField</a></li>
+<li><a title="exchangelib.fields.GenericEventListField" href="#exchangelib.fields.GenericEventListField">GenericEventListField</a></li>
 <li><a title="exchangelib.fields.IdElementField" href="#exchangelib.fields.IdElementField">IdElementField</a></li>
 <li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
 <li><a title="exchangelib.fields.OccurrenceField" href="#exchangelib.fields.OccurrenceField">OccurrenceField</a></li>
@@ -3370,12 +3464,14 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EWSElementListField(EWSElementField):
+    &#34;&#34;&#34;Like EWSElementField, but for lists of EWSElement objects.&#34;&#34;&#34;
+
     is_list = True
     is_complex = True</code></pre>
 </details>
@@ -3415,7 +3511,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3438,7 +3534,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3462,14 +3558,13 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A helper class used for email address string that we can use for email validation</p></div>
+<div class="desc"><p>A helper class used for email address string that we can use for email validation.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EmailAddressField(CharField):
-    &#34;&#34;&#34;A helper class used for email address string that we can use for email validation&#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;A helper class used for email address string that we can use for email validation.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3492,7 +3587,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A base class for all indexed fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3572,7 +3667,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for</p></div>
+<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3593,16 +3688,17 @@ def value_cls(self):
 </dd>
 <dt id="exchangelib.fields.EmailSubField"><code class="flex name class">
 <span>class <span class="ident">EmailSubField</span></span>
-<span>(</span><span>name, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field to hold the value on an SingleFieldIndexedElement</p></div>
+<div class="desc"><p>A field to hold the value on an SingleFieldIndexedElement.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EmailSubField(SubField):
-    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement.&#34;&#34;&#34;
+
     value_cls = str
 
     def from_xml(self, elem, account):
@@ -3643,13 +3739,13 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Like EnumField, but communicates values with EWS in integers</p></div>
+<div class="desc"><p>Like EnumField, but communicates values with EWS in integers.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EnumAsIntField(EnumField):
-    &#34;&#34;&#34;Like EnumField, but communicates values with EWS in integers&#34;&#34;&#34;
+    &#34;&#34;&#34;Like EnumField, but communicates values with EWS in integers.&#34;&#34;&#34;
 
     def from_xml(self, elem, account):
         return super(EnumField, self).from_xml(elem=elem, account=account)
@@ -3718,7 +3814,6 @@ stored internally as integers but output in XML as strings.</p></div>
 <pre><code class="python">class EnumField(IntegerField):
     &#34;&#34;&#34;A field type where you can enter either the 1-based index in an enum (tuple), or the enum value. Values will be
     stored internally as integers but output in XML as strings.
-
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -3892,13 +3987,14 @@ stored internally as integers but output in XML as strings.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field type where you can enter either the 1-based index in an enum (tuple), or the enum value. Values will be
-stored internally as integers but output in XML as strings.</p></div>
+<div class="desc"><p>Like EnumField, but for lists of enum values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EnumListField(EnumField):
+    &#34;&#34;&#34;Like EnumField, but for lists of enum values.&#34;&#34;&#34;
+
     is_list = True</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3929,7 +4025,7 @@ stored internally as integers but output in XML as strings.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Holds information related to an item field.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3944,7 +4040,7 @@ stored internally as integers but output in XML as strings.</p></div>
             if self.is_required:
                 raise ValueError(&#34;&#39;%s&#39; is a required field&#34; % self.name)
             return self.default
-        elif not isinstance(value, self.value_cls):
+        if not isinstance(value, self.value_cls):
             # Allow keeping ExtendedProperty field values as their simple Python type, but run clean() anyway
             tmp = self.value_cls(value)
             tmp.clean(version=version)
@@ -4004,7 +4100,7 @@ stored internally as integers but output in XML as strings.</p></div>
         if self.is_required:
             raise ValueError(&#34;&#39;%s&#39; is a required field&#34; % self.name)
         return self.default
-    elif not isinstance(value, self.value_cls):
+    if not isinstance(value, self.value_cls):
         # Allow keeping ExtendedProperty field values as their simple Python type, but run clean() anyway
         tmp = self.value_cls(value)
         tmp.clean(version=version)
@@ -4076,16 +4172,17 @@ stored internally as integers but output in XML as strings.</p></div>
 </dd>
 <dt id="exchangelib.fields.Field"><code class="flex name class">
 <span>class <span class="ident">Field</span></span>
-<span>(</span><span>name, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Holds information related to an item field.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Field(metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Holds information related to an item field&#34;&#34;&#34;
+    &#34;&#34;&#34;Holds information related to an item field.&#34;&#34;&#34;
+
     value_cls = None
     is_list = False
     # Is the field a complex EWS type? Quoting the EWS FindItem docs:
@@ -4096,7 +4193,7 @@ stored internally as integers but output in XML as strings.</p></div>
     #
     is_complex = False
 
-    def __init__(self, name, is_required=False, is_required_after_save=False, is_read_only=False,
+    def __init__(self, name=None, is_required=False, is_required_after_save=False, is_read_only=False,
                  is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None,
                  supported_from=None, deprecated_from=None):
         self.name = name
@@ -4287,13 +4384,13 @@ def to_xml(self, value, version):
 <span>(</span><span>field_path, reverse=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds values needed to call server-side sorting on a single field path</p></div>
+<div class="desc"><p>Holds values needed to call server-side sorting on a single field path.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FieldOrder:
-    &#34;&#34;&#34;Holds values needed to call server-side sorting on a single field path&#34;&#34;&#34;
+    &#34;&#34;&#34;Holds values needed to call server-side sorting on a single field path.&#34;&#34;&#34;
 
     def __init__(self, field_path, reverse=False):
         if not isinstance(field_path, FieldPath):
@@ -4370,7 +4467,6 @@ property with a specific label, or a particular subfield field on that property.
     &#34;&#34;&#34;Holds values needed to point to a single field. For indexed properties, we allow setting either field,
     field and label, or field, label and subfield. This allows pointing to either the full indexed property set, a
     property with a specific label, or a particular subfield field on that property.
-
     &#34;&#34;&#34;
 
     def __init__(self, field, label=None, subfield=None):
@@ -4576,12 +4672,19 @@ def path(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that has a FieldURI value in EWS. This means it's value is contained in an XML element or arrtibute. It
+may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
+'itemtype:FieldName'</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FieldURIField(Field):
+    &#34;&#34;&#34;A field that has a FieldURI value in EWS. This means it&#39;s value is contained in an XML element or arrtibute. It
+    may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
+    &#39;itemtype:FieldName&#39;
+    &#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         self.field_uri = kwargs.pop(&#39;field_uri&#39;, None)
         self.namespace = kwargs.pop(&#39;namespace&#39;, TNS)
@@ -4742,12 +4845,14 @@ def path(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>Like ChoiceField, but specifically for Free/Busy values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FreeBusyStatusField(ChoiceField):
+    &#34;&#34;&#34;Like ChoiceField, but specifically for Free/Busy values.&#34;&#34;&#34;
+
     def __init__(self, *args, **kwargs):
         kwargs[&#39;choices&#39;] = set(FREE_BUSY_CHOICES)
         super().__init__(*args, **kwargs)</code></pre>
@@ -4769,12 +4874,91 @@ def path(self):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.fields.GenericEventListField"><code class="flex name class">
+<span>class <span class="ident">GenericEventListField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A list field that can contain all subclasses of Event.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericEventListField(EWSElementField):
+    &#34;&#34;&#34;A list field that can contain all subclasses of Event.&#34;&#34;&#34;
+
+    is_list = True
+
+    @property
+    def _event_types_map(self):
+        return {v.response_tag(): v for v in self.value_classes}
+
+    def __init__(self, *args, **kwargs):
+        from .properties import CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, \
+            NewMailEvent, StatusEvent, FreeBusyChangedEvent
+        kwargs[&#39;value_cls&#39;] = None  # Parent class requires this kwarg
+        kwargs[&#39;namespace&#39;] = None  # Parent class requires this kwarg
+        super().__init__(*args, **kwargs)
+        self.value_classes = (
+            CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent,
+            FreeBusyChangedEvent,
+        )
+
+    def from_xml(self, elem, account):
+        events = []
+        for event in elem:
+            # This may or may not be an event element. Could also be other child elements of Notification
+            try:
+                value_cls = self._event_types_map[event.tag]
+            except KeyError:
+                continue
+            events.append(value_cls.from_xml(elem=event, account=account))
+        return events or self.default</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.GenericEventListField.is_list"><code class="name">var <span class="ident">is_list</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.GenericEventListField.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def from_xml(self, elem, account):
+    events = []
+    for event in elem:
+        # This may or may not be an event element. Could also be other child elements of Notification
+        try:
+            value_cls = self._event_types_map[event.tag]
+        except KeyError:
+            continue
+        events.append(value_cls.from_xml(elem=event, account=account))
+    return events or self.default</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="exchangelib.fields.IdElementField"><code class="flex name class">
 <span>class <span class="ident">IdElementField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -4808,7 +4992,6 @@ but we can assume 512 bytes in practice. See
     &#34;&#34;&#34;A field to hold the &#39;Id&#39; and &#39;Changekey&#39; attributes on &#39;ItemId&#39; type items. There is no guaranteed max length,
     but we can assume 512 bytes in practice. See
     https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/ews-identifiers-in-exchange
-
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -4838,12 +5021,14 @@ but we can assume 512 bytes in practice. See
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A base class for all indexed fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IndexedField(EWSElementField):
+    &#34;&#34;&#34;A base class for all indexed fields.&#34;&#34;&#34;
+
     PARENT_ELEMENT_NAME = None
 
     def to_xml(self, value, version):
@@ -4909,12 +5094,14 @@ but we can assume 512 bytes in practice. See
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles integer values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IntegerField(FieldURIField):
+    &#34;&#34;&#34;A field that handles integer values.&#34;&#34;&#34;
+
     value_cls = int
 
     def __init__(self, *args, **kwargs):
@@ -5003,13 +5190,13 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<div class="desc"><p>Used when a value is not valid for an enum-type field.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class InvalidChoiceForVersion(ValueError):
-    pass</code></pre>
+    &#34;&#34;&#34;Used when a value is not valid for an enum-type field.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5023,13 +5210,13 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<div class="desc"><p>Used when a field name does not match any defined fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class InvalidField(ValueError):
-    pass</code></pre>
+    &#34;&#34;&#34;Used when a field name does not match any defined fields.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5043,13 +5230,13 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<div class="desc"><p>Used when a field is not supported on the given Exchnage version.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class InvalidFieldForVersion(ValueError):
-    pass</code></pre>
+    &#34;&#34;&#34;Used when a field is not supported on the given Exchnage version.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5063,7 +5250,9 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that has a FieldURI value in EWS. This means it's value is contained in an XML element or arrtibute. It
+may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
+'itemtype:FieldName'</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5148,13 +5337,13 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field to hold the label on an IndexedElement</p></div>
+<div class="desc"><p>A field to hold the label on an IndexedElement.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LabelField(ChoiceField):
-    &#34;&#34;&#34;A field to hold the label on an IndexedElement&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the label on an IndexedElement.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -5201,7 +5390,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for</p></div>
+<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5225,7 +5414,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5272,7 +5461,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5325,12 +5514,14 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with no length limit</p></div>
+<div class="desc"><p>A field that handles the Message element.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MessageField(TextField):
+    &#34;&#34;&#34;A field that handles the Message element.&#34;&#34;&#34;
+
     INNER_ELEMENT_NAME = &#39;Message&#39;
 
     def from_xml(self, elem, account):
@@ -5413,7 +5604,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5437,16 +5628,18 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like Base64Field. This element has an optional 'CharacterSet' attribute, but it specifies the encoding of the
+base64-encoded string (which doesn't make sense since base64-encoded strings are always ASCII). We ignore it here
+because the decoded data could be in some other encoding, specified in the "Content-Type" HTTP header.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MimeContentField(Base64Field):
-    # This element has an optional &#39;CharacterSet&#39; attribute, but it specifies the encoding of the base64-encoded
-    # string (which doesn&#39;t make sense since base64-encoded strings are always ASCII). We ignore it here because
-    # the decoded data could be in some other encoding, specified in the &#34;Content-Type:&#34; header.
-    pass</code></pre>
+    &#34;&#34;&#34;Like Base64Field. This element has an optional &#39;CharacterSet&#39; attribute, but it specifies the encoding of the
+    base64-encoded string (which doesn&#39;t make sense since base64-encoded strings are always ASCII). We ignore it here
+    because the decoded data could be in some other encoding, specified in the &#34;Content-Type&#34; HTTP header.
+    &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5468,13 +5661,14 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field to hold the value on an MultiFieldIndexedElement</p></div>
+<div class="desc"><p>A field to hold the value on an MultiFieldIndexedElement.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NamedSubField(SubField):
-    &#34;&#34;&#34;A field to hold the value on an MultiFieldIndexedElement&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the value on an MultiFieldIndexedElement.&#34;&#34;&#34;
+
     value_cls = str
 
     def __init__(self, *args, **kwargs):
@@ -5597,7 +5791,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5628,7 +5822,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5656,13 +5850,13 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles boolean values that are On/Off instead of True/False.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class OnOffField(BooleanField):
-    pass</code></pre>
+    &#34;&#34;&#34;A field that handles boolean values that are On/Off instead of True/False.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5684,7 +5878,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5716,7 +5910,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5748,7 +5942,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5772,7 +5966,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A base class for all indexed fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5811,7 +6005,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A base class for all indexed fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5850,7 +6044,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5874,7 +6068,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5918,7 +6112,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for</p></div>
+<div class="desc"><p>A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5942,7 +6136,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5993,7 +6187,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6044,7 +6238,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>Like CharField, but restricts the value to a limited set of strings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6077,7 +6271,7 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6098,18 +6292,18 @@ def value_cls(self):
 </dd>
 <dt id="exchangelib.fields.SubField"><code class="flex name class">
 <span>class <span class="ident">SubField</span></span>
-<span>(</span><span>name, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field to hold the value on an SingleFieldIndexedElement.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SubField(Field):
-    namespace = TNS
+    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement.&#34;&#34;&#34;
 
-    # A field to hold the value on an SingleFieldIndexedElement
+    namespace = TNS
     value_cls = str
 
     def from_xml(self, elem, account):
@@ -6207,7 +6401,7 @@ def field_uri_xml(field_uri, label):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6258,13 +6452,14 @@ def field_uri_xml(field_uri, label):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with no length limit</p></div>
+<div class="desc"><p>A field that stores a string value with no length limit.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TextField(FieldURIField):
-    &#34;&#34;&#34;A field that stores a string value with no length limit&#34;&#34;&#34;
+    &#34;&#34;&#34;A field that stores a string value with no length limit.&#34;&#34;&#34;
+
     value_cls = str
     is_complex = True</code></pre>
 </details>
@@ -6306,12 +6501,14 @@ errors defaults to 'strict'.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with no length limit</p></div>
+<div class="desc"><p>Like TextField, but for lists of text.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TextListField(TextField):
+    &#34;&#34;&#34;Like TextField, but for lists of text.&#34;&#34;&#34;
+
     is_list = True
 
     def from_xml(self, elem, account):
@@ -6366,12 +6563,14 @@ errors defaults to 'strict'.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles time values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TimeField(FieldURIField):
+    &#34;&#34;&#34;A field that handles time values.&#34;&#34;&#34;
+
     value_cls = datetime.time
 
     def from_xml(self, elem, account):
@@ -6433,12 +6632,14 @@ a tzinfo subclass. The remaining arguments may be ints.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information related to an item field</p></div>
+<div class="desc"><p>A field that handles timezone values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TimeZoneField(FieldURIField):
+    &#34;&#34;&#34;A field that handles timezone values.&#34;&#34;&#34;
+
     value_cls = EWSTimeZone
 
     def clean(self, value, version=None):
@@ -6553,8 +6754,8 @@ services.GetServerTimeZones.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TypeValueField(FieldURIField):
-    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.&#34;&#34;&#34;
+
     TYPES_MAP = {
         &#39;Boolean&#39;: bool,
         &#39;Integer32&#39;: int,
@@ -6583,7 +6784,12 @@ services.GetServerTimeZones.</p></div>
             # This is a single byte. Translate it to the &#39;Byte&#39; type
             return &#39;Byte&#39;
         if is_iterable(value):
-            value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+            # We don&#39;t allow generators as values, so keep the logic simple
+            try:
+                first = next(iter(value))
+            except StopIteration:
+                first = None
+            value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(first)]
             if value_type not in cls.TYPES_MAP:
                 raise ValueError(&#39;%r is not a supported type&#39; % value)
             return value_type
@@ -6663,7 +6869,12 @@ def get_type(cls, value):
         # This is a single byte. Translate it to the &#39;Byte&#39; type
         return &#39;Byte&#39;
     if is_iterable(value):
-        value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(next(iter(value)))]
+        # We don&#39;t allow generators as values, so keep the logic simple
+        try:
+            first = next(iter(value))
+        except StopIteration:
+            first = None
+        value_type = &#39;%sArray&#39; % cls.TYPES_MAP_REVERSED[type(first)]
         if value_type not in cls.TYPES_MAP:
             raise ValueError(&#39;%r is not a supported type&#39; % value)
         return value_type
@@ -6761,18 +6972,16 @@ def is_array_type(cls, value_type):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper to mark strings that must conform to xsd:anyURI
+<div class="desc"><p>Helper to mark strings that must conform to xsd:anyURI.
 If we want an URI validator, see <a href="http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri">http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class URIField(TextField):
-    &#34;&#34;&#34;Helper to mark strings that must conform to xsd:anyURI
+    &#34;&#34;&#34;Helper to mark strings that must conform to xsd:anyURI.
     If we want an URI validator, see http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri
-
-    &#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6794,7 +7003,7 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field that stores a string value with a limited length</p></div>
+<div class="desc"><p>Like CharField, but for lists of strings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -7116,6 +7325,13 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.FreeBusyStatusField" href="#exchangelib.fields.FreeBusyStatusField">FreeBusyStatusField</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.GenericEventListField" href="#exchangelib.fields.GenericEventListField">GenericEventListField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.GenericEventListField.from_xml" href="#exchangelib.fields.GenericEventListField.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.GenericEventListField.is_list" href="#exchangelib.fields.GenericEventListField.is_list">is_list</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.IdElementField" href="#exchangelib.fields.IdElementField">IdElementField</a></code></h4>

@@ -33,6 +33,7 @@ from ..util import create_element, MNS
 
 class ExportItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exportitems-operation&#34;&#34;&#34;
+
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
     SERVICE_NAME = &#39;ExportItems&#39;
     element_container_name = &#39;{%s}Data&#39; % MNS
@@ -49,7 +50,8 @@ class ExportItems(EWSAccountService):
     # We need to override this since ExportItemsResponseMessage is formatted a
     #  little bit differently. Namely, all we want is the 64bit string in the
     #  Data tag.
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.text]</code></pre>
 </details>
 </section>
@@ -74,6 +76,7 @@ class ExportItems(EWSAccountService):
 </summary>
 <pre><code class="python">class ExportItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exportitems-operation&#34;&#34;&#34;
+
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
     SERVICE_NAME = &#39;ExportItems&#39;
     element_container_name = &#39;{%s}Data&#39; % MNS
@@ -90,7 +93,8 @@ class ExportItems(EWSAccountService):
     # We need to override this since ExportItemsResponseMessage is formatted a
     #  little bit differently. Namely, all we want is the 64bit string in the
     #  Data tag.
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return [container.text]</code></pre>
 </details>
 <h3>Ancestors</h3>

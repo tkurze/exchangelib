@@ -43,8 +43,8 @@ from .version import EXCHANGE_2010
 log = logging.getLogger(__name__)
 
 
-class SearchableMixIn(metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Implements a search API for inheritance&#34;&#34;&#34;
+class SearchableMixIn:
+    &#34;&#34;&#34;Implement a search API for inheritance.&#34;&#34;&#34;
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):
@@ -76,8 +76,8 @@ class QuerySet(SearchableMixIn):
     build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
-
     &#34;&#34;&#34;
+
     VALUES = &#39;values&#39;
     VALUES_LIST = &#39;values_list&#39;
     FLAT = &#39;flat&#39;
@@ -446,46 +446,25 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def filter(self, *args, **kwargs):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-          **kwargs:
-
-
-        &#34;&#34;&#34;
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
         new_qs.q = new_qs.q &amp; q
         return new_qs
 
     def exclude(self, *args, **kwargs):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-          **kwargs:
-
-
-        &#34;&#34;&#34;
         new_qs = self._copy_self()
         q = ~Q(*args, **kwargs)
         new_qs.q = new_qs.q &amp; q
         return new_qs
 
     def people(self):
-        &#34;&#34;&#34;Changes the queryset to search the folder for Personas instead of Items&#34;&#34;&#34;
+        &#34;&#34;&#34;Change the queryset to search the folder for Personas instead of Items.&#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs.request_type = self.PERSONA
         return new_qs
 
     def only(self, *args):
-        &#34;&#34;&#34;Fetch only the specified field names. All other item fields will be &#39;None&#39;
-
-        Args:
-          *args:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Fetch only the specified field names. All other item fields will be &#39;None&#39;.&#34;&#34;&#34;
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -497,13 +476,8 @@ class QuerySet(SearchableMixIn):
     def order_by(self, *args):
         &#34;&#34;&#34;
 
-        Args:
-          *args:
-
-        Returns:
-          in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
-          implemented client-side and will therefore make the query greedy
-
+        :return: The QuerySet in reverse order. EWS only supports server-side sorting on a single field. Sorting on
+          multiple fields is implemented client-side and will therefore make the query greedy.
         &#34;&#34;&#34;
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
@@ -514,7 +488,7 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def reverse(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34;Reverses the ordering of the queryset.&#34;&#34;&#34;
         if not self.order_fields:
             raise ValueError(&#39;Reversing only makes sense if there are order_by fields&#39;)
         new_qs = self._copy_self()
@@ -523,13 +497,6 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def values(self, *args):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-
-
-        &#34;&#34;&#34;
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -540,15 +507,8 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def values_list(self, *args, **kwargs):
-        &#34;&#34;&#34;Return the values of the specified field names as lists. If called with flat=True and only one field name,
-
-        Args:
-          *args:
-          **kwargs:
-
-        Returns:
-          Allow an arbitrary list of fields in *args, possibly ending with flat=True|False
-
+        &#34;&#34;&#34;Return the values of the specified field names as a list of lists. If called with flat=True and only one
+        field name, returns a list of values.
         &#34;&#34;&#34;
         flat = kwargs.pop(&#39;flat&#39;, False)
         if kwargs:
@@ -565,11 +525,9 @@ class QuerySet(SearchableMixIn):
         return new_qs
 
     def depth(self, depth):
-        &#34;&#34;&#34;Specify the search depth (SHALLOW, ASSOCIATED or DEEP)
+        &#34;&#34;&#34;Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP.
 
-        Args:
-          depth:
-
+        :param depth:
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs._depth = depth
@@ -587,13 +545,7 @@ class QuerySet(SearchableMixIn):
     ###########################
 
     def get(self, *args, **kwargs):
-        &#34;&#34;&#34;Assume the query will return exactly one item. Return that item
-
-        Args:
-          *args:
-          **kwargs:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Assume the query will return exactly one item. Return that item.&#34;&#34;&#34;
         if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
@@ -614,38 +566,34 @@ class QuerySet(SearchableMixIn):
         &#34;&#34;&#34;Get the query count, with as little effort as possible &#39;page_size&#39; is the number of items to
         fetch from the server per request. We&#39;re only fetching the IDs, so keep it high
 
-        Args:
-          page_size:  (Default value = 1000)
-
+        :param page_size:  (Default value = 1000)
         &#34;&#34;&#34;
         new_qs = self._copy_self()
-        new_qs.only_fields = tuple()
+        new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         new_qs.page_size = page_size
         return len(list(new_qs.__iter__()))
 
     def exists(self):
-        &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible&#34;&#34;&#34;
+        &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible.&#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs.max_items = 1
         return new_qs.count(page_size=1) &gt; 0
 
     def _id_only_copy_self(self):
         new_qs = self._copy_self()
-        new_qs.only_fields = tuple()
+        new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         return new_qs
 
     def delete(self, page_size=1000, **delete_kwargs):
         &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **delete_kwargs:
-
+        :param page_size:  (Default value = 1000)
+        :param delete_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -657,12 +605,10 @@ class QuerySet(SearchableMixIn):
 
     def send(self, page_size=1000, **send_kwargs):
         &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and send per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and send per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **send_kwargs:
-
+        :param page_size:  (Default value = 1000)
+        :param send_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -674,13 +620,11 @@ class QuerySet(SearchableMixIn):
 
     def copy(self, to_folder, page_size=1000, **copy_kwargs):
         &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-          **copy_kwargs:
-
+        :param to_folder:
+        :param page_size:  (Default value = 1000)
+        :param copy_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -693,12 +637,10 @@ class QuerySet(SearchableMixIn):
 
     def move(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-
+        :param to_folder:
+        :param page_size: (Default value = 1000)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -710,12 +652,10 @@ class QuerySet(SearchableMixIn):
 
     def archive(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-
+        :param to_folder:
+        :param page_size: (Default value = 1000)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -727,12 +667,10 @@ class QuerySet(SearchableMixIn):
 
     def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
         &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
-        items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high
+        items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **mark_as_junk_kwargs:
-
+        :param page_size:  (Default value = 1000)
+        :param mark_as_junk_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -761,13 +699,14 @@ def _get_value_or_default(item, field_order):
 
 
 def _default_field_value(field):
-    # Returns the default value of a field. If the field does not have a default value, try creating an empty instance
-    # of the field value class. If that doesn&#39;t work, there&#39;s really nothing we can do about it; we&#39;ll raise an error.
+    &#34;&#34;&#34;Return the default value of a field. If the field does not have a default value, try creating an empty instance
+    of the field value class. If that doesn&#39;t work, there&#39;s really nothing we can do about it; we&#39;ll raise an error.
+    &#34;&#34;&#34;
     return field.default or ([field.value_cls()] if field.is_list else field.value_cls())
 
 
 def _rinse_item(i, fields_to_nullify):
-    # Set fields in fields_to_nullify to None. Make sure to accept exceptions.
+    &#34;&#34;&#34;Set fields in fields_to_nullify to None. Make sure to accept exceptions.&#34;&#34;&#34;
     if isinstance(i, Exception):
         return i
     for f in fields_to_nullify:
@@ -801,8 +740,8 @@ build up complex queries.</p>
     build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
-
     &#34;&#34;&#34;
+
     VALUES = &#39;values&#39;
     VALUES_LIST = &#39;values_list&#39;
     FLAT = &#39;flat&#39;
@@ -1171,46 +1110,25 @@ build up complex queries.</p>
         return new_qs
 
     def filter(self, *args, **kwargs):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-          **kwargs:
-
-
-        &#34;&#34;&#34;
         new_qs = self._copy_self()
         q = Q(*args, **kwargs)
         new_qs.q = new_qs.q &amp; q
         return new_qs
 
     def exclude(self, *args, **kwargs):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-          **kwargs:
-
-
-        &#34;&#34;&#34;
         new_qs = self._copy_self()
         q = ~Q(*args, **kwargs)
         new_qs.q = new_qs.q &amp; q
         return new_qs
 
     def people(self):
-        &#34;&#34;&#34;Changes the queryset to search the folder for Personas instead of Items&#34;&#34;&#34;
+        &#34;&#34;&#34;Change the queryset to search the folder for Personas instead of Items.&#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs.request_type = self.PERSONA
         return new_qs
 
     def only(self, *args):
-        &#34;&#34;&#34;Fetch only the specified field names. All other item fields will be &#39;None&#39;
-
-        Args:
-          *args:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Fetch only the specified field names. All other item fields will be &#39;None&#39;.&#34;&#34;&#34;
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -1222,13 +1140,8 @@ build up complex queries.</p>
     def order_by(self, *args):
         &#34;&#34;&#34;
 
-        Args:
-          *args:
-
-        Returns:
-          in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
-          implemented client-side and will therefore make the query greedy
-
+        :return: The QuerySet in reverse order. EWS only supports server-side sorting on a single field. Sorting on
+          multiple fields is implemented client-side and will therefore make the query greedy.
         &#34;&#34;&#34;
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
@@ -1239,7 +1152,7 @@ build up complex queries.</p>
         return new_qs
 
     def reverse(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34;Reverses the ordering of the queryset.&#34;&#34;&#34;
         if not self.order_fields:
             raise ValueError(&#39;Reversing only makes sense if there are order_by fields&#39;)
         new_qs = self._copy_self()
@@ -1248,13 +1161,6 @@ build up complex queries.</p>
         return new_qs
 
     def values(self, *args):
-        &#34;&#34;&#34;
-
-        Args:
-          *args:
-
-
-        &#34;&#34;&#34;
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -1265,15 +1171,8 @@ build up complex queries.</p>
         return new_qs
 
     def values_list(self, *args, **kwargs):
-        &#34;&#34;&#34;Return the values of the specified field names as lists. If called with flat=True and only one field name,
-
-        Args:
-          *args:
-          **kwargs:
-
-        Returns:
-          Allow an arbitrary list of fields in *args, possibly ending with flat=True|False
-
+        &#34;&#34;&#34;Return the values of the specified field names as a list of lists. If called with flat=True and only one
+        field name, returns a list of values.
         &#34;&#34;&#34;
         flat = kwargs.pop(&#39;flat&#39;, False)
         if kwargs:
@@ -1290,11 +1189,9 @@ build up complex queries.</p>
         return new_qs
 
     def depth(self, depth):
-        &#34;&#34;&#34;Specify the search depth (SHALLOW, ASSOCIATED or DEEP)
+        &#34;&#34;&#34;Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP.
 
-        Args:
-          depth:
-
+        :param depth:
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs._depth = depth
@@ -1312,13 +1209,7 @@ build up complex queries.</p>
     ###########################
 
     def get(self, *args, **kwargs):
-        &#34;&#34;&#34;Assume the query will return exactly one item. Return that item
-
-        Args:
-          *args:
-          **kwargs:
-
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Assume the query will return exactly one item. Return that item.&#34;&#34;&#34;
         if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
@@ -1339,38 +1230,34 @@ build up complex queries.</p>
         &#34;&#34;&#34;Get the query count, with as little effort as possible &#39;page_size&#39; is the number of items to
         fetch from the server per request. We&#39;re only fetching the IDs, so keep it high
 
-        Args:
-          page_size:  (Default value = 1000)
-
+        :param page_size:  (Default value = 1000)
         &#34;&#34;&#34;
         new_qs = self._copy_self()
-        new_qs.only_fields = tuple()
+        new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         new_qs.page_size = page_size
         return len(list(new_qs.__iter__()))
 
     def exists(self):
-        &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible&#34;&#34;&#34;
+        &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible.&#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs.max_items = 1
         return new_qs.count(page_size=1) &gt; 0
 
     def _id_only_copy_self(self):
         new_qs = self._copy_self()
-        new_qs.only_fields = tuple()
+        new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         return new_qs
 
     def delete(self, page_size=1000, **delete_kwargs):
         &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **delete_kwargs:
-
+        :param page_size:  (Default value = 1000)
+        :param delete_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -1382,12 +1269,10 @@ build up complex queries.</p>
 
     def send(self, page_size=1000, **send_kwargs):
         &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and send per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and send per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **send_kwargs:
-
+        :param page_size:  (Default value = 1000)
+        :param send_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -1399,13 +1284,11 @@ build up complex queries.</p>
 
     def copy(self, to_folder, page_size=1000, **copy_kwargs):
         &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-          **copy_kwargs:
-
+        :param to_folder:
+        :param page_size:  (Default value = 1000)
+        :param copy_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -1418,12 +1301,10 @@ build up complex queries.</p>
 
     def move(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-
+        :param to_folder:
+        :param page_size: (Default value = 1000)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -1435,12 +1316,10 @@ build up complex queries.</p>
 
     def archive(self, to_folder, page_size=1000):
         &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high
+        to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          to_folder:
-          page_size:  (Default value = 1000)
-
+        :param to_folder:
+        :param page_size: (Default value = 1000)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -1452,12 +1331,10 @@ build up complex queries.</p>
 
     def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
         &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
-        items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high
+        items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high.
 
-        Args:
-          page_size:  (Default value = 1000)
-          **mark_as_junk_kwargs:
-
+        :param page_size:  (Default value = 1000)
+        :param mark_as_junk_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
@@ -1532,25 +1409,19 @@ build up complex queries.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Archive the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and move per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>to_folder:</dt>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl></div>
+to fetch and move per request. We're only fetching the IDs, so keep it high.</p>
+<p>:param to_folder:
+:param page_size: (Default value = 1000)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def archive(self, to_folder, page_size=1000):
     &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and move per request. We&#39;re only fetching the IDs, so keep it high
+    to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
-    Args:
-      to_folder:
-      page_size:  (Default value = 1000)
-
+    :param to_folder:
+    :param page_size: (Default value = 1000)
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
@@ -1566,27 +1437,22 @@ to fetch and move per request. We're only fetching the IDs, so keep it high</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Copy the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and copy per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>to_folder:</dt>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl>
-<p>**copy_kwargs:</p></div>
+to fetch and copy per request. We're only fetching the IDs, so keep it high.</p>
+<p>:param to_folder:
+:param page_size:
+(Default value = 1000)
+:param copy_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def copy(self, to_folder, page_size=1000, **copy_kwargs):
     &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high
+    to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high.
 
-    Args:
-      to_folder:
-      page_size:  (Default value = 1000)
-      **copy_kwargs:
-
+    :param to_folder:
+    :param page_size:  (Default value = 1000)
+    :param copy_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
@@ -1604,11 +1470,8 @@ to fetch and copy per request. We're only fetching the IDs, so keep it high</p>
 <dd>
 <div class="desc"><p>Get the query count, with as little effort as possible 'page_size' is the number of items to
 fetch from the server per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl></div>
+<p>:param page_size:
+(Default value = 1000)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1617,12 +1480,10 @@ fetch from the server per request. We're only fetching the IDs, so keep it high<
     &#34;&#34;&#34;Get the query count, with as little effort as possible &#39;page_size&#39; is the number of items to
     fetch from the server per request. We&#39;re only fetching the IDs, so keep it high
 
-    Args:
-      page_size:  (Default value = 1000)
-
+    :param page_size:  (Default value = 1000)
     &#34;&#34;&#34;
     new_qs = self._copy_self()
-    new_qs.only_fields = tuple()
+    new_qs.only_fields = ()
     new_qs.order_fields = None
     new_qs.return_format = self.NONE
     new_qs.page_size = page_size
@@ -1634,25 +1495,20 @@ fetch from the server per request. We're only fetching the IDs, so keep it high<
 </code></dt>
 <dd>
 <div class="desc"><p>Delete the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and delete per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl>
-<p>**delete_kwargs:</p></div>
+to fetch and delete per request. We're only fetching the IDs, so keep it high.</p>
+<p>:param page_size:
+(Default value = 1000)
+:param delete_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def delete(self, page_size=1000, **delete_kwargs):
     &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high
+    to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high.
 
-    Args:
-      page_size:  (Default value = 1000)
-      **delete_kwargs:
-
+    :param page_size:  (Default value = 1000)
+    :param delete_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
@@ -1667,19 +1523,16 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 <span>def <span class="ident">depth</span></span>(<span>self, depth)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Specify the search depth (SHALLOW, ASSOCIATED or DEEP)</p>
-<h2 id="args">Args</h2>
-<p>depth:</p></div>
+<div class="desc"><p>Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP.</p>
+<p>:param depth:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def depth(self, depth):
-    &#34;&#34;&#34;Specify the search depth (SHALLOW, ASSOCIATED or DEEP)
+    &#34;&#34;&#34;Specify the search depth. Possible values are: SHALLOW, ASSOCIATED or DEEP.
 
-    Args:
-      depth:
-
+    :param depth:
     &#34;&#34;&#34;
     new_qs = self._copy_self()
     new_qs._depth = depth
@@ -1690,22 +1543,12 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 <span>def <span class="ident">exclude</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def exclude(self, *args, **kwargs):
-    &#34;&#34;&#34;
-
-    Args:
-      *args:
-      **kwargs:
-
-
-    &#34;&#34;&#34;
     new_qs = self._copy_self()
     q = ~Q(*args, **kwargs)
     new_qs.q = new_qs.q &amp; q
@@ -1716,13 +1559,13 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 <span>def <span class="ident">exists</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Find out if the query contains any hits, with as little effort as possible</p></div>
+<div class="desc"><p>Find out if the query contains any hits, with as little effort as possible.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def exists(self):
-    &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible&#34;&#34;&#34;
+    &#34;&#34;&#34;Find out if the query contains any hits, with as little effort as possible.&#34;&#34;&#34;
     new_qs = self._copy_self()
     new_qs.max_items = 1
     return new_qs.count(page_size=1) &gt; 0</code></pre>
@@ -1732,22 +1575,12 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 <span>def <span class="ident">filter</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def filter(self, *args, **kwargs):
-    &#34;&#34;&#34;
-
-    Args:
-      *args:
-      **kwargs:
-
-
-    &#34;&#34;&#34;
     new_qs = self._copy_self()
     q = Q(*args, **kwargs)
     new_qs.q = new_qs.q &amp; q
@@ -1758,22 +1591,13 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 <span>def <span class="ident">get</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Assume the query will return exactly one item. Return that item</p>
-<h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p></div>
+<div class="desc"><p>Assume the query will return exactly one item. Return that item.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get(self, *args, **kwargs):
-    &#34;&#34;&#34;Assume the query will return exactly one item. Return that item
-
-    Args:
-      *args:
-      **kwargs:
-
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Assume the query will return exactly one item. Return that item.&#34;&#34;&#34;
     if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
         # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
         # kwargs are present.
@@ -1811,25 +1635,20 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high</p
 </code></dt>
 <dd>
 <div class="desc"><p>Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
-items to fetch and mark per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl>
-<p>**mark_as_junk_kwargs:</p></div>
+items to fetch and mark per request. We're only fetching the IDs, so keep it high.</p>
+<p>:param page_size:
+(Default value = 1000)
+:param mark_as_junk_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
     &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
-    items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high
+    items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high.
 
-    Args:
-      page_size:  (Default value = 1000)
-      **mark_as_junk_kwargs:
-
+    :param page_size:  (Default value = 1000)
+    :param mark_as_junk_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
@@ -1845,25 +1664,19 @@ items to fetch and mark per request. We're only fetching the IDs, so keep it hig
 </code></dt>
 <dd>
 <div class="desc"><p>Move the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and move per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>to_folder:</dt>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl></div>
+to fetch and move per request. We're only fetching the IDs, so keep it high.</p>
+<p>:param to_folder:
+:param page_size: (Default value = 1000)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def move(self, to_folder, page_size=1000):
     &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and move per request. We&#39;re only fetching the IDs, so keep it high
+    to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
-    Args:
-      to_folder:
-      page_size:  (Default value = 1000)
-
+    :param to_folder:
+    :param page_size: (Default value = 1000)
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
@@ -1894,20 +1707,13 @@ to fetch and move per request. We're only fetching the IDs, so keep it high</p>
 <span>def <span class="ident">only</span></span>(<span>self, *args)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Fetch only the specified field names. All other item fields will be 'None'</p>
-<h2 id="args">Args</h2>
-<p>*args:</p></div>
+<div class="desc"><p>Fetch only the specified field names. All other item fields will be 'None'.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def only(self, *args):
-    &#34;&#34;&#34;Fetch only the specified field names. All other item fields will be &#39;None&#39;
-
-    Args:
-      *args:
-
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Fetch only the specified field names. All other item fields will be &#39;None&#39;.&#34;&#34;&#34;
     try:
         only_fields = tuple(self._get_field_path(arg) for arg in args)
     except ValueError as e:
@@ -1921,11 +1727,8 @@ to fetch and move per request. We're only fetching the IDs, so keep it high</p>
 <span>def <span class="ident">order_by</span></span>(<span>self, *args)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<p>*args:</p>
-<h2 id="returns">Returns</h2>
-<p>in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
-implemented client-side and will therefore make the query greedy</p></div>
+<div class="desc"><p>:return: The QuerySet in reverse order. EWS only supports server-side sorting on a single field. Sorting on
+multiple fields is implemented client-side and will therefore make the query greedy.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1933,13 +1736,8 @@ implemented client-side and will therefore make the query greedy</p></div>
 <pre><code class="python">def order_by(self, *args):
     &#34;&#34;&#34;
 
-    Args:
-      *args:
-
-    Returns:
-      in reverse order. EWS only supports server-side sorting on a single field. Sorting on multiple fields is
-      implemented client-side and will therefore make the query greedy
-
+    :return: The QuerySet in reverse order. EWS only supports server-side sorting on a single field. Sorting on
+      multiple fields is implemented client-side and will therefore make the query greedy.
     &#34;&#34;&#34;
     try:
         order_fields = tuple(self._get_field_order(arg) for arg in args)
@@ -1954,13 +1752,13 @@ implemented client-side and will therefore make the query greedy</p></div>
 <span>def <span class="ident">people</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Changes the queryset to search the folder for Personas instead of Items</p></div>
+<div class="desc"><p>Change the queryset to search the folder for Personas instead of Items.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def people(self):
-    &#34;&#34;&#34;Changes the queryset to search the folder for Personas instead of Items&#34;&#34;&#34;
+    &#34;&#34;&#34;Change the queryset to search the folder for Personas instead of Items.&#34;&#34;&#34;
     new_qs = self._copy_self()
     new_qs.request_type = self.PERSONA
     return new_qs</code></pre>
@@ -1970,13 +1768,13 @@ implemented client-side and will therefore make the query greedy</p></div>
 <span>def <span class="ident">reverse</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Reverses the ordering of the queryset.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reverse(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
+    &#34;&#34;&#34;Reverses the ordering of the queryset.&#34;&#34;&#34;
     if not self.order_fields:
         raise ValueError(&#39;Reversing only makes sense if there are order_by fields&#39;)
     new_qs = self._copy_self()
@@ -1990,25 +1788,20 @@ implemented client-side and will therefore make the query greedy</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Send the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and send per request. We're only fetching the IDs, so keep it high</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>(Default value = 1000)</dd>
-</dl>
-<p>**send_kwargs:</p></div>
+to fetch and send per request. We're only fetching the IDs, so keep it high.</p>
+<p>:param page_size:
+(Default value = 1000)
+:param send_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def send(self, page_size=1000, **send_kwargs):
     &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and send per request. We&#39;re only fetching the IDs, so keep it high
+    to fetch and send per request. We&#39;re only fetching the IDs, so keep it high.
 
-    Args:
-      page_size:  (Default value = 1000)
-      **send_kwargs:
-
+    :param page_size:  (Default value = 1000)
+    :param send_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
@@ -2023,20 +1816,12 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <span>def <span class="ident">values</span></span>(<span>self, *args)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<p>*args:</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def values(self, *args):
-    &#34;&#34;&#34;
-
-    Args:
-      *args:
-
-
-    &#34;&#34;&#34;
     try:
         only_fields = tuple(self._get_field_path(arg) for arg in args)
     except ValueError as e:
@@ -2051,26 +1836,15 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <span>def <span class="ident">values_list</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the values of the specified field names as lists. If called with flat=True and only one field name,</p>
-<h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p>
-<h2 id="returns">Returns</h2>
-<p>Allow an arbitrary list of fields in *args, possibly ending with flat=True|False</p></div>
+<div class="desc"><p>Return the values of the specified field names as a list of lists. If called with flat=True and only one
+field name, returns a list of values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def values_list(self, *args, **kwargs):
-    &#34;&#34;&#34;Return the values of the specified field names as lists. If called with flat=True and only one field name,
-
-    Args:
-      *args:
-      **kwargs:
-
-    Returns:
-      Allow an arbitrary list of fields in *args, possibly ending with flat=True|False
-
+    &#34;&#34;&#34;Return the values of the specified field names as a list of lists. If called with flat=True and only one
+    field name, returns a list of values.
     &#34;&#34;&#34;
     flat = kwargs.pop(&#39;flat&#39;, False)
     if kwargs:
@@ -2093,13 +1867,13 @@ to fetch and send per request. We're only fetching the IDs, so keep it high</p>
 <span>class <span class="ident">SearchableMixIn</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Implements a search API for inheritance</p></div>
+<div class="desc"><p>Implement a search API for inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SearchableMixIn(metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;Implements a search API for inheritance&#34;&#34;&#34;
+<pre><code class="python">class SearchableMixIn:
+    &#34;&#34;&#34;Implement a search API for inheritance.&#34;&#34;&#34;
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):

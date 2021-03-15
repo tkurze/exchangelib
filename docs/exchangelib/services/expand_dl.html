@@ -34,6 +34,7 @@ from ..util import create_element, set_xml_value, MNS
 
 class ExpandDL(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ExpandDL&#39;
     element_container_name = &#39;{%s}DLExpansion&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
@@ -62,7 +63,7 @@ class ExpandDL(EWSService):
 <dl>
 <dt id="exchangelib.services.expand_dl.ExpandDL"><code class="flex name class">
 <span>class <span class="ident">ExpandDL</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation</a></p></div>
@@ -72,6 +73,7 @@ class ExpandDL(EWSService):
 </summary>
 <pre><code class="python">class ExpandDL(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ExpandDL&#39;
     element_container_name = &#39;{%s}DLExpansion&#39; % MNS
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults

@@ -34,12 +34,12 @@ from ..version import EXCHANGE_2013_SP1
 
 
 class DeleteItem(EWSAccountService):
-    &#34;&#34;&#34;Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
+    &#34;&#34;&#34;Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
     (success[True|False], errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteItem&#39;
     returns_elements = False
 
@@ -110,7 +110,7 @@ class DeleteItem(EWSAccountService):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
+<div class="desc"><p>Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
 (success[True|False], errormessage), in the same order as the input list.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem</a></p></div>
 <details class="source">
@@ -118,12 +118,12 @@ class DeleteItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DeleteItem(EWSAccountService):
-    &#34;&#34;&#34;Takes a folder and a list of (id, changekey) tuples. Returns result of deletion as a list of tuples
+    &#34;&#34;&#34;Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
     (success[True|False], errormessage), in the same order as the input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteItem&#39;
     returns_elements = False
 

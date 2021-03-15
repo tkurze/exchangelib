@@ -67,7 +67,7 @@ API_VERSIONS = sorted({v[0] for v in VERSIONS.values()}, reverse=True)
 
 
 class Build:
-    &#34;&#34;&#34;Holds methods for working with build numbers&#34;&#34;&#34;
+    &#34;&#34;&#34;Holds methods for working with build numbers.&#34;&#34;&#34;
 
     # List of build numbers here: https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
     API_VERSION_MAP = {
@@ -91,7 +91,7 @@ class Build:
         },
     }
 
-    __slots__ = (&#39;major_version&#39;, &#39;minor_version&#39;, &#39;major_build&#39;, &#39;minor_build&#39;)
+    __slots__ = &#39;major_version&#39;, &#39;minor_version&#39;, &#39;major_build&#39;, &#39;minor_build&#39;
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
@@ -137,9 +137,7 @@ class Build:
             * The next bit contains a flag. Can be ignored
             * The next 15 bits contain the major build number
 
-        Args:
-          s:
-
+        :param s:
         &#34;&#34;&#34;
         bin_s = &#39;{:032b}&#39;.format(int(s, 16))  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
@@ -214,8 +212,9 @@ EXCHANGE_O365 = Build(15, 20)
 
 
 class Version:
-    &#34;&#34;&#34;Holds information about the server version&#34;&#34;&#34;
-    __slots__ = (&#39;build&#39;, &#39;api_version&#39;)
+    &#34;&#34;&#34;Holds information about the server version.&#34;&#34;&#34;
+
+    __slots__ = &#39;build&#39;, &#39;api_version&#39;
 
     def __init__(self, build, api_version=None):
         if not isinstance(build, (Build, type(None))):
@@ -234,17 +233,15 @@ class Version:
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
-        &#34;&#34;&#34;Tries to ask the server which version it has. We haven&#39;t set up an Account object yet, so we generate requests
+        &#34;&#34;&#34;Ask the server which version it has. We haven&#39;t set up an Account object yet, so we generate requests
         by hand. We only need a response header containing a ServerVersionInfo element.
 
         To get API version and build numbers from the server, we need to send a valid SOAP request. We can&#39;t do that
         without a valid API version. To solve this chicken-and-egg problem, we try all possible API versions that this
         package supports, until we get a valid response.
 
-        Args:
-          protocol:
-          api_version_hint:  (Default value = None)
-
+        :param protocol:
+        :param api_version_hint:  (Default value = None)
         &#34;&#34;&#34;
         from .services import ResolveNames
         # The protocol doesn&#39;t have a version yet, so default to latest supported version if we don&#39;t have a hint.
@@ -327,13 +324,13 @@ class Version:
 <span>(</span><span>major_version, minor_version, major_build=0, minor_build=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds methods for working with build numbers</p></div>
+<div class="desc"><p>Holds methods for working with build numbers.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Build:
-    &#34;&#34;&#34;Holds methods for working with build numbers&#34;&#34;&#34;
+    &#34;&#34;&#34;Holds methods for working with build numbers.&#34;&#34;&#34;
 
     # List of build numbers here: https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
     API_VERSION_MAP = {
@@ -357,7 +354,7 @@ class Version:
         },
     }
 
-    __slots__ = (&#39;major_version&#39;, &#39;minor_version&#39;, &#39;major_build&#39;, &#39;minor_build&#39;)
+    __slots__ = &#39;major_version&#39;, &#39;minor_version&#39;, &#39;major_build&#39;, &#39;minor_build&#39;
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
@@ -403,9 +400,7 @@ class Version:
             * The next bit contains a flag. Can be ignored
             * The next 15 bits contain the major build number
 
-        Args:
-          s:
-
+        :param s:
         &#34;&#34;&#34;
         bin_s = &#39;{:032b}&#39;.format(int(s, 16))  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
@@ -486,8 +481,7 @@ class Version:
 * The next 6 bits contain the minor version number
 * The next bit contains a flag. Can be ignored
 * The next 15 bits contain the major build number</p>
-<h2 id="args">Args</h2>
-<p>s:</p></div>
+<p>:param s:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -504,9 +498,7 @@ def from_hex_string(cls, s):
         * The next bit contains a flag. Can be ignored
         * The next 15 bits contain the major build number
 
-    Args:
-      s:
-
+    :param s:
     &#34;&#34;&#34;
     bin_s = &#39;{:032b}&#39;.format(int(s, 16))  # Convert string to 32-bit binary string
     major_version = int(bin_s[4:10], 2)
@@ -601,14 +593,15 @@ def from_xml(cls, elem):
 <span>(</span><span>build, api_version=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Holds information about the server version</p></div>
+<div class="desc"><p>Holds information about the server version.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Version:
-    &#34;&#34;&#34;Holds information about the server version&#34;&#34;&#34;
-    __slots__ = (&#39;build&#39;, &#39;api_version&#39;)
+    &#34;&#34;&#34;Holds information about the server version.&#34;&#34;&#34;
+
+    __slots__ = &#39;build&#39;, &#39;api_version&#39;
 
     def __init__(self, build, api_version=None):
         if not isinstance(build, (Build, type(None))):
@@ -627,17 +620,15 @@ def from_xml(cls, elem):
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
-        &#34;&#34;&#34;Tries to ask the server which version it has. We haven&#39;t set up an Account object yet, so we generate requests
+        &#34;&#34;&#34;Ask the server which version it has. We haven&#39;t set up an Account object yet, so we generate requests
         by hand. We only need a response header containing a ServerVersionInfo element.
 
         To get API version and build numbers from the server, we need to send a valid SOAP request. We can&#39;t do that
         without a valid API version. To solve this chicken-and-egg problem, we try all possible API versions that this
         package supports, until we get a valid response.
 
-        Args:
-          protocol:
-          api_version_hint:  (Default value = None)
-
+        :param protocol:
+        :param api_version_hint:  (Default value = None)
         &#34;&#34;&#34;
         from .services import ResolveNames
         # The protocol doesn&#39;t have a version yet, so default to latest supported version if we don&#39;t have a hint.
@@ -745,34 +736,29 @@ def from_soap_header(cls, requested_api_version, header):
 <span>def <span class="ident">guess</span></span>(<span>protocol, api_version_hint=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Tries to ask the server which version it has. We haven't set up an Account object yet, so we generate requests
+<div class="desc"><p>Ask the server which version it has. We haven't set up an Account object yet, so we generate requests
 by hand. We only need a response header containing a ServerVersionInfo element.</p>
 <p>To get API version and build numbers from the server, we need to send a valid SOAP request. We can't do that
 without a valid API version. To solve this chicken-and-egg problem, we try all possible API versions that this
 package supports, until we get a valid response.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>protocol:</dt>
-<dt><strong><code>api_version_hint</code></strong></dt>
-<dd>(Default value = None)</dd>
-</dl></div>
+<p>:param protocol:
+:param api_version_hint:
+(Default value = None)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
 def guess(cls, protocol, api_version_hint=None):
-    &#34;&#34;&#34;Tries to ask the server which version it has. We haven&#39;t set up an Account object yet, so we generate requests
+    &#34;&#34;&#34;Ask the server which version it has. We haven&#39;t set up an Account object yet, so we generate requests
     by hand. We only need a response header containing a ServerVersionInfo element.
 
     To get API version and build numbers from the server, we need to send a valid SOAP request. We can&#39;t do that
     without a valid API version. To solve this chicken-and-egg problem, we try all possible API versions that this
     package supports, until we get a valid response.
 
-    Args:
-      protocol:
-      api_version_hint:  (Default value = None)
-
+    :param protocol:
+    :param api_version_hint:  (Default value = None)
     &#34;&#34;&#34;
     from .services import ResolveNames
     # The protocol doesn&#39;t have a version yet, so default to latest supported version if we don&#39;t have a hint.

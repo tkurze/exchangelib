@@ -33,12 +33,12 @@ from ..version import EXCHANGE_2007_SP1
 
 
 class ConvertId(EWSService):
-    &#34;&#34;&#34;Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
+    &#34;&#34;&#34;Take a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ConvertId&#39;
     supported_from = EXCHANGE_2007_SP1
 
@@ -67,7 +67,8 @@ class ConvertId(EWSService):
         convertid.append(item_ids)
         return convertid
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \
@@ -85,10 +86,10 @@ class ConvertId(EWSService):
 <dl>
 <dt id="exchangelib.services.convert_id.ConvertId"><code class="flex name class">
 <span>class <span class="ident">ConvertId</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
+<div class="desc"><p>Take a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
 input list.</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation</a></p></div>
 <details class="source">
@@ -96,12 +97,12 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ConvertId(EWSService):
-    &#34;&#34;&#34;Takes a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
+    &#34;&#34;&#34;Take a list of IDs to convert. Returns a list of converted IDs or exception instances, in the same order as the
     input list.
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
-
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;ConvertId&#39;
     supported_from = EXCHANGE_2007_SP1
 
@@ -130,7 +131,8 @@ input list.</p>
         convertid.append(item_ids)
         return convertid
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
         return container.findall(AlternateId.response_tag()) \
             + container.findall(AlternatePublicFolderId.response_tag()) \

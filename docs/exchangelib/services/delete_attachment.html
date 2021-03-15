@@ -32,8 +32,10 @@ from ..util import create_element
 
 
 class DeleteAttachment(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteAttachment&#39;
 
     def call(self, items):
@@ -43,8 +45,8 @@ class DeleteAttachment(EWSAccountService):
                 continue
             yield RootItemId.from_xml(elem=elem, account=self.account)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
@@ -68,14 +70,17 @@ class DeleteAttachment(EWSAccountService):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation</a></p></div>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DeleteAttachment(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;DeleteAttachment&#39;
 
     def call(self, items):
@@ -85,8 +90,8 @@ class DeleteAttachment(EWSAccountService):
                 continue
             yield RootItemId.from_xml(elem=elem, account=self.account)
 
-    @staticmethod
-    def _get_elements_in_container(container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):

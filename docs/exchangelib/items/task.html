@@ -34,52 +34,47 @@ from .item import Item
 from ..ewsdatetime import EWSDateTime, UTC
 from ..fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, Choice, \
     CharField, TextListField, TaskRecurrenceField, DateTimeBackedDateField
-from ..properties import Fields
 
 log = logging.getLogger(__name__)
 
 
 class Task(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;Task&#39;
     NOT_STARTED = &#39;NotStarted&#39;
     COMPLETED = &#39;Completed&#39;
-    LOCAL_FIELDS = Fields(
-        IntegerField(&#39;actual_work&#39;, field_uri=&#39;task:ActualWork&#39;, min=0),
-        DateTimeField(&#39;assigned_time&#39;, field_uri=&#39;task:AssignedTime&#39;, is_read_only=True),
-        TextField(&#39;billing_information&#39;, field_uri=&#39;task:BillingInformation&#39;),
-        IntegerField(&#39;change_count&#39;, field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0),
-        TextListField(&#39;companies&#39;, field_uri=&#39;task:Companies&#39;),
-        # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
-        DateTimeField(&#39;complete_date&#39;, field_uri=&#39;task:CompleteDate&#39;, is_read_only=True),
-        TextListField(&#39;contacts&#39;, field_uri=&#39;task:Contacts&#39;),
-        ChoiceField(&#39;delegation_state&#39;, field_uri=&#39;task:DelegationState&#39;, choices={
-            Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
-        }, is_read_only=True),
-        CharField(&#39;delegator&#39;, field_uri=&#39;task:Delegator&#39;, is_read_only=True),
-        DateTimeBackedDateField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
-        BooleanField(&#39;is_editable&#39;, field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True),
-        BooleanField(&#39;is_complete&#39;, field_uri=&#39;task:IsComplete&#39;, is_read_only=True),
-        BooleanField(&#39;is_recurring&#39;, field_uri=&#39;task:IsRecurring&#39;, is_read_only=True),
-        BooleanField(&#39;is_team_task&#39;, field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True),
-        TextField(&#39;mileage&#39;, field_uri=&#39;task:Mileage&#39;),
-        CharField(&#39;owner&#39;, field_uri=&#39;task:Owner&#39;, is_read_only=True),
-        DecimalField(&#39;percent_complete&#39;, field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
-                     min=Decimal(0), max=Decimal(100), is_searchable=False),
-        TaskRecurrenceField(&#39;recurrence&#39;, field_uri=&#39;task:Recurrence&#39;, is_searchable=False),
-        DateTimeBackedDateField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
-        ChoiceField(&#39;status&#39;, field_uri=&#39;task:Status&#39;, choices={
-            Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
-        }, is_required=True, is_searchable=False, default=NOT_STARTED),
-        CharField(&#39;status_description&#39;, field_uri=&#39;task:StatusDescription&#39;, is_read_only=True),
-        IntegerField(&#39;total_work&#39;, field_uri=&#39;task:TotalWork&#39;, min=0),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    actual_work = IntegerField(field_uri=&#39;task:ActualWork&#39;, min=0)
+    assigned_time = DateTimeField(field_uri=&#39;task:AssignedTime&#39;, is_read_only=True)
+    billing_information = TextField(field_uri=&#39;task:BillingInformation&#39;)
+    change_count = IntegerField(field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0)
+    companies = TextListField(field_uri=&#39;task:Companies&#39;)
+    # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
+    complete_date = DateTimeField(field_uri=&#39;task:CompleteDate&#39;, is_read_only=True)
+    contacts = TextListField(field_uri=&#39;task:Contacts&#39;)
+    delegation_state = ChoiceField(field_uri=&#39;task:DelegationState&#39;, choices={
+        Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
+    }, is_read_only=True)
+    delegator = CharField(field_uri=&#39;task:Delegator&#39;, is_read_only=True)
+    due_date = DateTimeBackedDateField(field_uri=&#39;task:DueDate&#39;)
+    is_editable = BooleanField(field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True)
+    is_complete = BooleanField(field_uri=&#39;task:IsComplete&#39;, is_read_only=True)
+    is_recurring = BooleanField(field_uri=&#39;task:IsRecurring&#39;, is_read_only=True)
+    is_team_task = BooleanField(field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True)
+    mileage = TextField(field_uri=&#39;task:Mileage&#39;)
+    owner = CharField(field_uri=&#39;task:Owner&#39;, is_read_only=True)
+    percent_complete = DecimalField(field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
+                                    min=Decimal(0), max=Decimal(100), is_searchable=False)
+    recurrence = TaskRecurrenceField(field_uri=&#39;task:Recurrence&#39;, is_searchable=False)
+    start_date = DateTimeBackedDateField(field_uri=&#39;task:StartDate&#39;)
+    status = ChoiceField(field_uri=&#39;task:Status&#39;, choices={
+        Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
+    }, is_required=True, is_searchable=False, default=NOT_STARTED)
+    status_description = CharField(field_uri=&#39;task:StatusDescription&#39;, is_read_only=True)
+    total_work = IntegerField(field_uri=&#39;task:TotalWork&#39;, min=0)
 
     def clean(self, version=None):
-        # pylint: disable=access-member-before-definition
         super().clean(version=version)
         if self.due_date and self.start_date and self.due_date &lt; self.start_date:
             log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
@@ -113,7 +108,6 @@ class Task(Item):
                 self.percent_complete = Decimal(0)
 
     def complete(self):
-        # pylint: disable=access-member-before-definition
         # A helper method to mark a task as complete on the server
         self.status = Task.COMPLETED
         self.percent_complete = Decimal(100)
@@ -134,52 +128,53 @@ class Task(Item):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task</a></p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Task(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;Task&#39;
     NOT_STARTED = &#39;NotStarted&#39;
     COMPLETED = &#39;Completed&#39;
-    LOCAL_FIELDS = Fields(
-        IntegerField(&#39;actual_work&#39;, field_uri=&#39;task:ActualWork&#39;, min=0),
-        DateTimeField(&#39;assigned_time&#39;, field_uri=&#39;task:AssignedTime&#39;, is_read_only=True),
-        TextField(&#39;billing_information&#39;, field_uri=&#39;task:BillingInformation&#39;),
-        IntegerField(&#39;change_count&#39;, field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0),
-        TextListField(&#39;companies&#39;, field_uri=&#39;task:Companies&#39;),
-        # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
-        DateTimeField(&#39;complete_date&#39;, field_uri=&#39;task:CompleteDate&#39;, is_read_only=True),
-        TextListField(&#39;contacts&#39;, field_uri=&#39;task:Contacts&#39;),
-        ChoiceField(&#39;delegation_state&#39;, field_uri=&#39;task:DelegationState&#39;, choices={
-            Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
-        }, is_read_only=True),
-        CharField(&#39;delegator&#39;, field_uri=&#39;task:Delegator&#39;, is_read_only=True),
-        DateTimeBackedDateField(&#39;due_date&#39;, field_uri=&#39;task:DueDate&#39;),
-        BooleanField(&#39;is_editable&#39;, field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True),
-        BooleanField(&#39;is_complete&#39;, field_uri=&#39;task:IsComplete&#39;, is_read_only=True),
-        BooleanField(&#39;is_recurring&#39;, field_uri=&#39;task:IsRecurring&#39;, is_read_only=True),
-        BooleanField(&#39;is_team_task&#39;, field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True),
-        TextField(&#39;mileage&#39;, field_uri=&#39;task:Mileage&#39;),
-        CharField(&#39;owner&#39;, field_uri=&#39;task:Owner&#39;, is_read_only=True),
-        DecimalField(&#39;percent_complete&#39;, field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
-                     min=Decimal(0), max=Decimal(100), is_searchable=False),
-        TaskRecurrenceField(&#39;recurrence&#39;, field_uri=&#39;task:Recurrence&#39;, is_searchable=False),
-        DateTimeBackedDateField(&#39;start_date&#39;, field_uri=&#39;task:StartDate&#39;),
-        ChoiceField(&#39;status&#39;, field_uri=&#39;task:Status&#39;, choices={
-            Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
-        }, is_required=True, is_searchable=False, default=NOT_STARTED),
-        CharField(&#39;status_description&#39;, field_uri=&#39;task:StatusDescription&#39;, is_read_only=True),
-        IntegerField(&#39;total_work&#39;, field_uri=&#39;task:TotalWork&#39;, min=0),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    actual_work = IntegerField(field_uri=&#39;task:ActualWork&#39;, min=0)
+    assigned_time = DateTimeField(field_uri=&#39;task:AssignedTime&#39;, is_read_only=True)
+    billing_information = TextField(field_uri=&#39;task:BillingInformation&#39;)
+    change_count = IntegerField(field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0)
+    companies = TextListField(field_uri=&#39;task:Companies&#39;)
+    # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
+    complete_date = DateTimeField(field_uri=&#39;task:CompleteDate&#39;, is_read_only=True)
+    contacts = TextListField(field_uri=&#39;task:Contacts&#39;)
+    delegation_state = ChoiceField(field_uri=&#39;task:DelegationState&#39;, choices={
+        Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
+    }, is_read_only=True)
+    delegator = CharField(field_uri=&#39;task:Delegator&#39;, is_read_only=True)
+    due_date = DateTimeBackedDateField(field_uri=&#39;task:DueDate&#39;)
+    is_editable = BooleanField(field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True)
+    is_complete = BooleanField(field_uri=&#39;task:IsComplete&#39;, is_read_only=True)
+    is_recurring = BooleanField(field_uri=&#39;task:IsRecurring&#39;, is_read_only=True)
+    is_team_task = BooleanField(field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True)
+    mileage = TextField(field_uri=&#39;task:Mileage&#39;)
+    owner = CharField(field_uri=&#39;task:Owner&#39;, is_read_only=True)
+    percent_complete = DecimalField(field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
+                                    min=Decimal(0), max=Decimal(100), is_searchable=False)
+    recurrence = TaskRecurrenceField(field_uri=&#39;task:Recurrence&#39;, is_searchable=False)
+    start_date = DateTimeBackedDateField(field_uri=&#39;task:StartDate&#39;)
+    status = ChoiceField(field_uri=&#39;task:Status&#39;, choices={
+        Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
+    }, is_required=True, is_searchable=False, default=NOT_STARTED)
+    status_description = CharField(field_uri=&#39;task:StatusDescription&#39;, is_read_only=True)
+    total_work = IntegerField(field_uri=&#39;task:TotalWork&#39;, min=0)
 
     def clean(self, version=None):
-        # pylint: disable=access-member-before-definition
         super().clean(version=version)
         if self.due_date and self.start_date and self.due_date &lt; self.start_date:
             log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
@@ -213,7 +208,6 @@ class Task(Item):
                 self.percent_complete = Decimal(0)
 
     def complete(self):
-        # pylint: disable=access-member-before-definition
         # A helper method to mark a task as complete on the server
         self.status = Task.COMPLETED
         self.percent_complete = Decimal(100)
@@ -241,10 +235,6 @@ class Task(Item):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.task.Task.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="exchangelib.items.task.Task.NOT_STARTED"><code class="name">var <span class="ident">NOT_STARTED</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -254,91 +244,91 @@ class Task(Item):
 <dl>
 <dt id="exchangelib.items.task.Task.actual_work"><code class="name">var <span class="ident">actual_work</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.assigned_time"><code class="name">var <span class="ident">assigned_time</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.billing_information"><code class="name">var <span class="ident">billing_information</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.change_count"><code class="name">var <span class="ident">change_count</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.companies"><code class="name">var <span class="ident">companies</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.complete_date"><code class="name">var <span class="ident">complete_date</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.contacts"><code class="name">var <span class="ident">contacts</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.delegation_state"><code class="name">var <span class="ident">delegation_state</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.delegator"><code class="name">var <span class="ident">delegator</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.due_date"><code class="name">var <span class="ident">due_date</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.is_complete"><code class="name">var <span class="ident">is_complete</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.is_editable"><code class="name">var <span class="ident">is_editable</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.is_recurring"><code class="name">var <span class="ident">is_recurring</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.is_team_task"><code class="name">var <span class="ident">is_team_task</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.mileage"><code class="name">var <span class="ident">mileage</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.owner"><code class="name">var <span class="ident">owner</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.percent_complete"><code class="name">var <span class="ident">percent_complete</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.recurrence"><code class="name">var <span class="ident">recurrence</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.start_date"><code class="name">var <span class="ident">start_date</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.status"><code class="name">var <span class="ident">status</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.status_description"><code class="name">var <span class="ident">status_description</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.task.Task.total_work"><code class="name">var <span class="ident">total_work</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -353,7 +343,6 @@ class Task(Item):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clean(self, version=None):
-    # pylint: disable=access-member-before-definition
     super().clean(version=version)
     if self.due_date and self.start_date and self.due_date &lt; self.start_date:
         log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
@@ -397,7 +386,6 @@ class Task(Item):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def complete(self):
-    # pylint: disable=access-member-before-definition
     # A helper method to mark a task as complete on the server
     self.status = Task.COMPLETED
     self.percent_complete = Decimal(100)
@@ -413,50 +401,13 @@ class Task(Item):
 <li><code><a title="exchangelib.items.item.Item.account" href="base.html#exchangelib.items.base.BaseItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.attach" href="item.html#exchangelib.items.item.Item.attach">attach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.attachments" href="item.html#exchangelib.items.item.Item.attachments">attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.body" href="item.html#exchangelib.items.item.Item.body">body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.categories" href="item.html#exchangelib.items.item.Item.categories">categories</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.conversation_id" href="item.html#exchangelib.items.item.Item.conversation_id">conversation_id</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.culture" href="item.html#exchangelib.items.item.Item.culture">culture</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_created" href="item.html#exchangelib.items.item.Item.datetime_created">datetime_created</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_received" href="item.html#exchangelib.items.item.Item.datetime_received">datetime_received</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_sent" href="item.html#exchangelib.items.item.Item.datetime_sent">datetime_sent</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.deregister" href="base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.detach" href="item.html#exchangelib.items.item.Item.detach">detach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_cc" href="item.html#exchangelib.items.item.Item.display_cc">display_cc</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_to" href="item.html#exchangelib.items.item.Item.display_to">display_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.effective_rights" href="item.html#exchangelib.items.item.Item.effective_rights">effective_rights</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.folder" href="base.html#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.has_attachments" href="item.html#exchangelib.items.item.Item.has_attachments">has_attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.headers" href="item.html#exchangelib.items.item.Item.headers">headers</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.importance" href="item.html#exchangelib.items.item.Item.importance">importance</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.in_reply_to" href="item.html#exchangelib.items.item.Item.in_reply_to">in_reply_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_associated" href="item.html#exchangelib.items.item.Item.is_associated">is_associated</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_draft" href="item.html#exchangelib.items.item.Item.is_draft">is_draft</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_from_me" href="item.html#exchangelib.items.item.Item.is_from_me">is_from_me</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_resend" href="item.html#exchangelib.items.item.Item.is_resend">is_resend</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_submitted" href="item.html#exchangelib.items.item.Item.is_submitted">is_submitted</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_unmodified" href="item.html#exchangelib.items.item.Item.is_unmodified">is_unmodified</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.item_class" href="item.html#exchangelib.items.item.Item.item_class">item_class</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_name" href="item.html#exchangelib.items.item.Item.last_modified_name">last_modified_name</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_time" href="item.html#exchangelib.items.item.Item.last_modified_time">last_modified_time</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.mime_content" href="item.html#exchangelib.items.item.Item.mime_content">mime_content</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.parent_folder_id" href="item.html#exchangelib.items.item.Item.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.register" href="base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_due_by" href="item.html#exchangelib.items.item.Item.reminder_due_by">reminder_due_by</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.text_body" href="item.html#exchangelib.items.item.Item.text_body">text_body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.unique_body" href="item.html#exchangelib.items.item.Item.unique_body">unique_body</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_edit_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_edit_form_query_string">web_client_edit_form_query_string</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_read_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_read_form_query_string">web_client_read_form_query_string</a></code></li>
 </ul>
 </li>
 </ul>
@@ -483,7 +434,6 @@ class Task(Item):
 <li><code><a title="exchangelib.items.task.Task.COMPLETED" href="#exchangelib.items.task.Task.COMPLETED">COMPLETED</a></code></li>
 <li><code><a title="exchangelib.items.task.Task.ELEMENT_NAME" href="#exchangelib.items.task.Task.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.task.Task.FIELDS" href="#exchangelib.items.task.Task.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.task.Task.LOCAL_FIELDS" href="#exchangelib.items.task.Task.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.task.Task.NOT_STARTED" href="#exchangelib.items.task.Task.NOT_STARTED">NOT_STARTED</a></code></li>
 <li><code><a title="exchangelib.items.task.Task.actual_work" href="#exchangelib.items.task.Task.actual_work">actual_work</a></code></li>
 <li><code><a title="exchangelib.items.task.Task.assigned_time" href="#exchangelib.items.task.Task.assigned_time">assigned_time</a></code></li>

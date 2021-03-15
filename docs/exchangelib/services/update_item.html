@@ -39,6 +39,7 @@ from ..version import EXCHANGE_2013_SP1
 
 class UpdateItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UpdateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -131,7 +132,7 @@ class UpdateItem(EWSAccountService):
         if item.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
             if field.name in (&#39;start&#39;, &#39;end&#39;):
-                if type(value) == EWSDate:
+                if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return item.date_to_datetime(field_name=field.name)
                 tz_field_name = item.tz_field_for_field_name(field.name).name
@@ -235,6 +236,7 @@ class UpdateItem(EWSAccountService):
 </summary>
 <pre><code class="python">class UpdateItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;UpdateItem&#39;
     element_container_name = &#39;{%s}Items&#39; % MNS
 
@@ -327,7 +329,7 @@ class UpdateItem(EWSAccountService):
         if item.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
             if field.name in (&#39;start&#39;, &#39;end&#39;):
-                if type(value) == EWSDate:
+                if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return item.date_to_datetime(field_name=field.name)
                 tz_field_name = item.tz_field_for_field_name(field.name).name

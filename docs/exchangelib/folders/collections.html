@@ -36,25 +36,32 @@ from ..items import Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
 from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
-from ..services import FindFolder, GetFolder, FindItem, FindPeople
+from ..services import FindFolder, GetFolder, FindItem, FindPeople, SyncFolderItems, SyncFolderHierarchy, \
+    SubscribeToPull, SubscribeToPush, SubscribeToStreaming
 from ..util import require_account
 
 log = logging.getLogger(__name__)
 
 
+class SyncCompleted(Exception):
+    &#34;&#34;&#34;This is a really ugly way of returning the sync state.&#34;&#34;&#34;
+
+    def __init__(self, sync_state):
+        super().__init__(sync_state)
+        self.sync_state = sync_state
+
+
 class FolderCollection(SearchableMixIn):
-    &#34;&#34;&#34;A class that implements an API for searching folders&#34;&#34;&#34;
+    &#34;&#34;&#34;A class that implements an API for searching folders.&#34;&#34;&#34;
 
     # These fields are required in a FindFolder or GetFolder call to properly identify folder types
     REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
 
     def __init__(self, account, folders):
-        &#34;&#34;&#34;Implements a search API on a collection of folders
+        &#34;&#34;&#34;Implement a search API on a collection of folders.
 
-        Args:
-          account: An Account object
-          folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
-
+        :param account: An Account object
+        :param folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
         &#34;&#34;&#34;
         self.account = account
         self._folders = folders
@@ -80,7 +87,7 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).none()
 
     def filter(self, *args, **kwargs):
-        &#34;&#34;&#34;Finds items in the folder(s).
+        &#34;&#34;&#34;Find items in the folder(s).
 
         Non-keyword args may be a list of Q instances.
 
@@ -104,11 +111,6 @@ class FolderCollection(SearchableMixIn):
         &#39;endswith&#39; and &#39;iendswith&#39; could be emulated by searching with &#39;contains&#39; or &#39;icontains&#39; and then
         post-processing items. Fetch the field in question with additional_fields and remove items where the search
         string is not a postfix.
-
-        Args:
-          *args:
-          **kwargs:
-
         &#34;&#34;&#34;
         return QuerySet(self).filter(*args, **kwargs)
 
@@ -119,8 +121,8 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).people()
 
     def view(self, start, end, max_items=None, *args, **kwargs):
-        &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
-        only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+        &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
+        only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
 
         Supports the same semantics as filter, except for &#39;start&#39; and &#39;end&#39; keyword attributes which are both required
@@ -131,13 +133,10 @@ class FolderCollection(SearchableMixIn):
 
         &#39;max_items&#39; defines the maximum number of items returned in this view. Optional.
 
-        Args:
-          start:
-          end:
-          max_items:  (Default value = None)
-          *args:
-          **kwargs:
-
+        :param start:
+        :param end:
+        :param max_items:  (Default value = None)
+        :return:
         &#34;&#34;&#34;
         qs = QuerySet(self).filter(*args, **kwargs)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
@@ -167,24 +166,21 @@ class FolderCollection(SearchableMixIn):
 
     def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                    calendar_view=None, page_size=None, max_items=None, offset=0):
-        &#34;&#34;&#34;Private method to call the FindItem service
+        &#34;&#34;&#34;Private method to call the FindItem service.
 
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
-            we always return Item objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
-            that complex fields can only be fetched with fetch() (i.e. the GetItem service).
-          order_fields: the SortOrder fields, if any (Default value = None)
-          calendar_view: a CalendarView instance, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
+        :param q: a Q instance containing any restrictions
+        :param shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is
+          non-null, we always return Item objects. (Default value = ID_ONLY)
+        :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+        :param additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+          that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+        :param order_fields: the SortOrder fields, if any (Default value = None)
+        :param calendar_view: a CalendarView instance, if any (Default value = None)
+        :param page_size: the requested number of items per page (Default value = None)
+        :param max_items: the max number of items to return (Default value = None)
+        :param offset: the offset relative to the first item in the item collection (Default value = 0)
 
-        Returns:
-          a generator for the returned item IDs or items
-
+        :return: a generator for the returned item IDs or items
         &#34;&#34;&#34;
         if not self.folders:
             log.debug(&#39;Folder list is empty&#39;)
@@ -238,30 +234,32 @@ class FolderCollection(SearchableMixIn):
             offset=offset,
         )
 
-    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                    page_size=None, max_items=None, offset=0):
-        &#34;&#34;&#34;Private method to call the FindPeople service
-
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
-            non-null, we always return Persona objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties.
-          order_fields: the SortOrder fields, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
-
-        Returns:
-          a generator for the returned personas
-
-        &#34;&#34;&#34;
+    def _get_single_folder(self):
         if len(self.folders) &gt; 1:
-            log.debug(&#39;Searching for personas can only be done on a single folder&#39;)
-            return
+            raise ValueError(&#39;Syncing folder hierarchy can only be done on a single folder&#39;)
         if not self.folders:
             log.debug(&#39;Folder list is empty&#39;)
+            return None
+        return self.folders[0]
+
+    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                    page_size=None, max_items=None, offset=0):
+        &#34;&#34;&#34;Private method to call the FindPeople service.
+
+        :param q: a Q instance containing any restrictions
+        :param shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+          non-null, we always return Persona objects. (Default value = ID_ONLY)
+        :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+        :param additional_fields: the extra properties we want on the return objects. Default is no properties.
+        :param order_fields: the SortOrder fields, if any (Default value = None)
+        :param page_size: the requested number of items per page (Default value = None)
+        :param max_items: the max number of items to return (Default value = None)
+        :param offset: the offset relative to the first item in the item collection (Default value = 0)
+
+        :return: a generator for the returned personas
+        &#34;&#34;&#34;
+        folder = self._get_single_folder()
+        if not folder:
             return
         if q.is_never():
             log.debug(&#39;Query will never return results&#39;)
@@ -284,12 +282,12 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         elif q.query_string:
             restriction = None
-            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         else:
-            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=self.folders,
+                folder=[folder],
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -326,7 +324,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_default_item_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        unique_depths = set(f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders)
+        unique_depths = {f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
@@ -336,7 +334,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        unique_depths = set(f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders)
+        unique_depths = {f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
@@ -425,7 +423,97 @@ class FolderCollection(SearchableMixIn):
                 folders=self.folders,
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        )</code></pre>
+        )
+
+    def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        yield from SubscribeToPull(account=self.account).call(
+            folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+        )
+
+    def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
+                          status_frequency=1):
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        yield from SubscribeToPush(account=self.account).call(
+            folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            url=callback_url,
+        )
+
+    def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)
+
+    def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
+        folder = self._get_single_folder()
+        if not folder:
+            return
+        if only_fields is None:
+            # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+            additional_fields = {FieldPath(field=f) for f in folder.allowed_item_fields(version=self.account.version)}
+        else:
+            for field in only_fields:
+                folder.validate_item_field(field=field, version=self.account.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+
+        svc = SyncFolderItems(account=self.account)
+        while True:
+            yield from svc.call(
+                folder=folder,
+                shape=ID_ONLY,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+                ignore=ignore,
+                max_changes_returned=max_changes_returned,
+                sync_scope=sync_scope,
+            )
+            if svc.sync_state == sync_state:
+                # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+                break
+            sync_state = svc.sync_state  # Set the new sync state in the next call
+            if svc.includes_last_item_in_range:  # Try again if there are more items
+                break
+        raise SyncCompleted(sync_state=svc.sync_state)
+
+    def sync_hierarchy(self, sync_state=None, only_fields=None):
+        folder = self._get_single_folder()
+        if not folder:
+            return
+        if only_fields is None:
+            # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+            additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
+        else:
+            for f in only_fields:
+                folder.validate_field(field=f, version=self.account.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=folder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        svc = SyncFolderHierarchy(account=self.account)
+        while True:
+            yield from svc.call(
+                folder=folder,
+                shape=ID_ONLY,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+            )
+            if svc.sync_state == sync_state:
+                # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+                break
+            sync_state = svc.sync_state  # Set the new sync state in the next call
+            if svc.includes_last_item_in_range:  # Try again if there are more items
+                break
+        raise SyncCompleted(sync_state=svc.sync_state)</code></pre>
 </details>
 </section>
 <section>
@@ -442,32 +530,25 @@ class FolderCollection(SearchableMixIn):
 <span>(</span><span>account, folders)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A class that implements an API for searching folders</p>
-<p>Implements a search API on a collection of folders</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>account</code></strong></dt>
-<dd>An Account object</dd>
-<dt><strong><code>folders</code></strong></dt>
-<dd>An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]</dd>
-</dl></div>
+<div class="desc"><p>A class that implements an API for searching folders.</p>
+<p>Implement a search API on a collection of folders.</p>
+<p>:param account: An Account object
+:param folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FolderCollection(SearchableMixIn):
-    &#34;&#34;&#34;A class that implements an API for searching folders&#34;&#34;&#34;
+    &#34;&#34;&#34;A class that implements an API for searching folders.&#34;&#34;&#34;
 
     # These fields are required in a FindFolder or GetFolder call to properly identify folder types
     REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
 
     def __init__(self, account, folders):
-        &#34;&#34;&#34;Implements a search API on a collection of folders
+        &#34;&#34;&#34;Implement a search API on a collection of folders.
 
-        Args:
-          account: An Account object
-          folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
-
+        :param account: An Account object
+        :param folders: An iterable of folders, e.g. Folder.walk(), Folder.glob(), or [a.calendar, a.inbox]
         &#34;&#34;&#34;
         self.account = account
         self._folders = folders
@@ -493,7 +574,7 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).none()
 
     def filter(self, *args, **kwargs):
-        &#34;&#34;&#34;Finds items in the folder(s).
+        &#34;&#34;&#34;Find items in the folder(s).
 
         Non-keyword args may be a list of Q instances.
 
@@ -517,11 +598,6 @@ class FolderCollection(SearchableMixIn):
         &#39;endswith&#39; and &#39;iendswith&#39; could be emulated by searching with &#39;contains&#39; or &#39;icontains&#39; and then
         post-processing items. Fetch the field in question with additional_fields and remove items where the search
         string is not a postfix.
-
-        Args:
-          *args:
-          **kwargs:
-
         &#34;&#34;&#34;
         return QuerySet(self).filter(*args, **kwargs)
 
@@ -532,8 +608,8 @@ class FolderCollection(SearchableMixIn):
         return QuerySet(self).people()
 
     def view(self, start, end, max_items=None, *args, **kwargs):
-        &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
-        only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+        &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
+        only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
 
         Supports the same semantics as filter, except for &#39;start&#39; and &#39;end&#39; keyword attributes which are both required
@@ -544,13 +620,10 @@ class FolderCollection(SearchableMixIn):
 
         &#39;max_items&#39; defines the maximum number of items returned in this view. Optional.
 
-        Args:
-          start:
-          end:
-          max_items:  (Default value = None)
-          *args:
-          **kwargs:
-
+        :param start:
+        :param end:
+        :param max_items:  (Default value = None)
+        :return:
         &#34;&#34;&#34;
         qs = QuerySet(self).filter(*args, **kwargs)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
@@ -580,24 +653,21 @@ class FolderCollection(SearchableMixIn):
 
     def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                    calendar_view=None, page_size=None, max_items=None, offset=0):
-        &#34;&#34;&#34;Private method to call the FindItem service
+        &#34;&#34;&#34;Private method to call the FindItem service.
 
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
-            we always return Item objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
-            that complex fields can only be fetched with fetch() (i.e. the GetItem service).
-          order_fields: the SortOrder fields, if any (Default value = None)
-          calendar_view: a CalendarView instance, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
+        :param q: a Q instance containing any restrictions
+        :param shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is
+          non-null, we always return Item objects. (Default value = ID_ONLY)
+        :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+        :param additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+          that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+        :param order_fields: the SortOrder fields, if any (Default value = None)
+        :param calendar_view: a CalendarView instance, if any (Default value = None)
+        :param page_size: the requested number of items per page (Default value = None)
+        :param max_items: the max number of items to return (Default value = None)
+        :param offset: the offset relative to the first item in the item collection (Default value = 0)
 
-        Returns:
-          a generator for the returned item IDs or items
-
+        :return: a generator for the returned item IDs or items
         &#34;&#34;&#34;
         if not self.folders:
             log.debug(&#39;Folder list is empty&#39;)
@@ -651,30 +721,32 @@ class FolderCollection(SearchableMixIn):
             offset=offset,
         )
 
-    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                    page_size=None, max_items=None, offset=0):
-        &#34;&#34;&#34;Private method to call the FindPeople service
-
-        Args:
-          q: a Q instance containing any restrictions
-          shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
-            non-null, we always return Persona objects. (Default value = ID_ONLY)
-          depth: controls the whether to return soft-deleted items or not. (Default value = None)
-          additional_fields: the extra properties we want on the return objects. Default is no properties.
-          order_fields: the SortOrder fields, if any (Default value = None)
-          page_size: the requested number of items per page (Default value = None)
-          max_items: the max number of items to return (Default value = None)
-          offset: the offset relative to the first item in the item collection (Default value = 0)
-
-        Returns:
-          a generator for the returned personas
-
-        &#34;&#34;&#34;
+    def _get_single_folder(self):
         if len(self.folders) &gt; 1:
-            log.debug(&#39;Searching for personas can only be done on a single folder&#39;)
-            return
+            raise ValueError(&#39;Syncing folder hierarchy can only be done on a single folder&#39;)
         if not self.folders:
             log.debug(&#39;Folder list is empty&#39;)
+            return None
+        return self.folders[0]
+
+    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
+                    page_size=None, max_items=None, offset=0):
+        &#34;&#34;&#34;Private method to call the FindPeople service.
+
+        :param q: a Q instance containing any restrictions
+        :param shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+          non-null, we always return Persona objects. (Default value = ID_ONLY)
+        :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+        :param additional_fields: the extra properties we want on the return objects. Default is no properties.
+        :param order_fields: the SortOrder fields, if any (Default value = None)
+        :param page_size: the requested number of items per page (Default value = None)
+        :param max_items: the max number of items to return (Default value = None)
+        :param offset: the offset relative to the first item in the item collection (Default value = 0)
+
+        :return: a generator for the returned personas
+        &#34;&#34;&#34;
+        folder = self._get_single_folder()
+        if not folder:
             return
         if q.is_never():
             log.debug(&#39;Query will never return results&#39;)
@@ -697,12 +769,12 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         elif q.query_string:
             restriction = None
-            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         else:
-            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=self.folders,
+                folder=[folder],
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -739,7 +811,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_default_item_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        unique_depths = set(f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders)
+        unique_depths = {f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
@@ -749,7 +821,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        unique_depths = set(f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders)
+        unique_depths = {f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
@@ -838,7 +910,97 @@ class FolderCollection(SearchableMixIn):
                 folders=self.folders,
                 additional_fields=additional_fields,
                 shape=ID_ONLY,
-        )</code></pre>
+        )
+
+    def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        yield from SubscribeToPull(account=self.account).call(
+            folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+        )
+
+    def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
+                          status_frequency=1):
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        yield from SubscribeToPush(account=self.account).call(
+            folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            url=callback_url,
+        )
+
+    def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+        if not self.folders:
+            log.debug(&#39;Folder list is empty&#39;)
+            return
+        yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)
+
+    def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
+        folder = self._get_single_folder()
+        if not folder:
+            return
+        if only_fields is None:
+            # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+            additional_fields = {FieldPath(field=f) for f in folder.allowed_item_fields(version=self.account.version)}
+        else:
+            for field in only_fields:
+                folder.validate_item_field(field=field, version=self.account.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+
+        svc = SyncFolderItems(account=self.account)
+        while True:
+            yield from svc.call(
+                folder=folder,
+                shape=ID_ONLY,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+                ignore=ignore,
+                max_changes_returned=max_changes_returned,
+                sync_scope=sync_scope,
+            )
+            if svc.sync_state == sync_state:
+                # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+                break
+            sync_state = svc.sync_state  # Set the new sync state in the next call
+            if svc.includes_last_item_in_range:  # Try again if there are more items
+                break
+        raise SyncCompleted(sync_state=svc.sync_state)
+
+    def sync_hierarchy(self, sync_state=None, only_fields=None):
+        folder = self._get_single_folder()
+        if not folder:
+            return
+        if only_fields is None:
+            # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+            additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
+        else:
+            for f in only_fields:
+                folder.validate_field(field=f, version=self.account.version)
+            # Remove ItemId and ChangeKey. We get them unconditionally
+            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+
+        # Add required fields
+        additional_fields.update(
+            (FieldPath(field=folder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+        )
+
+        svc = SyncFolderHierarchy(account=self.account)
+        while True:
+            yield from svc.call(
+                folder=folder,
+                shape=ID_ONLY,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+            )
+            if svc.sync_state == sync_state:
+                # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+                break
+            sync_state = svc.sync_state  # Set the new sync state in the next call
+            if svc.includes_last_item_in_range:  # Try again if there are more items
+                break
+        raise SyncCompleted(sync_state=svc.sync_state)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -938,7 +1100,7 @@ def supported_item_models(self):
 <span>def <span class="ident">filter</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Finds items in the folder(s).</p>
+<div class="desc"><p>Find items in the folder(s).</p>
 <p>Non-keyword args may be a list of Q instances.</p>
 <p>Optional extra keyword arguments follow a Django-like QuerySet filter syntax (see
 <a href="https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups">https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups</a>).</p>
@@ -954,16 +1116,13 @@ my_account.tasks.filter(subject__contains='Foo')
 my_account.tasks.filter(subject__icontains='foo')</p>
 <p>'endswith' and 'iendswith' could be emulated by searching with 'contains' or 'icontains' and then
 post-processing items. Fetch the field in question with additional_fields and remove items where the search
-string is not a postfix.</p>
-<h2 id="args">Args</h2>
-<p><em>args:
-</em>*kwargs:</p></div>
+string is not a postfix.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def filter(self, *args, **kwargs):
-    &#34;&#34;&#34;Finds items in the folder(s).
+    &#34;&#34;&#34;Find items in the folder(s).
 
     Non-keyword args may be a list of Q instances.
 
@@ -987,11 +1146,6 @@ string is not a postfix.</p>
     &#39;endswith&#39; and &#39;iendswith&#39; could be emulated by searching with &#39;contains&#39; or &#39;icontains&#39; and then
     post-processing items. Fetch the field in question with additional_fields and remove items where the search
     string is not a postfix.
-
-    Args:
-      *args:
-      **kwargs:
-
     &#34;&#34;&#34;
     return QuerySet(self).filter(*args, **kwargs)</code></pre>
 </details>
@@ -1056,56 +1210,40 @@ def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None
 <span>def <span class="ident">find_items</span></span>(<span>self, q, shape='IdOnly', depth=None, additional_fields=None, order_fields=None, calendar_view=None, page_size=None, max_items=None, offset=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Private method to call the FindItem service</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>q</code></strong></dt>
-<dd>a Q instance containing any restrictions</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
-we always return Item objects. (Default value = ID_ONLY)</dd>
-<dt><strong><code>depth</code></strong></dt>
-<dd>controls the whether to return soft-deleted items or not. (Default value = None)</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra properties we want on the return objects. Default is no properties. Be aware
-that complex fields can only be fetched with fetch() (i.e. the GetItem service).</dd>
-<dt><strong><code>order_fields</code></strong></dt>
-<dd>the SortOrder fields, if any (Default value = None)</dd>
-<dt><strong><code>calendar_view</code></strong></dt>
-<dd>a CalendarView instance, if any (Default value = None)</dd>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>the requested number of items per page (Default value = None)</dd>
-<dt><strong><code>max_items</code></strong></dt>
-<dd>the max number of items to return (Default value = None)</dd>
-<dt><strong><code>offset</code></strong></dt>
-<dd>the offset relative to the first item in the item collection (Default value = 0)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a generator for the returned item IDs or items</p></div>
+<div class="desc"><p>Private method to call the FindItem service.</p>
+<p>:param q: a Q instance containing any restrictions
+:param shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is
+non-null, we always return Item objects. (Default value = ID_ONLY)
+:param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+:param additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+:param order_fields: the SortOrder fields, if any (Default value = None)
+:param calendar_view: a CalendarView instance, if any (Default value = None)
+:param page_size: the requested number of items per page (Default value = None)
+:param max_items: the max number of items to return (Default value = None)
+:param offset: the offset relative to the first item in the item collection (Default value = 0)</p>
+<p>:return: a generator for the returned item IDs or items</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                calendar_view=None, page_size=None, max_items=None, offset=0):
-    &#34;&#34;&#34;Private method to call the FindItem service
+    &#34;&#34;&#34;Private method to call the FindItem service.
 
-    Args:
-      q: a Q instance containing any restrictions
-      shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is non-null,
-        we always return Item objects. (Default value = ID_ONLY)
-      depth: controls the whether to return soft-deleted items or not. (Default value = None)
-      additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
-        that complex fields can only be fetched with fetch() (i.e. the GetItem service).
-      order_fields: the SortOrder fields, if any (Default value = None)
-      calendar_view: a CalendarView instance, if any (Default value = None)
-      page_size: the requested number of items per page (Default value = None)
-      max_items: the max number of items to return (Default value = None)
-      offset: the offset relative to the first item in the item collection (Default value = 0)
+    :param q: a Q instance containing any restrictions
+    :param shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is
+      non-null, we always return Item objects. (Default value = ID_ONLY)
+    :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+    :param additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
+      that complex fields can only be fetched with fetch() (i.e. the GetItem service).
+    :param order_fields: the SortOrder fields, if any (Default value = None)
+    :param calendar_view: a CalendarView instance, if any (Default value = None)
+    :param page_size: the requested number of items per page (Default value = None)
+    :param max_items: the max number of items to return (Default value = None)
+    :param offset: the offset relative to the first item in the item collection (Default value = 0)
 
-    Returns:
-      a generator for the returned item IDs or items
-
+    :return: a generator for the returned item IDs or items
     &#34;&#34;&#34;
     if not self.folders:
         log.debug(&#39;Folder list is empty&#39;)
@@ -1164,57 +1302,39 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
 <span>def <span class="ident">find_people</span></span>(<span>self, q, shape='IdOnly', depth=None, additional_fields=None, order_fields=None, page_size=None, max_items=None, offset=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Private method to call the FindPeople service</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>q</code></strong></dt>
-<dd>a Q instance containing any restrictions</dd>
-<dt><strong><code>shape</code></strong></dt>
-<dd>controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
-non-null, we always return Persona objects. (Default value = ID_ONLY)</dd>
-<dt><strong><code>depth</code></strong></dt>
-<dd>controls the whether to return soft-deleted items or not. (Default value = None)</dd>
-<dt><strong><code>additional_fields</code></strong></dt>
-<dd>the extra properties we want on the return objects. Default is no properties.</dd>
-<dt><strong><code>order_fields</code></strong></dt>
-<dd>the SortOrder fields, if any (Default value = None)</dd>
-<dt><strong><code>page_size</code></strong></dt>
-<dd>the requested number of items per page (Default value = None)</dd>
-<dt><strong><code>max_items</code></strong></dt>
-<dd>the max number of items to return (Default value = None)</dd>
-<dt><strong><code>offset</code></strong></dt>
-<dd>the offset relative to the first item in the item collection (Default value = 0)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>a generator for the returned personas</p></div>
+<div class="desc"><p>Private method to call the FindPeople service.</p>
+<p>:param q: a Q instance containing any restrictions
+:param shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+non-null, we always return Persona objects. (Default value = ID_ONLY)
+:param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+:param additional_fields: the extra properties we want on the return objects. Default is no properties.
+:param order_fields: the SortOrder fields, if any (Default value = None)
+:param page_size: the requested number of items per page (Default value = None)
+:param max_items: the max number of items to return (Default value = None)
+:param offset: the offset relative to the first item in the item collection (Default value = 0)</p>
+<p>:return: a generator for the returned personas</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                 page_size=None, max_items=None, offset=0):
-    &#34;&#34;&#34;Private method to call the FindPeople service
+    &#34;&#34;&#34;Private method to call the FindPeople service.
 
-    Args:
-      q: a Q instance containing any restrictions
-      shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
-        non-null, we always return Persona objects. (Default value = ID_ONLY)
-      depth: controls the whether to return soft-deleted items or not. (Default value = None)
-      additional_fields: the extra properties we want on the return objects. Default is no properties.
-      order_fields: the SortOrder fields, if any (Default value = None)
-      page_size: the requested number of items per page (Default value = None)
-      max_items: the max number of items to return (Default value = None)
-      offset: the offset relative to the first item in the item collection (Default value = 0)
+    :param q: a Q instance containing any restrictions
+    :param shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+      non-null, we always return Persona objects. (Default value = ID_ONLY)
+    :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
+    :param additional_fields: the extra properties we want on the return objects. Default is no properties.
+    :param order_fields: the SortOrder fields, if any (Default value = None)
+    :param page_size: the requested number of items per page (Default value = None)
+    :param max_items: the max number of items to return (Default value = None)
+    :param offset: the offset relative to the first item in the item collection (Default value = 0)
 
-    Returns:
-      a generator for the returned personas
-
+    :return: a generator for the returned personas
     &#34;&#34;&#34;
-    if len(self.folders) &gt; 1:
-        log.debug(&#39;Searching for personas can only be done on a single folder&#39;)
-        return
-    if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+    folder = self._get_single_folder()
+    if not folder:
         return
     if q.is_never():
         log.debug(&#39;Query will never return results&#39;)
@@ -1237,12 +1357,12 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)</dd>
         query_string = None
     elif q.query_string:
         restriction = None
-        query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        query_string = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
     else:
-        restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         query_string = None
     yield from FindPeople(account=self.account, chunk_size=page_size).call(
-            folder=self.folders,
+            folder=[folder],
             additional_fields=additional_fields,
             restriction=restriction,
             order_fields=order_fields,
@@ -1366,6 +1486,146 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)</dd>
     )</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.folders.collections.FolderCollection.subscribe_to_pull"><code class="name flex">
+<span>def <span class="ident">subscribe_to_pull</span></span>(<span>self, event_types=('CopiedEvent', 'CreatedEvent', 'DeletedEvent', 'ModifiedEvent', 'MovedEvent', 'NewMailEvent', 'FreeBusyChangedEvent'), watermark=None, timeout=60)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    yield from SubscribeToPull(account=self.account).call(
+        folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.subscribe_to_push"><code class="name flex">
+<span>def <span class="ident">subscribe_to_push</span></span>(<span>self, callback_url, event_types=('CopiedEvent', 'CreatedEvent', 'DeletedEvent', 'ModifiedEvent', 'MovedEvent', 'NewMailEvent', 'FreeBusyChangedEvent'), watermark=None, status_frequency=1)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
+                      status_frequency=1):
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    yield from SubscribeToPush(account=self.account).call(
+        folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+        url=callback_url,
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.subscribe_to_streaming"><code class="name flex">
+<span>def <span class="ident">subscribe_to_streaming</span></span>(<span>self, event_types=('CopiedEvent', 'CreatedEvent', 'DeletedEvent', 'ModifiedEvent', 'MovedEvent', 'NewMailEvent', 'FreeBusyChangedEvent'))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+    if not self.folders:
+        log.debug(&#39;Folder list is empty&#39;)
+        return
+    yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.sync_hierarchy"><code class="name flex">
+<span>def <span class="ident">sync_hierarchy</span></span>(<span>self, sync_state=None, only_fields=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sync_hierarchy(self, sync_state=None, only_fields=None):
+    folder = self._get_single_folder()
+    if not folder:
+        return
+    if only_fields is None:
+        # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+        additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
+    else:
+        for f in only_fields:
+            folder.validate_field(field=f, version=self.account.version)
+        # Remove ItemId and ChangeKey. We get them unconditionally
+        additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+
+    # Add required fields
+    additional_fields.update(
+        (FieldPath(field=folder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
+    )
+
+    svc = SyncFolderHierarchy(account=self.account)
+    while True:
+        yield from svc.call(
+            folder=folder,
+            shape=ID_ONLY,
+            additional_fields=additional_fields,
+            sync_state=sync_state,
+        )
+        if svc.sync_state == sync_state:
+            # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+            break
+        sync_state = svc.sync_state  # Set the new sync state in the next call
+        if svc.includes_last_item_in_range:  # Try again if there are more items
+            break
+    raise SyncCompleted(sync_state=svc.sync_state)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.collections.FolderCollection.sync_items"><code class="name flex">
+<span>def <span class="ident">sync_items</span></span>(<span>self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
+    folder = self._get_single_folder()
+    if not folder:
+        return
+    if only_fields is None:
+        # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
+        additional_fields = {FieldPath(field=f) for f in folder.allowed_item_fields(version=self.account.version)}
+    else:
+        for field in only_fields:
+            folder.validate_item_field(field=field, version=self.account.version)
+        # Remove ItemId and ChangeKey. We get them unconditionally
+        additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+
+    svc = SyncFolderItems(account=self.account)
+    while True:
+        yield from svc.call(
+            folder=folder,
+            shape=ID_ONLY,
+            additional_fields=additional_fields,
+            sync_state=sync_state,
+            ignore=ignore,
+            max_changes_returned=max_changes_returned,
+            sync_scope=sync_scope,
+        )
+        if svc.sync_state == sync_state:
+            # We sometimes get the same sync_state back, even though includes_last_item_in_range is False. Stop here
+            break
+        sync_state = svc.sync_state  # Set the new sync state in the next call
+        if svc.includes_last_item_in_range:  # Try again if there are more items
+            break
+    raise SyncCompleted(sync_state=svc.sync_state)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.folders.collections.FolderCollection.validate_item_field"><code class="name flex">
 <span>def <span class="ident">validate_item_field</span></span>(<span>self, field, version)</span>
 </code></dt>
@@ -1391,30 +1651,26 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)</dd>
 <span>def <span class="ident">view</span></span>(<span>self, start, end, max_items=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
-only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+<div class="desc"><p>Implement the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
+only returns the master CalendarItem for recurring items, while 'view' unfolds recurring items and returns all
 CalendarItem occurrences as one would normally expect when presenting a calendar.</p>
 <p>Supports the same semantics as filter, except for 'start' and 'end' keyword attributes which are both required
 and behave differently than filter. Here, they denote the start and end of the timespan of the view. All items
 the overlap the timespan are returned (items that end exactly on 'start' are also returned, for some reason).</p>
 <p>EWS does not allow combining CalendarView with search restrictions (filter and exclude).</p>
 <p>'max_items' defines the maximum number of items returned in this view. Optional.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>start:</dt>
-<dt>end:</dt>
-<dt><strong><code>max_items</code></strong></dt>
-<dd>(Default value = None)</dd>
-</dl>
-<p><em>args:
-</em>*kwargs:</p></div>
+<p>:param start:
+:param end:
+:param max_items:
+(Default value = None)
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def view(self, start, end, max_items=None, *args, **kwargs):
-    &#34;&#34;&#34;Implements the CalendarView option to FindItem. The difference between filter() and view() is that filter()
-    only returns the master CalendarItem for recurring items, while view() unfolds recurring items and returns all
+    &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
+    only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
     CalendarItem occurrences as one would normally expect when presenting a calendar.
 
     Supports the same semantics as filter, except for &#39;start&#39; and &#39;end&#39; keyword attributes which are both required
@@ -1425,13 +1681,10 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 
     &#39;max_items&#39; defines the maximum number of items returned in this view. Optional.
 
-    Args:
-      start:
-      end:
-      max_items:  (Default value = None)
-      *args:
-      **kwargs:
-
+    :param start:
+    :param end:
+    :param max_items:  (Default value = None)
+    :return:
     &#34;&#34;&#34;
     qs = QuerySet(self).filter(*args, **kwargs)
     qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
@@ -1439,6 +1692,29 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="exchangelib.folders.collections.SyncCompleted"><code class="flex name class">
+<span>class <span class="ident">SyncCompleted</span></span>
+<span>(</span><span>sync_state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is a really ugly way of returning the sync state.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SyncCompleted(Exception):
+    &#34;&#34;&#34;This is a really ugly way of returning the sync state.&#34;&#34;&#34;
+
+    def __init__(self, sync_state):
+        super().__init__(sync_state)
+        self.sync_state = sync_state</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -1474,10 +1750,18 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 <li><code><a title="exchangelib.folders.collections.FolderCollection.none" href="#exchangelib.folders.collections.FolderCollection.none">none</a></code></li>
 <li><code><a title="exchangelib.folders.collections.FolderCollection.people" href="#exchangelib.folders.collections.FolderCollection.people">people</a></code></li>
 <li><code><a title="exchangelib.folders.collections.FolderCollection.resolve" href="#exchangelib.folders.collections.FolderCollection.resolve">resolve</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.subscribe_to_pull" href="#exchangelib.folders.collections.FolderCollection.subscribe_to_pull">subscribe_to_pull</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.subscribe_to_push" href="#exchangelib.folders.collections.FolderCollection.subscribe_to_push">subscribe_to_push</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.subscribe_to_streaming" href="#exchangelib.folders.collections.FolderCollection.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
 <li><code><a title="exchangelib.folders.collections.FolderCollection.supported_item_models" href="#exchangelib.folders.collections.FolderCollection.supported_item_models">supported_item_models</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.sync_hierarchy" href="#exchangelib.folders.collections.FolderCollection.sync_hierarchy">sync_hierarchy</a></code></li>
+<li><code><a title="exchangelib.folders.collections.FolderCollection.sync_items" href="#exchangelib.folders.collections.FolderCollection.sync_items">sync_items</a></code></li>
 <li><code><a title="exchangelib.folders.collections.FolderCollection.validate_item_field" href="#exchangelib.folders.collections.FolderCollection.validate_item_field">validate_item_field</a></code></li>
 <li><code><a title="exchangelib.folders.collections.FolderCollection.view" href="#exchangelib.folders.collections.FolderCollection.view">view</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.collections.SyncCompleted" href="#exchangelib.folders.collections.SyncCompleted">SyncCompleted</a></code></h4>
 </li>
 </ul>
 </li>

@@ -35,212 +35,203 @@ from ..fields import BooleanField, Base64Field, TextField, ChoiceField, URIField
     EmailAddressField, IdElementField, EWSElementField, DateTimeField, EWSElementListField, \
     BodyContentAttributedValueField, StringAttributedValueField, PhoneNumberAttributedValueField, \
     PersonaPhoneNumberField, EmailAddressAttributedValueField, PostalAddressAttributedValueField
-from ..properties import PersonaId, IdChangeKeyMixIn, Fields, CompleteName, Attribution, EmailAddress, Address, \
-    FolderId
+from ..properties import PersonaId, IdChangeKeyMixIn, CompleteName, Attribution, EmailAddress, Address, FolderId
 from ..util import TNS
-from ..version import EXCHANGE_2010, EXCHANGE_2010_SP2, EXCHANGE_2013
+from ..version import EXCHANGE_2010, EXCHANGE_2010_SP2
 
 log = logging.getLogger(__name__)
 
 
 class Contact(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;Contact&#39;
-    LOCAL_FIELDS = Fields(
-        TextField(&#39;file_as&#39;, field_uri=&#39;contacts:FileAs&#39;),
-        ChoiceField(&#39;file_as_mapping&#39;, field_uri=&#39;contacts:FileAsMapping&#39;, choices={
-            Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
-            Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
-            Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
-            Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
-            Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
-            Choice(&#39;Empty&#39;),
-        }),
-        TextField(&#39;display_name&#39;, field_uri=&#39;contacts:DisplayName&#39;, is_required=True),
-        CharField(&#39;given_name&#39;, field_uri=&#39;contacts:GivenName&#39;),
-        TextField(&#39;initials&#39;, field_uri=&#39;contacts:Initials&#39;),
-        CharField(&#39;middle_name&#39;, field_uri=&#39;contacts:MiddleName&#39;),
-        TextField(&#39;nickname&#39;, field_uri=&#39;contacts:Nickname&#39;),
-        EWSElementField(&#39;complete_name&#39;, field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True),
-        TextField(&#39;company_name&#39;, field_uri=&#39;contacts:CompanyName&#39;),
-        EmailAddressesField(&#39;email_addresses&#39;, field_uri=&#39;contacts:EmailAddress&#39;),
-        PhysicalAddressField(&#39;physical_addresses&#39;, field_uri=&#39;contacts:PhysicalAddress&#39;),
-        PhoneNumberField(&#39;phone_numbers&#39;, field_uri=&#39;contacts:PhoneNumber&#39;),
-        TextField(&#39;assistant_name&#39;, field_uri=&#39;contacts:AssistantName&#39;),
-        DateTimeBackedDateField(&#39;birthday&#39;, field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59)),
-        URIField(&#39;business_homepage&#39;, field_uri=&#39;contacts:BusinessHomePage&#39;),
-        TextListField(&#39;children&#39;, field_uri=&#39;contacts:Children&#39;),
-        TextListField(&#39;companies&#39;, field_uri=&#39;contacts:Companies&#39;, is_searchable=False),
-        ChoiceField(&#39;contact_source&#39;, field_uri=&#39;contacts:ContactSource&#39;, choices={
-            Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-        }, is_read_only=True),
-        TextField(&#39;department&#39;, field_uri=&#39;contacts:Department&#39;),
-        TextField(&#39;generation&#39;, field_uri=&#39;contacts:Generation&#39;),
-        CharField(&#39;im_addresses&#39;, field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True),
-        TextField(&#39;job_title&#39;, field_uri=&#39;contacts:JobTitle&#39;),
-        TextField(&#39;manager&#39;, field_uri=&#39;contacts:Manager&#39;),
-        TextField(&#39;mileage&#39;, field_uri=&#39;contacts:Mileage&#39;),
-        TextField(&#39;office&#39;, field_uri=&#39;contacts:OfficeLocation&#39;),
-        ChoiceField(&#39;postal_address_index&#39;, field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
-            Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
-        }, default=&#39;None&#39;, is_required_after_save=True),
-        TextField(&#39;profession&#39;, field_uri=&#39;contacts:Profession&#39;),
-        TextField(&#39;spouse_name&#39;, field_uri=&#39;contacts:SpouseName&#39;),
-        CharField(&#39;surname&#39;, field_uri=&#39;contacts:Surname&#39;),
-        DateTimeBackedDateField(&#39;wedding_anniversary&#39;, field_uri=&#39;contacts:WeddingAnniversary&#39;,
-                                default_time=datetime.time(11, 59)),
-        BooleanField(&#39;has_picture&#39;, field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True),
-        TextField(&#39;phonetic_full_name&#39;, field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2013,
-                  is_read_only=True),
-        TextField(&#39;phonetic_first_name&#39;, field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2013,
-                  is_read_only=True),
-        TextField(&#39;phonetic_last_name&#39;, field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2013,
-                  is_read_only=True),
-        EmailAddressField(&#39;email_alias&#39;, field_uri=&#39;contacts:Alias&#39;, is_read_only=True),
-        # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
-        # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
-        CharField(&#39;notes&#39;, field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2013, is_read_only=True),
-        # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
-        # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
-        # the &#39;has_picture&#39; field.
-        Base64Field(&#39;photo&#39;, field_uri=&#39;contacts:Photo&#39;, is_read_only=True),
-        Base64Field(&#39;user_smime_certificate&#39;, field_uri=&#39;contacts:UserSMIMECertificate&#39;, is_read_only=True,
-                    supported_from=EXCHANGE_2010_SP2),
-        Base64Field(&#39;ms_exchange_certificate&#39;, field_uri=&#39;contacts:MSExchangeCertificate&#39;, is_read_only=True,
-                    supported_from=EXCHANGE_2010_SP2),
-        TextField(&#39;directory_id&#39;, field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2013, is_read_only=True),
-        CharField(&#39;manager_mailbox&#39;, field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
-                  is_read_only=True),
-        CharField(&#39;direct_reports&#39;, field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
-                  is_read_only=True),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    ELEMENT_NAME = &#39;Contact&#39;
+
+    file_as = TextField(field_uri=&#39;contacts:FileAs&#39;)
+    file_as_mapping = ChoiceField(field_uri=&#39;contacts:FileAsMapping&#39;, choices={
+        Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
+        Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
+        Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
+        Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
+        Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
+        Choice(&#39;Empty&#39;),
+    })
+    display_name = TextField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
+    given_name = CharField(field_uri=&#39;contacts:GivenName&#39;)
+    initials = TextField(field_uri=&#39;contacts:Initials&#39;)
+    middle_name = CharField(field_uri=&#39;contacts:MiddleName&#39;)
+    nickname = TextField(field_uri=&#39;contacts:Nickname&#39;)
+    complete_name = EWSElementField(field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True)
+    company_name = TextField(field_uri=&#39;contacts:CompanyName&#39;)
+    email_addresses = EmailAddressesField(field_uri=&#39;contacts:EmailAddress&#39;)
+    physical_addresses = PhysicalAddressField(field_uri=&#39;contacts:PhysicalAddress&#39;)
+    phone_numbers = PhoneNumberField(field_uri=&#39;contacts:PhoneNumber&#39;)
+    assistant_name = TextField(field_uri=&#39;contacts:AssistantName&#39;)
+    birthday = DateTimeBackedDateField(field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59))
+    business_homepage = URIField(field_uri=&#39;contacts:BusinessHomePage&#39;)
+    children = TextListField(field_uri=&#39;contacts:Children&#39;)
+    companies = TextListField(field_uri=&#39;contacts:Companies&#39;, is_searchable=False)
+    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
+        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
+    }, is_read_only=True)
+    department = TextField(field_uri=&#39;contacts:Department&#39;)
+    generation = TextField(field_uri=&#39;contacts:Generation&#39;)
+    im_addresses = CharField(field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True)
+    job_title = TextField(field_uri=&#39;contacts:JobTitle&#39;)
+    manager = TextField(field_uri=&#39;contacts:Manager&#39;)
+    mileage = TextField(field_uri=&#39;contacts:Mileage&#39;)
+    office = TextField(field_uri=&#39;contacts:OfficeLocation&#39;)
+    postal_address_index = ChoiceField(field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
+        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
+    }, default=&#39;None&#39;, is_required_after_save=True)
+    profession = TextField(field_uri=&#39;contacts:Profession&#39;)
+    spouse_name = TextField(field_uri=&#39;contacts:SpouseName&#39;)
+    surname = CharField(field_uri=&#39;contacts:Surname&#39;)
+    wedding_anniversary = DateTimeBackedDateField(field_uri=&#39;contacts:WeddingAnniversary&#39;,
+                                                  default_time=datetime.time(11, 59))
+    has_picture = BooleanField(field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True)
+    phonetic_full_name = TextField(field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2010_SP2,
+                                   is_read_only=True)
+    phonetic_first_name = TextField(field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2010_SP2,
+                                    is_read_only=True)
+    phonetic_last_name = TextField(field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2010_SP2,
+                                   is_read_only=True)
+    email_alias = EmailAddressField(field_uri=&#39;contacts:Alias&#39;, is_read_only=True,
+                                    supported_from=EXCHANGE_2010_SP2)
+    # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
+    # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
+    notes = CharField(field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
+    # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
+    # the &#39;has_picture&#39; field.
+    photo = Base64Field(field_uri=&#39;contacts:Photo&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    user_smime_certificate = Base64Field(field_uri=&#39;contacts:UserSMIMECertificate&#39;, supported_from=EXCHANGE_2010_SP2,
+                                         is_read_only=True)
+    ms_exchange_certificate = Base64Field(field_uri=&#39;contacts:MSExchangeCertificate&#39;, supported_from=EXCHANGE_2010_SP2,
+                                          is_read_only=True)
+    directory_id = TextField(field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    manager_mailbox = CharField(field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
+                                is_read_only=True)
+    direct_reports = CharField(field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
+                               is_read_only=True)
 
 
 class Persona(IdChangeKeyMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/persona&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;Persona&#39;
     ID_ELEMENT_CLS = PersonaId
-    LOCAL_FIELDS = Fields(
-        IdElementField(&#39;_id&#39;, field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS),
-        CharField(&#39;persona_type&#39;, field_uri=&#39;persona:PersonaType&#39;),
-        TextField(&#39;persona_object_type&#39;, field_uri=&#39;persona:PersonaObjectStatus&#39;),
-        DateTimeField(&#39;creation_time&#39;, field_uri=&#39;persona:CreationTime&#39;),
-        BodyContentAttributedValueField(&#39;bodies&#39;, field_uri=&#39;persona:Bodies&#39;),
-        TextField(&#39;display_name_first_last_sort_key&#39;, field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;),
-        TextField(&#39;display_name_last_first_sort_key&#39;, field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;),
-        TextField(&#39;company_sort_key&#39;, field_uri=&#39;persona:CompanyNameSortKey&#39;),
-        TextField(&#39;home_sort_key&#39;, field_uri=&#39;persona:HomeCitySortKey&#39;),
-        TextField(&#39;work_city_sort_key&#39;, field_uri=&#39;persona:WorkCitySortKey&#39;),
-        CharField(&#39;display_name_first_last_header&#39;, field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;),
-        CharField(&#39;display_name_last_first_header&#39;, field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;),
-        TextField(&#39;file_as_header&#39;, field_uri=&#39;persona:FileAsHeader&#39;),
-        CharField(&#39;display_name&#39;, field_uri=&#39;persona:DisplayName&#39;),
-        CharField(&#39;display_name_first_last&#39;, field_uri=&#39;persona:DisplayNameFirstLast&#39;),
-        CharField(&#39;display_name_last_first&#39;, field_uri=&#39;persona:DisplayNameLastFirst&#39;),
-        CharField(&#39;file_as&#39;, field_uri=&#39;persona:FileAs&#39;),
-        TextField(&#39;file_as_id&#39;, field_uri=&#39;persona:FileAsId&#39;),
-        CharField(&#39;display_name_prefix&#39;, field_uri=&#39;persona:DisplayNamePrefix&#39;),
-        CharField(&#39;given_name&#39;, field_uri=&#39;persona:GivenName&#39;),
-        CharField(&#39;middle_name&#39;, field_uri=&#39;persona:MiddleName&#39;),
-        CharField(&#39;surname&#39;, field_uri=&#39;persona:Surname&#39;),
-        CharField(&#39;generation&#39;, field_uri=&#39;persona:Generation&#39;),
-        TextField(&#39;nickname&#39;, field_uri=&#39;persona:Nickname&#39;),
-        TextField(&#39;yomi_company_name&#39;, field_uri=&#39;persona:YomiCompanyName&#39;),
-        TextField(&#39;yomi_first_name&#39;, field_uri=&#39;persona:YomiFirstName&#39;),
-        TextField(&#39;yomi_last_name&#39;, field_uri=&#39;persona:YomiLastName&#39;),
-        CharField(&#39;title&#39;, field_uri=&#39;persona:Title&#39;),
-        TextField(&#39;department&#39;, field_uri=&#39;persona:Department&#39;),
-        CharField(&#39;company_name&#39;, field_uri=&#39;persona:CompanyName&#39;),
-        EWSElementField(&#39;email_address&#39;, field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress),
-        EWSElementListField(&#39;email_addresses&#39;, field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address),
-        PersonaPhoneNumberField(&#39;PhoneNumber&#39;, field_uri=&#39;persona:PhoneNumber&#39;),
-        CharField(&#39;im_address&#39;, field_uri=&#39;persona:ImAddress&#39;),
-        CharField(&#39;home_city&#39;, field_uri=&#39;persona:HomeCity&#39;),
-        CharField(&#39;work_city&#39;, field_uri=&#39;persona:WorkCity&#39;),
-        CharField(&#39;relevance_score&#39;, field_uri=&#39;persona:RelevanceScore&#39;),
-        EWSElementListField(&#39;folder_ids&#39;, field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId),
-        EWSElementListField(&#39;attributions&#39;, field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution),
-        StringAttributedValueField(&#39;display_names&#39;, field_uri=&#39;persona:DisplayNames&#39;),
-        StringAttributedValueField(&#39;file_ases&#39;, field_uri=&#39;persona:FileAses&#39;),
-        StringAttributedValueField(&#39;file_as_ids&#39;, field_uri=&#39;persona:FileAsIds&#39;),
-        StringAttributedValueField(&#39;display_name_prefixes&#39;, field_uri=&#39;persona:DisplayNamePrefixes&#39;),
-        StringAttributedValueField(&#39;given_names&#39;, field_uri=&#39;persona:GivenNames&#39;),
-        StringAttributedValueField(&#39;middle_names&#39;, field_uri=&#39;persona:MiddleNames&#39;),
-        StringAttributedValueField(&#39;surnames&#39;, field_uri=&#39;persona:Surnames&#39;),
-        StringAttributedValueField(&#39;generations&#39;, field_uri=&#39;persona:Generations&#39;),
-        StringAttributedValueField(&#39;nicknames&#39;, field_uri=&#39;persona:Nicknames&#39;),
-        StringAttributedValueField(&#39;initials&#39;, field_uri=&#39;persona:Initials&#39;),
-        StringAttributedValueField(&#39;yomi_company_names&#39;, field_uri=&#39;persona:YomiCompanyNames&#39;),
-        StringAttributedValueField(&#39;yomi_first_names&#39;, field_uri=&#39;persona:YomiFirstNames&#39;),
-        StringAttributedValueField(&#39;yomi_last_names&#39;, field_uri=&#39;persona:YomiLastNames&#39;),
-        PhoneNumberAttributedValueField(&#39;business_phone_numbers&#39;, field_uri=&#39;persona:BusinessPhoneNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;business_phone_numbers2&#39;, field_uri=&#39;persona:BusinessPhoneNumbers2&#39;),
-        PhoneNumberAttributedValueField(&#39;home_phones&#39;, field_uri=&#39;persona:HomePhones&#39;),
-        PhoneNumberAttributedValueField(&#39;home_phones2&#39;, field_uri=&#39;persona:HomePhones2&#39;),
-        PhoneNumberAttributedValueField(&#39;mobile_phones&#39;, field_uri=&#39;persona:MobilePhones&#39;),
-        PhoneNumberAttributedValueField(&#39;mobile_phones2&#39;, field_uri=&#39;persona:MobilePhones2&#39;),
-        PhoneNumberAttributedValueField(&#39;assistant_phone_numbers&#39;, field_uri=&#39;persona:AssistantPhoneNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;callback_phones&#39;, field_uri=&#39;persona:CallbackPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;car_phones&#39;, field_uri=&#39;persona:CarPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;home_faxes&#39;, field_uri=&#39;persona:HomeFaxes&#39;),
-        PhoneNumberAttributedValueField(&#39;orgnaization_main_phones&#39;, field_uri=&#39;persona:OrganizationMainPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;other_faxes&#39;, field_uri=&#39;persona:OtherFaxes&#39;),
-        PhoneNumberAttributedValueField(&#39;other_telephones&#39;, field_uri=&#39;persona:OtherTelephones&#39;),
-        PhoneNumberAttributedValueField(&#39;other_phones2&#39;, field_uri=&#39;persona:OtherPhones2&#39;),
-        PhoneNumberAttributedValueField(&#39;pagers&#39;, field_uri=&#39;persona:Pagers&#39;),
-        PhoneNumberAttributedValueField(&#39;radio_phones&#39;, field_uri=&#39;persona:RadioPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;telex_numbers&#39;, field_uri=&#39;persona:TelexNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;tty_tdd_phone_numbers&#39;, field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;work_faxes&#39;, field_uri=&#39;persona:WorkFaxes&#39;),
-        EmailAddressAttributedValueField(&#39;emails1&#39;, field_uri=&#39;persona:Emails1&#39;),
-        EmailAddressAttributedValueField(&#39;emails2&#39;, field_uri=&#39;persona:Emails2&#39;),
-        EmailAddressAttributedValueField(&#39;emails3&#39;, field_uri=&#39;persona:Emails3&#39;),
-        StringAttributedValueField(&#39;business_home_pages&#39;, field_uri=&#39;persona:BusinessHomePages&#39;),
-        StringAttributedValueField(&#39;personal_home_pages&#39;, field_uri=&#39;persona:PersonalHomePages&#39;),
-        StringAttributedValueField(&#39;office_locations&#39;, field_uri=&#39;persona:OfficeLocations&#39;),
-        StringAttributedValueField(&#39;im_addresses&#39;, field_uri=&#39;persona:ImAddresses&#39;),
-        StringAttributedValueField(&#39;im_addresses2&#39;, field_uri=&#39;persona:ImAddresses2&#39;),
-        StringAttributedValueField(&#39;im_addresses3&#39;, field_uri=&#39;persona:ImAddresses3&#39;),
-        PostalAddressAttributedValueField(&#39;business_addresses&#39;, field_uri=&#39;persona:BusinessAddresses&#39;),
-        PostalAddressAttributedValueField(&#39;home_addresses&#39;, field_uri=&#39;persona:HomeAddresses&#39;),
-        PostalAddressAttributedValueField(&#39;other_addresses&#39;, field_uri=&#39;persona:OtherAddresses&#39;),
-        StringAttributedValueField(&#39;titles&#39;, field_uri=&#39;persona:Titles&#39;),
-        StringAttributedValueField(&#39;departments&#39;, field_uri=&#39;persona:Departments&#39;),
-        StringAttributedValueField(&#39;company_names&#39;, field_uri=&#39;persona:CompanyNames&#39;),
-        StringAttributedValueField(&#39;managers&#39;, field_uri=&#39;persona:Managers&#39;),
-        StringAttributedValueField(&#39;assistant_names&#39;, field_uri=&#39;persona:AssistantNames&#39;),
-        StringAttributedValueField(&#39;professions&#39;, field_uri=&#39;persona:Professions&#39;),
-        StringAttributedValueField(&#39;spouse_names&#39;, field_uri=&#39;persona:SpouseNames&#39;),
-        StringAttributedValueField(&#39;children&#39;, field_uri=&#39;persona:Children&#39;),
-        StringAttributedValueField(&#39;schools&#39;, field_uri=&#39;persona:Schools&#39;),
-        StringAttributedValueField(&#39;hobbies&#39;, field_uri=&#39;persona:Hobbies&#39;),
-        StringAttributedValueField(&#39;wedding_anniversaries&#39;, field_uri=&#39;persona:WeddingAnniversaries&#39;),
-        StringAttributedValueField(&#39;birthdays&#39;, field_uri=&#39;persona:Birthdays&#39;),
-        StringAttributedValueField(&#39;locations&#39;, field_uri=&#39;persona:Locations&#39;),
-        # ExtendedPropertyAttributedValueField(&#39;extended_properties&#39;, field_uri=&#39;persona:ExtendedProperties&#39;),
-    )
-    FIELDS = IdChangeKeyMixIn.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    _id = IdElementField(field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
+    persona_type = CharField(field_uri=&#39;persona:PersonaType&#39;)
+    persona_object_type = TextField(field_uri=&#39;persona:PersonaObjectStatus&#39;)
+    creation_time = DateTimeField(field_uri=&#39;persona:CreationTime&#39;)
+    bodies = BodyContentAttributedValueField(field_uri=&#39;persona:Bodies&#39;)
+    display_name_first_last_sort_key = TextField(field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;)
+    display_name_last_first_sort_key = TextField(field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;)
+    company_sort_key = TextField(field_uri=&#39;persona:CompanyNameSortKey&#39;)
+    home_sort_key = TextField(field_uri=&#39;persona:HomeCitySortKey&#39;)
+    work_city_sort_key = TextField(field_uri=&#39;persona:WorkCitySortKey&#39;)
+    display_name_first_last_header = CharField(field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;)
+    display_name_last_first_header = CharField(field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;)
+    file_as_header = TextField(field_uri=&#39;persona:FileAsHeader&#39;)
+    display_name = CharField(field_uri=&#39;persona:DisplayName&#39;)
+    display_name_first_last = CharField(field_uri=&#39;persona:DisplayNameFirstLast&#39;)
+    display_name_last_first = CharField(field_uri=&#39;persona:DisplayNameLastFirst&#39;)
+    file_as = CharField(field_uri=&#39;persona:FileAs&#39;)
+    file_as_id = TextField(field_uri=&#39;persona:FileAsId&#39;)
+    display_name_prefix = CharField(field_uri=&#39;persona:DisplayNamePrefix&#39;)
+    given_name = CharField(field_uri=&#39;persona:GivenName&#39;)
+    middle_name = CharField(field_uri=&#39;persona:MiddleName&#39;)
+    surname = CharField(field_uri=&#39;persona:Surname&#39;)
+    generation = CharField(field_uri=&#39;persona:Generation&#39;)
+    nickname = TextField(field_uri=&#39;persona:Nickname&#39;)
+    yomi_company_name = TextField(field_uri=&#39;persona:YomiCompanyName&#39;)
+    yomi_first_name = TextField(field_uri=&#39;persona:YomiFirstName&#39;)
+    yomi_last_name = TextField(field_uri=&#39;persona:YomiLastName&#39;)
+    title = CharField(field_uri=&#39;persona:Title&#39;)
+    department = TextField(field_uri=&#39;persona:Department&#39;)
+    company_name = CharField(field_uri=&#39;persona:CompanyName&#39;)
+    email_address = EWSElementField(field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress)
+    email_addresses = EWSElementListField(field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address)
+    PhoneNumber = PersonaPhoneNumberField(field_uri=&#39;persona:PhoneNumber&#39;)
+    im_address = CharField(field_uri=&#39;persona:ImAddress&#39;)
+    home_city = CharField(field_uri=&#39;persona:HomeCity&#39;)
+    work_city = CharField(field_uri=&#39;persona:WorkCity&#39;)
+    relevance_score = CharField(field_uri=&#39;persona:RelevanceScore&#39;)
+    folder_ids = EWSElementListField(field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId)
+    attributions = EWSElementListField(field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution)
+    display_names = StringAttributedValueField(field_uri=&#39;persona:DisplayNames&#39;)
+    file_ases = StringAttributedValueField(field_uri=&#39;persona:FileAses&#39;)
+    file_as_ids = StringAttributedValueField(field_uri=&#39;persona:FileAsIds&#39;)
+    display_name_prefixes = StringAttributedValueField(field_uri=&#39;persona:DisplayNamePrefixes&#39;)
+    given_names = StringAttributedValueField(field_uri=&#39;persona:GivenNames&#39;)
+    middle_names = StringAttributedValueField(field_uri=&#39;persona:MiddleNames&#39;)
+    surnames = StringAttributedValueField(field_uri=&#39;persona:Surnames&#39;)
+    generations = StringAttributedValueField(field_uri=&#39;persona:Generations&#39;)
+    nicknames = StringAttributedValueField(field_uri=&#39;persona:Nicknames&#39;)
+    initials = StringAttributedValueField(field_uri=&#39;persona:Initials&#39;)
+    yomi_company_names = StringAttributedValueField(field_uri=&#39;persona:YomiCompanyNames&#39;)
+    yomi_first_names = StringAttributedValueField(field_uri=&#39;persona:YomiFirstNames&#39;)
+    yomi_last_names = StringAttributedValueField(field_uri=&#39;persona:YomiLastNames&#39;)
+    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers&#39;)
+    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers2&#39;)
+    home_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones&#39;)
+    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones2&#39;)
+    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones&#39;)
+    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones2&#39;)
+    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:AssistantPhoneNumbers&#39;)
+    callback_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CallbackPhones&#39;)
+    car_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CarPhones&#39;)
+    home_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomeFaxes&#39;)
+    orgnaization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
+    other_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherFaxes&#39;)
+    other_telephones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherTelephones&#39;)
+    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherPhones2&#39;)
+    pagers = PhoneNumberAttributedValueField(field_uri=&#39;persona:Pagers&#39;)
+    radio_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:RadioPhones&#39;)
+    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TelexNumbers&#39;)
+    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;)
+    work_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:WorkFaxes&#39;)
+    emails1 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails1&#39;)
+    emails2 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails2&#39;)
+    emails3 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails3&#39;)
+    business_home_pages = StringAttributedValueField(field_uri=&#39;persona:BusinessHomePages&#39;)
+    personal_home_pages = StringAttributedValueField(field_uri=&#39;persona:PersonalHomePages&#39;)
+    office_locations = StringAttributedValueField(field_uri=&#39;persona:OfficeLocations&#39;)
+    im_addresses = StringAttributedValueField(field_uri=&#39;persona:ImAddresses&#39;)
+    im_addresses2 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses2&#39;)
+    im_addresses3 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses3&#39;)
+    business_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:BusinessAddresses&#39;)
+    home_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:HomeAddresses&#39;)
+    other_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:OtherAddresses&#39;)
+    titles = StringAttributedValueField(field_uri=&#39;persona:Titles&#39;)
+    departments = StringAttributedValueField(field_uri=&#39;persona:Departments&#39;)
+    company_names = StringAttributedValueField(field_uri=&#39;persona:CompanyNames&#39;)
+    managers = StringAttributedValueField(field_uri=&#39;persona:Managers&#39;)
+    assistant_names = StringAttributedValueField(field_uri=&#39;persona:AssistantNames&#39;)
+    professions = StringAttributedValueField(field_uri=&#39;persona:Professions&#39;)
+    spouse_names = StringAttributedValueField(field_uri=&#39;persona:SpouseNames&#39;)
+    children = StringAttributedValueField(field_uri=&#39;persona:Children&#39;)
+    schools = StringAttributedValueField(field_uri=&#39;persona:Schools&#39;)
+    hobbies = StringAttributedValueField(field_uri=&#39;persona:Hobbies&#39;)
+    wedding_anniversaries = StringAttributedValueField(field_uri=&#39;persona:WeddingAnniversaries&#39;)
+    birthdays = StringAttributedValueField(field_uri=&#39;persona:Birthdays&#39;)
+    locations = StringAttributedValueField(field_uri=&#39;persona:Locations&#39;)
+    # ExtendedPropertyAttributedValueField(&#39;extended_properties&#39;, field_uri=&#39;persona:ExtendedProperties&#39;)
 
 
 class DistributionList(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;DistributionList&#39;
-    LOCAL_FIELDS = Fields(
-        CharField(&#39;display_name&#39;, field_uri=&#39;contacts:DisplayName&#39;, is_required=True),
-        CharField(&#39;file_as&#39;, field_uri=&#39;contacts:FileAs&#39;, is_read_only=True),
-        ChoiceField(&#39;contact_source&#39;, field_uri=&#39;contacts:ContactSource&#39;, choices={
-            Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-        }, is_read_only=True),
-        MemberListField(&#39;members&#39;, field_uri=&#39;distributionlist:Members&#39;),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)</code></pre>
+    ELEMENT_NAME = &#39;DistributionList&#39;
+
+    display_name = CharField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
+    file_as = CharField(field_uri=&#39;contacts:FileAs&#39;, is_read_only=True)
+    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
+        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
+    }, is_read_only=True)
+    members = MemberListField(field_uri=&#39;distributionlist:Members&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -257,85 +248,88 @@ class DistributionList(Item):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact</a></p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Contact(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;Contact&#39;
-    LOCAL_FIELDS = Fields(
-        TextField(&#39;file_as&#39;, field_uri=&#39;contacts:FileAs&#39;),
-        ChoiceField(&#39;file_as_mapping&#39;, field_uri=&#39;contacts:FileAsMapping&#39;, choices={
-            Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
-            Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
-            Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
-            Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
-            Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
-            Choice(&#39;Empty&#39;),
-        }),
-        TextField(&#39;display_name&#39;, field_uri=&#39;contacts:DisplayName&#39;, is_required=True),
-        CharField(&#39;given_name&#39;, field_uri=&#39;contacts:GivenName&#39;),
-        TextField(&#39;initials&#39;, field_uri=&#39;contacts:Initials&#39;),
-        CharField(&#39;middle_name&#39;, field_uri=&#39;contacts:MiddleName&#39;),
-        TextField(&#39;nickname&#39;, field_uri=&#39;contacts:Nickname&#39;),
-        EWSElementField(&#39;complete_name&#39;, field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True),
-        TextField(&#39;company_name&#39;, field_uri=&#39;contacts:CompanyName&#39;),
-        EmailAddressesField(&#39;email_addresses&#39;, field_uri=&#39;contacts:EmailAddress&#39;),
-        PhysicalAddressField(&#39;physical_addresses&#39;, field_uri=&#39;contacts:PhysicalAddress&#39;),
-        PhoneNumberField(&#39;phone_numbers&#39;, field_uri=&#39;contacts:PhoneNumber&#39;),
-        TextField(&#39;assistant_name&#39;, field_uri=&#39;contacts:AssistantName&#39;),
-        DateTimeBackedDateField(&#39;birthday&#39;, field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59)),
-        URIField(&#39;business_homepage&#39;, field_uri=&#39;contacts:BusinessHomePage&#39;),
-        TextListField(&#39;children&#39;, field_uri=&#39;contacts:Children&#39;),
-        TextListField(&#39;companies&#39;, field_uri=&#39;contacts:Companies&#39;, is_searchable=False),
-        ChoiceField(&#39;contact_source&#39;, field_uri=&#39;contacts:ContactSource&#39;, choices={
-            Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-        }, is_read_only=True),
-        TextField(&#39;department&#39;, field_uri=&#39;contacts:Department&#39;),
-        TextField(&#39;generation&#39;, field_uri=&#39;contacts:Generation&#39;),
-        CharField(&#39;im_addresses&#39;, field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True),
-        TextField(&#39;job_title&#39;, field_uri=&#39;contacts:JobTitle&#39;),
-        TextField(&#39;manager&#39;, field_uri=&#39;contacts:Manager&#39;),
-        TextField(&#39;mileage&#39;, field_uri=&#39;contacts:Mileage&#39;),
-        TextField(&#39;office&#39;, field_uri=&#39;contacts:OfficeLocation&#39;),
-        ChoiceField(&#39;postal_address_index&#39;, field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
-            Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
-        }, default=&#39;None&#39;, is_required_after_save=True),
-        TextField(&#39;profession&#39;, field_uri=&#39;contacts:Profession&#39;),
-        TextField(&#39;spouse_name&#39;, field_uri=&#39;contacts:SpouseName&#39;),
-        CharField(&#39;surname&#39;, field_uri=&#39;contacts:Surname&#39;),
-        DateTimeBackedDateField(&#39;wedding_anniversary&#39;, field_uri=&#39;contacts:WeddingAnniversary&#39;,
-                                default_time=datetime.time(11, 59)),
-        BooleanField(&#39;has_picture&#39;, field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True),
-        TextField(&#39;phonetic_full_name&#39;, field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2013,
-                  is_read_only=True),
-        TextField(&#39;phonetic_first_name&#39;, field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2013,
-                  is_read_only=True),
-        TextField(&#39;phonetic_last_name&#39;, field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2013,
-                  is_read_only=True),
-        EmailAddressField(&#39;email_alias&#39;, field_uri=&#39;contacts:Alias&#39;, is_read_only=True),
-        # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
-        # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
-        CharField(&#39;notes&#39;, field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2013, is_read_only=True),
-        # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
-        # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
-        # the &#39;has_picture&#39; field.
-        Base64Field(&#39;photo&#39;, field_uri=&#39;contacts:Photo&#39;, is_read_only=True),
-        Base64Field(&#39;user_smime_certificate&#39;, field_uri=&#39;contacts:UserSMIMECertificate&#39;, is_read_only=True,
-                    supported_from=EXCHANGE_2010_SP2),
-        Base64Field(&#39;ms_exchange_certificate&#39;, field_uri=&#39;contacts:MSExchangeCertificate&#39;, is_read_only=True,
-                    supported_from=EXCHANGE_2010_SP2),
-        TextField(&#39;directory_id&#39;, field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2013, is_read_only=True),
-        CharField(&#39;manager_mailbox&#39;, field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
-                  is_read_only=True),
-        CharField(&#39;direct_reports&#39;, field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
-                  is_read_only=True),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)</code></pre>
+    ELEMENT_NAME = &#39;Contact&#39;
+
+    file_as = TextField(field_uri=&#39;contacts:FileAs&#39;)
+    file_as_mapping = ChoiceField(field_uri=&#39;contacts:FileAsMapping&#39;, choices={
+        Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
+        Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
+        Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
+        Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
+        Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
+        Choice(&#39;Empty&#39;),
+    })
+    display_name = TextField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
+    given_name = CharField(field_uri=&#39;contacts:GivenName&#39;)
+    initials = TextField(field_uri=&#39;contacts:Initials&#39;)
+    middle_name = CharField(field_uri=&#39;contacts:MiddleName&#39;)
+    nickname = TextField(field_uri=&#39;contacts:Nickname&#39;)
+    complete_name = EWSElementField(field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True)
+    company_name = TextField(field_uri=&#39;contacts:CompanyName&#39;)
+    email_addresses = EmailAddressesField(field_uri=&#39;contacts:EmailAddress&#39;)
+    physical_addresses = PhysicalAddressField(field_uri=&#39;contacts:PhysicalAddress&#39;)
+    phone_numbers = PhoneNumberField(field_uri=&#39;contacts:PhoneNumber&#39;)
+    assistant_name = TextField(field_uri=&#39;contacts:AssistantName&#39;)
+    birthday = DateTimeBackedDateField(field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59))
+    business_homepage = URIField(field_uri=&#39;contacts:BusinessHomePage&#39;)
+    children = TextListField(field_uri=&#39;contacts:Children&#39;)
+    companies = TextListField(field_uri=&#39;contacts:Companies&#39;, is_searchable=False)
+    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
+        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
+    }, is_read_only=True)
+    department = TextField(field_uri=&#39;contacts:Department&#39;)
+    generation = TextField(field_uri=&#39;contacts:Generation&#39;)
+    im_addresses = CharField(field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True)
+    job_title = TextField(field_uri=&#39;contacts:JobTitle&#39;)
+    manager = TextField(field_uri=&#39;contacts:Manager&#39;)
+    mileage = TextField(field_uri=&#39;contacts:Mileage&#39;)
+    office = TextField(field_uri=&#39;contacts:OfficeLocation&#39;)
+    postal_address_index = ChoiceField(field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
+        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
+    }, default=&#39;None&#39;, is_required_after_save=True)
+    profession = TextField(field_uri=&#39;contacts:Profession&#39;)
+    spouse_name = TextField(field_uri=&#39;contacts:SpouseName&#39;)
+    surname = CharField(field_uri=&#39;contacts:Surname&#39;)
+    wedding_anniversary = DateTimeBackedDateField(field_uri=&#39;contacts:WeddingAnniversary&#39;,
+                                                  default_time=datetime.time(11, 59))
+    has_picture = BooleanField(field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True)
+    phonetic_full_name = TextField(field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2010_SP2,
+                                   is_read_only=True)
+    phonetic_first_name = TextField(field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2010_SP2,
+                                    is_read_only=True)
+    phonetic_last_name = TextField(field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2010_SP2,
+                                   is_read_only=True)
+    email_alias = EmailAddressField(field_uri=&#39;contacts:Alias&#39;, is_read_only=True,
+                                    supported_from=EXCHANGE_2010_SP2)
+    # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
+    # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
+    notes = CharField(field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
+    # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
+    # the &#39;has_picture&#39; field.
+    photo = Base64Field(field_uri=&#39;contacts:Photo&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    user_smime_certificate = Base64Field(field_uri=&#39;contacts:UserSMIMECertificate&#39;, supported_from=EXCHANGE_2010_SP2,
+                                         is_read_only=True)
+    ms_exchange_certificate = Base64Field(field_uri=&#39;contacts:MSExchangeCertificate&#39;, supported_from=EXCHANGE_2010_SP2,
+                                          is_read_only=True)
+    directory_id = TextField(field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    manager_mailbox = CharField(field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
+                                is_read_only=True)
+    direct_reports = CharField(field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
+                               is_read_only=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -355,180 +349,176 @@ class DistributionList(Item):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.contact.Contact.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.items.contact.Contact.assistant_name"><code class="name">var <span class="ident">assistant_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.birthday"><code class="name">var <span class="ident">birthday</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.business_homepage"><code class="name">var <span class="ident">business_homepage</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.children"><code class="name">var <span class="ident">children</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.companies"><code class="name">var <span class="ident">companies</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.company_name"><code class="name">var <span class="ident">company_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.complete_name"><code class="name">var <span class="ident">complete_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.contact_source"><code class="name">var <span class="ident">contact_source</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.department"><code class="name">var <span class="ident">department</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.direct_reports"><code class="name">var <span class="ident">direct_reports</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.directory_id"><code class="name">var <span class="ident">directory_id</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.display_name"><code class="name">var <span class="ident">display_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.email_addresses"><code class="name">var <span class="ident">email_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.email_alias"><code class="name">var <span class="ident">email_alias</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.file_as"><code class="name">var <span class="ident">file_as</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.file_as_mapping"><code class="name">var <span class="ident">file_as_mapping</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.generation"><code class="name">var <span class="ident">generation</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.given_name"><code class="name">var <span class="ident">given_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.has_picture"><code class="name">var <span class="ident">has_picture</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.im_addresses"><code class="name">var <span class="ident">im_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.initials"><code class="name">var <span class="ident">initials</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.job_title"><code class="name">var <span class="ident">job_title</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.manager"><code class="name">var <span class="ident">manager</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.manager_mailbox"><code class="name">var <span class="ident">manager_mailbox</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.middle_name"><code class="name">var <span class="ident">middle_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.mileage"><code class="name">var <span class="ident">mileage</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.ms_exchange_certificate"><code class="name">var <span class="ident">ms_exchange_certificate</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.nickname"><code class="name">var <span class="ident">nickname</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.notes"><code class="name">var <span class="ident">notes</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.office"><code class="name">var <span class="ident">office</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.phone_numbers"><code class="name">var <span class="ident">phone_numbers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.phonetic_first_name"><code class="name">var <span class="ident">phonetic_first_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.phonetic_full_name"><code class="name">var <span class="ident">phonetic_full_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.phonetic_last_name"><code class="name">var <span class="ident">phonetic_last_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.photo"><code class="name">var <span class="ident">photo</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.physical_addresses"><code class="name">var <span class="ident">physical_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.postal_address_index"><code class="name">var <span class="ident">postal_address_index</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.profession"><code class="name">var <span class="ident">profession</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.spouse_name"><code class="name">var <span class="ident">spouse_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.surname"><code class="name">var <span class="ident">surname</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.user_smime_certificate"><code class="name">var <span class="ident">user_smime_certificate</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Contact.wedding_anniversary"><code class="name">var <span class="ident">wedding_anniversary</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -539,50 +529,13 @@ class DistributionList(Item):
 <li><code><a title="exchangelib.items.item.Item.account" href="base.html#exchangelib.items.base.BaseItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.attach" href="item.html#exchangelib.items.item.Item.attach">attach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.attachments" href="item.html#exchangelib.items.item.Item.attachments">attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.body" href="item.html#exchangelib.items.item.Item.body">body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.categories" href="item.html#exchangelib.items.item.Item.categories">categories</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.conversation_id" href="item.html#exchangelib.items.item.Item.conversation_id">conversation_id</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.culture" href="item.html#exchangelib.items.item.Item.culture">culture</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_created" href="item.html#exchangelib.items.item.Item.datetime_created">datetime_created</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_received" href="item.html#exchangelib.items.item.Item.datetime_received">datetime_received</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_sent" href="item.html#exchangelib.items.item.Item.datetime_sent">datetime_sent</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.deregister" href="base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.detach" href="item.html#exchangelib.items.item.Item.detach">detach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_cc" href="item.html#exchangelib.items.item.Item.display_cc">display_cc</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_to" href="item.html#exchangelib.items.item.Item.display_to">display_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.effective_rights" href="item.html#exchangelib.items.item.Item.effective_rights">effective_rights</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.folder" href="base.html#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.has_attachments" href="item.html#exchangelib.items.item.Item.has_attachments">has_attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.headers" href="item.html#exchangelib.items.item.Item.headers">headers</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.importance" href="item.html#exchangelib.items.item.Item.importance">importance</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.in_reply_to" href="item.html#exchangelib.items.item.Item.in_reply_to">in_reply_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_associated" href="item.html#exchangelib.items.item.Item.is_associated">is_associated</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_draft" href="item.html#exchangelib.items.item.Item.is_draft">is_draft</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_from_me" href="item.html#exchangelib.items.item.Item.is_from_me">is_from_me</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_resend" href="item.html#exchangelib.items.item.Item.is_resend">is_resend</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_submitted" href="item.html#exchangelib.items.item.Item.is_submitted">is_submitted</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_unmodified" href="item.html#exchangelib.items.item.Item.is_unmodified">is_unmodified</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.item_class" href="item.html#exchangelib.items.item.Item.item_class">item_class</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_name" href="item.html#exchangelib.items.item.Item.last_modified_name">last_modified_name</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_time" href="item.html#exchangelib.items.item.Item.last_modified_time">last_modified_time</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.mime_content" href="item.html#exchangelib.items.item.Item.mime_content">mime_content</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.parent_folder_id" href="item.html#exchangelib.items.item.Item.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.register" href="base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_due_by" href="item.html#exchangelib.items.item.Item.reminder_due_by">reminder_due_by</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.text_body" href="item.html#exchangelib.items.item.Item.text_body">text_body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.unique_body" href="item.html#exchangelib.items.item.Item.unique_body">unique_body</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_edit_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_edit_form_query_string">web_client_edit_form_query_string</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_read_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_read_form_query_string">web_client_read_form_query_string</a></code></li>
 </ul>
 </li>
 </ul>
@@ -592,25 +545,27 @@ class DistributionList(Item):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist</a></p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DistributionList(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;DistributionList&#39;
-    LOCAL_FIELDS = Fields(
-        CharField(&#39;display_name&#39;, field_uri=&#39;contacts:DisplayName&#39;, is_required=True),
-        CharField(&#39;file_as&#39;, field_uri=&#39;contacts:FileAs&#39;, is_read_only=True),
-        ChoiceField(&#39;contact_source&#39;, field_uri=&#39;contacts:ContactSource&#39;, choices={
-            Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-        }, is_read_only=True),
-        MemberListField(&#39;members&#39;, field_uri=&#39;distributionlist:Members&#39;),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)</code></pre>
+    ELEMENT_NAME = &#39;DistributionList&#39;
+
+    display_name = CharField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
+    file_as = CharField(field_uri=&#39;contacts:FileAs&#39;, is_read_only=True)
+    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
+        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
+    }, is_read_only=True)
+    members = MemberListField(field_uri=&#39;distributionlist:Members&#39;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -630,28 +585,24 @@ class DistributionList(Item):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.contact.DistributionList.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.items.contact.DistributionList.contact_source"><code class="name">var <span class="ident">contact_source</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.DistributionList.display_name"><code class="name">var <span class="ident">display_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.DistributionList.file_as"><code class="name">var <span class="ident">file_as</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.DistributionList.members"><code class="name">var <span class="ident">members</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -662,50 +613,13 @@ class DistributionList(Item):
 <li><code><a title="exchangelib.items.item.Item.account" href="base.html#exchangelib.items.base.BaseItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.attach" href="item.html#exchangelib.items.item.Item.attach">attach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.attachments" href="item.html#exchangelib.items.item.Item.attachments">attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.body" href="item.html#exchangelib.items.item.Item.body">body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.categories" href="item.html#exchangelib.items.item.Item.categories">categories</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.conversation_id" href="item.html#exchangelib.items.item.Item.conversation_id">conversation_id</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.culture" href="item.html#exchangelib.items.item.Item.culture">culture</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_created" href="item.html#exchangelib.items.item.Item.datetime_created">datetime_created</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_received" href="item.html#exchangelib.items.item.Item.datetime_received">datetime_received</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_sent" href="item.html#exchangelib.items.item.Item.datetime_sent">datetime_sent</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.deregister" href="base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.detach" href="item.html#exchangelib.items.item.Item.detach">detach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_cc" href="item.html#exchangelib.items.item.Item.display_cc">display_cc</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_to" href="item.html#exchangelib.items.item.Item.display_to">display_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.effective_rights" href="item.html#exchangelib.items.item.Item.effective_rights">effective_rights</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.folder" href="base.html#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.has_attachments" href="item.html#exchangelib.items.item.Item.has_attachments">has_attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.headers" href="item.html#exchangelib.items.item.Item.headers">headers</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.importance" href="item.html#exchangelib.items.item.Item.importance">importance</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.in_reply_to" href="item.html#exchangelib.items.item.Item.in_reply_to">in_reply_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_associated" href="item.html#exchangelib.items.item.Item.is_associated">is_associated</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_draft" href="item.html#exchangelib.items.item.Item.is_draft">is_draft</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_from_me" href="item.html#exchangelib.items.item.Item.is_from_me">is_from_me</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_resend" href="item.html#exchangelib.items.item.Item.is_resend">is_resend</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_submitted" href="item.html#exchangelib.items.item.Item.is_submitted">is_submitted</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_unmodified" href="item.html#exchangelib.items.item.Item.is_unmodified">is_unmodified</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.item_class" href="item.html#exchangelib.items.item.Item.item_class">item_class</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_name" href="item.html#exchangelib.items.item.Item.last_modified_name">last_modified_name</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_time" href="item.html#exchangelib.items.item.Item.last_modified_time">last_modified_time</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.mime_content" href="item.html#exchangelib.items.item.Item.mime_content">mime_content</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.parent_folder_id" href="item.html#exchangelib.items.item.Item.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.register" href="base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_due_by" href="item.html#exchangelib.items.item.Item.reminder_due_by">reminder_due_by</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.text_body" href="item.html#exchangelib.items.item.Item.text_body">text_body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.unique_body" href="item.html#exchangelib.items.item.Item.unique_body">unique_body</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_edit_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_edit_form_query_string">web_client_edit_form_query_string</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_read_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_read_form_query_string">web_client_read_form_query_string</a></code></li>
 </ul>
 </li>
 </ul>
@@ -722,110 +636,106 @@ class DistributionList(Item):
 </summary>
 <pre><code class="python">class Persona(IdChangeKeyMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/persona&#34;&#34;&#34;
+
     ELEMENT_NAME = &#39;Persona&#39;
     ID_ELEMENT_CLS = PersonaId
-    LOCAL_FIELDS = Fields(
-        IdElementField(&#39;_id&#39;, field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS),
-        CharField(&#39;persona_type&#39;, field_uri=&#39;persona:PersonaType&#39;),
-        TextField(&#39;persona_object_type&#39;, field_uri=&#39;persona:PersonaObjectStatus&#39;),
-        DateTimeField(&#39;creation_time&#39;, field_uri=&#39;persona:CreationTime&#39;),
-        BodyContentAttributedValueField(&#39;bodies&#39;, field_uri=&#39;persona:Bodies&#39;),
-        TextField(&#39;display_name_first_last_sort_key&#39;, field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;),
-        TextField(&#39;display_name_last_first_sort_key&#39;, field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;),
-        TextField(&#39;company_sort_key&#39;, field_uri=&#39;persona:CompanyNameSortKey&#39;),
-        TextField(&#39;home_sort_key&#39;, field_uri=&#39;persona:HomeCitySortKey&#39;),
-        TextField(&#39;work_city_sort_key&#39;, field_uri=&#39;persona:WorkCitySortKey&#39;),
-        CharField(&#39;display_name_first_last_header&#39;, field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;),
-        CharField(&#39;display_name_last_first_header&#39;, field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;),
-        TextField(&#39;file_as_header&#39;, field_uri=&#39;persona:FileAsHeader&#39;),
-        CharField(&#39;display_name&#39;, field_uri=&#39;persona:DisplayName&#39;),
-        CharField(&#39;display_name_first_last&#39;, field_uri=&#39;persona:DisplayNameFirstLast&#39;),
-        CharField(&#39;display_name_last_first&#39;, field_uri=&#39;persona:DisplayNameLastFirst&#39;),
-        CharField(&#39;file_as&#39;, field_uri=&#39;persona:FileAs&#39;),
-        TextField(&#39;file_as_id&#39;, field_uri=&#39;persona:FileAsId&#39;),
-        CharField(&#39;display_name_prefix&#39;, field_uri=&#39;persona:DisplayNamePrefix&#39;),
-        CharField(&#39;given_name&#39;, field_uri=&#39;persona:GivenName&#39;),
-        CharField(&#39;middle_name&#39;, field_uri=&#39;persona:MiddleName&#39;),
-        CharField(&#39;surname&#39;, field_uri=&#39;persona:Surname&#39;),
-        CharField(&#39;generation&#39;, field_uri=&#39;persona:Generation&#39;),
-        TextField(&#39;nickname&#39;, field_uri=&#39;persona:Nickname&#39;),
-        TextField(&#39;yomi_company_name&#39;, field_uri=&#39;persona:YomiCompanyName&#39;),
-        TextField(&#39;yomi_first_name&#39;, field_uri=&#39;persona:YomiFirstName&#39;),
-        TextField(&#39;yomi_last_name&#39;, field_uri=&#39;persona:YomiLastName&#39;),
-        CharField(&#39;title&#39;, field_uri=&#39;persona:Title&#39;),
-        TextField(&#39;department&#39;, field_uri=&#39;persona:Department&#39;),
-        CharField(&#39;company_name&#39;, field_uri=&#39;persona:CompanyName&#39;),
-        EWSElementField(&#39;email_address&#39;, field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress),
-        EWSElementListField(&#39;email_addresses&#39;, field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address),
-        PersonaPhoneNumberField(&#39;PhoneNumber&#39;, field_uri=&#39;persona:PhoneNumber&#39;),
-        CharField(&#39;im_address&#39;, field_uri=&#39;persona:ImAddress&#39;),
-        CharField(&#39;home_city&#39;, field_uri=&#39;persona:HomeCity&#39;),
-        CharField(&#39;work_city&#39;, field_uri=&#39;persona:WorkCity&#39;),
-        CharField(&#39;relevance_score&#39;, field_uri=&#39;persona:RelevanceScore&#39;),
-        EWSElementListField(&#39;folder_ids&#39;, field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId),
-        EWSElementListField(&#39;attributions&#39;, field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution),
-        StringAttributedValueField(&#39;display_names&#39;, field_uri=&#39;persona:DisplayNames&#39;),
-        StringAttributedValueField(&#39;file_ases&#39;, field_uri=&#39;persona:FileAses&#39;),
-        StringAttributedValueField(&#39;file_as_ids&#39;, field_uri=&#39;persona:FileAsIds&#39;),
-        StringAttributedValueField(&#39;display_name_prefixes&#39;, field_uri=&#39;persona:DisplayNamePrefixes&#39;),
-        StringAttributedValueField(&#39;given_names&#39;, field_uri=&#39;persona:GivenNames&#39;),
-        StringAttributedValueField(&#39;middle_names&#39;, field_uri=&#39;persona:MiddleNames&#39;),
-        StringAttributedValueField(&#39;surnames&#39;, field_uri=&#39;persona:Surnames&#39;),
-        StringAttributedValueField(&#39;generations&#39;, field_uri=&#39;persona:Generations&#39;),
-        StringAttributedValueField(&#39;nicknames&#39;, field_uri=&#39;persona:Nicknames&#39;),
-        StringAttributedValueField(&#39;initials&#39;, field_uri=&#39;persona:Initials&#39;),
-        StringAttributedValueField(&#39;yomi_company_names&#39;, field_uri=&#39;persona:YomiCompanyNames&#39;),
-        StringAttributedValueField(&#39;yomi_first_names&#39;, field_uri=&#39;persona:YomiFirstNames&#39;),
-        StringAttributedValueField(&#39;yomi_last_names&#39;, field_uri=&#39;persona:YomiLastNames&#39;),
-        PhoneNumberAttributedValueField(&#39;business_phone_numbers&#39;, field_uri=&#39;persona:BusinessPhoneNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;business_phone_numbers2&#39;, field_uri=&#39;persona:BusinessPhoneNumbers2&#39;),
-        PhoneNumberAttributedValueField(&#39;home_phones&#39;, field_uri=&#39;persona:HomePhones&#39;),
-        PhoneNumberAttributedValueField(&#39;home_phones2&#39;, field_uri=&#39;persona:HomePhones2&#39;),
-        PhoneNumberAttributedValueField(&#39;mobile_phones&#39;, field_uri=&#39;persona:MobilePhones&#39;),
-        PhoneNumberAttributedValueField(&#39;mobile_phones2&#39;, field_uri=&#39;persona:MobilePhones2&#39;),
-        PhoneNumberAttributedValueField(&#39;assistant_phone_numbers&#39;, field_uri=&#39;persona:AssistantPhoneNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;callback_phones&#39;, field_uri=&#39;persona:CallbackPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;car_phones&#39;, field_uri=&#39;persona:CarPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;home_faxes&#39;, field_uri=&#39;persona:HomeFaxes&#39;),
-        PhoneNumberAttributedValueField(&#39;orgnaization_main_phones&#39;, field_uri=&#39;persona:OrganizationMainPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;other_faxes&#39;, field_uri=&#39;persona:OtherFaxes&#39;),
-        PhoneNumberAttributedValueField(&#39;other_telephones&#39;, field_uri=&#39;persona:OtherTelephones&#39;),
-        PhoneNumberAttributedValueField(&#39;other_phones2&#39;, field_uri=&#39;persona:OtherPhones2&#39;),
-        PhoneNumberAttributedValueField(&#39;pagers&#39;, field_uri=&#39;persona:Pagers&#39;),
-        PhoneNumberAttributedValueField(&#39;radio_phones&#39;, field_uri=&#39;persona:RadioPhones&#39;),
-        PhoneNumberAttributedValueField(&#39;telex_numbers&#39;, field_uri=&#39;persona:TelexNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;tty_tdd_phone_numbers&#39;, field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;),
-        PhoneNumberAttributedValueField(&#39;work_faxes&#39;, field_uri=&#39;persona:WorkFaxes&#39;),
-        EmailAddressAttributedValueField(&#39;emails1&#39;, field_uri=&#39;persona:Emails1&#39;),
-        EmailAddressAttributedValueField(&#39;emails2&#39;, field_uri=&#39;persona:Emails2&#39;),
-        EmailAddressAttributedValueField(&#39;emails3&#39;, field_uri=&#39;persona:Emails3&#39;),
-        StringAttributedValueField(&#39;business_home_pages&#39;, field_uri=&#39;persona:BusinessHomePages&#39;),
-        StringAttributedValueField(&#39;personal_home_pages&#39;, field_uri=&#39;persona:PersonalHomePages&#39;),
-        StringAttributedValueField(&#39;office_locations&#39;, field_uri=&#39;persona:OfficeLocations&#39;),
-        StringAttributedValueField(&#39;im_addresses&#39;, field_uri=&#39;persona:ImAddresses&#39;),
-        StringAttributedValueField(&#39;im_addresses2&#39;, field_uri=&#39;persona:ImAddresses2&#39;),
-        StringAttributedValueField(&#39;im_addresses3&#39;, field_uri=&#39;persona:ImAddresses3&#39;),
-        PostalAddressAttributedValueField(&#39;business_addresses&#39;, field_uri=&#39;persona:BusinessAddresses&#39;),
-        PostalAddressAttributedValueField(&#39;home_addresses&#39;, field_uri=&#39;persona:HomeAddresses&#39;),
-        PostalAddressAttributedValueField(&#39;other_addresses&#39;, field_uri=&#39;persona:OtherAddresses&#39;),
-        StringAttributedValueField(&#39;titles&#39;, field_uri=&#39;persona:Titles&#39;),
-        StringAttributedValueField(&#39;departments&#39;, field_uri=&#39;persona:Departments&#39;),
-        StringAttributedValueField(&#39;company_names&#39;, field_uri=&#39;persona:CompanyNames&#39;),
-        StringAttributedValueField(&#39;managers&#39;, field_uri=&#39;persona:Managers&#39;),
-        StringAttributedValueField(&#39;assistant_names&#39;, field_uri=&#39;persona:AssistantNames&#39;),
-        StringAttributedValueField(&#39;professions&#39;, field_uri=&#39;persona:Professions&#39;),
-        StringAttributedValueField(&#39;spouse_names&#39;, field_uri=&#39;persona:SpouseNames&#39;),
-        StringAttributedValueField(&#39;children&#39;, field_uri=&#39;persona:Children&#39;),
-        StringAttributedValueField(&#39;schools&#39;, field_uri=&#39;persona:Schools&#39;),
-        StringAttributedValueField(&#39;hobbies&#39;, field_uri=&#39;persona:Hobbies&#39;),
-        StringAttributedValueField(&#39;wedding_anniversaries&#39;, field_uri=&#39;persona:WeddingAnniversaries&#39;),
-        StringAttributedValueField(&#39;birthdays&#39;, field_uri=&#39;persona:Birthdays&#39;),
-        StringAttributedValueField(&#39;locations&#39;, field_uri=&#39;persona:Locations&#39;),
-        # ExtendedPropertyAttributedValueField(&#39;extended_properties&#39;, field_uri=&#39;persona:ExtendedProperties&#39;),
-    )
-    FIELDS = IdChangeKeyMixIn.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)</code></pre>
+    _id = IdElementField(field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
+    persona_type = CharField(field_uri=&#39;persona:PersonaType&#39;)
+    persona_object_type = TextField(field_uri=&#39;persona:PersonaObjectStatus&#39;)
+    creation_time = DateTimeField(field_uri=&#39;persona:CreationTime&#39;)
+    bodies = BodyContentAttributedValueField(field_uri=&#39;persona:Bodies&#39;)
+    display_name_first_last_sort_key = TextField(field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;)
+    display_name_last_first_sort_key = TextField(field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;)
+    company_sort_key = TextField(field_uri=&#39;persona:CompanyNameSortKey&#39;)
+    home_sort_key = TextField(field_uri=&#39;persona:HomeCitySortKey&#39;)
+    work_city_sort_key = TextField(field_uri=&#39;persona:WorkCitySortKey&#39;)
+    display_name_first_last_header = CharField(field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;)
+    display_name_last_first_header = CharField(field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;)
+    file_as_header = TextField(field_uri=&#39;persona:FileAsHeader&#39;)
+    display_name = CharField(field_uri=&#39;persona:DisplayName&#39;)
+    display_name_first_last = CharField(field_uri=&#39;persona:DisplayNameFirstLast&#39;)
+    display_name_last_first = CharField(field_uri=&#39;persona:DisplayNameLastFirst&#39;)
+    file_as = CharField(field_uri=&#39;persona:FileAs&#39;)
+    file_as_id = TextField(field_uri=&#39;persona:FileAsId&#39;)
+    display_name_prefix = CharField(field_uri=&#39;persona:DisplayNamePrefix&#39;)
+    given_name = CharField(field_uri=&#39;persona:GivenName&#39;)
+    middle_name = CharField(field_uri=&#39;persona:MiddleName&#39;)
+    surname = CharField(field_uri=&#39;persona:Surname&#39;)
+    generation = CharField(field_uri=&#39;persona:Generation&#39;)
+    nickname = TextField(field_uri=&#39;persona:Nickname&#39;)
+    yomi_company_name = TextField(field_uri=&#39;persona:YomiCompanyName&#39;)
+    yomi_first_name = TextField(field_uri=&#39;persona:YomiFirstName&#39;)
+    yomi_last_name = TextField(field_uri=&#39;persona:YomiLastName&#39;)
+    title = CharField(field_uri=&#39;persona:Title&#39;)
+    department = TextField(field_uri=&#39;persona:Department&#39;)
+    company_name = CharField(field_uri=&#39;persona:CompanyName&#39;)
+    email_address = EWSElementField(field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress)
+    email_addresses = EWSElementListField(field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address)
+    PhoneNumber = PersonaPhoneNumberField(field_uri=&#39;persona:PhoneNumber&#39;)
+    im_address = CharField(field_uri=&#39;persona:ImAddress&#39;)
+    home_city = CharField(field_uri=&#39;persona:HomeCity&#39;)
+    work_city = CharField(field_uri=&#39;persona:WorkCity&#39;)
+    relevance_score = CharField(field_uri=&#39;persona:RelevanceScore&#39;)
+    folder_ids = EWSElementListField(field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId)
+    attributions = EWSElementListField(field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution)
+    display_names = StringAttributedValueField(field_uri=&#39;persona:DisplayNames&#39;)
+    file_ases = StringAttributedValueField(field_uri=&#39;persona:FileAses&#39;)
+    file_as_ids = StringAttributedValueField(field_uri=&#39;persona:FileAsIds&#39;)
+    display_name_prefixes = StringAttributedValueField(field_uri=&#39;persona:DisplayNamePrefixes&#39;)
+    given_names = StringAttributedValueField(field_uri=&#39;persona:GivenNames&#39;)
+    middle_names = StringAttributedValueField(field_uri=&#39;persona:MiddleNames&#39;)
+    surnames = StringAttributedValueField(field_uri=&#39;persona:Surnames&#39;)
+    generations = StringAttributedValueField(field_uri=&#39;persona:Generations&#39;)
+    nicknames = StringAttributedValueField(field_uri=&#39;persona:Nicknames&#39;)
+    initials = StringAttributedValueField(field_uri=&#39;persona:Initials&#39;)
+    yomi_company_names = StringAttributedValueField(field_uri=&#39;persona:YomiCompanyNames&#39;)
+    yomi_first_names = StringAttributedValueField(field_uri=&#39;persona:YomiFirstNames&#39;)
+    yomi_last_names = StringAttributedValueField(field_uri=&#39;persona:YomiLastNames&#39;)
+    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers&#39;)
+    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers2&#39;)
+    home_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones&#39;)
+    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones2&#39;)
+    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones&#39;)
+    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones2&#39;)
+    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:AssistantPhoneNumbers&#39;)
+    callback_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CallbackPhones&#39;)
+    car_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CarPhones&#39;)
+    home_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomeFaxes&#39;)
+    orgnaization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
+    other_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherFaxes&#39;)
+    other_telephones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherTelephones&#39;)
+    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherPhones2&#39;)
+    pagers = PhoneNumberAttributedValueField(field_uri=&#39;persona:Pagers&#39;)
+    radio_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:RadioPhones&#39;)
+    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TelexNumbers&#39;)
+    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;)
+    work_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:WorkFaxes&#39;)
+    emails1 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails1&#39;)
+    emails2 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails2&#39;)
+    emails3 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails3&#39;)
+    business_home_pages = StringAttributedValueField(field_uri=&#39;persona:BusinessHomePages&#39;)
+    personal_home_pages = StringAttributedValueField(field_uri=&#39;persona:PersonalHomePages&#39;)
+    office_locations = StringAttributedValueField(field_uri=&#39;persona:OfficeLocations&#39;)
+    im_addresses = StringAttributedValueField(field_uri=&#39;persona:ImAddresses&#39;)
+    im_addresses2 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses2&#39;)
+    im_addresses3 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses3&#39;)
+    business_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:BusinessAddresses&#39;)
+    home_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:HomeAddresses&#39;)
+    other_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:OtherAddresses&#39;)
+    titles = StringAttributedValueField(field_uri=&#39;persona:Titles&#39;)
+    departments = StringAttributedValueField(field_uri=&#39;persona:Departments&#39;)
+    company_names = StringAttributedValueField(field_uri=&#39;persona:CompanyNames&#39;)
+    managers = StringAttributedValueField(field_uri=&#39;persona:Managers&#39;)
+    assistant_names = StringAttributedValueField(field_uri=&#39;persona:AssistantNames&#39;)
+    professions = StringAttributedValueField(field_uri=&#39;persona:Professions&#39;)
+    spouse_names = StringAttributedValueField(field_uri=&#39;persona:SpouseNames&#39;)
+    children = StringAttributedValueField(field_uri=&#39;persona:Children&#39;)
+    schools = StringAttributedValueField(field_uri=&#39;persona:Schools&#39;)
+    hobbies = StringAttributedValueField(field_uri=&#39;persona:Hobbies&#39;)
+    wedding_anniversaries = StringAttributedValueField(field_uri=&#39;persona:WeddingAnniversaries&#39;)
+    birthdays = StringAttributedValueField(field_uri=&#39;persona:Birthdays&#39;)
+    locations = StringAttributedValueField(field_uri=&#39;persona:Locations&#39;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -846,392 +756,388 @@ class DistributionList(Item):
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/personaid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/personaid</a></p></div>
 </dd>
-<dt id="exchangelib.items.contact.Persona.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.items.contact.Persona.PhoneNumber"><code class="name">var <span class="ident">PhoneNumber</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.assistant_names"><code class="name">var <span class="ident">assistant_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.assistant_phone_numbers"><code class="name">var <span class="ident">assistant_phone_numbers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.attributions"><code class="name">var <span class="ident">attributions</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.birthdays"><code class="name">var <span class="ident">birthdays</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.bodies"><code class="name">var <span class="ident">bodies</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.business_addresses"><code class="name">var <span class="ident">business_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.business_home_pages"><code class="name">var <span class="ident">business_home_pages</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.business_phone_numbers"><code class="name">var <span class="ident">business_phone_numbers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.business_phone_numbers2"><code class="name">var <span class="ident">business_phone_numbers2</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.callback_phones"><code class="name">var <span class="ident">callback_phones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.car_phones"><code class="name">var <span class="ident">car_phones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.children"><code class="name">var <span class="ident">children</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.company_name"><code class="name">var <span class="ident">company_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.company_names"><code class="name">var <span class="ident">company_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.company_sort_key"><code class="name">var <span class="ident">company_sort_key</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.creation_time"><code class="name">var <span class="ident">creation_time</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.department"><code class="name">var <span class="ident">department</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.departments"><code class="name">var <span class="ident">departments</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name"><code class="name">var <span class="ident">display_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_first_last"><code class="name">var <span class="ident">display_name_first_last</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_first_last_header"><code class="name">var <span class="ident">display_name_first_last_header</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_first_last_sort_key"><code class="name">var <span class="ident">display_name_first_last_sort_key</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_last_first"><code class="name">var <span class="ident">display_name_last_first</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_last_first_header"><code class="name">var <span class="ident">display_name_last_first_header</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_last_first_sort_key"><code class="name">var <span class="ident">display_name_last_first_sort_key</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_prefix"><code class="name">var <span class="ident">display_name_prefix</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_name_prefixes"><code class="name">var <span class="ident">display_name_prefixes</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.display_names"><code class="name">var <span class="ident">display_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.email_address"><code class="name">var <span class="ident">email_address</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.email_addresses"><code class="name">var <span class="ident">email_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.emails1"><code class="name">var <span class="ident">emails1</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.emails2"><code class="name">var <span class="ident">emails2</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.emails3"><code class="name">var <span class="ident">emails3</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.file_as"><code class="name">var <span class="ident">file_as</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.file_as_header"><code class="name">var <span class="ident">file_as_header</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.file_as_id"><code class="name">var <span class="ident">file_as_id</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.file_as_ids"><code class="name">var <span class="ident">file_as_ids</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.file_ases"><code class="name">var <span class="ident">file_ases</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.folder_ids"><code class="name">var <span class="ident">folder_ids</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.generation"><code class="name">var <span class="ident">generation</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.generations"><code class="name">var <span class="ident">generations</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.given_name"><code class="name">var <span class="ident">given_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.given_names"><code class="name">var <span class="ident">given_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.hobbies"><code class="name">var <span class="ident">hobbies</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.home_addresses"><code class="name">var <span class="ident">home_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.home_city"><code class="name">var <span class="ident">home_city</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.home_faxes"><code class="name">var <span class="ident">home_faxes</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.home_phones"><code class="name">var <span class="ident">home_phones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.home_phones2"><code class="name">var <span class="ident">home_phones2</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.home_sort_key"><code class="name">var <span class="ident">home_sort_key</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.im_address"><code class="name">var <span class="ident">im_address</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.im_addresses"><code class="name">var <span class="ident">im_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.im_addresses2"><code class="name">var <span class="ident">im_addresses2</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.im_addresses3"><code class="name">var <span class="ident">im_addresses3</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.initials"><code class="name">var <span class="ident">initials</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.locations"><code class="name">var <span class="ident">locations</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.managers"><code class="name">var <span class="ident">managers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.middle_name"><code class="name">var <span class="ident">middle_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.middle_names"><code class="name">var <span class="ident">middle_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.mobile_phones"><code class="name">var <span class="ident">mobile_phones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.mobile_phones2"><code class="name">var <span class="ident">mobile_phones2</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.nickname"><code class="name">var <span class="ident">nickname</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.nicknames"><code class="name">var <span class="ident">nicknames</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.office_locations"><code class="name">var <span class="ident">office_locations</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.orgnaization_main_phones"><code class="name">var <span class="ident">orgnaization_main_phones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.other_addresses"><code class="name">var <span class="ident">other_addresses</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.other_faxes"><code class="name">var <span class="ident">other_faxes</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.other_phones2"><code class="name">var <span class="ident">other_phones2</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.other_telephones"><code class="name">var <span class="ident">other_telephones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.pagers"><code class="name">var <span class="ident">pagers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.persona_object_type"><code class="name">var <span class="ident">persona_object_type</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.persona_type"><code class="name">var <span class="ident">persona_type</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.personal_home_pages"><code class="name">var <span class="ident">personal_home_pages</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.professions"><code class="name">var <span class="ident">professions</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.radio_phones"><code class="name">var <span class="ident">radio_phones</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.relevance_score"><code class="name">var <span class="ident">relevance_score</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.schools"><code class="name">var <span class="ident">schools</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.spouse_names"><code class="name">var <span class="ident">spouse_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.surname"><code class="name">var <span class="ident">surname</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.surnames"><code class="name">var <span class="ident">surnames</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.telex_numbers"><code class="name">var <span class="ident">telex_numbers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.title"><code class="name">var <span class="ident">title</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.titles"><code class="name">var <span class="ident">titles</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.tty_tdd_phone_numbers"><code class="name">var <span class="ident">tty_tdd_phone_numbers</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.wedding_anniversaries"><code class="name">var <span class="ident">wedding_anniversaries</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.work_city"><code class="name">var <span class="ident">work_city</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.work_city_sort_key"><code class="name">var <span class="ident">work_city_sort_key</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.work_faxes"><code class="name">var <span class="ident">work_faxes</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.yomi_company_name"><code class="name">var <span class="ident">yomi_company_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.yomi_company_names"><code class="name">var <span class="ident">yomi_company_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.yomi_first_name"><code class="name">var <span class="ident">yomi_first_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.yomi_first_names"><code class="name">var <span class="ident">yomi_first_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.yomi_last_name"><code class="name">var <span class="ident">yomi_last_name</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.contact.Persona.yomi_last_names"><code class="name">var <span class="ident">yomi_last_names</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -1267,7 +1173,6 @@ class DistributionList(Item):
 <ul class="">
 <li><code><a title="exchangelib.items.contact.Contact.ELEMENT_NAME" href="#exchangelib.items.contact.Contact.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.contact.Contact.FIELDS" href="#exchangelib.items.contact.Contact.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.contact.Contact.LOCAL_FIELDS" href="#exchangelib.items.contact.Contact.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.contact.Contact.assistant_name" href="#exchangelib.items.contact.Contact.assistant_name">assistant_name</a></code></li>
 <li><code><a title="exchangelib.items.contact.Contact.birthday" href="#exchangelib.items.contact.Contact.birthday">birthday</a></code></li>
 <li><code><a title="exchangelib.items.contact.Contact.business_homepage" href="#exchangelib.items.contact.Contact.business_homepage">business_homepage</a></code></li>
@@ -1317,7 +1222,6 @@ class DistributionList(Item):
 <ul class="two-column">
 <li><code><a title="exchangelib.items.contact.DistributionList.ELEMENT_NAME" href="#exchangelib.items.contact.DistributionList.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.contact.DistributionList.FIELDS" href="#exchangelib.items.contact.DistributionList.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.contact.DistributionList.LOCAL_FIELDS" href="#exchangelib.items.contact.DistributionList.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.contact.DistributionList.contact_source" href="#exchangelib.items.contact.DistributionList.contact_source">contact_source</a></code></li>
 <li><code><a title="exchangelib.items.contact.DistributionList.display_name" href="#exchangelib.items.contact.DistributionList.display_name">display_name</a></code></li>
 <li><code><a title="exchangelib.items.contact.DistributionList.file_as" href="#exchangelib.items.contact.DistributionList.file_as">file_as</a></code></li>
@@ -1330,7 +1234,6 @@ class DistributionList(Item):
 <li><code><a title="exchangelib.items.contact.Persona.ELEMENT_NAME" href="#exchangelib.items.contact.Persona.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.contact.Persona.FIELDS" href="#exchangelib.items.contact.Persona.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.contact.Persona.ID_ELEMENT_CLS" href="#exchangelib.items.contact.Persona.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
-<li><code><a title="exchangelib.items.contact.Persona.LOCAL_FIELDS" href="#exchangelib.items.contact.Persona.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.contact.Persona.PhoneNumber" href="#exchangelib.items.contact.Persona.PhoneNumber">PhoneNumber</a></code></li>
 <li><code><a title="exchangelib.items.contact.Persona.assistant_names" href="#exchangelib.items.contact.Persona.assistant_names">assistant_names</a></code></li>
 <li><code><a title="exchangelib.items.contact.Persona.assistant_phone_numbers" href="#exchangelib.items.contact.Persona.assistant_phone_numbers">assistant_phone_numbers</a></code></li>

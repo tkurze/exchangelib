@@ -31,7 +31,7 @@
 from .base import BaseReplyItem
 from .item import Item, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
-from ..properties import ReferenceItemId, ReminderMessageData, Fields
+from ..properties import ReferenceItemId, ReminderMessageData
 from ..services import SendItem, MarkAsJunk
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
@@ -40,38 +40,36 @@ log = logging.getLogger(__name__)
 
 
 class Message(Item):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
     &#34;&#34;&#34;
-    ELEMENT_NAME = &#39;Message&#39;
-    LOCAL_FIELDS = Fields(
-        MailboxField(&#39;sender&#39;, field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True),
-        MailboxListField(&#39;to_recipients&#39;, field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
-                         is_searchable=False),
-        MailboxListField(&#39;cc_recipients&#39;, field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
-                         is_searchable=False),
-        MailboxListField(&#39;bcc_recipients&#39;, field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
-                         is_searchable=False),
-        BooleanField(&#39;is_read_receipt_requested&#39;, field_uri=&#39;message:IsReadReceiptRequested&#39;,
-                     is_required=True, default=False, is_read_only_after_send=True),
-        BooleanField(&#39;is_delivery_receipt_requested&#39;, field_uri=&#39;message:IsDeliveryReceiptRequested&#39;,
-                     is_required=True, default=False, is_read_only_after_send=True),
-        Base64Field(&#39;conversation_index&#39;, field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True),
-        CharField(&#39;conversation_topic&#39;, field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True),
-        # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
-        MailboxField(&#39;author&#39;, field_uri=&#39;message:From&#39;, is_read_only_after_send=True),
-        CharField(&#39;message_id&#39;, field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True),
-        BooleanField(&#39;is_read&#39;, field_uri=&#39;message:IsRead&#39;, is_required=True, default=False),
-        BooleanField(&#39;is_response_requested&#39;, field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True),
-        TextField(&#39;references&#39;, field_uri=&#39;message:References&#39;),
-        MailboxListField(&#39;reply_to&#39;, field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False),
-        MailboxField(&#39;received_by&#39;, field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True),
-        MailboxField(&#39;received_representing&#39;, field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True),
-        EWSElementField(&#39;reminder_message_data&#39;, field_uri=&#39;message:ReminderMessageData&#39;,
-                        value_cls=ReminderMessageData, supported_from=EXCHANGE_2013_SP1, is_read_only=True),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    ELEMENT_NAME = &#39;Message&#39;
+
+    sender = MailboxField(field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True)
+    to_recipients = MailboxListField(field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
+                                     is_searchable=False)
+    cc_recipients = MailboxListField(field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
+                                     is_searchable=False)
+    bcc_recipients = MailboxListField(field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
+                                      is_searchable=False)
+    is_read_receipt_requested = BooleanField(field_uri=&#39;message:IsReadReceiptRequested&#39;,
+                                             is_required=True, default=False, is_read_only_after_send=True)
+    is_delivery_receipt_requested = BooleanField(field_uri=&#39;message:IsDeliveryReceiptRequested&#39;, is_required=True,
+                                                 default=False, is_read_only_after_send=True)
+    conversation_index = Base64Field(field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True)
+    conversation_topic = CharField(field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True)
+    # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
+    author = MailboxField(field_uri=&#39;message:From&#39;, is_read_only_after_send=True)
+    message_id = CharField(field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True)
+    is_read = BooleanField(field_uri=&#39;message:IsRead&#39;, is_required=True, default=False)
+    is_response_requested = BooleanField(field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True)
+    references = TextField(field_uri=&#39;message:References&#39;)
+    reply_to = MailboxListField(field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False)
+    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
+    reminder_message_data = EWSElementField(field_uri=&#39;message:ReminderMessageData&#39;, value_cls=ReminderMessageData,
+                                            supported_from=EXCHANGE_2013_SP1, is_read_only=True)
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
@@ -194,23 +192,20 @@ class Message(Item):
 
 class ReplyToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;ReplyToItem&#39;
 
-    __slots__ = tuple()
+    ELEMENT_NAME = &#39;ReplyToItem&#39;
 
 
 class ReplyAllToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;ReplyAllToItem&#39;
 
-    __slots__ = tuple()
+    ELEMENT_NAME = &#39;ReplyAllToItem&#39;
 
 
 class ForwardItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;ForwardItem&#39;
 
-    __slots__ = tuple()</code></pre>
+    ELEMENT_NAME = &#39;ForwardItem&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -234,9 +229,8 @@ class ForwardItem(BaseReplyItem):
 </summary>
 <pre><code class="python">class ForwardItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;ForwardItem&#39;
 
-    __slots__ = tuple()</code></pre>
+    ELEMENT_NAME = &#39;ForwardItem&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -256,21 +250,9 @@ class ForwardItem(BaseReplyItem):
 <ul class="hlist">
 <li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="base.html#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="base.html#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="base.html#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="base.html#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="base.html#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="base.html#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="base.html#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="base.html#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="base.html#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="base.html#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="base.html#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
@@ -281,44 +263,48 @@ class ForwardItem(BaseReplyItem):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref</a></p></div>
+<div class="desc"><p>MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref</a></p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Message(Item):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
+    &#34;&#34;&#34;MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
     &#34;&#34;&#34;
-    ELEMENT_NAME = &#39;Message&#39;
-    LOCAL_FIELDS = Fields(
-        MailboxField(&#39;sender&#39;, field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True),
-        MailboxListField(&#39;to_recipients&#39;, field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
-                         is_searchable=False),
-        MailboxListField(&#39;cc_recipients&#39;, field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
-                         is_searchable=False),
-        MailboxListField(&#39;bcc_recipients&#39;, field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
-                         is_searchable=False),
-        BooleanField(&#39;is_read_receipt_requested&#39;, field_uri=&#39;message:IsReadReceiptRequested&#39;,
-                     is_required=True, default=False, is_read_only_after_send=True),
-        BooleanField(&#39;is_delivery_receipt_requested&#39;, field_uri=&#39;message:IsDeliveryReceiptRequested&#39;,
-                     is_required=True, default=False, is_read_only_after_send=True),
-        Base64Field(&#39;conversation_index&#39;, field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True),
-        CharField(&#39;conversation_topic&#39;, field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True),
-        # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
-        MailboxField(&#39;author&#39;, field_uri=&#39;message:From&#39;, is_read_only_after_send=True),
-        CharField(&#39;message_id&#39;, field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True),
-        BooleanField(&#39;is_read&#39;, field_uri=&#39;message:IsRead&#39;, is_required=True, default=False),
-        BooleanField(&#39;is_response_requested&#39;, field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True),
-        TextField(&#39;references&#39;, field_uri=&#39;message:References&#39;),
-        MailboxListField(&#39;reply_to&#39;, field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False),
-        MailboxField(&#39;received_by&#39;, field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True),
-        MailboxField(&#39;received_representing&#39;, field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True),
-        EWSElementField(&#39;reminder_message_data&#39;, field_uri=&#39;message:ReminderMessageData&#39;,
-                        value_cls=ReminderMessageData, supported_from=EXCHANGE_2013_SP1, is_read_only=True),
-    )
-    FIELDS = Item.FIELDS + LOCAL_FIELDS
 
-    __slots__ = tuple(f.name for f in LOCAL_FIELDS)
+    ELEMENT_NAME = &#39;Message&#39;
+
+    sender = MailboxField(field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True)
+    to_recipients = MailboxListField(field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
+                                     is_searchable=False)
+    cc_recipients = MailboxListField(field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
+                                     is_searchable=False)
+    bcc_recipients = MailboxListField(field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
+                                      is_searchable=False)
+    is_read_receipt_requested = BooleanField(field_uri=&#39;message:IsReadReceiptRequested&#39;,
+                                             is_required=True, default=False, is_read_only_after_send=True)
+    is_delivery_receipt_requested = BooleanField(field_uri=&#39;message:IsDeliveryReceiptRequested&#39;, is_required=True,
+                                                 default=False, is_read_only_after_send=True)
+    conversation_index = Base64Field(field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True)
+    conversation_topic = CharField(field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True)
+    # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
+    author = MailboxField(field_uri=&#39;message:From&#39;, is_read_only_after_send=True)
+    message_id = CharField(field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True)
+    is_read = BooleanField(field_uri=&#39;message:IsRead&#39;, is_required=True, default=False)
+    is_response_requested = BooleanField(field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True)
+    references = TextField(field_uri=&#39;message:References&#39;)
+    reply_to = MailboxListField(field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False)
+    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
+    reminder_message_data = EWSElementField(field_uri=&#39;message:ReminderMessageData&#39;, value_cls=ReminderMessageData,
+                                            supported_from=EXCHANGE_2013_SP1, is_read_only=True)
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
@@ -456,80 +442,76 @@ class ForwardItem(BaseReplyItem):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.message.Message.LOCAL_FIELDS"><code class="name">var <span class="ident">LOCAL_FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.items.message.Message.author"><code class="name">var <span class="ident">author</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.bcc_recipients"><code class="name">var <span class="ident">bcc_recipients</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.cc_recipients"><code class="name">var <span class="ident">cc_recipients</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.conversation_index"><code class="name">var <span class="ident">conversation_index</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.conversation_topic"><code class="name">var <span class="ident">conversation_topic</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.is_delivery_receipt_requested"><code class="name">var <span class="ident">is_delivery_receipt_requested</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.is_read"><code class="name">var <span class="ident">is_read</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.is_read_receipt_requested"><code class="name">var <span class="ident">is_read_receipt_requested</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.is_response_requested"><code class="name">var <span class="ident">is_response_requested</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.message_id"><code class="name">var <span class="ident">message_id</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.received_representing"><code class="name">var <span class="ident">received_representing</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.references"><code class="name">var <span class="ident">references</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.reminder_message_data"><code class="name">var <span class="ident">reminder_message_data</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.reply_to"><code class="name">var <span class="ident">reply_to</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.sender"><code class="name">var <span class="ident">sender</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.message.Message.to_recipients"><code class="name">var <span class="ident">to_recipients</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -735,50 +717,13 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <li><code><a title="exchangelib.items.item.Item.account" href="base.html#exchangelib.items.base.BaseItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.attach" href="item.html#exchangelib.items.item.Item.attach">attach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.attachments" href="item.html#exchangelib.items.item.Item.attachments">attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.body" href="item.html#exchangelib.items.item.Item.body">body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.categories" href="item.html#exchangelib.items.item.Item.categories">categories</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.conversation_id" href="item.html#exchangelib.items.item.Item.conversation_id">conversation_id</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.culture" href="item.html#exchangelib.items.item.Item.culture">culture</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_created" href="item.html#exchangelib.items.item.Item.datetime_created">datetime_created</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_received" href="item.html#exchangelib.items.item.Item.datetime_received">datetime_received</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.datetime_sent" href="item.html#exchangelib.items.item.Item.datetime_sent">datetime_sent</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.deregister" href="base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.detach" href="item.html#exchangelib.items.item.Item.detach">detach</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_cc" href="item.html#exchangelib.items.item.Item.display_cc">display_cc</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.display_to" href="item.html#exchangelib.items.item.Item.display_to">display_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.effective_rights" href="item.html#exchangelib.items.item.Item.effective_rights">effective_rights</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.folder" href="base.html#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.has_attachments" href="item.html#exchangelib.items.item.Item.has_attachments">has_attachments</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.headers" href="item.html#exchangelib.items.item.Item.headers">headers</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.importance" href="item.html#exchangelib.items.item.Item.importance">importance</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.in_reply_to" href="item.html#exchangelib.items.item.Item.in_reply_to">in_reply_to</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_associated" href="item.html#exchangelib.items.item.Item.is_associated">is_associated</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_draft" href="item.html#exchangelib.items.item.Item.is_draft">is_draft</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_from_me" href="item.html#exchangelib.items.item.Item.is_from_me">is_from_me</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_resend" href="item.html#exchangelib.items.item.Item.is_resend">is_resend</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_submitted" href="item.html#exchangelib.items.item.Item.is_submitted">is_submitted</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.is_unmodified" href="item.html#exchangelib.items.item.Item.is_unmodified">is_unmodified</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.item_class" href="item.html#exchangelib.items.item.Item.item_class">item_class</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_name" href="item.html#exchangelib.items.item.Item.last_modified_name">last_modified_name</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.last_modified_time" href="item.html#exchangelib.items.item.Item.last_modified_time">last_modified_time</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.mime_content" href="item.html#exchangelib.items.item.Item.mime_content">mime_content</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.parent_folder_id" href="item.html#exchangelib.items.item.Item.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.register" href="base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_due_by" href="item.html#exchangelib.items.item.Item.reminder_due_by">reminder_due_by</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_is_set" href="item.html#exchangelib.items.item.Item.reminder_is_set">reminder_is_set</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.reminder_minutes_before_start" href="item.html#exchangelib.items.item.Item.reminder_minutes_before_start">reminder_minutes_before_start</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.response_objects" href="item.html#exchangelib.items.item.Item.response_objects">response_objects</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.sensitivity" href="item.html#exchangelib.items.item.Item.sensitivity">sensitivity</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.size" href="item.html#exchangelib.items.item.Item.size">size</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.subject" href="item.html#exchangelib.items.item.Item.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.text_body" href="item.html#exchangelib.items.item.Item.text_body">text_body</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.unique_body" href="item.html#exchangelib.items.item.Item.unique_body">unique_body</a></code></li>
 <li><code><a title="exchangelib.items.item.Item.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_edit_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_edit_form_query_string">web_client_edit_form_query_string</a></code></li>
-<li><code><a title="exchangelib.items.item.Item.web_client_read_form_query_string" href="item.html#exchangelib.items.item.Item.web_client_read_form_query_string">web_client_read_form_query_string</a></code></li>
 </ul>
 </li>
 </ul>
@@ -795,9 +740,8 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 </summary>
 <pre><code class="python">class ReplyAllToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;ReplyAllToItem&#39;
 
-    __slots__ = tuple()</code></pre>
+    ELEMENT_NAME = &#39;ReplyAllToItem&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -817,21 +761,9 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <ul class="hlist">
 <li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="base.html#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="base.html#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="base.html#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="base.html#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="base.html#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="base.html#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="base.html#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="base.html#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="base.html#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="base.html#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="base.html#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
@@ -849,9 +781,8 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 </summary>
 <pre><code class="python">class ReplyToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem&#34;&#34;&#34;
-    ELEMENT_NAME = &#39;ReplyToItem&#39;
 
-    __slots__ = tuple()</code></pre>
+    ELEMENT_NAME = &#39;ReplyToItem&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -871,21 +802,9 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <ul class="hlist">
 <li><code><a title="exchangelib.items.base.BaseReplyItem.account" href="base.html#exchangelib.items.base.BaseReplyItem.account">account</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.author" href="base.html#exchangelib.items.base.BaseReplyItem.author">author</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.bcc_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.bcc_recipients">bcc_recipients</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.body" href="base.html#exchangelib.items.base.BaseReplyItem.body">body</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.cc_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.cc_recipients">cc_recipients</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested" href="base.html#exchangelib.items.base.BaseReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="base.html#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="base.html#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="base.html#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="base.html#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="base.html#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="base.html#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.subject" href="base.html#exchangelib.items.base.BaseReplyItem.subject">subject</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.to_recipients" href="base.html#exchangelib.items.base.BaseReplyItem.to_recipients">to_recipients</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
@@ -918,7 +837,6 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <ul class="">
 <li><code><a title="exchangelib.items.message.Message.ELEMENT_NAME" href="#exchangelib.items.message.Message.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.message.Message.FIELDS" href="#exchangelib.items.message.Message.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.message.Message.LOCAL_FIELDS" href="#exchangelib.items.message.Message.LOCAL_FIELDS">LOCAL_FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.message.Message.author" href="#exchangelib.items.message.Message.author">author</a></code></li>
 <li><code><a title="exchangelib.items.message.Message.bcc_recipients" href="#exchangelib.items.message.Message.bcc_recipients">bcc_recipients</a></code></li>
 <li><code><a title="exchangelib.items.message.Message.cc_recipients" href="#exchangelib.items.message.Message.cc_recipients">cc_recipients</a></code></li>

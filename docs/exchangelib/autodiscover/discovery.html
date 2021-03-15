@@ -55,7 +55,7 @@ def discover(email, credentials=None, auth_type=None, retry_policy=None):
 
 
 class SrvRecord:
-    &#34;&#34;&#34;A container for autodiscover-related SRV records in DNS&#34;&#34;&#34;
+    &#34;&#34;&#34;A container for autodiscover-related SRV records in DNS.&#34;&#34;&#34;
 
     def __init__(self, priority, weight, port, srv):
         self.priority = priority
@@ -95,7 +95,6 @@ class Autodiscovery:
 
     WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
     implementation, start by doing an official test at https://testconnectivity.microsoft.com
-
     &#34;&#34;&#34;
 
     # When connecting to servers that may not be serving the correct endpoint, we should use a retry policy that does
@@ -111,13 +110,11 @@ class Autodiscovery:
     def __init__(self, email, credentials=None, auth_type=None, retry_policy=None):
         &#34;&#34;&#34;
 
-        Args:
-          email: The email address to autodiscover
-          credentials: Credentials with authorization to make autodiscover lookups for this Account
+        :param email: The email address to autodiscover
+        :param credentials: Credentials with authorization to make autodiscover lookups for this Account
             (Default value = None)
-          auth_type:  (Default value = None)
-          retry_policy:  (Default value = None)
-
+        :param auth_type:  (Default value = None)
+        :param retry_policy:  (Default value = None)
         &#34;&#34;&#34;
         self.email = email
         self.credentials = credentials
@@ -243,9 +240,8 @@ class Autodiscovery:
         it does not redirect to non-SSL endpoints or SSL endpoints with invalid certificates, and that the redirect is
         not circular. Finally, we should fail after 10 redirects.
 
-        Args:
-          url:
-
+        :param url:
+        :return:
         &#34;&#34;&#34;
         if url.lower() in self._urls_visited:
             log.warning(&#39;We have already tried this URL: %s&#39;, url)
@@ -274,10 +270,9 @@ class Autodiscovery:
         &#34;&#34;&#34;Get auth type by tasting headers from the server. Do POST requests be default. HEAD is too error prone, and
         some servers are set up to redirect to OWA on all requests except POST to the autodiscover endpoint.
 
-        Args:
-          url:
-          method:  (Default value = &#39;post&#39;)
-
+        :param url:
+        :param method:  (Default value = &#39;post&#39;)
+        :return:
         &#34;&#34;&#34;
         # We are connecting to untrusted servers here, so take necessary precautions.
         hostname = urlparse(url).netloc
@@ -309,6 +304,8 @@ class Autodiscovery:
                     total_wait = time.monotonic() - t_start
                     if _may_retry_on_error(response=r, retry_policy=self.INITIAL_RETRY_POLICY, wait=total_wait):
                         log.debug(&#34;Connection error on URL %s (retry %s, error: %s). Cool down&#34;, url, retry, e)
+                        # Don&#39;t respect the &#39;Retry-After&#39; header. We don&#39;t know if this is a useful endpoint, and we
+                        # want autodiscover to be reasonably fast.
                         self.INITIAL_RETRY_POLICY.back_off(self.RETRY_WAIT)
                         retry += 1
                         continue
@@ -319,21 +316,19 @@ class Autodiscovery:
         except UnauthorizedError:
             # Failed to guess the auth type
             auth_type = NOAUTH
-        if r.status_code in (301, 302):
-            if &#39;location&#39; in r.headers:
-                # Make the redirect URL absolute
-                try:
-                    r.headers[&#39;location&#39;] = get_redirect_url(r)
-                except TransportError:
-                    del r.headers[&#39;location&#39;]
+        if r.status_code in (301, 302) and &#39;location&#39; in r.headers:
+            # Make the redirect URL absolute
+            try:
+                r.headers[&#39;location&#39;] = get_redirect_url(r)
+            except TransportError:
+                del r.headers[&#39;location&#39;]
         return auth_type, r
 
     def _get_authenticated_response(self, protocol):
         &#34;&#34;&#34;Get a response by using the credentials provided. We guess the auth type along the way.
 
-        Args:
-          protocol:
-
+        :param protocol:
+        :return:
         &#34;&#34;&#34;
         # Redo the request with the correct auth
         data = Autodiscover.payload(email=self.email)
@@ -355,11 +350,10 @@ class Autodiscovery:
         return r
 
     def _attempt_response(self, url):
-        &#34;&#34;&#34;Returns a (is_valid_response, response) tuple
+        &#34;&#34;&#34;Return an (is_valid_response, response) tuple.
 
-        Args:
-          url:
-
+        :param url:
+        :return:
         &#34;&#34;&#34;
         self._urls_visited.append(url.lower())
         log.debug(&#39;Attempting to get a valid response from %s&#39;, url)
@@ -420,9 +414,8 @@ class Autodiscovery:
 
         The first three numbers in the service line are: priority, weight, port
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         log.debug(&#39;Attempting to get SRV records for %s&#39;, hostname)
         records = []
@@ -444,43 +437,39 @@ class Autodiscovery:
         return records
 
     def _step_1(self, hostname):
-        &#34;&#34;&#34;The client sends an Autodiscover request to https://example.com/autodiscover/autodiscover.xml and then does
-        one of the following:
+        &#34;&#34;&#34;Perform step 1, where the client sends an Autodiscover request to
+        https://example.com/autodiscover/autodiscover.xml and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 2.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         url = &#39;https://%s/Autodiscover/Autodiscover.xml&#39; % hostname
         log.info(&#39;Step 1: Trying autodiscover on %r with email %r&#39;, url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
-        else:
-            return self._step_2(hostname=hostname)
+        return self._step_2(hostname=hostname)
 
     def _step_2(self, hostname):
-        &#34;&#34;&#34;The client sends an Autodiscover request to https://autodiscover.example.com/autodiscover/autodiscover.xml
-        and then does one of the following:
+        &#34;&#34;&#34;Perform step 2, where the client sends an Autodiscover request to
+        https://autodiscover.example.com/autodiscover/autodiscover.xml and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 3.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         url = &#39;https://autodiscover.%s/Autodiscover/Autodiscover.xml&#39; % hostname
         log.info(&#39;Step 2: Trying autodiscover on %r with email %r&#39;, url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
-        else:
-            return self._step_3(hostname=hostname)
+        return self._step_3(hostname=hostname)
 
     def _step_3(self, hostname):
-        &#34;&#34;&#34;The client sends an unauth&#39;ed GET method request to
+        &#34;&#34;&#34;Perform step 3, where the client sends an unauth&#39;ed GET method request to
         http://autodiscover.example.com/autodiscover/autodiscover.xml (Note that this is a non-HTTPS endpoint). The
         client then does one of the following:
             * If the GET request returns a 302 redirect response, it gets the redirection URL from the &#39;Location&#39; HTTP
@@ -492,9 +481,8 @@ class Autodiscovery:
                 * If the redirection URL is not valid, the client proceeds to step 4.
             * If the GET request does not return a 302 redirect response, the client proceeds to step 4.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         url = &#39;http://autodiscover.%s/Autodiscover/Autodiscover.xml&#39; % hostname
         log.info(&#39;Step 3: Trying autodiscover on %r with email %r&#39;, url, self.email)
@@ -508,17 +496,15 @@ class Autodiscovery:
                 is_valid_response, ad = self._attempt_response(url=redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                else:
-                    return self._step_4(hostname=hostname)
-            else:
                 return self._step_4(hostname=hostname)
-        else:
             return self._step_4(hostname=hostname)
+        return self._step_4(hostname=hostname)
 
     def _step_4(self, hostname):
-        &#34;&#34;&#34;The client performs a Domain Name System (DNS) query for an SRV record for _autodiscover._tcp.example.com.
-        The query might return multiple records. The client selects only records that point to an SSL endpoint and that
-        have the highest priority and weight. One of the following actions then occurs:
+        &#34;&#34;&#34;Perform step 4, where the client performs a Domain Name System (DNS) query for an SRV record for
+        _autodiscover._tcp.example.com. The query might return multiple records. The client selects only records that
+        point to an SSL endpoint and that have the highest priority and weight. One of the following actions then
+        occurs:
             * If no such records are returned, the client proceeds to step 6.
             * If records are returned, the application randomly chooses a record in the list and validates the endpoint
               that it points to by following the process described in the &#34;Redirect Response&#34; section. The client then
@@ -528,9 +514,8 @@ class Autodiscovery:
                     * If the attempt fails, the client proceeds to step 6.
                 * If the redirection URL is not valid, the client proceeds to step 6.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         dns_hostname = &#39;_autodiscover._tcp.%s&#39; % hostname
         log.info(&#39;Step 4: Trying autodiscover on %r with email %r&#39;, dns_hostname, self.email)
@@ -541,19 +526,16 @@ class Autodiscovery:
             srv_host = None
         if not srv_host:
             return self._step_6()
-        else:
-            redirect_url = &#39;https://%s/Autodiscover/Autodiscover.xml&#39; % srv_host
-            if self._redirect_url_is_valid(url=redirect_url):
-                is_valid_response, ad = self._attempt_response(url=redirect_url)
-                if is_valid_response:
-                    return self._step_5(ad=ad)
-                else:
-                    return self._step_6()
-            else:
-                return self._step_6()
+        redirect_url = &#39;https://%s/Autodiscover/Autodiscover.xml&#39; % srv_host
+        if self._redirect_url_is_valid(url=redirect_url):
+            is_valid_response, ad = self._attempt_response(url=redirect_url)
+            if is_valid_response:
+                return self._step_5(ad=ad)
+            return self._step_6()
+        return self._step_6()
 
     def _step_5(self, ad):
-        &#34;&#34;&#34;When a valid Autodiscover request succeeds, the following sequence occurs:
+        &#34;&#34;&#34;Perform step 5. When a valid Autodiscover request succeeds, the following sequence occurs:
             * If the server responds with an HTTP 302 redirect, the client validates the redirection URL according to
               the process defined in the &#34;Redirect responses&#34; and then does one of the following:
                 * If the redirection URL is valid, the client tries the URL and then does one of the following:
@@ -566,9 +548,8 @@ class Autodiscovery:
                 * If the value of the Action element is &#34;Settings&#34;, the client has successfully received the requested
                   configuration settings for the specified user. The client does not need to proceed to step 6.
 
-        Args:
-          ad:
-
+        :param ad:
+        :return:
         &#34;&#34;&#34;
         log.info(&#39;Step 5: Checking response&#39;)
         if ad.response is None:
@@ -584,19 +565,16 @@ class Autodiscovery:
                 is_valid_response, ad = self._attempt_response(url=ad_response.redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                else:
-                    return self._step_6()
-            else:
-                log.debug(&#39;Invalid redirect URL: %s&#39;, ad_response.redirect_url)
                 return self._step_6()
-        else:
-            # This could be an email redirect. Let outer layer handle this
-            return ad_response
+            log.debug(&#39;Invalid redirect URL: %s&#39;, ad_response.redirect_url)
+            return self._step_6()
+        # This could be an email redirect. Let outer layer handle this
+        return ad_response
 
     def _step_6(self):
-        &#34;&#34;&#34;If the client cannot contact the Autodiscover service, the client should ask the user for the Exchange server
-        name and use it to construct an Exchange EWS URL. The client should try to use this URL for future requests.
-
+        &#34;&#34;&#34;Perform step 6. If the client cannot contact the Autodiscover service, the client should ask the user for
+        the Exchange server name and use it to construct an Exchange EWS URL. The client should try to use this URL for
+        future requests.
         &#34;&#34;&#34;
         raise AutoDiscoverFailed(
             &#39;All steps in the autodiscover protocol failed for email %r. If you think this is an error, consider doing &#39;
@@ -604,11 +582,10 @@ class Autodiscovery:
 
 
 def _select_srv_host(srv_records):
-    &#34;&#34;&#34;Select the record with the highest priority, that also supports TLS
+    &#34;&#34;&#34;Select the record with the highest priority, that also supports TLS.
 
-    Args:
-      srv_records:
-
+    :param srv_records:
+    :return:
     &#34;&#34;&#34;
     best_record = None
     for srv_record in srv_records:
@@ -671,18 +648,13 @@ set up the Autodiscover service, the client might try this step first.</p>
 <a href="https://support.microsoft.com/en-us/help/3211279/outlook-2016-implementation-of-autodiscover">https://support.microsoft.com/en-us/help/3211279/outlook-2016-implementation-of-autodiscover</a></p>
 <p>WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
 implementation, start by doing an official test at <a href="https://testconnectivity.microsoft.com">https://testconnectivity.microsoft.com</a></p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>email</code></strong></dt>
-<dd>The email address to autodiscover</dd>
-<dt><strong><code>credentials</code></strong></dt>
-<dd>Credentials with authorization to make autodiscover lookups for this Account
-(Default value = None)</dd>
-<dt><strong><code>auth_type</code></strong></dt>
-<dd>(Default value = None)</dd>
-<dt><strong><code>retry_policy</code></strong></dt>
-<dd>(Default value = None)</dd>
-</dl></div>
+<p>:param email: The email address to autodiscover
+:param credentials: Credentials with authorization to make autodiscover lookups for this Account
+(Default value = None)
+:param auth_type:
+(Default value = None)
+:param retry_policy:
+(Default value = None)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -712,7 +684,6 @@ implementation, start by doing an official test at <a href="https://testconnecti
 
     WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
     implementation, start by doing an official test at https://testconnectivity.microsoft.com
-
     &#34;&#34;&#34;
 
     # When connecting to servers that may not be serving the correct endpoint, we should use a retry policy that does
@@ -728,13 +699,11 @@ implementation, start by doing an official test at <a href="https://testconnecti
     def __init__(self, email, credentials=None, auth_type=None, retry_policy=None):
         &#34;&#34;&#34;
 
-        Args:
-          email: The email address to autodiscover
-          credentials: Credentials with authorization to make autodiscover lookups for this Account
+        :param email: The email address to autodiscover
+        :param credentials: Credentials with authorization to make autodiscover lookups for this Account
             (Default value = None)
-          auth_type:  (Default value = None)
-          retry_policy:  (Default value = None)
-
+        :param auth_type:  (Default value = None)
+        :param retry_policy:  (Default value = None)
         &#34;&#34;&#34;
         self.email = email
         self.credentials = credentials
@@ -860,9 +829,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
         it does not redirect to non-SSL endpoints or SSL endpoints with invalid certificates, and that the redirect is
         not circular. Finally, we should fail after 10 redirects.
 
-        Args:
-          url:
-
+        :param url:
+        :return:
         &#34;&#34;&#34;
         if url.lower() in self._urls_visited:
             log.warning(&#39;We have already tried this URL: %s&#39;, url)
@@ -891,10 +859,9 @@ implementation, start by doing an official test at <a href="https://testconnecti
         &#34;&#34;&#34;Get auth type by tasting headers from the server. Do POST requests be default. HEAD is too error prone, and
         some servers are set up to redirect to OWA on all requests except POST to the autodiscover endpoint.
 
-        Args:
-          url:
-          method:  (Default value = &#39;post&#39;)
-
+        :param url:
+        :param method:  (Default value = &#39;post&#39;)
+        :return:
         &#34;&#34;&#34;
         # We are connecting to untrusted servers here, so take necessary precautions.
         hostname = urlparse(url).netloc
@@ -926,6 +893,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
                     total_wait = time.monotonic() - t_start
                     if _may_retry_on_error(response=r, retry_policy=self.INITIAL_RETRY_POLICY, wait=total_wait):
                         log.debug(&#34;Connection error on URL %s (retry %s, error: %s). Cool down&#34;, url, retry, e)
+                        # Don&#39;t respect the &#39;Retry-After&#39; header. We don&#39;t know if this is a useful endpoint, and we
+                        # want autodiscover to be reasonably fast.
                         self.INITIAL_RETRY_POLICY.back_off(self.RETRY_WAIT)
                         retry += 1
                         continue
@@ -936,21 +905,19 @@ implementation, start by doing an official test at <a href="https://testconnecti
         except UnauthorizedError:
             # Failed to guess the auth type
             auth_type = NOAUTH
-        if r.status_code in (301, 302):
-            if &#39;location&#39; in r.headers:
-                # Make the redirect URL absolute
-                try:
-                    r.headers[&#39;location&#39;] = get_redirect_url(r)
-                except TransportError:
-                    del r.headers[&#39;location&#39;]
+        if r.status_code in (301, 302) and &#39;location&#39; in r.headers:
+            # Make the redirect URL absolute
+            try:
+                r.headers[&#39;location&#39;] = get_redirect_url(r)
+            except TransportError:
+                del r.headers[&#39;location&#39;]
         return auth_type, r
 
     def _get_authenticated_response(self, protocol):
         &#34;&#34;&#34;Get a response by using the credentials provided. We guess the auth type along the way.
 
-        Args:
-          protocol:
-
+        :param protocol:
+        :return:
         &#34;&#34;&#34;
         # Redo the request with the correct auth
         data = Autodiscover.payload(email=self.email)
@@ -972,11 +939,10 @@ implementation, start by doing an official test at <a href="https://testconnecti
         return r
 
     def _attempt_response(self, url):
-        &#34;&#34;&#34;Returns a (is_valid_response, response) tuple
+        &#34;&#34;&#34;Return an (is_valid_response, response) tuple.
 
-        Args:
-          url:
-
+        :param url:
+        :return:
         &#34;&#34;&#34;
         self._urls_visited.append(url.lower())
         log.debug(&#39;Attempting to get a valid response from %s&#39;, url)
@@ -1037,9 +1003,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
 
         The first three numbers in the service line are: priority, weight, port
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         log.debug(&#39;Attempting to get SRV records for %s&#39;, hostname)
         records = []
@@ -1061,43 +1026,39 @@ implementation, start by doing an official test at <a href="https://testconnecti
         return records
 
     def _step_1(self, hostname):
-        &#34;&#34;&#34;The client sends an Autodiscover request to https://example.com/autodiscover/autodiscover.xml and then does
-        one of the following:
+        &#34;&#34;&#34;Perform step 1, where the client sends an Autodiscover request to
+        https://example.com/autodiscover/autodiscover.xml and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 2.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         url = &#39;https://%s/Autodiscover/Autodiscover.xml&#39; % hostname
         log.info(&#39;Step 1: Trying autodiscover on %r with email %r&#39;, url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
-        else:
-            return self._step_2(hostname=hostname)
+        return self._step_2(hostname=hostname)
 
     def _step_2(self, hostname):
-        &#34;&#34;&#34;The client sends an Autodiscover request to https://autodiscover.example.com/autodiscover/autodiscover.xml
-        and then does one of the following:
+        &#34;&#34;&#34;Perform step 2, where the client sends an Autodiscover request to
+        https://autodiscover.example.com/autodiscover/autodiscover.xml and then does one of the following:
             * If the Autodiscover attempt succeeds, the client proceeds to step 5.
             * If the Autodiscover attempt fails, the client proceeds to step 3.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         url = &#39;https://autodiscover.%s/Autodiscover/Autodiscover.xml&#39; % hostname
         log.info(&#39;Step 2: Trying autodiscover on %r with email %r&#39;, url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
-        else:
-            return self._step_3(hostname=hostname)
+        return self._step_3(hostname=hostname)
 
     def _step_3(self, hostname):
-        &#34;&#34;&#34;The client sends an unauth&#39;ed GET method request to
+        &#34;&#34;&#34;Perform step 3, where the client sends an unauth&#39;ed GET method request to
         http://autodiscover.example.com/autodiscover/autodiscover.xml (Note that this is a non-HTTPS endpoint). The
         client then does one of the following:
             * If the GET request returns a 302 redirect response, it gets the redirection URL from the &#39;Location&#39; HTTP
@@ -1109,9 +1070,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
                 * If the redirection URL is not valid, the client proceeds to step 4.
             * If the GET request does not return a 302 redirect response, the client proceeds to step 4.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         url = &#39;http://autodiscover.%s/Autodiscover/Autodiscover.xml&#39; % hostname
         log.info(&#39;Step 3: Trying autodiscover on %r with email %r&#39;, url, self.email)
@@ -1125,17 +1085,15 @@ implementation, start by doing an official test at <a href="https://testconnecti
                 is_valid_response, ad = self._attempt_response(url=redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                else:
-                    return self._step_4(hostname=hostname)
-            else:
                 return self._step_4(hostname=hostname)
-        else:
             return self._step_4(hostname=hostname)
+        return self._step_4(hostname=hostname)
 
     def _step_4(self, hostname):
-        &#34;&#34;&#34;The client performs a Domain Name System (DNS) query for an SRV record for _autodiscover._tcp.example.com.
-        The query might return multiple records. The client selects only records that point to an SSL endpoint and that
-        have the highest priority and weight. One of the following actions then occurs:
+        &#34;&#34;&#34;Perform step 4, where the client performs a Domain Name System (DNS) query for an SRV record for
+        _autodiscover._tcp.example.com. The query might return multiple records. The client selects only records that
+        point to an SSL endpoint and that have the highest priority and weight. One of the following actions then
+        occurs:
             * If no such records are returned, the client proceeds to step 6.
             * If records are returned, the application randomly chooses a record in the list and validates the endpoint
               that it points to by following the process described in the &#34;Redirect Response&#34; section. The client then
@@ -1145,9 +1103,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
                     * If the attempt fails, the client proceeds to step 6.
                 * If the redirection URL is not valid, the client proceeds to step 6.
 
-        Args:
-          hostname:
-
+        :param hostname:
+        :return:
         &#34;&#34;&#34;
         dns_hostname = &#39;_autodiscover._tcp.%s&#39; % hostname
         log.info(&#39;Step 4: Trying autodiscover on %r with email %r&#39;, dns_hostname, self.email)
@@ -1158,19 +1115,16 @@ implementation, start by doing an official test at <a href="https://testconnecti
             srv_host = None
         if not srv_host:
             return self._step_6()
-        else:
-            redirect_url = &#39;https://%s/Autodiscover/Autodiscover.xml&#39; % srv_host
-            if self._redirect_url_is_valid(url=redirect_url):
-                is_valid_response, ad = self._attempt_response(url=redirect_url)
-                if is_valid_response:
-                    return self._step_5(ad=ad)
-                else:
-                    return self._step_6()
-            else:
-                return self._step_6()
+        redirect_url = &#39;https://%s/Autodiscover/Autodiscover.xml&#39; % srv_host
+        if self._redirect_url_is_valid(url=redirect_url):
+            is_valid_response, ad = self._attempt_response(url=redirect_url)
+            if is_valid_response:
+                return self._step_5(ad=ad)
+            return self._step_6()
+        return self._step_6()
 
     def _step_5(self, ad):
-        &#34;&#34;&#34;When a valid Autodiscover request succeeds, the following sequence occurs:
+        &#34;&#34;&#34;Perform step 5. When a valid Autodiscover request succeeds, the following sequence occurs:
             * If the server responds with an HTTP 302 redirect, the client validates the redirection URL according to
               the process defined in the &#34;Redirect responses&#34; and then does one of the following:
                 * If the redirection URL is valid, the client tries the URL and then does one of the following:
@@ -1183,9 +1137,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
                 * If the value of the Action element is &#34;Settings&#34;, the client has successfully received the requested
                   configuration settings for the specified user. The client does not need to proceed to step 6.
 
-        Args:
-          ad:
-
+        :param ad:
+        :return:
         &#34;&#34;&#34;
         log.info(&#39;Step 5: Checking response&#39;)
         if ad.response is None:
@@ -1201,19 +1154,16 @@ implementation, start by doing an official test at <a href="https://testconnecti
                 is_valid_response, ad = self._attempt_response(url=ad_response.redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                else:
-                    return self._step_6()
-            else:
-                log.debug(&#39;Invalid redirect URL: %s&#39;, ad_response.redirect_url)
                 return self._step_6()
-        else:
-            # This could be an email redirect. Let outer layer handle this
-            return ad_response
+            log.debug(&#39;Invalid redirect URL: %s&#39;, ad_response.redirect_url)
+            return self._step_6()
+        # This could be an email redirect. Let outer layer handle this
+        return ad_response
 
     def _step_6(self):
-        &#34;&#34;&#34;If the client cannot contact the Autodiscover service, the client should ask the user for the Exchange server
-        name and use it to construct an Exchange EWS URL. The client should try to use this URL for future requests.
-
+        &#34;&#34;&#34;Perform step 6. If the client cannot contact the Autodiscover service, the client should ask the user for
+        the Exchange server name and use it to construct an Exchange EWS URL. The client should try to use this URL for
+        future requests.
         &#34;&#34;&#34;
         raise AutoDiscoverFailed(
             &#39;All steps in the autodiscover protocol failed for email %r. If you think this is an error, consider doing &#39;
@@ -1341,13 +1291,13 @@ implementation, start by doing an official test at <a href="https://testconnecti
 <span>(</span><span>priority, weight, port, srv)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A container for autodiscover-related SRV records in DNS</p></div>
+<div class="desc"><p>A container for autodiscover-related SRV records in DNS.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SrvRecord:
-    &#34;&#34;&#34;A container for autodiscover-related SRV records in DNS&#34;&#34;&#34;
+    &#34;&#34;&#34;A container for autodiscover-related SRV records in DNS.&#34;&#34;&#34;
 
     def __init__(self, priority, weight, port, srv):
         self.priority = priority

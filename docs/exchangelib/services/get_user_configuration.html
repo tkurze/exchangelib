@@ -40,7 +40,9 @@ PROPERTIES_CHOICES = {ID, DICTIONARY, XML_DATA, BINARY_DATA, ALL}
 
 class GetUserConfiguration(EWSAccountService):
     &#34;&#34;&#34;MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation&#34;&#34;&#34;
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
+    &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserConfiguration&#39;
 
     def call(self, user_configuration_name, properties):
@@ -89,7 +91,9 @@ class GetUserConfiguration(EWSAccountService):
 </summary>
 <pre><code class="python">class GetUserConfiguration(EWSAccountService):
     &#34;&#34;&#34;MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation&#34;&#34;&#34;
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
+    &#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetUserConfiguration&#39;
 
     def call(self, user_configuration_name, properties):

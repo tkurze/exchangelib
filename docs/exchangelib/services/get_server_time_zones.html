@@ -38,6 +38,7 @@ from ..version import EXCHANGE_2010
 
 class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
     element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
     supported_from = EXCHANGE_2010
@@ -63,14 +64,15 @@ class GetServerTimeZones(EWSService):
                 payload.append(tz_ids)
         return payload
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         for timezonedef in container:
             tz_id = timezonedef.get(&#39;Id&#39;)
             tz_name = timezonedef.get(&#39;Name&#39;)
-            tz_periods = self._get_periods(timezonedef)
-            tz_transitions_groups = self._get_transitions_groups(timezonedef)
-            tz_transitions = self._get_transitions(timezonedef)
-            yield (tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups)
+            tz_periods = cls._get_periods(timezonedef)
+            tz_transitions_groups = cls._get_transitions_groups(timezonedef)
+            tz_transitions = cls._get_transitions(timezonedef)
+            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
     def _get_periods(timezonedef):
@@ -135,7 +137,7 @@ class GetServerTimeZones(EWSService):
                     t_date = xml_text_to_value(transition.find(&#39;{%s}DateTime&#39; % TNS).text, EWSDateTime).date()
                 except NaiveDateTimeNotAllowed as e:
                     # We encountered a naive datetime. Don&#39;t worry. we just need the date
-                    t_date = e.args[0].date()
+                    t_date = e.local_dt.date()
                 tz_transitions[tg_id] = t_date
         return tz_transitions</code></pre>
 </details>
@@ -151,7 +153,7 @@ class GetServerTimeZones(EWSService):
 <dl>
 <dt id="exchangelib.services.get_server_time_zones.GetServerTimeZones"><code class="flex name class">
 <span>class <span class="ident">GetServerTimeZones</span></span>
-<span>(</span><span>protocol, chunk_size=None)</span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones</a></p></div>
@@ -161,6 +163,7 @@ class GetServerTimeZones(EWSService):
 </summary>
 <pre><code class="python">class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones&#34;&#34;&#34;
+
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
     element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
     supported_from = EXCHANGE_2010
@@ -186,14 +189,15 @@ class GetServerTimeZones(EWSService):
                 payload.append(tz_ids)
         return payload
 
-    def _get_elements_in_container(self, container):
+    @classmethod
+    def _get_elements_in_container(cls, container):
         for timezonedef in container:
             tz_id = timezonedef.get(&#39;Id&#39;)
             tz_name = timezonedef.get(&#39;Name&#39;)
-            tz_periods = self._get_periods(timezonedef)
-            tz_transitions_groups = self._get_transitions_groups(timezonedef)
-            tz_transitions = self._get_transitions(timezonedef)
-            yield (tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups)
+            tz_periods = cls._get_periods(timezonedef)
+            tz_transitions_groups = cls._get_transitions_groups(timezonedef)
+            tz_transitions = cls._get_transitions(timezonedef)
+            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
     def _get_periods(timezonedef):
@@ -258,7 +262,7 @@ class GetServerTimeZones(EWSService):
                     t_date = xml_text_to_value(transition.find(&#39;{%s}DateTime&#39; % TNS).text, EWSDateTime).date()
                 except NaiveDateTimeNotAllowed as e:
                     # We encountered a naive datetime. Don&#39;t worry. we just need the date
-                    t_date = e.args[0].date()
+                    t_date = e.local_dt.date()
                 tz_transitions[tg_id] = t_date
         return tz_transitions</code></pre>
 </details>

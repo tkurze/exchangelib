@@ -28,9 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># flake8: noqa
-&#34;&#34;&#34;
-Stores errors specific to this package, and mirrors all the possible errors that EWS can return.
-&#34;&#34;&#34;
+&#34;&#34;&#34;Stores errors specific to this package, and mirrors all the possible errors that EWS can return.&#34;&#34;&#34;
 from urllib.parse import urlparse
 
 
@@ -127,7 +125,12 @@ class AutoDiscoverRedirect(AutoDiscoverError):
 
 
 class NaiveDateTimeNotAllowed(ValueError):
-    pass
+    def __init__(self, local_dt):
+        super().__init__()
+        from .ewsdatetime import EWSDateTime
+        if not isinstance(local_dt, EWSDateTime):
+            raise ValueError(&#34;&#39;local_dt&#39; value %r must be an EWSDateTime&#34; % local_dt)
+        self.local_dt = local_dt
 
 
 class UnknownTimeZone(EWSError):
@@ -149,7 +152,6 @@ class ResponseMessageError(TransportError):
 class CASError(EWSError):
     &#34;&#34;&#34;EWS will sometimes return an error message in an &#39;X-CasErrorCode&#39; custom HTTP header in an HTTP 500 error code.
     This exception is for those cases. The caller may want to do something with the original response, so store that.
-
     &#34;&#34;&#34;
 
     def __init__(self, cas_error, response):
@@ -697,7 +699,6 @@ This exception is for those cases. The caller may want to do something with the 
 <pre><code class="python">class CASError(EWSError):
     &#34;&#34;&#34;EWS will sometimes return an error message in an &#39;X-CasErrorCode&#39; custom HTTP header in an HTTP 500 error code.
     This exception is for those cases. The caller may want to do something with the original response, so store that.
-
     &#34;&#34;&#34;
 
     def __init__(self, cas_error, response):
@@ -8878,7 +8879,7 @@ This exception is for those cases. The caller may want to do something with the 
 </dd>
 <dt id="exchangelib.errors.NaiveDateTimeNotAllowed"><code class="flex name class">
 <span>class <span class="ident">NaiveDateTimeNotAllowed</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<span>(</span><span>local_dt)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
@@ -8887,7 +8888,12 @@ This exception is for those cases. The caller may want to do something with the 
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NaiveDateTimeNotAllowed(ValueError):
-    pass</code></pre>
+    def __init__(self, local_dt):
+        super().__init__()
+        from .ewsdatetime import EWSDateTime
+        if not isinstance(local_dt, EWSDateTime):
+            raise ValueError(&#34;&#39;local_dt&#39; value %r must be an EWSDateTime&#34; % local_dt)
+        self.local_dt = local_dt</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
