@@ -230,10 +230,10 @@ class EWSService(metaclass=abc.ABCMeta):
                 log.warning('Account %s: Exception in _get_elements: %s', account, traceback.format_exc(20))
                 raise
 
-    def _get_response_and_session(self, payload, api_version):
+    def _get_response(self, payload, api_version):
         """Send the actual HTTP request and get the response."""
         session = self.protocol.get_session()
-        return post_ratelimited(
+        r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
             url=self.protocol.service_endpoint,
@@ -248,6 +248,11 @@ class EWSService(metaclass=abc.ABCMeta):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
+        # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
+        #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
+        #  that. Not doing so seems to not cause any trouble, though.
+        self.protocol.release_session(session)
+        return r
 
     @property
     def _api_versions_to_try(self):
@@ -271,11 +276,7 @@ class EWSService(metaclass=abc.ABCMeta):
         log.debug('Calling service %s', self.SERVICE_NAME)
         for api_version in self._api_versions_to_try:
             log.debug('Trying API version %s', api_version)
-            r, session = self._get_response_and_session(payload=payload, api_version=api_version)
-            # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
-            #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
-            #  that. Not doing so seems to not cause any trouble, though.
-            self.protocol.release_session(session)
+            r = self._get_response(payload=payload, api_version=api_version)
             if self.streaming:
                 # Let 'requests' decode raw data automatically
                 r.raw.decode_content = True
