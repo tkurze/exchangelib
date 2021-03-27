@@ -874,8 +874,9 @@ Response XML: %(xml_response)s'''
         protocol.retire_session(session)
         try:
             _raise_response_errors(r, protocol)  # Always raises an exception
-        finally:
-            log.error('%s\n%s', log_msg % log_vals, xml_log_msg % xml_log_vals)
+        except Exception as e:
+            log.error('%s: %s\n%s\n%s', e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            raise
     log.debug('Session %s thread %s: Useful response from %s', session.session_id, thread_id, url)
     return r, session
 
