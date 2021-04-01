@@ -32,21 +32,21 @@ CALENDAR_ITEM_CHOICES = (SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER)
 class AcceptDeclineMixIn:
     """A mixin for items that can be declined or accepted."""
 
-    def accept(self, message_disposition=None, **kwargs):
+    def accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return AcceptItem(
             account=self.account,
             reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
             **kwargs
         ).send(message_disposition)
 
-    def decline(self, message_disposition=None, **kwargs):
+    def decline(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return DeclineItem(
             account=self.account,
             reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
             **kwargs
         ).send(message_disposition)
 
-    def tentatively_accept(self, message_disposition=None, **kwargs):
+    def tentatively_accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return TentativelyAcceptItem(
             account=self.account,
             reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
