@@ -1,8 +1,7 @@
 import logging
 import re
 
-from .errors import TransportError, ErrorInvalidSchemaVersionForMailboxVersion, ErrorInvalidServerVersion, \
-    ErrorIncorrectSchemaVersion, ResponseMessageError
+from .errors import TransportError, ResponseMessageError
 from .util import xml_to_str, TNS
 
 log = logging.getLogger(__name__)
@@ -228,13 +227,12 @@ class Version:
         name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else 'DUMMY'
         try:
             list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
-        except (ErrorInvalidSchemaVersionForMailboxVersion, ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion):
-            raise TransportError('Unable to guess version')
-        except ResponseMessageError:
-            # We survived long enough to get a new version
-            pass
-        if not protocol.version.build:
-            raise AttributeError('Protocol should have a build number at this point')
+        except ResponseMessageError as e:
+            # We may have survived long enough to get a new version
+            if not protocol.config.version.build:
+                raise TransportError('No valid version headers found in response (%r)' % e)
+        if not protocol.config.version.build:
+            raise TransportError('No valid version headers found in response')
         return protocol.version
 
     @staticmethod
