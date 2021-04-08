@@ -367,12 +367,20 @@ class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
 
     @require_account
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
-        return CreateItem(account=self.account).get(
+        # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
+        # the list of IDs.
+        res = list(CreateItem(account=self.account).call(
             items=[self],
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
-        )
+        ))
+        for r in res:
+            if isinstance(r, Exception):
+                raise r
+        if len(res) == 1:
+            return res[0]
+        return res
 
 
 class AcceptItem(BaseMeetingReplyItem):
