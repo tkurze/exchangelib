@@ -753,6 +753,9 @@ a.inbox.filter(subject__startswith='Invoice').move(to_folder=a.trash)
 a.inbox.filter(subject__startswith='Invoice').archive(
   to_folder=DistinguishedFolderId('inbox')
 )
+a.inbox.filter(subject__startswith='Invoice').mark_as_junk(
+  is_junk=True, move_item=True
+)
 
 # You can change the default page size of bulk operations if you have a slow or
 # busy server.
@@ -958,7 +961,7 @@ FolderCollection(account=a, folders=[a.inbox, a.calendar]).filter(subject='foo')
 
 ## Paging
 
-Paging EWS services, e.g. FindItem and, have a default page size of 100. You can
+Paging EWS services, e.g. `FindItem` and `FindFolder`, have a default page size of 100. You can
 change this value globally if you want:
 
 ```python
@@ -976,7 +979,7 @@ from exchangelib import Account
 a = Account(...)
 qs = a.inbox.all().only('mime_content')
 qs.page_size = 5
-for msg in qs.iterator():
+for msg in qs:
     with open('%s.eml' % msg.item_id, 'w') as f:
         f.write(msg.mime_content)
 ```
