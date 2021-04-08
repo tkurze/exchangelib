@@ -333,7 +333,7 @@ class BaseProtocol:
             # Fetch the token explicitly -- it doesn't occur implicitly
             token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
                                         client_secret=self.credentials.client_secret, scope=scope,
-                                        **token_params)
+                                        timeout=self.TIMEOUT, **token_params)
             # Allow the credentials object to update its copy of the new
             # token, and give the application an opportunity to cache it
             self.credentials.on_token_auto_refreshed(token)
