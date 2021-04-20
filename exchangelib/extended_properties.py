@@ -209,7 +209,12 @@ class ExtendedProperty(EWSElement):
         do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
         field in the response.
         """
-        xml_obj = ExtendedFieldURI.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+        # We can't use ExtendedFieldURI.from_xml(). It clears the XML element but we may not want to consume it here.
+        kwargs = {
+            f.name: f.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+            for f in ExtendedFieldURI.FIELDS
+        }
+        xml_obj = ExtendedFieldURI(**kwargs)
         cls_obj = cls.as_object()
         return cls._normalize_obj(cls_obj) == cls._normalize_obj(xml_obj)
 

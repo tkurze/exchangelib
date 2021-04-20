@@ -3,7 +3,7 @@ from exchangelib.items import Message, CalendarItem
 from exchangelib.folders import Inbox
 from exchangelib.properties import Mailbox
 
-from .common import get_random_int
+from .common import get_random_int, get_random_url
 from .test_items.test_basics import BaseItemTest
 
 
@@ -266,3 +266,26 @@ class ExtendedPropertyTest(BaseItemTest):
             property_type = 'ZZZ'
         with self.assertRaises(ValueError):
             TestProp13.validate_cls()
+
+    def test_multiple_extended_properties(self):
+        class ExternalSharingUrl(ExtendedProperty):
+            property_set_id = "F52A8693-C34D-4980-9E20-9D4C1EABB6A7"
+            property_name = "ExternalSharingUrl"
+            property_type = "String"
+
+        class ExternalSharingFolderId(ExtendedProperty):
+            property_set_id = "F52A8693-C34D-4980-9E20-9D4C1EABB6A7"
+            property_name = "ExternalSharingLocalFolderId"
+            property_type = "Binary"
+
+        Message.register("sharing_url", ExternalSharingUrl)
+        Message.register("sharing_folder_id", ExternalSharingFolderId)
+
+        url, folder_id = get_random_url(), self.test_folder.id.encode('utf-8')
+        m = self.get_test_item()
+        m.sharing_url, m.sharing_folder_id = url, folder_id
+        m.save()
+
+        m = self.test_folder.get(sharing_url=url)
+        self.assertEqual(m.sharing_url, url)
+        self.assertEqual(m.sharing_folder_id, folder_id)
