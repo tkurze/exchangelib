@@ -7,6 +7,7 @@ import struct
 from inspect import getmro
 from threading import Lock
 
+from .errors import TimezoneDefinitionInvalidForYear
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
@@ -848,13 +849,13 @@ class TimeZone(EWSElement):
         # Set a default bias
         valid_period = None
         for (year, period_type), period in sorted(periods.items()):
-            if period_type != 'Standard':
-                continue
             if year > for_year:
                 break
+            if period_type != 'Standard':
+                continue
             valid_period = period
         if valid_period is None:
-            raise ValueError('No standard bias found in periods %s' % periods)
+            raise TimezoneDefinitionInvalidForYear('Year %s not included in periods %s' % (for_year, periods))
         return int(valid_period['bias'].total_seconds()) // 60  # Convert to minutes
 
     @staticmethod

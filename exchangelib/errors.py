@@ -108,6 +108,10 @@ class UnknownTimeZone(EWSError):
     pass
 
 
+class TimezoneDefinitionInvalidForYear(EWSError):
+    pass
+
+
 class SessionPoolMinSizeReached(EWSError):
     pass
 

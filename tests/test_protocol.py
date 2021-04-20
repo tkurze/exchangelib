@@ -16,7 +16,7 @@ from exchangelib.credentials import Credentials
 from exchangelib.configuration import Configuration
 from exchangelib.items import CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
-    TransportError, SessionPoolMaxSizeReached
+    TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
@@ -153,8 +153,12 @@ class ProtocolTest(EWSTest):
         # Test translation to TimeZone objects
         for _, _, periods, transitions, transitionsgroups in self.account.protocol.get_timezones(
                 return_full_timezone_data=True):
-            TimeZone.from_server_timezone(periods=periods, transitions=transitions, transitionsgroups=transitionsgroups,
-                                          for_year=2018)
+            try:
+                TimeZone.from_server_timezone(
+                    periods=periods, transitions=transitions, transitionsgroups=transitionsgroups, for_year=2018,
+                )
+            except TimezoneDefinitionInvalidForYear:
+                pass
 
     def test_get_free_busy_info(self):
         tz = self.account.default_timezone
