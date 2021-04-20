@@ -46,7 +46,7 @@ from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;4.1.0&#39;
+__version__ = &#39;4.2.0&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -2755,7 +2755,7 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
                                         client_secret=self.credentials.client_secret, scope=scope,
-                                        **token_params)
+                                        timeout=self.TIMEOUT, **token_params)
             # Allow the credentials object to update its copy of the new
             # token, and give the application an opportunity to cache it
             self.credentials.on_token_auto_refreshed(token)
@@ -3053,7 +3053,7 @@ def session_pool_size(self):
         # Fetch the token explicitly -- it doesn&#39;t occur implicitly
         token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
                                     client_secret=self.credentials.client_secret, scope=scope,
-                                    **token_params)
+                                    timeout=self.TIMEOUT, **token_params)
         # Allow the credentials object to update its copy of the new
         # token, and give the application an opportunity to cache it
         self.credentials.on_token_auto_refreshed(token)
@@ -6033,7 +6033,12 @@ def timezone(cls, location):
         do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
         field in the response.
         &#34;&#34;&#34;
-        xml_obj = ExtendedFieldURI.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+        # We can&#39;t use ExtendedFieldURI.from_xml(). It clears the XML element but we may not want to consume it here.
+        kwargs = {
+            f.name: f.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+            for f in ExtendedFieldURI.FIELDS
+        }
+        xml_obj = ExtendedFieldURI(**kwargs)
         cls_obj = cls.as_object()
         return cls._normalize_obj(cls_obj) == cls._normalize_obj(xml_obj)
 
@@ -6247,7 +6252,12 @@ def is_property_instance(cls, elem):
     do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
     field in the response.
     &#34;&#34;&#34;
-    xml_obj = ExtendedFieldURI.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+    # We can&#39;t use ExtendedFieldURI.from_xml(). It clears the XML element but we may not want to consume it here.
+    kwargs = {
+        f.name: f.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
+        for f in ExtendedFieldURI.FIELDS
+    }
+    xml_obj = ExtendedFieldURI(**kwargs)
     cls_obj = cls.as_object()
     return cls._normalize_obj(cls_obj) == cls._normalize_obj(xml_obj)</code></pre>
 </details>
@@ -6418,7 +6428,11 @@ def validate_cls(cls):
         return None
 
     def back_off(self, seconds):
-        raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
+        raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)
+
+    def may_retry_on_error(self, response, wait):
+        log.debug(&#39;No retry: no fail-fast policy&#39;)
+        return False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6464,6 +6478,20 @@ def fail_fast(self):
 </summary>
 <pre><code class="python">def back_off(self, seconds):
     raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.FailFast.may_retry_on_error"><code class="name flex">
+<span>def <span class="ident">may_retry_on_error</span></span>(<span>self, response, wait)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def may_retry_on_error(self, response, wait):
+    log.debug(&#39;No retry: no fail-fast policy&#39;)
+    return False</code></pre>
 </details>
 </dd>
 </dl>
@@ -6530,7 +6558,38 @@ failing, and wait up to max_wait seconds before failing.</p></div>
             seconds = self.DEFAULT_BACKOFF
         value = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
         with self._back_off_lock:
-            self._back_off_until = value</code></pre>
+            self._back_off_until = value
+
+    def may_retry_on_error(self, response, wait):
+        if response.status_code not in (301, 302, 401, 500, 503):
+            # Don&#39;t retry if we didn&#39;t get a status code that we can hope to recover from
+            log.debug(&#39;No retry: wrong status code %s&#39;, response.status_code)
+            return False
+        if wait &gt; self.max_wait:
+            # We lost patience. Session is cleaned up in outer loop
+            raise RateLimitError(
+                &#39;Max timeout reached&#39;, url=response.url, status_code=response.status_code, total_wait=wait)
+        if response.status_code == 401:
+            # EWS sometimes throws 401&#39;s when it wants us to throttle connections. OK to retry.
+            return True
+        if response.headers.get(&#39;connection&#39;) == &#39;close&#39;:
+            # Connection closed. OK to retry.
+            return True
+        if response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() \
+                == &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;:
+            # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
+            #
+            # Redirect to &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS
+            # certificate f*ckups on the Exchange server. We should not retry those.
+            return True
+        if response.status_code == 503:
+            # Internal server error. OK to retry.
+            return True
+        if response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content:
+            # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings. OK to retry.
+            log.debug(&#39;Retry allowed: conditions met&#39;)
+            return True
+        return False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6596,6 +6655,47 @@ def fail_fast(self):
     value = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
     with self._back_off_lock:
         self._back_off_until = value</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.FaultTolerance.may_retry_on_error"><code class="name flex">
+<span>def <span class="ident">may_retry_on_error</span></span>(<span>self, response, wait)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def may_retry_on_error(self, response, wait):
+    if response.status_code not in (301, 302, 401, 500, 503):
+        # Don&#39;t retry if we didn&#39;t get a status code that we can hope to recover from
+        log.debug(&#39;No retry: wrong status code %s&#39;, response.status_code)
+        return False
+    if wait &gt; self.max_wait:
+        # We lost patience. Session is cleaned up in outer loop
+        raise RateLimitError(
+            &#39;Max timeout reached&#39;, url=response.url, status_code=response.status_code, total_wait=wait)
+    if response.status_code == 401:
+        # EWS sometimes throws 401&#39;s when it wants us to throttle connections. OK to retry.
+        return True
+    if response.headers.get(&#39;connection&#39;) == &#39;close&#39;:
+        # Connection closed. OK to retry.
+        return True
+    if response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() \
+            == &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;:
+        # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
+        #
+        # Redirect to &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS
+        # certificate f*ckups on the Exchange server. We should not retry those.
+        return True
+    if response.status_code == 503:
+        # Internal server error. OK to retry.
+        return True
+    if response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content:
+        # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings. OK to retry.
+        log.debug(&#39;Retry allowed: conditions met&#39;)
+        return True
+    return False</code></pre>
 </details>
 </dd>
 </dl>
@@ -12081,13 +12181,12 @@ account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-
         name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else &#39;DUMMY&#39;
         try:
             list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
-        except (ErrorInvalidSchemaVersionForMailboxVersion, ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion):
-            raise TransportError(&#39;Unable to guess version&#39;)
-        except ResponseMessageError:
-            # We survived long enough to get a new version
-            pass
-        if not protocol.version.build:
-            raise AttributeError(&#39;Protocol should have a build number at this point&#39;)
+        except ResponseMessageError as e:
+            # We may have survived long enough to get a new version
+            if not protocol.config.version.build:
+                raise TransportError(&#39;No valid version headers found in response (%r)&#39; % e)
+        if not protocol.config.version.build:
+            raise TransportError(&#39;No valid version headers found in response&#39;)
         return protocol.version
 
     @staticmethod
@@ -12211,13 +12310,12 @@ def guess(cls, protocol, api_version_hint=None):
     name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else &#39;DUMMY&#39;
     try:
         list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
-    except (ErrorInvalidSchemaVersionForMailboxVersion, ErrorInvalidServerVersion, ErrorIncorrectSchemaVersion):
-        raise TransportError(&#39;Unable to guess version&#39;)
-    except ResponseMessageError:
-        # We survived long enough to get a new version
-        pass
-    if not protocol.version.build:
-        raise AttributeError(&#39;Protocol should have a build number at this point&#39;)
+    except ResponseMessageError as e:
+        # We may have survived long enough to get a new version
+        if not protocol.config.version.build:
+            raise TransportError(&#39;No valid version headers found in response (%r)&#39; % e)
+    if not protocol.config.version.build:
+        raise TransportError(&#39;No valid version headers found in response&#39;)
     return protocol.version</code></pre>
 </details>
 </dd>
@@ -12644,6 +12742,7 @@ def fullname(self):
 <li><code><a title="exchangelib.FailFast.back_off" href="#exchangelib.FailFast.back_off">back_off</a></code></li>
 <li><code><a title="exchangelib.FailFast.back_off_until" href="#exchangelib.FailFast.back_off_until">back_off_until</a></code></li>
 <li><code><a title="exchangelib.FailFast.fail_fast" href="#exchangelib.FailFast.fail_fast">fail_fast</a></code></li>
+<li><code><a title="exchangelib.FailFast.may_retry_on_error" href="#exchangelib.FailFast.may_retry_on_error">may_retry_on_error</a></code></li>
 </ul>
 </li>
 <li>
@@ -12653,6 +12752,7 @@ def fullname(self):
 <li><code><a title="exchangelib.FaultTolerance.back_off" href="#exchangelib.FaultTolerance.back_off">back_off</a></code></li>
 <li><code><a title="exchangelib.FaultTolerance.back_off_until" href="#exchangelib.FaultTolerance.back_off_until">back_off_until</a></code></li>
 <li><code><a title="exchangelib.FaultTolerance.fail_fast" href="#exchangelib.FaultTolerance.fail_fast">fail_fast</a></code></li>
+<li><code><a title="exchangelib.FaultTolerance.may_retry_on_error" href="#exchangelib.FaultTolerance.may_retry_on_error">may_retry_on_error</a></code></li>
 </ul>
 </li>
 <li>

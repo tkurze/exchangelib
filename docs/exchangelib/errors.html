@@ -137,6 +137,10 @@ class UnknownTimeZone(EWSError):
     pass
 
 
+class TimezoneDefinitionInvalidForYear(EWSError):
+    pass
+
+
 class SessionPoolMinSizeReached(EWSError):
     pass
 
@@ -766,6 +770,7 @@ This exception is for those cases. The caller may want to do something with the 
 <li><a title="exchangelib.errors.EWSWarning" href="#exchangelib.errors.EWSWarning">EWSWarning</a></li>
 <li><a title="exchangelib.errors.SessionPoolMaxSizeReached" href="#exchangelib.errors.SessionPoolMaxSizeReached">SessionPoolMaxSizeReached</a></li>
 <li><a title="exchangelib.errors.SessionPoolMinSizeReached" href="#exchangelib.errors.SessionPoolMinSizeReached">SessionPoolMinSizeReached</a></li>
+<li><a title="exchangelib.errors.TimezoneDefinitionInvalidForYear" href="#exchangelib.errors.TimezoneDefinitionInvalidForYear">TimezoneDefinitionInvalidForYear</a></li>
 <li><a title="exchangelib.errors.TransportError" href="#exchangelib.errors.TransportError">TransportError</a></li>
 <li><a title="exchangelib.errors.UnauthorizedError" href="#exchangelib.errors.UnauthorizedError">UnauthorizedError</a></li>
 <li><a title="exchangelib.errors.UnknownTimeZone" href="#exchangelib.errors.UnknownTimeZone">UnknownTimeZone</a></li>
@@ -9451,6 +9456,26 @@ This exception is for those cases. The caller may want to do something with the 
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="exchangelib.errors.TimezoneDefinitionInvalidForYear"><code class="flex name class">
+<span>class <span class="ident">TimezoneDefinitionInvalidForYear</span></span>
+<span>(</span><span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Global error type within this module.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TimezoneDefinitionInvalidForYear(EWSError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.errors.EWSError" href="#exchangelib.errors.EWSError">EWSError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="exchangelib.errors.TransportError"><code class="flex name class">
 <span>class <span class="ident">TransportError</span></span>
 <span>(</span><span>value)</span>
@@ -10739,6 +10764,9 @@ This exception is for those cases. The caller may want to do something with the 
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.SessionPoolMinSizeReached" href="#exchangelib.errors.SessionPoolMinSizeReached">SessionPoolMinSizeReached</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.errors.TimezoneDefinitionInvalidForYear" href="#exchangelib.errors.TimezoneDefinitionInvalidForYear">TimezoneDefinitionInvalidForYear</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.TransportError" href="#exchangelib.errors.TransportError">TransportError</a></code></h4>

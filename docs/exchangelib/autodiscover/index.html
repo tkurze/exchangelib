@@ -586,7 +586,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
                 except CONNECTION_ERRORS as e:
                     r = DummyResponse(url=url, headers={}, request_headers=kwargs[&#39;headers&#39;])
                     total_wait = time.monotonic() - t_start
-                    if _may_retry_on_error(response=r, retry_policy=self.INITIAL_RETRY_POLICY, wait=total_wait):
+                    if self.INITIAL_RETRY_POLICY.may_retry_on_error(response=r, wait=total_wait):
                         log.debug(&#34;Connection error on URL %s (retry %s, error: %s). Cool down&#34;, url, retry, e)
                         # Don&#39;t respect the &#39;Retry-After&#39; header. We don&#39;t know if this is a useful endpoint, and we
                         # want autodiscover to be reasonably fast.

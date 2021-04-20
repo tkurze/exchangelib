@@ -52,8 +52,7 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 
-from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, CASError, UnauthorizedError, \
-    ErrorInvalidSchemaVersionForMailboxVersion
+from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger(&#39;%s.xml&#39; % __name__)
@@ -872,7 +871,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 session = protocol.refresh_credentials(session)
                 continue
             total_wait = time.monotonic() - t_start
-            if _may_retry_on_error(response=r, retry_policy=protocol.retry_policy, wait=total_wait):
+            if protocol.retry_policy.may_retry_on_error(response=r, wait=total_wait):
                 r.close()  # Release memory
                 log.info(&#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
                          session.session_id, thread_id, r.url, r.status_code, wait)
@@ -901,9 +900,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     elif r.status_code != 200:
         protocol.retire_session(session)
         try:
-            _raise_response_errors(r, protocol)  # Always raises an exception
-        finally:
-            log.error(&#39;%s\n%s&#39;, log_msg % log_vals, xml_log_msg % xml_log_vals)
+            protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
+        except Exception as e:
+            log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            raise
     log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
     return r, session
 
@@ -916,41 +916,6 @@ def _back_off_if_needed(back_off_until):
             log.warning(&#39;Server requested back off until %s. Sleeping %s seconds&#39;, back_off_until, sleep_secs)
             time.sleep(sleep_secs)
             return True
-    return False
-
-
-def _may_retry_on_error(response, retry_policy, wait):
-    if response.status_code not in (301, 302, 401, 500, 503):
-        # Don&#39;t retry if we didn&#39;t get a status code that we can hope to recover from
-        log.debug(&#39;No retry: wrong status code %s&#39;, response.status_code)
-        return False
-    if retry_policy.fail_fast:
-        log.debug(&#39;No retry: no fail-fast policy&#39;)
-        return False
-    if wait &gt; retry_policy.max_wait:
-        # We lost patience. Session is cleaned up in outer loop
-        raise RateLimitError(
-            &#39;Max timeout reached&#39;, url=response.url, status_code=response.status_code, total_wait=wait)
-    if response.status_code == 401:
-        # EWS sometimes throws 401&#39;s when it wants us to throttle connections. OK to retry.
-        return True
-    if response.headers.get(&#39;connection&#39;) == &#39;close&#39;:
-        # Connection closed. OK to retry.
-        return True
-    if response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() \
-            == &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;:
-        # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
-        #
-        # Redirect to &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS
-        # certificate f*ckups on the Exchange server. We should not retry those.
-        return True
-    if response.status_code == 503:
-        # Internal server error. OK to retry.
-        return True
-    if response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content:
-        # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings. OK to retry.
-        log.debug(&#39;Retry allowed: conditions met&#39;)
-        return True
     return False
 
 
@@ -974,32 +939,6 @@ def _redirect_or_fail(response, redirects, allow_redirects):
     if redirects &gt; MAX_REDIRECTS:
         raise TransportError(&#39;Max redirect count exceeded&#39;)
     return redirect_url, redirects
-
-
-def _raise_response_errors(response, protocol):
-    cas_error = response.headers.get(&#39;X-CasErrorCode&#39;)
-    if cas_error:
-        if cas_error.startswith(&#39;CAS error:&#39;):
-            # Remove unnecessary text
-            cas_error = cas_error.split(&#39;:&#39;, 1)[1].strip()
-        raise CASError(cas_error=cas_error, response=response)
-    if response.status_code == 500 and (b&#39;The specified server version is invalid&#39; in response.content or
-                                        b&#39;ErrorInvalidSchemaVersionForMailboxVersion&#39; in response.content):
-        # Another way of communicating invalid schema versions
-        raise ErrorInvalidSchemaVersionForMailboxVersion(&#39;Invalid server version&#39;)
-    if b&#39;The referenced account is currently locked out&#39; in response.content:
-        raise TransportError(&#39;The service account is currently locked out&#39;)
-    if response.status_code == 401 and protocol.retry_policy.fail_fast:
-        # This is a login failure
-        raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
-    if &#39;TimeoutException&#39; in response.headers:
-        # A header set by us on CONNECTION_ERRORS
-        raise response.headers[&#39;TimeoutException&#39;]
-    # This could be anything. Let higher layers handle this
-    raise TransportError(
-        &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
-        % (response.status_code, response.headers, response.text)
-    )
 
 
 def _retry_after(r, wait):
@@ -1439,7 +1378,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 session = protocol.refresh_credentials(session)
                 continue
             total_wait = time.monotonic() - t_start
-            if _may_retry_on_error(response=r, retry_policy=protocol.retry_policy, wait=total_wait):
+            if protocol.retry_policy.may_retry_on_error(response=r, wait=total_wait):
                 r.close()  # Release memory
                 log.info(&#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
                          session.session_id, thread_id, r.url, r.status_code, wait)
@@ -1468,9 +1407,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     elif r.status_code != 200:
         protocol.retire_session(session)
         try:
-            _raise_response_errors(r, protocol)  # Always raises an exception
-        finally:
-            log.error(&#39;%s\n%s&#39;, log_msg % log_vals, xml_log_msg % xml_log_vals)
+            protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
+        except Exception as e:
+            log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            raise
     log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
     return r, session</code></pre>
 </details>

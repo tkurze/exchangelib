@@ -35,6 +35,7 @@ import struct
 from inspect import getmro
 from threading import Lock
 
+from .errors import TimezoneDefinitionInvalidForYear
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
@@ -876,13 +877,13 @@ class TimeZone(EWSElement):
         # Set a default bias
         valid_period = None
         for (year, period_type), period in sorted(periods.items()):
-            if period_type != &#39;Standard&#39;:
-                continue
             if year &gt; for_year:
                 break
+            if period_type != &#39;Standard&#39;:
+                continue
             valid_period = period
         if valid_period is None:
-            raise ValueError(&#39;No standard bias found in periods %s&#39; % periods)
+            raise TimezoneDefinitionInvalidForYear(&#39;Year %s not included in periods %s&#39; % (for_year, periods))
         return int(valid_period[&#39;bias&#39;].total_seconds()) // 60  # Convert to minutes
 
     @staticmethod
@@ -1764,7 +1765,7 @@ class MovedEvent(OldTimestampEvent):
     ELEMENT_NAME = &#39;MovedEvent&#39;
 
 
-class NewMailEvent(Event):
+class NewMailEvent(TimestampEvent):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/newmailevent&#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;NewMailEvent&#39;
@@ -4603,7 +4604,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="exchangelib.properties.NewMailEvent" href="#exchangelib.properties.NewMailEvent">NewMailEvent</a></li>
 <li><a title="exchangelib.properties.StatusEvent" href="#exchangelib.properties.StatusEvent">StatusEvent</a></li>
 <li><a title="exchangelib.properties.TimestampEvent" href="#exchangelib.properties.TimestampEvent">TimestampEvent</a></li>
 </ul>
@@ -6281,13 +6281,14 @@ def id_from_xml(cls, elem):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NewMailEvent(Event):
+<pre><code class="python">class NewMailEvent(TimestampEvent):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/newmailevent&#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;NewMailEvent&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.properties.TimestampEvent" href="#exchangelib.properties.TimestampEvent">TimestampEvent</a></li>
 <li><a title="exchangelib.properties.Event" href="#exchangelib.properties.Event">Event</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
 </ul>
@@ -6300,12 +6301,12 @@ def id_from_xml(cls, elem):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.properties.Event" href="#exchangelib.properties.Event">Event</a></b></code>:
+<li><code><b><a title="exchangelib.properties.TimestampEvent" href="#exchangelib.properties.TimestampEvent">TimestampEvent</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.properties.Event.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
-<li><code><a title="exchangelib.properties.Event.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
-<li><code><a title="exchangelib.properties.Event.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
-<li><code><a title="exchangelib.properties.Event.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+<li><code><a title="exchangelib.properties.TimestampEvent.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.TimestampEvent.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.TimestampEvent.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.TimestampEvent.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
 </ul>
@@ -8372,13 +8373,13 @@ def response_tag(cls):
         # Set a default bias
         valid_period = None
         for (year, period_type), period in sorted(periods.items()):
-            if period_type != &#39;Standard&#39;:
-                continue
             if year &gt; for_year:
                 break
+            if period_type != &#39;Standard&#39;:
+                continue
             valid_period = period
         if valid_period is None:
-            raise ValueError(&#39;No standard bias found in periods %s&#39; % periods)
+            raise TimezoneDefinitionInvalidForYear(&#39;Year %s not included in periods %s&#39; % (for_year, periods))
         return int(valid_period[&#39;bias&#39;].total_seconds()) // 60  # Convert to minutes
 
     @staticmethod
@@ -8730,6 +8731,7 @@ def from_xml(cls, elem, account):
 <li><a title="exchangelib.properties.DeletedEvent" href="#exchangelib.properties.DeletedEvent">DeletedEvent</a></li>
 <li><a title="exchangelib.properties.FreeBusyChangedEvent" href="#exchangelib.properties.FreeBusyChangedEvent">FreeBusyChangedEvent</a></li>
 <li><a title="exchangelib.properties.ModifiedEvent" href="#exchangelib.properties.ModifiedEvent">ModifiedEvent</a></li>
+<li><a title="exchangelib.properties.NewMailEvent" href="#exchangelib.properties.NewMailEvent">NewMailEvent</a></li>
 <li><a title="exchangelib.properties.OldTimestampEvent" href="#exchangelib.properties.OldTimestampEvent">OldTimestampEvent</a></li>
 </ul>
 <h3>Class variables</h3>
