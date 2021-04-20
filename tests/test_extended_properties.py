@@ -278,14 +278,18 @@ class ExtendedPropertyTest(BaseItemTest):
             property_name = "ExternalSharingLocalFolderId"
             property_type = "Binary"
 
-        Message.register("sharing_url", ExternalSharingUrl)
-        Message.register("sharing_folder_id", ExternalSharingFolderId)
+        try:
+            self.ITEM_CLASS.register("sharing_url", ExternalSharingUrl)
+            self.ITEM_CLASS.register("sharing_folder_id", ExternalSharingFolderId)
 
-        url, folder_id = get_random_url(), self.test_folder.id.encode('utf-8')
-        m = self.get_test_item()
-        m.sharing_url, m.sharing_folder_id = url, folder_id
-        m.save()
+            url, folder_id = get_random_url(), self.test_folder.id.encode('utf-8')
+            m = self.get_test_item()
+            m.sharing_url, m.sharing_folder_id = url, folder_id
+            m.save()
 
-        m = self.test_folder.get(sharing_url=url)
-        self.assertEqual(m.sharing_url, url)
-        self.assertEqual(m.sharing_folder_id, folder_id)
+            m = self.test_folder.get(sharing_url=url)
+            self.assertEqual(m.sharing_url, url)
+            self.assertEqual(m.sharing_folder_id, folder_id)
+        finally:
+            self.ITEM_CLASS.deregister("sharing_url")
+            self.ITEM_CLASS.deregister("sharing_folder_id")
