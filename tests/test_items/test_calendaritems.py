@@ -18,6 +18,8 @@ class CalendarTest(CommonItemTest):
     ITEM_CLASS = CalendarItem
 
     def match_cat(self, i):
+        if isinstance(i, Exception):
+            return False
         return set(i.categories or []) == set(self.categories)
 
     def test_cancel(self):
