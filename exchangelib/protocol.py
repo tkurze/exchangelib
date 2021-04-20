@@ -18,7 +18,8 @@ from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient
 from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
-from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached
+from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached, RateLimitError, CASError, \
+    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError
 from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
@@ -646,6 +647,35 @@ class RetryPolicy(metaclass=abc.ABCMeta):
     def back_off(self, seconds):
         pass
 
+    @abc.abstractmethod
+    def may_retry_on_error(self, response, wait):
+        pass
+
+    def raise_response_errors(self, response):
+        cas_error = response.headers.get('X-CasErrorCode')
+        if cas_error:
+            if cas_error.startswith('CAS error:'):
+                # Remove unnecessary text
+                cas_error = cas_error.split(':', 1)[1].strip()
+            raise CASError(cas_error=cas_error, response=response)
+        if response.status_code == 500 and (b'The specified server version is invalid' in response.content or
+                                            b'ErrorInvalidSchemaVersionForMailboxVersion' in response.content):
+            # Another way of communicating invalid schema versions
+            raise ErrorInvalidSchemaVersionForMailboxVersion('Invalid server version')
+        if b'The referenced account is currently locked out' in response.content:
+            raise TransportError('The service account is currently locked out')
+        if response.status_code == 401 and self.fail_fast:
+            # This is a login failure
+            raise UnauthorizedError('Invalid credentials for %s' % response.url)
+        if 'TimeoutException' in response.headers:
+            # A header set by us on CONNECTION_ERRORS
+            raise response.headers['TimeoutException']
+        # This could be anything. Let higher layers handle this
+        raise TransportError(
+            'Unknown failure in response. Code: %s headers: %s content: %s'
+            % (response.status_code, response.headers, response.text)
+        )
+
 
 class FailFast(RetryPolicy):
     """Fail immediately on server errors."""
@@ -660,6 +690,10 @@ class FailFast(RetryPolicy):
 
     def back_off(self, seconds):
         raise ValueError('Cannot back off with fail-fast policy')
+
+    def may_retry_on_error(self, response, wait):
+        log.debug('No retry: no fail-fast policy')
+        return False
 
 
 class FaultTolerance(RetryPolicy):
@@ -714,3 +748,34 @@ class FaultTolerance(RetryPolicy):
         value = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
         with self._back_off_lock:
             self._back_off_until = value
+
+    def may_retry_on_error(self, response, wait):
+        if response.status_code not in (301, 302, 401, 500, 503):
+            # Don't retry if we didn't get a status code that we can hope to recover from
+            log.debug('No retry: wrong status code %s', response.status_code)
+            return False
+        if wait > self.max_wait:
+            # We lost patience. Session is cleaned up in outer loop
+            raise RateLimitError(
+                'Max timeout reached', url=response.url, status_code=response.status_code, total_wait=wait)
+        if response.status_code == 401:
+            # EWS sometimes throws 401's when it wants us to throttle connections. OK to retry.
+            return True
+        if response.headers.get('connection') == 'close':
+            # Connection closed. OK to retry.
+            return True
+        if response.status_code == 302 and response.headers.get('location', '').lower() \
+                == '/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx':
+            # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
+            #
+            # Redirect to '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS
+            # certificate f*ckups on the Exchange server. We should not retry those.
+            return True
+        if response.status_code == 503:
+            # Internal server error. OK to retry.
+            return True
+        if response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content:
+            # "Server Error in '/EWS' Application" has been seen in highly concurrent settings. OK to retry.
+            log.debug('Retry allowed: conditions met')
+            return True
+        return False

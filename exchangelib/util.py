@@ -24,8 +24,7 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 
-from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, CASError, UnauthorizedError, \
-    ErrorInvalidSchemaVersionForMailboxVersion
+from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger('%s.xml' % __name__)
@@ -844,7 +843,7 @@ Response XML: %(xml_response)s'''
                 session = protocol.refresh_credentials(session)
                 continue
             total_wait = time.monotonic() - t_start
-            if _may_retry_on_error(response=r, retry_policy=protocol.retry_policy, wait=total_wait):
+            if protocol.retry_policy.may_retry_on_error(response=r, wait=total_wait):
                 r.close()  # Release memory
                 log.info("Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs",
                          session.session_id, thread_id, r.url, r.status_code, wait)
@@ -873,7 +872,7 @@ Response XML: %(xml_response)s'''
     elif r.status_code != 200:
         protocol.retire_session(session)
         try:
-            _raise_response_errors(r, protocol)  # Always raises an exception
+            protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
         except Exception as e:
             log.error('%s: %s\n%s\n%s', e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
             raise
@@ -889,41 +888,6 @@ def _back_off_if_needed(back_off_until):
             log.warning('Server requested back off until %s. Sleeping %s seconds', back_off_until, sleep_secs)
             time.sleep(sleep_secs)
             return True
-    return False
-
-
-def _may_retry_on_error(response, retry_policy, wait):
-    if response.status_code not in (301, 302, 401, 500, 503):
-        # Don't retry if we didn't get a status code that we can hope to recover from
-        log.debug('No retry: wrong status code %s', response.status_code)
-        return False
-    if retry_policy.fail_fast:
-        log.debug('No retry: no fail-fast policy')
-        return False
-    if wait > retry_policy.max_wait:
-        # We lost patience. Session is cleaned up in outer loop
-        raise RateLimitError(
-            'Max timeout reached', url=response.url, status_code=response.status_code, total_wait=wait)
-    if response.status_code == 401:
-        # EWS sometimes throws 401's when it wants us to throttle connections. OK to retry.
-        return True
-    if response.headers.get('connection') == 'close':
-        # Connection closed. OK to retry.
-        return True
-    if response.status_code == 302 and response.headers.get('location', '').lower() \
-            == '/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx':
-        # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
-        #
-        # Redirect to '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS
-        # certificate f*ckups on the Exchange server. We should not retry those.
-        return True
-    if response.status_code == 503:
-        # Internal server error. OK to retry.
-        return True
-    if response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content:
-        # "Server Error in '/EWS' Application" has been seen in highly concurrent settings. OK to retry.
-        log.debug('Retry allowed: conditions met')
-        return True
     return False
 
 
@@ -947,32 +911,6 @@ def _redirect_or_fail(response, redirects, allow_redirects):
     if redirects > MAX_REDIRECTS:
         raise TransportError('Max redirect count exceeded')
     return redirect_url, redirects
-
-
-def _raise_response_errors(response, protocol):
-    cas_error = response.headers.get('X-CasErrorCode')
-    if cas_error:
-        if cas_error.startswith('CAS error:'):
-            # Remove unnecessary text
-            cas_error = cas_error.split(':', 1)[1].strip()
-        raise CASError(cas_error=cas_error, response=response)
-    if response.status_code == 500 and (b'The specified server version is invalid' in response.content or
-                                        b'ErrorInvalidSchemaVersionForMailboxVersion' in response.content):
-        # Another way of communicating invalid schema versions
-        raise ErrorInvalidSchemaVersionForMailboxVersion('Invalid server version')
-    if b'The referenced account is currently locked out' in response.content:
-        raise TransportError('The service account is currently locked out')
-    if response.status_code == 401 and protocol.retry_policy.fail_fast:
-        # This is a login failure
-        raise UnauthorizedError('Invalid credentials for %s' % response.url)
-    if 'TimeoutException' in response.headers:
-        # A header set by us on CONNECTION_ERRORS
-        raise response.headers['TimeoutException']
-    # This could be anything. Let higher layers handle this
-    raise TransportError(
-        'Unknown failure in response. Code: %s headers: %s content: %s'
-        % (response.status_code, response.headers, response.text)
-    )
 
 
 def _retry_after(r, wait):

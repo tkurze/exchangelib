@@ -6,7 +6,7 @@ import requests_ntlm
 import requests_oauthlib
 
 from .errors import UnauthorizedError, TransportError
-from .util import create_element, add_xml_child, xml_to_str, ns_translation, _may_retry_on_error, _back_off_if_needed, \
+from .util import create_element, add_xml_child, xml_to_str, ns_translation, _back_off_if_needed, \
     _retry_after, DummyResponse, CONNECTION_ERRORS
 
 log = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
                     # Don't retry on TLS errors. They will most likely be persistent.
                     total_wait = time.monotonic() - t_start
                     r = DummyResponse(url=service_endpoint, headers={}, request_headers=headers)
-                    if _may_retry_on_error(response=r, retry_policy=retry_policy, wait=total_wait):
+                    if retry_policy.may_retry_on_error(response=r, wait=total_wait):
                         wait = _retry_after(r, wait)
                         log.info("Connection error on URL %s (retry %s, error: %s). Cool down %s secs",
                                  service_endpoint, retry, e, wait)

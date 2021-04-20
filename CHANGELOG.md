@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+HEAD
+----
+-   Move `util._may_retry_on_error` and and `util._raise_response_errors` to
+    `RetryPolicy.may_retry_on_error` and `RetryPolicy.raise_response_errors`, respectively. This allows
+    for easier customization of the retry logic.
+
+
 4.1.0
 -----
 -   Add support for synchronization, subscriptions and notifications. Both pull, push and streaming

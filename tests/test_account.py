@@ -200,30 +200,25 @@ class AccountTest(EWSTest):
             autodiscover=False,
             locale='da_DK',
         )
+
         # Should fail when credentials are wrong, but UnauthorizedError is caught and retried. Mock the needed methods
-        import exchangelib.util
+        class Mock1(FaultTolerance):
+            def may_retry_on_error(self, response, wait):
+                if response.status_code == 401:
+                    return False
+                return super().may_retry_on_error(response, wait)
 
-        _orig1 = exchangelib.util._may_retry_on_error
-        _orig2 = exchangelib.util._raise_response_errors
+            def raise_response_errors(self, response):
+                if response.status_code == 401:
+                    raise UnauthorizedError('Invalid credentials for %s' % response.url)
+                return super().raise_response_errors(response)
 
-        def _mock1(response, retry_policy, wait):
-            if response.status_code == 401:
-                return False
-            return _orig1(response, retry_policy, wait)
-
-        def _mock2(response, protocol):
-            if response.status_code == 401:
-                raise UnauthorizedError('Invalid credentials for %s' % response.url)
-            return _orig2(response, protocol)
-
-        exchangelib.util._may_retry_on_error = _mock1
-        exchangelib.util._raise_response_errors = _mock2
         try:
+            account.protocol.config.retry_policy = Mock1()
             with self.assertRaises(UnauthorizedError):
                 account.root.refresh()
         finally:
-            exchangelib.util._may_retry_on_error = _orig1
-            exchangelib.util._raise_response_errors = _orig2
+            account.protocol.config.retry_policy = self.retry_policy
 
         # Cannot update from Configuration object
         with self.assertRaises(AttributeError):

@@ -86,5 +86,5 @@ for msg in a.inbox.filter(datetime_received__gt=emails_since, is_read=False)\
         .only('datetime_received', 'subject', 'text_body')\
         .order_by('datetime_received')[:10]:
     subj = 'New mail: %s' % msg.subject
-    clean_body = '\n'.join(l for l in msg.text_body.split('\n') if l)
+    clean_body = '\n'.join(line for line in msg.text_body.split('\n') if line)
     notify(subj, clean_body[:200])

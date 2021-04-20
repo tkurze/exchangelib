@@ -13,7 +13,7 @@ from ..credentials import OAuth2Credentials
 from ..errors import AutoDiscoverFailed, AutoDiscoverCircularRedirect, TransportError, RedirectError, UnauthorizedError
 from ..protocol import Protocol, FailFast
 from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, OAUTH2, CREDENTIALS_REQUIRED
-from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, _may_retry_on_error, \
+from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, \
     DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
 from ..version import Version
 
@@ -274,7 +274,7 @@ class Autodiscovery:
                 except CONNECTION_ERRORS as e:
                     r = DummyResponse(url=url, headers={}, request_headers=kwargs['headers'])
                     total_wait = time.monotonic() - t_start
-                    if _may_retry_on_error(response=r, retry_policy=self.INITIAL_RETRY_POLICY, wait=total_wait):
+                    if self.INITIAL_RETRY_POLICY.may_retry_on_error(response=r, wait=total_wait):
                         log.debug("Connection error on URL %s (retry %s, error: %s). Cool down", url, retry, e)
                         # Don't respect the 'Retry-After' header. We don't know if this is a useful endpoint, and we
                         # want autodiscover to be reasonably fast.
