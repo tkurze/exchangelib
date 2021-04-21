@@ -18,7 +18,7 @@ Apart from this documentation, we also provide online
 
 ## Table of Contents
 * [Installation](#installation)
-* [Setup and connecting]()
+* [Setup and connecting](#setup-and-connecting)
     * [Optimizing connections](#optimizing-connections)
     * [Fault tolerance](#fault-tolerance)
     * [Kerberos and SSPI authentication](#kerberos-and-sspi-authentication)
