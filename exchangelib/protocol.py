@@ -282,7 +282,9 @@ class BaseProtocol:
 
     def create_oauth2_session(self):
         if self.auth_type != OAUTH2:
-            raise ValueError('Auth type must be %r for credentials type OAuth2Credentials' % OAUTH2)
+            raise ValueError(
+                'Auth type must be %r for credentials type %s' % (OAUTH2, self.credentials.__class__.__name__)
+            )
 
         has_token = False
         scope = ['https://outlook.office365.com/.default']

@@ -2,9 +2,9 @@ import logging
 
 from cached_property import threaded_cached_property
 
-from .credentials import BaseCredentials
+from .credentials import BaseCredentials, OAuth2Credentials
 from .protocol import RetryPolicy, FailFast
-from .transport import AUTH_TYPE_MAP
+from .transport import AUTH_TYPE_MAP, OAUTH2
 from .util import split_url
 from .version import Version
 
@@ -43,6 +43,9 @@ class Configuration:
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError("'credentials' %r must be a Credentials instance" % credentials)
+        if isinstance(credentials, OAuth2Credentials) and auth_type is None:
+            # This type of credentials *must* use the OAuth auth type
+            auth_type = OAUTH2
         if server and service_endpoint:
             raise AttributeError("Only one of 'server' or 'service_endpoint' must be provided")
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
