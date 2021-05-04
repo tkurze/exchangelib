@@ -9,7 +9,8 @@ from .util import to_xml
 
 CLDR_WINZONE_URL = 'https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml'
 DEFAULT_TERRITORY = '001'
-CLDR_WINZONE_VERSION = '2021a'
+CLDR_WINZONE_TYPE_VERSION = '2021a'
+CLDR_WINZONE_OTHER_VERSION = '7e11800'
 
 
 def generate_map(timeout=10):
@@ -23,7 +24,8 @@ def generate_map(timeout=10):
         raise ValueError('Unexpected response: %s' % r)
     tz_map = {}
     timezones_elem = to_xml(r.content).find('windowsZones').find('mapTimezones')
-    version = timezones_elem.get('typeVersion')
+    type_version = timezones_elem.get('typeVersion')
+    other_version = timezones_elem.get('otherVersion')
     for e in timezones_elem.findall('mapZone'):
         for location in re.split(r'\s+', e.get('type')):
             if e.get('territory') == DEFAULT_TERRITORY or location not in tz_map:
@@ -32,7 +34,7 @@ def generate_map(timeout=10):
                 if not location:
                     raise ValueError('Expected location')
                 tz_map[location] = e.get('other'), e.get('territory')
-    return version, tz_map
+    return type_version, other_version, tz_map
 
 
 # This map is generated irregularly from generate_map(). Do not edit manually - make corrections to
@@ -131,7 +133,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'America/Creston': ('US Mountain Standard Time', 'CA'),
     'America/Cuiaba': ('Central Brazilian Standard Time', '001'),
     'America/Curacao': ('SA Western Standard Time', 'CW'),
-    'America/Danmarkshavn': ('UTC', 'GL'),
+    'America/Danmarkshavn': ('Greenwich Standard Time', 'GL'),
     'America/Dawson': ('Yukon Standard Time', 'CA'),
     'America/Dawson_Creek': ('US Mountain Standard Time', 'CA'),
     'America/Denver': ('Mountain Standard Time', '001'),
@@ -359,7 +361,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'Australia/Sydney': ('AUS Eastern Standard Time', '001'),
     'CST6CDT': ('Central Standard Time', 'ZZ'),
     'EST5EDT': ('Eastern Standard Time', 'ZZ'),
-    'Etc/GMT': ('UTC', '001'),
+    'Etc/GMT': ('UTC', 'ZZ'),
     'Etc/GMT+1': ('Cape Verde Standard Time', 'ZZ'),
     'Etc/GMT+10': ('Hawaiian Standard Time', 'ZZ'),
     'Etc/GMT+11': ('UTC-11', '001'),
@@ -386,7 +388,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'Etc/GMT-7': ('SE Asia Standard Time', 'ZZ'),
     'Etc/GMT-8': ('Singapore Standard Time', 'ZZ'),
     'Etc/GMT-9': ('Tokyo Standard Time', 'ZZ'),
-    'Etc/UTC': ('UTC', 'ZZ'),
+    'Etc/UTC': ('UTC', '001'),
     'Europe/Amsterdam': ('W. Europe Standard Time', 'NL'),
     'Europe/Andorra': ('W. Europe Standard Time', 'AD'),
     'Europe/Astrakhan': ('Astrakhan Standard Time', '001'),
