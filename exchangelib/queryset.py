@@ -248,7 +248,7 @@ class QuerySet(SearchableMixIn):
         # each sort operation if the field was marked as such.
         for f in reversed(self.order_fields):
             try:
-                items = sorted(items, key=lambda i: _get_value_or_default(i, f), reverse=f.reverse)
+                items = sorted(items, key=lambda i: _get_sort_value_or_default(i, f), reverse=f.reverse)
             except TypeError as e:
                 if 'unorderable types' not in e.args[0]:
                     raise
@@ -366,7 +366,7 @@ class QuerySet(SearchableMixIn):
             raise ValueError('values() requires at least one field name')
         return self._item_yielder(
             iterable=iterable,
-            item_func=lambda i: {f.path: f.get_value(i) for f in self.only_fields},
+            item_func=lambda i: {f.path: _get_value_or_default(f, i) for f in self.only_fields},
             id_only_func=lambda item_id, changekey: {'id': item_id},
             changekey_only_func=lambda item_id, changekey: {'changekey': changekey},
             id_and_changekey_func=lambda item_id, changekey: {'id': item_id, 'changekey': changekey},
@@ -377,7 +377,7 @@ class QuerySet(SearchableMixIn):
             raise ValueError('values_list() requires at least one field name')
         return self._item_yielder(
             iterable=iterable,
-            item_func=lambda i: tuple(f.get_value(i) for f in self.only_fields),
+            item_func=lambda i: tuple(_get_value_or_default(f, i) for f in self.only_fields),
             id_only_func=lambda item_id, changekey: (item_id,),
             changekey_only_func=lambda item_id, changekey: (changekey,),
             id_and_changekey_func=lambda item_id, changekey: (item_id, changekey),
@@ -386,10 +386,9 @@ class QuerySet(SearchableMixIn):
     def _as_flat_values_list(self, iterable):
         if not self.only_fields or len(self.only_fields) != 1:
             raise ValueError('flat=True requires exactly one field name')
-        flat_field_path = self.only_fields[0]
         return self._item_yielder(
             iterable=iterable,
-            item_func=flat_field_path.get_value,
+            item_func=lambda i: _get_value_or_default(self.only_fields[0], i),
             id_only_func=lambda item_id, changekey: item_id,
             changekey_only_func=lambda item_id, changekey: changekey,
             id_and_changekey_func=None,  # Can never be called
@@ -657,7 +656,16 @@ class QuerySet(SearchableMixIn):
         return self.__class__.__name__ + '(%s)' % ', '.join('%s=%s' % (k, v) for k, v in fmt_args)
 
 
-def _get_value_or_default(item, field_order):
+def _get_value_or_default(field, item):
+    # When we request specific fields using .values() or .values_list(), the incoming item type may not have the field
+    # we are requesting. Return None when this happens instead of raising an AttributeError.
+    try:
+        return field.get_value(item)
+    except AttributeError:
+        return None
+
+
+def _get_sort_value_or_default(item, field_order):
     # Python can only sort values when <, > and = are implemented for the two types. Try as best we can to sort
     # items, even when the item may have a None value for the field in question, or when the item is an
     # Exception. In that case, we calculate a default value and sort all None values and exceptions as the default
