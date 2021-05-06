@@ -67,7 +67,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'Africa/Gaborone': ('South Africa Standard Time', 'BW'),
     'Africa/Harare': ('South Africa Standard Time', 'ZW'),
     'Africa/Johannesburg': ('South Africa Standard Time', '001'),
-    'Africa/Juba': ('South Africa Standard Time', 'SS'),
+    'Africa/Juba': ('South Sudan Standard Time', '001'),
     'Africa/Kampala': ('E. Africa Standard Time', 'UG'),
     'Africa/Khartoum': ('Sudan Standard Time', '001'),
     'Africa/Kigali': ('South Africa Standard Time', 'RW'),
