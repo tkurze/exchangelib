@@ -57,6 +57,7 @@ jobs:
         python -m pip install --upgrade pip
 
     - name: Install cutting-edge Cython-based packages on Python dev versions
+      continue-on-error: ${{ matrix.allowed_failure || false }}
       if: matrix.python-version == '3.10-dev'
       run: |
         sudo apt-get install libxml2-dev libxslt1-dev
@@ -66,11 +67,13 @@ jobs:
         python -m pip install git+https://github.com/yaml/pyyaml.git
 
     - name: Install dependencies
+      continue-on-error: ${{ matrix.allowed_failure || false }}
       run: |
         python -m pip install .
         python -m pip install -r test-requirements.txt
 
     - name: Test with coverage
+      continue-on-error: ${{ matrix.allowed_failure || false }}
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
