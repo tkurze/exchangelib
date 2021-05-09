@@ -102,6 +102,9 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
         self.timeout = timeout
+        # Streaming connection variables
+        self._streaming_session = None
+        self._streaming_response = None
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
@@ -194,6 +197,14 @@ class EWSService(metaclass=abc.ABCMeta):
             log.debug('Processing chunk %s containing %s items', i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
+    def stop_streaming(self):
+        if self._streaming_response:
+            self._streaming_response.close()  # Release memory
+            self._streaming_response = None
+        if self._streaming_session:
+            self.protocol.release_session(self._streaming_session)
+            self._streaming_session = None
+
     def _get_elements(self, payload):
         """Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
         to the caller as exception objects. Retry the request according to the retry policy.
@@ -229,10 +240,14 @@ class EWSService(metaclass=abc.ABCMeta):
                 account = self.account if isinstance(self, EWSAccountService) else None
                 log.warning('Account %s: Exception in _get_elements: %s', account, traceback.format_exc(20))
                 raise
+            finally:
+                if self.streaming:
+                    self.stop_streaming()
 
     def _get_response(self, payload, api_version):
         """Send the actual HTTP request and get the response."""
         session = self.protocol.get_session()
+        self._streaming_session, self._streaming_response = None, None
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
@@ -248,10 +263,12 @@ class EWSService(metaclass=abc.ABCMeta):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
-        # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
-        #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
-        #  that. Not doing so seems to not cause any trouble, though.
-        self.protocol.release_session(session)
+        if self.streaming:
+            # We con only release the session when we have fully consumed the response. Save session and response
+            # objects for later.
+            self._streaming_session, self._streaming_response = session, r
+        else:
+            self.protocol.release_session(session)
         return r
 
     @property

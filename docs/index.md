@@ -1559,6 +1559,13 @@ for notification in a.inbox.get_events(subscription_id, watermark):
 # 'connection_timeout' argument that defines how long, in minutes, to keep the
 # connection open. .get_streaming_events() will block while the connection is
 # open, yielding notifications as they become available on the request stream.
+#
+# .get_streaming_events() occupies a connection to the server while it's
+# streaming events. If you need to do additional calls to the server while
+# streaming, e.g. fetching extra item fields, moving items to a folder, sending
+# emails etc, you need to make sure that you have enough connections to do so.
+# The default configuration is to only have 1 connection. See the documentation
+# on `Configuration.max_connections` on how to increase the connection count.
 for notification in a.inbox.get_streaming_events(
         subscription_id, connection_timeout=1
 ):

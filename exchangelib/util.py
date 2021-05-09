@@ -364,7 +364,6 @@ class StreamingBase64Parser(DefusedExpatParser):
             buffer = file.read(self._bufsize)
         # Any remaining data in self.buffer should be padding chars now
         self.buffer = None
-        r.close()  # Release memory
         self.close()
         if not self.element_found:
             data = bytes(collected_data)

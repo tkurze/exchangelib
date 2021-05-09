@@ -197,3 +197,25 @@ class SyncTest(BaseItemTest):
             ))
             deleted_event, _ = self._filter_events(notifications, DeletedEvent, i1_id)
             self.assertEqual(deleted_event.item_id.id, i1_id)
+
+    def test_streaming_with_other_calls(self):
+        # Test that we can call other EWS operations while we have a streaming subscription open
+        test_folder = self.account.drafts
+
+        # Test calling GetItem while the streaming connection is still open. We need to bump the
+        # connection count because the default count is 1 but we need 2 connections.
+        self.account.protocol._session_pool_maxsize += 1
+        self.account.protocol.increase_poolsize()
+        try:
+            with test_folder.streaming_subscription() as subscription_id:
+                i1 = self.get_test_item(folder=test_folder).save()
+                for notification in test_folder.get_streaming_events(
+                    subscription_id, connection_timeout=1, max_notifications_returned=1
+                ):
+                    for e in notification.events:
+                        if isinstance(e, CreatedEvent) and e.event_type == CreatedEvent.ITEM \
+                                and e.item_id.id == i1.id:
+                            test_folder.all().only('id').get(id=e.item_id.id)
+        finally:
+            self.account.protocol.decrease_poolsize()
+            self.account.protocol._session_pool_maxsize -= 1

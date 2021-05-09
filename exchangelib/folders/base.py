@@ -666,6 +666,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         ):
             yield notification
             if max_notifications_returned and i >= max_notifications_returned:
+                svc.stop_streaming()
                 break
         if svc.error_subscription_ids:
             raise ErrorInvalidSubscription('Invalid subscription IDs: %s' % svc.error_subscription_ids)

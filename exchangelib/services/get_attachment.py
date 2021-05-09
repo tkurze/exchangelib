@@ -76,3 +76,5 @@ class GetAttachment(EWSAccountService):
                     raise e
             # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
             raise enf
+        finally:
+            self.stop_streaming()
