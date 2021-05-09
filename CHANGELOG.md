@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+HEAD
+----
+-   Add context managers `Folder.pull_subscription()`, `Folder.push_subscription()` and
+    `Folder.streaming_subscription()` that handle unsubscriptions automatically.
+
 4.2.0
 -----
 -   Move `util._may_retry_on_error` and and `util._raise_response_errors` to

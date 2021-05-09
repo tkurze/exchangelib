@@ -558,6 +558,18 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             raise s_id
         return s_id
 
+    @require_id
+    def pull_subscription(self, **kwargs):
+        return PullSubscription(folder=self, **kwargs)
+
+    @require_id
+    def push_subscription(self, **kwargs):
+        return PushSubscription(folder=self, **kwargs)
+
+    @require_id
+    def streaming_subscription(self, **kwargs):
+        return StreamingSubscription(folder=self, **kwargs)
+
     def unsubscribe(self, subscription_id):
         """Unsubscribe. Only applies to pull and streaming notifications.
 
@@ -830,3 +842,39 @@ class Folder(BaseFolder):
             if folder_cls == Folder:
                 log.debug('Fallback to class Folder (folder_class %s, name %s)', folder.folder_class, folder.name)
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})
+
+
+class BaseSubscription(metaclass=abc.ABCMeta):
+    def __init__(self, folder, **subscription_kwargs):
+        self.folder = folder
+        self.subscription_kwargs = subscription_kwargs
+        self.subscription_id = None
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        self.folder.unsubscribe(subscription_id=self.subscription_id)
+        self.subscription_id = None
+
+
+class PullSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_pull(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+
+class PushSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_push(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+    def __exit__(self, *args, **kwargs):
+        # Cannot unsubscribe to push subscriptions
+        pass
+
+
+class StreamingSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id = self.folder.subscribe_to_streaming(**self.subscription_kwargs)
+        return self.subscription_id

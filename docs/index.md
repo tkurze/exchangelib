@@ -1518,7 +1518,7 @@ subscription_id, watermark = a.inbox.subscribe_to_pull()
 # Create a push subscription. The server will regularly send a request to the
 # callback URL to deliver changes or a status message.
 subscription_id, watermark = a.inbox.subscribe_to_push(
-  'https://my_app.example.com/callback_url'
+  callback_url='https://my_app.example.com/callback_url'
 )
 
 # Create a streaming subscription that can be used to stream events from the
@@ -1528,6 +1528,19 @@ subscription_id = a.inbox.subscribe_to_streaming()
 # Cancel the subscription. Does not apply to push subscriptions that cancel
 # automatically after a certain amount of failed attempts.
 a.inbox.unsubscribe(subscription_id)
+
+# You can also use one of the three context managers that handle unsubscription
+# automatically:
+with a.inbox.pull_subscription() as (subscription_id, watermark):
+  pass
+
+with a.inbox.push_subscription(
+        callback_url='https://my_app.example.com/callback_url'
+) as (subscription_id, watermark):
+  pass
+
+with a.inbox.streaming_subscription() as subscription_id:
+  pass
 
 # Pull events from the server. This method returns Notification objects that
 # contain events in the 'events' attribute and a new watermark in the
