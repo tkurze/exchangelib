@@ -242,12 +242,13 @@ class Root(RootOfHierarchy):
                 log.debug('Found cached %s folder with default distinguished name', folder_cls)
                 return f
 
-        # Try direct children of TOIS first. TOIS might not exist.
-        try:
-            return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-        except MISSING_FOLDER_ERRORS:
-            # No candidates, or TOIS does not exist, or we don't have access
-            pass
+        # Try direct children of TOIS first, unless we're trying to get the TOIS folder. TOIS might not exist.
+        if folder_cls != MsgFolderRoot:
+            try:
+                return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
+            except MISSING_FOLDER_ERRORS:
+                # No candidates, or TOIS does not exist, or we don't have access
+                pass
 
         # No candidates in TOIS. Try direct children of root.
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
