@@ -313,7 +313,9 @@ class BaseProtocol:
 
     def create_oauth2_session(self):
         if self.auth_type != OAUTH2:
-            raise ValueError(&#39;Auth type must be %r for credentials type OAuth2Credentials&#39; % OAUTH2)
+            raise ValueError(
+                &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
+            )
 
         has_token = False
         scope = [&#39;https://outlook.office365.com/.default&#39;]
@@ -1096,7 +1098,9 @@ class FaultTolerance(RetryPolicy):
 
     def create_oauth2_session(self):
         if self.auth_type != OAUTH2:
-            raise ValueError(&#39;Auth type must be %r for credentials type OAuth2Credentials&#39; % OAUTH2)
+            raise ValueError(
+                &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
+            )
 
         has_token = False
         scope = [&#39;https://outlook.office365.com/.default&#39;]
@@ -1394,7 +1398,9 @@ def session_pool_size(self):
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
     if self.auth_type != OAUTH2:
-        raise ValueError(&#39;Auth type must be %r for credentials type OAuth2Credentials&#39; % OAUTH2)
+        raise ValueError(
+            &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
+        )
 
     has_token = False
     scope = [&#39;https://outlook.office365.com/.default&#39;]

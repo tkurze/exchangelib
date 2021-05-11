@@ -103,7 +103,9 @@ class GetAttachment(EWSAccountService):
                 if isinstance(e, Exception):
                     raise e
             # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
-            raise enf</code></pre>
+            raise enf
+        finally:
+            self.stop_streaming()</code></pre>
 </details>
 </section>
 <section>
@@ -197,7 +199,9 @@ class GetAttachment(EWSAccountService):
                 if isinstance(e, Exception):
                     raise e
             # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
-            raise enf</code></pre>
+            raise enf
+        finally:
+            self.stop_streaming()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -289,7 +293,9 @@ class GetAttachment(EWSAccountService):
             if isinstance(e, Exception):
                 raise e
         # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
-        raise enf</code></pre>
+        raise enf
+    finally:
+        self.stop_streaming()</code></pre>
 </details>
 </dd>
 </dl>

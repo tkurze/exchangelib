@@ -1443,6 +1443,18 @@ __all__ = [
             raise s_id
         return s_id
 
+    @require_id
+    def pull_subscription(self, **kwargs):
+        return PullSubscription(folder=self, **kwargs)
+
+    @require_id
+    def push_subscription(self, **kwargs):
+        return PushSubscription(folder=self, **kwargs)
+
+    @require_id
+    def streaming_subscription(self, **kwargs):
+        return StreamingSubscription(folder=self, **kwargs)
+
     def unsubscribe(self, subscription_id):
         &#34;&#34;&#34;Unsubscribe. Only applies to pull and streaming notifications.
 
@@ -1539,6 +1551,7 @@ __all__ = [
         ):
             yield notification
             if max_notifications_returned and i &gt;= max_notifications_returned:
+                svc.stop_streaming()
                 break
         if svc.error_subscription_ids:
             raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)
@@ -2178,6 +2191,7 @@ sync methods.</p></div>
     ):
         yield notification
         if max_notifications_returned and i &gt;= max_notifications_returned:
+            svc.stop_streaming()
             break
     if svc.error_subscription_ids:
         raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)</code></pre>
@@ -2283,6 +2297,34 @@ def get_user_configuration(self, name, properties=ALL):
     return FolderCollection(account=self.account, folders=[self]).people()</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.folders.BaseFolder.pull_subscription"><code class="name flex">
+<span>def <span class="ident">pull_subscription</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_id
+def pull_subscription(self, **kwargs):
+    return PullSubscription(folder=self, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.BaseFolder.push_subscription"><code class="name flex">
+<span>def <span class="ident">push_subscription</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_id
+def push_subscription(self, **kwargs):
+    return PushSubscription(folder=self, **kwargs)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.folders.BaseFolder.refresh"><code class="name flex">
 <span>def <span class="ident">refresh</span></span>(<span>self)</span>
 </code></dt>
@@ -2343,6 +2385,20 @@ def refresh(self):
     self.changekey = changekey
     self.root.update_folder(self)  # Update the folder in the cache
     return None</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.BaseFolder.streaming_subscription"><code class="name flex">
+<span>def <span class="ident">streaming_subscription</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_id
+def streaming_subscription(self, **kwargs):
+    return StreamingSubscription(folder=self, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.subscribe_to_pull"><code class="name flex">
@@ -8267,12 +8323,13 @@ def is_deletable(self):
                 log.debug(&#39;Found cached %s folder with default distinguished name&#39;, folder_cls)
                 return f
 
-        # Try direct children of TOIS first. TOIS might not exist.
-        try:
-            return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-        except MISSING_FOLDER_ERRORS:
-            # No candidates, or TOIS does not exist, or we don&#39;t have access
-            pass
+        # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder. TOIS might not exist.
+        if folder_cls != MsgFolderRoot:
+            try:
+                return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
+            except MISSING_FOLDER_ERRORS:
+                # No candidates, or TOIS does not exist, or we don&#39;t have access
+                pass
 
         # No candidates in TOIS. Try direct children of root.
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
@@ -10312,10 +10369,13 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.BaseFolder.parent_folder_id" href="#exchangelib.folders.BaseFolder.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.parts" href="#exchangelib.folders.BaseFolder.parts">parts</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.people" href="#exchangelib.folders.BaseFolder.people">people</a></code></li>
+<li><code><a title="exchangelib.folders.BaseFolder.pull_subscription" href="#exchangelib.folders.BaseFolder.pull_subscription">pull_subscription</a></code></li>
+<li><code><a title="exchangelib.folders.BaseFolder.push_subscription" href="#exchangelib.folders.BaseFolder.push_subscription">push_subscription</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.refresh" href="#exchangelib.folders.BaseFolder.refresh">refresh</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.resolve" href="#exchangelib.folders.BaseFolder.resolve">resolve</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.root" href="#exchangelib.folders.BaseFolder.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.save" href="#exchangelib.folders.BaseFolder.save">save</a></code></li>
+<li><code><a title="exchangelib.folders.BaseFolder.streaming_subscription" href="#exchangelib.folders.BaseFolder.streaming_subscription">streaming_subscription</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.subscribe_to_pull" href="#exchangelib.folders.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.subscribe_to_push" href="#exchangelib.folders.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.subscribe_to_streaming" href="#exchangelib.folders.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>

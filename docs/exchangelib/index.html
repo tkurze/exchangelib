@@ -46,7 +46,7 @@ from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;4.2.0&#39;
+__version__ = &#39;4.3.0&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -2703,7 +2703,9 @@ account.upload([(account.inbox, "AABBCC&hellip;"),
 
     def create_oauth2_session(self):
         if self.auth_type != OAUTH2:
-            raise ValueError(&#39;Auth type must be %r for credentials type OAuth2Credentials&#39; % OAUTH2)
+            raise ValueError(
+                &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
+            )
 
         has_token = False
         scope = [&#39;https://outlook.office365.com/.default&#39;]
@@ -3001,7 +3003,9 @@ def session_pool_size(self):
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
     if self.auth_type != OAUTH2:
-        raise ValueError(&#39;Auth type must be %r for credentials type OAuth2Credentials&#39; % OAUTH2)
+        raise ValueError(
+            &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
+        )
 
     has_token = False
     scope = [&#39;https://outlook.office365.com/.default&#39;]
@@ -4383,6 +4387,9 @@ policies on the Exchange server.</p></div>
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError(&#34;&#39;credentials&#39; %r must be a Credentials instance&#34; % credentials)
+        if isinstance(credentials, OAuth2Credentials) and auth_type is None:
+            # This type of credentials *must* use the OAuth auth type
+            auth_type = OAUTH2
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:

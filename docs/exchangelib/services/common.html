@@ -130,6 +130,9 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
         self.timeout = timeout
+        # Streaming connection variables
+        self._streaming_session = None
+        self._streaming_response = None
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
@@ -222,6 +225,14 @@ class EWSService(metaclass=abc.ABCMeta):
             log.debug(&#39;Processing chunk %s containing %s items&#39;, i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
+    def stop_streaming(self):
+        if self._streaming_response:
+            self._streaming_response.close()  # Release memory
+            self._streaming_response = None
+        if self._streaming_session:
+            self.protocol.release_session(self._streaming_session)
+            self._streaming_session = None
+
     def _get_elements(self, payload):
         &#34;&#34;&#34;Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
         to the caller as exception objects. Retry the request according to the retry policy.
@@ -257,10 +268,14 @@ class EWSService(metaclass=abc.ABCMeta):
                 account = self.account if isinstance(self, EWSAccountService) else None
                 log.warning(&#39;Account %s: Exception in _get_elements: %s&#39;, account, traceback.format_exc(20))
                 raise
+            finally:
+                if self.streaming:
+                    self.stop_streaming()
 
     def _get_response(self, payload, api_version):
         &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
         session = self.protocol.get_session()
+        self._streaming_session, self._streaming_response = None, None
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
@@ -276,10 +291,12 @@ class EWSService(metaclass=abc.ABCMeta):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
-        # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
-        #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
-        #  that. Not doing so seems to not cause any trouble, though.
-        self.protocol.release_session(session)
+        if self.streaming:
+            # We con only release the session when we have fully consumed the response. Save session and response
+            # objects for later.
+            self._streaming_session, self._streaming_response = session, r
+        else:
+            self.protocol.release_session(session)
         return r
 
     @property
@@ -1157,6 +1174,9 @@ def parse_folder_elem(elem, folder, account):
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
         self.timeout = timeout
+        # Streaming connection variables
+        self._streaming_session = None
+        self._streaming_response = None
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
@@ -1249,6 +1269,14 @@ def parse_folder_elem(elem, folder, account):
             log.debug(&#39;Processing chunk %s containing %s items&#39;, i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
+    def stop_streaming(self):
+        if self._streaming_response:
+            self._streaming_response.close()  # Release memory
+            self._streaming_response = None
+        if self._streaming_session:
+            self.protocol.release_session(self._streaming_session)
+            self._streaming_session = None
+
     def _get_elements(self, payload):
         &#34;&#34;&#34;Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
         to the caller as exception objects. Retry the request according to the retry policy.
@@ -1284,10 +1312,14 @@ def parse_folder_elem(elem, folder, account):
                 account = self.account if isinstance(self, EWSAccountService) else None
                 log.warning(&#39;Account %s: Exception in _get_elements: %s&#39;, account, traceback.format_exc(20))
                 raise
+            finally:
+                if self.streaming:
+                    self.stop_streaming()
 
     def _get_response(self, payload, api_version):
         &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
         session = self.protocol.get_session()
+        self._streaming_session, self._streaming_response = None, None
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
@@ -1303,10 +1335,12 @@ def parse_folder_elem(elem, folder, account):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
-        # TODO: We should only release the session when we have fully consumed the response, but in streaming mode
-        #  that requires fully consuming the generator returned by _get_soap_messages. The caller may not always do
-        #  that. Not doing so seems to not cause any trouble, though.
-        self.protocol.release_session(session)
+        if self.streaming:
+            # We con only release the session when we have fully consumed the response. Save session and response
+            # objects for later.
+            self._streaming_session, self._streaming_response = session, r
+        else:
+            self.protocol.release_session(session)
         return r
 
     @property
@@ -1859,6 +1893,24 @@ zero or one when expect_result=None. Returns either one object or None.</p>
     return res[0]</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.services.common.EWSService.stop_streaming"><code class="name flex">
+<span>def <span class="ident">stop_streaming</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop_streaming(self):
+    if self._streaming_response:
+        self._streaming_response.close()  # Release memory
+        self._streaming_response = None
+    if self._streaming_session:
+        self.protocol.release_session(self._streaming_session)
+        self._streaming_session = None</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -1903,6 +1955,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.paging_container_name" href="#exchangelib.services.common.EWSService.paging_container_name">paging_container_name</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.prefer_affinity" href="#exchangelib.services.common.EWSService.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.returns_elements" href="#exchangelib.services.common.EWSService.returns_elements">returns_elements</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.stop_streaming" href="#exchangelib.services.common.EWSService.stop_streaming">stop_streaming</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.streaming" href="#exchangelib.services.common.EWSService.streaming">streaming</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.supported_from" href="#exchangelib.services.common.EWSService.supported_from">supported_from</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.supports_paging" href="#exchangelib.services.common.EWSService.supports_paging">supports_paging</a></code></li>

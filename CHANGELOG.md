@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-HEAD
-----
+4.3.0
+-----
 -   Add context managers `Folder.pull_subscription()`, `Folder.push_subscription()` and
     `Folder.streaming_subscription()` that handle unsubscriptions automatically.
 

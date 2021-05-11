@@ -586,6 +586,18 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             raise s_id
         return s_id
 
+    @require_id
+    def pull_subscription(self, **kwargs):
+        return PullSubscription(folder=self, **kwargs)
+
+    @require_id
+    def push_subscription(self, **kwargs):
+        return PushSubscription(folder=self, **kwargs)
+
+    @require_id
+    def streaming_subscription(self, **kwargs):
+        return StreamingSubscription(folder=self, **kwargs)
+
     def unsubscribe(self, subscription_id):
         &#34;&#34;&#34;Unsubscribe. Only applies to pull and streaming notifications.
 
@@ -682,6 +694,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         ):
             yield notification
             if max_notifications_returned and i &gt;= max_notifications_returned:
+                svc.stop_streaming()
                 break
         if svc.error_subscription_ids:
             raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)
@@ -857,7 +870,43 @@ class Folder(BaseFolder):
                     pass
             if folder_cls == Folder:
                 log.debug(&#39;Fallback to class Folder (folder_class %s, name %s)&#39;, folder.folder_class, folder.name)
-        return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
+        return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})
+
+
+class BaseSubscription(metaclass=abc.ABCMeta):
+    def __init__(self, folder, **subscription_kwargs):
+        self.folder = folder
+        self.subscription_kwargs = subscription_kwargs
+        self.subscription_id = None
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        self.folder.unsubscribe(subscription_id=self.subscription_id)
+        self.subscription_id = None
+
+
+class PullSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_pull(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+
+class PushSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_push(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+    def __exit__(self, *args, **kwargs):
+        # Cannot unsubscribe to push subscriptions
+        pass
+
+
+class StreamingSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id = self.folder.subscribe_to_streaming(**self.subscription_kwargs)
+        return self.subscription_id</code></pre>
 </details>
 </section>
 <section>
@@ -1411,6 +1460,18 @@ class Folder(BaseFolder):
             raise s_id
         return s_id
 
+    @require_id
+    def pull_subscription(self, **kwargs):
+        return PullSubscription(folder=self, **kwargs)
+
+    @require_id
+    def push_subscription(self, **kwargs):
+        return PushSubscription(folder=self, **kwargs)
+
+    @require_id
+    def streaming_subscription(self, **kwargs):
+        return StreamingSubscription(folder=self, **kwargs)
+
     def unsubscribe(self, subscription_id):
         &#34;&#34;&#34;Unsubscribe. Only applies to pull and streaming notifications.
 
@@ -1507,6 +1568,7 @@ class Folder(BaseFolder):
         ):
             yield notification
             if max_notifications_returned and i &gt;= max_notifications_returned:
+                svc.stop_streaming()
                 break
         if svc.error_subscription_ids:
             raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)
@@ -2146,6 +2208,7 @@ sync methods.</p></div>
     ):
         yield notification
         if max_notifications_returned and i &gt;= max_notifications_returned:
+            svc.stop_streaming()
             break
     if svc.error_subscription_ids:
         raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)</code></pre>
@@ -2251,6 +2314,34 @@ def get_user_configuration(self, name, properties=ALL):
     return FolderCollection(account=self.account, folders=[self]).people()</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.folders.base.BaseFolder.pull_subscription"><code class="name flex">
+<span>def <span class="ident">pull_subscription</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_id
+def pull_subscription(self, **kwargs):
+    return PullSubscription(folder=self, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.base.BaseFolder.push_subscription"><code class="name flex">
+<span>def <span class="ident">push_subscription</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_id
+def push_subscription(self, **kwargs):
+    return PushSubscription(folder=self, **kwargs)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.folders.base.BaseFolder.refresh"><code class="name flex">
 <span>def <span class="ident">refresh</span></span>(<span>self)</span>
 </code></dt>
@@ -2311,6 +2402,20 @@ def refresh(self):
     self.changekey = changekey
     self.root.update_folder(self)  # Update the folder in the cache
     return None</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.folders.base.BaseFolder.streaming_subscription"><code class="name flex">
+<span>def <span class="ident">streaming_subscription</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@require_id
+def streaming_subscription(self, **kwargs):
+    return StreamingSubscription(folder=self, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.subscribe_to_pull"><code class="name flex">
@@ -2756,6 +2861,36 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.folders.base.BaseSubscription"><code class="flex name class">
+<span>class <span class="ident">BaseSubscription</span></span>
+<span>(</span><span>folder, **subscription_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseSubscription(metaclass=abc.ABCMeta):
+    def __init__(self, folder, **subscription_kwargs):
+        self.folder = folder
+        self.subscription_kwargs = subscription_kwargs
+        self.subscription_id = None
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        self.folder.unsubscribe(subscription_id=self.subscription_id)
+        self.subscription_id = None</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.base.PullSubscription" href="#exchangelib.folders.base.PullSubscription">PullSubscription</a></li>
+<li><a title="exchangelib.folders.base.PushSubscription" href="#exchangelib.folders.base.PushSubscription">PushSubscription</a></li>
+<li><a title="exchangelib.folders.base.StreamingSubscription" href="#exchangelib.folders.base.StreamingSubscription">StreamingSubscription</a></li>
+</ul>
+</dd>
 <dt id="exchangelib.folders.base.Folder"><code class="flex name class">
 <span>class <span class="ident">Folder</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -3130,6 +3265,70 @@ def root(self):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.folders.base.PullSubscription"><code class="flex name class">
+<span>class <span class="ident">PullSubscription</span></span>
+<span>(</span><span>folder, **subscription_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PullSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_pull(**self.subscription_kwargs)
+        return self.subscription_id, watermark</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.base.BaseSubscription" href="#exchangelib.folders.base.BaseSubscription">BaseSubscription</a></li>
+</ul>
+</dd>
+<dt id="exchangelib.folders.base.PushSubscription"><code class="flex name class">
+<span>class <span class="ident">PushSubscription</span></span>
+<span>(</span><span>folder, **subscription_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PushSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_push(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+    def __exit__(self, *args, **kwargs):
+        # Cannot unsubscribe to push subscriptions
+        pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.base.BaseSubscription" href="#exchangelib.folders.base.BaseSubscription">BaseSubscription</a></li>
+</ul>
+</dd>
+<dt id="exchangelib.folders.base.StreamingSubscription"><code class="flex name class">
+<span>class <span class="ident">StreamingSubscription</span></span>
+<span>(</span><span>folder, **subscription_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StreamingSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id = self.folder.subscribe_to_streaming(**self.subscription_kwargs)
+        return self.subscription_id</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.base.BaseSubscription" href="#exchangelib.folders.base.BaseSubscription">BaseSubscription</a></li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -3197,10 +3396,13 @@ def root(self):
 <li><code><a title="exchangelib.folders.base.BaseFolder.parent_folder_id" href="#exchangelib.folders.base.BaseFolder.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.parts" href="#exchangelib.folders.base.BaseFolder.parts">parts</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.people" href="#exchangelib.folders.base.BaseFolder.people">people</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.pull_subscription" href="#exchangelib.folders.base.BaseFolder.pull_subscription">pull_subscription</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.push_subscription" href="#exchangelib.folders.base.BaseFolder.push_subscription">push_subscription</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.refresh" href="#exchangelib.folders.base.BaseFolder.refresh">refresh</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.resolve" href="#exchangelib.folders.base.BaseFolder.resolve">resolve</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.root" href="#exchangelib.folders.base.BaseFolder.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.save" href="#exchangelib.folders.base.BaseFolder.save">save</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.streaming_subscription" href="#exchangelib.folders.base.BaseFolder.streaming_subscription">streaming_subscription</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_pull" href="#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_push" href="#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_streaming" href="#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
@@ -3224,6 +3426,9 @@ def root(self):
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.folders.base.BaseSubscription" href="#exchangelib.folders.base.BaseSubscription">BaseSubscription</a></code></h4>
+</li>
+<li>
 <h4><code><a title="exchangelib.folders.base.Folder" href="#exchangelib.folders.base.Folder">Folder</a></code></h4>
 <ul class="two-column">
 <li><code><a title="exchangelib.folders.base.Folder.FIELDS" href="#exchangelib.folders.base.Folder.FIELDS">FIELDS</a></code></li>
@@ -3236,6 +3441,15 @@ def root(self):
 <li><code><a title="exchangelib.folders.base.Folder.permission_set" href="#exchangelib.folders.base.Folder.permission_set">permission_set</a></code></li>
 <li><code><a title="exchangelib.folders.base.Folder.root" href="#exchangelib.folders.base.Folder.root">root</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.base.PullSubscription" href="#exchangelib.folders.base.PullSubscription">PullSubscription</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.base.PushSubscription" href="#exchangelib.folders.base.PushSubscription">PushSubscription</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.folders.base.StreamingSubscription" href="#exchangelib.folders.base.StreamingSubscription">StreamingSubscription</a></code></h4>
 </li>
 </ul>
 </li>

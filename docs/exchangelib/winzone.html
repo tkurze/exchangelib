@@ -40,7 +40,8 @@ from .util import to_xml
 
 CLDR_WINZONE_URL = &#39;https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml&#39;
 DEFAULT_TERRITORY = &#39;001&#39;
-CLDR_WINZONE_VERSION = &#39;2021a&#39;
+CLDR_WINZONE_TYPE_VERSION = &#39;2021a&#39;
+CLDR_WINZONE_OTHER_VERSION = &#39;7e11800&#39;
 
 
 def generate_map(timeout=10):
@@ -54,7 +55,8 @@ def generate_map(timeout=10):
         raise ValueError(&#39;Unexpected response: %s&#39; % r)
     tz_map = {}
     timezones_elem = to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;)
-    version = timezones_elem.get(&#39;typeVersion&#39;)
+    type_version = timezones_elem.get(&#39;typeVersion&#39;)
+    other_version = timezones_elem.get(&#39;otherVersion&#39;)
     for e in timezones_elem.findall(&#39;mapZone&#39;):
         for location in re.split(r&#39;\s+&#39;, e.get(&#39;type&#39;)):
             if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
@@ -63,7 +65,7 @@ def generate_map(timeout=10):
                 if not location:
                     raise ValueError(&#39;Expected location&#39;)
                 tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
-    return version, tz_map
+    return type_version, other_version, tz_map
 
 
 # This map is generated irregularly from generate_map(). Do not edit manually - make corrections to
@@ -96,7 +98,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;Africa/Gaborone&#39;: (&#39;South Africa Standard Time&#39;, &#39;BW&#39;),
     &#39;Africa/Harare&#39;: (&#39;South Africa Standard Time&#39;, &#39;ZW&#39;),
     &#39;Africa/Johannesburg&#39;: (&#39;South Africa Standard Time&#39;, &#39;001&#39;),
-    &#39;Africa/Juba&#39;: (&#39;South Africa Standard Time&#39;, &#39;SS&#39;),
+    &#39;Africa/Juba&#39;: (&#39;South Sudan Standard Time&#39;, &#39;001&#39;),
     &#39;Africa/Kampala&#39;: (&#39;E. Africa Standard Time&#39;, &#39;UG&#39;),
     &#39;Africa/Khartoum&#39;: (&#39;Sudan Standard Time&#39;, &#39;001&#39;),
     &#39;Africa/Kigali&#39;: (&#39;South Africa Standard Time&#39;, &#39;RW&#39;),
@@ -162,7 +164,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;America/Creston&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Cuiaba&#39;: (&#39;Central Brazilian Standard Time&#39;, &#39;001&#39;),
     &#39;America/Curacao&#39;: (&#39;SA Western Standard Time&#39;, &#39;CW&#39;),
-    &#39;America/Danmarkshavn&#39;: (&#39;UTC&#39;, &#39;GL&#39;),
+    &#39;America/Danmarkshavn&#39;: (&#39;Greenwich Standard Time&#39;, &#39;GL&#39;),
     &#39;America/Dawson&#39;: (&#39;Yukon Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Dawson_Creek&#39;: (&#39;US Mountain Standard Time&#39;, &#39;CA&#39;),
     &#39;America/Denver&#39;: (&#39;Mountain Standard Time&#39;, &#39;001&#39;),
@@ -390,7 +392,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;Australia/Sydney&#39;: (&#39;AUS Eastern Standard Time&#39;, &#39;001&#39;),
     &#39;CST6CDT&#39;: (&#39;Central Standard Time&#39;, &#39;ZZ&#39;),
     &#39;EST5EDT&#39;: (&#39;Eastern Standard Time&#39;, &#39;ZZ&#39;),
-    &#39;Etc/GMT&#39;: (&#39;UTC&#39;, &#39;001&#39;),
+    &#39;Etc/GMT&#39;: (&#39;UTC&#39;, &#39;ZZ&#39;),
     &#39;Etc/GMT+1&#39;: (&#39;Cape Verde Standard Time&#39;, &#39;ZZ&#39;),
     &#39;Etc/GMT+10&#39;: (&#39;Hawaiian Standard Time&#39;, &#39;ZZ&#39;),
     &#39;Etc/GMT+11&#39;: (&#39;UTC-11&#39;, &#39;001&#39;),
@@ -417,7 +419,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     &#39;Etc/GMT-7&#39;: (&#39;SE Asia Standard Time&#39;, &#39;ZZ&#39;),
     &#39;Etc/GMT-8&#39;: (&#39;Singapore Standard Time&#39;, &#39;ZZ&#39;),
     &#39;Etc/GMT-9&#39;: (&#39;Tokyo Standard Time&#39;, &#39;ZZ&#39;),
-    &#39;Etc/UTC&#39;: (&#39;UTC&#39;, &#39;ZZ&#39;),
+    &#39;Etc/UTC&#39;: (&#39;UTC&#39;, &#39;001&#39;),
     &#39;Europe/Amsterdam&#39;: (&#39;W. Europe Standard Time&#39;, &#39;NL&#39;),
     &#39;Europe/Andorra&#39;: (&#39;W. Europe Standard Time&#39;, &#39;AD&#39;),
     &#39;Europe/Astrakhan&#39;: (&#39;Astrakhan Standard Time&#39;, &#39;001&#39;),
@@ -585,7 +587,8 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
         raise ValueError(&#39;Unexpected response: %s&#39; % r)
     tz_map = {}
     timezones_elem = to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;)
-    version = timezones_elem.get(&#39;typeVersion&#39;)
+    type_version = timezones_elem.get(&#39;typeVersion&#39;)
+    other_version = timezones_elem.get(&#39;otherVersion&#39;)
     for e in timezones_elem.findall(&#39;mapZone&#39;):
         for location in re.split(r&#39;\s+&#39;, e.get(&#39;type&#39;)):
             if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
@@ -594,7 +597,7 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
                 if not location:
                     raise ValueError(&#39;Expected location&#39;)
                 tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
-    return version, tz_map</code></pre>
+    return type_version, other_version, tz_map</code></pre>
 </details>
 </dd>
 </dl>
