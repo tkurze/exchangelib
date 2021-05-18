@@ -5,7 +5,7 @@ from ..util import create_element, MNS
 
 
 class GetFolder(EWSAccountService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder-operation"""
 
     SERVICE_NAME = 'GetFolder'
     element_container_name = '{%s}Folders' % MNS

@@ -8,7 +8,7 @@ class CreateItem(EWSAccountService):
     """Take a folder and a list of items. Return the result of creation as a list of tuples (success[True|False],
     errormessage), in the same order as the input list.
 
-    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-operation
     """
 
     SERVICE_NAME = 'CreateItem'

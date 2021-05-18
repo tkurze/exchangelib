@@ -9,7 +9,7 @@ class DeleteItem(EWSAccountService):
     """Take a folder and a list of (id, changekey) tuples. Return result of deletion as a list of tuples
     (success[True|False], errormessage), in the same order as the input list.
 
-    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem-operation
     """
 
     SERVICE_NAME = 'DeleteItem'

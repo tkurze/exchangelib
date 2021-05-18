@@ -5,7 +5,7 @@ from ..version import EXCHANGE_2010
 
 
 class GetRooms(EWSService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation"""
 
     SERVICE_NAME = 'GetRooms'
     element_container_name = '{%s}Rooms' % MNS

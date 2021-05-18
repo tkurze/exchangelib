@@ -4,7 +4,7 @@ from ..util import create_element
 
 
 class MarkAsJunk(EWSAccountService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk-operation"""
 
     SERVICE_NAME = 'MarkAsJunk'
 

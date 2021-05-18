@@ -9,7 +9,9 @@ from ..version import EXCHANGE_2010
 
 
 class GetServerTimeZones(EWSService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones"""
+    """MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones-operation
+    """
 
     SERVICE_NAME = 'GetServerTimeZones'
     element_container_name = '{%s}TimeZoneDefinitions' % MNS

@@ -5,7 +5,7 @@ from ..util import create_element
 
 
 class EmptyFolder(EWSAccountService):
-    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder"""
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder-operation"""
 
     SERVICE_NAME = 'EmptyFolder'
     returns_elements = False
