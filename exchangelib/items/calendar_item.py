@@ -283,8 +283,12 @@ class BaseMeetingItem(Item):
         Choice('NoResponseReceived')
     }, is_required=True, default='Unknown')
 
+    effective_rights_idx = Item.FIELDS.index_by_name('effective_rights')
+    sender_idx = Message.FIELDS.index_by_name('sender')
     reply_to_idx = Message.FIELDS.index_by_name('reply_to')
-    FIELDS = Message.FIELDS[:reply_to_idx + 1]
+    FIELDS = Item.FIELDS[:effective_rights_idx] \
+        + Message.FIELDS[sender_idx:reply_to_idx + 1] \
+        + Item.FIELDS[effective_rights_idx:]
 
 
 class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
@@ -300,21 +304,18 @@ class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
             Choice('Free'), Choice('Tentative'), Choice('Busy'), Choice('OOF'), Choice('NoData')
     }, is_required=True, default='Busy')
 
-    # FIELDS on this element are shuffled compared to other elements
-    culture_idx = Item.FIELDS.index_by_name('culture')
-    assoc_idx = BaseMeetingItem.FIELDS.index_by_name('associated_calendar_item_id')
-    FIELDS = Item.FIELDS[:culture_idx + 1] + BaseMeetingItem.FIELDS[assoc_idx:] + Item.FIELDS[culture_idx + 1:]
+    # This element also has some fields from CalendarItem
+    start_idx = CalendarItem.FIELDS.index_by_name('start')
+    is_response_requested_idx = CalendarItem.FIELDS.index_by_name('is_response_requested')
+    FIELDS = BaseMeetingItem.FIELDS \
+        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]\
+        + CalendarItem.FIELDS[is_response_requested_idx + 1:]
 
 
 class MeetingMessage(BaseMeetingItem):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingmessage"""
 
     ELEMENT_NAME = 'MeetingMessage'
-
-    # FIELDS on this element are shuffled compared to other elements
-    culture_idx = Item.FIELDS.index_by_name('culture')
-    assoc_idx = BaseMeetingItem.FIELDS.index_by_name('associated_calendar_item_id')
-    FIELDS = Item.FIELDS[:culture_idx + 1] + BaseMeetingItem.FIELDS[assoc_idx:] + Item.FIELDS[culture_idx + 1:]
 
 
 class MeetingResponse(BaseMeetingItem):
@@ -326,13 +327,6 @@ class MeetingResponse(BaseMeetingItem):
     received_representing = MailboxField(field_uri='message:ReceivedRepresenting', is_read_only=True)
     proposed_start = DateTimeField(field_uri='meeting:ProposedStart', supported_from=EXCHANGE_2013)
     proposed_end = DateTimeField(field_uri='meeting:ProposedEnd', supported_from=EXCHANGE_2013)
-
-    # FIELDS on this element are shuffled compared to other elements
-    culture_idx = Item.FIELDS.index_by_name('culture')
-    effective_rights_idx = culture_idx + 1
-    assoc_idx = BaseMeetingItem.FIELDS.index_by_name('associated_calendar_item_id')
-    FIELDS = Item.FIELDS[:culture_idx + 1] + BaseMeetingItem.FIELDS[assoc_idx:] \
-        + Item.FIELDS[effective_rights_idx:effective_rights_idx + 1]
 
 
 class MeetingCancellation(BaseMeetingItem):
