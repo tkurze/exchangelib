@@ -779,7 +779,13 @@ def create_shape_element(tag, shape, additional_fields, version):
     if additional_fields:
         additional_properties = create_element('t:AdditionalProperties')
         expanded_fields = chain(*(f.expand(version=version) for f in additional_fields))
-        set_xml_value(additional_properties, sorted(expanded_fields, key=lambda f: f.path), version=version)
+        # 'path' is insufficient to consistently sort additional properties. For example, we have both
+        # 'contacts:Companies' and 'task:Companies' with path 'companies'. Sort by both 'field_uri' and 'path'.
+        # Extended properties do not have a 'field_uri' value.
+        set_xml_value(additional_properties, sorted(
+            expanded_fields,
+            key=lambda f: (getattr(f.field, 'field_uri', ''), f.path)
+        ), version=version)
         shape_elem.append(additional_properties)
     return shape_elem
 
