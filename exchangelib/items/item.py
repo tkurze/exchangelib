@@ -190,7 +190,6 @@ class Item(BaseItem):
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
-
         res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
         if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
             # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -201,6 +200,7 @@ class Item(BaseItem):
         # 'parent_item' should point to 'self', not 'fresh_item'. That way, 'fresh_item' can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
+        return self
 
     @require_id
     def copy(self, to_folder):

@@ -466,6 +466,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Apparently, the changekey may get updated
         for f in self.FIELDS:
             setattr(self, f.name, getattr(fresh_folder, f.name))
+        return self
 
     @require_id
     def get_user_configuration(self, name, properties=ALL):
