@@ -5,12 +5,11 @@ except ImportError:
     from backports import zoneinfo
 
 from exchangelib.errors import ErrorInvalidIdMalformed
-from exchangelib.folders import Contacts, FolderCollection
+from exchangelib.folders import Contacts
 from exchangelib.indexed_properties import EmailAddress, PhysicalAddress
 from exchangelib.items import Contact, DistributionList, Persona
 from exchangelib.properties import Mailbox, Member, Attribution, SourceId, FolderId, StringAttributedValue, \
     PhoneNumberAttributedValue, PersonaPhoneNumberTypeValue
-from exchangelib.queryset import QuerySet
 from exchangelib.services import GetPersona
 
 from ..common import get_random_string, get_random_email, MockResponse
@@ -31,9 +30,7 @@ class ContactsTest(CommonItemTest):
             item.email_addresses = [EmailAddress(email='%s@foo.com' % i, label=label)]
             test_items.append(item)
         self.test_folder.bulk_create(items=test_items)
-        qs = QuerySet(
-            folder_collection=FolderCollection(account=self.account, folders=[self.test_folder])
-        ).filter(categories__contains=self.categories)
+        qs = self.test_folder.filter(categories__contains=self.categories)
         self.assertEqual(
             [i[0].email for i in qs.order_by('email_addresses__%s' % label)
                 .values_list('email_addresses', flat=True)],
@@ -53,9 +50,7 @@ class ContactsTest(CommonItemTest):
             item.physical_addresses = [PhysicalAddress(street='Elm St %s' % i, label=label)]
             test_items.append(item)
         self.test_folder.bulk_create(items=test_items)
-        qs = QuerySet(
-            folder_collection=FolderCollection(account=self.account, folders=[self.test_folder])
-        ).filter(categories__contains=self.categories)
+        qs = self.test_folder.filter(categories__contains=self.categories)
         self.assertEqual(
             [i[0].street for i in qs.order_by('physical_addresses__%s__street' % label)
                 .values_list('physical_addresses', flat=True)],
@@ -70,9 +65,7 @@ class ContactsTest(CommonItemTest):
 
     def test_order_by_failure(self):
         # Test error handling on indexed properties with labels and subfields
-        qs = QuerySet(
-            folder_collection=FolderCollection(account=self.account, folders=[self.test_folder])
-        ).filter(categories__contains=self.categories)
+        qs = self.test_folder.filter(categories__contains=self.categories)
         with self.assertRaises(ValueError):
             qs.order_by('email_addresses')  # Must have label
         with self.assertRaises(ValueError):
