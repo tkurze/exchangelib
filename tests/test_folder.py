@@ -439,6 +439,24 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorDeleteDistinguishedFolder):
             self.account.inbox.delete()
 
+    def test_move(self):
+        f1 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
+        f2 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
+
+        f1_id, f1_changekey, f1_parent = f1.id, f1.changekey, f1.parent
+        f1.move(f2)
+        self.assertEqual(f1.id, f1_id)
+        self.assertNotEqual(f1.changekey, f1_changekey)
+        self.assertEqual(f1.parent, f2)
+
+        f1_id, f1_changekey, f1_parent = f1.id, f1.changekey, f1.parent
+        f1.refresh()
+        self.assertEqual(f1.id, f1_id)
+        self.assertEqual(f1.parent, f2)
+
+        f1.delete()
+        f2.delete()
+
     def test_generic_folder(self):
         f = Folder(parent=self.account.inbox, name=get_random_string(16))
         f.save()

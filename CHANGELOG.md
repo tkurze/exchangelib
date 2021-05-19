@@ -1,10 +1,16 @@
 Change Log
 ==========
 
+HEAD
+----
+-   Add `Folder.move()` to move folders to a different parent folder.
+
+
 4.3.0
 -----
 -   Add context managers `Folder.pull_subscription()`, `Folder.push_subscription()` and
     `Folder.streaming_subscription()` that handle unsubscriptions automatically.
+
 
 4.2.0
 -----

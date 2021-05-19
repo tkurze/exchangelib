@@ -16,7 +16,7 @@ from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderI
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
-    Unsubscribe, GetEvents, GetStreamingEvents
+    Unsubscribe, GetEvents, GetStreamingEvents, MoveFolder
 from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
@@ -344,7 +344,17 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Don't check changekey value. It may not change on no-op updates
         self.changekey = changekey
         self.root.update_folder(self)  # Update the folder in the cache
-        return None
+        return self
+
+    def move(self, to_folder):
+        res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
+        folder_id, changekey = res.id, res.changekey
+        if self.id != folder_id:
+            raise ValueError('ID mismatch')
+        # Don't check changekey value. It may not change on no-op moves
+        self.changekey = changekey
+        self.parent_folder_id = ParentFolderId(id=to_folder.id, changekey=to_folder.changekey)
+        self.root.update_folder(self)  # Update the folder in the cache
 
     def delete(self, delete_type=HARD_DELETE):
         if delete_type not in DELETE_TYPE_CHOICES:

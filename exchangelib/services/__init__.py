@@ -41,6 +41,7 @@ from .get_user_availability import GetUserAvailability
 from .get_user_configuration import GetUserConfiguration
 from .get_user_oof_settings import GetUserOofSettings
 from .mark_as_junk import MarkAsJunk
+from .move_folder import MoveFolder
 from .move_item import MoveItem
 from .resolve_names import ResolveNames
 from .send_item import SendItem
@@ -89,6 +90,7 @@ __all__ = [
     'GetUserConfiguration',
     'GetUserOofSettings',
     'MarkAsJunk',
+    'MoveFolder',
     'MoveItem',
     'ResolveNames',
     'SendItem',
