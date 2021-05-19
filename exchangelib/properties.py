@@ -119,7 +119,7 @@ class UID(bytes):
         property_type = 'Binary'
 
     CalendarItem.register('global_object_id', GlobalObjectId)
-    account.calendar.filter(global_object_id=GlobalObjectId(UID('261cbc18-1f65-5a0a-bd11-23b1e224cc2f')))
+    account.calendar.filter(global_object_id=UID('261cbc18-1f65-5a0a-bd11-23b1e224cc2f'))
     """
 
     _HEADER = binascii.hexlify(bytearray((
@@ -151,6 +151,11 @@ class UID(bytes):
             cls._HEADER, cls._EXCEPTION_REPLACEMENT_TIME, cls._CREATION_TIME, cls._RESERVED, length, payload
         ])
         return super().__new__(cls, codecs.decode(encoding, 'hex'))
+
+    @classmethod
+    def to_global_object_id(cls, uid):
+        """Converts a UID as returned by EWS to GlobalObjectId format"""
+        return binascii.unhexlify(uid)
 
 
 def _mangle(field_name):
