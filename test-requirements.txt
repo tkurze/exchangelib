@@ -6,4 +6,4 @@ python-dateutil
 pytz
 PyYAML
 requests_mock
-unittest-parallel
+unittest-parallel>=1.3.0

@@ -77,7 +77,7 @@ jobs:
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        unittest-parallel -j 4 --coverage --coverage-source exchangelib
+        unittest-parallel -j 4 --class-fixtures --coverage --coverage-source exchangelib
         coveralls --service=github
 
   cleanup:
