@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-HEAD
-----
+4.4.0
+-----
 -   Add `Folder.move()` to move folders to a different parent folder.
 
 

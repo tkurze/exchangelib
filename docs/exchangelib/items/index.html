@@ -1736,7 +1736,6 @@ we use folder.account.</p></div>
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
-
         res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
         if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
             # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -1747,6 +1746,7 @@ we use folder.account.</p></div>
         # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
+        return self
 
     @require_id
     def copy(self, to_folder):
@@ -2280,7 +2280,6 @@ def refresh(self):
     additional_fields = {
         FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
     }
-
     res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
     if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
         # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -2290,7 +2289,8 @@ def refresh(self):
         setattr(self, f.name, getattr(res, f.name))
     # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
     for a in self.attachments:
-        a.parent_item = self</code></pre>
+        a.parent_item = self
+    return self</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.Item.save"><code class="name flex">
@@ -2463,10 +2463,12 @@ we use folder.account.</p></div>
             Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Busy&#39;), Choice(&#39;OOF&#39;), Choice(&#39;NoData&#39;)
     }, is_required=True, default=&#39;Busy&#39;)
 
-    # FIELDS on this element are shuffled compared to other elements
-    culture_idx = Item.FIELDS.index_by_name(&#39;culture&#39;)
-    assoc_idx = BaseMeetingItem.FIELDS.index_by_name(&#39;associated_calendar_item_id&#39;)
-    FIELDS = Item.FIELDS[:culture_idx + 1] + BaseMeetingItem.FIELDS[assoc_idx:] + Item.FIELDS[culture_idx + 1:]</code></pre>
+    # This element also has some fields from CalendarItem
+    start_idx = CalendarItem.FIELDS.index_by_name(&#39;start&#39;)
+    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#39;is_response_requested&#39;)
+    FIELDS = BaseMeetingItem.FIELDS \
+        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]\
+        + CalendarItem.FIELDS[is_response_requested_idx + 1:]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2488,22 +2490,162 @@ we use folder.account.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.MeetingRequest.assoc_idx"><code class="name">var <span class="ident">assoc_idx</span></code></dt>
+<dt id="exchangelib.items.MeetingRequest.is_response_requested_idx"><code class="name">var <span class="ident">is_response_requested_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.MeetingRequest.culture_idx"><code class="name">var <span class="ident">culture_idx</span></code></dt>
+<dt id="exchangelib.items.MeetingRequest.start_idx"><code class="name">var <span class="ident">start_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="exchangelib.items.MeetingRequest.adjacent_meeting_count"><code class="name">var <span class="ident">adjacent_meeting_count</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.adjacent_meetings"><code class="name">var <span class="ident">adjacent_meetings</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.allow_new_time_proposal"><code class="name">var <span class="ident">allow_new_time_proposal</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.appointment_reply_time"><code class="name">var <span class="ident">appointment_reply_time</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.appointment_sequence_number"><code class="name">var <span class="ident">appointment_sequence_number</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.appointment_state"><code class="name">var <span class="ident">appointment_state</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.conference_type"><code class="name">var <span class="ident">conference_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.conflicting_meeting_count"><code class="name">var <span class="ident">conflicting_meeting_count</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.conflicting_meetings"><code class="name">var <span class="ident">conflicting_meetings</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.deleted_occurrences"><code class="name">var <span class="ident">deleted_occurrences</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.duration"><code class="name">var <span class="ident">duration</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.end"><code class="name">var <span class="ident">end</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.first_occurrence"><code class="name">var <span class="ident">first_occurrence</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.items.MeetingRequest.intended_free_busy_status"><code class="name">var <span class="ident">intended_free_busy_status</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.items.MeetingRequest.is_all_day"><code class="name">var <span class="ident">is_all_day</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.is_cancelled"><code class="name">var <span class="ident">is_cancelled</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.is_meeting"><code class="name">var <span class="ident">is_meeting</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.is_online_meeting"><code class="name">var <span class="ident">is_online_meeting</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.is_recurring"><code class="name">var <span class="ident">is_recurring</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.last_occurrence"><code class="name">var <span class="ident">last_occurrence</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.legacy_free_busy_status"><code class="name">var <span class="ident">legacy_free_busy_status</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.location"><code class="name">var <span class="ident">location</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.items.MeetingRequest.meeting_request_type"><code class="name">var <span class="ident">meeting_request_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.meeting_request_was_sent"><code class="name">var <span class="ident">meeting_request_was_sent</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.meeting_workspace_url"><code class="name">var <span class="ident">meeting_workspace_url</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.modified_occurrences"><code class="name">var <span class="ident">modified_occurrences</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.my_response_type"><code class="name">var <span class="ident">my_response_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.net_show_url"><code class="name">var <span class="ident">net_show_url</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.optional_attendees"><code class="name">var <span class="ident">optional_attendees</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.organizer"><code class="name">var <span class="ident">organizer</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.original_start"><code class="name">var <span class="ident">original_start</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.recurrence"><code class="name">var <span class="ident">recurrence</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.required_attendees"><code class="name">var <span class="ident">required_attendees</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.resources"><code class="name">var <span class="ident">resources</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.start"><code class="name">var <span class="ident">start</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.type"><code class="name">var <span class="ident">type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.MeetingRequest.when"><code class="name">var <span class="ident">when</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2550,14 +2692,7 @@ we use folder.account.</p></div>
     received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
     received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
     proposed_start = DateTimeField(field_uri=&#39;meeting:ProposedStart&#39;, supported_from=EXCHANGE_2013)
-    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)
-
-    # FIELDS on this element are shuffled compared to other elements
-    culture_idx = Item.FIELDS.index_by_name(&#39;culture&#39;)
-    effective_rights_idx = culture_idx + 1
-    assoc_idx = BaseMeetingItem.FIELDS.index_by_name(&#39;associated_calendar_item_id&#39;)
-    FIELDS = Item.FIELDS[:culture_idx + 1] + BaseMeetingItem.FIELDS[assoc_idx:] \
-        + Item.FIELDS[effective_rights_idx:effective_rights_idx + 1]</code></pre>
+    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2575,18 +2710,6 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.MeetingResponse.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.MeetingResponse.assoc_idx"><code class="name">var <span class="ident">assoc_idx</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.MeetingResponse.culture_idx"><code class="name">var <span class="ident">culture_idx</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.MeetingResponse.effective_rights_idx"><code class="name">var <span class="ident">effective_rights_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4714,10 +4837,45 @@ we use folder.account.</p></div>
 <ul class="">
 <li><code><a title="exchangelib.items.MeetingRequest.ELEMENT_NAME" href="#exchangelib.items.MeetingRequest.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.FIELDS" href="#exchangelib.items.MeetingRequest.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.MeetingRequest.assoc_idx" href="#exchangelib.items.MeetingRequest.assoc_idx">assoc_idx</a></code></li>
-<li><code><a title="exchangelib.items.MeetingRequest.culture_idx" href="#exchangelib.items.MeetingRequest.culture_idx">culture_idx</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.adjacent_meeting_count" href="#exchangelib.items.MeetingRequest.adjacent_meeting_count">adjacent_meeting_count</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.adjacent_meetings" href="#exchangelib.items.MeetingRequest.adjacent_meetings">adjacent_meetings</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.allow_new_time_proposal" href="#exchangelib.items.MeetingRequest.allow_new_time_proposal">allow_new_time_proposal</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.appointment_reply_time" href="#exchangelib.items.MeetingRequest.appointment_reply_time">appointment_reply_time</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.appointment_sequence_number" href="#exchangelib.items.MeetingRequest.appointment_sequence_number">appointment_sequence_number</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.appointment_state" href="#exchangelib.items.MeetingRequest.appointment_state">appointment_state</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.conference_type" href="#exchangelib.items.MeetingRequest.conference_type">conference_type</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.conflicting_meeting_count" href="#exchangelib.items.MeetingRequest.conflicting_meeting_count">conflicting_meeting_count</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.conflicting_meetings" href="#exchangelib.items.MeetingRequest.conflicting_meetings">conflicting_meetings</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.deleted_occurrences" href="#exchangelib.items.MeetingRequest.deleted_occurrences">deleted_occurrences</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.duration" href="#exchangelib.items.MeetingRequest.duration">duration</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.end" href="#exchangelib.items.MeetingRequest.end">end</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.first_occurrence" href="#exchangelib.items.MeetingRequest.first_occurrence">first_occurrence</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.intended_free_busy_status" href="#exchangelib.items.MeetingRequest.intended_free_busy_status">intended_free_busy_status</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.is_all_day" href="#exchangelib.items.MeetingRequest.is_all_day">is_all_day</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.is_cancelled" href="#exchangelib.items.MeetingRequest.is_cancelled">is_cancelled</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.is_meeting" href="#exchangelib.items.MeetingRequest.is_meeting">is_meeting</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.is_online_meeting" href="#exchangelib.items.MeetingRequest.is_online_meeting">is_online_meeting</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.is_recurring" href="#exchangelib.items.MeetingRequest.is_recurring">is_recurring</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.is_response_requested_idx" href="#exchangelib.items.MeetingRequest.is_response_requested_idx">is_response_requested_idx</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.last_occurrence" href="#exchangelib.items.MeetingRequest.last_occurrence">last_occurrence</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.legacy_free_busy_status" href="#exchangelib.items.MeetingRequest.legacy_free_busy_status">legacy_free_busy_status</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.location" href="#exchangelib.items.MeetingRequest.location">location</a></code></li>
 <li><code><a title="exchangelib.items.MeetingRequest.meeting_request_type" href="#exchangelib.items.MeetingRequest.meeting_request_type">meeting_request_type</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.meeting_request_was_sent" href="#exchangelib.items.MeetingRequest.meeting_request_was_sent">meeting_request_was_sent</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.meeting_workspace_url" href="#exchangelib.items.MeetingRequest.meeting_workspace_url">meeting_workspace_url</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.modified_occurrences" href="#exchangelib.items.MeetingRequest.modified_occurrences">modified_occurrences</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.my_response_type" href="#exchangelib.items.MeetingRequest.my_response_type">my_response_type</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.net_show_url" href="#exchangelib.items.MeetingRequest.net_show_url">net_show_url</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.optional_attendees" href="#exchangelib.items.MeetingRequest.optional_attendees">optional_attendees</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.organizer" href="#exchangelib.items.MeetingRequest.organizer">organizer</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.original_start" href="#exchangelib.items.MeetingRequest.original_start">original_start</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.recurrence" href="#exchangelib.items.MeetingRequest.recurrence">recurrence</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.required_attendees" href="#exchangelib.items.MeetingRequest.required_attendees">required_attendees</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.resources" href="#exchangelib.items.MeetingRequest.resources">resources</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.start" href="#exchangelib.items.MeetingRequest.start">start</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.start_idx" href="#exchangelib.items.MeetingRequest.start_idx">start_idx</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.type" href="#exchangelib.items.MeetingRequest.type">type</a></code></li>
+<li><code><a title="exchangelib.items.MeetingRequest.when" href="#exchangelib.items.MeetingRequest.when">when</a></code></li>
 </ul>
 </li>
 <li>
@@ -4725,9 +4883,6 @@ we use folder.account.</p></div>
 <ul class="">
 <li><code><a title="exchangelib.items.MeetingResponse.ELEMENT_NAME" href="#exchangelib.items.MeetingResponse.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.items.MeetingResponse.FIELDS" href="#exchangelib.items.MeetingResponse.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.items.MeetingResponse.assoc_idx" href="#exchangelib.items.MeetingResponse.assoc_idx">assoc_idx</a></code></li>
-<li><code><a title="exchangelib.items.MeetingResponse.culture_idx" href="#exchangelib.items.MeetingResponse.culture_idx">culture_idx</a></code></li>
-<li><code><a title="exchangelib.items.MeetingResponse.effective_rights_idx" href="#exchangelib.items.MeetingResponse.effective_rights_idx">effective_rights_idx</a></code></li>
 <li><code><a title="exchangelib.items.MeetingResponse.proposed_end" href="#exchangelib.items.MeetingResponse.proposed_end">proposed_end</a></code></li>
 <li><code><a title="exchangelib.items.MeetingResponse.proposed_start" href="#exchangelib.items.MeetingResponse.proposed_start">proposed_start</a></code></li>
 <li><code><a title="exchangelib.items.MeetingResponse.received_by" href="#exchangelib.items.MeetingResponse.received_by">received_by</a></code></li>

@@ -218,7 +218,6 @@ class Item(BaseItem):
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
-
         res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
         if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
             # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -229,6 +228,7 @@ class Item(BaseItem):
         # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
+        return self
 
     @require_id
     def copy(self, to_folder):
@@ -556,7 +556,6 @@ we use folder.account.</p></div>
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
-
         res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
         if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
             # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -567,6 +566,7 @@ we use folder.account.</p></div>
         # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
         for a in self.attachments:
             a.parent_item = self
+        return self
 
     @require_id
     def copy(self, to_folder):
@@ -1100,7 +1100,6 @@ def refresh(self):
     additional_fields = {
         FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
     }
-
     res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
     if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
         # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -1110,7 +1109,8 @@ def refresh(self):
         setattr(self, f.name, getattr(res, f.name))
     # &#39;parent_item&#39; should point to &#39;self&#39;, not &#39;fresh_item&#39;. That way, &#39;fresh_item&#39; can be garbage collected.
     for a in self.attachments:
-        a.parent_item = self</code></pre>
+        a.parent_item = self
+    return self</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.item.Item.save"><code class="name flex">

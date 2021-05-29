@@ -1229,7 +1229,17 @@ __all__ = [
         # Don&#39;t check changekey value. It may not change on no-op updates
         self.changekey = changekey
         self.root.update_folder(self)  # Update the folder in the cache
-        return None
+        return self
+
+    def move(self, to_folder):
+        res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
+        folder_id, changekey = res.id, res.changekey
+        if self.id != folder_id:
+            raise ValueError(&#39;ID mismatch&#39;)
+        # Don&#39;t check changekey value. It may not change on no-op moves
+        self.changekey = changekey
+        self.parent_folder_id = ParentFolderId(id=to_folder.id, changekey=to_folder.changekey)
+        self.root.update_folder(self)  # Update the folder in the cache
 
     def delete(self, delete_type=HARD_DELETE):
         if delete_type not in DELETE_TYPE_CHOICES:
@@ -1351,6 +1361,7 @@ __all__ = [
         # Apparently, the changekey may get updated
         for f in self.FIELDS:
             setattr(self, f.name, getattr(fresh_folder, f.name))
+        return self
 
     @require_id
     def get_user_configuration(self, name, properties=ALL):
@@ -2227,6 +2238,26 @@ def get_user_configuration(self, name, properties=ALL):
     return FolderCollection(account=self.account, folders=self._glob(pattern))</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.folders.BaseFolder.move"><code class="name flex">
+<span>def <span class="ident">move</span></span>(<span>self, to_folder)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def move(self, to_folder):
+    res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
+    folder_id, changekey = res.id, res.changekey
+    if self.id != folder_id:
+        raise ValueError(&#39;ID mismatch&#39;)
+    # Don&#39;t check changekey value. It may not change on no-op moves
+    self.changekey = changekey
+    self.parent_folder_id = ParentFolderId(id=to_folder.id, changekey=to_folder.changekey)
+    self.root.update_folder(self)  # Update the folder in the cache</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.folders.BaseFolder.none"><code class="name flex">
 <span>def <span class="ident">none</span></span>(<span>self)</span>
 </code></dt>
@@ -2341,7 +2372,8 @@ def refresh(self):
         raise ValueError(&#39;ID mismatch&#39;)
     # Apparently, the changekey may get updated
     for f in self.FIELDS:
-        setattr(self, f.name, getattr(fresh_folder, f.name))</code></pre>
+        setattr(self, f.name, getattr(fresh_folder, f.name))
+    return self</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.save"><code class="name flex">
@@ -2384,7 +2416,7 @@ def refresh(self):
     # Don&#39;t check changekey value. It may not change on no-op updates
     self.changekey = changekey
     self.root.update_folder(self)  # Update the folder in the cache
-    return None</code></pre>
+    return self</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.streaming_subscription"><code class="name flex">
@@ -10362,6 +10394,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.BaseFolder.item_model_from_tag" href="#exchangelib.folders.BaseFolder.item_model_from_tag">item_model_from_tag</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.item_sync_state" href="#exchangelib.folders.BaseFolder.item_sync_state">item_sync_state</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.localized_names" href="#exchangelib.folders.BaseFolder.localized_names">localized_names</a></code></li>
+<li><code><a title="exchangelib.folders.BaseFolder.move" href="#exchangelib.folders.BaseFolder.move">move</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.name" href="#exchangelib.folders.BaseFolder.name">name</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.none" href="#exchangelib.folders.BaseFolder.none">none</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.normalize_fields" href="#exchangelib.folders.BaseFolder.normalize_fields">normalize_fields</a></code></li>

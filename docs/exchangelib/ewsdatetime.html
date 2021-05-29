@@ -280,8 +280,12 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
 
     @classmethod
     def from_dateutil(cls, tz):
-        key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
-        return cls(key)
+        # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
+        # don&#39;t contain enough information to reliably match them with a CLDR timezone.
+        if hasattr(tz, &#39;_filename&#39;):
+            key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
+            return cls(key)
+        return cls(tz.tzname(datetime.datetime.now()))
 
     @classmethod
     def from_zoneinfo(cls, tz):
@@ -914,8 +918,12 @@ services.GetServerTimeZones.</p></div>
 
     @classmethod
     def from_dateutil(cls, tz):
-        key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
-        return cls(key)
+        # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
+        # don&#39;t contain enough information to reliably match them with a CLDR timezone.
+        if hasattr(tz, &#39;_filename&#39;):
+            key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
+            return cls(key)
+        return cls(tz.tzname(datetime.datetime.now()))
 
     @classmethod
     def from_zoneinfo(cls, tz):
@@ -1008,8 +1016,12 @@ services.GetServerTimeZones.</p></div>
 </summary>
 <pre><code class="python">@classmethod
 def from_dateutil(cls, tz):
-    key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
-    return cls(key)</code></pre>
+    # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
+    # don&#39;t contain enough information to reliably match them with a CLDR timezone.
+    if hasattr(tz, &#39;_filename&#39;):
+        key = &#39;/&#39;.join(tz._filename.split(&#39;/&#39;)[-2:])
+        return cls(key)
+    return cls(tz.tzname(datetime.datetime.now()))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.ewsdatetime.EWSTimeZone.from_ms_id"><code class="name flex">

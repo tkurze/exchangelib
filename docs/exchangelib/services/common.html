@@ -807,7 +807,13 @@ def create_shape_element(tag, shape, additional_fields, version):
     if additional_fields:
         additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
         expanded_fields = chain(*(f.expand(version=version) for f in additional_fields))
-        set_xml_value(additional_properties, sorted(expanded_fields, key=lambda f: f.path), version=version)
+        # &#39;path&#39; is insufficient to consistently sort additional properties. For example, we have both
+        # &#39;contacts:Companies&#39; and &#39;task:Companies&#39; with path &#39;companies&#39;. Sort by both &#39;field_uri&#39; and &#39;path&#39;.
+        # Extended properties do not have a &#39;field_uri&#39; value.
+        set_xml_value(additional_properties, sorted(
+            expanded_fields,
+            key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
+        ), version=version)
         shape_elem.append(additional_properties)
     return shape_elem
 
@@ -953,7 +959,13 @@ def parse_folder_elem(elem, folder, account):
     if additional_fields:
         additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
         expanded_fields = chain(*(f.expand(version=version) for f in additional_fields))
-        set_xml_value(additional_properties, sorted(expanded_fields, key=lambda f: f.path), version=version)
+        # &#39;path&#39; is insufficient to consistently sort additional properties. For example, we have both
+        # &#39;contacts:Companies&#39; and &#39;task:Companies&#39; with path &#39;companies&#39;. Sort by both &#39;field_uri&#39; and &#39;path&#39;.
+        # Extended properties do not have a &#39;field_uri&#39; value.
+        set_xml_value(additional_properties, sorted(
+            expanded_fields,
+            key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
+        ), version=version)
         shape_elem.append(additional_properties)
     return shape_elem</code></pre>
 </details>
@@ -1101,6 +1113,7 @@ def parse_folder_elem(elem, folder, account):
 <li><a title="exchangelib.services.get_user_configuration.GetUserConfiguration" href="get_user_configuration.html#exchangelib.services.get_user_configuration.GetUserConfiguration">GetUserConfiguration</a></li>
 <li><a title="exchangelib.services.get_user_oof_settings.GetUserOofSettings" href="get_user_oof_settings.html#exchangelib.services.get_user_oof_settings.GetUserOofSettings">GetUserOofSettings</a></li>
 <li><a title="exchangelib.services.mark_as_junk.MarkAsJunk" href="mark_as_junk.html#exchangelib.services.mark_as_junk.MarkAsJunk">MarkAsJunk</a></li>
+<li><a title="exchangelib.services.move_folder.MoveFolder" href="move_folder.html#exchangelib.services.move_folder.MoveFolder">MoveFolder</a></li>
 <li><a title="exchangelib.services.move_item.MoveItem" href="move_item.html#exchangelib.services.move_item.MoveItem">MoveItem</a></li>
 <li><a title="exchangelib.services.send_item.SendItem" href="send_item.html#exchangelib.services.send_item.SendItem">SendItem</a></li>
 <li><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings" href="set_user_oof_settings.html#exchangelib.services.set_user_oof_settings.SetUserOofSettings">SetUserOofSettings</a></li>
