@@ -76,6 +76,29 @@ class EWSDateTimeTest(TimedTestCase):
         # Test from_ms_id() with non-standard MS ID
         self.assertEqual(EWSTimeZone('Europe/Copenhagen'), EWSTimeZone.from_ms_id('Europe/Copenhagen'))
 
+    def test_from_timezone(self):
+        self.assertEqual(
+            EWSTimeZone('Europe/Copenhagen'),
+            EWSTimeZone.from_timezone(EWSTimeZone('Europe/Copenhagen'))
+        )
+        self.assertEqual(
+            EWSTimeZone('Europe/Copenhagen'),
+            EWSTimeZone.from_timezone(zoneinfo.ZoneInfo('Europe/Copenhagen'))
+        )
+        self.assertEqual(
+            EWSTimeZone('Europe/Copenhagen'),
+            EWSTimeZone.from_timezone(dateutil.tz.gettz('Europe/Copenhagen'))
+        )
+        self.assertEqual(
+            EWSTimeZone('Europe/Copenhagen'),
+            EWSTimeZone.from_timezone(pytz.timezone('Europe/Copenhagen'))
+        )
+
+        self.assertEqual(
+            EWSTimeZone('UTC'),
+            EWSTimeZone.from_timezone(dateutil.tz.UTC)
+        )
+
     def test_localize(self):
         # Test some corner cases around DST
         tz = EWSTimeZone('Europe/Copenhagen')

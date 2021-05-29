@@ -252,8 +252,12 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
 
     @classmethod
     def from_dateutil(cls, tz):
-        key = '/'.join(tz._filename.split('/')[-2:])
-        return cls(key)
+        # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
+        # don't contain enough information to reliably match them with a CLDR timezone.
+        if hasattr(tz, '_filename'):
+            key = '/'.join(tz._filename.split('/')[-2:])
+            return cls(key)
+        return cls(tz.tzname(datetime.datetime.now()))
 
     @classmethod
     def from_zoneinfo(cls, tz):
