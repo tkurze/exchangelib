@@ -345,7 +345,7 @@ clear_cache()
 
 If you need proxy support or custom TLS validation, you can supply a
 custom 'requests' transport adapter class, as described in
-<http://docs.python-requests.org/en/master/user/advanced/#transport-adapters>.
+[http://docs.python-requests.org/en/master/user/advanced/#transport-adapters](http://docs.python-requests.org/en/master/user/advanced/#transport-adapters).
 
 Here's an example using different custom root certificates depending on
 the server to connect to:
@@ -1484,10 +1484,10 @@ a.upload((a.inbox, d) for d in data)  # Expects a list of (folder, data) tuples
 Methods for synchronization of folders and items, and for subscribing to, and
 receiving notifications, are available on the `Folder` model. An in-depth
 description of how to synchronize folders and items using EWS is available at
-https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/mailbox-synchronization-and-ews-in-exchange.
+[https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/mailbox-synchronization-and-ews-in-exchange](https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/mailbox-synchronization-and-ews-in-exchange).
 A description of how to subscribe to notifications and receive notifications
 using EWS is available at
-https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/notification-subscriptions-mailbox-events-and-ews-in-exchange:
+[https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/notification-subscriptions-mailbox-events-and-ews-in-exchange](https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/notification-subscriptions-mailbox-events-and-ews-in-exchange):
 
 ```python
 from exchangelib import Account
