@@ -29,7 +29,7 @@ Apart from this documentation, we also provide online
     * [User-Agent](#user-agent)
 * [Folders](#folders)
 * [Dates, datetimes and timezones](#dates-datetimes-and-timezones)
-* [Creating, updating, deleting, sending, moving, archiving](#creating-updating-deleting-sending-moving-archiving)
+* [Creating, updating, deleting, sending, moving, archiving, marking as junk](#creating-updating-deleting-sending-moving-archiving-marking-as-junk)
 * [Bulk operations](#bulk-operations)
 * [Searching](#searching)
 * [Paging](#paging)
