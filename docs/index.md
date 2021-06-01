@@ -1725,5 +1725,5 @@ python -m unittest -k test_folder.FolderTest.test_refresh
 # If you want extreme levels of debug output:
 DEBUG=1 python -m unittest -k test_folder.FolderTest.test_refresh
 # Tests can be run in parallel if you install the 'unittest-parallel' package
-unittest-parallel -j 4
+unittest-parallel -j 4 --class-fixtures
 ```
