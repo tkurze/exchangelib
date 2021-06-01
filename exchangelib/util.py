@@ -24,7 +24,7 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 
-from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect
+from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, MalformedResponseError
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger('%s.xml' % __name__)
@@ -872,8 +872,10 @@ Response XML: %(xml_response)s'''
         protocol.retire_session(session)
         try:
             protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
-        except Exception as e:
+        except MalformedResponseError as e:
             log.error('%s: %s\n%s\n%s', e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            raise
+        except Exception:
             raise
     log.debug('Session %s thread %s: Useful response from %s', session.session_id, thread_id, url)
     return r, session

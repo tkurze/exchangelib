@@ -19,7 +19,7 @@ from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached, RateLimitError, CASError, \
-    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError
+    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError
 from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
@@ -665,7 +665,7 @@ class RetryPolicy(metaclass=abc.ABCMeta):
             # Another way of communicating invalid schema versions
             raise ErrorInvalidSchemaVersionForMailboxVersion('Invalid server version')
         if b'The referenced account is currently locked out' in response.content:
-            raise TransportError('The service account is currently locked out')
+            raise UnauthorizedError('The referenced account is currently locked out')
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
             raise UnauthorizedError('Invalid credentials for %s' % response.url)
@@ -673,7 +673,7 @@ class RetryPolicy(metaclass=abc.ABCMeta):
             # A header set by us on CONNECTION_ERRORS
             raise response.headers['TimeoutException']
         # This could be anything. Let higher layers handle this
-        raise TransportError(
+        raise MalformedResponseError(
             'Unknown failure in response. Code: %s headers: %s content: %s'
             % (response.status_code, response.headers, response.text)
         )
