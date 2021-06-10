@@ -451,14 +451,14 @@ class CommonItemTest(BaseItemTest):
                         continue
                     # is_complex=True forces the query to use GetItems which will always get the full value
                     f.is_complex = True
-                    new_full_item = self.test_folder.all().only(f.name).get(categories__contains=self.categories)
+                    new_full_item = self.test_folder.all().only(f.name).get(id=item.id)
                     new_full = getattr(new_full_item, f.name)
                     if old_max_length:
                         if f.is_list:
                             for s in new_full:
-                                self.assertLessEqual(len(s), old_max_length, (f.name, len(s), old_max_length))
+                                self.assertEqual(len(s), old_max_length, (f.name, len(s), old_max_length))
                         else:
-                            self.assertLessEqual(len(new_full), old_max_length, (f.name, len(new_full), old_max_length))
+                            self.assertEqual(len(new_full), old_max_length, (f.name, len(new_full), old_max_length))
 
                     # is_complex=False forces the query to use FindItems which will only get the short value
                     f.is_complex = False
