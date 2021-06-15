@@ -33,7 +33,7 @@ Change Log
 -   Add `Message.mark_as_junk()` and complementary `QuerySet.mark_as_junk()` methods to mark or un-mark
     messages as junk email, and optionally move them to the junk folder.
 -   Add support for Master Category Lists, also known as User Configurations. These are custom values
-    that can be assigned to folders.
+    that can be assigned to folders. Available via `Folder.get_user_configuration()`.
 -   `Persona` objects as returned by `QuerySet.people()` now support almost all documented fields.
 -   Improved `QuerySet.people()` to call the `GetPersona` service if at least one field is requested that
     is not supported by the `FindPeople` service.
