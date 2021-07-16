@@ -375,41 +375,53 @@ class CachingProtocol(type):
 
         # We may be using multiple different credentials and changing our minds on TLS verification. This key
         # combination should be safe.
-        _protocol_cache_key = kwargs['config'].service_endpoint, kwargs['config'].credentials
+        config = kwargs['config']
+        _protocol_cache_key = cls._cache_key(config)
 
-        protocol = cls._protocol_cache.get(_protocol_cache_key)
-        if isinstance(protocol, Exception):
-            # The input data leads to a TransportError. Re-throw
-            raise protocol
-        if protocol is not None:
+        try:
+            protocol, timestamp = cls._protocol_cache[_protocol_cache_key]
+        except KeyError:
+            pass
+        else:
+            if isinstance(protocol, Exception):
+                # The input data leads to a TransportError. Re-throw
+                raise protocol
             return protocol
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
         # probably overkill although it would reduce lock contention.
         log.debug('Waiting for _protocol_cache_lock')
         with cls._protocol_cache_lock:
-            protocol = cls._protocol_cache.get(_protocol_cache_key)
-            if isinstance(protocol, Exception):
-                # Someone got ahead of us while holding the lock, but the input data leads to a TransportError. Re-throw
-                raise protocol
-            if protocol is not None:
-                # Someone got ahead of us while holding the lock
+            try:
+                protocol, timestamp = cls._protocol_cache[_protocol_cache_key]
+            except KeyError:
+                pass
+            else:
+                if isinstance(protocol, Exception):
+                    # We already tried this combination, possibly in a different competing thread, but the input
+                    # data leads to a TransportError.
+                    raise protocol
                 return protocol
+
             log.debug("Protocol __call__ cache miss. Adding key '%s'", str(_protocol_cache_key))
             try:
                 protocol = super().__call__(*args, **kwargs)
             except TransportError as e:
                 # This can happen if, for example, autodiscover supplies us with a bogus EWS endpoint
                 log.warning('Failed to create cached protocol with key %s: %s', _protocol_cache_key, e)
-                cls._protocol_cache[_protocol_cache_key] = e
+                cls._protocol_cache[_protocol_cache_key] = e, datetime.datetime.now()
                 raise e
-            cls._protocol_cache[_protocol_cache_key] = protocol
+            cls._protocol_cache[_protocol_cache_key] = protocol, datetime.datetime.now()
         return protocol
+
+    @staticmethod
+    def _cache_key(config):
+        return config.service_endpoint, config.credentials
 
     @classmethod
     def clear_cache(mcs):
         with mcs._protocol_cache_lock:
-            for key, protocol in mcs._protocol_cache.items():
+            for key, (protocol, _) in mcs._protocol_cache.items():
                 if isinstance(protocol, Exception):
                     continue
                 service_endpoint = key[0]
