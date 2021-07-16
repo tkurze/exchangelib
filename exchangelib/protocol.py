@@ -373,13 +373,11 @@ class CachingProtocol(type):
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
 
-        # We may be using multiple different credentials and changing our minds on TLS verification. This key
-        # combination should be safe.
         config = kwargs['config']
         _protocol_cache_key = cls._cache_key(config)
 
         try:
-            protocol, timestamp = cls._protocol_cache[_protocol_cache_key]
+            protocol, _ = cls._protocol_cache[_protocol_cache_key]
         except KeyError:
             pass
         else:
@@ -393,7 +391,7 @@ class CachingProtocol(type):
         log.debug('Waiting for _protocol_cache_lock')
         with cls._protocol_cache_lock:
             try:
-                protocol, timestamp = cls._protocol_cache[_protocol_cache_key]
+                protocol, _ = cls._protocol_cache[_protocol_cache_key]
             except KeyError:
                 pass
             else:
@@ -416,13 +414,15 @@ class CachingProtocol(type):
 
     @staticmethod
     def _cache_key(config):
+        # We may be using multiple different credentials for the same service endpoint. This key combination should be
+        # safe.
         return config.service_endpoint, config.credentials
 
-    def __getitem__(self, config):
-        return self._protocol_cache[self._cache_key(config)]
+    def __getitem__(cls, config):
+        return cls._protocol_cache[cls._cache_key(config)]
 
-    def __delitem__(self, config):
-        del self._protocol_cache[self._cache_key(config)]
+    def __delitem__(cls, config):
+        del cls._protocol_cache[cls._cache_key(config)]
 
     @classmethod
     def clear_cache(mcs):
