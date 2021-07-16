@@ -60,20 +60,34 @@ class ProtocolTest(EWSTest):
     def test_protocol_instance_caching(self, m):
         # Verify that we get the same Protocol instance for the same combination of (endpoint, credentials)
         user, password = get_random_string(8), get_random_string(8)
-        base_p = Protocol(config=Configuration(
+        config = Configuration(
             service_endpoint='https://example.com/Foo.asmx', credentials=Credentials(user, password),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
-        ))
+        )
 
+        # Test CachingProtocol.__getitem__
+        with self.assertRaises(KeyError):
+            _ = Protocol[config]
+        base_p = Protocol(config=config)
+        self.assertEqual(base_p, Protocol[config][0])
+
+        # Make sure we always return the same item when creating a Protocol with the same endpoint and creds
         for _ in range(10):
-            p = Protocol(config=Configuration(
-                service_endpoint='https://example.com/Foo.asmx', credentials=Credentials(user, password),
-                auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
-            ))
+            p = Protocol(config=config)
             self.assertEqual(base_p, p)
             self.assertEqual(id(base_p), id(p))
             self.assertEqual(hash(base_p), hash(p))
             self.assertEqual(id(base_p._session_pool), id(p._session_pool))
+
+        # Test CachingProtocol.__delitem__
+        del Protocol[config]
+        with self.assertRaises(KeyError):
+            _ = Protocol[config]
+
+        # Make sure we get a fresh instance after we cleared the cache
+        p = Protocol(config=config)
+        self.assertNotEqual(base_p, p)
+
         Protocol.clear_cache()
 
     def test_close(self):

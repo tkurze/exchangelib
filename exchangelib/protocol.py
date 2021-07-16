@@ -418,6 +418,12 @@ class CachingProtocol(type):
     def _cache_key(config):
         return config.service_endpoint, config.credentials
 
+    def __getitem__(self, config):
+        return self._protocol_cache[self._cache_key(config)]
+
+    def __delitem__(self, config):
+        del self._protocol_cache[self._cache_key(config)]
+
     @classmethod
     def clear_cache(mcs):
         with mcs._protocol_cache_lock:
