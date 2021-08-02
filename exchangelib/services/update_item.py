@@ -3,7 +3,6 @@ from collections import OrderedDict
 from .common import EWSAccountService, to_item_id
 from ..ewsdatetime import EWSDate
 from ..fields import FieldPath, IndexedField
-from ..indexed_properties import MultiFieldIndexedElement
 from ..properties import ItemId
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013_SP1
@@ -119,44 +118,30 @@ class UpdateItem(EWSAccountService):
 
     def _get_set_item_elems(self, item_model, field, value):
         if isinstance(field, IndexedField):
-            if issubclass(field.value_cls, MultiFieldIndexedElement):
-                # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
-                # have the one value set that we want to change. Create a new IndexedField object that has
-                # only that value set.
-                seen_labels = set()
-                for v in value:
-                    seen_labels.add(v.label)
-                    for subfield in field.value_cls.supported_fields(version=self.account.version):
-                        field_path = FieldPath(field=field, label=v.label, subfield=subfield)
-                        subfield_value = getattr(v, subfield.name)
-                        if not subfield_value:
-                            yield self._delete_item_elem(field_path=field_path)
-                        else:
-                            yield self._set_item_elem(
-                                item_model=item_model,
-                                field_path=field_path,
-                                value=field.value_cls(**{'label': v.label, subfield.name: subfield_value}),
-                            )
-                supported_labels = field.value_cls.get_field_by_fieldname('label')\
-                    .supported_choices(version=self.account.version)
+            # Generate either set or delete elements for all combinations of labels and subfields
+            supported_labels = field.value_cls.get_field_by_fieldname('label')\
+                .supported_choices(version=self.account.version)
+            seen_labels = set()
+            subfields = field.value_cls.supported_fields(version=self.account.version)
+            for v in value:
+                seen_labels.add(v.label)
+                for subfield in subfields:
+                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                    subfield_value = getattr(v, subfield.name)
+                    if not subfield_value:
+                        # Generate delete elements for blank subfield values
+                        yield self._delete_item_elem(field_path=field_path)
+                    else:
+                        # Generate set elements for non-null subfield values
+                        yield self._set_item_elem(
+                            item_model=item_model,
+                            field_path=field_path,
+                            value=field.value_cls(**{'label': v.label, subfield.name: subfield_value}),
+                        )
+                # Generate delete elements for all subfields of all labels not mentioned in the list of values
                 for label in (label for label in supported_labels if label not in seen_labels):
-                    for subfield in field.value_cls.supported_fields(version=self.account.version):
+                    for subfield in subfields:
                         yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
-            else:
-                # The simpler IndexedFields with only one subfield
-                subfield = field.value_cls.value_field(version=self.account.version)
-                seen_labels = set()
-                for v in value:
-                    seen_labels.add(v.label)
-                    yield self._set_item_elem(
-                        item_model=item_model,
-                        field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                        value=v,
-                    )
-                supported_labels = field.value_cls.get_field_by_fieldname('label')\
-                    .supported_choices(version=self.account.version)
-                for label in (label for label in supported_labels if label not in seen_labels):
-                    yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
         else:
             yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
 

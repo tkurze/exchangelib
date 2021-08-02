@@ -1195,7 +1195,7 @@ class SubField(Field):
 
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
-        if self.is_required and value == '':
+        if self.is_required and not value:
             raise ValueError('Value for subfield %r must be non-empty' % self.name)
         return value
 
