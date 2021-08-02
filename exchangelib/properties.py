@@ -328,10 +328,8 @@ class EWSElement(metaclass=EWSMeta):
 
     @classmethod
     def supported_fields(cls, version):
-        """
+        """Return the fields supported by the given server version."""
 
-        :param version:
-        """
         return tuple(f for f in cls.FIELDS if not f.is_attribute and f.supports_version(version))
 
     @classmethod
@@ -430,6 +428,7 @@ class MessageHeader(EWSElement):
 
 class BaseItemId(EWSElement):
     """Base class for ItemId elements."""
+
     ID_ATTR = None
     CHANGEKEY_ATTR = None
 
