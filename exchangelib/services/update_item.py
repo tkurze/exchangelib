@@ -55,10 +55,10 @@ class UpdateItem(EWSAccountService):
     def _set_item_elem(self, item_model, field_path, value):
         setitemfield = create_element('t:SetItemField')
         set_xml_value(setitemfield, field_path, version=self.account.version)
-        folderitem = create_element(item_model.request_tag())
+        item_elem = create_element(item_model.request_tag())
         field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(folderitem, field_elem, version=self.account.version)
-        setitemfield.append(folderitem)
+        set_xml_value(item_elem, field_elem, version=self.account.version)
+        setitemfield.append(item_elem)
         return setitemfield
 
     @staticmethod
