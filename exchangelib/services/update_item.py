@@ -119,27 +119,32 @@ class UpdateItem(EWSAccountService):
 
     def _get_set_item_elems(self, item_model, field, value):
         if isinstance(field, IndexedField):
-            # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
-            for v in value:
-                # TODO: We should also delete the labels that no longer exist in the list
-                if issubclass(field.value_cls, MultiFieldIndexedElement):
-                    # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
-                    # have the one value set that we want to change. Create a new IndexedField object that has
-                    # only that value set.
+            if issubclass(field.value_cls, MultiFieldIndexedElement):
+                # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
+                # have the one value set that we want to change. Create a new IndexedField object that has
+                # only that value set.
+                # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
+                for v in value:
                     for subfield in field.value_cls.supported_fields(version=self.account.version):
                         yield self._set_item_elem(
                             item_model=item_model,
                             field_path=FieldPath(field=field, label=v.label, subfield=subfield),
                             value=field.value_cls(**{'label': v.label, subfield.name: getattr(v, subfield.name)}),
                         )
-                else:
-                    # The simpler IndexedFields with only one subfield
-                    subfield = field.value_cls.value_field(version=self.account.version)
+            else:
+                # The simpler IndexedFields with only one subfield
+                subfield = field.value_cls.value_field(version=self.account.version)
+                seen_labels = set()
+                for v in value:
+                    seen_labels.add(v.label)
                     yield self._set_item_elem(
                         item_model=item_model,
                         field_path=FieldPath(field=field, label=v.label, subfield=subfield),
                         value=v,
                     )
+                missing_labels = (label for label in field.value_cls.LABEL_CHOICES if label not in seen_labels)
+                for label in missing_labels:
+                    yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
         else:
             yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
 
