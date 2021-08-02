@@ -123,14 +123,25 @@ class UpdateItem(EWSAccountService):
                 # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
                 # have the one value set that we want to change. Create a new IndexedField object that has
                 # only that value set.
-                # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
+                seen_labels = set()
                 for v in value:
+                    seen_labels.add(v.label)
                     for subfield in field.value_cls.supported_fields(version=self.account.version):
-                        yield self._set_item_elem(
-                            item_model=item_model,
-                            field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                            value=field.value_cls(**{'label': v.label, subfield.name: getattr(v, subfield.name)}),
-                        )
+                        field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                        subfield_value = getattr(v, subfield.name)
+                        if not subfield_value:
+                            yield self._delete_item_elem(field_path=field_path)
+                        else:
+                            yield self._set_item_elem(
+                                item_model=item_model,
+                                field_path=field_path,
+                                value=field.value_cls(**{'label': v.label, subfield.name: subfield_value}),
+                            )
+                supported_labels = field.value_cls.get_field_by_fieldname('label')\
+                    .supported_choices(version=self.account.version)
+                for label in (label for label in supported_labels if label not in seen_labels):
+                    for subfield in field.value_cls.supported_fields(version=self.account.version):
+                        yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
             else:
                 # The simpler IndexedFields with only one subfield
                 subfield = field.value_cls.value_field(version=self.account.version)
@@ -142,8 +153,9 @@ class UpdateItem(EWSAccountService):
                         field_path=FieldPath(field=field, label=v.label, subfield=subfield),
                         value=v,
                     )
-                missing_labels = (label for label in field.value_cls.LABEL_CHOICES if label not in seen_labels)
-                for label in missing_labels:
+                supported_labels = field.value_cls.get_field_by_fieldname('label')\
+                    .supported_choices(version=self.account.version)
+                for label in (label for label in supported_labels if label not in seen_labels):
                     yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
         else:
             yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)

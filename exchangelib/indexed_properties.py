@@ -30,7 +30,7 @@ class EmailAddress(SingleFieldIndexedElement):
     LABEL_CHOICES = ('EmailAddress1', 'EmailAddress2', 'EmailAddress3')
 
     label = LabelField(field_uri='Key', choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
-    email = EmailSubField()
+    email = EmailSubField(is_required=True)
 
 
 class PhoneNumber(SingleFieldIndexedElement):
@@ -44,7 +44,7 @@ class PhoneNumber(SingleFieldIndexedElement):
     )
 
     label = LabelField(field_uri='Key', choices={Choice(c) for c in LABEL_CHOICES}, default='PrimaryPhone')
-    phone_number = SubField()
+    phone_number = SubField(is_required=True)
 
 
 class MultiFieldIndexedElement(IndexedElement, metaclass=EWSMeta):

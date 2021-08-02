@@ -1177,7 +1177,7 @@ class LabelField(ChoiceField):
 
 
 class SubField(Field):
-    """A field to hold the value on an SingleFieldIndexedElement."""
+    """A field to hold the value on an IndexedElement."""
 
     namespace = TNS
     value_cls = str
@@ -1192,6 +1192,12 @@ class SubField(Field):
     def field_uri_xml(field_uri, label):
         from .properties import IndexedFieldURI
         return IndexedFieldURI(field_uri=field_uri, field_index=label).to_xml(version=None)
+
+    def clean(self, value, version=None):
+        value = super().clean(value, version=version)
+        if self.is_required and value == '':
+            raise ValueError('Value for subfield %r must be non-empty' % self.name)
+        return value
 
     def __hash__(self):
         return hash(self.name)

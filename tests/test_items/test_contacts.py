@@ -6,7 +6,7 @@ except ImportError:
 
 from exchangelib.errors import ErrorInvalidIdMalformed
 from exchangelib.folders import Contacts
-from exchangelib.indexed_properties import EmailAddress, PhysicalAddress
+from exchangelib.indexed_properties import EmailAddress, PhysicalAddress, PhoneNumber
 from exchangelib.items import Contact, DistributionList, Persona
 from exchangelib.properties import Mailbox, Member, Attribution, SourceId, FolderId, StringAttributedValue, \
     PhoneNumberAttributedValue, PersonaPhoneNumberTypeValue
@@ -76,6 +76,28 @@ class ContactsTest(CommonItemTest):
             qs.order_by('physical_addresses__Business')  # Must have a subfield
         with self.assertRaises(ValueError):
             qs.order_by('physical_addresses__Business__FOO')  # Must have a valid subfield
+
+    def test_update_on_single_field_indexed_field(self):
+        home = PhoneNumber(label='HomePhone', phone_number='123')
+        business = PhoneNumber(label='BusinessPhone', phone_number='456')
+        item = self.get_test_item()
+        item.phone_numbers = [home]
+        item.save()
+        item.phone_numbers = [business]
+        item.save(update_fields=['phone_numbers'])
+        item.refresh()
+        self.assertListEqual(item.phone_numbers, [business])
+
+    def test_update_on_multi_field_indexed_field(self):
+        home = PhysicalAddress(label='Home', street='ABC')
+        business = PhysicalAddress(label='Business', street='DEF', city='GHI')
+        item = self.get_test_item()
+        item.physical_addresses = [home]
+        item.save()
+        item.physical_addresses = [business]
+        item.save(update_fields=['physical_addresses'])
+        item.refresh()
+        self.assertListEqual(item.physical_addresses, [business])
 
     def test_distribution_lists(self):
         dl = DistributionList(folder=self.test_folder, display_name=get_random_string(255), categories=self.categories)
