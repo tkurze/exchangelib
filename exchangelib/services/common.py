@@ -132,6 +132,10 @@ class EWSService(metaclass=abc.ABCMeta):
         :return: Same as .call(), but returns either None or exactly one item
         """
         res = list(self.call(**kwargs))
+        # Raise any errors
+        for r in res:
+            if isinstance(r, Exception):
+                raise r
         if expect_result is None and not res:
             # Allow empty result
             return None
@@ -141,8 +145,6 @@ class EWSService(metaclass=abc.ABCMeta):
             return None
         if len(res) != 1:
             raise ValueError('Expected result length 1, but got %r' % res)
-        if isinstance(res[0], Exception):
-            raise res[0]
         return res[0]
 
     @property
