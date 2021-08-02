@@ -1244,6 +1244,13 @@ class IndexedField(EWSElementField):
 
     PARENT_ELEMENT_NAME = None
 
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import IndexedElement
+        value_cls = kwargs['value_cls']
+        if not issubclass(value_cls, IndexedElement):
+            raise ValueError("'value_cls' %r must be a subclass of IndexedElement" % value_cls)
+        super().__init__(*args, **kwargs)
+
     def to_xml(self, value, version):
         return set_xml_value(create_element('t:%s' % self.PARENT_ELEMENT_NAME), value, version)
 

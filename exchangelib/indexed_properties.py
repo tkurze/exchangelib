@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 class IndexedElement(EWSElement, metaclass=EWSMeta):
     """Base class for all classes that implement an indexed element."""
 
-    LABELS = set()
+    LABEL_CHOICES = ()
 
 
 class SingleFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
@@ -37,13 +37,13 @@ class PhoneNumber(SingleFieldIndexedElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber"""
 
     ELEMENT_NAME = 'Entry'
+    LABEL_CHOICES = (
+        'AssistantPhone', 'BusinessFax', 'BusinessPhone', 'BusinessPhone2', 'Callback', 'CarPhone', 'CompanyMainPhone',
+        'HomeFax', 'HomePhone', 'HomePhone2', 'Isdn', 'MobilePhone', 'OtherFax', 'OtherTelephone', 'Pager',
+        'PrimaryPhone', 'RadioPhone', 'Telex', 'TtyTddPhone'
+    )
 
-    label = LabelField(field_uri='Key', choices={
-        Choice('AssistantPhone'), Choice('BusinessFax'), Choice('BusinessPhone'), Choice('BusinessPhone2'),
-        Choice('Callback'), Choice('CarPhone'), Choice('CompanyMainPhone'), Choice('HomeFax'), Choice('HomePhone'),
-        Choice('HomePhone2'), Choice('Isdn'), Choice('MobilePhone'), Choice('OtherFax'), Choice('OtherTelephone'),
-        Choice('Pager'), Choice('PrimaryPhone'), Choice('RadioPhone'), Choice('Telex'), Choice('TtyTddPhone'),
-    }, default='PrimaryPhone')
+    label = LabelField(field_uri='Key', choices={Choice(c) for c in LABEL_CHOICES}, default='PrimaryPhone')
     phone_number = SubField()
 
 
@@ -55,10 +55,9 @@ class PhysicalAddress(MultiFieldIndexedElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-physicaladdress"""
 
     ELEMENT_NAME = 'Entry'
+    LABEL_CHOICES = ('Business', 'Home', 'Other')
 
-    label = LabelField(field_uri='Key', choices={
-        Choice('Business'), Choice('Home'), Choice('Other')
-    }, default='Business')
+    label = LabelField(field_uri='Key', choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
     street = NamedSubField(field_uri='Street')  # Street, house number, etc.
     city = NamedSubField(field_uri='City')
     state = NamedSubField(field_uri='State')
