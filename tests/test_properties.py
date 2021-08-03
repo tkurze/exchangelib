@@ -21,11 +21,11 @@ class PropertiesTest(TimedTestCase):
         for module in (attachments, properties, items, folders, indexed_properties, extended_properties, recurrence,
                        settings):
             for cls in vars(module).values():
+                if not isclass(cls) or not issubclass(cls, EWSElement):
+                    continue
                 with self.subTest(cls=cls):
-                    if not isclass(cls) or not issubclass(cls, EWSElement):
-                        continue
                     # Make sure that we have an ELEMENT_NAME on all models
-                    if cls != BulkCreateResult and (not cls.__doc__ or not cls.__doc__.startswith('Base class ')):
+                    if cls != BulkCreateResult and not (cls.__doc__ and cls.__doc__.startswith('Base class ')):
                         self.assertIsNotNone(cls.ELEMENT_NAME, '%s must have an ELEMENT_NAME' % cls)
                     # Assert that all FIELDS names are unique on the model. Also assert that the class defines
                     # __slots__, that all fields are mentioned in __slots__ and that __slots__ is unique.
