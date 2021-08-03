@@ -1061,7 +1061,6 @@ class UserId(EWSElement):
 class BasePermission(EWSElement, metaclass=EWSMeta):
     """Base class for the Permission and CalendarPermission classes"""
 
-    ELEMENT_NAME = 'Permission'
     PERMISSION_ENUM = {Choice('None'), Choice('Owned'), Choice('All')}
 
     can_create_items = BooleanField(field_uri='CanCreateItems', default=False)
@@ -1078,22 +1077,29 @@ class BasePermission(EWSElement, metaclass=EWSMeta):
 class Permission(BasePermission):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/permission"""
 
-    permission_level = ChoiceField(field_uri='PermissionLevel', choices={
-        Choice('None'), Choice('Owner'), Choice('PublishingEditor'), Choice('Editor'), Choice('PublishingAuthor'),
-        Choice('Author'), Choice('NoneditingAuthor'), Choice('Reviewer'), Choice('Contributor'), Choice('Custom')
-    }, default='None')
+    ELEMENT_NAME = 'Permission'
+    LEVEL_CHOICES = (
+        'None', 'Owner', 'PublishingEditor', 'Editor', 'PublishingAuthor', 'Author', 'NoneditingAuthor', 'Reviewer',
+        'Contributor', 'Custom',
+    )
+
+    permission_level = ChoiceField(
+        field_uri='CalendarPermissionLevel', choices={Choice(c) for c in LEVEL_CHOICES}, default=LEVEL_CHOICES[0]
+    )
 
 
 class CalendarPermission(BasePermission):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarpermission"""
 
     ELEMENT_NAME = 'Permission'
+    LEVEL_CHOICES = (
+        'None', 'Owner', 'PublishingEditor', 'Editor', 'PublishingAuthor', 'Author', 'NoneditingAuthor', 'Reviewer',
+        'Contributor', 'FreeBusyTimeOnly', 'FreeBusyTimeAndSubjectAndLocation', 'Custom',
+    )
 
-    calendar_permission_level = ChoiceField(field_uri='CalendarPermissionLevel', choices={
-        Choice('None'), Choice('Owner'), Choice('PublishingEditor'), Choice('Editor'), Choice('PublishingAuthor'),
-        Choice('Author'), Choice('NoneditingAuthor'), Choice('Reviewer'), Choice('Contributor'),
-        Choice('FreeBusyTimeOnly'), Choice('FreeBusyTimeAndSubjectAndLocation'), Choice('Custom')
-    }, default='None')
+    calendar_permission_level = ChoiceField(
+        field_uri='CalendarPermissionLevel', choices={Choice(c) for c in LEVEL_CHOICES}, default=LEVEL_CHOICES[0]
+    )
 
 
 class PermissionSet(EWSElement):
