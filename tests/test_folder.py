@@ -9,12 +9,13 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     DefaultFoldersChangeHistory, PassThroughSearchResults, SmsAndChatsSync, GraphAnalytics, Signal, \
     PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy, Companies, \
     OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot
-from exchangelib.properties import Mailbox, InvalidField
+from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
 from exchangelib.queryset import Q
 from exchangelib.services import GetFolder
+from exchangelib.services.common import parse_folder_elem
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
-    get_random_byte
+    get_random_byte, MockResponse
 
 
 def get_random_str_tuple(tuple_length, str_length):
@@ -604,3 +605,111 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorItemNotFound):
             f.get_user_configuration(name=name)
         f.delete()
+
+    def test_permissionset_effectiverights_parsing(self):
+        # Test static XML since server may not have any permission sets or effective rights
+        ws = GetFolder(account=self.account)
+        xml = b'''\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:GetFolderResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                             xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:GetFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:Folders>
+                        <t:CalendarFolder>
+                            <t:FolderId Id="XXX" ChangeKey="YYY"/>
+                            <t:ParentFolderId Id="ZZZ" ChangeKey="WWW"/>
+                            <t:FolderClass>IPF.Appointment</t:FolderClass>
+                            <t:DisplayName>My Calendar</t:DisplayName>
+                            <t:TotalCount>1</t:TotalCount>
+                            <t:ChildFolderCount>2</t:ChildFolderCount>
+                            <t:EffectiveRights>
+                                <t:CreateAssociated>true</t:CreateAssociated>
+                                <t:CreateContents>true</t:CreateContents>
+                                <t:CreateHierarchy>true</t:CreateHierarchy>
+                                <t:Delete>true</t:Delete>
+                                <t:Modify>true</t:Modify>
+                                <t:Read>true</t:Read>
+                                <t:ViewPrivateItems>false</t:ViewPrivateItems>
+                            </t:EffectiveRights>
+                            <t:PermissionSet>
+                                <t:CalendarPermissions>
+                                    <t:CalendarPermission>
+                                        <t:UserId>
+                                            <t:SID>SID1</t:SID>
+                                            <t:PrimarySmtpAddress>user1@example.com</t:PrimarySmtpAddress>
+                                            <t:DisplayName>User 1</t:DisplayName>
+                                        </t:UserId>
+                                        <t:CanCreateItems>false</t:CanCreateItems>
+                                        <t:CanCreateSubFolders>false</t:CanCreateSubFolders>
+                                        <t:IsFolderOwner>false</t:IsFolderOwner>
+                                        <t:IsFolderVisible>true</t:IsFolderVisible>
+                                        <t:IsFolderContact>false</t:IsFolderContact>
+                                        <t:EditItems>None</t:EditItems>
+                                        <t:DeleteItems>None</t:DeleteItems>
+                                        <t:ReadItems>FullDetails</t:ReadItems>
+                                        <t:CalendarPermissionLevel>Reviewer</t:CalendarPermissionLevel>
+                                    </t:CalendarPermission>
+                                    <t:CalendarPermission>
+                                        <t:UserId>
+                                            <t:SID>SID2</t:SID>
+                                            <t:PrimarySmtpAddress>user2@example.com</t:PrimarySmtpAddress>
+                                            <t:DisplayName>User 2</t:DisplayName>
+                                        </t:UserId>
+                                        <t:CanCreateItems>true</t:CanCreateItems>
+                                        <t:CanCreateSubFolders>false</t:CanCreateSubFolders>
+                                        <t:IsFolderOwner>false</t:IsFolderOwner>
+                                        <t:IsFolderVisible>true</t:IsFolderVisible>
+                                        <t:IsFolderContact>false</t:IsFolderContact>
+                                        <t:EditItems>All</t:EditItems>
+                                        <t:DeleteItems>All</t:DeleteItems>
+                                        <t:ReadItems>FullDetails</t:ReadItems>
+                                        <t:CalendarPermissionLevel>Editor</t:CalendarPermissionLevel>
+                                    </t:CalendarPermission>
+                                </t:CalendarPermissions>
+                            </t:PermissionSet>
+                        </t:CalendarFolder>
+                    </m:Folders>
+                </m:GetFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:GetFolderResponse>
+    </s:Body>
+</s:Envelope>'''
+        _, body = ws._get_soap_parts(response=MockResponse(xml))
+        res = list(ws._get_elements_in_response(response=ws._get_soap_messages(body=body)))
+        self.assertEqual(len(res), 1)
+        fld = parse_folder_elem(elem=res[0], folder=self.account.calendar, account=self.account)
+        self.assertEqual(
+            fld.effective_rights,
+            EffectiveRights(
+                create_associated=True, create_contents=True, create_hierarchy=True, delete=True, modify=True,
+                read=True, view_private_items=False
+            )
+        )
+        self.assertEqual(
+            fld.permission_set,
+            PermissionSet(
+                permissions=None,
+                calendar_permissions=[
+                    CalendarPermission(
+                        can_create_items=False, can_create_subfolders=False, is_folder_owner=False,
+                        is_folder_visible=True, is_folder_contact=False, edit_items='None',
+                        delete_items='None', read_items='FullDetails', user_id=UserId(
+                            sid='SID1', primary_smtp_address='user1@example.com', display_name='User 1',
+                            distinguished_user=None, external_user_identity=None
+                        ), calendar_permission_level='Reviewer'
+                    ),
+                    CalendarPermission(
+                        can_create_items=True, can_create_subfolders=False, is_folder_owner=False,
+                        is_folder_visible=True, is_folder_contact=False, edit_items='All', delete_items='All',
+                        read_items='FullDetails', user_id=UserId(
+                            sid='SID2', primary_smtp_address='user2@example.com', display_name='User 2',
+                            distinguished_user=None, external_user_identity=None
+                        ), calendar_permission_level='Editor'
+                    )
+                ], unknown_entries=None
+            ),
+        )

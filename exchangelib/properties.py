@@ -1091,7 +1091,7 @@ class Permission(BasePermission):
 class CalendarPermission(BasePermission):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarpermission"""
 
-    ELEMENT_NAME = 'Permission'
+    ELEMENT_NAME = 'CalendarPermission'
     LEVEL_CHOICES = (
         'None', 'Owner', 'PublishingEditor', 'Editor', 'PublishingAuthor', 'Author', 'NoneditingAuthor', 'Reviewer',
         'Contributor', 'FreeBusyTimeOnly', 'FreeBusyTimeAndSubjectAndLocation', 'Custom',
