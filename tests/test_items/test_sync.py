@@ -3,7 +3,8 @@ import time
 from exchangelib.errors import ErrorInvalidSubscription, ErrorSubscriptionNotFound
 from exchangelib.folders import Inbox
 from exchangelib.items import Message
-from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent
+from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent, Notification
+from exchangelib.services import SendNotification
 
 from .test_basics import BaseItemTest
 from ..common import get_random_string
@@ -219,3 +220,40 @@ class SyncTest(BaseItemTest):
         finally:
             self.account.protocol.decrease_poolsize()
             self.account.protocol._session_pool_maxsize -= 1
+
+    def test_push_message_parsing(self):
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<soap11:Envelope
+    xmlns:soap11="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap11:Header>
+        <t:RequestServerVersion
+            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" Version="Exchange2016"
+            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
+        </soap11:Header>
+        <soap11:Body>
+            <m:SendNotification
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
+                xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+                <m:ResponseMessages>
+                    <m:SendNotificationResponseMessage ResponseClass="Success">
+                        <m:ResponseCode>NoError</m:ResponseCode>
+                        <m:Notification>
+                            <t:SubscriptionId>XXXXX=</t:SubscriptionId>
+                            <t:PreviousWatermark>AAAAA=</t:PreviousWatermark>
+                            <t:MoreEvents>false</t:MoreEvents>
+                            <t:StatusEvent>
+                                <t:Watermark>BBBBB=</t:Watermark>
+                            </t:StatusEvent>
+                        </m:Notification>
+                    </m:SendNotificationResponseMessage>
+                </m:ResponseMessages>
+            </m:SendNotification>
+        </soap11:Body>
+    </soap11:Envelope>'''
+        ws = SendNotification(protocol=self.account.protocol)
+        self.assertListEqual(
+            list(ws.parse(xml)),
+            [Notification(subscription_id='XXXXX=', previous_watermark='AAAAA=', more_events=False,
+                          events=[StatusEvent(watermark='BBBBB=')])]
+        )

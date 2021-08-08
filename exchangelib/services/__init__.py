@@ -45,6 +45,7 @@ from .move_folder import MoveFolder
 from .move_item import MoveItem
 from .resolve_names import ResolveNames
 from .send_item import SendItem
+from .send_notification import SendNotification
 from .set_user_oof_settings import SetUserOofSettings
 from .subscribe import SubscribeToStreaming, SubscribeToPull, SubscribeToPush
 from .sync_folder_hierarchy import SyncFolderHierarchy
@@ -94,6 +95,7 @@ __all__ = [
     'MoveItem',
     'ResolveNames',
     'SendItem',
+    'SendNotification',
     'SetUserOofSettings',
     'SubscribeToPull',
     'SubscribeToPush',
