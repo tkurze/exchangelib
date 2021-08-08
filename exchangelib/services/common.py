@@ -21,7 +21,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
 from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
-    xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError
+    xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError, DummyResponse
 from ..version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
@@ -146,6 +146,12 @@ class EWSService(metaclass=abc.ABCMeta):
         if len(res) != 1:
             raise ValueError('Expected result length 1, but got %r' % res)
         return res[0]
+
+    def parse_bytes(self, xml):
+        """Used mostly for testing, when we want to parse static XML data."""
+        resp = DummyResponse(url=None, headers=None, request_headers=None, content=xml)
+        _, body = self._get_soap_parts(response=resp)
+        return self._get_elements_in_response(response=self._get_soap_messages(body=body))
 
     @property
     def _version_hint(self):

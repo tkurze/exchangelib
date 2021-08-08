@@ -51,11 +51,6 @@ def mock_session_exception(exc_cls):
     return raise_exc
 
 
-class MockResponse(DummyResponse):
-    def __init__(self, c):
-        super().__init__(url='', headers={}, request_headers={}, content=c)
-
-
 class TimedTestCase(unittest.TestCase, metaclass=abc.ABCMeta):
     SLOW_TEST_DURATION = 5  # Log tests that are slower than this value (in seconds)
 

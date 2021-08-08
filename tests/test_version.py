@@ -68,7 +68,7 @@ class VersionTest(TimedTestCase):
         self.assertEqual(version.api_version, 'Exchange2016')
 
         # Test various parse failures
-        with self.assertRaises(TransportError):
+        with self.assertRaises(TransportError) as e:
             Version.from_soap_header(
                 'Exchange2013',
                 to_xml(b'''\
@@ -76,7 +76,8 @@ class VersionTest(TimedTestCase):
     <foo/>
 </s:Header>''')
             )
-        with self.assertRaises(TransportError):
+        self.assertIn('No ServerVersionInfo in header', e.exception.args[0])
+        with self.assertRaises(TransportError) as e:
             Version.from_soap_header(
                 'Exchange2013',
                 to_xml(b'''\
@@ -85,3 +86,4 @@ class VersionTest(TimedTestCase):
         xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"/>
 </s:Header>''')
             )
+        self.assertIn('Bad ServerVersionInfo in response', e.exception.args[0])

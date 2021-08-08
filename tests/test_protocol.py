@@ -26,8 +26,7 @@ from exchangelib.transport import NOAUTH, NTLM
 from exchangelib.version import Build, Version
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
-from .common import EWSTest, MockResponse, get_random_datetime_range, get_random_string, RANDOM_DATE_MIN, \
-    RANDOM_DATE_MAX
+from .common import EWSTest, get_random_datetime_range, get_random_string, RANDOM_DATE_MIN, RANDOM_DATE_MAX
 
 
 class ProtocolTest(EWSTest):
@@ -217,7 +216,6 @@ class ProtocolTest(EWSTest):
 
     def test_get_roomlists_parsing(self):
         # Test static XML since server has no roomlists
-        ws = GetRoomLists(self.account.protocol)
         xml = b'''\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -243,10 +241,9 @@ class ProtocolTest(EWSTest):
         </m:GetRoomListsResponse>
     </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
-        res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
+        ws = GetRoomLists(self.account.protocol)
         self.assertSetEqual(
-            {RoomList.from_xml(elem=elem, account=None).email_address for elem in res},
+            {RoomList.from_xml(elem=elem, account=None).email_address for elem in ws.parse_bytes(xml)},
             {'roomlist1@example.com', 'roomlist2@example.com'}
         )
 
@@ -262,7 +259,6 @@ class ProtocolTest(EWSTest):
 
     def test_get_rooms_parsing(self):
         # Test static XML since server has no rooms
-        ws = GetRooms(self.account.protocol)
         xml = b'''\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -292,10 +288,9 @@ class ProtocolTest(EWSTest):
         </m:GetRoomsResponse>
     </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
-        res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
+        ws = GetRooms(self.account.protocol)
         self.assertSetEqual(
-            {Room.from_xml(elem=elem, account=None).email_address for elem in res},
+            {Room.from_xml(elem=elem, account=None).email_address for elem in ws.parse_bytes(xml)},
             {'room1@example.com', 'room2@example.com'}
         )
 
@@ -333,7 +328,6 @@ class ProtocolTest(EWSTest):
 
     def test_resolvenames_parsing(self):
         # Test static XML since server has no roomlists
-        ws = ResolveNames(self.account.protocol)
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -369,10 +363,12 @@ class ProtocolTest(EWSTest):
     </m:ResolveNamesResponse>
   </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
-        res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
+        ws = ResolveNames(self.account.protocol)
         self.assertSetEqual(
-            {Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None).email_address for elem in res},
+            {
+                Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None).email_address
+                for elem in ws.parse_bytes(xml)
+            },
             {'anne@example.com', 'john@example.com'}
         )
 
@@ -409,9 +405,8 @@ class ProtocolTest(EWSTest):
    </s:Body>
 </s:Envelope>'''
         ws = GetSearchableMailboxes(protocol=self.account.protocol)
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
         mailboxes = []
-        for elem in ws._get_elements_in_response(response=ws._get_soap_messages(body=body)):
+        for elem in ws.parse_bytes(xml):
             if elem.tag == SearchableMailbox.response_tag():
                 mailboxes.append(SearchableMailbox.from_xml(elem=elem, account=None))
             elif elem.tag == FailedMailbox.response_tag():
@@ -600,8 +595,9 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     # Ignore ResourceWarning for unclosed socket. It does get closed.
-                    with self.assertRaises(TransportError):
+                    with self.assertRaises(TransportError) as e:
                         self.account.root.all().exists()
+                    self.assertIn('SSLError', e.exception.args[0])
 
                 # Disable insecure TLS warnings
                 with warnings.catch_warnings():

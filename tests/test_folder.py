@@ -15,7 +15,7 @@ from exchangelib.services import GetFolder
 from exchangelib.services.common import parse_folder_elem
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
-    get_random_byte, MockResponse
+    get_random_byte
 
 
 def get_random_str_tuple(tuple_length, str_length):
@@ -449,11 +449,13 @@ class FolderTest(EWSTest):
         self.assertEqual(f1.id, f1_id)
         self.assertNotEqual(f1.changekey, f1_changekey)
         self.assertEqual(f1.parent, f2)
+        self.assertNotEqual(f1.changekey, f1_parent)
 
         f1_id, f1_changekey, f1_parent = f1.id, f1.changekey, f1.parent
         f1.refresh()
         self.assertEqual(f1.id, f1_id)
         self.assertEqual(f1.parent, f2)
+        self.assertNotEqual(f1.changekey, f1_parent)
 
         f1.delete()
         f2.delete()
@@ -608,7 +610,6 @@ class FolderTest(EWSTest):
 
     def test_permissionset_effectiverights_parsing(self):
         # Test static XML since server may not have any permission sets or effective rights
-        ws = GetFolder(account=self.account)
         xml = b'''\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -678,8 +679,8 @@ class FolderTest(EWSTest):
         </m:GetFolderResponse>
     </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
-        res = list(ws._get_elements_in_response(response=ws._get_soap_messages(body=body)))
+        ws = GetFolder(account=self.account)
+        res = list(ws.parse_bytes(xml))
         self.assertEqual(len(res), 1)
         fld = parse_folder_elem(elem=res[0], folder=self.account.calendar, account=self.account)
         self.assertEqual(

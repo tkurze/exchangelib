@@ -13,7 +13,7 @@ from exchangelib.protocol import Protocol, FaultTolerance
 from exchangelib.services import GetDelegate
 from exchangelib.version import Version, EXCHANGE_2007_SP1
 
-from .common import EWSTest, MockResponse
+from .common import EWSTest
 
 
 class AccountTest(EWSTest):
@@ -163,9 +163,7 @@ class AccountTest(EWSTest):
         a = MockAccount(DELEGATE, 'foo@example.com', MockTZ('XXX'), protocol=p)
 
         ws = GetDelegate(account=a)
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
-        res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
-        delegates = [DelegateUser.from_xml(elem=elem, account=a) for elem in res]
+        delegates = [DelegateUser.from_xml(elem=elem, account=a) for elem in ws.parse_bytes(xml)]
         self.assertListEqual(
             delegates,
             [

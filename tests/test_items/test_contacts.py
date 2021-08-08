@@ -12,7 +12,7 @@ from exchangelib.properties import Mailbox, Member, Attribution, SourceId, Folde
     PhoneNumberAttributedValue, PersonaPhoneNumberTypeValue
 from exchangelib.services import GetPersona
 
-from ..common import get_random_string, get_random_email, MockResponse
+from ..common import get_random_string, get_random_email
 from .test_basics import CommonItemTest
 
 
@@ -128,7 +128,6 @@ class ContactsTest(CommonItemTest):
         )
 
     def test_get_persona(self):
-        ws = GetPersona(account=self.account)
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -187,9 +186,8 @@ class ContactsTest(CommonItemTest):
       </m:GetPersonaResponseMessage>
    </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
-        res = ws._get_elements_in_response(response=ws._get_soap_messages(body=body))
-        personas = [Persona.from_xml(elem=elem, account=self.account) for elem in res]
+        ws = GetPersona(account=self.account)
+        personas = [Persona.from_xml(elem=elem, account=self.account) for elem in ws.parse_bytes(xml)]
         self.assertEqual(len(personas), 1)
         persona = personas[0]
         self.assertEqual(persona.id, 'AAQkADEzAQAKtOtR=')

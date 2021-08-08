@@ -8,7 +8,7 @@ from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, Res
 from exchangelib.util import create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
 
-from .common import EWSTest, mock_protocol, mock_version, mock_account, MockResponse, get_random_string
+from .common import EWSTest, mock_protocol, mock_version, mock_account, get_random_string
 
 
 class ServicesTest(EWSTest):
@@ -25,8 +25,6 @@ class ServicesTest(EWSTest):
 
     def test_error_server_busy(self):
         # Test that we can parse an exception response via SOAP body
-        version = mock_version(build=EXCHANGE_2010)
-        ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
         xml = b'''\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -48,9 +46,10 @@ class ServicesTest(EWSTest):
     </s:Fault>
   </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
+        version = mock_version(build=EXCHANGE_2010)
+        ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
         with self.assertRaises(ErrorServerBusy) as e:
-            ws._get_soap_messages(body=body)
+            ws.parse_bytes(xml)
         self.assertEqual(e.exception.back_off, 297.749)  # Test that we correctly parse the BackOffMilliseconds value
 
     @requests_mock.mock(real_http=True)
@@ -76,10 +75,9 @@ class ServicesTest(EWSTest):
         </m:FindFolderResponse>
     </s:Body>
 </s:Envelope>'''
-        _, body = ws._get_soap_parts(response=MockResponse(xml))
         # Just test that we can parse the error
         with self.assertRaises(ErrorTooManyObjectsOpened):
-            list(ws._get_elements_in_response(response=ws._get_soap_messages(body=body)))
+            list(ws.parse_bytes(xml))
 
         # Test that it gets converted to an ErrorServerBusy exception. This happens deep inside EWSService methods
         # so it's easier to only mock the response.
@@ -95,7 +93,7 @@ class ServicesTest(EWSTest):
             self.account.protocol.config.retry_policy = orig_policy
 
     def test_soap_error(self):
-        soap_xml = """\
+        xml_template = '''\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -109,33 +107,33 @@ class ServicesTest(EWSTest):
       </detail>
     </s:Fault>
   </s:Body>
-</s:Envelope>"""
+</s:Envelope>'''
         version = mock_version(build=EXCHANGE_2010)
         protocol = mock_protocol(version=version, service_endpoint='example.com')
         ws = GetRoomLists(protocol=protocol)
-        _, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
+        xml = xml_template.format(
                 faultcode='YYY', faultstring='AAA', responsecode='XXX', message='ZZZ'
-            ).encode('utf-8')))
+            ).encode('utf-8')
         with self.assertRaises(SOAPError) as e:
-            ws._get_soap_messages(body=body)
+            ws.parse_bytes(xml)
         self.assertIn('AAA', e.exception.args[0])
         self.assertIn('YYY', e.exception.args[0])
         self.assertIn('ZZZ', e.exception.args[0])
-        _, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
+        xml = xml_template.format(
                 faultcode='ErrorNonExistentMailbox', faultstring='AAA', responsecode='XXX', message='ZZZ'
-            ).encode('utf-8')))
+            ).encode('utf-8')
         with self.assertRaises(ErrorNonExistentMailbox) as e:
-            ws._get_soap_messages(body=body)
+            ws.parse_bytes(xml)
         self.assertIn('AAA', e.exception.args[0])
-        _, body = ws._get_soap_parts(response=MockResponse(soap_xml.format(
+        xml = xml_template.format(
                 faultcode='XXX', faultstring='AAA', responsecode='ErrorNonExistentMailbox', message='YYY'
-            ).encode('utf-8')))
+            ).encode('utf-8')
         with self.assertRaises(ErrorNonExistentMailbox) as e:
-            ws._get_soap_messages(body=body)
+            ws.parse_bytes(xml)
         self.assertIn('YYY', e.exception.args[0])
 
         # Test bad XML (no body)
-        soap_xml = b"""\
+        xml = b'''\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -143,12 +141,12 @@ class ServicesTest(EWSTest):
                          xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
   </s:Header>
   </s:Body>
-</s:Envelope>"""
+</s:Envelope>'''
         with self.assertRaises(MalformedResponseError):
-            ws._get_soap_parts(response=MockResponse(soap_xml))
+            ws.parse_bytes(xml)
 
         # Test bad XML (no fault)
-        soap_xml = b"""\
+        xml = b'''\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -159,14 +157,14 @@ class ServicesTest(EWSTest):
     <s:Fault>
     </s:Fault>
   </s:Body>
-</s:Envelope>"""
-        _, body = ws._get_soap_parts(response=MockResponse(soap_xml))
-        with self.assertRaises(TransportError):
-            ws._get_soap_messages(body=body)
+</s:Envelope>'''
+        with self.assertRaises(SOAPError) as e:
+            ws.parse_bytes(xml)
+        self.assertEqual(e.exception.args[0], 'SOAP error code: None string: None actor: None detail: None')
 
     def test_element_container(self):
-        svc = ResolveNames(self.account.protocol)
-        soap_xml = b"""\
+        ws = ResolveNames(self.account.protocol)
+        xml = b'''\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -178,12 +176,10 @@ class ServicesTest(EWSTest):
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
   </s:Body>
-</s:Envelope>"""
-        _, body = svc._get_soap_parts(response=MockResponse(soap_xml))
-        resp = svc._get_soap_messages(body=body)
+</s:Envelope>'''
         with self.assertRaises(TransportError) as e:
             # Missing ResolutionSet elements
-            list(svc._get_elements_in_response(response=resp))
+            list(ws.parse_bytes(xml))
         self.assertIn('ResolutionSet elements in ResponseMessage', e.exception.args[0])
 
     def test_get_elements(self):
