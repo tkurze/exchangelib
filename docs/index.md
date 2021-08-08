@@ -1493,6 +1493,7 @@ using EWS is available at
 from exchangelib import Account
 from exchangelib.properties import CopiedEvent, CreatedEvent, DeletedEvent, \
     ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent, FreeBusyChangedEvent
+form exchangelib.services import SendNotification
 
 a = Account(...)
 
@@ -1515,11 +1516,18 @@ for change_type, item in a.inbox.sync_items():
 # Create a pull subscription that can be used to pull events from the server
 subscription_id, watermark = a.inbox.subscribe_to_pull()
 
-# Create a push subscription. The server will regularly send a request to the
-# callback URL to deliver changes or a status message.
+# Create a push subscription. The server will regularly send an HTTP POST
+# request to the callback URL to deliver changes or a status message.
 subscription_id, watermark = a.inbox.subscribe_to_push(
   callback_url='https://my_app.example.com/callback_url'
 )
+# When the server sends a push notification, the POST data contains a
+# 'SendNotification' XML document. You can use exchangelib in the callback URL
+# implementation to parse this data:
+ws = SendNotification(protocol=a.protocol)
+for notification in ws.parse(response.data):
+    # ws.parse() returns Notification objects
+    pass
 
 # Create a streaming subscription that can be used to stream events from the
 # server.
