@@ -13,6 +13,10 @@ class FindFolder(EWSAccountService):
     paging_container_name = '{%s}RootFolder' % MNS
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.root = None  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         """Find subfolders of a folder.
 

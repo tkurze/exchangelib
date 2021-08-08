@@ -16,6 +16,12 @@ class FindPeople(EWSAccountService):
     supported_from = EXCHANGE_2013
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A hack to communicate parsing args to _elems_to_objs()
+        self.additional_fields = None
+        self.shape = None
+
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         """Find items in an account.
 
