@@ -11,11 +11,14 @@ class GetAttachment(EWSAccountService):
     streaming = True
 
     def call(self, items, include_mime_content):
+        return self._elems_to_objs(self._chunked_get_elements(
+                self.get_payload, items=items, include_mime_content=include_mime_content
+        ))
+
+    def _elems_to_objs(self, elems):
         from ..attachments import FileAttachment, ItemAttachment
         cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in self._chunked_get_elements(
-                self.get_payload, items=items, include_mime_content=include_mime_content
-        ):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

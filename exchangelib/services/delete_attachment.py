@@ -11,7 +11,10 @@ class DeleteAttachment(EWSAccountService):
     SERVICE_NAME = 'DeleteAttachment'
 
     def call(self, items):
-        for elem in self._chunked_get_elements(self.get_payload, items=items):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

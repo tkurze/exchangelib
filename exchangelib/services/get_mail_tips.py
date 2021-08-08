@@ -9,12 +9,15 @@ class GetMailTips(EWSService):
     SERVICE_NAME = 'GetMailTips'
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=recipients,
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

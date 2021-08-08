@@ -16,7 +16,7 @@ class UpdateItem(EWSAccountService):
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError("'conflict_resolution' %s must be one of %s" % (
@@ -34,14 +34,18 @@ class UpdateItem(EWSAccountService):
             raise ValueError("'suppress_read_receipts' %s must be True or False" % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError('Cannot send-only existing objects. Use SendItem service instead')
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue

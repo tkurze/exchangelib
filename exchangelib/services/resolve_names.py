@@ -21,9 +21,13 @@ class ResolveNames(EWSService):
     # 100 candidates are returned for a lookup.
     supports_paging = False
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.return_full_contact_data = False  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
-        from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
+        from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
         if self.chunk_size > 100:
             log.warning(
                 'Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup',
@@ -33,19 +37,24 @@ class ResolveNames(EWSService):
             raise ValueError("'search_scope' %s must be one if %s" % (search_scope, SEARCH_SCOPE_CHOICES))
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
             raise ValueError("'shape' %s must be one if %s" % (contact_data_shape, SHAPE_CHOICES))
-        for elem in self._chunked_get_elements(
+        self.return_full_contact_data = return_full_contact_data
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,
             parent_folders=parent_folders,
             return_full_contact_data=return_full_contact_data,
             search_scope=search_scope,
             contact_data_shape=contact_data_shape,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Contact
+        for elem in elems:
             if isinstance(elem, ErrorNameResolutionNoResults):
                 continue
             if isinstance(elem, Exception):
                 raise elem
-            if return_full_contact_data:
+            if self.return_full_contact_data:
                 mailbox_elem = elem.find(Mailbox.response_tag())
                 contact_elem = elem.find(Contact.response_tag())
                 yield (

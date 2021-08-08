@@ -16,7 +16,7 @@ class CreateItem(EWSAccountService):
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         from ..folders import BaseFolder, FolderId
-        from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+        from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
             SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
             raise ValueError("'message_disposition' %s must be one of %s" % (
@@ -37,13 +37,17 @@ class CreateItem(EWSAccountService):
             folder = self.account.sent  # 'Sent' is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError("Folder must be None in send-ony mode")
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=items,
             folder=folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import BulkCreateResult
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue

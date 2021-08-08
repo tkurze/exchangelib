@@ -163,7 +163,7 @@ class AccountTest(EWSTest):
         a = MockAccount(DELEGATE, 'foo@example.com', MockTZ('XXX'), protocol=p)
 
         ws = GetDelegate(account=a)
-        delegates = [DelegateUser.from_xml(elem=elem, account=a) for elem in ws.parse_bytes(xml)]
+        delegates = list(ws.parse(xml))
         self.assertListEqual(
             delegates,
             [

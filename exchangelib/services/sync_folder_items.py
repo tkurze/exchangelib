@@ -26,7 +26,6 @@ class SyncFolderItems(SyncFolder):
         return res
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        from ..folders.base import BaseFolder
         self.sync_state = sync_state
         if max_changes_returned is None:
             max_changes_returned = self.chunk_size
@@ -34,8 +33,7 @@ class SyncFolderItems(SyncFolder):
             raise ValueError("'max_changes_returned' %s must be a positive integer" % max_changes_returned)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
             raise ValueError("'sync_scope' %s must be one of %r" % (sync_scope, self.SYNC_SCOPES))
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
@@ -43,7 +41,12 @@ class SyncFolderItems(SyncFolder):
                 ignore=ignore,
                 max_changes_returned=max_changes_returned,
                 sync_scope=sync_scope,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        change_types = self._change_types_map()
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

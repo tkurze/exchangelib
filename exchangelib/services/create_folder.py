@@ -8,13 +8,20 @@ class CreateFolder(EWSAccountService):
     SERVICE_NAME = 'CreateFolder'
     element_container_name = '{%s}Folders' % MNS
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folders = []  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, parent_folder, folders):
         # We can't easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case 'folders' is a generator. We're iterating twice.
-        for folder, elem in zip(folders_list, self._chunked_get_elements(
-                self.get_payload, items=folders_list, parent_folder=parent_folder,
-        )):
+        self.folders = list(folders)  # Convert to a list, in case 'folders' is a generator. We're iterating twice.
+        return self._elems_to_objs(self._chunked_get_elements(
+                self.get_payload, items=self.folders, parent_folder=parent_folder,
+        ))
+
+    def _elems_to_objs(self, elems):
+        for folder, elem in zip(self.folders, elems):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):

@@ -17,10 +17,13 @@ class GetItem(EWSAccountService):
 
         :return: XML elements for the items, in stable order
         """
-        from ..folders.base import BaseFolder
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

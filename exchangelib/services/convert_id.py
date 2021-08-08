@@ -17,10 +17,15 @@ class ConvertId(EWSService):
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
             raise ValueError("'destination_format' %r must be one of %s" % (destination_format, ID_FORMATS))
+        return self._elems_to_objs(
+            self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+        )
+
+    def _elems_to_objs(self, elems):
         cls_map = {cls.response_tag(): cls for cls in (
             AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         )}
-        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

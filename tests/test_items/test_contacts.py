@@ -187,9 +187,7 @@ class ContactsTest(CommonItemTest):
    </s:Body>
 </s:Envelope>'''
         ws = GetPersona(account=self.account)
-        personas = [Persona.from_xml(elem=elem, account=self.account) for elem in ws.parse_bytes(xml)]
-        self.assertEqual(len(personas), 1)
-        persona = personas[0]
+        persona = ws.parse(xml)
         self.assertEqual(persona.id, 'AAQkADEzAQAKtOtR=')
         self.assertEqual(persona.persona_type, 'Person')
         self.assertEqual(

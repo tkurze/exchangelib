@@ -12,7 +12,6 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
 from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
 from exchangelib.queryset import Q
 from exchangelib.services import GetFolder
-from exchangelib.services.common import parse_folder_elem
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
     get_random_byte
@@ -680,9 +679,10 @@ class FolderTest(EWSTest):
     </s:Body>
 </s:Envelope>'''
         ws = GetFolder(account=self.account)
-        res = list(ws.parse_bytes(xml))
+        ws.folders = [self.account.calendar]
+        res = list(ws.parse(xml))
         self.assertEqual(len(res), 1)
-        fld = parse_folder_elem(elem=res[0], folder=self.account.calendar, account=self.account)
+        fld = res[0]
         self.assertEqual(
             fld.effective_rights,
             EffectiveRights(

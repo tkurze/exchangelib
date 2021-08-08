@@ -31,8 +31,9 @@ class FindPeople(EWSAccountService):
 
         :return: XML elements for the matching items
         """
-        from ..items import Persona, ID_ONLY
-        for elem in self._paged_call(
+        self.additional_fields = additional_fields
+        self.shape = shape
+        return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -47,11 +48,15 @@ class FindPeople(EWSAccountService):
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Persona, ID_ONLY
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if shape == ID_ONLY and additional_fields is None:
+            if self.shape == ID_ONLY and self.additional_fields is None:
                 yield Persona.id_from_xml(elem)
                 continue
             yield Persona.from_xml(elem, account=self.account)

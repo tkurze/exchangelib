@@ -13,7 +13,10 @@ class ExpandDL(EWSService):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
-        for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(distribution_list=distribution_list)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 raise elem
             yield Mailbox.from_xml(elem, account=None)

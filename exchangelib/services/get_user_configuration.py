@@ -20,9 +20,12 @@ class GetUserConfiguration(EWSAccountService):
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
             raise ValueError("'properties' %r must be one of %s" % (properties, PROPERTIES_CHOICES))
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 user_configuration_name=user_configuration_name, properties=properties
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

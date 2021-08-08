@@ -12,7 +12,10 @@ class GetRoomLists(EWSService):
     supported_from = EXCHANGE_2010
 
     def call(self):
-        for elem in self._get_elements(payload=self.get_payload()):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload()))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

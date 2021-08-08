@@ -16,9 +16,12 @@ class GetEvents(EWSAccountService):
     prefer_affinity = True
 
     def call(self, subscription_id, watermark):
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_id=subscription_id, watermark=watermark,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

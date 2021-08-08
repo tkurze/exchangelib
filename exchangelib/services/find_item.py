@@ -12,6 +12,12 @@ class FindItem(EWSAccountService):
     paging_container_name = '{%s}RootFolder' % MNS
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A hack to communicate parsing args to _elems_to_objs()
+        self.additional_fields = None
+        self.shape = None
+
     def call(self, folders, additional_fields, restriction, order_fields, shape, query_string, depth, calendar_view,
              max_items, offset):
         """Find items in an account.
@@ -29,9 +35,9 @@ class FindItem(EWSAccountService):
 
         :return: XML elements for the matching items
         """
-        from ..folders.base import BaseFolder
-        from ..items import Item, ID_ONLY
-        for elem in self._paged_call(
+        self.additional_fields = additional_fields
+        self.shape = shape
+        return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=len(folders),
@@ -47,11 +53,16 @@ class FindItem(EWSAccountService):
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        from ..items import Item, ID_ONLY
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if shape == ID_ONLY and additional_fields is None:
+            if self.shape == ID_ONLY and self.additional_fields is None:
                 yield Item.id_from_xml(elem)
                 continue
             yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)

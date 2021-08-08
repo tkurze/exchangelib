@@ -9,7 +9,12 @@ class MarkAsJunk(EWSAccountService):
     SERVICE_NAME = 'MarkAsJunk'
 
     def call(self, items, is_junk, move_item):
-        for elem in self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item):
+        return self._elems_to_objs(
+            self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
+        )
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue

@@ -49,7 +49,7 @@ class ServicesTest(EWSTest):
         version = mock_version(build=EXCHANGE_2010)
         ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
         with self.assertRaises(ErrorServerBusy) as e:
-            ws.parse_bytes(xml)
+            ws.parse(xml)
         self.assertEqual(e.exception.back_off, 297.749)  # Test that we correctly parse the BackOffMilliseconds value
 
     @requests_mock.mock(real_http=True)
@@ -77,7 +77,7 @@ class ServicesTest(EWSTest):
 </s:Envelope>'''
         # Just test that we can parse the error
         with self.assertRaises(ErrorTooManyObjectsOpened):
-            list(ws.parse_bytes(xml))
+            list(ws.parse(xml))
 
         # Test that it gets converted to an ErrorServerBusy exception. This happens deep inside EWSService methods
         # so it's easier to only mock the response.
@@ -115,7 +115,7 @@ class ServicesTest(EWSTest):
                 faultcode='YYY', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')
         with self.assertRaises(SOAPError) as e:
-            ws.parse_bytes(xml)
+            ws.parse(xml)
         self.assertIn('AAA', e.exception.args[0])
         self.assertIn('YYY', e.exception.args[0])
         self.assertIn('ZZZ', e.exception.args[0])
@@ -123,13 +123,13 @@ class ServicesTest(EWSTest):
                 faultcode='ErrorNonExistentMailbox', faultstring='AAA', responsecode='XXX', message='ZZZ'
             ).encode('utf-8')
         with self.assertRaises(ErrorNonExistentMailbox) as e:
-            ws.parse_bytes(xml)
+            ws.parse(xml)
         self.assertIn('AAA', e.exception.args[0])
         xml = xml_template.format(
                 faultcode='XXX', faultstring='AAA', responsecode='ErrorNonExistentMailbox', message='YYY'
             ).encode('utf-8')
         with self.assertRaises(ErrorNonExistentMailbox) as e:
-            ws.parse_bytes(xml)
+            ws.parse(xml)
         self.assertIn('YYY', e.exception.args[0])
 
         # Test bad XML (no body)
@@ -143,7 +143,7 @@ class ServicesTest(EWSTest):
   </s:Body>
 </s:Envelope>'''
         with self.assertRaises(MalformedResponseError):
-            ws.parse_bytes(xml)
+            ws.parse(xml)
 
         # Test bad XML (no fault)
         xml = b'''\
@@ -159,7 +159,7 @@ class ServicesTest(EWSTest):
   </s:Body>
 </s:Envelope>'''
         with self.assertRaises(SOAPError) as e:
-            ws.parse_bytes(xml)
+            ws.parse(xml)
         self.assertEqual(e.exception.args[0], 'SOAP error code: None string: None actor: None detail: None')
 
     def test_element_container(self):
@@ -179,7 +179,7 @@ class ServicesTest(EWSTest):
 </s:Envelope>'''
         with self.assertRaises(TransportError) as e:
             # Missing ResolutionSet elements
-            list(ws.parse_bytes(xml))
+            list(ws.parse(xml))
         self.assertIn('ResolutionSet elements in ResponseMessage', e.exception.args[0])
 
     def test_get_elements(self):

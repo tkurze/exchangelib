@@ -17,7 +17,7 @@ from exchangelib.configuration import Configuration
 from exchangelib.items import CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
-from exchangelib.properties import TimeZone, RoomList, FreeBusyView, Room, AlternateId, ID_FORMATS, EWS_ID, \
+from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes
@@ -243,7 +243,7 @@ class ProtocolTest(EWSTest):
 </s:Envelope>'''
         ws = GetRoomLists(self.account.protocol)
         self.assertSetEqual(
-            {RoomList.from_xml(elem=elem, account=None).email_address for elem in ws.parse_bytes(xml)},
+            {rl.email_address for rl in ws.parse(xml)},
             {'roomlist1@example.com', 'roomlist2@example.com'}
         )
 
@@ -290,7 +290,7 @@ class ProtocolTest(EWSTest):
 </s:Envelope>'''
         ws = GetRooms(self.account.protocol)
         self.assertSetEqual(
-            {Room.from_xml(elem=elem, account=None).email_address for elem in ws.parse_bytes(xml)},
+            {r.email_address for r in ws.parse(xml)},
             {'room1@example.com', 'room2@example.com'}
         )
 
@@ -364,11 +364,9 @@ class ProtocolTest(EWSTest):
   </s:Body>
 </s:Envelope>'''
         ws = ResolveNames(self.account.protocol)
+        ws.return_full_contact_data = False
         self.assertSetEqual(
-            {
-                Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None).email_address
-                for elem in ws.parse_bytes(xml)
-            },
+            {m.email_address for m in ws.parse(xml)},
             {'anne@example.com', 'john@example.com'}
         )
 
@@ -405,13 +403,7 @@ class ProtocolTest(EWSTest):
    </s:Body>
 </s:Envelope>'''
         ws = GetSearchableMailboxes(protocol=self.account.protocol)
-        mailboxes = []
-        for elem in ws.parse_bytes(xml):
-            if elem.tag == SearchableMailbox.response_tag():
-                mailboxes.append(SearchableMailbox.from_xml(elem=elem, account=None))
-            elif elem.tag == FailedMailbox.response_tag():
-                mailboxes.append(FailedMailbox.from_xml(elem=elem, account=None))
-        self.assertListEqual(mailboxes, [
+        self.assertListEqual(list(ws.parse(xml)), [
             SearchableMailbox(
                 guid='33a408fe-2574-4e3b-49f5-5e1e000a3035',
                 primary_smtp_address='LOLgroup@contoso.com',

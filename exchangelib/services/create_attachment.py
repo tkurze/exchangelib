@@ -12,9 +12,12 @@ class CreateAttachment(EWSAccountService):
     element_container_name = '{%s}Attachments' % MNS
 
     def call(self, parent_item, items):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
+
+    def _elems_to_objs(self, elems):
         from ..attachments import FileAttachment, ItemAttachment
         cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

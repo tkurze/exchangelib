@@ -16,11 +16,14 @@ class GetSearchableMailboxes(EWSService):
     supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
-        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,
                 expand_group_membership=expand_group_membership,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

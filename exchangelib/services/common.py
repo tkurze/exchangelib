@@ -147,11 +147,15 @@ class EWSService(metaclass=abc.ABCMeta):
             raise ValueError('Expected result length 1, but got %r' % res)
         return res[0]
 
-    def parse_bytes(self, xml):
+    def parse(self, xml):
         """Used mostly for testing, when we want to parse static XML data."""
         resp = DummyResponse(url=None, headers=None, request_headers=None, content=xml)
         _, body = self._get_soap_parts(response=resp)
-        return self._get_elements_in_response(response=self._get_soap_messages(body=body))
+        return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
+
+    def _elems_to_objs(self, elems):
+        """Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions)."""
+        raise NotImplementedError()
 
     @property
     def _version_hint(self):

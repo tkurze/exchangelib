@@ -11,12 +11,15 @@ class GetDelegate(EWSAccountService):
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=user_ids or [None],
             mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
             include_permissions=include_permissions,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

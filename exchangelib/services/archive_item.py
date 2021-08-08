@@ -18,8 +18,11 @@ class ArchiveItem(EWSAccountService):
 
         :return: None
         """
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
         from ..items import Item
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

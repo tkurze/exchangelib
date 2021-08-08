@@ -26,12 +26,11 @@ class FindFolder(EWSAccountService):
 
         :return: XML elements for the matching folders
         """
-        from ..folders import Folder
         roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError('FindFolder must be called with folders in the same root hierarchy (%r)' % roots)
-        root = roots.pop()
-        for elem in self._paged_call(
+        self.root = roots.pop()
+        return self._elems_to_objs(self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,
                 expected_message_count=len(folders),
@@ -44,11 +43,15 @@ class FindFolder(EWSAccountService):
                     page_size=self.chunk_size,
                     offset=offset,
                 )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders import Folder
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield Folder.from_xml_with_root(elem=elem, root=root)
+            yield Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
         findfolder = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))

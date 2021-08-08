@@ -12,7 +12,11 @@ class MoveFolder(EWSAccountService):
         from ..folders import BaseFolder, FolderId
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError("'to_folder' %r must be a Folder or FolderId instance" % to_folder)
-        for elem in self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
+        from ..folders import FolderId
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue

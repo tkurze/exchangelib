@@ -13,7 +13,10 @@ class GetUserOofSettings(EWSAccountService):
     element_container_name = '{%s}OofSettings' % TNS
 
     def call(self, mailbox):
-        for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue

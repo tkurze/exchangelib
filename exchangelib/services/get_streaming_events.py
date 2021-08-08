@@ -31,9 +31,12 @@ class GetStreamingEvents(EWSAccountService):
     def call(self, subscription_ids, connection_timeout):
         if connection_timeout < 1:
             raise ValueError("'connection_timeout' must be a positive integer")
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
