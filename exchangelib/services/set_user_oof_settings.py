@@ -29,6 +29,6 @@ class SetUserOofSettings(EWSAccountService):
         message = message.find(self._response_message_tag())
         return super()._get_element_container(message=message, name=name)
 
-    @staticmethod
-    def _response_message_tag():
+    @classmethod
+    def _response_message_tag(cls):
         return '{%s}ResponseMessage' % MNS
