@@ -38,10 +38,13 @@ class MoveItem(EWSAccountService):
 
     def call(self, items, to_folder):
         from ..folders import BaseFolder, FolderId
-        from ..items import Item
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -85,10 +88,13 @@ class MoveItem(EWSAccountService):
 
     def call(self, items, to_folder):
         from ..folders import BaseFolder, FolderId
-        from ..items import Item
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -137,14 +143,9 @@ class MoveItem(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, to_folder):
     from ..folders import BaseFolder, FolderId
-    from ..items import Item
     if not isinstance(to_folder, (BaseFolder, FolderId)):
         raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-    for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield Item.id_from_xml(elem)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.move_item.MoveItem.get_payload"><code class="name flex">
@@ -175,6 +176,7 @@ class MoveItem(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

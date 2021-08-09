@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 class IndexedElement(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement an indexed element.&#34;&#34;&#34;
 
-    LABELS = set()
+    LABEL_CHOICES = ()
 
 
 class SingleFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
@@ -58,21 +58,21 @@ class EmailAddress(SingleFieldIndexedElement):
     LABEL_CHOICES = (&#39;EmailAddress1&#39;, &#39;EmailAddress2&#39;, &#39;EmailAddress3&#39;)
 
     label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
-    email = EmailSubField()
+    email = EmailSubField(is_required=True)
 
 
 class PhoneNumber(SingleFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber&#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;Entry&#39;
+    LABEL_CHOICES = (
+        &#39;AssistantPhone&#39;, &#39;BusinessFax&#39;, &#39;BusinessPhone&#39;, &#39;BusinessPhone2&#39;, &#39;Callback&#39;, &#39;CarPhone&#39;, &#39;CompanyMainPhone&#39;,
+        &#39;HomeFax&#39;, &#39;HomePhone&#39;, &#39;HomePhone2&#39;, &#39;Isdn&#39;, &#39;MobilePhone&#39;, &#39;OtherFax&#39;, &#39;OtherTelephone&#39;, &#39;Pager&#39;,
+        &#39;PrimaryPhone&#39;, &#39;RadioPhone&#39;, &#39;Telex&#39;, &#39;TtyTddPhone&#39;
+    )
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={
-        Choice(&#39;AssistantPhone&#39;), Choice(&#39;BusinessFax&#39;), Choice(&#39;BusinessPhone&#39;), Choice(&#39;BusinessPhone2&#39;),
-        Choice(&#39;Callback&#39;), Choice(&#39;CarPhone&#39;), Choice(&#39;CompanyMainPhone&#39;), Choice(&#39;HomeFax&#39;), Choice(&#39;HomePhone&#39;),
-        Choice(&#39;HomePhone2&#39;), Choice(&#39;Isdn&#39;), Choice(&#39;MobilePhone&#39;), Choice(&#39;OtherFax&#39;), Choice(&#39;OtherTelephone&#39;),
-        Choice(&#39;Pager&#39;), Choice(&#39;PrimaryPhone&#39;), Choice(&#39;RadioPhone&#39;), Choice(&#39;Telex&#39;), Choice(&#39;TtyTddPhone&#39;),
-    }, default=&#39;PrimaryPhone&#39;)
-    phone_number = SubField()
+    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=&#39;PrimaryPhone&#39;)
+    phone_number = SubField(is_required=True)
 
 
 class MultiFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
@@ -83,10 +83,9 @@ class PhysicalAddress(MultiFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-physicaladdress&#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;Entry&#39;
+    LABEL_CHOICES = (&#39;Business&#39;, &#39;Home&#39;, &#39;Other&#39;)
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={
-        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;)
-    }, default=&#39;Business&#39;)
+    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
     street = NamedSubField(field_uri=&#39;Street&#39;)  # Street, house number, etc.
     city = NamedSubField(field_uri=&#39;City&#39;)
     state = NamedSubField(field_uri=&#39;State&#39;)
@@ -125,7 +124,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
     LABEL_CHOICES = (&#39;EmailAddress1&#39;, &#39;EmailAddress2&#39;, &#39;EmailAddress3&#39;)
 
     label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
-    email = EmailSubField()</code></pre>
+    email = EmailSubField(is_required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -184,7 +183,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <pre><code class="python">class IndexedElement(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement an indexed element.&#34;&#34;&#34;
 
-    LABELS = set()</code></pre>
+    LABEL_CHOICES = ()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -197,7 +196,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.indexed_properties.IndexedElement.LABELS"><code class="name">var <span class="ident">LABELS</span></code></dt>
+<dt id="exchangelib.indexed_properties.IndexedElement.LABEL_CHOICES"><code class="name">var <span class="ident">LABEL_CHOICES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -262,14 +261,14 @@ class PhysicalAddress(MultiFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber&#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;Entry&#39;
+    LABEL_CHOICES = (
+        &#39;AssistantPhone&#39;, &#39;BusinessFax&#39;, &#39;BusinessPhone&#39;, &#39;BusinessPhone2&#39;, &#39;Callback&#39;, &#39;CarPhone&#39;, &#39;CompanyMainPhone&#39;,
+        &#39;HomeFax&#39;, &#39;HomePhone&#39;, &#39;HomePhone2&#39;, &#39;Isdn&#39;, &#39;MobilePhone&#39;, &#39;OtherFax&#39;, &#39;OtherTelephone&#39;, &#39;Pager&#39;,
+        &#39;PrimaryPhone&#39;, &#39;RadioPhone&#39;, &#39;Telex&#39;, &#39;TtyTddPhone&#39;
+    )
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={
-        Choice(&#39;AssistantPhone&#39;), Choice(&#39;BusinessFax&#39;), Choice(&#39;BusinessPhone&#39;), Choice(&#39;BusinessPhone2&#39;),
-        Choice(&#39;Callback&#39;), Choice(&#39;CarPhone&#39;), Choice(&#39;CompanyMainPhone&#39;), Choice(&#39;HomeFax&#39;), Choice(&#39;HomePhone&#39;),
-        Choice(&#39;HomePhone2&#39;), Choice(&#39;Isdn&#39;), Choice(&#39;MobilePhone&#39;), Choice(&#39;OtherFax&#39;), Choice(&#39;OtherTelephone&#39;),
-        Choice(&#39;Pager&#39;), Choice(&#39;PrimaryPhone&#39;), Choice(&#39;RadioPhone&#39;), Choice(&#39;Telex&#39;), Choice(&#39;TtyTddPhone&#39;),
-    }, default=&#39;PrimaryPhone&#39;)
-    phone_number = SubField()</code></pre>
+    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=&#39;PrimaryPhone&#39;)
+    phone_number = SubField(is_required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -284,6 +283,10 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.indexed_properties.PhoneNumber.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.indexed_properties.PhoneNumber.LABEL_CHOICES"><code class="name">var <span class="ident">LABEL_CHOICES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -325,10 +328,9 @@ class PhysicalAddress(MultiFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-physicaladdress&#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;Entry&#39;
+    LABEL_CHOICES = (&#39;Business&#39;, &#39;Home&#39;, &#39;Other&#39;)
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={
-        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;)
-    }, default=&#39;Business&#39;)
+    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
     street = NamedSubField(field_uri=&#39;Street&#39;)  # Street, house number, etc.
     city = NamedSubField(field_uri=&#39;City&#39;)
     state = NamedSubField(field_uri=&#39;State&#39;)
@@ -353,6 +355,10 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.indexed_properties.PhysicalAddress.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.indexed_properties.PhysicalAddress.LABEL_CHOICES"><code class="name">var <span class="ident">LABEL_CHOICES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -505,7 +511,7 @@ def value_field(cls, version=None):
 <li>
 <h4><code><a title="exchangelib.indexed_properties.IndexedElement" href="#exchangelib.indexed_properties.IndexedElement">IndexedElement</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.indexed_properties.IndexedElement.LABELS" href="#exchangelib.indexed_properties.IndexedElement.LABELS">LABELS</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.IndexedElement.LABEL_CHOICES" href="#exchangelib.indexed_properties.IndexedElement.LABEL_CHOICES">LABEL_CHOICES</a></code></li>
 </ul>
 </li>
 <li>
@@ -516,6 +522,7 @@ def value_field(cls, version=None):
 <ul class="">
 <li><code><a title="exchangelib.indexed_properties.PhoneNumber.ELEMENT_NAME" href="#exchangelib.indexed_properties.PhoneNumber.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhoneNumber.FIELDS" href="#exchangelib.indexed_properties.PhoneNumber.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.PhoneNumber.LABEL_CHOICES" href="#exchangelib.indexed_properties.PhoneNumber.LABEL_CHOICES">LABEL_CHOICES</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhoneNumber.label" href="#exchangelib.indexed_properties.PhoneNumber.label">label</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhoneNumber.phone_number" href="#exchangelib.indexed_properties.PhoneNumber.phone_number">phone_number</a></code></li>
 </ul>
@@ -525,6 +532,7 @@ def value_field(cls, version=None):
 <ul class="two-column">
 <li><code><a title="exchangelib.indexed_properties.PhysicalAddress.ELEMENT_NAME" href="#exchangelib.indexed_properties.PhysicalAddress.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhysicalAddress.FIELDS" href="#exchangelib.indexed_properties.PhysicalAddress.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.PhysicalAddress.LABEL_CHOICES" href="#exchangelib.indexed_properties.PhysicalAddress.LABEL_CHOICES">LABEL_CHOICES</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhysicalAddress.city" href="#exchangelib.indexed_properties.PhysicalAddress.city">city</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhysicalAddress.clean" href="#exchangelib.indexed_properties.PhysicalAddress.clean">clean</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.PhysicalAddress.country" href="#exchangelib.indexed_properties.PhysicalAddress.country">country</a></code></li>

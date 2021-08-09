@@ -52,7 +52,7 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 
-from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect
+from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, MalformedResponseError
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger(&#39;%s.xml&#39; % __name__)
@@ -900,8 +900,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         protocol.retire_session(session)
         try:
             protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
-        except Exception as e:
+        except MalformedResponseError as e:
             log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            raise
+        except Exception:
             raise
     log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
     return r, session
@@ -1407,8 +1409,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         protocol.retire_session(session)
         try:
             protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
-        except Exception as e:
+        except MalformedResponseError as e:
             log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            raise
+        except Exception:
             raise
     log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
     return r, session</code></pre>

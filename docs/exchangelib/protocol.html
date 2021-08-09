@@ -50,7 +50,7 @@ from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached, RateLimitError, CASError, \
-    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError
+    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError
 from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
@@ -404,43 +404,61 @@ class CachingProtocol(type):
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
 
-        # We may be using multiple different credentials and changing our minds on TLS verification. This key
-        # combination should be safe.
-        _protocol_cache_key = kwargs[&#39;config&#39;].service_endpoint, kwargs[&#39;config&#39;].credentials
+        config = kwargs[&#39;config&#39;]
+        _protocol_cache_key = cls._cache_key(config)
 
-        protocol = cls._protocol_cache.get(_protocol_cache_key)
-        if isinstance(protocol, Exception):
-            # The input data leads to a TransportError. Re-throw
-            raise protocol
-        if protocol is not None:
+        try:
+            protocol, _ = cls._protocol_cache[_protocol_cache_key]
+        except KeyError:
+            pass
+        else:
+            if isinstance(protocol, Exception):
+                # The input data leads to a TransportError. Re-throw
+                raise protocol
             return protocol
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
         # probably overkill although it would reduce lock contention.
         log.debug(&#39;Waiting for _protocol_cache_lock&#39;)
         with cls._protocol_cache_lock:
-            protocol = cls._protocol_cache.get(_protocol_cache_key)
-            if isinstance(protocol, Exception):
-                # Someone got ahead of us while holding the lock, but the input data leads to a TransportError. Re-throw
-                raise protocol
-            if protocol is not None:
-                # Someone got ahead of us while holding the lock
+            try:
+                protocol, _ = cls._protocol_cache[_protocol_cache_key]
+            except KeyError:
+                pass
+            else:
+                if isinstance(protocol, Exception):
+                    # We already tried this combination, possibly in a different competing thread, but the input
+                    # data leads to a TransportError.
+                    raise protocol
                 return protocol
+
             log.debug(&#34;Protocol __call__ cache miss. Adding key &#39;%s&#39;&#34;, str(_protocol_cache_key))
             try:
                 protocol = super().__call__(*args, **kwargs)
             except TransportError as e:
                 # This can happen if, for example, autodiscover supplies us with a bogus EWS endpoint
                 log.warning(&#39;Failed to create cached protocol with key %s: %s&#39;, _protocol_cache_key, e)
-                cls._protocol_cache[_protocol_cache_key] = e
+                cls._protocol_cache[_protocol_cache_key] = e, datetime.datetime.now()
                 raise e
-            cls._protocol_cache[_protocol_cache_key] = protocol
+            cls._protocol_cache[_protocol_cache_key] = protocol, datetime.datetime.now()
         return protocol
+
+    @staticmethod
+    def _cache_key(config):
+        # We may be using multiple different credentials for the same service endpoint. This key combination should be
+        # safe.
+        return config.service_endpoint, config.credentials
+
+    def __getitem__(cls, config):
+        return cls._protocol_cache[cls._cache_key(config)]
+
+    def __delitem__(cls, config):
+        del cls._protocol_cache[cls._cache_key(config)]
 
     @classmethod
     def clear_cache(mcs):
         with mcs._protocol_cache_lock:
-            for key, protocol in mcs._protocol_cache.items():
+            for key, (protocol, _) in mcs._protocol_cache.items():
                 if isinstance(protocol, Exception):
                     continue
                 service_endpoint = key[0]
@@ -696,7 +714,7 @@ class RetryPolicy(metaclass=abc.ABCMeta):
             # Another way of communicating invalid schema versions
             raise ErrorInvalidSchemaVersionForMailboxVersion(&#39;Invalid server version&#39;)
         if b&#39;The referenced account is currently locked out&#39; in response.content:
-            raise TransportError(&#39;The service account is currently locked out&#39;)
+            raise UnauthorizedError(&#39;The referenced account is currently locked out&#39;)
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
             raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
@@ -704,7 +722,7 @@ class RetryPolicy(metaclass=abc.ABCMeta):
             # A header set by us on CONNECTION_ERRORS
             raise response.headers[&#39;TimeoutException&#39;]
         # This could be anything. Let higher layers handle this
-        raise TransportError(
+        raise MalformedResponseError(
             &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
             % (response.status_code, response.headers, response.text)
         )
@@ -1696,43 +1714,61 @@ requests. We decrease by one session per call.</p></div>
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
 
-        # We may be using multiple different credentials and changing our minds on TLS verification. This key
-        # combination should be safe.
-        _protocol_cache_key = kwargs[&#39;config&#39;].service_endpoint, kwargs[&#39;config&#39;].credentials
+        config = kwargs[&#39;config&#39;]
+        _protocol_cache_key = cls._cache_key(config)
 
-        protocol = cls._protocol_cache.get(_protocol_cache_key)
-        if isinstance(protocol, Exception):
-            # The input data leads to a TransportError. Re-throw
-            raise protocol
-        if protocol is not None:
+        try:
+            protocol, _ = cls._protocol_cache[_protocol_cache_key]
+        except KeyError:
+            pass
+        else:
+            if isinstance(protocol, Exception):
+                # The input data leads to a TransportError. Re-throw
+                raise protocol
             return protocol
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
         # probably overkill although it would reduce lock contention.
         log.debug(&#39;Waiting for _protocol_cache_lock&#39;)
         with cls._protocol_cache_lock:
-            protocol = cls._protocol_cache.get(_protocol_cache_key)
-            if isinstance(protocol, Exception):
-                # Someone got ahead of us while holding the lock, but the input data leads to a TransportError. Re-throw
-                raise protocol
-            if protocol is not None:
-                # Someone got ahead of us while holding the lock
+            try:
+                protocol, _ = cls._protocol_cache[_protocol_cache_key]
+            except KeyError:
+                pass
+            else:
+                if isinstance(protocol, Exception):
+                    # We already tried this combination, possibly in a different competing thread, but the input
+                    # data leads to a TransportError.
+                    raise protocol
                 return protocol
+
             log.debug(&#34;Protocol __call__ cache miss. Adding key &#39;%s&#39;&#34;, str(_protocol_cache_key))
             try:
                 protocol = super().__call__(*args, **kwargs)
             except TransportError as e:
                 # This can happen if, for example, autodiscover supplies us with a bogus EWS endpoint
                 log.warning(&#39;Failed to create cached protocol with key %s: %s&#39;, _protocol_cache_key, e)
-                cls._protocol_cache[_protocol_cache_key] = e
+                cls._protocol_cache[_protocol_cache_key] = e, datetime.datetime.now()
                 raise e
-            cls._protocol_cache[_protocol_cache_key] = protocol
+            cls._protocol_cache[_protocol_cache_key] = protocol, datetime.datetime.now()
         return protocol
+
+    @staticmethod
+    def _cache_key(config):
+        # We may be using multiple different credentials for the same service endpoint. This key combination should be
+        # safe.
+        return config.service_endpoint, config.credentials
+
+    def __getitem__(cls, config):
+        return cls._protocol_cache[cls._cache_key(config)]
+
+    def __delitem__(cls, config):
+        del cls._protocol_cache[cls._cache_key(config)]
 
     @classmethod
     def clear_cache(mcs):
         with mcs._protocol_cache_lock:
-            for key, protocol in mcs._protocol_cache.items():
+            for key, (protocol, _) in mcs._protocol_cache.items():
                 if isinstance(protocol, Exception):
                     continue
                 service_endpoint = key[0]
@@ -1759,7 +1795,7 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">@classmethod
 def clear_cache(mcs):
     with mcs._protocol_cache_lock:
-        for key, protocol in mcs._protocol_cache.items():
+        for key, (protocol, _) in mcs._protocol_cache.items():
             if isinstance(protocol, Exception):
                 continue
             service_endpoint = key[0]
@@ -2650,7 +2686,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
             # Another way of communicating invalid schema versions
             raise ErrorInvalidSchemaVersionForMailboxVersion(&#39;Invalid server version&#39;)
         if b&#39;The referenced account is currently locked out&#39; in response.content:
-            raise TransportError(&#39;The service account is currently locked out&#39;)
+            raise UnauthorizedError(&#39;The referenced account is currently locked out&#39;)
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
             raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
@@ -2658,7 +2694,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
             # A header set by us on CONNECTION_ERRORS
             raise response.headers[&#39;TimeoutException&#39;]
         # This could be anything. Let higher layers handle this
-        raise TransportError(
+        raise MalformedResponseError(
             &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
             % (response.status_code, response.headers, response.text)
         )</code></pre>
@@ -2750,7 +2786,7 @@ def may_retry_on_error(self, response, wait):
         # Another way of communicating invalid schema versions
         raise ErrorInvalidSchemaVersionForMailboxVersion(&#39;Invalid server version&#39;)
     if b&#39;The referenced account is currently locked out&#39; in response.content:
-        raise TransportError(&#39;The service account is currently locked out&#39;)
+        raise UnauthorizedError(&#39;The referenced account is currently locked out&#39;)
     if response.status_code == 401 and self.fail_fast:
         # This is a login failure
         raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
@@ -2758,7 +2794,7 @@ def may_retry_on_error(self, response, wait):
         # A header set by us on CONNECTION_ERRORS
         raise response.headers[&#39;TimeoutException&#39;]
     # This could be anything. Let higher layers handle this
-    raise TransportError(
+    raise MalformedResponseError(
         &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
         % (response.status_code, response.headers, response.text)
     )</code></pre>

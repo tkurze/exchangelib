@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-HEAD
-----
+4.5.0
+-----
 -   Fixed bug when updating indexed fields on `Contact` items.
 -   Fixed bug preventing parsing of `CalendarPermission` items in the `permission_set` field.
 -   Add support for parsing push notification POST requests sent from the Exchange server

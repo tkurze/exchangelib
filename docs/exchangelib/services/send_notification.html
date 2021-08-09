@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>exchangelib.services.delete_folder API documentation</title>
+<title>exchangelib.services.send_notification API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,31 +19,44 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>exchangelib.services.delete_folder</code></h1>
+<h1 class="title">Module <code>exchangelib.services.send_notification</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_folder_ids_element
-from ..util import create_element
+<pre><code class="python">from .common import EWSService
+from ..properties import Notification
+from ..util import MNS
 
 
-class DeleteFolder(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation&#34;&#34;&#34;
+class SendNotification(EWSService):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification
 
-    SERVICE_NAME = &#39;DeleteFolder&#39;
-    returns_elements = False
+    This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.
+    &#34;&#34;&#34;
 
-    def call(self, folders, delete_type):
-        return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
+    SERVICE_NAME = &#39;SendNotification&#39;
 
-    def get_payload(self, folders, delete_type):
-        deletefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        deletefolder.append(folder_ids)
-        return deletefolder</code></pre>
+    def call(self):
+        raise NotImplementedError()
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield Notification.from_xml(elem=elem, account=None)
+
+    @classmethod
+    def _response_tag(cls):
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
+        return &#39;{%s}%s&#39; % (MNS, cls.SERVICE_NAME)
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        return container.findall(Notification.response_tag())</code></pre>
 </details>
 </section>
 <section>
@@ -55,51 +68,59 @@ class DeleteFolder(EWSAccountService):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="exchangelib.services.delete_folder.DeleteFolder"><code class="flex name class">
-<span>class <span class="ident">DeleteFolder</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<dt id="exchangelib.services.send_notification.SendNotification"><code class="flex name class">
+<span>class <span class="ident">SendNotification</span></span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification</a></p>
+<p>This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DeleteFolder(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation&#34;&#34;&#34;
+<pre><code class="python">class SendNotification(EWSService):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification
 
-    SERVICE_NAME = &#39;DeleteFolder&#39;
-    returns_elements = False
+    This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.
+    &#34;&#34;&#34;
 
-    def call(self, folders, delete_type):
-        return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
+    SERVICE_NAME = &#39;SendNotification&#39;
 
-    def get_payload(self, folders, delete_type):
-        deletefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        deletefolder.append(folder_ids)
-        return deletefolder</code></pre>
+    def call(self):
+        raise NotImplementedError()
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield Notification.from_xml(elem=elem, account=None)
+
+    @classmethod
+    def _response_tag(cls):
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
+        return &#39;{%s}%s&#39; % (MNS, cls.SERVICE_NAME)
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        return container.findall(Notification.response_tag())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.services.delete_folder.DeleteFolder.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.delete_folder.DeleteFolder.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
+<dt id="exchangelib.services.send_notification.SendNotification.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.services.delete_folder.DeleteFolder.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, folders, delete_type)</span>
+<dt id="exchangelib.services.send_notification.SendNotification.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -107,35 +128,19 @@ class DeleteFolder(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, folders, delete_type):
-    return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.services.delete_folder.DeleteFolder.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, folders, delete_type)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_payload(self, folders, delete_type):
-    deletefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))
-    folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-    deletefolder.append(folder_ids)
-    return deletefolder</code></pre>
+<pre><code class="python">def call(self):
+    raise NotImplementedError()</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -157,12 +162,10 @@ class DeleteFolder(EWSAccountService):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="exchangelib.services.delete_folder.DeleteFolder" href="#exchangelib.services.delete_folder.DeleteFolder">DeleteFolder</a></code></h4>
+<h4><code><a title="exchangelib.services.send_notification.SendNotification" href="#exchangelib.services.send_notification.SendNotification">SendNotification</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.services.delete_folder.DeleteFolder.SERVICE_NAME" href="#exchangelib.services.delete_folder.DeleteFolder.SERVICE_NAME">SERVICE_NAME</a></code></li>
-<li><code><a title="exchangelib.services.delete_folder.DeleteFolder.call" href="#exchangelib.services.delete_folder.DeleteFolder.call">call</a></code></li>
-<li><code><a title="exchangelib.services.delete_folder.DeleteFolder.get_payload" href="#exchangelib.services.delete_folder.DeleteFolder.get_payload">get_payload</a></code></li>
-<li><code><a title="exchangelib.services.delete_folder.DeleteFolder.returns_elements" href="#exchangelib.services.delete_folder.DeleteFolder.returns_elements">returns_elements</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.SERVICE_NAME" href="#exchangelib.services.send_notification.SendNotification.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.call" href="#exchangelib.services.send_notification.SendNotification.call">call</a></code></li>
 </ul>
 </li>
 </ul>

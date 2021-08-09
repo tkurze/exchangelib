@@ -57,8 +57,8 @@ class SetUserOofSettings(EWSAccountService):
         message = message.find(self._response_message_tag())
         return super()._get_element_container(message=message, name=name)
 
-    @staticmethod
-    def _response_message_tag():
+    @classmethod
+    def _response_message_tag(cls):
         return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 </section>
@@ -107,8 +107,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         message = message.find(self._response_message_tag())
         return super()._get_element_container(message=message, name=name)
 
-    @staticmethod
-    def _response_message_tag():
+    @classmethod
+    def _response_message_tag(cls):
         return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -170,6 +170,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

@@ -41,6 +41,10 @@ class FindFolder(EWSAccountService):
     paging_container_name = &#39;{%s}RootFolder&#39; % MNS
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.root = None  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         &#34;&#34;&#34;Find subfolders of a folder.
 
@@ -54,12 +58,11 @@ class FindFolder(EWSAccountService):
 
         :return: XML elements for the matching folders
         &#34;&#34;&#34;
-        from ..folders import Folder
         roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError(&#39;FindFolder must be called with folders in the same root hierarchy (%r)&#39; % roots)
-        root = roots.pop()
-        for elem in self._paged_call(
+        self.root = roots.pop()
+        return self._elems_to_objs(self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,
                 expected_message_count=len(folders),
@@ -72,11 +75,15 @@ class FindFolder(EWSAccountService):
                     page_size=self.chunk_size,
                     offset=offset,
                 )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders import Folder
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield Folder.from_xml_with_root(elem=elem, root=root)
+            yield Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
         findfolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(Traversal=depth))
@@ -132,6 +139,10 @@ class FindFolder(EWSAccountService):
     paging_container_name = &#39;{%s}RootFolder&#39; % MNS
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.root = None  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         &#34;&#34;&#34;Find subfolders of a folder.
 
@@ -145,12 +156,11 @@ class FindFolder(EWSAccountService):
 
         :return: XML elements for the matching folders
         &#34;&#34;&#34;
-        from ..folders import Folder
         roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError(&#39;FindFolder must be called with folders in the same root hierarchy (%r)&#39; % roots)
-        root = roots.pop()
-        for elem in self._paged_call(
+        self.root = roots.pop()
+        return self._elems_to_objs(self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,
                 expected_message_count=len(folders),
@@ -163,11 +173,15 @@ class FindFolder(EWSAccountService):
                     page_size=self.chunk_size,
                     offset=offset,
                 )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders import Folder
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield Folder.from_xml_with_root(elem=elem, root=root)
+            yield Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
         findfolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(Traversal=depth))
@@ -251,12 +265,11 @@ class FindFolder(EWSAccountService):
 
     :return: XML elements for the matching folders
     &#34;&#34;&#34;
-    from ..folders import Folder
     roots = {f.root for f in folders}
     if len(roots) != 1:
         raise ValueError(&#39;FindFolder must be called with folders in the same root hierarchy (%r)&#39; % roots)
-    root = roots.pop()
-    for elem in self._paged_call(
+    self.root = roots.pop()
+    return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=len(folders),
@@ -269,11 +282,7 @@ class FindFolder(EWSAccountService):
                 page_size=self.chunk_size,
                 offset=offset,
             )
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Folder.from_xml_with_root(elem=elem, root=root)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.find_folder.FindFolder.get_payload"><code class="name flex">
@@ -320,6 +329,7 @@ class FindFolder(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

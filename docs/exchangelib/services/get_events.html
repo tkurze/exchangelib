@@ -44,9 +44,12 @@ class GetEvents(EWSAccountService):
     prefer_affinity = True
 
     def call(self, subscription_id, watermark):
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_id=subscription_id, watermark=watermark,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -92,9 +95,12 @@ class GetEvents(EWSAccountService):
     prefer_affinity = True
 
     def call(self, subscription_id, watermark):
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_id=subscription_id, watermark=watermark,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -138,13 +144,9 @@ class GetEvents(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, subscription_id, watermark):
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             subscription_id=subscription_id, watermark=watermark,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Notification.from_xml(elem=elem, account=None)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_events.GetEvents.get_payload"><code class="name flex">
@@ -171,6 +173,7 @@ class GetEvents(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

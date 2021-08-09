@@ -36,13 +36,20 @@ class CreateFolder(EWSAccountService):
     SERVICE_NAME = &#39;CreateFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folders = []  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, parent_folder, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        for folder, elem in zip(folders_list, self._chunked_get_elements(
-                self.get_payload, items=folders_list, parent_folder=parent_folder,
-        )):
+        self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        return self._elems_to_objs(self._chunked_get_elements(
+                self.get_payload, items=self.folders, parent_folder=parent_folder,
+        ))
+
+    def _elems_to_objs(self, elems):
+        for folder, elem in zip(self.folders, elems):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
@@ -80,13 +87,20 @@ class CreateFolder(EWSAccountService):
     SERVICE_NAME = &#39;CreateFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folders = []  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, parent_folder, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        for folder, elem in zip(folders_list, self._chunked_get_elements(
-                self.get_payload, items=folders_list, parent_folder=parent_folder,
-        )):
+        self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        return self._elems_to_objs(self._chunked_get_elements(
+                self.get_payload, items=self.folders, parent_folder=parent_folder,
+        ))
+
+    def _elems_to_objs(self, elems):
+        for folder, elem in zip(self.folders, elems):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
@@ -128,11 +142,10 @@ class CreateFolder(EWSAccountService):
 <pre><code class="python">def call(self, parent_folder, folders):
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
-    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    for folder, elem in zip(folders_list, self._chunked_get_elements(
-            self.get_payload, items=folders_list, parent_folder=parent_folder,
-    )):
-        yield parse_folder_elem(elem=elem, folder=folder, account=self.account)</code></pre>
+    self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+    return self._elems_to_objs(self._chunked_get_elements(
+            self.get_payload, items=self.folders, parent_folder=parent_folder,
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.create_folder.CreateFolder.get_payload"><code class="name flex">
@@ -162,6 +175,7 @@ class CreateFolder(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

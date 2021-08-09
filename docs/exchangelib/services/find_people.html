@@ -44,6 +44,12 @@ class FindPeople(EWSAccountService):
     supported_from = EXCHANGE_2013
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A hack to communicate parsing args to _elems_to_objs()
+        self.additional_fields = None
+        self.shape = None
+
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         &#34;&#34;&#34;Find items in an account.
 
@@ -59,8 +65,9 @@ class FindPeople(EWSAccountService):
 
         :return: XML elements for the matching items
         &#34;&#34;&#34;
-        from ..items import Persona, ID_ONLY
-        for elem in self._paged_call(
+        self.additional_fields = additional_fields
+        self.shape = shape
+        return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -75,11 +82,15 @@ class FindPeople(EWSAccountService):
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Persona, ID_ONLY
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if shape == ID_ONLY and additional_fields is None:
+            if self.shape == ID_ONLY and self.additional_fields is None:
                 yield Persona.id_from_xml(elem)
                 continue
             yield Persona.from_xml(elem, account=self.account)
@@ -156,6 +167,12 @@ class FindPeople(EWSAccountService):
     supported_from = EXCHANGE_2013
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A hack to communicate parsing args to _elems_to_objs()
+        self.additional_fields = None
+        self.shape = None
+
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         &#34;&#34;&#34;Find items in an account.
 
@@ -171,8 +188,9 @@ class FindPeople(EWSAccountService):
 
         :return: XML elements for the matching items
         &#34;&#34;&#34;
-        from ..items import Persona, ID_ONLY
-        for elem in self._paged_call(
+        self.additional_fields = additional_fields
+        self.shape = shape
+        return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -187,11 +205,15 @@ class FindPeople(EWSAccountService):
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Persona, ID_ONLY
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if shape == ID_ONLY and additional_fields is None:
+            if self.shape == ID_ONLY and self.additional_fields is None:
                 yield Persona.id_from_xml(elem)
                 continue
             yield Persona.from_xml(elem, account=self.account)
@@ -300,8 +322,9 @@ class FindPeople(EWSAccountService):
 
     :return: XML elements for the matching items
     &#34;&#34;&#34;
-    from ..items import Persona, ID_ONLY
-    for elem in self._paged_call(
+    self.additional_fields = additional_fields
+    self.shape = shape
+    return self._elems_to_objs(self._paged_call(
         payload_func=self.get_payload,
         max_items=max_items,
         expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -316,14 +339,7 @@ class FindPeople(EWSAccountService):
             page_size=self.chunk_size,
             offset=offset,
         )
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        if shape == ID_ONLY and additional_fields is None:
-            yield Persona.id_from_xml(elem)
-            continue
-        yield Persona.from_xml(elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.find_people.FindPeople.get_payload"><code class="name flex">
@@ -377,6 +393,7 @@ class FindPeople(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

@@ -45,10 +45,15 @@ class ConvertId(EWSService):
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
             raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
+        return self._elems_to_objs(
+            self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+        )
+
+    def _elems_to_objs(self, elems):
         cls_map = {cls.response_tag(): cls for cls in (
             AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         )}
-        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -109,10 +114,15 @@ input list.</p>
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
             raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
+        return self._elems_to_objs(
+            self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+        )
+
+    def _elems_to_objs(self, elems):
         cls_map = {cls.response_tag(): cls for cls in (
             AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         )}
-        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -167,14 +177,9 @@ input list.</p>
 <pre><code class="python">def call(self, items, destination_format):
     if destination_format not in ID_FORMATS:
         raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
-    cls_map = {cls.response_tag(): cls for cls in (
-        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    )}
-    for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield cls_map[elem.tag].from_xml(elem, account=None)</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.convert_id.ConvertId.get_payload"><code class="name flex">
@@ -208,6 +213,7 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

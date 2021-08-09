@@ -37,12 +37,15 @@ class GetMailTips(EWSService):
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=recipients,
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -97,12 +100,15 @@ class GetMailTips(EWSService):
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=recipients,
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -154,16 +160,12 @@ class GetMailTips(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, sending_as, recipients, mail_tips_requested):
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=recipients,
         sending_as=sending_as,
         mail_tips_requested=mail_tips_requested,
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield MailTips.from_xml(elem=elem, account=None)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_mail_tips.GetMailTips.get_payload"><code class="name flex">
@@ -199,6 +201,7 @@ class GetMailTips(EWSService):
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

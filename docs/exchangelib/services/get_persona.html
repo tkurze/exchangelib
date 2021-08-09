@@ -37,8 +37,11 @@ class GetPersona(EWSAccountService):
     SERVICE_NAME = &#39;GetPersona&#39;
 
     def call(self, persona):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))
+
+    def _elems_to_objs(self, elems):
         from ..items import Persona
-        elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
+        elements = list(elems)
         if len(elements) != 1:
             raise ValueError(&#39;Expected exactly one element in response&#39;)
         elem = elements[0]
@@ -87,8 +90,11 @@ class GetPersona(EWSAccountService):
     SERVICE_NAME = &#39;GetPersona&#39;
 
     def call(self, persona):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))
+
+    def _elems_to_objs(self, elems):
         from ..items import Persona
-        elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
+        elements = list(elems)
         if len(elements) != 1:
             raise ValueError(&#39;Expected exactly one element in response&#39;)
         elem = elements[0]
@@ -135,14 +141,7 @@ class GetPersona(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, persona):
-    from ..items import Persona
-    elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
-    if len(elements) != 1:
-        raise ValueError(&#39;Expected exactly one element in response&#39;)
-    elem = elements[0]
-    if isinstance(elem, Exception):
-        raise elem
-    return Persona.from_xml(elem=elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_persona.GetPersona.get_payload"><code class="name flex">
@@ -169,6 +168,7 @@ class GetPersona(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

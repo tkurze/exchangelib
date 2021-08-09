@@ -31,7 +31,6 @@
 from .common import EWSAccountService, to_item_id
 from ..ewsdatetime import EWSDate
 from ..fields import FieldPath, IndexedField
-from ..indexed_properties import MultiFieldIndexedElement
 from ..properties import ItemId
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013_SP1
@@ -45,7 +44,7 @@ class UpdateItem(EWSAccountService):
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -63,14 +62,18 @@ class UpdateItem(EWSAccountService):
             raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -83,10 +86,10 @@ class UpdateItem(EWSAccountService):
     def _set_item_elem(self, item_model, field_path, value):
         setitemfield = create_element(&#39;t:SetItemField&#39;)
         set_xml_value(setitemfield, field_path, version=self.account.version)
-        folderitem = create_element(item_model.request_tag())
+        item_elem = create_element(item_model.request_tag())
         field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(folderitem, field_elem, version=self.account.version)
-        setitemfield.append(folderitem)
+        set_xml_value(item_elem, field_elem, version=self.account.version)
+        setitemfield.append(item_elem)
         return setitemfield
 
     @staticmethod
@@ -147,27 +150,30 @@ class UpdateItem(EWSAccountService):
 
     def _get_set_item_elems(self, item_model, field, value):
         if isinstance(field, IndexedField):
-            # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
+            # Generate either set or delete elements for all combinations of labels and subfields
+            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
+                .supported_choices(version=self.account.version)
+            seen_labels = set()
+            subfields = field.value_cls.supported_fields(version=self.account.version)
             for v in value:
-                # TODO: We should also delete the labels that no longer exist in the list
-                if issubclass(field.value_cls, MultiFieldIndexedElement):
-                    # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
-                    # have the one value set that we want to change. Create a new IndexedField object that has
-                    # only that value set.
-                    for subfield in field.value_cls.supported_fields(version=self.account.version):
+                seen_labels.add(v.label)
+                for subfield in subfields:
+                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                    subfield_value = getattr(v, subfield.name)
+                    if not subfield_value:
+                        # Generate delete elements for blank subfield values
+                        yield self._delete_item_elem(field_path=field_path)
+                    else:
+                        # Generate set elements for non-null subfield values
                         yield self._set_item_elem(
                             item_model=item_model,
-                            field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: getattr(v, subfield.name)}),
+                            field_path=field_path,
+                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
                         )
-                else:
-                    # The simpler IndexedFields with only one subfield
-                    subfield = field.value_cls.value_field(version=self.account.version)
-                    yield self._set_item_elem(
-                        item_model=item_model,
-                        field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                        value=v,
-                    )
+                # Generate delete elements for all subfields of all labels not mentioned in the list of values
+                for label in (label for label in supported_labels if label not in seen_labels):
+                    for subfield in subfields:
+                        yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
         else:
             yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
 
@@ -242,7 +248,7 @@ class UpdateItem(EWSAccountService):
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -260,14 +266,18 @@ class UpdateItem(EWSAccountService):
             raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -280,10 +290,10 @@ class UpdateItem(EWSAccountService):
     def _set_item_elem(self, item_model, field_path, value):
         setitemfield = create_element(&#39;t:SetItemField&#39;)
         set_xml_value(setitemfield, field_path, version=self.account.version)
-        folderitem = create_element(item_model.request_tag())
+        item_elem = create_element(item_model.request_tag())
         field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(folderitem, field_elem, version=self.account.version)
-        setitemfield.append(folderitem)
+        set_xml_value(item_elem, field_elem, version=self.account.version)
+        setitemfield.append(item_elem)
         return setitemfield
 
     @staticmethod
@@ -344,27 +354,30 @@ class UpdateItem(EWSAccountService):
 
     def _get_set_item_elems(self, item_model, field, value):
         if isinstance(field, IndexedField):
-            # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
+            # Generate either set or delete elements for all combinations of labels and subfields
+            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
+                .supported_choices(version=self.account.version)
+            seen_labels = set()
+            subfields = field.value_cls.supported_fields(version=self.account.version)
             for v in value:
-                # TODO: We should also delete the labels that no longer exist in the list
-                if issubclass(field.value_cls, MultiFieldIndexedElement):
-                    # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
-                    # have the one value set that we want to change. Create a new IndexedField object that has
-                    # only that value set.
-                    for subfield in field.value_cls.supported_fields(version=self.account.version):
+                seen_labels.add(v.label)
+                for subfield in subfields:
+                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                    subfield_value = getattr(v, subfield.name)
+                    if not subfield_value:
+                        # Generate delete elements for blank subfield values
+                        yield self._delete_item_elem(field_path=field_path)
+                    else:
+                        # Generate set elements for non-null subfield values
                         yield self._set_item_elem(
                             item_model=item_model,
-                            field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: getattr(v, subfield.name)}),
+                            field_path=field_path,
+                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
                         )
-                else:
-                    # The simpler IndexedFields with only one subfield
-                    subfield = field.value_cls.value_field(version=self.account.version)
-                    yield self._set_item_elem(
-                        item_model=item_model,
-                        field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                        value=v,
-                    )
+                # Generate delete elements for all subfields of all labels not mentioned in the list of values
+                for label in (label for label in supported_labels if label not in seen_labels):
+                    for subfield in subfields:
+                        yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
         else:
             yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
 
@@ -440,7 +453,7 @@ class UpdateItem(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
          suppress_read_receipts):
-    from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+    from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
         SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
     if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
         raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -458,18 +471,14 @@ class UpdateItem(EWSAccountService):
         raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
     if message_disposition == SEND_ONLY:
         raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=items,
         conflict_resolution=conflict_resolution,
         message_disposition=message_disposition,
         send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
         suppress_read_receipts=suppress_read_receipts,
-    ):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield Item.id_from_xml(elem)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.update_item.UpdateItem.get_payload"><code class="name flex">
@@ -533,6 +542,7 @@ class UpdateItem(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

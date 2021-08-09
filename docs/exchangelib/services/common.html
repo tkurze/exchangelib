@@ -49,7 +49,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
 from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
-    xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError
+    xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError, DummyResponse
 from ..version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
@@ -160,6 +160,10 @@ class EWSService(metaclass=abc.ABCMeta):
         :return: Same as .call(), but returns either None or exactly one item
         &#34;&#34;&#34;
         res = list(self.call(**kwargs))
+        # Raise any errors
+        for r in res:
+            if isinstance(r, Exception):
+                raise r
         if expect_result is None and not res:
             # Allow empty result
             return None
@@ -169,9 +173,17 @@ class EWSService(metaclass=abc.ABCMeta):
             return None
         if len(res) != 1:
             raise ValueError(&#39;Expected result length 1, but got %r&#39; % res)
-        if isinstance(res[0], Exception):
-            raise res[0]
         return res[0]
+
+    def parse(self, xml):
+        &#34;&#34;&#34;Used mostly for testing, when we want to parse static XML data.&#34;&#34;&#34;
+        resp = DummyResponse(url=None, headers=None, request_headers=None, content=xml)
+        _, body = self._get_soap_parts(response=resp)
+        return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
+
+    def _elems_to_objs(self, elems):
+        &#34;&#34;&#34;Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions).&#34;&#34;&#34;
+        raise NotImplementedError()
 
     @property
     def _version_hint(self):
@@ -1132,6 +1144,7 @@ def parse_folder_elem(elem, folder, account):
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1217,6 +1230,10 @@ def parse_folder_elem(elem, folder, account):
         :return: Same as .call(), but returns either None or exactly one item
         &#34;&#34;&#34;
         res = list(self.call(**kwargs))
+        # Raise any errors
+        for r in res:
+            if isinstance(r, Exception):
+                raise r
         if expect_result is None and not res:
             # Allow empty result
             return None
@@ -1226,9 +1243,17 @@ def parse_folder_elem(elem, folder, account):
             return None
         if len(res) != 1:
             raise ValueError(&#39;Expected result length 1, but got %r&#39; % res)
-        if isinstance(res[0], Exception):
-            raise res[0]
         return res[0]
+
+    def parse(self, xml):
+        &#34;&#34;&#34;Used mostly for testing, when we want to parse static XML data.&#34;&#34;&#34;
+        resp = DummyResponse(url=None, headers=None, request_headers=None, content=xml)
+        _, body = self._get_soap_parts(response=resp)
+        return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
+
+    def _elems_to_objs(self, elems):
+        &#34;&#34;&#34;Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions).&#34;&#34;&#34;
+        raise NotImplementedError()
 
     @property
     def _version_hint(self):
@@ -1816,6 +1841,7 @@ def parse_folder_elem(elem, folder, account):
 <li><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones" href="get_server_time_zones.html#exchangelib.services.get_server_time_zones.GetServerTimeZones">GetServerTimeZones</a></li>
 <li><a title="exchangelib.services.get_user_availability.GetUserAvailability" href="get_user_availability.html#exchangelib.services.get_user_availability.GetUserAvailability">GetUserAvailability</a></li>
 <li><a title="exchangelib.services.resolve_names.ResolveNames" href="resolve_names.html#exchangelib.services.resolve_names.ResolveNames">ResolveNames</a></li>
+<li><a title="exchangelib.services.send_notification.SendNotification" href="send_notification.html#exchangelib.services.send_notification.SendNotification">SendNotification</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1892,6 +1918,10 @@ zero or one when expect_result=None. Returns either one object or None.</p>
     :return: Same as .call(), but returns either None or exactly one item
     &#34;&#34;&#34;
     res = list(self.call(**kwargs))
+    # Raise any errors
+    for r in res:
+        if isinstance(r, Exception):
+            raise r
     if expect_result is None and not res:
         # Allow empty result
         return None
@@ -1901,9 +1931,23 @@ zero or one when expect_result=None. Returns either one object or None.</p>
         return None
     if len(res) != 1:
         raise ValueError(&#39;Expected result length 1, but got %r&#39; % res)
-    if isinstance(res[0], Exception):
-        raise res[0]
     return res[0]</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.common.EWSService.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>self, xml)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Used mostly for testing, when we want to parse static XML data.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse(self, xml):
+    &#34;&#34;&#34;Used mostly for testing, when we want to parse static XML data.&#34;&#34;&#34;
+    resp = DummyResponse(url=None, headers=None, request_headers=None, content=xml)
+    _, body = self._get_soap_parts(response=resp)
+    return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.common.EWSService.stop_streaming"><code class="name flex">
@@ -1966,6 +2010,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.element_container_name" href="#exchangelib.services.common.EWSService.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.paging_container_name" href="#exchangelib.services.common.EWSService.paging_container_name">paging_container_name</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.prefer_affinity" href="#exchangelib.services.common.EWSService.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.returns_elements" href="#exchangelib.services.common.EWSService.returns_elements">returns_elements</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.stop_streaming" href="#exchangelib.services.common.EWSService.stop_streaming">stop_streaming</a></code></li>

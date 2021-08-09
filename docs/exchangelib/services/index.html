@@ -78,6 +78,7 @@ from .move_folder import MoveFolder
 from .move_item import MoveItem
 from .resolve_names import ResolveNames
 from .send_item import SendItem
+from .send_notification import SendNotification
 from .set_user_oof_settings import SetUserOofSettings
 from .subscribe import SubscribeToStreaming, SubscribeToPull, SubscribeToPush
 from .sync_folder_hierarchy import SyncFolderHierarchy
@@ -127,6 +128,7 @@ __all__ = [
     &#39;MoveItem&#39;,
     &#39;ResolveNames&#39;,
     &#39;SendItem&#39;,
+    &#39;SendNotification&#39;,
     &#39;SetUserOofSettings&#39;,
     &#39;SubscribeToPull&#39;,
     &#39;SubscribeToPush&#39;,
@@ -296,6 +298,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="exchangelib.services.send_notification" href="send_notification.html">exchangelib.services.send_notification</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="exchangelib.services.set_user_oof_settings" href="set_user_oof_settings.html">exchangelib.services.set_user_oof_settings</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -367,8 +373,11 @@ classes.</p></div>
 
         :return: None
         &#34;&#34;&#34;
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
         from ..items import Item
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -425,12 +434,7 @@ classes.</p></div>
 
     :return: None
     &#34;&#34;&#34;
-    from ..items import Item
-    for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Item.id_from_xml(elem)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.ArchiveItem.get_payload"><code class="name flex">
@@ -460,6 +464,7 @@ classes.</p></div>
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -489,10 +494,15 @@ input list.</p>
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
             raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
+        return self._elems_to_objs(
+            self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+        )
+
+    def _elems_to_objs(self, elems):
         cls_map = {cls.response_tag(): cls for cls in (
             AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
         )}
-        for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -547,14 +557,9 @@ input list.</p>
 <pre><code class="python">def call(self, items, destination_format):
     if destination_format not in ID_FORMATS:
         raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
-    cls_map = {cls.response_tag(): cls for cls in (
-        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    )}
-    for elem in self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield cls_map[elem.tag].from_xml(elem, account=None)</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.ConvertId.get_payload"><code class="name flex">
@@ -588,6 +593,7 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -627,6 +633,7 @@ input list.</p>
 <li><code><a title="exchangelib.services.move_item.MoveItem.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.move_item.MoveItem.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.move_item.MoveItem.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.move_item.MoveItem.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -651,9 +658,12 @@ input list.</p>
     element_container_name = &#39;{%s}Attachments&#39; % MNS
 
     def call(self, parent_item, items):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
+
+    def _elems_to_objs(self, elems):
         from ..attachments import FileAttachment, ItemAttachment
         cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -703,13 +713,7 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, parent_item, items):
-    from ..attachments import FileAttachment, ItemAttachment
-    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-    for elem in self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.CreateAttachment.get_payload"><code class="name flex">
@@ -746,6 +750,7 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -766,13 +771,20 @@ input list.</p>
     SERVICE_NAME = &#39;CreateFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folders = []  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, parent_folder, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        for folder, elem in zip(folders_list, self._chunked_get_elements(
-                self.get_payload, items=folders_list, parent_folder=parent_folder,
-        )):
+        self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        return self._elems_to_objs(self._chunked_get_elements(
+                self.get_payload, items=self.folders, parent_folder=parent_folder,
+        ))
+
+    def _elems_to_objs(self, elems):
+        for folder, elem in zip(self.folders, elems):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
@@ -814,11 +826,10 @@ input list.</p>
 <pre><code class="python">def call(self, parent_folder, folders):
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
-    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    for folder, elem in zip(folders_list, self._chunked_get_elements(
-            self.get_payload, items=folders_list, parent_folder=parent_folder,
-    )):
-        yield parse_folder_elem(elem=elem, folder=folder, account=self.account)</code></pre>
+    self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+    return self._elems_to_objs(self._chunked_get_elements(
+            self.get_payload, items=self.folders, parent_folder=parent_folder,
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.CreateFolder.get_payload"><code class="name flex">
@@ -848,6 +859,7 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -876,7 +888,7 @@ errormessage), in the same order as the input list.</p>
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         from ..folders import BaseFolder, FolderId
-        from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+        from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
             SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
             raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
@@ -897,13 +909,17 @@ errormessage), in the same order as the input list.</p>
             folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=items,
             folder=folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import BulkCreateResult
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -978,7 +994,7 @@ errormessage), in the same order as the input list.</p>
 </summary>
 <pre><code class="python">def call(self, items, folder, message_disposition, send_meeting_invitations):
     from ..folders import BaseFolder, FolderId
-    from ..items import BulkCreateResult, SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+    from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
         SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
     if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
         raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
@@ -999,17 +1015,13 @@ errormessage), in the same order as the input list.</p>
         folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
     if message_disposition == SEND_ONLY and folder is not None:
         raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=items,
         folder=folder,
         message_disposition=message_disposition,
         send_meeting_invitations=send_meeting_invitations,
-    ):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield BulkCreateResult.from_xml(elem=elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.CreateItem.get_payload"><code class="name flex">
@@ -1083,6 +1095,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1168,6 +1181,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1191,7 +1205,10 @@ invitation accepts (see
     SERVICE_NAME = &#39;DeleteAttachment&#39;
 
     def call(self, items):
-        for elem in self._chunked_get_elements(self.get_payload, items=items):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -1231,11 +1248,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items):
-    for elem in self._chunked_get_elements(self.get_payload, items=items):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield RootItemId.from_xml(elem=elem, account=self.account)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.DeleteAttachment.get_payload"><code class="name flex">
@@ -1262,6 +1275,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1346,6 +1360,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1522,6 +1537,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1607,6 +1623,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1707,6 +1724,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1730,7 +1748,10 @@ invitation accepts (see
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
-        for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(distribution_list=distribution_list)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 raise elem
             yield Mailbox.from_xml(elem, account=None)
@@ -1775,10 +1796,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, distribution_list):
-    for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
-        if isinstance(elem, Exception):
-            raise elem
-        yield Mailbox.from_xml(elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(distribution_list=distribution_list)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.ExpandDL.get_payload"><code class="name flex">
@@ -1804,6 +1822,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1900,6 +1919,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1922,6 +1942,10 @@ invitation accepts (see
     paging_container_name = &#39;{%s}RootFolder&#39; % MNS
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.root = None  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
         &#34;&#34;&#34;Find subfolders of a folder.
 
@@ -1935,12 +1959,11 @@ invitation accepts (see
 
         :return: XML elements for the matching folders
         &#34;&#34;&#34;
-        from ..folders import Folder
         roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError(&#39;FindFolder must be called with folders in the same root hierarchy (%r)&#39; % roots)
-        root = roots.pop()
-        for elem in self._paged_call(
+        self.root = roots.pop()
+        return self._elems_to_objs(self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,
                 expected_message_count=len(folders),
@@ -1953,11 +1976,15 @@ invitation accepts (see
                     page_size=self.chunk_size,
                     offset=offset,
                 )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders import Folder
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield Folder.from_xml_with_root(elem=elem, root=root)
+            yield Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
         findfolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(Traversal=depth))
@@ -2041,12 +2068,11 @@ invitation accepts (see
 
     :return: XML elements for the matching folders
     &#34;&#34;&#34;
-    from ..folders import Folder
     roots = {f.root for f in folders}
     if len(roots) != 1:
         raise ValueError(&#39;FindFolder must be called with folders in the same root hierarchy (%r)&#39; % roots)
-    root = roots.pop()
-    for elem in self._paged_call(
+    self.root = roots.pop()
+    return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=len(folders),
@@ -2059,11 +2085,7 @@ invitation accepts (see
                 page_size=self.chunk_size,
                 offset=offset,
             )
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Folder.from_xml_with_root(elem=elem, root=root)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.FindFolder.get_payload"><code class="name flex">
@@ -2110,6 +2132,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2132,6 +2155,12 @@ invitation accepts (see
     paging_container_name = &#39;{%s}RootFolder&#39; % MNS
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A hack to communicate parsing args to _elems_to_objs()
+        self.additional_fields = None
+        self.shape = None
+
     def call(self, folders, additional_fields, restriction, order_fields, shape, query_string, depth, calendar_view,
              max_items, offset):
         &#34;&#34;&#34;Find items in an account.
@@ -2149,9 +2178,9 @@ invitation accepts (see
 
         :return: XML elements for the matching items
         &#34;&#34;&#34;
-        from ..folders.base import BaseFolder
-        from ..items import Item, ID_ONLY
-        for elem in self._paged_call(
+        self.additional_fields = additional_fields
+        self.shape = shape
+        return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=len(folders),
@@ -2167,11 +2196,16 @@ invitation accepts (see
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        from ..items import Item, ID_ONLY
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if shape == ID_ONLY and additional_fields is None:
+            if self.shape == ID_ONLY and self.additional_fields is None:
                 yield Item.id_from_xml(elem)
                 continue
             yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
@@ -2275,9 +2309,9 @@ invitation accepts (see
 
     :return: XML elements for the matching items
     &#34;&#34;&#34;
-    from ..folders.base import BaseFolder
-    from ..items import Item, ID_ONLY
-    for elem in self._paged_call(
+    self.additional_fields = additional_fields
+    self.shape = shape
+    return self._elems_to_objs(self._paged_call(
         payload_func=self.get_payload,
         max_items=max_items,
         expected_message_count=len(folders),
@@ -2293,14 +2327,7 @@ invitation accepts (see
             page_size=self.chunk_size,
             offset=offset,
         )
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        if shape == ID_ONLY and additional_fields is None:
-            yield Item.id_from_xml(elem)
-            continue
-        yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.FindItem.get_payload"><code class="name flex">
@@ -2357,6 +2384,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2379,6 +2407,12 @@ invitation accepts (see
     supported_from = EXCHANGE_2013
     supports_paging = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A hack to communicate parsing args to _elems_to_objs()
+        self.additional_fields = None
+        self.shape = None
+
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
         &#34;&#34;&#34;Find items in an account.
 
@@ -2394,8 +2428,9 @@ invitation accepts (see
 
         :return: XML elements for the matching items
         &#34;&#34;&#34;
-        from ..items import Persona, ID_ONLY
-        for elem in self._paged_call(
+        self.additional_fields = additional_fields
+        self.shape = shape
+        return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -2410,11 +2445,15 @@ invitation accepts (see
                 page_size=self.chunk_size,
                 offset=offset,
             )
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Persona, ID_ONLY
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            if shape == ID_ONLY and additional_fields is None:
+            if self.shape == ID_ONLY and self.additional_fields is None:
                 yield Persona.id_from_xml(elem)
                 continue
             yield Persona.from_xml(elem, account=self.account)
@@ -2523,8 +2562,9 @@ invitation accepts (see
 
     :return: XML elements for the matching items
     &#34;&#34;&#34;
-    from ..items import Persona, ID_ONLY
-    for elem in self._paged_call(
+    self.additional_fields = additional_fields
+    self.shape = shape
+    return self._elems_to_objs(self._paged_call(
         payload_func=self.get_payload,
         max_items=max_items,
         expected_message_count=1,  # We can only query one folder, so there will only be one element in response
@@ -2539,14 +2579,7 @@ invitation accepts (see
             page_size=self.chunk_size,
             offset=offset,
         )
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        if shape == ID_ONLY and additional_fields is None:
-            yield Persona.id_from_xml(elem)
-            continue
-        yield Persona.from_xml(elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.FindPeople.get_payload"><code class="name flex">
@@ -2600,6 +2633,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2622,11 +2656,14 @@ invitation accepts (see
     streaming = True
 
     def call(self, items, include_mime_content):
+        return self._elems_to_objs(self._chunked_get_elements(
+                self.get_payload, items=items, include_mime_content=include_mime_content
+        ))
+
+    def _elems_to_objs(self, elems):
         from ..attachments import FileAttachment, ItemAttachment
         cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in self._chunked_get_elements(
-                self.get_payload, items=items, include_mime_content=include_mime_content
-        ):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -2722,15 +2759,9 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, include_mime_content):
-    from ..attachments import FileAttachment, ItemAttachment
-    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, include_mime_content=include_mime_content
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetAttachment.get_payload"><code class="name flex">
@@ -2793,6 +2824,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2814,12 +2846,15 @@ invitation accepts (see
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=user_ids or [None],
             mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
             include_permissions=include_permissions,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -2871,16 +2906,12 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, user_ids, include_permissions):
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=user_ids or [None],
         mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
         include_permissions=include_permissions,
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield DelegateUser.from_xml(elem=elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetDelegate.get_payload"><code class="name flex">
@@ -2911,6 +2942,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2935,9 +2967,12 @@ invitation accepts (see
     prefer_affinity = True
 
     def call(self, subscription_id, watermark):
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_id=subscription_id, watermark=watermark,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -2981,13 +3016,9 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, subscription_id, watermark):
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             subscription_id=subscription_id, watermark=watermark,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Notification.from_xml(elem=elem, account=None)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetEvents.get_payload"><code class="name flex">
@@ -3014,6 +3045,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3037,6 +3069,10 @@ invitation accepts (see
         ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation,
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folders = []  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folders, additional_fields, shape):
         &#34;&#34;&#34;Take a folder ID and returns the full information for that folder.
 
@@ -3048,13 +3084,16 @@ invitation accepts (see
         &#34;&#34;&#34;
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        for folder, elem in zip(folders_list, self._chunked_get_elements(
+        self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
-            items=folders_list,
+            items=self.folders,
             additional_fields=additional_fields,
             shape=shape,
-        )):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for folder, elem in zip(self.folders, elems):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
@@ -3113,14 +3152,13 @@ invitation accepts (see
     &#34;&#34;&#34;
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
-    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    for folder, elem in zip(folders_list, self._chunked_get_elements(
+    self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
-        items=folders_list,
+        items=self.folders,
         additional_fields=additional_fields,
         shape=shape,
-    )):
-        yield parse_folder_elem(elem=elem, folder=folder, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetFolder.get_payload"><code class="name flex">
@@ -3151,6 +3189,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3180,10 +3219,13 @@ invitation accepts (see
 
         :return: XML elements for the items, in stable order
         &#34;&#34;&#34;
-        from ..folders.base import BaseFolder
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -3239,14 +3281,9 @@ invitation accepts (see
 
     :return: XML elements for the items, in stable order
     &#34;&#34;&#34;
-    from ..folders.base import BaseFolder
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetItem.get_payload"><code class="name flex">
@@ -3277,6 +3314,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3297,12 +3335,15 @@ invitation accepts (see
     SERVICE_NAME = &#39;GetMailTips&#39;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=recipients,
             sending_as=sending_as,
             mail_tips_requested=mail_tips_requested,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -3354,16 +3395,12 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, sending_as, recipients, mail_tips_requested):
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=recipients,
         sending_as=sending_as,
         mail_tips_requested=mail_tips_requested,
-    ):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield MailTips.from_xml(elem=elem, account=None)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetMailTips.get_payload"><code class="name flex">
@@ -3399,6 +3436,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3419,8 +3457,11 @@ invitation accepts (see
     SERVICE_NAME = &#39;GetPersona&#39;
 
     def call(self, persona):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))
+
+    def _elems_to_objs(self, elems):
         from ..items import Persona
-        elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
+        elements = list(elems)
         if len(elements) != 1:
             raise ValueError(&#39;Expected exactly one element in response&#39;)
         elem = elements[0]
@@ -3467,14 +3508,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, persona):
-    from ..items import Persona
-    elements = list(self._get_elements(payload=self.get_payload(persona=persona)))
-    if len(elements) != 1:
-        raise ValueError(&#39;Expected exactly one element in response&#39;)
-    elem = elements[0]
-    if isinstance(elem, Exception):
-        raise elem
-    return Persona.from_xml(elem=elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetPersona.get_payload"><code class="name flex">
@@ -3501,6 +3535,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3523,7 +3558,10 @@ invitation accepts (see
     supported_from = EXCHANGE_2010
 
     def call(self):
-        for elem in self._get_elements(payload=self.get_payload()):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload()))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -3563,11 +3601,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self):
-    for elem in self._get_elements(payload=self.get_payload()):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield RoomList.from_xml(elem=elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload()))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetRoomLists.get_payload"><code class="name flex">
@@ -3591,6 +3625,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3613,7 +3648,10 @@ invitation accepts (see
     supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
-        for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(roomlist=roomlist)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -3655,11 +3693,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, roomlist):
-    for elem in self._get_elements(payload=self.get_payload(roomlist=roomlist)):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Room.from_xml(elem=elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(roomlist=roomlist)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetRooms.get_payload"><code class="name flex">
@@ -3685,6 +3719,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3711,11 +3746,14 @@ invitation accepts (see
     supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
-        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 search_filter=search_filter,
                 expand_group_membership=expand_group_membership,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -3779,15 +3817,10 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, search_filter, expand_group_membership):
-    cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             search_filter=search_filter,
             expand_group_membership=expand_group_membership,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield cls_map[elem.tag].from_xml(elem=elem, account=None)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetSearchableMailboxes.get_payload"><code class="name flex">
@@ -3816,6 +3849,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4008,6 +4042,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4046,9 +4081,12 @@ invitation accepts (see
     def call(self, subscription_ids, connection_timeout):
         if connection_timeout &lt; 1:
             raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -4149,13 +4187,9 @@ invitation accepts (see
 <pre><code class="python">def call(self, subscription_ids, connection_timeout):
     if connection_timeout &lt; 1:
         raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Notification.from_xml(elem=elem, account=None)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetStreamingEvents.get_payload"><code class="name flex">
@@ -4188,6 +4222,7 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4215,11 +4250,14 @@ MSDN:
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
         #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             timezone=timezone,
             mailbox_data=mailbox_data,
             free_busy_view_options=free_busy_view_options
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -4277,15 +4315,11 @@ MSDN:
 <pre><code class="python">def call(self, timezone, mailbox_data, free_busy_view_options):
     # TODO: Also supports SuggestionsViewOptions, see
     #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
         timezone=timezone,
         mailbox_data=mailbox_data,
         free_busy_view_options=free_busy_view_options
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield FreeBusyView.from_xml(elem=elem, account=None)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetUserAvailability.get_payload"><code class="name flex">
@@ -4315,6 +4349,7 @@ MSDN:
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4340,9 +4375,12 @@ MSDN:
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
             raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 user_configuration_name=user_configuration_name, properties=properties
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -4386,13 +4424,9 @@ MSDN:
 <pre><code class="python">def call(self, user_configuration_name, properties):
     if properties not in PROPERTIES_CHOICES:
         raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             user_configuration_name=user_configuration_name, properties=properties
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield UserConfiguration.from_xml(elem=elem, account=self.account)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetUserConfiguration.get_payload"><code class="name flex">
@@ -4421,6 +4455,7 @@ MSDN:
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4445,7 +4480,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     element_container_name = &#39;{%s}OofSettings&#39; % TNS
 
     def call(self, mailbox):
-        for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -4465,8 +4503,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         super()._get_element_container(message=message.find(self._response_message_tag()), name=None)
         return message.find(name)
 
-    @staticmethod
-    def _response_message_tag():
+    @classmethod
+    def _response_message_tag(cls):
         return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4497,11 +4535,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, mailbox):
-    for elem in self._get_elements(payload=self.get_payload(mailbox=mailbox)):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield OofSettings.from_xml(elem=elem, account=self.account)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetUserOofSettings.get_payload"><code class="name flex">
@@ -4526,6 +4560,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4546,7 +4581,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     SERVICE_NAME = &#39;MarkAsJunk&#39;
 
     def call(self, items, is_junk, move_item):
-        for elem in self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item):
+        return self._elems_to_objs(
+            self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
+        )
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -4590,11 +4630,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, is_junk, move_item):
-    for elem in self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield MovedItemId.id_from_xml(elem)</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.MarkAsJunk.get_payload"><code class="name flex">
@@ -4625,6 +4663,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4649,7 +4688,11 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         from ..folders import BaseFolder, FolderId
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-        for elem in self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
+        from ..folders import FolderId
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -4696,11 +4739,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     from ..folders import BaseFolder, FolderId
     if not isinstance(to_folder, (BaseFolder, FolderId)):
         raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-    for elem in self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.MoveFolder.get_payload"><code class="name flex">
@@ -4731,6 +4770,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4753,10 +4793,13 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def call(self, items, to_folder):
         from ..folders import BaseFolder, FolderId
-        from ..items import Item
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -4805,14 +4848,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, items, to_folder):
     from ..folders import BaseFolder, FolderId
-    from ..items import Item
     if not isinstance(to_folder, (BaseFolder, FolderId)):
         raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
-    for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield Item.id_from_xml(elem)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.MoveItem.get_payload"><code class="name flex">
@@ -4843,13 +4881,14 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="exchangelib.services.ResolveNames"><code class="flex name class">
 <span>class <span class="ident">ResolveNames</span></span>
-<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation</a></p></div>
@@ -4869,9 +4908,13 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     # 100 candidates are returned for a lookup.
     supports_paging = False
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.return_full_contact_data = False  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
-        from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
+        from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
         if self.chunk_size &gt; 100:
             log.warning(
                 &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
@@ -4881,19 +4924,24 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
             raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
-        for elem in self._chunked_get_elements(
+        self.return_full_contact_data = return_full_contact_data
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=unresolved_entries,
             parent_folders=parent_folders,
             return_full_contact_data=return_full_contact_data,
             search_scope=search_scope,
             contact_data_shape=contact_data_shape,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Contact
+        for elem in elems:
             if isinstance(elem, ErrorNameResolutionNoResults):
                 continue
             if isinstance(elem, Exception):
                 raise elem
-            if return_full_contact_data:
+            if self.return_full_contact_data:
                 mailbox_elem = elem.find(Mailbox.response_tag())
                 contact_elem = elem.find(Contact.response_tag())
                 yield (
@@ -4965,7 +5013,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
          contact_data_shape=None):
-    from ..items import Contact, SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
+    from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
     if self.chunk_size &gt; 100:
         log.warning(
             &#39;Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup&#39;,
@@ -4975,27 +5023,15 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         raise ValueError(&#34;&#39;search_scope&#39; %s must be one if %s&#34; % (search_scope, SEARCH_SCOPE_CHOICES))
     if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
         raise ValueError(&#34;&#39;shape&#39; %s must be one if %s&#34; % (contact_data_shape, SHAPE_CHOICES))
-    for elem in self._chunked_get_elements(
+    self.return_full_contact_data = return_full_contact_data
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=unresolved_entries,
         parent_folders=parent_folders,
         return_full_contact_data=return_full_contact_data,
         search_scope=search_scope,
         contact_data_shape=contact_data_shape,
-    ):
-        if isinstance(elem, ErrorNameResolutionNoResults):
-            continue
-        if isinstance(elem, Exception):
-            raise elem
-        if return_full_contact_data:
-            mailbox_elem = elem.find(Mailbox.response_tag())
-            contact_elem = elem.find(Contact.response_tag())
-            yield (
-                None if mailbox_elem is None else Mailbox.from_xml(elem=mailbox_elem, account=None),
-                None if contact_elem is None else Contact.from_xml(elem=contact_elem, account=None),
-            )
-        else:
-            yield Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.ResolveNames.get_payload"><code class="name flex">
@@ -5038,6 +5074,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5142,6 +5179,84 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.SendNotification"><code class="flex name class">
+<span>class <span class="ident">SendNotification</span></span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification</a></p>
+<p>This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SendNotification(EWSService):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification
+
+    This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#39;SendNotification&#39;
+
+    def call(self):
+        raise NotImplementedError()
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield Notification.from_xml(elem=elem, account=None)
+
+    @classmethod
+    def _response_tag(cls):
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
+        return &#39;{%s}%s&#39; % (MNS, cls.SERVICE_NAME)
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        return container.findall(Notification.response_tag())</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.SendNotification.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.SendNotification.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self):
+    raise NotImplementedError()</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5182,8 +5297,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         message = message.find(self._response_message_tag())
         return super()._get_element_container(message=message, name=name)
 
-    @staticmethod
-    def _response_message_tag():
+    @classmethod
+    def _response_message_tag(cls):
         return &#39;{%s}ResponseMessage&#39; % MNS</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5245,6 +5360,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5335,6 +5451,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.subscribe.Subscribe.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5427,6 +5544,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.subscribe.Subscribe.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5509,6 +5627,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.subscribe.Subscribe.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5638,6 +5757,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5675,7 +5795,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         return res
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        from ..folders.base import BaseFolder
         self.sync_state = sync_state
         if max_changes_returned is None:
             max_changes_returned = self.chunk_size
@@ -5683,8 +5802,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
             raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
@@ -5692,7 +5810,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
                 ignore=ignore,
                 max_changes_returned=max_changes_returned,
                 sync_scope=sync_scope,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        change_types = self._change_types_map()
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -5769,7 +5892,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-    from ..folders.base import BaseFolder
     self.sync_state = sync_state
     if max_changes_returned is None:
         max_changes_returned = self.chunk_size
@@ -5777,8 +5899,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
     if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
         raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
-    change_types = self._change_types_map()
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             folder=folder,
             shape=shape,
             additional_fields=additional_fields,
@@ -5786,24 +5907,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             ignore=ignore,
             max_changes_returned=max_changes_returned,
             sync_scope=sync_scope,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        change_type = change_types[elem.tag]
-        if change_type == self.READ_FLAG_CHANGE:
-            item = (
-                ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                xml_text_to_value(elem.find(&#39;{%s}IsRead&#39; % TNS).text, bool)
-            )
-        elif change_type == self.DELETE:
-            item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
-        else:
-            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-            # contain multiple item types, each with their own tag.
-            item_elem = elem[0]
-            item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
-        yield change_type, item</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.SyncFolderItems.get_payload"><code class="name flex">
@@ -5837,6 +5941,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5923,6 +6028,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5943,11 +6049,18 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     SERVICE_NAME = &#39;UpdateFolder&#39;
     element_container_name = &#39;{%s}Folders&#39; % MNS
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folders = []  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folders):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
-        folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        for (folder, _), elem in zip(folders_list, self._chunked_get_elements(self.get_payload, items=folders_list)):
+        self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=self.folders))
+
+    def _elems_to_objs(self, elems):
+        for (folder, _), elem in zip(self.folders, elems):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     @staticmethod
@@ -6041,9 +6154,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">def call(self, folders):
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
-    folders_list = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    for (folder, _), elem in zip(folders_list, self._chunked_get_elements(self.get_payload, items=folders_list)):
-        yield parse_folder_elem(elem=elem, folder=folder, account=self.account)</code></pre>
+    self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=self.folders))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.UpdateFolder.get_payload"><code class="name flex">
@@ -6084,6 +6196,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6106,7 +6219,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -6124,14 +6237,18 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        for elem in self._chunked_get_elements(
+        return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
             items=items,
             conflict_resolution=conflict_resolution,
             message_disposition=message_disposition,
             send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
             suppress_read_receipts=suppress_read_receipts,
-        ):
+        ))
+
+    def _elems_to_objs(self, elems):
+        from ..items import Item
+        for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
@@ -6144,10 +6261,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def _set_item_elem(self, item_model, field_path, value):
         setitemfield = create_element(&#39;t:SetItemField&#39;)
         set_xml_value(setitemfield, field_path, version=self.account.version)
-        folderitem = create_element(item_model.request_tag())
+        item_elem = create_element(item_model.request_tag())
         field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(folderitem, field_elem, version=self.account.version)
-        setitemfield.append(folderitem)
+        set_xml_value(item_elem, field_elem, version=self.account.version)
+        setitemfield.append(item_elem)
         return setitemfield
 
     @staticmethod
@@ -6208,27 +6325,30 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def _get_set_item_elems(self, item_model, field, value):
         if isinstance(field, IndexedField):
-            # TODO: Maybe the set/delete logic should extend into subfields, not just overwrite the whole item.
+            # Generate either set or delete elements for all combinations of labels and subfields
+            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
+                .supported_choices(version=self.account.version)
+            seen_labels = set()
+            subfields = field.value_cls.supported_fields(version=self.account.version)
             for v in value:
-                # TODO: We should also delete the labels that no longer exist in the list
-                if issubclass(field.value_cls, MultiFieldIndexedElement):
-                    # We have subfields. Generate SetItem XML for each subfield. SetItem only accepts items that
-                    # have the one value set that we want to change. Create a new IndexedField object that has
-                    # only that value set.
-                    for subfield in field.value_cls.supported_fields(version=self.account.version):
+                seen_labels.add(v.label)
+                for subfield in subfields:
+                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                    subfield_value = getattr(v, subfield.name)
+                    if not subfield_value:
+                        # Generate delete elements for blank subfield values
+                        yield self._delete_item_elem(field_path=field_path)
+                    else:
+                        # Generate set elements for non-null subfield values
                         yield self._set_item_elem(
                             item_model=item_model,
-                            field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: getattr(v, subfield.name)}),
+                            field_path=field_path,
+                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
                         )
-                else:
-                    # The simpler IndexedFields with only one subfield
-                    subfield = field.value_cls.value_field(version=self.account.version)
-                    yield self._set_item_elem(
-                        item_model=item_model,
-                        field_path=FieldPath(field=field, label=v.label, subfield=subfield),
-                        value=v,
-                    )
+                # Generate delete elements for all subfields of all labels not mentioned in the list of values
+                for label in (label for label in supported_labels if label not in seen_labels):
+                    for subfield in subfields:
+                        yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
         else:
             yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
 
@@ -6304,7 +6424,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
          suppress_read_receipts):
-    from ..items import Item, CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+    from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
         SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
     if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
         raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
@@ -6322,18 +6442,14 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
     if message_disposition == SEND_ONLY:
         raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-    for elem in self._chunked_get_elements(
+    return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload,
         items=items,
         conflict_resolution=conflict_resolution,
         message_disposition=message_disposition,
         send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
         suppress_read_receipts=suppress_read_receipts,
-    ):
-        if isinstance(elem, (Exception, type(None))):
-            yield elem
-            continue
-        yield Item.id_from_xml(elem)</code></pre>
+    ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.UpdateItem.get_payload"><code class="name flex">
@@ -6397,6 +6513,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6482,6 +6599,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6610,6 +6728,7 @@ call.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6668,6 +6787,7 @@ call.</p>
 <li><code><a title="exchangelib.services.move_item" href="move_item.html">exchangelib.services.move_item</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names" href="resolve_names.html">exchangelib.services.resolve_names</a></code></li>
 <li><code><a title="exchangelib.services.send_item" href="send_item.html">exchangelib.services.send_item</a></code></li>
+<li><code><a title="exchangelib.services.send_notification" href="send_notification.html">exchangelib.services.send_notification</a></code></li>
 <li><code><a title="exchangelib.services.set_user_oof_settings" href="set_user_oof_settings.html">exchangelib.services.set_user_oof_settings</a></code></li>
 <li><code><a title="exchangelib.services.subscribe" href="subscribe.html">exchangelib.services.subscribe</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy" href="sync_folder_hierarchy.html">exchangelib.services.sync_folder_hierarchy</a></code></li>
@@ -7028,6 +7148,13 @@ call.</p>
 <li><code><a title="exchangelib.services.SendItem.call" href="#exchangelib.services.SendItem.call">call</a></code></li>
 <li><code><a title="exchangelib.services.SendItem.get_payload" href="#exchangelib.services.SendItem.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.SendItem.returns_elements" href="#exchangelib.services.SendItem.returns_elements">returns_elements</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.SendNotification" href="#exchangelib.services.SendNotification">SendNotification</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.SendNotification.SERVICE_NAME" href="#exchangelib.services.SendNotification.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.SendNotification.call" href="#exchangelib.services.SendNotification.call">call</a></code></li>
 </ul>
 </li>
 <li>

@@ -46,8 +46,11 @@ class ArchiveItem(EWSAccountService):
 
         :return: None
         &#34;&#34;&#34;
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
         from ..items import Item
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -97,8 +100,11 @@ class ArchiveItem(EWSAccountService):
 
         :return: None
         &#34;&#34;&#34;
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
+
+    def _elems_to_objs(self, elems):
         from ..items import Item
-        for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -155,12 +161,7 @@ class ArchiveItem(EWSAccountService):
 
     :return: None
     &#34;&#34;&#34;
-    from ..items import Item
-    for elem in self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Item.id_from_xml(elem)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.archive_item.ArchiveItem.get_payload"><code class="name flex">
@@ -190,6 +191,7 @@ class ArchiveItem(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

@@ -1205,7 +1205,7 @@ class LabelField(ChoiceField):
 
 
 class SubField(Field):
-    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement.&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the value on an IndexedElement.&#34;&#34;&#34;
 
     namespace = TNS
     value_cls = str
@@ -1220,6 +1220,12 @@ class SubField(Field):
     def field_uri_xml(field_uri, label):
         from .properties import IndexedFieldURI
         return IndexedFieldURI(field_uri=field_uri, field_index=label).to_xml(version=None)
+
+    def clean(self, value, version=None):
+        value = super().clean(value, version=version)
+        if self.is_required and not value:
+            raise ValueError(&#39;Value for subfield %r must be non-empty&#39; % self.name)
+        return value
 
     def __hash__(self):
         return hash(self.name)
@@ -1271,6 +1277,13 @@ class IndexedField(EWSElementField):
     &#34;&#34;&#34;A base class for all indexed fields.&#34;&#34;&#34;
 
     PARENT_ELEMENT_NAME = None
+
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import IndexedElement
+        value_cls = kwargs[&#39;value_cls&#39;]
+        if not issubclass(value_cls, IndexedElement):
+            raise ValueError(&#34;&#39;value_cls&#39; %r must be a subclass of IndexedElement&#34; % value_cls)
+        super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
         return set_xml_value(create_element(&#39;t:%s&#39; % self.PARENT_ELEMENT_NAME), value, version)
@@ -5031,6 +5044,13 @@ but we can assume 512 bytes in practice. See
 
     PARENT_ELEMENT_NAME = None
 
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import IndexedElement
+        value_cls = kwargs[&#39;value_cls&#39;]
+        if not issubclass(value_cls, IndexedElement):
+            raise ValueError(&#34;&#39;value_cls&#39; %r must be a subclass of IndexedElement&#34; % value_cls)
+        super().__init__(*args, **kwargs)
+
     def to_xml(self, value, version):
         return set_xml_value(create_element(&#39;t:%s&#39; % self.PARENT_ELEMENT_NAME), value, version)
 
@@ -6295,13 +6315,13 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A field to hold the value on an SingleFieldIndexedElement.</p></div>
+<div class="desc"><p>A field to hold the value on an IndexedElement.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SubField(Field):
-    &#34;&#34;&#34;A field to hold the value on an SingleFieldIndexedElement.&#34;&#34;&#34;
+    &#34;&#34;&#34;A field to hold the value on an IndexedElement.&#34;&#34;&#34;
 
     namespace = TNS
     value_cls = str
@@ -6316,6 +6336,12 @@ because the decoded data could be in some other encoding, specified in the "Cont
     def field_uri_xml(field_uri, label):
         from .properties import IndexedFieldURI
         return IndexedFieldURI(field_uri=field_uri, field_index=label).to_xml(version=None)
+
+    def clean(self, value, version=None):
+        value = super().clean(value, version=version)
+        if self.is_required and not value:
+            raise ValueError(&#39;Value for subfield %r must be non-empty&#39; % self.name)
+        return value
 
     def __hash__(self):
         return hash(self.name)</code></pre>
@@ -6368,6 +6394,22 @@ def field_uri_xml(field_uri, label):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="exchangelib.fields.SubField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    value = super().clean(value, version=version)
+    if self.is_required and not value:
+        raise ValueError(&#39;Value for subfield %r must be non-empty&#39; % self.name)
+    return value</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.fields.SubField.from_xml"><code class="name flex">
 <span>def <span class="ident">from_xml</span></span>(<span>self, elem, account)</span>
 </code></dt>
@@ -7494,7 +7536,8 @@ If we want an URI validator, see <a href="http://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.SubField" href="#exchangelib.fields.SubField">SubField</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="exchangelib.fields.SubField.clean" href="#exchangelib.fields.SubField.clean">clean</a></code></li>
 <li><code><a title="exchangelib.fields.SubField.field_uri_xml" href="#exchangelib.fields.SubField.field_uri_xml">field_uri_xml</a></code></li>
 <li><code><a title="exchangelib.fields.SubField.from_xml" href="#exchangelib.fields.SubField.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.SubField.namespace" href="#exchangelib.fields.SubField.namespace">namespace</a></code></li>

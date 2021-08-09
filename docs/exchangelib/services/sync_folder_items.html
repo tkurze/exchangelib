@@ -54,7 +54,6 @@ class SyncFolderItems(SyncFolder):
         return res
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        from ..folders.base import BaseFolder
         self.sync_state = sync_state
         if max_changes_returned is None:
             max_changes_returned = self.chunk_size
@@ -62,8 +61,7 @@ class SyncFolderItems(SyncFolder):
             raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
             raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
@@ -71,7 +69,12 @@ class SyncFolderItems(SyncFolder):
                 ignore=ignore,
                 max_changes_returned=max_changes_returned,
                 sync_scope=sync_scope,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        change_types = self._change_types_map()
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -146,7 +149,6 @@ class SyncFolderItems(SyncFolder):
         return res
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        from ..folders.base import BaseFolder
         self.sync_state = sync_state
         if max_changes_returned is None:
             max_changes_returned = self.chunk_size
@@ -154,8 +156,7 @@ class SyncFolderItems(SyncFolder):
             raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
             raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
@@ -163,7 +164,12 @@ class SyncFolderItems(SyncFolder):
                 ignore=ignore,
                 max_changes_returned=max_changes_returned,
                 sync_scope=sync_scope,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        from ..folders.base import BaseFolder
+        change_types = self._change_types_map()
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -240,7 +246,6 @@ class SyncFolderItems(SyncFolder):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-    from ..folders.base import BaseFolder
     self.sync_state = sync_state
     if max_changes_returned is None:
         max_changes_returned = self.chunk_size
@@ -248,8 +253,7 @@ class SyncFolderItems(SyncFolder):
         raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
     if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
         raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
-    change_types = self._change_types_map()
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             folder=folder,
             shape=shape,
             additional_fields=additional_fields,
@@ -257,24 +261,7 @@ class SyncFolderItems(SyncFolder):
             ignore=ignore,
             max_changes_returned=max_changes_returned,
             sync_scope=sync_scope,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        change_type = change_types[elem.tag]
-        if change_type == self.READ_FLAG_CHANGE:
-            item = (
-                ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                xml_text_to_value(elem.find(&#39;{%s}IsRead&#39; % TNS).text, bool)
-            )
-        elif change_type == self.DELETE:
-            item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
-        else:
-            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-            # contain multiple item types, each with their own tag.
-            item_elem = elem[0]
-            item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
-        yield change_type, item</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.sync_folder_items.SyncFolderItems.get_payload"><code class="name flex">
@@ -308,6 +295,7 @@ class SyncFolderItems(SyncFolder):
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

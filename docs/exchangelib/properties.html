@@ -356,10 +356,8 @@ class EWSElement(metaclass=EWSMeta):
 
     @classmethod
     def supported_fields(cls, version):
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the fields supported by the given server version.&#34;&#34;&#34;
 
-        :param version:
-        &#34;&#34;&#34;
         return tuple(f for f in cls.FIELDS if not f.is_attribute and f.supports_version(version))
 
     @classmethod
@@ -458,6 +456,7 @@ class MessageHeader(EWSElement):
 
 class BaseItemId(EWSElement):
     &#34;&#34;&#34;Base class for ItemId elements.&#34;&#34;&#34;
+
     ID_ATTR = None
     CHANGEKEY_ATTR = None
 
@@ -1090,7 +1089,6 @@ class UserId(EWSElement):
 class BasePermission(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for the Permission and CalendarPermission classes&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Permission&#39;
     PERMISSION_ENUM = {Choice(&#39;None&#39;), Choice(&#39;Owned&#39;), Choice(&#39;All&#39;)}
 
     can_create_items = BooleanField(field_uri=&#39;CanCreateItems&#39;, default=False)
@@ -1107,22 +1105,29 @@ class BasePermission(EWSElement, metaclass=EWSMeta):
 class Permission(BasePermission):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/permission&#34;&#34;&#34;
 
-    permission_level = ChoiceField(field_uri=&#39;PermissionLevel&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;Owner&#39;), Choice(&#39;PublishingEditor&#39;), Choice(&#39;Editor&#39;), Choice(&#39;PublishingAuthor&#39;),
-        Choice(&#39;Author&#39;), Choice(&#39;NoneditingAuthor&#39;), Choice(&#39;Reviewer&#39;), Choice(&#39;Contributor&#39;), Choice(&#39;Custom&#39;)
-    }, default=&#39;None&#39;)
+    ELEMENT_NAME = &#39;Permission&#39;
+    LEVEL_CHOICES = (
+        &#39;None&#39;, &#39;Owner&#39;, &#39;PublishingEditor&#39;, &#39;Editor&#39;, &#39;PublishingAuthor&#39;, &#39;Author&#39;, &#39;NoneditingAuthor&#39;, &#39;Reviewer&#39;,
+        &#39;Contributor&#39;, &#39;Custom&#39;,
+    )
+
+    permission_level = ChoiceField(
+        field_uri=&#39;CalendarPermissionLevel&#39;, choices={Choice(c) for c in LEVEL_CHOICES}, default=LEVEL_CHOICES[0]
+    )
 
 
 class CalendarPermission(BasePermission):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarpermission&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Permission&#39;
+    ELEMENT_NAME = &#39;CalendarPermission&#39;
+    LEVEL_CHOICES = (
+        &#39;None&#39;, &#39;Owner&#39;, &#39;PublishingEditor&#39;, &#39;Editor&#39;, &#39;PublishingAuthor&#39;, &#39;Author&#39;, &#39;NoneditingAuthor&#39;, &#39;Reviewer&#39;,
+        &#39;Contributor&#39;, &#39;FreeBusyTimeOnly&#39;, &#39;FreeBusyTimeAndSubjectAndLocation&#39;, &#39;Custom&#39;,
+    )
 
-    calendar_permission_level = ChoiceField(field_uri=&#39;CalendarPermissionLevel&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;Owner&#39;), Choice(&#39;PublishingEditor&#39;), Choice(&#39;Editor&#39;), Choice(&#39;PublishingAuthor&#39;),
-        Choice(&#39;Author&#39;), Choice(&#39;NoneditingAuthor&#39;), Choice(&#39;Reviewer&#39;), Choice(&#39;Contributor&#39;),
-        Choice(&#39;FreeBusyTimeOnly&#39;), Choice(&#39;FreeBusyTimeAndSubjectAndLocation&#39;), Choice(&#39;Custom&#39;)
-    }, default=&#39;None&#39;)
+    calendar_permission_level = ChoiceField(
+        field_uri=&#39;CalendarPermissionLevel&#39;, choices={Choice(c) for c in LEVEL_CHOICES}, default=LEVEL_CHOICES[0]
+    )
 
 
 class PermissionSet(EWSElement):
@@ -2428,6 +2433,7 @@ def from_mailbox(cls, mailbox):
 </summary>
 <pre><code class="python">class BaseItemId(EWSElement):
     &#34;&#34;&#34;Base class for ItemId elements.&#34;&#34;&#34;
+
     ID_ATTR = None
     CHANGEKEY_ATTR = None
 
@@ -2484,7 +2490,6 @@ def from_mailbox(cls, mailbox):
 <pre><code class="python">class BasePermission(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for the Permission and CalendarPermission classes&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Permission&#39;
     PERMISSION_ENUM = {Choice(&#39;None&#39;), Choice(&#39;Owned&#39;), Choice(&#39;All&#39;)}
 
     can_create_items = BooleanField(field_uri=&#39;CanCreateItems&#39;, default=False)
@@ -2508,10 +2513,6 @@ def from_mailbox(cls, mailbox):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.properties.BasePermission.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="exchangelib.properties.BasePermission.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -2921,13 +2922,15 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <pre><code class="python">class CalendarPermission(BasePermission):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendarpermission&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Permission&#39;
+    ELEMENT_NAME = &#39;CalendarPermission&#39;
+    LEVEL_CHOICES = (
+        &#39;None&#39;, &#39;Owner&#39;, &#39;PublishingEditor&#39;, &#39;Editor&#39;, &#39;PublishingAuthor&#39;, &#39;Author&#39;, &#39;NoneditingAuthor&#39;, &#39;Reviewer&#39;,
+        &#39;Contributor&#39;, &#39;FreeBusyTimeOnly&#39;, &#39;FreeBusyTimeAndSubjectAndLocation&#39;, &#39;Custom&#39;,
+    )
 
-    calendar_permission_level = ChoiceField(field_uri=&#39;CalendarPermissionLevel&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;Owner&#39;), Choice(&#39;PublishingEditor&#39;), Choice(&#39;Editor&#39;), Choice(&#39;PublishingAuthor&#39;),
-        Choice(&#39;Author&#39;), Choice(&#39;NoneditingAuthor&#39;), Choice(&#39;Reviewer&#39;), Choice(&#39;Contributor&#39;),
-        Choice(&#39;FreeBusyTimeOnly&#39;), Choice(&#39;FreeBusyTimeAndSubjectAndLocation&#39;), Choice(&#39;Custom&#39;)
-    }, default=&#39;None&#39;)</code></pre>
+    calendar_permission_level = ChoiceField(
+        field_uri=&#39;CalendarPermissionLevel&#39;, choices={Choice(c) for c in LEVEL_CHOICES}, default=LEVEL_CHOICES[0]
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2941,6 +2944,10 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.CalendarPermission.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.CalendarPermission.LEVEL_CHOICES"><code class="name">var <span class="ident">LEVEL_CHOICES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3802,10 +3809,8 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 
     @classmethod
     def supported_fields(cls, version):
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Return the fields supported by the given server version.&#34;&#34;&#34;
 
-        :param version:
-        &#34;&#34;&#34;
         return tuple(f for f in cls.FIELDS if not f.is_attribute and f.supports_version(version))
 
     @classmethod
@@ -4115,17 +4120,15 @@ def response_tag(cls):
 <span>def <span class="ident">supported_fields</span></span>(<span>version)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>:param version:</p></div>
+<div class="desc"><p>Return the fields supported by the given server version.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
 def supported_fields(cls, version):
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Return the fields supported by the given server version.&#34;&#34;&#34;
 
-    :param version:
-    &#34;&#34;&#34;
     return tuple(f for f in cls.FIELDS if not f.is_attribute and f.supports_version(version))</code></pre>
 </details>
 </dd>
@@ -6746,10 +6749,15 @@ def from_xml(cls, elem, account):
 <pre><code class="python">class Permission(BasePermission):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/permission&#34;&#34;&#34;
 
-    permission_level = ChoiceField(field_uri=&#39;PermissionLevel&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;Owner&#39;), Choice(&#39;PublishingEditor&#39;), Choice(&#39;Editor&#39;), Choice(&#39;PublishingAuthor&#39;),
-        Choice(&#39;Author&#39;), Choice(&#39;NoneditingAuthor&#39;), Choice(&#39;Reviewer&#39;), Choice(&#39;Contributor&#39;), Choice(&#39;Custom&#39;)
-    }, default=&#39;None&#39;)</code></pre>
+    ELEMENT_NAME = &#39;Permission&#39;
+    LEVEL_CHOICES = (
+        &#39;None&#39;, &#39;Owner&#39;, &#39;PublishingEditor&#39;, &#39;Editor&#39;, &#39;PublishingAuthor&#39;, &#39;Author&#39;, &#39;NoneditingAuthor&#39;, &#39;Reviewer&#39;,
+        &#39;Contributor&#39;, &#39;Custom&#39;,
+    )
+
+    permission_level = ChoiceField(
+        field_uri=&#39;CalendarPermissionLevel&#39;, choices={Choice(c) for c in LEVEL_CHOICES}, default=LEVEL_CHOICES[0]
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6758,7 +6766,15 @@ def from_xml(cls, elem, account):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.properties.Permission.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.properties.Permission.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.Permission.LEVEL_CHOICES"><code class="name">var <span class="ident">LEVEL_CHOICES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -9379,7 +9395,6 @@ def from_xml(cls, elem, account):
 <li>
 <h4><code><a title="exchangelib.properties.BasePermission" href="#exchangelib.properties.BasePermission">BasePermission</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.properties.BasePermission.ELEMENT_NAME" href="#exchangelib.properties.BasePermission.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.BasePermission.FIELDS" href="#exchangelib.properties.BasePermission.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.properties.BasePermission.PERMISSION_ENUM" href="#exchangelib.properties.BasePermission.PERMISSION_ENUM">PERMISSION_ENUM</a></code></li>
 <li><code><a title="exchangelib.properties.BasePermission.can_create_items" href="#exchangelib.properties.BasePermission.can_create_items">can_create_items</a></code></li>
@@ -9449,6 +9464,7 @@ def from_xml(cls, elem, account):
 <ul class="">
 <li><code><a title="exchangelib.properties.CalendarPermission.ELEMENT_NAME" href="#exchangelib.properties.CalendarPermission.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.CalendarPermission.FIELDS" href="#exchangelib.properties.CalendarPermission.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.CalendarPermission.LEVEL_CHOICES" href="#exchangelib.properties.CalendarPermission.LEVEL_CHOICES">LEVEL_CHOICES</a></code></li>
 <li><code><a title="exchangelib.properties.CalendarPermission.calendar_permission_level" href="#exchangelib.properties.CalendarPermission.calendar_permission_level">calendar_permission_level</a></code></li>
 </ul>
 </li>
@@ -9910,7 +9926,9 @@ def from_xml(cls, elem, account):
 <li>
 <h4><code><a title="exchangelib.properties.Permission" href="#exchangelib.properties.Permission">Permission</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.properties.Permission.ELEMENT_NAME" href="#exchangelib.properties.Permission.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.Permission.FIELDS" href="#exchangelib.properties.Permission.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.Permission.LEVEL_CHOICES" href="#exchangelib.properties.Permission.LEVEL_CHOICES">LEVEL_CHOICES</a></code></li>
 <li><code><a title="exchangelib.properties.Permission.permission_level" href="#exchangelib.properties.Permission.permission_level">permission_level</a></code></li>
 </ul>
 </li>

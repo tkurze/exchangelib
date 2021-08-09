@@ -59,9 +59,12 @@ class GetStreamingEvents(EWSAccountService):
     def call(self, subscription_ids, connection_timeout):
         if connection_timeout &lt; 1:
             raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -160,9 +163,12 @@ class GetStreamingEvents(EWSAccountService):
     def call(self, subscription_ids, connection_timeout):
         if connection_timeout &lt; 1:
             raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
-        for elem in self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -263,13 +269,9 @@ class GetStreamingEvents(EWSAccountService):
 <pre><code class="python">def call(self, subscription_ids, connection_timeout):
     if connection_timeout &lt; 1:
         raise ValueError(&#34;&#39;connection_timeout&#39; must be a positive integer&#34;)
-    for elem in self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield Notification.from_xml(elem=elem, account=None)</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_streaming_events.GetStreamingEvents.get_payload"><code class="name flex">
@@ -302,6 +304,7 @@ class GetStreamingEvents(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

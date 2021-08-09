@@ -41,7 +41,10 @@ class ExpandDL(EWSService):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
-        for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(distribution_list=distribution_list)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 raise elem
             yield Mailbox.from_xml(elem, account=None)
@@ -80,7 +83,10 @@ class ExpandDL(EWSService):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
-        for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(distribution_list=distribution_list)))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 raise elem
             yield Mailbox.from_xml(elem, account=None)
@@ -125,10 +131,7 @@ class ExpandDL(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, distribution_list):
-    for elem in self._get_elements(payload=self.get_payload(distribution_list=distribution_list)):
-        if isinstance(elem, Exception):
-            raise elem
-        yield Mailbox.from_xml(elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(distribution_list=distribution_list)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.expand_dl.ExpandDL.get_payload"><code class="name flex">
@@ -154,6 +157,7 @@ class ExpandDL(EWSService):
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

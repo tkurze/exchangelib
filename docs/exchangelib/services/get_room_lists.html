@@ -40,7 +40,10 @@ class GetRoomLists(EWSService):
     supported_from = EXCHANGE_2010
 
     def call(self):
-        for elem in self._get_elements(payload=self.get_payload()):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload()))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -77,7 +80,10 @@ class GetRoomLists(EWSService):
     supported_from = EXCHANGE_2010
 
     def call(self):
-        for elem in self._get_elements(payload=self.get_payload()):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload()))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -117,11 +123,7 @@ class GetRoomLists(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self):
-    for elem in self._get_elements(payload=self.get_payload()):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        yield RoomList.from_xml(elem=elem, account=None)</code></pre>
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload()))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_room_lists.GetRoomLists.get_payload"><code class="name flex">
@@ -145,6 +147,7 @@ class GetRoomLists(EWSService):
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
