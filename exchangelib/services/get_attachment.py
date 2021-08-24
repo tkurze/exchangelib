@@ -8,7 +8,6 @@ class GetAttachment(EWSAccountService):
 
     SERVICE_NAME = 'GetAttachment'
     element_container_name = '{%s}Attachments' % MNS
-    streaming = True
 
     def call(self, items, include_mime_content):
         return self._elems_to_objs(self._chunked_get_elements(
@@ -65,6 +64,7 @@ class GetAttachment(EWSAccountService):
     def stream_file_content(self, attachment_id):
         # The streaming XML parser can only stream content of one attachment
         payload = self.get_payload(items=[attachment_id], include_mime_content=False)
+        self.streaming = True
         try:
             yield from self._get_response_xml(payload=payload, stream_file_content=True)
         except ElementNotFound as enf:
@@ -80,4 +80,5 @@ class GetAttachment(EWSAccountService):
             # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
             raise enf
         finally:
+            self.streaming = False
             self.stop_streaming()

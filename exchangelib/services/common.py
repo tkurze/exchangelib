@@ -80,8 +80,6 @@ class EWSService(metaclass=abc.ABCMeta):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Controls whether the HTTP request should be streaming or fetch everything at once
-    streaming = False
     # Marks the version from which the service was introduced
     supported_from = None
     # Marks services that support paging of requested items
@@ -102,6 +100,8 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
         self.timeout = timeout
+        # Controls whether the HTTP request should be streaming or fetch everything at once
+        self.streaming = False
         # Streaming connection variables
         self._streaming_session = None
         self._streaming_response = None
