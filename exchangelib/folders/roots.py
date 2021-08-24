@@ -121,7 +121,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             raise ValueError("'folder_cls' %s must have a DISTINGUISHED_FOLDER_ID value" % folder_cls)
         # Use cached distinguished folder instance, but only if cache has already been prepped. This is an optimization
         # for accessing e.g. 'account.contacts' without fetching all folders of the account.
-        if self._subfolders:
+        if self._subfolders is not None:
             for f in self._folders_map.values():
                 # Require exact class, to not match subclasses, e.g. RecipientCache instead of Contacts
                 if f.__class__ == folder_cls and f.is_distinguished:
