@@ -3,7 +3,7 @@ import mimetypes
 from io import BytesIO
 
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
-    ItemField, IdField
+    ItemField, IdField, FieldPath
 from .properties import EWSElement, EWSMeta
 from .services import GetAttachment, CreateAttachment, DeleteAttachment
 
@@ -185,6 +185,7 @@ class ItemAttachment(Attachment):
 
     @property
     def item(self):
+        from .folders import BaseFolder
         if self.attachment_id is None:
             return self._item
         if self._item is not None:
@@ -192,8 +193,11 @@ class ItemAttachment(Attachment):
         # We have an ID to the data but still haven't called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
             raise ValueError('%s must have an account' % self.__class__.__name__)
+        additional_fields = {
+            FieldPath(field=f) for f in BaseFolder.allowed_item_fields(version=self.parent_item.account.version)
+        }
         attachment = GetAttachment(account=self.parent_item.account).get(
-            items=[self.attachment_id], include_mime_content=True
+            items=[self.attachment_id], include_mime_content=True, additional_fields=additional_fields,
         )
         self._item = attachment.item
         return self._item

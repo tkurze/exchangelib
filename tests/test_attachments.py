@@ -36,7 +36,7 @@ class AttachmentsTest(BaseItemTest):
         att1.parent_item = None
         att1.attachment_id = None
 
-    def test_attachment_properties(self):
+    def test_file_attachment_properties(self):
         binary_file_content = 'Hello from unicode æøå'.encode('utf-8')
         att1 = FileAttachment(name='my_file_1.txt', content=binary_file_content)
         self.assertIn("name='my_file_1.txt'", str(att1))
@@ -48,17 +48,61 @@ class AttachmentsTest(BaseItemTest):
         with self.assertRaises(ValueError):
             print(att1.content)  # Test property getter when we need to fetch the content
 
+    def test_item_attachment_properties(self):
         attached_item1 = self.get_test_item(folder=self.test_folder)
-        att2 = ItemAttachment(name='attachment1', item=attached_item1)
-        self.assertIn("name='attachment1'", str(att2))
-        att2.item = attached_item1  # Test property setter
-        self.assertEqual(att2.item, attached_item1)  # Test property getter
-        self.assertEqual(att2.item, attached_item1)  # Test property getter
-        att2.attachment_id = 'xxx'
-        self.assertEqual(att2.item, attached_item1)  # Test property getter when attachment_id is set
-        att2._item = None
+        att1 = ItemAttachment(name='attachment1', item=attached_item1)
+        self.assertIn("name='attachment1'", str(att1))
+        att1.item = attached_item1  # Test property setter
+        self.assertEqual(att1.item, attached_item1)  # Test property getter
+        self.assertEqual(att1.item, attached_item1)  # Test property getter
+        att1.attachment_id = 'xxx'
+        self.assertEqual(att1.item, attached_item1)  # Test property getter when attachment_id is set
+        att1._item = None
         with self.assertRaises(ValueError):
-            print(att2.item)  # Test property getter when we need to fetch the item
+            print(att1.item)  # Test property getter when we need to fetch the item
+
+    def test_item_attachments(self):
+        item = self.get_test_item(folder=self.test_folder)
+        attached_item1 = self.get_test_item(folder=self.test_folder)
+        att1 = ItemAttachment(name='attachment1', item=attached_item1)
+
+        # Test __init__(attachments=...) and attach() on new item
+        self.assertEqual(len(item.attachments), 0)
+        item.attach(att1)
+        self.assertEqual(len(item.attachments), 1)
+        item.save()
+        fresh_item = self.get_item_by_id(item)
+        self.assertEqual(len(fresh_item.attachments), 1)
+        fresh_attachments = sorted(fresh_item.attachments, key=lambda a: a.name)
+        self.assertEqual(fresh_attachments[0].name, 'attachment1')
+        self.assertEqual(fresh_attachments[0].item.subject, attached_item1.subject)
+        self.assertEqual(fresh_attachments[0].item.body, attached_item1.body)
+
+        # Test attach on saved object
+        att2 = ItemAttachment(name='attachment2', item=attached_item1)
+        self.assertEqual(len(item.attachments), 1)
+        item.attach(att2)
+        self.assertEqual(len(item.attachments), 2)
+        fresh_item = self.get_item_by_id(item)
+        self.assertEqual(len(fresh_item.attachments), 2)
+        fresh_attachments = sorted(fresh_item.attachments, key=lambda a: a.name)
+        self.assertEqual(fresh_attachments[0].name, 'attachment1')
+        self.assertEqual(fresh_attachments[0].item.subject, attached_item1.subject)
+        self.assertEqual(fresh_attachments[0].item.body, attached_item1.body)
+        self.assertEqual(fresh_attachments[1].name, 'attachment2')
+        self.assertEqual(fresh_attachments[1].item.subject, attached_item1.subject)
+        self.assertEqual(fresh_attachments[1].item.body, attached_item1.body)
+
+        # Test detach
+        item.detach(att1)
+        self.assertTrue(att1.attachment_id is None)
+        self.assertTrue(att1.parent_item is None)
+        fresh_item = self.get_item_by_id(item)
+        self.assertEqual(len(fresh_item.attachments), 1)
+        fresh_attachments = sorted(fresh_item.attachments, key=lambda a: a.name)
+        self.assertEqual(fresh_attachments[0].name, 'attachment2')
+        self.assertEqual(fresh_attachments[0].item.subject, attached_item1.subject)
+        self.assertEqual(fresh_attachments[0].item.body, attached_item1.body)
 
     def test_file_attachments(self):
         item = self.get_test_item(folder=self.test_folder)
