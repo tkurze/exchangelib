@@ -77,6 +77,8 @@ class AttachmentsTest(BaseItemTest):
         self.assertEqual(fresh_attachments[0].name, 'attachment1')
         self.assertEqual(fresh_attachments[0].item.subject, attached_item1.subject)
         self.assertEqual(fresh_attachments[0].item.body, attached_item1.body)
+        # Same as 'body' because 'body' doesn't contain HTML
+        self.assertEqual(fresh_attachments[0].item.text_body, attached_item1.body)
 
         # Test attach on saved object
         att2 = ItemAttachment(name='attachment2', item=attached_item1)
