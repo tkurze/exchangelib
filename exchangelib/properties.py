@@ -735,7 +735,6 @@ class Attendee(EWSElement):
     last_response_time = DateTimeField(field_uri='LastResponseTime')
 
     def __hash__(self):
-        # TODO: maybe take 'response_type' and 'last_response_time' into account?
         return hash(self.mailbox)
 
 
@@ -1040,7 +1039,6 @@ class Member(EWSElement):
         }, default='Normal')
 
     def __hash__(self):
-        # TODO: maybe take 'status' into account?
         return hash(self.mailbox)
 
 
