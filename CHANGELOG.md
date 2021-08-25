@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+HEAD
+----
+-   Support updating items in `Àccount.upload()`. Previously, only insert was supported.
+
+
 4.5.0
 -----
 -   Fixed bug when updating indexed fields on `Contact` items.

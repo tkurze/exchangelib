@@ -735,10 +735,10 @@ class GenericItemTest(CommonItemTest):
         for result in export_results:
             self.assertIsInstance(result, str)
 
-        # Try reuploading our results
-        upload_results = self.account.upload([(self.test_folder, data) for data in export_results])
-        self.assertEqual(len(items), len(upload_results), (items, upload_results))
-        for result in upload_results:
+        # Try re-uploading our results (insert)
+        insert_results = self.account.upload([(self.test_folder, data) for data in export_results])
+        self.assertEqual(len(items), len(insert_results), (items, insert_results))
+        for result in insert_results:
             # Must be a completely new ItemId
             self.assertIsInstance(result, tuple)
             self.assertNotIn(result, ids)
@@ -764,10 +764,23 @@ class GenericItemTest(CommonItemTest):
                         a.attachment_id = None
             return dict_item
 
-        uploaded_items = sorted([to_dict(item) for item in self.account.fetch(upload_results)],
-                                key=lambda i: i['subject'])
-        original_items = sorted([to_dict(item) for item in items], key=lambda i: i['subject'])
-        self.assertListEqual(original_items, uploaded_items)
+        inserted_items = list(self.account.fetch(insert_results))
+        uploaded_data = sorted([to_dict(item) for item in inserted_items], key=lambda i: i['subject'])
+        original_data = sorted([to_dict(item) for item in items], key=lambda i: i['subject'])
+        self.assertListEqual(original_data, uploaded_data)
+
+        # Test update instead of insert
+        update_results = self.account.upload([
+            (self.test_folder, ((i.id, i.changekey), i.is_associated, data))
+            for i, data in zip(inserted_items, export_results)
+        ])
+        self.assertEqual(len(export_results), len(update_results), (export_results, update_results))
+        for i, result in zip(inserted_items, update_results):
+            # Must be a completely new ItemId
+            self.assertIsInstance(result, tuple)
+            item_id, changekey = result
+            self.assertEqual(i.id, item_id)
+            self.assertNotEqual(i.changekey, changekey)
 
     def test_export_with_error(self):
         # 15 new items which we will attempt to export and re-upload

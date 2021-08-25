@@ -358,19 +358,24 @@ class Account:
         """Upload objects retrieved from an export to the given folders.
 
         :param data: An iterable of tuples containing the folder we want to upload the data to and the string outputs of
-            exports.
+            exports. If you want to update items instead of create, the data must be a tuple of
+            (ItemId, is_associated, data) values.
         :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
         :return: A list of tuples with the new ids and changekeys
 
           Example:
-          account.upload([(account.inbox, "AABBCC..."),
-          (account.inbox, "XXYYZZ..."),
-          (account.calendar, "ABCXYZ...")])
+          account.upload([
+              (account.inbox, "AABBCC..."),
+              (account.inbox, (ItemId('AA', 'BB'), False, "XXYYZZ...")),
+              (account.inbox, (('CC', 'DD'), None, "XXYYZZ...")),
+              (account.calendar, "ABCXYZ..."),
+          ])
           -> [("idA", "changekey"), ("idB", "changekey"), ("idC", "changekey")]
         """
+        items = ((f, (None, False, d) if isinstance(d, str) else d) for f, d in data)
         return list(
-            self._consume_item_service(service_cls=UploadItems, items=data, chunk_size=chunk_size, kwargs={})
+            self._consume_item_service(service_cls=UploadItems, items=items, chunk_size=chunk_size, kwargs={})
         )
 
     def bulk_create(self, folder, items, message_disposition=SAVE_ONLY, send_meeting_invitations=SEND_TO_NONE,
