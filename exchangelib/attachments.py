@@ -197,7 +197,8 @@ class ItemAttachment(Attachment):
             FieldPath(field=f) for f in BaseFolder.allowed_item_fields(version=self.parent_item.account.version)
         }
         attachment = GetAttachment(account=self.parent_item.account).get(
-            items=[self.attachment_id], include_mime_content=True, additional_fields=additional_fields,
+            items=[self.attachment_id], include_mime_content=True, body_type=None, filter_html_content=None,
+            additional_fields=additional_fields,
         )
         self._item = attachment.item
         return self._item

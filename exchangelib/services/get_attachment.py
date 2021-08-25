@@ -4,6 +4,9 @@ from .common import EWSAccountService, create_attachment_ids_element
 from ..util import create_element, add_xml_child, set_xml_value, DummyResponse, StreamingBase64Parser,\
     StreamingContentHandler, ElementNotFound, MNS
 
+# https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/bodytype
+BODY_TYPE_CHOICES = ('Best', 'HTML', 'Text')
+
 
 class GetAttachment(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation"""
@@ -11,10 +14,12 @@ class GetAttachment(EWSAccountService):
     SERVICE_NAME = 'GetAttachment'
     element_container_name = '{%s}Attachments' % MNS
 
-    def call(self, items, include_mime_content, additional_fields):
+    def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
+        if body_type and body_type not in BODY_TYPE_CHOICES:
+            raise ValueError("'body_type' %s must be one of %s" % (body_type, BODY_TYPE_CHOICES))
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, include_mime_content=include_mime_content,
-            additional_fields=additional_fields,
+            body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
         ))
 
     def _elems_to_objs(self, elems):
@@ -26,13 +31,15 @@ class GetAttachment(EWSAccountService):
                 continue
             yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
-    def get_payload(self, items, include_mime_content, additional_fields):
-        # TODO: Support additional 'BodyType' and 'FilterHtmlContent' properties of 'AttachmentShape'. See
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
+    def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         payload = create_element('m:%s' % self.SERVICE_NAME)
         shape_elem = create_element('m:AttachmentShape')
         if include_mime_content:
             add_xml_child(shape_elem, 't:IncludeMimeContent', 'true')
+        if body_type:
+            add_xml_child(shape_elem, 't:BodyType', body_type)
+        if filter_html_content is not None:
+            add_xml_child(shape_elem, 't:FilterHtmlContent', 'true' if filter_html_content else 'false')
         if additional_fields:
             additional_properties = create_element('t:AdditionalProperties')
             expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
@@ -75,7 +82,10 @@ class GetAttachment(EWSAccountService):
 
     def stream_file_content(self, attachment_id):
         # The streaming XML parser can only stream content of one attachment
-        payload = self.get_payload(items=[attachment_id], include_mime_content=False, additional_fields=None)
+        payload = self.get_payload(
+            items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+            additional_fields=None,
+        )
         self.streaming = True
         try:
             yield from self._get_response_xml(payload=payload, stream_file_content=True)
