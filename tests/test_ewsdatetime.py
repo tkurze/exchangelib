@@ -59,6 +59,9 @@ class EWSDateTimeTest(TimedTestCase):
             self.assertEqual(len(v), 2)
             self.assertIsInstance(v[0], str)
 
+        # Test IANA exceptions
+        self.assertEqual(set(zoneinfo.available_timezones()) - set(EWSTimeZone.IANA_TO_MS_MAP), set())
+
         # Test timezone unknown by ZoneInfo
         with self.assertRaises(UnknownTimeZone) as e:
             EWSTimeZone('UNKNOWN')
