@@ -21,6 +21,9 @@ class UpdateFolder(EWSAccountService):
 
     def _elems_to_objs(self, elems):
         for (folder, _), elem in zip(self.folders, elems):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     @staticmethod

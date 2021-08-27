@@ -12,7 +12,7 @@ class UploadItems(EWSAccountService):
 
     def call(self, items):
         # _pool_requests expects 'items', not 'data'
-        return self._chunked_get_elements(self.get_payload, items=items)
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
     def get_payload(self, items):
         """Upload given items to given account.
@@ -41,6 +41,13 @@ class UploadItems(EWSAccountService):
             itemselement.append(item)
         return uploaditems
 
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
+
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]
+        return [container]

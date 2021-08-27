@@ -25,15 +25,21 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
     def _partial_call(self, payload_func, folders, event_types, **kwargs):
         if set(event_types) - set(self.EVENT_TYPES):
             raise ValueError("'event_types' values must consist of values in %s" % str(self.EVENT_TYPES))
-        for elem in self._get_elements(payload=payload_func(folders=folders, event_types=event_types, **kwargs)):
+        return self._elems_to_objs(self._get_elements(
+            payload=payload_func(folders=folders, event_types=event_types, **kwargs)
+        ))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield elem
+            subscription_elem, watermark_elem = elem
+            yield subscription_elem.text, watermark_elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return[(container.find('{%s}SubscriptionId' % MNS).text, container.find('{%s}Watermark' % MNS).text)]
+        return [(container.find('{%s}SubscriptionId' % MNS), container.find('{%s}Watermark' % MNS))]
 
     def _partial_payload(self, folders, event_types):
         request_elem = create_element(self.subscription_request_elem_tag)
@@ -93,9 +99,16 @@ class SubscribeToStreaming(Subscribe):
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
 
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield elem.text
+
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find('{%s}SubscriptionId' % MNS).text]
+        return [container.find('{%s}SubscriptionId' % MNS)]
 
     def get_payload(self, folders, event_types):
         subscribe = create_element('m:%s' % self.SERVICE_NAME)

@@ -18,10 +18,10 @@ class GetServerTimeZones(EWSService):
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        return self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             timezones=timezones,
             return_full_timezone_data=return_full_timezone_data
-        ))
+        )))
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
@@ -38,14 +38,16 @@ class GetServerTimeZones(EWSService):
                 payload.append(tz_ids)
         return payload
 
-    @classmethod
-    def _get_elements_in_container(cls, container):
-        for timezonedef in container:
-            tz_id = timezonedef.get('Id')
-            tz_name = timezonedef.get('Name')
-            tz_periods = cls._get_periods(timezonedef)
-            tz_transitions_groups = cls._get_transitions_groups(timezonedef)
-            tz_transitions = cls._get_transitions(timezonedef)
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            tz_id = elem.get('Id')
+            tz_name = elem.get('Name')
+            tz_periods = self._get_periods(elem)
+            tz_transitions_groups = self._get_transitions_groups(elem)
+            tz_transitions = self._get_transitions(elem)
             yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod

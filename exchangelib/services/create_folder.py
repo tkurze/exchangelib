@@ -22,6 +22,9 @@ class CreateFolder(EWSAccountService):
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):

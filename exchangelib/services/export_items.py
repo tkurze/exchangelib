@@ -11,7 +11,14 @@ class ExportItems(EWSAccountService):
     element_container_name = '{%s}Data' % MNS
 
     def call(self, items):
-        return self._chunked_get_elements(self.get_payload, items=items)
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield elem.text  # All we want is the 64bit string in the 'Data' tag
 
     def get_payload(self, items):
         exportitems = create_element('m:%s' % self.SERVICE_NAME)
@@ -20,8 +27,7 @@ class ExportItems(EWSAccountService):
         return exportitems
 
     # We need to override this since ExportItemsResponseMessage is formatted a
-    #  little bit differently. Namely, all we want is the 64bit string in the
-    #  Data tag.
+    # little bit differently. .
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.text]
+        return [container]

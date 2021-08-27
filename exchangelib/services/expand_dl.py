@@ -1,5 +1,5 @@
 from .common import EWSService
-from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
+from ..errors import ErrorNameResolutionMultipleResults
 from ..properties import Mailbox
 from ..util import create_element, set_xml_value, MNS
 
@@ -9,7 +9,6 @@ class ExpandDL(EWSService):
 
     SERVICE_NAME = 'ExpandDL'
     element_container_name = '{%s}DLExpansion' % MNS
-    ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -18,7 +17,8 @@ class ExpandDL(EWSService):
     def _elems_to_objs(self, elems):
         for elem in elems:
             if isinstance(elem, Exception):
-                raise elem
+                yield elem
+                continue
             yield Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):

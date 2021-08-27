@@ -310,7 +310,7 @@ class ProtocolTest(EWSTest):
         # Test something that's not an email
         self.assertEqual(
             self.account.protocol.resolve_names(names=['foo\\bar']),
-            []
+            [ErrorNameResolutionNoResults('No results were found.')]
         )
         # Test return_full_contact_data
         mailbox, contact = self.account.protocol.resolve_names(

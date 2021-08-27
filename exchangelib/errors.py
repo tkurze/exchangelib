@@ -21,6 +21,9 @@ class EWSError(Exception):
     def __str__(self):
         return str(self.value)
 
+    def __eq__(self, other):
+        return repr(self) == repr(other)
+
 
 # Warnings
 class EWSWarning(EWSError):

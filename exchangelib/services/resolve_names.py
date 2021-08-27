@@ -50,10 +50,9 @@ class ResolveNames(EWSService):
     def _elems_to_objs(self, elems):
         from ..items import Contact
         for elem in elems:
-            if isinstance(elem, ErrorNameResolutionNoResults):
-                continue
             if isinstance(elem, Exception):
-                raise elem
+                yield elem
+                continue
             if self.return_full_contact_data:
                 mailbox_elem = elem.find(Mailbox.response_tag())
                 contact_elem = elem.find(Contact.response_tag())
