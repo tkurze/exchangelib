@@ -60,7 +60,7 @@ class EWSDateTimeTest(TimedTestCase):
             self.assertIsInstance(v[0], str)
 
         # Test IANA exceptions
-        sanitized = list(t for t in zoneinfo.available_timezones() if not t.startswith('SystemV/') and t != 'localzone')
+        sanitized = list(t for t in zoneinfo.available_timezones() if not t.startswith('SystemV/') and t != 'localtime')
         self.assertEqual(set(sanitized) - set(EWSTimeZone.IANA_TO_MS_MAP), set())
 
         # Test timezone unknown by ZoneInfo
