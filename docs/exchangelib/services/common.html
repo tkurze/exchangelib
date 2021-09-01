@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>exchangelib.services.common API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -45,7 +45,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorNoPublicFolderReplicaAvailable, MalformedResponseError, ErrorExceededConnectionCount, \
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark, \
-    ErrorInvalidSyncStateData
+    ErrorInvalidSyncStateData, ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
 from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
@@ -79,6 +79,8 @@ KNOWN_EXCEPTIONS = (
     ErrorItemNotFound,
     ErrorMailboxMoveInProgress,
     ErrorMailboxStoreUnavailable,
+    ErrorNameResolutionMultipleResults,
+    ErrorNameResolutionNoResults,
     ErrorNonExistentMailbox,
     ErrorNoPublicFolderReplicaAvailable,
     ErrorNoRespondingCASInDestinationSite,
@@ -108,8 +110,6 @@ class EWSService(metaclass=abc.ABCMeta):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Controls whether the HTTP request should be streaming or fetch everything at once
-    streaming = False
     # Marks the version from which the service was introduced
     supported_from = None
     # Marks services that support paging of requested items
@@ -130,6 +130,8 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
         self.timeout = timeout
+        # Controls whether the HTTP request should be streaming or fetch everything at once
+        self.streaming = False
         # Streaming connection variables
         self._streaming_session = None
         self._streaming_response = None
@@ -1178,8 +1180,6 @@ def parse_folder_elem(elem, folder, account):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Controls whether the HTTP request should be streaming or fetch everything at once
-    streaming = False
     # Marks the version from which the service was introduced
     supported_from = None
     # Marks services that support paging of requested items
@@ -1200,6 +1200,8 @@ def parse_folder_elem(elem, folder, account):
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
         self.timeout = timeout
+        # Controls whether the HTTP request should be streaming or fetch everything at once
+        self.streaming = False
         # Streaming connection variables
         self._streaming_session = None
         self._streaming_response = None
@@ -1881,10 +1883,6 @@ def parse_folder_elem(elem, folder, account):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.common.EWSService.streaming"><code class="name">var <span class="ident">streaming</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="exchangelib.services.common.EWSService.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -2014,7 +2012,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.prefer_affinity" href="#exchangelib.services.common.EWSService.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.returns_elements" href="#exchangelib.services.common.EWSService.returns_elements">returns_elements</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.stop_streaming" href="#exchangelib.services.common.EWSService.stop_streaming">stop_streaming</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.streaming" href="#exchangelib.services.common.EWSService.streaming">streaming</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.supported_from" href="#exchangelib.services.common.EWSService.supported_from">supported_from</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.supports_paging" href="#exchangelib.services.common.EWSService.supports_paging">supports_paging</a></code></li>
 </ul>
@@ -2025,7 +2022,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>exchangelib.util API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -637,6 +637,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
 class AnonymizingXmlHandler(PrettyXmlHandler):
     &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.&#34;&#34;&#34;
+    PRIVATE_TAGS = {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -645,8 +646,10 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
     def parse_bytes(self, xml_bytes):
         root = lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
         for elem in root.iter():
-            for attr in set(elem.keys()) &amp; {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}:
+            # Anonymize element attribute values known to contain private data
+            for attr in set(elem.keys()) &amp; self.PRIVATE_TAGS:
                 elem.set(attr, &#39;DEADBEEF=&#39;)
+            # Anonymize anything requested by the caller
             for s in self.forbidden_strings:
                 elem.text.replace(s, &#39;[REMOVED]&#39;)
         return root
@@ -1744,6 +1747,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 </summary>
 <pre><code class="python">class AnonymizingXmlHandler(PrettyXmlHandler):
     &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.&#34;&#34;&#34;
+    PRIVATE_TAGS = {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -1752,8 +1756,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     def parse_bytes(self, xml_bytes):
         root = lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
         for elem in root.iter():
-            for attr in set(elem.keys()) &amp; {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}:
+            # Anonymize element attribute values known to contain private data
+            for attr in set(elem.keys()) &amp; self.PRIVATE_TAGS:
                 elem.set(attr, &#39;DEADBEEF=&#39;)
+            # Anonymize anything requested by the caller
             for s in self.forbidden_strings:
                 elem.text.replace(s, &#39;[REMOVED]&#39;)
         return root</code></pre>
@@ -1765,6 +1771,13 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <li>logging.Handler</li>
 <li>logging.Filterer</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.util.AnonymizingXmlHandler.PRIVATE_TAGS"><code class="name">var <span class="ident">PRIVATE_TAGS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.util.AnonymizingXmlHandler.parse_bytes"><code class="name flex">
@@ -1779,8 +1792,10 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <pre><code class="python">def parse_bytes(self, xml_bytes):
     root = lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
     for elem in root.iter():
-        for attr in set(elem.keys()) &amp; {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}:
+        # Anonymize element attribute values known to contain private data
+        for attr in set(elem.keys()) &amp; self.PRIVATE_TAGS:
             elem.set(attr, &#39;DEADBEEF=&#39;)
+        # Anonymize anything requested by the caller
         for s in self.forbidden_strings:
             elem.text.replace(s, &#39;[REMOVED]&#39;)
     return root</code></pre>
@@ -2610,6 +2625,7 @@ no namespace.</p></div>
 <li>
 <h4><code><a title="exchangelib.util.AnonymizingXmlHandler" href="#exchangelib.util.AnonymizingXmlHandler">AnonymizingXmlHandler</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.util.AnonymizingXmlHandler.PRIVATE_TAGS" href="#exchangelib.util.AnonymizingXmlHandler.PRIVATE_TAGS">PRIVATE_TAGS</a></code></li>
 <li><code><a title="exchangelib.util.AnonymizingXmlHandler.parse_bytes" href="#exchangelib.util.AnonymizingXmlHandler.parse_bytes">parse_bytes</a></code></li>
 </ul>
 </li>
@@ -2675,7 +2691,7 @@ no namespace.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

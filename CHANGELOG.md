@@ -3,7 +3,12 @@ Change Log
 
 HEAD
 ----
--   Support updating items in `Àccount.upload()`. Previously, only insert was supported.
+
+4.5.1
+-----
+-   Support updating items in `Account.upload()`. Previously, only insert was supported.
+-   Fixed types for `Contact.manager_mailbox` and `Contact.direct_reports`.
+-   Support getting `text_body` field on item attachments.
 
 
 4.5.0

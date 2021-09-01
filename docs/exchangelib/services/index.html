@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>exchangelib.services API documentation</title>
 <meta name="description" content="Implement a selection of EWS services (operations) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -785,6 +785,9 @@ input list.</p>
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
@@ -1744,7 +1747,6 @@ invitation accepts (see
 
     SERVICE_NAME = &#39;ExpandDL&#39;
     element_container_name = &#39;{%s}DLExpansion&#39; % MNS
-    ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -1753,7 +1755,8 @@ invitation accepts (see
     def _elems_to_objs(self, elems):
         for elem in elems:
             if isinstance(elem, Exception):
-                raise elem
+                yield elem
+                continue
             yield Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
@@ -1767,10 +1770,6 @@ invitation accepts (see
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.services.ExpandDL.ERRORS_TO_CATCH_IN_RESPONSE"><code class="name">var <span class="ident">ERRORS_TO_CATCH_IN_RESPONSE</span></code></dt>
-<dd>
-<div class="desc"><p>Global error type within this module.</p></div>
-</dd>
 <dt id="exchangelib.services.ExpandDL.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1845,7 +1844,14 @@ invitation accepts (see
     element_container_name = &#39;{%s}Data&#39; % MNS
 
     def call(self, items):
-        return self._chunked_get_elements(self.get_payload, items=items)
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
+
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
 
     def get_payload(self, items):
         exportitems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -1854,11 +1860,10 @@ invitation accepts (see
         return exportitems
 
     # We need to override this since ExportItemsResponseMessage is formatted a
-    #  little bit differently. Namely, all we want is the 64bit string in the
-    #  Data tag.
+    # little bit differently. .
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.text]</code></pre>
+        return [container]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1892,7 +1897,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items):
-    return self._chunked_get_elements(self.get_payload, items=items)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.ExportItems.get_payload"><code class="name flex">
@@ -2653,11 +2658,13 @@ invitation accepts (see
 
     SERVICE_NAME = &#39;GetAttachment&#39;
     element_container_name = &#39;{%s}Attachments&#39; % MNS
-    streaming = True
 
-    def call(self, items, include_mime_content):
+    def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
+        if body_type and body_type not in BODY_TYPE_CHOICES:
+            raise ValueError(&#34;&#39;body_type&#39; %s must be one of %s&#34; % (body_type, BODY_TYPE_CHOICES))
         return self._elems_to_objs(self._chunked_get_elements(
-                self.get_payload, items=items, include_mime_content=include_mime_content
+            self.get_payload, items=items, include_mime_content=include_mime_content,
+            body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
         ))
 
     def _elems_to_objs(self, elems):
@@ -2669,14 +2676,25 @@ invitation accepts (see
                 continue
             yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
-    def get_payload(self, items, include_mime_content):
+    def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        # TODO: Support additional properties of AttachmentShape. See
-        #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
+        shape_elem = create_element(&#39;m:AttachmentShape&#39;)
         if include_mime_content:
-            attachment_shape = create_element(&#39;m:AttachmentShape&#39;)
-            add_xml_child(attachment_shape, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
-            payload.append(attachment_shape)
+            add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+        if body_type:
+            add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+        if filter_html_content is not None:
+            add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+        if additional_fields:
+            additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+            expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
+            set_xml_value(additional_properties, sorted(
+                expanded_fields,
+                key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
+            ), version=self.account.version)
+            shape_elem.append(additional_properties)
+        if len(shape_elem):
+            payload.append(shape_elem)
         attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
         payload.append(attachment_ids)
         return payload
@@ -2709,7 +2727,11 @@ invitation accepts (see
 
     def stream_file_content(self, attachment_id):
         # The streaming XML parser can only stream content of one attachment
-        payload = self.get_payload(items=[attachment_id], include_mime_content=False)
+        payload = self.get_payload(
+            items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+            additional_fields=None,
+        )
+        self.streaming = True
         try:
             yield from self._get_response_xml(payload=payload, stream_file_content=True)
         except ElementNotFound as enf:
@@ -2725,6 +2747,7 @@ invitation accepts (see
             # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
             raise enf
         finally:
+            self.streaming = False
             self.stop_streaming()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2742,15 +2765,11 @@ invitation accepts (see
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.GetAttachment.streaming"><code class="name">var <span class="ident">streaming</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.services.GetAttachment.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, items, include_mime_content)</span>
+<span>def <span class="ident">call</span></span>(<span>self, items, include_mime_content, body_type, filter_html_content, additional_fields)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2758,14 +2777,17 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, items, include_mime_content):
+<pre><code class="python">def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
+    if body_type and body_type not in BODY_TYPE_CHOICES:
+        raise ValueError(&#34;&#39;body_type&#39; %s must be one of %s&#34; % (body_type, BODY_TYPE_CHOICES))
     return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=items, include_mime_content=include_mime_content
+        self.get_payload, items=items, include_mime_content=include_mime_content,
+        body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
     ))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetAttachment.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, items, include_mime_content)</span>
+<span>def <span class="ident">get_payload</span></span>(<span>self, items, include_mime_content, body_type, filter_html_content, additional_fields)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2773,14 +2795,25 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, items, include_mime_content):
+<pre><code class="python">def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
     payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    # TODO: Support additional properties of AttachmentShape. See
-    #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentshape
+    shape_elem = create_element(&#39;m:AttachmentShape&#39;)
     if include_mime_content:
-        attachment_shape = create_element(&#39;m:AttachmentShape&#39;)
-        add_xml_child(attachment_shape, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
-        payload.append(attachment_shape)
+        add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+    if body_type:
+        add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+    if filter_html_content is not None:
+        add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+    if additional_fields:
+        additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+        expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
+        set_xml_value(additional_properties, sorted(
+            expanded_fields,
+            key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
+        ), version=self.account.version)
+        shape_elem.append(additional_properties)
+    if len(shape_elem):
+        payload.append(shape_elem)
     attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
     payload.append(attachment_ids)
     return payload</code></pre>
@@ -2797,7 +2830,11 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def stream_file_content(self, attachment_id):
     # The streaming XML parser can only stream content of one attachment
-    payload = self.get_payload(items=[attachment_id], include_mime_content=False)
+    payload = self.get_payload(
+        items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+        additional_fields=None,
+    )
+    self.streaming = True
     try:
         yield from self._get_response_xml(payload=payload, stream_file_content=True)
     except ElementNotFound as enf:
@@ -2813,6 +2850,7 @@ invitation accepts (see
         # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
         raise enf
     finally:
+        self.streaming = False
         self.stop_streaming()</code></pre>
 </details>
 </dd>
@@ -3094,6 +3132,9 @@ invitation accepts (see
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
@@ -3875,10 +3916,10 @@ invitation accepts (see
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        return self._get_elements(payload=self.get_payload(
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             timezones=timezones,
             return_full_timezone_data=return_full_timezone_data
-        ))
+        )))
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
@@ -3895,14 +3936,16 @@ invitation accepts (see
                 payload.append(tz_ids)
         return payload
 
-    @classmethod
-    def _get_elements_in_container(cls, container):
-        for timezonedef in container:
-            tz_id = timezonedef.get(&#39;Id&#39;)
-            tz_name = timezonedef.get(&#39;Name&#39;)
-            tz_periods = cls._get_periods(timezonedef)
-            tz_transitions_groups = cls._get_transitions_groups(timezonedef)
-            tz_transitions = cls._get_transitions(timezonedef)
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            tz_id = elem.get(&#39;Id&#39;)
+            tz_name = elem.get(&#39;Name&#39;)
+            tz_periods = self._get_periods(elem)
+            tz_transitions_groups = self._get_transitions_groups(elem)
+            tz_transitions = self._get_transitions(elem)
             yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
@@ -4003,10 +4046,10 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, timezones=None, return_full_timezone_data=False):
-    return self._get_elements(payload=self.get_payload(
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
         timezones=timezones,
         return_full_timezone_data=return_full_timezone_data
-    ))</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetServerTimeZones.get_payload"><code class="name flex">
@@ -4937,10 +4980,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def _elems_to_objs(self, elems):
         from ..items import Contact
         for elem in elems:
-            if isinstance(elem, ErrorNameResolutionNoResults):
-                continue
             if isinstance(elem, Exception):
-                raise elem
+                yield elem
+                continue
             if self.return_full_contact_data:
                 mailbox_elem = elem.find(Mailbox.response_tag())
                 contact_elem = elem.find(Contact.response_tag())
@@ -5565,9 +5607,16 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
 
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield elem.text
+
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find(&#39;{%s}SubscriptionId&#39; % MNS).text]
+        return [container.find(&#39;{%s}SubscriptionId&#39; % MNS)]
 
     def get_payload(self, folders, event_types):
         subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -6061,6 +6110,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def _elems_to_objs(self, elems):
         for (folder, _), elem in zip(self.folders, elems):
+            if isinstance(elem, Exception):
+                yield elem
+                continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     @staticmethod
@@ -6609,18 +6661,13 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation</a></p>
-<p>TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
-database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UploadItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
-
-    TODO: This currently has the existing limitation of only being able to upload items that do not yet exist in the
-     database. The full spec also allows actions &#34;Update&#34; and &#34;UpdateOrCreate&#34;.
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UploadItems&#39;
@@ -6628,13 +6675,14 @@ database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></
 
     def call(self, items):
         # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
-        return self._chunked_get_elements(self.get_payload, items=items)
+        return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
     def get_payload(self, items):
         &#34;&#34;&#34;Upload given items to given account.
 
         &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
-        that the item will be placed in and the second element is a Data string returned from an ExportItems.
+        that the item will be placed in and the second element is a tuple containing an optional ItemId, an optional
+        Item.is_associated boolean, and a Data string returned from an ExportItems.
         call.
 
         :param items:
@@ -6642,17 +6690,30 @@ database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></
         uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
         itemselement = create_element(&#39;m:Items&#39;)
         uploaditems.append(itemselement)
-        for parent_folder, data_str in items:
-            item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;CreateNew&#39;))
+        for parent_folder, (item_id, is_associated, data_str) in items:
+            # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
+            item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;))
+            if is_associated is not None:
+                item.set(&#39;IsAssociated&#39;, &#39;true&#39; if is_associated else &#39;false&#39;)
             parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
             set_xml_value(item, parentfolderid, version=self.account.version)
+            if item_id:
+                itemid = to_item_id(item_id, ItemId, version=self.account.version)
+                set_xml_value(item, itemid, version=self.account.version)
             add_xml_child(item, &#39;t:Data&#39;, data_str)
             itemselement.append(item)
         return uploaditems
 
+    def _elems_to_objs(self, elems):
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
+
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [(container.get(ItemId.ID_ATTR), container.get(ItemId.CHANGEKEY_ATTR))]</code></pre>
+        return [container]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6683,7 +6744,7 @@ database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></
 </summary>
 <pre><code class="python">def call(self, items):
     # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
-    return self._chunked_get_elements(self.get_payload, items=items)</code></pre>
+    return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.UploadItems.get_payload"><code class="name flex">
@@ -6692,7 +6753,8 @@ database. The full spec also allows actions "Update" and "UpdateOrCreate".</p></
 <dd>
 <div class="desc"><p>Upload given items to given account.</p>
 <p>'items' is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
-that the item will be placed in and the second element is a Data string returned from an ExportItems.
+that the item will be placed in and the second element is a tuple containing an optional ItemId, an optional
+Item.is_associated boolean, and a Data string returned from an ExportItems.
 call.</p>
 <p>:param items:</p></div>
 <details class="source">
@@ -6703,7 +6765,8 @@ call.</p>
     &#34;&#34;&#34;Upload given items to given account.
 
     &#39;items&#39; is an iterable of tuples where the first element is a Folder instance representing the ParentFolder
-    that the item will be placed in and the second element is a Data string returned from an ExportItems.
+    that the item will be placed in and the second element is a tuple containing an optional ItemId, an optional
+    Item.is_associated boolean, and a Data string returned from an ExportItems.
     call.
 
     :param items:
@@ -6711,10 +6774,16 @@ call.</p>
     uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
     itemselement = create_element(&#39;m:Items&#39;)
     uploaditems.append(itemselement)
-    for parent_folder, data_str in items:
-        item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;CreateNew&#39;))
+    for parent_folder, (item_id, is_associated, data_str) in items:
+        # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
+        item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;))
+        if is_associated is not None:
+            item.set(&#39;IsAssociated&#39;, &#39;true&#39; if is_associated else &#39;false&#39;)
         parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
         set_xml_value(item, parentfolderid, version=self.account.version)
+        if item_id:
+            itemid = to_item_id(item_id, ItemId, version=self.account.version)
+            set_xml_value(item, itemid, version=self.account.version)
         add_xml_child(item, &#39;t:Data&#39;, data_str)
         itemselement.append(item)
     return uploaditems</code></pre>
@@ -6909,7 +6978,6 @@ call.</p>
 <li>
 <h4><code><a title="exchangelib.services.ExpandDL" href="#exchangelib.services.ExpandDL">ExpandDL</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.services.ExpandDL.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.ExpandDL.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.ExpandDL.SERVICE_NAME" href="#exchangelib.services.ExpandDL.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.ExpandDL.WARNINGS_TO_IGNORE_IN_RESPONSE" href="#exchangelib.services.ExpandDL.WARNINGS_TO_IGNORE_IN_RESPONSE">WARNINGS_TO_IGNORE_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.ExpandDL.call" href="#exchangelib.services.ExpandDL.call">call</a></code></li>
@@ -6968,7 +7036,6 @@ call.</p>
 <li><code><a title="exchangelib.services.GetAttachment.element_container_name" href="#exchangelib.services.GetAttachment.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.GetAttachment.get_payload" href="#exchangelib.services.GetAttachment.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.GetAttachment.stream_file_content" href="#exchangelib.services.GetAttachment.stream_file_content">stream_file_content</a></code></li>
-<li><code><a title="exchangelib.services.GetAttachment.streaming" href="#exchangelib.services.GetAttachment.streaming">streaming</a></code></li>
 </ul>
 </li>
 <li>
@@ -7264,7 +7331,7 @@ call.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
