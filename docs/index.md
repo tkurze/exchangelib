@@ -1340,18 +1340,18 @@ master_recurrence = CalendarItem(
         start=start.date(),
         number=7
     ),
-)
+).save()
 
 # Occurrence data for the master item
-for i in a.calendar.filter(start__lt=end, end__gt=start):
-    print(i.subject, i.start, i.end)
-    print(i.recurrence)
-    print(i.first_occurrence)
-    print(i.last_occurrence)
-    for o in i.modified_occurrences:
-        print(o)
-    for o in i.deleted_occurrences:
-        print(o)
+i = a.calendar.get(id=master_recurrence.id)
+print(i.subject, i.start, i.end)
+print(i.recurrence)
+print(i.first_occurrence)
+print(i.last_occurrence)
+for o in i.modified_occurrences:
+    print(o)
+for o in i.deleted_occurrences:
+    print(o)
 
 # All occurrences expanded. The recurrence will span over 4 iterations of a
 # 3-week period.
