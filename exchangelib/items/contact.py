@@ -84,9 +84,9 @@ class Contact(Item):
                                           is_read_only=True)
     directory_id = TextField(field_uri='contacts:DirectoryId', supported_from=EXCHANGE_2010_SP2, is_read_only=True)
     manager_mailbox = MailboxField(field_uri='contacts:ManagerMailbox', supported_from=EXCHANGE_2010_SP2,
-                                is_read_only=True)
+                                   is_read_only=True)
     direct_reports = MailboxListField(field_uri='contacts:DirectReports', supported_from=EXCHANGE_2010_SP2,
-                               is_read_only=True)
+                                      is_read_only=True)
 
 
 class Persona(IdChangeKeyMixIn):
