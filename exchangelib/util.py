@@ -609,6 +609,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
 class AnonymizingXmlHandler(PrettyXmlHandler):
     """A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal."""
+    PRIVATE_TAGS = {'RootItemId', 'ItemId', 'Id', 'RootItemChangeKey', 'ChangeKey'}
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -617,8 +618,10 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
     def parse_bytes(self, xml_bytes):
         root = lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
         for elem in root.iter():
-            for attr in set(elem.keys()) & {'RootItemId', 'ItemId', 'Id', 'RootItemChangeKey', 'ChangeKey'}:
+            # Anonymize element attribute values known to contain private data
+            for attr in set(elem.keys()) & self.PRIVATE_TAGS:
                 elem.set(attr, 'DEADBEEF=')
+            # Anonymize anything requested by the caller
             for s in self.forbidden_strings:
                 elem.text.replace(s, '[REMOVED]')
         return root
