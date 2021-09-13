@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 Release notes:
+*  Install pdoc3, wheel, twine
 * Bump version in exchangelib/__init__.py
 * Bump version in CHANGELOG.md
 * Generate documentation: pdoc3 --html exchangelib -o docs --force
