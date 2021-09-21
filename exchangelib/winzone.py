@@ -503,7 +503,8 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     'Pacific/Wallis': ('UTC+12', 'WF'),
 }
 
-# Timezone names used by IANA but not mentioned in the CLDR. All of them have an alias in CLDR. Aliases were found
+# Timezone names used by IANA but not mentioned in the CLDR. All of them have an alias in CLDR. This is essentially
+# all timezone names that zoneinfo.available_timezones() contains but CLDR doesn't. Aliases were found
 # at https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 IANA_TO_MS_TIMEZONE_MAP = dict(
     CLDR_TO_MS_TIMEZONE_MAP,
@@ -646,9 +647,10 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
     }
 )
 
-# Reverse map from Microsoft timezone ID to IANA timezone name. Non-CLDR timezone ID's can be added here.
+# Reverse map from Microsoft timezone ID to IANA timezone name. Non-IANA timezone ID's can be added here.
 MS_TIMEZONE_TO_IANA_MAP = dict(
-    {v[0]: k for k, v in IANA_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
+    # Use the CLDR map because the IANA map contains deprecated aliases that not all systems support
+    {v[0]: k for k, v in CLDR_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
     **{
         'tzone://Microsoft/Utc': 'UTC',
     }
