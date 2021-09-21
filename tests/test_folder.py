@@ -109,14 +109,19 @@ class FolderTest(EWSTest):
     def test_get_folders_with_distinguished_id(self):
         # Test that we return an Inbox instance and not a generic Messages or Folder instance when we call GetFolder
         # with a DistinguishedFolderId instance with an ID of Inbox.DISTINGUISHED_FOLDER_ID.
+        inbox_folder_id = DistinguishedFolderId(
+            id=Inbox.DISTINGUISHED_FOLDER_ID,
+            mailbox=Mailbox(email_address=self.account.primary_smtp_address)
+        )
         inbox = list(GetFolder(account=self.account).call(
-            folders=[DistinguishedFolderId(
-                id=Inbox.DISTINGUISHED_FOLDER_ID,
-                mailbox=Mailbox(email_address=self.account.primary_smtp_address))
-            ],
+            folders=[inbox_folder_id],
             shape='IdOnly',
             additional_fields=[],
         ))[0]
+        self.assertIsInstance(inbox, Inbox)
+
+        # Test via SingleFolderQuerySet
+        inbox = SingleFolderQuerySet(account=self.account, folder=inbox_folder_id).resolve()
         self.assertIsInstance(inbox, Inbox)
 
     def test_folder_grouping(self):

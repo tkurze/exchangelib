@@ -158,3 +158,14 @@ class SingleFolderQuerySet(FolderQuerySet):
 
     def _copy_cls(self):
         return self.__class__(account=self.folder_collection.account, folder=self.folder_collection.folders[0])
+
+    def resolve(self):
+        folders = list(self.folder_collection.resolve())
+        if not folders:
+            raise DoesNotExist('Could not find a folder matching the query')
+        if len(folders) != 1:
+            raise MultipleObjectsReturned('Expected result length 1, but got %s' % folders)
+        f = folders[0]
+        if isinstance(f, Exception):
+            raise f
+        return f
