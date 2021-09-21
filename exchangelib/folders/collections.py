@@ -294,25 +294,22 @@ class FolderCollection(SearchableMixIn):
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
-    def _get_default_item_traversal_depth(self):
-        # When searching folders, some folders require 'Shallow' and others 'Associated' traversal depth.
-        unique_depths = {f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders}
+    def _get_default_traversal_depth(self, traversal_attr):
+        unique_depths = {getattr(f, traversal_attr) for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            'Folders in this collection do not have a common DEFAULT_ITEM_TRAVERSAL_DEPTH value. You need to '
-            'define an explicit traversal depth with QuerySet.depth() (values: %s)' % unique_depths
+            'Folders in this collection do not have a common %s value. You need to define an explicit traversal depth'
+            'with QuerySet.depth() (values: %s)' % (traversal_attr, unique_depths)
         )
+
+    def _get_default_item_traversal_depth(self):
+        # When searching folders, some folders require 'Shallow' and others 'Associated' traversal depth.
+        return self._get_default_traversal_depth('DEFAULT_ITEM_TRAVERSAL_DEPTH')
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require 'Shallow' and others 'Deep' traversal depth.
-        unique_depths = {f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders}
-        if len(unique_depths) == 1:
-            return unique_depths.pop()
-        raise ValueError(
-            'Folders in this collection do not have a common DEFAULT_FOLDER_TRAVERSAL_DEPTH value. You need to '
-            'define an explicit traversal depth with FolderQuerySet.depth() (values: %s)' % unique_depths
-        )
+        return self._get_default_traversal_depth('DEFAULT_FOLDER_TRAVERSAL_DEPTH')
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
