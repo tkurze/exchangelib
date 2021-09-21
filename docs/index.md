@@ -112,6 +112,8 @@ fails to install.
 
 ```python
 from exchangelib import DELEGATE, IMPERSONATION, Account, Credentials
+from exchangelib.folders import Calendar, SingleFolderQuerySet
+from exchangelib.properties import DistinguishedFolderId, Mailbox
 
 # Specify your credentials. Username is usually in WINDOMAIN\username format,
 # where WINDOMAIN is the name of the Windows Domain your username is connected
@@ -165,10 +167,18 @@ account = Account(
 
 # If your credentials have been given impersonation access to the target
 # account, set a different 'access_type':
-account = Account(
+johns_account = Account(
   primary_smtp_address='john@example.com', credentials=credentials, 
   autodiscover=True, access_type=IMPERSONATION
 )
+
+# If you want to impersonate an account and access a shared folder that this
+# account has access to, you need to specify the email adress of the shared
+# folder to access the folder:
+shared_calendar = SingleFolderQuerySet(account=johns_account, folder=DistinguishedFolderId(
+    id=Calendar.DISTINGUISHED_FOLDER_ID,
+    mailbox=Mailbox(email_address='mary@example.com')
+)).resolve()
 
 # Autodiscover needs to make some DNS queries. We use the dnspython package for
 # that. Here's an example of customizing the way the dns.resolver.Resolver
