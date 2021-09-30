@@ -60,6 +60,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
     ELEMENT_NAME = 'CalendarItem'
 
     uid = TextField(field_uri='calendar:UID', is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri='calendar:RecurrenceId', is_read_only=True)
     start = DateOrDateTimeField(field_uri='calendar:Start', is_required=True)
     end = DateOrDateTimeField(field_uri='calendar:End', is_required=True)
     original_start = DateTimeField(field_uri='calendar:OriginalStart', is_read_only=True)
