@@ -1,7 +1,7 @@
 import logging
 
-from .base import BaseReplyItem
-from .item import Item, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
+from .base import BaseReplyItem, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
+from .item import Item
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
 from ..properties import ReferenceItemId, ReminderMessageData
 from ..services import SendItem, MarkAsJunk
@@ -99,7 +99,7 @@ class Message(Item):
                     message_disposition=SEND_AND_SAVE_COPY,
                     send_meeting_invitations=send_meeting_invitations
                 )
-                if res:
+                if res is not True:
                     raise ValueError('Unexpected response in send-only mode')
 
     @require_id

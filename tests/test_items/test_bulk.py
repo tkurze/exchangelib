@@ -2,7 +2,8 @@ import datetime
 from exchangelib.errors import ErrorItemNotFound, ErrorInvalidChangeKey, ErrorInvalidIdMalformed
 from exchangelib.fields import FieldPath
 from exchangelib.folders import Inbox, Folder, Calendar
-from exchangelib.items import Item, Message, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, CalendarItem
+from exchangelib.items import Item, Message, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, CalendarItem, BulkCreateResult
+from exchangelib.services import CreateItem
 
 from .test_basics import BaseItemTest
 
@@ -29,6 +30,13 @@ class BulkMethodTest(BaseItemTest):
 
         items = list(self.account.fetch(ids=ids, only_fields=['id', 'changekey']))
         self.assertEqual(len(items), 2)
+
+    def test_bulk_create(self):
+        item = self.get_test_item()
+        res = self.test_folder.bulk_create(items=[item, item])
+        self.assertEqual(len(res), 2)
+        for r in res:
+            self.assertIsInstance(r, BulkCreateResult)
 
     def test_no_account(self):
         # Test bulk operations on items with no self.account
@@ -137,6 +145,43 @@ class BulkMethodTest(BaseItemTest):
                 self.assertIsInstance(res, ErrorItemNotFound)
             else:
                 self.assertIsInstance(res, Item)
+
+    def test_bulk_create_with_no_result(self):
+        # Some CreateItem responses do not contain the ID of the created items. See issue#984
+        xml = b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
+    <h:ServerVersionInfo
+    xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types" xmlns="http://schemas.microsoft.com/exchange/services/2006/types"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" MajorVersion="15" MinorVersion="0" MajorBuildNumber="1473" MinorBuildNumber="3" Version="V2_23"/>
+  </s:Header>
+  <s:Body
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <m:CreateItemResponse
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:CreateItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items/>
+        </m:CreateItemResponseMessage>
+        <m:CreateItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items/>
+        </m:CreateItemResponseMessage>
+      </m:ResponseMessages>
+    </m:CreateItemResponse>
+  </s:Body>
+</s:Envelope>'''
+        ws = CreateItem(account=self.account)
+        self.assertListEqual(
+            list(ws.parse(xml)),
+            [True, True]
+        )
 
 
 class CalendarBulkMethodTest(BaseItemTest):

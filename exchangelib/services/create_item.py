@@ -51,7 +51,15 @@ class CreateItem(EWSAccountService):
             if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
+            if isinstance(elem, bool):
+                yield elem
+                continue
             yield BulkCreateResult.from_xml(elem=elem, account=self.account)
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        res = super()._get_elements_in_container(container)
+        return res or [True]
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
         """Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.

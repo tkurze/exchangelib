@@ -181,17 +181,14 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None):
-        from .calendar_item import CancelCalendarItem
         if copy_to_folder and not save_copy:
             raise AttributeError("'save_copy' must be True when 'copy_to_folder' is set")
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
-        expect_result = bool(isinstance(self, CancelCalendarItem))
         return CreateItem(account=self.account).get(
             items=[self],
             folder=copy_to_folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
-            expect_result=expect_result,
         )
 
     @require_account

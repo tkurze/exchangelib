@@ -1,6 +1,6 @@
 import logging
 
-from .base import BaseItem, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
+from .base import BaseItem, SAVE_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
     AUTO_RESOLVE, SOFT_DELETE, HARD_DELETE, ALL_OCCURRENCIES, MOVE_TO_DELETED_ITEMS
 from ..fields import BooleanField, IntegerField, TextField, CharListField, ChoiceField, URIField, BodyField, \
     DateTimeField, MessageHeaderField, AttachmentField, Choice, EWSElementField, EffectiveRightsField, CultureField, \
@@ -130,13 +130,13 @@ class Item(BaseItem):
 
     @require_account
     def _create(self, message_disposition, send_meeting_invitations):
-        # Return a BulkCreateResult because we want to return the ID of both the main item *and* attachments
+        # Return a BulkCreateResult because we want to return the ID of both the main item *and* attachments. In send
+        # and send-and-save-copy mode, the server does not return an ID, so we just return True.
         return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=send_meeting_invitations,
-            expect_result=message_disposition not in (SEND_ONLY, SEND_AND_SAVE_COPY),
         )
 
     def _update_fieldnames(self):
