@@ -617,6 +617,7 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
         'Navajo': CLDR_TO_MS_TIMEZONE_MAP['America/Denver'],
         'PRC': CLDR_TO_MS_TIMEZONE_MAP['Asia/Shanghai'],
         'Pacific/Chuuk': CLDR_TO_MS_TIMEZONE_MAP['Pacific/Truk'],
+        'Pacific/Kanton': CLDR_TO_MS_TIMEZONE_MAP['Pacific/Enderbury'],
         'Pacific/Pohnpei': CLDR_TO_MS_TIMEZONE_MAP['Pacific/Ponape'],
         'Pacific/Samoa': CLDR_TO_MS_TIMEZONE_MAP['Pacific/Pago_Pago'],
         'Pacific/Yap': CLDR_TO_MS_TIMEZONE_MAP['Pacific/Truk'],
