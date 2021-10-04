@@ -4,6 +4,25 @@ Change Log
 HEAD
 ----
 
+4.5.2
+-----
+- Make `FileAttachment.fp` a proper `BytesIO` implementation
+- Add missing `CalendarItem.recurrence_id` field
+- Add `SingleFolderQuerySet.resolve()` to aid accessing a folder shared by a different account:
+```python
+from exchangelib import Account
+from exchangelib.folders import Calendar, SingleFolderQuerySet
+from exchangelib.properties import DistinguishedFolderId, Mailbox
+
+account = Account(primary_smtp_address="some_user@example.com", ...)
+shared_calendar = SingleFolderQuerySet(account=account, folder=DistinguishedFolderId(
+    id=Calendar.DISTINGUISHED_FOLDER_ID,
+    mailbox=Mailbox(email_address="other_user@example.com")
+)).resolve()
+```
+- Minor bugfixes
+
+
 4.5.1
 -----
 -   Support updating items in `Account.upload()`. Previously, only insert was supported.

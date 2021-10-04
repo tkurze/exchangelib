@@ -4771,25 +4771,22 @@ def root(self):
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
-    def _get_default_item_traversal_depth(self):
-        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        unique_depths = {f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders}
+    def _get_default_traversal_depth(self, traversal_attr):
+        unique_depths = {getattr(f, traversal_attr) for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            &#39;Folders in this collection do not have a common DEFAULT_ITEM_TRAVERSAL_DEPTH value. You need to &#39;
-            &#39;define an explicit traversal depth with QuerySet.depth() (values: %s)&#39; % unique_depths
+            &#39;Folders in this collection do not have a common %s value. You need to define an explicit traversal depth&#39;
+            &#39;with QuerySet.depth() (values: %s)&#39; % (traversal_attr, unique_depths)
         )
+
+    def _get_default_item_traversal_depth(self):
+        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
+        return self._get_default_traversal_depth(&#39;DEFAULT_ITEM_TRAVERSAL_DEPTH&#39;)
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        unique_depths = {f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders}
-        if len(unique_depths) == 1:
-            return unique_depths.pop()
-        raise ValueError(
-            &#39;Folders in this collection do not have a common DEFAULT_FOLDER_TRAVERSAL_DEPTH value. You need to &#39;
-            &#39;define an explicit traversal depth with FolderQuerySet.depth() (values: %s)&#39; % unique_depths
-        )
+        return self._get_default_traversal_depth(&#39;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#39;)
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
@@ -9441,12 +9438,47 @@ folder was found, try as best we can to return the default folder of type 'folde
         super().__init__(folder_collection=folder_collection)
 
     def _copy_cls(self):
-        return self.__class__(account=self.folder_collection.account, folder=self.folder_collection.folders[0])</code></pre>
+        return self.__class__(account=self.folder_collection.account, folder=self.folder_collection.folders[0])
+
+    def resolve(self):
+        folders = list(self.folder_collection.resolve())
+        if not folders:
+            raise DoesNotExist(&#39;Could not find a folder matching the query&#39;)
+        if len(folders) != 1:
+            raise MultipleObjectsReturned(&#39;Expected result length 1, but got %s&#39; % folders)
+        f = folders[0]
+        if isinstance(f, Exception):
+            raise f
+        return f</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.folders.queryset.FolderQuerySet" href="queryset.html#exchangelib.folders.queryset.FolderQuerySet">FolderQuerySet</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.folders.SingleFolderQuerySet.resolve"><code class="name flex">
+<span>def <span class="ident">resolve</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resolve(self):
+    folders = list(self.folder_collection.resolve())
+    if not folders:
+        raise DoesNotExist(&#39;Could not find a folder matching the query&#39;)
+    if len(folders) != 1:
+        raise MultipleObjectsReturned(&#39;Expected result length 1, but got %s&#39; % folders)
+    f = folders[0]
+    if isinstance(f, Exception):
+        raise f
+    return f</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.folders.queryset.FolderQuerySet" href="queryset.html#exchangelib.folders.queryset.FolderQuerySet">FolderQuerySet</a></b></code>:
@@ -10931,6 +10963,9 @@ folder was found, try as best we can to return the default folder of type 'folde
 </li>
 <li>
 <h4><code><a title="exchangelib.folders.SingleFolderQuerySet" href="#exchangelib.folders.SingleFolderQuerySet">SingleFolderQuerySet</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.SingleFolderQuerySet.resolve" href="#exchangelib.folders.SingleFolderQuerySet.resolve">resolve</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.folders.SmsAndChatsSync" href="#exchangelib.folders.SmsAndChatsSync">SmsAndChatsSync</a></code></h4>

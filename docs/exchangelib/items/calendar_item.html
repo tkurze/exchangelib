@@ -88,6 +88,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
     ELEMENT_NAME = &#39;CalendarItem&#39;
 
     uid = TextField(field_uri=&#39;calendar:UID&#39;, is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri=&#39;calendar:RecurrenceId&#39;, is_read_only=True)
     start = DateOrDateTimeField(field_uri=&#39;calendar:Start&#39;, is_required=True)
     end = DateOrDateTimeField(field_uri=&#39;calendar:End&#39;, is_required=True)
     original_start = DateTimeField(field_uri=&#39;calendar:OriginalStart&#39;, is_read_only=True)
@@ -974,6 +975,7 @@ we use folder.account.</p></div>
     ELEMENT_NAME = &#39;CalendarItem&#39;
 
     uid = TextField(field_uri=&#39;calendar:UID&#39;, is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri=&#39;calendar:RecurrenceId&#39;, is_read_only=True)
     start = DateOrDateTimeField(field_uri=&#39;calendar:Start&#39;, is_required=True)
     end = DateOrDateTimeField(field_uri=&#39;calendar:End&#39;, is_required=True)
     original_start = DateTimeField(field_uri=&#39;calendar:OriginalStart&#39;, is_read_only=True)
@@ -1366,6 +1368,10 @@ def timezone_fields(cls):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.calendar_item.CalendarItem.recurrence"><code class="name">var <span class="ident">recurrence</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.calendar_item.CalendarItem.recurrence_id"><code class="name">var <span class="ident">recurrence_id</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2322,6 +2328,7 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.calendar_item.CalendarItem.organizer" href="#exchangelib.items.calendar_item.CalendarItem.organizer">organizer</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.CalendarItem.original_start" href="#exchangelib.items.calendar_item.CalendarItem.original_start">original_start</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.CalendarItem.recurrence" href="#exchangelib.items.calendar_item.CalendarItem.recurrence">recurrence</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.CalendarItem.recurrence_id" href="#exchangelib.items.calendar_item.CalendarItem.recurrence_id">recurrence_id</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.CalendarItem.recurring_master" href="#exchangelib.items.calendar_item.CalendarItem.recurring_master">recurring_master</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.CalendarItem.required_attendees" href="#exchangelib.items.calendar_item.CalendarItem.required_attendees">required_attendees</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.CalendarItem.resources" href="#exchangelib.items.calendar_item.CalendarItem.resources">resources</a></code></li>

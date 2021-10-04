@@ -26,9 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import logging
+<pre><code class="python">import io
+import logging
 import mimetypes
-from io import BytesIO
 
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
     ItemField, IdField, FieldPath
@@ -246,43 +246,41 @@ class ItemAttachment(Attachment):
         return cls(**kwargs)
 
 
-class FileAttachmentIO(BytesIO):
+class FileAttachmentIO(io.RawIOBase):
     &#34;&#34;&#34;A BytesIO where the stream of data comes from the GetAttachment service.&#34;&#34;&#34;
 
-    def __init__(self, *args, **kwargs):
-        self._attachment = kwargs.pop(&#39;attachment&#39;)
-        super().__init__(*args, **kwargs)
+    def __init__(self, attachment):
+        self._attachment = attachment
+        self._overflow = None
+
+    def readable(self):
+        return True
+
+    @property
+    def closed(self):
+        return self._stream is None
+
+    def readinto(self, b):
+        buf_size = len(b)  # We can&#39;t return more than l bytes
+        try:
+            chunk = self._overflow or next(self._stream)
+        except StopIteration:
+            return 0
+        else:
+            output, self._overflow = chunk[:buf_size], chunk[buf_size:]
+            b[:len(output)] = output
+            return len(output)
 
     def __enter__(self):
         self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
             attachment_id=self._attachment.attachment_id
         )
-        self._overflow = b&#39;&#39;
-        return self
+        self._overflow = None
+        return io.BufferedReader(self, buffer_size=io.DEFAULT_BUFFER_SIZE)
 
     def __exit__(self, *args, **kwargs):
         self._stream = None
-        self._overflow = None
-
-    def read(self, size=-1):
-        if size &lt; 0:
-            # Return everything
-            return b&#39;&#39;.join(self._stream)
-        # Return only &#39;size&#39; bytes
-        buffer = [self._overflow]
-        read_size = len(self._overflow)
-        while True:
-            if read_size &gt;= size:
-                break
-            try:
-                next_chunk = next(self._stream)
-            except StopIteration:
-                break
-            buffer.append(next_chunk)
-            read_size += len(next_chunk)
-        res = b&#39;&#39;.join(buffer)
-        self._overflow = res[size:]
-        return res[:size]</code></pre>
+        self._overflow = None</code></pre>
 </details>
 </section>
 <section>
@@ -792,7 +790,7 @@ def fp(self):
 </dd>
 <dt id="exchangelib.attachments.FileAttachmentIO"><code class="flex name class">
 <span>class <span class="ident">FileAttachmentIO</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<span>(</span><span>attachment)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A BytesIO where the stream of data comes from the GetAttachment service.</p></div>
@@ -800,82 +798,99 @@ def fp(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FileAttachmentIO(BytesIO):
+<pre><code class="python">class FileAttachmentIO(io.RawIOBase):
     &#34;&#34;&#34;A BytesIO where the stream of data comes from the GetAttachment service.&#34;&#34;&#34;
 
-    def __init__(self, *args, **kwargs):
-        self._attachment = kwargs.pop(&#39;attachment&#39;)
-        super().__init__(*args, **kwargs)
+    def __init__(self, attachment):
+        self._attachment = attachment
+        self._overflow = None
+
+    def readable(self):
+        return True
+
+    @property
+    def closed(self):
+        return self._stream is None
+
+    def readinto(self, b):
+        buf_size = len(b)  # We can&#39;t return more than l bytes
+        try:
+            chunk = self._overflow or next(self._stream)
+        except StopIteration:
+            return 0
+        else:
+            output, self._overflow = chunk[:buf_size], chunk[buf_size:]
+            b[:len(output)] = output
+            return len(output)
 
     def __enter__(self):
         self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
             attachment_id=self._attachment.attachment_id
         )
-        self._overflow = b&#39;&#39;
-        return self
+        self._overflow = None
+        return io.BufferedReader(self, buffer_size=io.DEFAULT_BUFFER_SIZE)
 
     def __exit__(self, *args, **kwargs):
         self._stream = None
-        self._overflow = None
-
-    def read(self, size=-1):
-        if size &lt; 0:
-            # Return everything
-            return b&#39;&#39;.join(self._stream)
-        # Return only &#39;size&#39; bytes
-        buffer = [self._overflow]
-        read_size = len(self._overflow)
-        while True:
-            if read_size &gt;= size:
-                break
-            try:
-                next_chunk = next(self._stream)
-            except StopIteration:
-                break
-            buffer.append(next_chunk)
-            read_size += len(next_chunk)
-        res = b&#39;&#39;.join(buffer)
-        self._overflow = res[size:]
-        return res[:size]</code></pre>
+        self._overflow = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>_io.BytesIO</li>
-<li>_io._BufferedIOBase</li>
+<li>io.RawIOBase</li>
+<li>_io._RawIOBase</li>
+<li>io.IOBase</li>
 <li>_io._IOBase</li>
 </ul>
-<h3>Methods</h3>
+<h3>Instance variables</h3>
 <dl>
-<dt id="exchangelib.attachments.FileAttachmentIO.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self, size=-1)</span>
-</code></dt>
+<dt id="exchangelib.attachments.FileAttachmentIO.closed"><code class="name">var <span class="ident">closed</span></code></dt>
 <dd>
-<div class="desc"><p>Read at most size bytes, returned as a bytes object.</p>
-<p>If the size argument is negative, read until EOF is reached.
-Return an empty bytes object at EOF.</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read(self, size=-1):
-    if size &lt; 0:
-        # Return everything
-        return b&#39;&#39;.join(self._stream)
-    # Return only &#39;size&#39; bytes
-    buffer = [self._overflow]
-    read_size = len(self._overflow)
-    while True:
-        if read_size &gt;= size:
-            break
-        try:
-            next_chunk = next(self._stream)
-        except StopIteration:
-            break
-        buffer.append(next_chunk)
-        read_size += len(next_chunk)
-    res = b&#39;&#39;.join(buffer)
-    self._overflow = res[size:]
-    return res[:size]</code></pre>
+<pre><code class="python">@property
+def closed(self):
+    return self._stream is None</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.attachments.FileAttachmentIO.readable"><code class="name flex">
+<span>def <span class="ident">readable</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return whether object was opened for reading.</p>
+<p>If False, read() will raise OSError.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def readable(self):
+    return True</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.attachments.FileAttachmentIO.readinto"><code class="name flex">
+<span>def <span class="ident">readinto</span></span>(<span>self, b)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def readinto(self, b):
+    buf_size = len(b)  # We can&#39;t return more than l bytes
+    try:
+        chunk = self._overflow or next(self._stream)
+    except StopIteration:
+        return 0
+    else:
+        output, self._overflow = chunk[:buf_size], chunk[buf_size:]
+        b[:len(output)] = output
+        return len(output)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1077,7 +1092,9 @@ def item(self):
 <li>
 <h4><code><a title="exchangelib.attachments.FileAttachmentIO" href="#exchangelib.attachments.FileAttachmentIO">FileAttachmentIO</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.attachments.FileAttachmentIO.read" href="#exchangelib.attachments.FileAttachmentIO.read">read</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachmentIO.closed" href="#exchangelib.attachments.FileAttachmentIO.closed">closed</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachmentIO.readable" href="#exchangelib.attachments.FileAttachmentIO.readable">readable</a></code></li>
+<li><code><a title="exchangelib.attachments.FileAttachmentIO.readinto" href="#exchangelib.attachments.FileAttachmentIO.readinto">readinto</a></code></li>
 </ul>
 </li>
 <li>

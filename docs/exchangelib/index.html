@@ -46,7 +46,7 @@ from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;4.5.1&#39;
+__version__ = &#39;4.5.2&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -3646,6 +3646,7 @@ we use folder.account.</p></div>
     ELEMENT_NAME = &#39;CalendarItem&#39;
 
     uid = TextField(field_uri=&#39;calendar:UID&#39;, is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri=&#39;calendar:RecurrenceId&#39;, is_read_only=True)
     start = DateOrDateTimeField(field_uri=&#39;calendar:Start&#39;, is_required=True)
     end = DateOrDateTimeField(field_uri=&#39;calendar:End&#39;, is_required=True)
     original_start = DateTimeField(field_uri=&#39;calendar:OriginalStart&#39;, is_read_only=True)
@@ -4038,6 +4039,10 @@ def timezone_fields(cls):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.CalendarItem.recurrence"><code class="name">var <span class="ident">recurrence</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.CalendarItem.recurrence_id"><code class="name">var <span class="ident">recurrence_id</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -7580,25 +7585,22 @@ def root(self):
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
-    def _get_default_item_traversal_depth(self):
-        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        unique_depths = {f.DEFAULT_ITEM_TRAVERSAL_DEPTH for f in self.folders}
+    def _get_default_traversal_depth(self, traversal_attr):
+        unique_depths = {getattr(f, traversal_attr) for f in self.folders}
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            &#39;Folders in this collection do not have a common DEFAULT_ITEM_TRAVERSAL_DEPTH value. You need to &#39;
-            &#39;define an explicit traversal depth with QuerySet.depth() (values: %s)&#39; % unique_depths
+            &#39;Folders in this collection do not have a common %s value. You need to define an explicit traversal depth&#39;
+            &#39;with QuerySet.depth() (values: %s)&#39; % (traversal_attr, unique_depths)
         )
+
+    def _get_default_item_traversal_depth(self):
+        # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
+        return self._get_default_traversal_depth(&#39;DEFAULT_ITEM_TRAVERSAL_DEPTH&#39;)
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        unique_depths = {f.DEFAULT_FOLDER_TRAVERSAL_DEPTH for f in self.folders}
-        if len(unique_depths) == 1:
-            return unique_depths.pop()
-        raise ValueError(
-            &#39;Folders in this collection do not have a common DEFAULT_FOLDER_TRAVERSAL_DEPTH value. You need to &#39;
-            &#39;define an explicit traversal depth with FolderQuerySet.depth() (values: %s)&#39; % unique_depths
-        )
+        return self._get_default_traversal_depth(&#39;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#39;)
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
@@ -9054,7 +9056,7 @@ we use folder.account.</p></div>
                     message_disposition=SEND_AND_SAVE_COPY,
                     send_meeting_invitations=send_meeting_invitations
                 )
-                if res:
+                if res is not True:
                     raise ValueError(&#39;Unexpected response in send-only mode&#39;)
 
     @require_id
@@ -9396,7 +9398,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
                 message_disposition=SEND_AND_SAVE_COPY,
                 send_meeting_invitations=send_meeting_invitations
             )
-            if res:
+            if res is not True:
                 raise ValueError(&#39;Unexpected response in send-only mode&#39;)</code></pre>
 </details>
 </dd>
@@ -12623,6 +12625,7 @@ def fullname(self):
 <li><code><a title="exchangelib.CalendarItem.organizer" href="#exchangelib.CalendarItem.organizer">organizer</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.original_start" href="#exchangelib.CalendarItem.original_start">original_start</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.recurrence" href="#exchangelib.CalendarItem.recurrence">recurrence</a></code></li>
+<li><code><a title="exchangelib.CalendarItem.recurrence_id" href="#exchangelib.CalendarItem.recurrence_id">recurrence_id</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.recurring_master" href="#exchangelib.CalendarItem.recurring_master">recurring_master</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.required_attendees" href="#exchangelib.CalendarItem.required_attendees">required_attendees</a></code></li>
 <li><code><a title="exchangelib.CalendarItem.resources" href="#exchangelib.CalendarItem.resources">resources</a></code></li>
