@@ -228,6 +228,10 @@ class FileAttachmentIO(io.RawIOBase):
     def readable(self):
         return True
 
+    @property
+    def closed(self):
+        return self._stream is None
+
     def readinto(self, b):
         buf_size = len(b)  # We can't return more than l bytes
         try:
