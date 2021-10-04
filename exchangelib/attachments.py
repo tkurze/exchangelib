@@ -223,18 +223,19 @@ class FileAttachmentIO(io.RawIOBase):
 
     def __init__(self, attachment):
         self._attachment = attachment
+        self._overflow = None
 
     def readable(self):
         return True
 
     def readinto(self, b):
-        l = len(b)  # We can't return more than l bytes
+        buf_size = len(b)  # We can't return more than l bytes
         try:
             chunk = self._overflow or next(self._stream)
         except StopIteration:
             return 0
         else:
-            output, self._overflow = chunk[:l], chunk[l:]
+            output, self._overflow = chunk[:buf_size], chunk[buf_size:]
             b[:len(output)] = output
             return len(output)
 

@@ -154,9 +154,10 @@ class BulkMethodTest(BaseItemTest):
     xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
     <h:ServerVersionInfo
-    xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types" xmlns="http://schemas.microsoft.com/exchange/services/2006/types"
+    xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
+    xmlns="http://schemas.microsoft.com/exchange/services/2006/types"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" MajorVersion="15" MinorVersion="0" MajorBuildNumber="1473" MinorBuildNumber="3" Version="V2_23"/>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" MajorVersion="15" MinorVersion="0" Version="V2_23"/>
   </s:Header>
   <s:Body
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
