@@ -524,6 +524,7 @@ number of folders, and you already know where to go.
 ```python
 some_folder // 'sub_folder' // 'even_deeper' // 'leaf'
 some_folder.parts  # returns some_folder and all parents, as Folder instances
+some_folder.absolute  # Returns the full path as a string
 ```
 
 tree() returns a string representation of the tree structure at a given level
