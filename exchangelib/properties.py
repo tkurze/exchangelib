@@ -717,7 +717,7 @@ class FreeBusyViewOptions(EWSElement):
 
     time_window = EWSElementField(value_cls=TimeWindow, is_required=True)
     # Interval value is in minutes
-    merged_free_busy_interval = IntegerField(field_uri='MergedFreeBusyIntervalInMinutes', min=6, max=1440, default=30,
+    merged_free_busy_interval = IntegerField(field_uri='MergedFreeBusyIntervalInMinutes', min=5, max=1440, default=30,
                                              is_required=True)
     requested_view = ChoiceField(field_uri='RequestedView', choices={Choice(c) for c in REQUESTED_VIEWS},
                                  is_required=True)  # Choice('None') is also valid, but only for responses
