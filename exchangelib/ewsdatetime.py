@@ -281,7 +281,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
                 'dateutil': cls.from_dateutil,
                 'pytz': cls.from_pytz,
                 'zoneinfo': cls.from_zoneinfo,
-                'pytz_deprecation_shim': lambda z: cls.from_zoneinfo(z.unwrap_shim())
+                'pytz_deprecation_shim': lambda z: cls.from_timezone(z.unwrap_shim())
             }[tz_module](tz)
         except KeyError:
             raise TypeError('Unsupported tzinfo type: %r' % tz)
