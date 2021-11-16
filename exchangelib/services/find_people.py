@@ -42,9 +42,8 @@ class FindPeople(EWSAccountService):
         return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
-            expected_message_count=1,  # We can only query one folder, so there will only be one element in response
+            folders=[folder],  # We can only query one folder, so there will only be one element in response
             **dict(
-                folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -67,8 +66,12 @@ class FindPeople(EWSAccountService):
                 continue
             yield Persona.from_xml(elem, account=self.account)
 
-    def get_payload(self, folder, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
+    def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
                     offset=0):
+        folders = list(folders)
+        if len(folders) != 1:
+            raise ValueError('%r can only query one folder' % self.SERVICE_NAME)
+        folder = folders[0]
         findpeople = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))
         personashape = create_shape_element(
             tag='m:PersonaShape', shape=shape, additional_fields=additional_fields, version=self.account.version

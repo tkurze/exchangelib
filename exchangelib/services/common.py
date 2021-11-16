@@ -664,20 +664,27 @@ class EWSService(metaclass=abc.ABCMeta):
             log.warning('Inconsistent next_offset values: %r. Using lowest value', next_offsets)
         return min(next_offsets)
 
-    def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
+    def _paged_call(self, payload_func, max_items, folders, **kwargs):
         """Call a service that supports paging requests. Return a generator over all response items. Keeps track of
         all paging-related counters.
         """
-        paging_infos = [dict(item_count=0, next_offset=None) for _ in range(expected_message_count)]
+        paging_infos = {f: dict(item_count=0, next_offset=None) for f in folders}
         common_next_offset = kwargs['offset']
         total_item_count = 0
         while True:
+            if not paging_infos:
+                # Paging is done for all folders
+                break
             log.debug('Getting page at offset %s (max_items %s)', common_next_offset, max_items)
             kwargs['offset'] = common_next_offset
-            pages = self._get_pages(payload_func, kwargs, expected_message_count)
-            for (page, next_offset), paging_info in zip(pages, paging_infos):
+            kwargs['folders'] = paging_infos.keys()  # Only request the paging of the remaining folders.
+            pages = self._get_pages(payload_func, kwargs, len(paging_infos))
+            for (page, next_offset), (f, paging_info) in zip(pages, list(paging_infos.items())):
                 paging_info['next_offset'] = next_offset
                 if isinstance(page, Exception):
+                    # Assume this folder no longer works. Don't attempt to page it again.
+                    log.debug('Exception occurred for folder %s. Removing.', f)
+                    del paging_infos[f]
                     yield page
                     continue
                 if page is not None:
@@ -690,8 +697,11 @@ class EWSService(metaclass=abc.ABCMeta):
                         log.debug("'max_items' count reached (inner)")
                         break
                 if not paging_info['next_offset']:
-                    # Paging is done for this message
+                    # Paging is done for this folder. Don't attempt to page it again.
+                    log.debug('Paging has completed for folder %s. Removing.', f)
+                    del paging_infos[f]
                     continue
+                log.debug('Folder %s still has items', f, paging_info)
                 # Check sanity of paging offsets, but don't fail. When we are iterating huge collections that take a
                 # long time to complete, the collection may change while we are iterating. This can affect the
                 # 'next_offset' value and make it inconsistent with the number of already collected items.
@@ -705,9 +715,9 @@ class EWSService(metaclass=abc.ABCMeta):
             if max_items and total_item_count >= max_items:
                 log.debug("'max_items' count reached (outer)")
                 break
-            common_next_offset = self._get_next_offset(paging_infos)
+            common_next_offset = self._get_next_offset(paging_infos.values())
             if common_next_offset is None:
-                # Paging is done for all messages
+                # Paging is done for all folders
                 break
 
     @staticmethod

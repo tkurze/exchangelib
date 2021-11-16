@@ -40,9 +40,8 @@ class FindItem(EWSAccountService):
         return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
-            expected_message_count=len(folders),
+            folders=folders,
             **dict(
-                folders=folders,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,

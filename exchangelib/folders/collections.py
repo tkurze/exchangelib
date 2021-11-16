@@ -259,7 +259,7 @@ class FolderCollection(SearchableMixIn):
             restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=[folder],
+                folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
