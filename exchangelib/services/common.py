@@ -723,7 +723,6 @@ class EWSService(metaclass=abc.ABCMeta):
     @staticmethod
     def _get_paging_values(elem):
         """Read paging information from the paging container element."""
-        #  <m:RootFolder IndexedPagingOffset="300" TotalItemsInView="300" IncludesLastItemInRange="true">
         offset_attr = elem.get('IndexedPagingOffset')
         next_offset = None if offset_attr is None else int(offset_attr)
         item_count = int(elem.get('TotalItemsInView'))
