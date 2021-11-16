@@ -43,6 +43,7 @@ class FolderQuerySet:
         from .base import Folder
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
+        all_fields.update(Folder.attribute_fields())
         only_fields = []
         for arg in args:
             for field_path in all_fields:
