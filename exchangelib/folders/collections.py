@@ -186,8 +186,8 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         log.debug(
             'Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)',
-            self.folders,
             self.account,
+            self.folders,
             shape,
             depth,
             additional_fields,
