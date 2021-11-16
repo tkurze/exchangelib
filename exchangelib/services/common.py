@@ -713,16 +713,26 @@ class EWSService(metaclass=abc.ABCMeta):
     @staticmethod
     def _get_paging_values(elem):
         """Read paging information from the paging container element."""
-        is_last_page = elem.get('IncludesLastItemInRange').lower() in ('true', '0')
-        offset = elem.get('IndexedPagingOffset')
-        if offset is None and not is_last_page:
-            log.debug("Not last page in range, but Exchange didn't send a page offset. Assuming first page")
-            offset = '1'
-        next_offset = None if is_last_page else int(offset)
+        #  <m:RootFolder IndexedPagingOffset="300" TotalItemsInView="300" IncludesLastItemInRange="true">
+        offset_attr = elem.get('IndexedPagingOffset')
+        next_offset = None if offset_attr is None else int(offset_attr)
         item_count = int(elem.get('TotalItemsInView'))
-        if not item_count and next_offset is not None:
-            raise ValueError("Expected empty 'next_offset' when 'item_count' is 0")
-        log.debug('Got page with next offset %s (last_page %s)', next_offset, is_last_page)
+        is_last_page = elem.get('IncludesLastItemInRange').lower() in ('true', '0')
+        log.debug('Got page with offset %s, item_count %s, last_page %s', next_offset, item_count, is_last_page)
+        # Clean up contradictory paging values
+        if next_offset is None and not is_last_page:
+            log.debug("Not last page in range, but server didn't send a page offset. Assuming first page")
+            next_offset = 1
+        if next_offset is not None and is_last_page:
+            if next_offset != item_count:
+                log.debug("Last page in range, but we still got an offset. Assuming paging has completed")
+            next_offset = None
+        if not item_count and not is_last_page:
+            log.debug("Not last page in range, but also no items left. Assuming paging has completed")
+            next_offset = None
+        if item_count and next_offset == 0:
+            log.debug("Non-zero offset, but also no items left. Assuming paging has completed")
+            next_offset = None
         return item_count, next_offset
 
     def _get_page(self, message):
