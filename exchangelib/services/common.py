@@ -701,7 +701,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     log.debug('Paging has completed for folder %s. Removing.', f)
                     del paging_infos[f]
                     continue
-                log.debug('Folder %s still has items', f, paging_info)
+                log.debug('Folder %s still has items', f)
                 # Check sanity of paging offsets, but don't fail. When we are iterating huge collections that take a
                 # long time to complete, the collection may change while we are iterating. This can affect the
                 # 'next_offset' value and make it inconsistent with the number of already collected items.
