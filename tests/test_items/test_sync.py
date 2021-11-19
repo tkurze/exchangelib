@@ -251,7 +251,7 @@ class SyncTest(BaseItemTest):
             </m:SendNotification>
         </soap11:Body>
     </soap11:Envelope>'''
-        ws = SendNotification(protocol=self.account.protocol)
+        ws = SendNotification(protocol=None)
         self.assertListEqual(
             list(ws.parse(xml)),
             [Notification(subscription_id='XXXXX=', previous_watermark='AAAAA=', more_events=False,

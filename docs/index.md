@@ -1656,11 +1656,9 @@ A description of how to subscribe to notifications and receive notifications
 using EWS is available at
 [https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/notification-subscriptions-mailbox-events-and-ews-in-exchange](https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/notification-subscriptions-mailbox-events-and-ews-in-exchange):
 
+The following shows how to synchronize folders and items:
 ```python
 from exchangelib import Account
-from exchangelib.properties import CopiedEvent, CreatedEvent, DeletedEvent, \
-    ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent, FreeBusyChangedEvent
-form exchangelib.services import SendNotification
 
 a = Account(...)
 
@@ -1670,7 +1668,8 @@ for change_type, item in a.inbox.sync_hierarchy():
     # SyncFolderHierarchy.CHANGE_TYPES
     pass
 # The next time you call a.inbox.sync_hierarchy(), you will only get folder
-# changes since the last .sync_hierarchy() call.
+# changes since the last .sync_hierarchy() call. The sync status is stored in
+# a.inbox.folder_sync_state.
 
 # Synchronize your local items within a.inbox
 for change_type, item in a.inbox.sync_items():
@@ -1678,34 +1677,57 @@ for change_type, item in a.inbox.sync_items():
     # SyncFolderItems.CHANGE_TYPES
     pass
 # The next time you call a.inbox.sync_items(), you will only get item changes
-# since the last .sync_items() call.
+# since the last .sync_items() call. The sync status is stored in 
+# a.inbox.item_sync_state.
+```
 
-# Create a pull subscription that can be used to pull events from the server
+Here's how to create a pull subscription that can be used to pull events from the server:
+```python
 subscription_id, watermark = a.inbox.subscribe_to_pull()
+```
 
-# Create a push subscription. The server will regularly send an HTTP POST
-# request to the callback URL to deliver changes or a status message.
+Here's how to create a push subscription. The server will regularly send an HTTP POST
+request to the callback URL to deliver changes or a status message. There is also support
+for  parsing the POST data that the Exchange server sends to the callback URL.
+```python
 subscription_id, watermark = a.inbox.subscribe_to_push(
   callback_url='https://my_app.example.com/callback_url'
 )
-# When the server sends a push notification, the POST data contains a
-# 'SendNotification' XML document. You can use exchangelib in the callback URL
-# implementation to parse this data:
-ws = SendNotification(protocol=a.protocol)
-for notification in ws.parse(response.data):
-    # ws.parse() returns Notification objects
-    pass
+```
 
-# Create a streaming subscription that can be used to stream events from the
-# server.
+When the server sends a push notification, the POST data contains a
+'SendNotification' XML document. You can use exchangelib in the callback URL
+implementation to parse this data. Here's a short example of a Flask app that
+handles these documents:
+```python
+from exchangelib.services import SendNotification
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/callback_url', methods=['POST'])
+def upload_file():
+    ws = SendNotification(protocol=None)
+    for notification in ws.parse(request.data):
+        # ws.parse() returns Notification objects
+        pass
+```
+
+Here's how to create a streaming subscription that can be used to stream events from the
+server.
+```python
 subscription_id = a.inbox.subscribe_to_streaming()
+```
 
-# Cancel the subscription. Does not apply to push subscriptions that cancel
-# automatically after a certain amount of failed attempts.
+Cancel the subscription when you're done synchronizing. This is not supported for push
+subscriptions. They cancel automatically after a certain amount of failed attempts.
+```python
 a.inbox.unsubscribe(subscription_id)
+```
 
-# You can also use one of the three context managers that handle unsubscription
-# automatically:
+When creating subscriptions, you can also use one of the three context managers
+that handle unsubscription automatically:
+```python
 with a.inbox.pull_subscription() as (subscription_id, watermark):
   pass
 
@@ -1723,6 +1745,9 @@ contain events in the `events` attribute and a new watermark in the
 `watermark` attribute.
 
 ```python
+from exchangelib.properties import CopiedEvent, CreatedEvent, DeletedEvent, \
+    ModifiedEvent
+
 for notification in a.inbox.get_events(subscription_id, watermark):
   for event in notification.events:
     if isinstance(event, (CreatedEvent, ModifiedEvent)):
@@ -1747,6 +1772,9 @@ The default configuration is to only have 1 connection. See the documentation
 on `Configuration.max_connections` on how to increase the connection count.
 
 ```python
+from exchangelib.properties import MovedEvent, NewMailEvent, StatusEvent, \
+    FreeBusyChangedEvent
+
 for notification in a.inbox.get_streaming_events(
         subscription_id, connection_timeout=1
 ):
