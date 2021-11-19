@@ -692,20 +692,27 @@ class EWSService(metaclass=abc.ABCMeta):
             log.warning(&#39;Inconsistent next_offset values: %r. Using lowest value&#39;, next_offsets)
         return min(next_offsets)
 
-    def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
+    def _paged_call(self, payload_func, max_items, folders, **kwargs):
         &#34;&#34;&#34;Call a service that supports paging requests. Return a generator over all response items. Keeps track of
         all paging-related counters.
         &#34;&#34;&#34;
-        paging_infos = [dict(item_count=0, next_offset=None) for _ in range(expected_message_count)]
+        paging_infos = {f: dict(item_count=0, next_offset=None) for f in folders}
         common_next_offset = kwargs[&#39;offset&#39;]
         total_item_count = 0
         while True:
+            if not paging_infos:
+                # Paging is done for all folders
+                break
             log.debug(&#39;Getting page at offset %s (max_items %s)&#39;, common_next_offset, max_items)
             kwargs[&#39;offset&#39;] = common_next_offset
-            pages = self._get_pages(payload_func, kwargs, expected_message_count)
-            for (page, next_offset), paging_info in zip(pages, paging_infos):
+            kwargs[&#39;folders&#39;] = paging_infos.keys()  # Only request the paging of the remaining folders.
+            pages = self._get_pages(payload_func, kwargs, len(paging_infos))
+            for (page, next_offset), (f, paging_info) in zip(pages, list(paging_infos.items())):
                 paging_info[&#39;next_offset&#39;] = next_offset
                 if isinstance(page, Exception):
+                    # Assume this folder no longer works. Don&#39;t attempt to page it again.
+                    log.debug(&#39;Exception occurred for folder %s. Removing.&#39;, f)
+                    del paging_infos[f]
                     yield page
                     continue
                 if page is not None:
@@ -718,8 +725,11 @@ class EWSService(metaclass=abc.ABCMeta):
                         log.debug(&#34;&#39;max_items&#39; count reached (inner)&#34;)
                         break
                 if not paging_info[&#39;next_offset&#39;]:
-                    # Paging is done for this message
+                    # Paging is done for this folder. Don&#39;t attempt to page it again.
+                    log.debug(&#39;Paging has completed for folder %s. Removing.&#39;, f)
+                    del paging_infos[f]
                     continue
+                log.debug(&#39;Folder %s still has items&#39;, f)
                 # Check sanity of paging offsets, but don&#39;t fail. When we are iterating huge collections that take a
                 # long time to complete, the collection may change while we are iterating. This can affect the
                 # &#39;next_offset&#39; value and make it inconsistent with the number of already collected items.
@@ -733,24 +743,33 @@ class EWSService(metaclass=abc.ABCMeta):
             if max_items and total_item_count &gt;= max_items:
                 log.debug(&#34;&#39;max_items&#39; count reached (outer)&#34;)
                 break
-            common_next_offset = self._get_next_offset(paging_infos)
+            common_next_offset = self._get_next_offset(paging_infos.values())
             if common_next_offset is None:
-                # Paging is done for all messages
+                # Paging is done for all folders
                 break
 
     @staticmethod
     def _get_paging_values(elem):
         &#34;&#34;&#34;Read paging information from the paging container element.&#34;&#34;&#34;
-        is_last_page = elem.get(&#39;IncludesLastItemInRange&#39;).lower() in (&#39;true&#39;, &#39;0&#39;)
-        offset = elem.get(&#39;IndexedPagingOffset&#39;)
-        if offset is None and not is_last_page:
-            log.debug(&#34;Not last page in range, but Exchange didn&#39;t send a page offset. Assuming first page&#34;)
-            offset = &#39;1&#39;
-        next_offset = None if is_last_page else int(offset)
+        offset_attr = elem.get(&#39;IndexedPagingOffset&#39;)
+        next_offset = None if offset_attr is None else int(offset_attr)
         item_count = int(elem.get(&#39;TotalItemsInView&#39;))
-        if not item_count and next_offset is not None:
-            raise ValueError(&#34;Expected empty &#39;next_offset&#39; when &#39;item_count&#39; is 0&#34;)
-        log.debug(&#39;Got page with next offset %s (last_page %s)&#39;, next_offset, is_last_page)
+        is_last_page = elem.get(&#39;IncludesLastItemInRange&#39;).lower() in (&#39;true&#39;, &#39;0&#39;)
+        log.debug(&#39;Got page with offset %s, item_count %s, last_page %s&#39;, next_offset, item_count, is_last_page)
+        # Clean up contradictory paging values
+        if next_offset is None and not is_last_page:
+            log.debug(&#34;Not last page in range, but server didn&#39;t send a page offset. Assuming first page&#34;)
+            next_offset = 1
+        if next_offset is not None and is_last_page:
+            if next_offset != item_count:
+                log.debug(&#34;Last page in range, but we still got an offset. Assuming paging has completed&#34;)
+            next_offset = None
+        if not item_count and not is_last_page:
+            log.debug(&#34;Not last page in range, but also no items left. Assuming paging has completed&#34;)
+            next_offset = None
+        if item_count and next_offset == 0:
+            log.debug(&#34;Non-zero offset, but also no items left. Assuming paging has completed&#34;)
+            next_offset = None
         return item_count, next_offset
 
     def _get_page(self, message):
@@ -1762,20 +1781,27 @@ def parse_folder_elem(elem, folder, account):
             log.warning(&#39;Inconsistent next_offset values: %r. Using lowest value&#39;, next_offsets)
         return min(next_offsets)
 
-    def _paged_call(self, payload_func, max_items, expected_message_count, **kwargs):
+    def _paged_call(self, payload_func, max_items, folders, **kwargs):
         &#34;&#34;&#34;Call a service that supports paging requests. Return a generator over all response items. Keeps track of
         all paging-related counters.
         &#34;&#34;&#34;
-        paging_infos = [dict(item_count=0, next_offset=None) for _ in range(expected_message_count)]
+        paging_infos = {f: dict(item_count=0, next_offset=None) for f in folders}
         common_next_offset = kwargs[&#39;offset&#39;]
         total_item_count = 0
         while True:
+            if not paging_infos:
+                # Paging is done for all folders
+                break
             log.debug(&#39;Getting page at offset %s (max_items %s)&#39;, common_next_offset, max_items)
             kwargs[&#39;offset&#39;] = common_next_offset
-            pages = self._get_pages(payload_func, kwargs, expected_message_count)
-            for (page, next_offset), paging_info in zip(pages, paging_infos):
+            kwargs[&#39;folders&#39;] = paging_infos.keys()  # Only request the paging of the remaining folders.
+            pages = self._get_pages(payload_func, kwargs, len(paging_infos))
+            for (page, next_offset), (f, paging_info) in zip(pages, list(paging_infos.items())):
                 paging_info[&#39;next_offset&#39;] = next_offset
                 if isinstance(page, Exception):
+                    # Assume this folder no longer works. Don&#39;t attempt to page it again.
+                    log.debug(&#39;Exception occurred for folder %s. Removing.&#39;, f)
+                    del paging_infos[f]
                     yield page
                     continue
                 if page is not None:
@@ -1788,8 +1814,11 @@ def parse_folder_elem(elem, folder, account):
                         log.debug(&#34;&#39;max_items&#39; count reached (inner)&#34;)
                         break
                 if not paging_info[&#39;next_offset&#39;]:
-                    # Paging is done for this message
+                    # Paging is done for this folder. Don&#39;t attempt to page it again.
+                    log.debug(&#39;Paging has completed for folder %s. Removing.&#39;, f)
+                    del paging_infos[f]
                     continue
+                log.debug(&#39;Folder %s still has items&#39;, f)
                 # Check sanity of paging offsets, but don&#39;t fail. When we are iterating huge collections that take a
                 # long time to complete, the collection may change while we are iterating. This can affect the
                 # &#39;next_offset&#39; value and make it inconsistent with the number of already collected items.
@@ -1803,24 +1832,33 @@ def parse_folder_elem(elem, folder, account):
             if max_items and total_item_count &gt;= max_items:
                 log.debug(&#34;&#39;max_items&#39; count reached (outer)&#34;)
                 break
-            common_next_offset = self._get_next_offset(paging_infos)
+            common_next_offset = self._get_next_offset(paging_infos.values())
             if common_next_offset is None:
-                # Paging is done for all messages
+                # Paging is done for all folders
                 break
 
     @staticmethod
     def _get_paging_values(elem):
         &#34;&#34;&#34;Read paging information from the paging container element.&#34;&#34;&#34;
-        is_last_page = elem.get(&#39;IncludesLastItemInRange&#39;).lower() in (&#39;true&#39;, &#39;0&#39;)
-        offset = elem.get(&#39;IndexedPagingOffset&#39;)
-        if offset is None and not is_last_page:
-            log.debug(&#34;Not last page in range, but Exchange didn&#39;t send a page offset. Assuming first page&#34;)
-            offset = &#39;1&#39;
-        next_offset = None if is_last_page else int(offset)
+        offset_attr = elem.get(&#39;IndexedPagingOffset&#39;)
+        next_offset = None if offset_attr is None else int(offset_attr)
         item_count = int(elem.get(&#39;TotalItemsInView&#39;))
-        if not item_count and next_offset is not None:
-            raise ValueError(&#34;Expected empty &#39;next_offset&#39; when &#39;item_count&#39; is 0&#34;)
-        log.debug(&#39;Got page with next offset %s (last_page %s)&#39;, next_offset, is_last_page)
+        is_last_page = elem.get(&#39;IncludesLastItemInRange&#39;).lower() in (&#39;true&#39;, &#39;0&#39;)
+        log.debug(&#39;Got page with offset %s, item_count %s, last_page %s&#39;, next_offset, item_count, is_last_page)
+        # Clean up contradictory paging values
+        if next_offset is None and not is_last_page:
+            log.debug(&#34;Not last page in range, but server didn&#39;t send a page offset. Assuming first page&#34;)
+            next_offset = 1
+        if next_offset is not None and is_last_page:
+            if next_offset != item_count:
+                log.debug(&#34;Last page in range, but we still got an offset. Assuming paging has completed&#34;)
+            next_offset = None
+        if not item_count and not is_last_page:
+            log.debug(&#34;Not last page in range, but also no items left. Assuming paging has completed&#34;)
+            next_offset = None
+        if item_count and next_offset == 0:
+            log.debug(&#34;Non-zero offset, but also no items left. Assuming paging has completed&#34;)
+            next_offset = None
         return item_count, next_offset
 
     def _get_page(self, message):

@@ -46,7 +46,7 @@ from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;4.6.0&#39;
+__version__ = &#39;4.6.1&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -5577,6 +5577,11 @@ services.GetServerTimeZones.</p></div>
         return cls(tz.zone)
 
     @classmethod
+    def from_datetime(cls, tz):
+        &#34;&#34;&#34;Convert from a standard library `datetime.timezone` instance.&#34;&#34;&#34;
+        return cls(tz.tzname(None))
+
+    @classmethod
     def from_dateutil(cls, tz):
         # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
         # don&#39;t contain enough information to reliably match them with a CLDR timezone.
@@ -5598,10 +5603,11 @@ services.GetServerTimeZones.</p></div>
             return {
                 cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
                 &#39;backports&#39;: cls.from_zoneinfo,
+                &#39;datetime&#39;: cls.from_datetime,
                 &#39;dateutil&#39;: cls.from_dateutil,
                 &#39;pytz&#39;: cls.from_pytz,
                 &#39;zoneinfo&#39;: cls.from_zoneinfo,
-                &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_zoneinfo(z.unwrap_shim())
+                &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_timezone(z.unwrap_shim())
             }[tz_module](tz)
         except KeyError:
             raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)
@@ -5666,6 +5672,21 @@ services.GetServerTimeZones.</p></div>
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="exchangelib.EWSTimeZone.from_datetime"><code class="name flex">
+<span>def <span class="ident">from_datetime</span></span>(<span>tz)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert from a standard library <code>datetime.timezone</code> instance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_datetime(cls, tz):
+    &#34;&#34;&#34;Convert from a standard library `datetime.timezone` instance.&#34;&#34;&#34;
+    return cls(tz.tzname(None))</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.EWSTimeZone.from_dateutil"><code class="name flex">
 <span>def <span class="ident">from_dateutil</span></span>(<span>tz)</span>
 </code></dt>
@@ -5740,10 +5761,11 @@ def from_timezone(cls, tz):
         return {
             cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
             &#39;backports&#39;: cls.from_zoneinfo,
+            &#39;datetime&#39;: cls.from_datetime,
             &#39;dateutil&#39;: cls.from_dateutil,
             &#39;pytz&#39;: cls.from_pytz,
             &#39;zoneinfo&#39;: cls.from_zoneinfo,
-            &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_zoneinfo(z.unwrap_shim())
+            &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_timezone(z.unwrap_shim())
         }[tz_module](tz)
     except KeyError:
         raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)</code></pre>
@@ -7481,8 +7503,8 @@ def root(self):
             query_string = None
         log.debug(
             &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-            self.folders,
             self.account,
+            self.folders,
             shape,
             depth,
             additional_fields,
@@ -7554,7 +7576,7 @@ def root(self):
             restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=[folder],
+                folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -8054,8 +8076,8 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
         query_string = None
     log.debug(
         &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-        self.folders,
         self.account,
+        self.folders,
         shape,
         depth,
         additional_fields,
@@ -8139,7 +8161,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
         restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         query_string = None
     yield from FindPeople(account=self.account, chunk_size=page_size).call(
-            folder=[folder],
+            folder=folder,
             additional_fields=additional_fields,
             restriction=restriction,
             order_fields=order_fields,
@@ -12765,6 +12787,7 @@ def fullname(self):
 <ul class="two-column">
 <li><code><a title="exchangelib.EWSTimeZone.IANA_TO_MS_MAP" href="#exchangelib.EWSTimeZone.IANA_TO_MS_MAP">IANA_TO_MS_MAP</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.MS_TO_IANA_MAP" href="#exchangelib.EWSTimeZone.MS_TO_IANA_MAP">MS_TO_IANA_MAP</a></code></li>
+<li><code><a title="exchangelib.EWSTimeZone.from_datetime" href="#exchangelib.EWSTimeZone.from_datetime">from_datetime</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_dateutil" href="#exchangelib.EWSTimeZone.from_dateutil">from_dateutil</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_ms_id" href="#exchangelib.EWSTimeZone.from_ms_id">from_ms_id</a></code></li>
 <li><code><a title="exchangelib.EWSTimeZone.from_pytz" href="#exchangelib.EWSTimeZone.from_pytz">from_pytz</a></code></li>

@@ -4663,8 +4663,8 @@ def root(self):
             query_string = None
         log.debug(
             &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-            self.folders,
             self.account,
+            self.folders,
             shape,
             depth,
             additional_fields,
@@ -4736,7 +4736,7 @@ def root(self):
             restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=[folder],
+                folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -5236,8 +5236,8 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
         query_string = None
     log.debug(
         &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-        self.folders,
         self.account,
+        self.folders,
         shape,
         depth,
         additional_fields,
@@ -5321,7 +5321,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
         restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         query_string = None
     yield from FindPeople(account=self.account, chunk_size=page_size).call(
-            folder=[folder],
+            folder=folder,
             additional_fields=additional_fields,
             restriction=restriction,
             order_fields=order_fields,
@@ -5734,6 +5734,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         from .base import Folder
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
+        all_fields.update(Folder.attribute_fields())
         only_fields = []
         for arg in args:
             for field_path in all_fields:
@@ -5943,6 +5944,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
     from .base import Folder
     # Subfolders will always be of class Folder
     all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
+    all_fields.update(Folder.attribute_fields())
     only_fields = []
     for arg in args:
         for field_path in all_fields:

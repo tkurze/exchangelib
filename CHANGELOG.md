@@ -4,6 +4,11 @@ Change Log
 HEAD
 ----
 
+4.6.1
+-----
+
+- Support `tzlocal>=4.1`
+- Bug fixes for paging in multi-folder requests.
 
 4.6.0
 -----

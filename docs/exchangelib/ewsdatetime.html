@@ -279,6 +279,11 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         return cls(tz.zone)
 
     @classmethod
+    def from_datetime(cls, tz):
+        &#34;&#34;&#34;Convert from a standard library `datetime.timezone` instance.&#34;&#34;&#34;
+        return cls(tz.tzname(None))
+
+    @classmethod
     def from_dateutil(cls, tz):
         # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
         # don&#39;t contain enough information to reliably match them with a CLDR timezone.
@@ -300,10 +305,11 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
             return {
                 cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
                 &#39;backports&#39;: cls.from_zoneinfo,
+                &#39;datetime&#39;: cls.from_datetime,
                 &#39;dateutil&#39;: cls.from_dateutil,
                 &#39;pytz&#39;: cls.from_pytz,
                 &#39;zoneinfo&#39;: cls.from_zoneinfo,
-                &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_zoneinfo(z.unwrap_shim())
+                &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_timezone(z.unwrap_shim())
             }[tz_module](tz)
         except KeyError:
             raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)
@@ -920,6 +926,11 @@ services.GetServerTimeZones.</p></div>
         return cls(tz.zone)
 
     @classmethod
+    def from_datetime(cls, tz):
+        &#34;&#34;&#34;Convert from a standard library `datetime.timezone` instance.&#34;&#34;&#34;
+        return cls(tz.tzname(None))
+
+    @classmethod
     def from_dateutil(cls, tz):
         # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
         # don&#39;t contain enough information to reliably match them with a CLDR timezone.
@@ -941,10 +952,11 @@ services.GetServerTimeZones.</p></div>
             return {
                 cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
                 &#39;backports&#39;: cls.from_zoneinfo,
+                &#39;datetime&#39;: cls.from_datetime,
                 &#39;dateutil&#39;: cls.from_dateutil,
                 &#39;pytz&#39;: cls.from_pytz,
                 &#39;zoneinfo&#39;: cls.from_zoneinfo,
-                &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_zoneinfo(z.unwrap_shim())
+                &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_timezone(z.unwrap_shim())
             }[tz_module](tz)
         except KeyError:
             raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)
@@ -1009,6 +1021,21 @@ services.GetServerTimeZones.</p></div>
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="exchangelib.ewsdatetime.EWSTimeZone.from_datetime"><code class="name flex">
+<span>def <span class="ident">from_datetime</span></span>(<span>tz)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert from a standard library <code>datetime.timezone</code> instance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_datetime(cls, tz):
+    &#34;&#34;&#34;Convert from a standard library `datetime.timezone` instance.&#34;&#34;&#34;
+    return cls(tz.tzname(None))</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.ewsdatetime.EWSTimeZone.from_dateutil"><code class="name flex">
 <span>def <span class="ident">from_dateutil</span></span>(<span>tz)</span>
 </code></dt>
@@ -1083,10 +1110,11 @@ def from_timezone(cls, tz):
         return {
             cls.__module__.split(&#39;.&#39;)[0]: lambda z: z,
             &#39;backports&#39;: cls.from_zoneinfo,
+            &#39;datetime&#39;: cls.from_datetime,
             &#39;dateutil&#39;: cls.from_dateutil,
             &#39;pytz&#39;: cls.from_pytz,
             &#39;zoneinfo&#39;: cls.from_zoneinfo,
-            &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_zoneinfo(z.unwrap_shim())
+            &#39;pytz_deprecation_shim&#39;: lambda z: cls.from_timezone(z.unwrap_shim())
         }[tz_module](tz)
     except KeyError:
         raise TypeError(&#39;Unsupported tzinfo type: %r&#39; % tz)</code></pre>
@@ -1252,6 +1280,7 @@ def timezone(cls, location):
 <ul class="two-column">
 <li><code><a title="exchangelib.ewsdatetime.EWSTimeZone.IANA_TO_MS_MAP" href="#exchangelib.ewsdatetime.EWSTimeZone.IANA_TO_MS_MAP">IANA_TO_MS_MAP</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSTimeZone.MS_TO_IANA_MAP" href="#exchangelib.ewsdatetime.EWSTimeZone.MS_TO_IANA_MAP">MS_TO_IANA_MAP</a></code></li>
+<li><code><a title="exchangelib.ewsdatetime.EWSTimeZone.from_datetime" href="#exchangelib.ewsdatetime.EWSTimeZone.from_datetime">from_datetime</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSTimeZone.from_dateutil" href="#exchangelib.ewsdatetime.EWSTimeZone.from_dateutil">from_dateutil</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSTimeZone.from_ms_id" href="#exchangelib.ewsdatetime.EWSTimeZone.from_ms_id">from_ms_id</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSTimeZone.from_pytz" href="#exchangelib.ewsdatetime.EWSTimeZone.from_pytz">from_pytz</a></code></li>

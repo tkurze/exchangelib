@@ -214,8 +214,8 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         log.debug(
             &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-            self.folders,
             self.account,
+            self.folders,
             shape,
             depth,
             additional_fields,
@@ -287,7 +287,7 @@ class FolderCollection(SearchableMixIn):
             restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=[folder],
+                folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -698,8 +698,8 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         log.debug(
             &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-            self.folders,
             self.account,
+            self.folders,
             shape,
             depth,
             additional_fields,
@@ -771,7 +771,7 @@ class FolderCollection(SearchableMixIn):
             restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
             query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
-                folder=[folder],
+                folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
                 order_fields=order_fields,
@@ -1271,8 +1271,8 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
         query_string = None
     log.debug(
         &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
-        self.folders,
         self.account,
+        self.folders,
         shape,
         depth,
         additional_fields,
@@ -1356,7 +1356,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
         restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
         query_string = None
     yield from FindPeople(account=self.account, chunk_size=page_size).call(
-            folder=[folder],
+            folder=folder,
             additional_fields=additional_fields,
             restriction=restriction,
             order_fields=order_fields,
