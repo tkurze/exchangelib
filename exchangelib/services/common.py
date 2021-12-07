@@ -88,8 +88,6 @@ class EWSService(metaclass=abc.ABCMeta):
     supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
-    # Marks services that need affinity to the backend server
-    prefer_affinity = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
@@ -171,13 +169,7 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol.config.version = value
 
     def _extra_headers(self, session):
-        headers = {}
-        if self.prefer_affinity:
-            headers['X-PreferServerAffinity'] = 'True'
-        for cookie in session.cookies:
-            if cookie.name == 'X-BackEndCookie':
-                headers['X-BackEndOverrideCookie'] = cookie.value
-        return headers
+        return {}
 
     @property
     def _account_to_impersonate(self):
@@ -262,6 +254,9 @@ class EWSService(metaclass=abc.ABCMeta):
                 if self.streaming:
                     self.stop_streaming()
 
+    def _handle_response_cookies(self, session):
+        pass
+
     def _get_response(self, payload, api_version):
         """Send the actual HTTP request and get the response."""
         session = self.protocol.get_session()
@@ -283,6 +278,7 @@ class EWSService(metaclass=abc.ABCMeta):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
+        self._handle_response_cookies(session)
         if self.streaming:
             # We con only release the session when we have fully consumed the response. Save session and response
             # objects for later.
@@ -765,6 +761,8 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     """Base class for services that act on items concerning a single Mailbox on the server."""
 
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
 
     def __init__(self, *args, **kwargs):
         self.account = kwargs.pop('account')
@@ -779,11 +777,28 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.account.version = value
 
-    def _extra_headers(self, *args, **kwargs):
-        headers = super()._extra_headers(*args, **kwargs)
+    def _handle_response_cookies(self, session):
+        super()._handle_response_cookies(session=session)
+
+        # See self._extra_headers() for documentation on affinity
+        if self.prefer_affinity:
+            for cookie in session.cookies:
+                if cookie.name == 'X-BackEndOverrideCookie':
+                    self.account.affinity_cookie = cookie.value
+                    break
+
+    def _extra_headers(self, session):
+        headers = super()._extra_headers(session=session)
         # See
         # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
         headers['X-AnchorMailbox'] = self.account.primary_smtp_address
+
+        # See
+        # https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/how-to-maintain-affinity-between-group-of-subscriptions-and-mailbox-server
+        if self.prefer_affinity:
+            headers['X-PreferServerAffinity'] = 'True'
+            if self.account.affinity_cookie:
+                headers['X-BackEndOverrideCookie'] = self.account.affinity_cookie
         return headers
 
     @property

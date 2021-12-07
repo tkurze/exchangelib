@@ -128,6 +128,9 @@ class Account:
         # Other ways of identifying the account can be added later
         self.identity = Identity(primary_smtp_address=primary_smtp_address)
 
+        # For maintaining affinity in e.g. subscriptions
+        self.affinity_cookie = None
+
         # We may need to override the default server version on a per-account basis because Microsoft may report one
         # server version up-front but delegate account requests to an older backend server.
         self.version = self.protocol.version

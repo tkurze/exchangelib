@@ -56,6 +56,7 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
 
 class SubscribeToPull(Subscribe):
     subscription_request_elem_tag = 'm:PullSubscriptionRequest'
+    prefer_affinity = True
 
     def call(self, folders, event_types, watermark, timeout):
         yield from self._partial_call(
@@ -95,6 +96,7 @@ class SubscribeToPush(Subscribe):
 
 class SubscribeToStreaming(Subscribe):
     subscription_request_elem_tag = 'm:StreamingSubscriptionRequest'
+    prefer_affinity = True
 
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)

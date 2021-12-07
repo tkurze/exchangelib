@@ -5,6 +5,7 @@ HEAD
 ----
 - Fix filtering on array-type extended properties.
 - Exceptions in `GetStreamingEvents` responses are now raised.
+- Support affinity cookies for pull and streaming subscriptions.
 
 
 4.6.1

@@ -16,12 +16,15 @@ class SyncTest(BaseItemTest):
     ITEM_CLASS = Message
 
     def test_pull_subscribe(self):
+        self.account.affinity_cookie = None
         with self.account.inbox.pull_subscription() as (subscription_id, watermark):
             self.assertIsNotNone(subscription_id)
             self.assertIsNotNone(watermark)
         # Context manager already unsubscribed us
         with self.assertRaises(ErrorSubscriptionNotFound):
             self.account.inbox.unsubscribe(subscription_id)
+        # Test affinity cookie
+        self.assertIsNotNone(self.account.affinity_cookie)
 
     def test_push_subscribe(self):
         with self.account.inbox.push_subscription(
@@ -33,11 +36,14 @@ class SyncTest(BaseItemTest):
             self.account.inbox.unsubscribe(subscription_id)
 
     def test_streaming_subscribe(self):
+        self.account.affinity_cookie = None
         with self.account.inbox.streaming_subscription() as subscription_id:
             self.assertIsNotNone(subscription_id)
         # Context manager already unsubscribed us
         with self.assertRaises(ErrorSubscriptionNotFound):
             self.account.inbox.unsubscribe(subscription_id)
+        # Test affinity cookie
+        self.assertIsNotNone(self.account.affinity_cookie)
 
     def test_sync_folder_hierarchy(self):
         test_folder = self.get_test_folder().save()
