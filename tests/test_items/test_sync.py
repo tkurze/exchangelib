@@ -224,6 +224,24 @@ class SyncTest(BaseItemTest):
             self.account.protocol.decrease_poolsize()
             self.account.protocol._session_pool_maxsize -= 1
 
+    def test_streaming_invalid_subscription(self):
+        # Test that we can get the failing subscription IDs from the response message
+        test_folder = self.account.drafts
+
+        # Test a single bad notification
+        with self.assertRaises(ErrorInvalidSubscription) as e:
+            list(test_folder.get_streaming_events('AAA-', connection_timeout=1, max_notifications_returned=1))
+        self.assertEqual(e.exception.value, "Subscription is invalid. (subscription IDs: 'AAA-')")
+
+        # Test a combination of a good and a bad notification
+        with self.assertRaises(ErrorInvalidSubscription) as e:
+            with test_folder.streaming_subscription() as subscription_id:
+                self.get_test_item(folder=test_folder).save()
+                list(test_folder.get_streaming_events(
+                    ('AAA-', subscription_id), connection_timeout=1, max_notifications_returned=1
+                ))
+        self.assertEqual(e.exception.value, "Subscription is invalid. (subscription IDs: 'AAA-')")
+
     def test_push_message_parsing(self):
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>

@@ -1,6 +1,7 @@
 import logging
 
 from .common import EWSAccountService, add_xml_child
+from ..errors import EWSError
 from ..properties import Notification
 from ..util import create_element, get_xml_attr, get_xml_attrs, MNS, DocumentYielder, DummyResponse
 
@@ -24,7 +25,6 @@ class GetStreamingEvents(EWSAccountService):
     def __init__(self, *args, **kwargs):
         # These values are set each time call() is consumed
         self.connection_status = None
-        self.error_subscription_ids = []
         super().__init__(*args, **kwargs)
         self.streaming = True
 
@@ -69,15 +69,23 @@ class GetStreamingEvents(EWSAccountService):
 
     def _get_element_container(self, message, name=None):
         error_ids_elem = message.find('{%s}ErrorSubscriptionIds' % MNS)
-        if error_ids_elem is not None:
-            self.error_subscription_ids = get_xml_attrs(error_ids_elem, '{%s}ErrorSubscriptionId' % MNS)
-            log.debug('These subscription IDs are invalid: %s', self.error_subscription_ids)
+        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, '{%s}SubscriptionId' % MNS)
         self.connection_status = get_xml_attr(message, '{%s}ConnectionStatus' % MNS)  # Either 'OK' or 'Closed'
         log.debug('Connection status is: %s', self.connection_status)
-        # Upstream expects to find a 'name' tag but our response does not always have it. Return an empty element.
+        # Upstream normally expects to find a 'name' tag but our response does not always have it. We still want to
+        # call upstream, to have exceptions raised. Return an empty list if there is no 'name' tag and no errors.
         if message.find(name) is None:
-            return []
-        return super()._get_element_container(message=message, name=name)
+            name = None
+        try:
+            res = super()._get_element_container(message=message, name=name)
+        except EWSError as e:
+            # When the request contains a combination of good and failing subscription IDs, notifications for the good
+            # subscriptions seem to never be returned even though the XML spec allows it. This means there's no point in
+            # trying to collect any notifications here and delivering a combination of errors and return values.
+            if error_ids:
+                e.value += ' (subscription IDs: %s)' % ', '.join(repr(i) for i in error_ids)
+            raise e
+        return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
         getstreamingevents = create_element('m:%s' % self.SERVICE_NAME)

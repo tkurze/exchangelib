@@ -4,6 +4,7 @@ Change Log
 HEAD
 ----
 - Fix filtering on array-type extended properties.
+- Exceptions in `GetStreamingEvents` responses are now raised.
 
 
 4.6.1
