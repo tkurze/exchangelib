@@ -2,7 +2,7 @@ import logging
 
 from ..extended_properties import ExtendedProperty
 from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
-    CharField, IdElementField, AttachmentField
+    CharField, IdElementField, AttachmentField, ExtendedPropertyListField
 from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, EWSMeta
 from ..services import CreateItem
 from ..util import require_account
@@ -94,7 +94,10 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
         #   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item
         #
         # Find the correct index for the new extended property, and insert.
-        field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
+        if attr_cls.is_array_type():
+            field = ExtendedPropertyListField(attr_name, value_cls=attr_cls)
+        else:
+            field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
         cls.add_field(field, insert_after=cls.INSERT_AFTER_FIELD)
 
     @classmethod

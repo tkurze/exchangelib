@@ -1365,6 +1365,10 @@ class ExtendedPropertyField(Field):
         return hash(self.name)
 
 
+class ExtendedPropertyListField(ExtendedPropertyField):
+    is_list = True
+
+
 class ItemField(FieldURIField):
     @property
     def value_cls(self):

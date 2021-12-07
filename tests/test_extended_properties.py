@@ -293,3 +293,29 @@ class ExtendedPropertyTest(BaseItemTest):
         finally:
             self.ITEM_CLASS.deregister("sharing_url")
             self.ITEM_CLASS.deregister("sharing_folder_id")
+
+    def test_via_queryset(self):
+        class TestProp(ExtendedProperty):
+            property_set_id = 'deadbeaf-cafe-cafe-cafe-deadbeefcafe'
+            property_name = 'Test Property'
+            property_type = 'Integer'
+
+        class TestArayProp(ExtendedProperty):
+            property_set_id = 'deadcafe-beef-beef-beef-deadcafebeef'
+            property_name = 'Test Array Property'
+            property_type = 'IntegerArray'
+
+        attr_name = 'dead_beef'
+        array_attr_name = 'dead_beef_array'
+        self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=TestProp)
+        self.ITEM_CLASS.register(attr_name=array_attr_name, attr_cls=TestArayProp)
+        try:
+            item = self.get_test_item(folder=self.test_folder).save()
+            self.assertEqual(self.test_folder.filter(**{attr_name: getattr(item, attr_name)}).count(), 1)
+            self.assertEqual(
+                self.test_folder.filter(**{'%s__contains' % array_attr_name: getattr(item, array_attr_name)}).count(),
+                1
+            )
+        finally:
+            self.ITEM_CLASS.deregister(attr_name=attr_name)
+            self.ITEM_CLASS.deregister(attr_name=array_attr_name)

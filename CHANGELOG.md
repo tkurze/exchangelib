@@ -3,6 +3,8 @@ Change Log
 
 HEAD
 ----
+- Fix filtering on array-type extended properties.
+
 
 4.6.1
 -----

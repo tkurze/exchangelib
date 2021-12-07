@@ -9,7 +9,7 @@ except ImportError:
 from exchangelib.extended_properties import ExternId
 from exchangelib.fields import BooleanField, IntegerField, DecimalField, TextField, ChoiceField, DateTimeField, \
     Base64Field, TimeZoneField, ExtendedPropertyField, CharListField, Choice, DateField, EnumField, EnumListField, \
-    CharField, InvalidFieldForVersion, InvalidChoiceForVersion
+    CharField, InvalidFieldForVersion, InvalidChoiceForVersion, ExtendedPropertyListField
 from exchangelib.indexed_properties import SingleFieldIndexedElement
 from exchangelib.version import Version, EXCHANGE_2007, EXCHANGE_2010, EXCHANGE_2013
 from exchangelib.util import to_xml, TNS
@@ -74,7 +74,7 @@ class FieldTest(TimedTestCase):
         class ExternIdArray(ExternId):
             property_type = 'StringArray'
 
-        field = ExtendedPropertyField('foo', value_cls=ExternIdArray, is_required=True)
+        field = ExtendedPropertyListField('foo', value_cls=ExternIdArray, is_required=True)
         with self.assertRaises(ValueError)as e:
             field.clean(None)  # Value is required
         self.assertEqual(str(e.exception), "'foo' is a required field")
