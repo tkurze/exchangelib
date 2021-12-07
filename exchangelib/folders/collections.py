@@ -41,7 +41,7 @@ class FolderCollection(SearchableMixIn):
     @threaded_cached_property
     def folders(self):
         # Resolve the list of folders, in case it's a generator
-        return list(self._folders)
+        return tuple(self._folders)
 
     def __len__(self):
         return len(self.folders)

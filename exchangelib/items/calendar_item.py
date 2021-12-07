@@ -150,7 +150,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
     @classmethod
     def timezone_fields(cls):
-        return [f for f in cls.FIELDS if isinstance(f, TimeZoneField)]
+        return tuple(f for f in cls.FIELDS if isinstance(f, TimeZoneField))
 
     def clean_timezone_fields(self, version):
         # Sets proper values on the timezone fields if they are not already set

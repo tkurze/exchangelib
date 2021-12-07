@@ -114,8 +114,8 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
         return insert_kwargs
 
     def get_item_fields(self):
-        return [self.ITEM_CLASS.get_field_by_fieldname('id'), self.ITEM_CLASS.get_field_by_fieldname('changekey')] \
-               + [f for f in self.ITEM_CLASS.FIELDS if f.name != '_id']
+        return (self.ITEM_CLASS.get_field_by_fieldname('id'), self.ITEM_CLASS.get_field_by_fieldname('changekey')) \
+               + tuple(f for f in self.ITEM_CLASS.FIELDS if f.name != '_id')
 
     def get_random_update_kwargs(self, item, insert_kwargs):
         update_kwargs = {}

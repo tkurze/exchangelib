@@ -103,17 +103,17 @@ class Q:
             if lookup == self.LOOKUP_EXISTS:
                 # value=True will fall through to further processing
                 if not value:
-                    return [~self.__class__(**{key: True})]
+                    return (~self.__class__(**{key: True}),)
 
             if lookup == self.LOOKUP_RANGE:
                 # EWS doesn't have a 'range' operator. Emulate 'foo__range=(1, 2)' as 'foo__gte=1 and foo__lte=2'
                 # (both values inclusive).
                 if len(value) != 2:
                     raise ValueError("Value of lookup '%s' must have exactly 2 elements" % key)
-                return [
+                return (
                     self.__class__(**{'%s__gte' % field_path: value[0]}),
                     self.__class__(**{'%s__lte' % field_path: value[1]}),
-                ]
+                )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
             #
@@ -136,12 +136,12 @@ class Q:
                 # specifying a list value. We'll emulate it as a set of OR'ed exact matches.
                 if not is_iterable(value, generators_allowed=True):
                     raise ValueError("Value for lookup %r must be a list" % key)
-                children = [self.__class__(**{field_path: v}) for v in value]
+                children = tuple(self.__class__(**{field_path: v}) for v in value)
                 if not children:
                     # This is an '__in' operator with an empty list as the value. We interpret it to mean "is foo
                     # contained in the empty set?" which is always false. Mark this Q object as such.
-                    return [self.__class__(conn_type=self.NEVER)]
-                return [self.__class__(*children, conn_type=self.OR)]
+                    return (self.__class__(conn_type=self.NEVER),)
+                return (self.__class__(*children, conn_type=self.OR),)
 
             if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
                 # A '__contains' lookup with an list as the value ony makes sense for list fields, since exact match
@@ -149,8 +149,8 @@ class Q:
                 #
                 # An empty list as value is allowed. We interpret it to mean "are all values in the empty set contained
                 # in foo?" which is always true.
-                children = [self.__class__(**{field_path: v}) for v in value]
-                return [self.__class__(*children, conn_type=self.AND)]
+                children = tuple(self.__class__(**{field_path: v}) for v in value)
+                return (self.__class__(*children, conn_type=self.AND),)
 
             try:
                 op = self._lookup_to_op(lookup)
@@ -160,13 +160,13 @@ class Q:
             field_path, op = key, self.EQ
 
         if not is_single_kwarg:
-            return [self.__class__(**{key: value})]
+            return (self.__class__(**{key: value}),)
 
         # This is a single-kwarg Q object with a lookup that requires a single value. Make this a leaf
         self.field_path = field_path
         self.op = op
         self.value = value
-        return []
+        return ()
 
     def reduce(self):
         """Simplify this object, if possible."""

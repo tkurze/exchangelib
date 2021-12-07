@@ -294,7 +294,7 @@ class EWSService(metaclass=abc.ABCMeta):
     @property
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
+        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
 
     def _get_response_xml(self, payload, **parse_opts):
         """Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -346,7 +346,9 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS('Tried versions %s but all were invalid' % self._api_versions_to_try)
+        raise self.NO_VALID_SERVER_VERSIONS(
+            'Tried versions %s but all were invalid' % ', '.join(self._api_versions_to_try)
+        )
 
     def _handle_backoff(self, e):
         """Take a request from the server to back off and checks the retry policy for what to do. Re-raise the

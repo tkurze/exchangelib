@@ -893,7 +893,7 @@ class ChoiceField(CharField):
         ))
 
     def supported_choices(self, version):
-        return [c.value for c in self.choices if c.supports_version(version)]
+        return tuple(c.value for c in self.choices if c.supports_version(version))
 
 
 FREE_BUSY_CHOICES = [Choice('Free'), Choice('Tentative'), Choice('Busy'), Choice('OOF'), Choice('NoData'),

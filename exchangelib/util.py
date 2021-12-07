@@ -167,7 +167,7 @@ def get_xml_attr(tree, name):
 
 
 def get_xml_attrs(tree, name):
-    return [elem.text for elem in tree.findall(name) if elem.text is not None]
+    return list(elem.text for elem in tree.findall(name) if elem.text is not None)
 
 
 def value_to_xml_text(value):
