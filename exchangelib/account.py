@@ -3,7 +3,7 @@ from logging import getLogger
 
 from cached_property import threaded_cached_property
 
-from .autodiscover import discover
+from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import DELEGATE, IMPERSONATION, ACCESS_TYPES
 from .errors import UnknownTimeZone
@@ -115,9 +115,9 @@ class Account:
                     credentials = config.credentials
             else:
                 retry_policy, auth_type = None, None
-            self.ad_response, self.protocol = discover(
+            self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
-            )
+            ).discover()
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:
