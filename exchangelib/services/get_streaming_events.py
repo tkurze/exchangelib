@@ -15,7 +15,6 @@ class GetStreamingEvents(EWSAccountService):
 
     SERVICE_NAME = 'GetStreamingEvents'
     element_container_name = '{%s}Notifications' % MNS
-    streaming = True
     prefer_affinity = True
 
     # Connection status values
@@ -27,6 +26,7 @@ class GetStreamingEvents(EWSAccountService):
         self.connection_status = None
         self.error_subscription_ids = []
         super().__init__(*args, **kwargs)
+        self.streaming = True
 
     def call(self, subscription_ids, connection_timeout):
         if connection_timeout < 1:

@@ -214,6 +214,8 @@ class EWSService(metaclass=abc.ABCMeta):
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def stop_streaming(self):
+        if not self.streaming:
+            raise RuntimeError('Attempt to stop a non-streaming service')
         if self._streaming_response:
             self._streaming_response.close()  # Release memory
             self._streaming_response = None
@@ -263,7 +265,9 @@ class EWSService(metaclass=abc.ABCMeta):
     def _get_response(self, payload, api_version):
         """Send the actual HTTP request and get the response."""
         session = self.protocol.get_session()
-        self._streaming_session, self._streaming_response = None, None
+        if self.streaming:
+            # Make sure to clean up lingering resources
+            self.stop_streaming()
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,

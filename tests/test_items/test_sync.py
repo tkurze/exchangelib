@@ -172,17 +172,21 @@ class SyncTest(BaseItemTest):
         with test_folder.streaming_subscription() as subscription_id:
             # Test that we see a create event
             i1 = self.get_test_item(folder=test_folder).save()
-            # 1 minute connection timeout
+            t1 = time.perf_counter()
+            # Let's only wait for one notification so this test doesn't take forever. 'connection_timeout' is only
+            # meant as a fallback.
             notifications = list(test_folder.get_streaming_events(
                 subscription_id, connection_timeout=1, max_notifications_returned=1
             ))
+            t2 = time.perf_counter()
+            # Make sure we returned after 'max_notifications' instead of waiting for 'connection_timeout'
+            self.assertLess(t2 - t1, 60)
             created_event, _ = self._filter_events(notifications, CreatedEvent, i1.id)
             self.assertEqual(created_event.item_id.id, i1.id)
 
             # Test that we see an update event
             i1.subject = get_random_string(8)
             i1.save(update_fields=['subject'])
-            # 1 minute connection timeout
             notifications = list(test_folder.get_streaming_events(
                 subscription_id, connection_timeout=1, max_notifications_returned=1
             ))
@@ -192,7 +196,6 @@ class SyncTest(BaseItemTest):
             # Test that we see a delete event
             i1_id = i1.id
             i1.delete()
-            # 1 minute connection timeout
             notifications = list(test_folder.get_streaming_events(
                 subscription_id, connection_timeout=1, max_notifications_returned=1
             ))
