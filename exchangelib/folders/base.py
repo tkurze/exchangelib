@@ -18,7 +18,7 @@ from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, Ge
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
     Unsubscribe, GetEvents, GetStreamingEvents, MoveFolder
 from ..services.get_user_configuration import ALL
-from ..util import TNS, require_id
+from ..util import TNS, require_id, is_iterable
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
 
 log = logging.getLogger(__name__)
@@ -655,11 +655,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             if not notification.more_events:
                 break
 
-    def get_streaming_events(self, subscription_id, connection_timeout=1, max_notifications_returned=None):
+    def get_streaming_events(self, subscription_id_or_ids, connection_timeout=1, max_notifications_returned=None):
         """Get events since the subscription was created, in streaming mode. This method will block as many minutes
         as specified by 'connection_timeout'.
 
-        :param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
+        :param subscription_id_or_ids: A subscription ID, or list of IDs, as acquired by .subscribe_to_streaming()
         :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
         is reached.
         :param max_notifications_returned: If specified, will exit after receiving this number of notifications
@@ -671,8 +671,10 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         request_timeout = connection_timeout*60 + 60
         svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
+        subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+            else [subscription_id_or_ids]
         for i, notification in enumerate(
-                svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout),
+                svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
                 start=1
         ):
             yield notification
