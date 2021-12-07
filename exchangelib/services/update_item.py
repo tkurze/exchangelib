@@ -159,7 +159,7 @@ class UpdateItem(EWSAccountService):
                     ConflictResolution=conflict_resolution,
                     MessageDisposition=message_disposition,
                     SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
-                    SuppressReadReceipts='true' if suppress_read_receipts else 'false',
+                    SuppressReadReceipts=suppress_read_receipts,
                 )
             )
         else:

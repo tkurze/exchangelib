@@ -63,11 +63,7 @@ class FindFolder(EWSAccountService):
         if self.account.version.build >= EXCHANGE_2010:
             indexedpageviewitem = create_element(
                 'm:IndexedPageFolderView',
-                attrs=dict(
-                    MaxEntriesReturned=str(page_size),
-                    Offset=str(offset),
-                    BasePoint='Beginning',
-                )
+                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint='Beginning')
             )
             findfolder.append(indexedpageviewitem)
         else:

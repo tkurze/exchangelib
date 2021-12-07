@@ -276,6 +276,10 @@ def create_element(name, attrs=None, nsmap=None):
         # Try hard to keep attribute order, to ensure deterministic output. This simplifies testing.
         # Dicts in Python 3.6+ have stable ordering.
         for k, v in attrs.items():
+            if isinstance(v, bool):
+                v = 'true' if v else 'false'
+            elif isinstance(v, int):
+                v = str(v)
             elem.set(k, v)
     return elem
 

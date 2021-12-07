@@ -15,10 +15,7 @@ class SendItem(EWSAccountService):
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
-        senditem = create_element(
-            'm:%s' % self.SERVICE_NAME,
-            attrs=dict(SaveItemToFolder='true' if saved_item_folder else 'false'),
-        )
+        senditem = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
         item_ids = create_item_ids_element(items=items, version=self.account.version)
         senditem.append(item_ids)
         if saved_item_folder:

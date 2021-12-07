@@ -77,11 +77,7 @@ class FindPeople(EWSAccountService):
         findpeople.append(personashape)
         view_type = create_element(
             'm:IndexedPageItemView',
-            attrs=dict(
-                MaxEntriesReturned=str(page_size),
-                Offset=str(offset),
-                BasePoint='Beginning',
-            )
+            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint='Beginning')
         )
         findpeople.append(view_type)
         if restriction:

@@ -16,10 +16,7 @@ class EmptyFolder(EWSAccountService):
     def get_payload(self, folders, delete_type, delete_sub_folders):
         emptyfolder = create_element(
             'm:%s' % self.SERVICE_NAME,
-            attrs=dict(
-                DeleteType=delete_type,
-                DeleteSubFolders='true' if delete_sub_folders else 'false',
-            )
+            attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
         folder_ids = create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version)
         emptyfolder.append(folder_ids)

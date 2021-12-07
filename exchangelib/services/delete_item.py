@@ -48,7 +48,7 @@ class DeleteItem(EWSAccountService):
                     DeleteType=delete_type,
                     SendMeetingCancellations=send_meeting_cancellations,
                     AffectedTaskOccurrences=affected_task_occurrences,
-                    SuppressReadReceipts='true' if suppress_read_receipts else 'false',
+                    SuppressReadReceipts=suppress_read_receipts,
                 )
             )
         else:

@@ -934,12 +934,11 @@ class BodyField(TextField):
 
     def to_xml(self, value, version):
         from .properties import Body, HTMLBody
-        field_elem = create_element(self.request_tag())
         body_type = {
             Body: Body.body_type,
             HTMLBody: HTMLBody.body_type,
         }[type(value)]
-        field_elem.set('BodyType', body_type)
+        field_elem = create_element(self.request_tag(), attrs=dict(BodyType=body_type))
         return set_xml_value(field_elem, value, version=version)
 
 

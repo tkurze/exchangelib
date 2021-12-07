@@ -74,11 +74,7 @@ class FindItem(EWSAccountService):
         if calendar_view is None:
             view_type = create_element(
                 'm:IndexedPageItemView',
-                attrs=dict(
-                    MaxEntriesReturned=str(page_size),
-                    Offset=str(offset),
-                    BasePoint='Beginning',
-                )
+                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint='Beginning')
             )
         else:
             view_type = calendar_view.to_xml(version=self.account.version)

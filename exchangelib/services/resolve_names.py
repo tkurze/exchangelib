@@ -65,17 +65,15 @@ class ResolveNames(EWSService):
 
     def get_payload(self, unresolved_entries, parent_folders, return_full_contact_data, search_scope,
                     contact_data_shape):
-        payload = create_element(
-            'm:%s' % self.SERVICE_NAME,
-            attrs=dict(ReturnFullContactData='true' if return_full_contact_data else 'false'),
-        )
+        attrs = dict(ReturnFullContactData=return_full_contact_data)
         if search_scope:
-            payload.set('SearchScope', search_scope)
+            attrs['SearchScope'] = search_scope
         if contact_data_shape:
             if self.protocol.version.build < EXCHANGE_2010_SP2:
                 raise NotImplementedError(
                     "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later")
-            payload.set('ContactDataShape', contact_data_shape)
+            attrs['ContactDataShape'] = contact_data_shape
+        payload = create_element('m:%s' % self.SERVICE_NAME, attrs=attrs)
         if parent_folders:
             parentfolderids = create_element('m:ParentFolderIds')
             set_xml_value(parentfolderids, parent_folders, version=self.protocol.version)

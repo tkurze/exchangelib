@@ -444,10 +444,8 @@ class Q:
                 # We need to convert to datetime
                 clean_value = field_path.field.date_to_datetime(clean_value)
             elem.append(field_path.to_xml())
-            constant = create_element('t:Constant')
             if self.op != self.EXISTS:
-                # Use .set() to not fill up the create_element() cache with unique values
-                constant.set('Value', value_to_xml_text(clean_value))
+                constant = create_element('t:Constant', attrs=dict(Value=value_to_xml_text(clean_value)))
                 if self.op in self.CONTAINS_OPS:
                     elem.append(constant)
                 else:

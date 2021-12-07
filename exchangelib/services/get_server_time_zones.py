@@ -26,7 +26,7 @@ class GetServerTimeZones(EWSService):
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
             'm:%s' % self.SERVICE_NAME,
-            attrs=dict(ReturnFullTimeZoneData='true' if return_full_timezone_data else 'false'),
+            attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
         )
         if timezones is not None:
             is_empty, timezones = peek(timezones)

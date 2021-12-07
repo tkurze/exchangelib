@@ -29,9 +29,10 @@ class UploadItems(EWSAccountService):
         uploaditems.append(itemselement)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the "UpdateOrCreate" create action.
-            item = create_element('t:Item', attrs=dict(CreateAction='Update' if item_id else 'CreateNew'))
+            attrs = dict(CreateAction='Update' if item_id else 'CreateNew')
             if is_associated is not None:
-                item.set('IsAssociated', 'true' if is_associated else 'false')
+                attrs['IsAssociated'] = is_associated
+            item = create_element('t:Item', attrs=attrs)
             parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
             set_xml_value(item, parentfolderid, version=self.account.version)
             if item_id:

@@ -283,17 +283,18 @@ class EWSElement(metaclass=EWSMeta):
         # WARNING: The order of addition of XML elements is VERY important. Exchange expects XML elements in a
         # specific, non-documented order and will fail with meaningless errors if the order is wrong.
 
-        # Call create_element() without args, to not fill up the cache with unique attribute values.
-        elem = create_element(self.request_tag())
-
-        # Add attributes
+        # Collect attributes
+        attrs = dict()
         for f in self.attribute_fields():
             if f.is_read_only:
                 continue
             value = getattr(self, f.name)
             if value is None or (f.is_list and not value):
                 continue
-            elem.set(f.field_uri, value_to_xml_text(getattr(self, f.name)))
+            attrs[f.field_uri] = value_to_xml_text(getattr(self, f.name))
+
+        # Create element with attributes
+        elem = create_element(self.request_tag(), attrs=attrs)
 
         # Add elements and values
         for f in self.supported_fields(version=version):
