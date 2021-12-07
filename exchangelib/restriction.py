@@ -129,7 +129,7 @@ class Q:
             # 'Contains' element which only supports matching on string elements, not arrays.
             #
             # Exact matching of categories (i.e. match ['a', 'b'] but not ['a', 'b', 'c']) could be implemented by
-            # post-processing items by fetch the categories field unconditionally and removing the items that don't
+            # post-processing items by fetching the categories field unconditionally and removing the items that don't
             # have an exact match.
             if lookup == self.LOOKUP_IN:
                 # EWS doesn't have an '__in' operator. Allow '__in' lookups on list and non-list field types,

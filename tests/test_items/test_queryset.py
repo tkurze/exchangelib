@@ -169,7 +169,7 @@ class ItemQuerySetTest(BaseItemTest):
         # len() and count()
         self.assertEqual(qs.count(), 4)
         # Indexing and slicing
-        self.assertTrue(isinstance(qs[0], self.ITEM_CLASS))
+        self.assertIsInstance(qs[0], self.ITEM_CLASS)
         self.assertEqual(len(list(qs[1:3])), 2)
         self.assertEqual(qs.count(), 4)
         with self.assertRaises(IndexError):

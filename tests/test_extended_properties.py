@@ -37,7 +37,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test item creation, refresh, and update
             item = self.get_test_item(folder=self.test_folder)
             prop_val = item.dead_beef
-            self.assertTrue(isinstance(prop_val, int))
+            self.assertIsInstance(prop_val, int)
             item.save()
             item.refresh()
             self.assertEqual(prop_val, item.dead_beef)
@@ -69,7 +69,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test item creation, refresh, and update
             item = self.get_test_item(folder=self.test_folder)
             prop_val = item.dead_beef_array
-            self.assertTrue(isinstance(prop_val, list))
+            self.assertIsInstance(prop_val, list)
             item.save()
             item.refresh()
             self.assertEqual(prop_val, item.dead_beef_array)
@@ -88,7 +88,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test item creation, refresh, and update
             item = self.get_test_item(folder=self.test_folder)
             prop_val = item.my_flag
-            self.assertTrue(isinstance(prop_val, int))
+            self.assertIsInstance(prop_val, int)
             item.save()
             item.refresh()
             self.assertEqual(prop_val, item.my_flag)
@@ -115,7 +115,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test item creation, refresh, and update
             item = self.get_test_item(folder=self.test_folder)
             prop_val = item.my_flag
-            self.assertTrue(isinstance(prop_val, int))
+            self.assertIsInstance(prop_val, int)
             item.save()
             item.refresh()
             self.assertEqual(prop_val, item.my_flag)
@@ -143,7 +143,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test item creation, refresh, and update
             item = self.get_test_item(folder=self.test_folder)
             prop_val = item.my_meeting
-            self.assertTrue(isinstance(prop_val, bytes))
+            self.assertIsInstance(prop_val, bytes)
             item.save()
             item = self.get_item_by_id((item.id, item.changekey))
             self.assertEqual(prop_val, item.my_meeting, (prop_val, item.my_meeting))
@@ -168,7 +168,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test item creation, refresh, and update
             item = self.get_test_item(folder=self.test_folder)
             prop_val = item.my_meeting_array
-            self.assertTrue(isinstance(prop_val, list))
+            self.assertIsInstance(prop_val, list)
             item.save()
             item = self.get_item_by_id((item.id, item.changekey))
             self.assertEqual(prop_val, item.my_meeting_array)
