@@ -40,7 +40,6 @@ setup(
     license='BSD-2-Clause',
     keywords='ews exchange autodiscover microsoft outlook exchange-web-services o365 office365',
     install_requires=[
-        'backports-datetime-fromisoformat;python_version<"3.7"',
         'backports.zoneinfo;python_version<"3.9"',
         'cached_property',
         'defusedxml>=0.6.0',
@@ -62,7 +61,7 @@ setup(
     },
     packages=find_packages(exclude=('tests', 'tests.*')),
     tests_require=['flake8', 'psutil', 'python-dateutil', 'pytz', 'PyYAML', 'requests_mock'],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     test_suite='tests',
     zip_safe=False,
     url='https://github.com/ecederstrand/exchangelib',
