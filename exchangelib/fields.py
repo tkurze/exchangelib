@@ -1,7 +1,6 @@
 import abc
 import datetime
 import logging
-from collections import OrderedDict
 from decimal import Decimal, InvalidOperation
 from importlib import import_module
 
@@ -733,7 +732,7 @@ class TimeZoneField(FieldURIField):
         return self.default
 
     def to_xml(self, value, version):
-        attrs = OrderedDict([('Id', value.ms_id)])
+        attrs = dict(Id=value.ms_id)
         if value.ms_name:
             attrs['Name'] = value.ms_name
         return create_element(self.request_tag(), attrs=attrs)

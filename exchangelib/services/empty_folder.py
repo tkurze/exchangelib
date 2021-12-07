@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .common import EWSAccountService, create_folder_ids_element
 from ..util import create_element
 
@@ -18,10 +16,10 @@ class EmptyFolder(EWSAccountService):
     def get_payload(self, folders, delete_type, delete_sub_folders):
         emptyfolder = create_element(
             'm:%s' % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                ('DeleteType', delete_type),
-                ('DeleteSubFolders', 'true' if delete_sub_folders else 'false'),
-            ])
+            attrs=dict(
+                DeleteType=delete_type,
+                DeleteSubFolders='true' if delete_sub_folders else 'false',
+            )
         )
         folder_ids = create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version)
         emptyfolder.append(folder_ids)

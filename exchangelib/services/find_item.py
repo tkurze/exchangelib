@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .common import EWSAccountService, create_shape_element
 from ..util import create_element, set_xml_value, TNS, MNS
 
@@ -76,11 +74,11 @@ class FindItem(EWSAccountService):
         if calendar_view is None:
             view_type = create_element(
                 'm:IndexedPageItemView',
-                attrs=OrderedDict([
-                    ('MaxEntriesReturned', str(page_size)),
-                    ('Offset', str(offset)),
-                    ('BasePoint', 'Beginning'),
-                ])
+                attrs=dict(
+                    MaxEntriesReturned=str(page_size),
+                    Offset=str(offset),
+                    BasePoint='Beginning',
+                )
             )
         else:
             view_type = calendar_view.to_xml(version=self.account.version)

@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .common import EWSAccountService
 from ..util import create_element, set_xml_value, MNS
 
@@ -82,10 +80,7 @@ class CreateItem(EWSAccountService):
         """
         createitem = create_element(
             'm:%s' % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                ('MessageDisposition', message_disposition),
-                ('SendMeetingInvitations', send_meeting_invitations),
-            ])
+            attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
         )
         if folder:
             saveditemfolderid = create_element('m:SavedItemFolderId')

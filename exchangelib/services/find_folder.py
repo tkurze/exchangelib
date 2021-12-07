@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .common import EWSAccountService, create_shape_element
 from ..util import create_element, set_xml_value, TNS, MNS
 from ..version import EXCHANGE_2010
@@ -65,11 +63,11 @@ class FindFolder(EWSAccountService):
         if self.account.version.build >= EXCHANGE_2010:
             indexedpageviewitem = create_element(
                 'm:IndexedPageFolderView',
-                attrs=OrderedDict([
-                    ('MaxEntriesReturned', str(page_size)),
-                    ('Offset', str(offset)),
-                    ('BasePoint', 'Beginning'),
-                ])
+                attrs=dict(
+                    MaxEntriesReturned=str(page_size),
+                    Offset=str(offset),
+                    BasePoint='Beginning',
+                )
             )
             findfolder.append(indexedpageviewitem)
         else:

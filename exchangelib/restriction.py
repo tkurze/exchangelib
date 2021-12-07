@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 from copy import copy
 
 from .fields import InvalidField, FieldPath, DateTimeBackedDateField
@@ -295,10 +294,7 @@ class Q:
             compare_mode = 'Exact'
         return create_element(
             't:Contains',
-            attrs=OrderedDict([
-                ('ContainmentMode', match_mode),
-                ('ContainmentComparison', compare_mode),
-            ])
+            attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode)
         )
 
     def is_leaf(self):

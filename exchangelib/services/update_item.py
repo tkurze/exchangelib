@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .common import EWSAccountService, to_item_id
 from ..ewsdatetime import EWSDate
 from ..fields import FieldPath, IndexedField
@@ -68,7 +66,7 @@ class UpdateItem(EWSAccountService):
     def _sorted_fields(item_model, fieldnames):
         # Take a list of fieldnames and return the (unique) fields in the order they are mentioned in item_class.FIELDS.
         # Checks that all fieldnames are valid.
-        unique_fieldnames = list(OrderedDict.fromkeys(fieldnames))  # Make field names unique ,but keep ordering
+        unique_fieldnames = list(dict.fromkeys(fieldnames))  # Make field names unique, but keep ordering
         # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
         for f in item_model.FIELDS:
             if f.name in unique_fieldnames:
@@ -157,21 +155,21 @@ class UpdateItem(EWSAccountService):
         if self.account.version.build >= EXCHANGE_2013_SP1:
             updateitem = create_element(
                 'm:%s' % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    ('ConflictResolution', conflict_resolution),
-                    ('MessageDisposition', message_disposition),
-                    ('SendMeetingInvitationsOrCancellations', send_meeting_invitations_or_cancellations),
-                    ('SuppressReadReceipts', 'true' if suppress_read_receipts else 'false'),
-                ])
+                attrs=dict(
+                    ConflictResolution=conflict_resolution,
+                    MessageDisposition=message_disposition,
+                    SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
+                    SuppressReadReceipts='true' if suppress_read_receipts else 'false',
+                )
             )
         else:
             updateitem = create_element(
                 'm:%s' % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    ('ConflictResolution', conflict_resolution),
-                    ('MessageDisposition', message_disposition),
-                    ('SendMeetingInvitationsOrCancellations', send_meeting_invitations_or_cancellations),
-                ])
+                attrs=dict(
+                    ConflictResolution=conflict_resolution,
+                    MessageDisposition=message_disposition,
+                    SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
+                )
             )
         itemchanges = create_element('m:ItemChanges')
         version = self.account.version

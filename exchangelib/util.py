@@ -8,7 +8,6 @@ import time
 import xml.sax.handler  # nosec
 from base64 import b64decode, b64encode
 from codecs import BOM_UTF8
-from collections import OrderedDict
 from decimal import Decimal
 from functools import wraps
 from threading import get_ident
@@ -74,11 +73,11 @@ AUTODISCOVER_BASE_NS = 'http://schemas.microsoft.com/exchange/autodiscover/respo
 AUTODISCOVER_REQUEST_NS = 'http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006'
 AUTODISCOVER_RESPONSE_NS = 'http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a'
 
-ns_translation = OrderedDict([
-    ('s', SOAPNS),
-    ('m', MNS),
-    ('t', TNS),
-])
+ns_translation = {
+    's': SOAPNS,
+    'm': MNS,
+    't': TNS,
+}
 for item in ns_translation.items():
     lxml.etree.register_namespace(*item)
 
@@ -269,14 +268,13 @@ def safe_xml_value(value, replacement='?'):
 
 
 def create_element(name, attrs=None, nsmap=None):
-    # Python versions prior to 3.6 do not preserve dict or kwarg ordering, so we cannot pull in attrs as **kwargs if we
-    # also want stable XML attribute output. Instead, let callers supply us with an OrderedDict instance.
     if ':' in name:
         ns, name = name.split(':')
         name = '{%s}%s' % (ns_translation[ns], name)
     elem = _forgiving_parser.makeelement(name, nsmap=nsmap)
     if attrs:
         # Try hard to keep attribute order, to ensure deterministic output. This simplifies testing.
+        # Dicts in Python 3.6+ have stable ordering.
         for k, v in attrs.items():
             elem.set(k, v)
     return elem

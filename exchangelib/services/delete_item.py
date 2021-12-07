@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .common import EWSAccountService, create_item_ids_element
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
@@ -46,21 +44,21 @@ class DeleteItem(EWSAccountService):
         if self.account.version.build >= EXCHANGE_2013_SP1:
             deleteitem = create_element(
                 'm:%s' % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    ('DeleteType', delete_type),
-                    ('SendMeetingCancellations', send_meeting_cancellations),
-                    ('AffectedTaskOccurrences', affected_task_occurrences),
-                    ('SuppressReadReceipts', 'true' if suppress_read_receipts else 'false'),
-                ])
+                attrs=dict(
+                    DeleteType=delete_type,
+                    SendMeetingCancellations=send_meeting_cancellations,
+                    AffectedTaskOccurrences=affected_task_occurrences,
+                    SuppressReadReceipts='true' if suppress_read_receipts else 'false',
+                )
             )
         else:
             deleteitem = create_element(
                 'm:%s' % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    ('DeleteType', delete_type),
-                    ('SendMeetingCancellations', send_meeting_cancellations),
-                    ('AffectedTaskOccurrences', affected_task_occurrences),
-                 ])
+                attrs=dict(
+                    DeleteType=delete_type,
+                    SendMeetingCancellations=send_meeting_cancellations,
+                    AffectedTaskOccurrences=affected_task_occurrences,
+                 )
             )
 
         item_ids = create_item_ids_element(items=items, version=self.account.version)
