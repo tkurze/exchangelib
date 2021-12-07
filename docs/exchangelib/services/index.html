@@ -2757,8 +2757,8 @@ invitation accepts (see
             # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
             raise enf
         finally:
-            self.streaming = False
-            self.stop_streaming()</code></pre>
+            self.stop_streaming()
+            self.streaming = False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2860,8 +2860,8 @@ invitation accepts (see
         # The returned content did not contain any EWS exceptions. Give up and re-raise the original exception.
         raise enf
     finally:
-        self.streaming = False
-        self.stop_streaming()</code></pre>
+        self.stop_streaming()
+        self.streaming = False</code></pre>
 </details>
 </dd>
 </dl>
@@ -4118,7 +4118,6 @@ invitation accepts (see
 
     SERVICE_NAME = &#39;GetStreamingEvents&#39;
     element_container_name = &#39;{%s}Notifications&#39; % MNS
-    streaming = True
     prefer_affinity = True
 
     # Connection status values
@@ -4128,8 +4127,8 @@ invitation accepts (see
     def __init__(self, *args, **kwargs):
         # These values are set each time call() is consumed
         self.connection_status = None
-        self.error_subscription_ids = []
         super().__init__(*args, **kwargs)
+        self.streaming = True
 
     def call(self, subscription_ids, connection_timeout):
         if connection_timeout &lt; 1:
@@ -4172,15 +4171,23 @@ invitation accepts (see
 
     def _get_element_container(self, message, name=None):
         error_ids_elem = message.find(&#39;{%s}ErrorSubscriptionIds&#39; % MNS)
-        if error_ids_elem is not None:
-            self.error_subscription_ids = get_xml_attrs(error_ids_elem, &#39;{%s}ErrorSubscriptionId&#39; % MNS)
-            log.debug(&#39;These subscription IDs are invalid: %s&#39;, self.error_subscription_ids)
+        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, &#39;{%s}SubscriptionId&#39; % MNS)
         self.connection_status = get_xml_attr(message, &#39;{%s}ConnectionStatus&#39; % MNS)  # Either &#39;OK&#39; or &#39;Closed&#39;
         log.debug(&#39;Connection status is: %s&#39;, self.connection_status)
-        # Upstream expects to find a &#39;name&#39; tag but our response does not always have it. Return an empty element.
+        # Upstream normally expects to find a &#39;name&#39; tag but our response does not always have it. We still want to
+        # call upstream, to have exceptions raised. Return an empty list if there is no &#39;name&#39; tag and no errors.
         if message.find(name) is None:
-            return []
-        return super()._get_element_container(message=message, name=name)
+            name = None
+        try:
+            res = super()._get_element_container(message=message, name=name)
+        except EWSError as e:
+            # When the request contains a combination of good and failing subscription IDs, notifications for the good
+            # subscriptions seem to never be returned even though the XML spec allows it. This means there&#39;s no point in
+            # trying to collect any notifications here and delivering a combination of errors and return values.
+            if error_ids:
+                e.value += &#39; (subscription IDs: %s)&#39; % &#39;, &#39;.join(repr(i) for i in error_ids)
+            raise e
+        return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
         getstreamingevents = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
@@ -4218,10 +4225,6 @@ invitation accepts (see
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.GetStreamingEvents.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.GetStreamingEvents.streaming"><code class="name">var <span class="ident">streaming</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -5429,6 +5432,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class SubscribeToPull(Subscribe):
     subscription_request_elem_tag = &#39;m:PullSubscriptionRequest&#39;
+    prefer_affinity = True
 
     def call(self, folders, event_types, watermark, timeout):
         yield from self._partial_call(
@@ -5453,6 +5457,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.SubscribeToPull.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.SubscribeToPull.subscription_request_elem_tag"><code class="name">var <span class="ident">subscription_request_elem_tag</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -5613,6 +5621,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">class SubscribeToStreaming(Subscribe):
     subscription_request_elem_tag = &#39;m:StreamingSubscriptionRequest&#39;
+    prefer_affinity = True
 
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
@@ -5642,6 +5651,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.SubscribeToStreaming.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.SubscribeToStreaming.subscription_request_elem_tag"><code class="name">var <span class="ident">subscription_request_elem_tag</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -6024,6 +6037,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     SERVICE_NAME = &#39;Unsubscribe&#39;
     returns_elements = False
+    prefer_affinity = True
 
     def call(self, subscription_id):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
@@ -6041,6 +6055,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.Unsubscribe.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.Unsubscribe.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -7152,7 +7170,6 @@ call.</p>
 <li><code><a title="exchangelib.services.GetStreamingEvents.element_container_name" href="#exchangelib.services.GetStreamingEvents.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.GetStreamingEvents.get_payload" href="#exchangelib.services.GetStreamingEvents.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.GetStreamingEvents.prefer_affinity" href="#exchangelib.services.GetStreamingEvents.prefer_affinity">prefer_affinity</a></code></li>
-<li><code><a title="exchangelib.services.GetStreamingEvents.streaming" href="#exchangelib.services.GetStreamingEvents.streaming">streaming</a></code></li>
 </ul>
 </li>
 <li>
@@ -7248,6 +7265,7 @@ call.</p>
 <ul class="">
 <li><code><a title="exchangelib.services.SubscribeToPull.call" href="#exchangelib.services.SubscribeToPull.call">call</a></code></li>
 <li><code><a title="exchangelib.services.SubscribeToPull.get_payload" href="#exchangelib.services.SubscribeToPull.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToPull.prefer_affinity" href="#exchangelib.services.SubscribeToPull.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.SubscribeToPull.subscription_request_elem_tag" href="#exchangelib.services.SubscribeToPull.subscription_request_elem_tag">subscription_request_elem_tag</a></code></li>
 </ul>
 </li>
@@ -7264,6 +7282,7 @@ call.</p>
 <ul class="">
 <li><code><a title="exchangelib.services.SubscribeToStreaming.call" href="#exchangelib.services.SubscribeToStreaming.call">call</a></code></li>
 <li><code><a title="exchangelib.services.SubscribeToStreaming.get_payload" href="#exchangelib.services.SubscribeToStreaming.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.SubscribeToStreaming.prefer_affinity" href="#exchangelib.services.SubscribeToStreaming.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.SubscribeToStreaming.subscription_request_elem_tag" href="#exchangelib.services.SubscribeToStreaming.subscription_request_elem_tag">subscription_request_elem_tag</a></code></li>
 </ul>
 </li>
@@ -7296,6 +7315,7 @@ call.</p>
 <li><code><a title="exchangelib.services.Unsubscribe.SERVICE_NAME" href="#exchangelib.services.Unsubscribe.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.Unsubscribe.call" href="#exchangelib.services.Unsubscribe.call">call</a></code></li>
 <li><code><a title="exchangelib.services.Unsubscribe.get_payload" href="#exchangelib.services.Unsubscribe.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.Unsubscribe.prefer_affinity" href="#exchangelib.services.Unsubscribe.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.Unsubscribe.returns_elements" href="#exchangelib.services.Unsubscribe.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>

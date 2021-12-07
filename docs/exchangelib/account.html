@@ -31,7 +31,7 @@ from logging import getLogger
 
 from cached_property import threaded_cached_property
 
-from .autodiscover import discover
+from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import DELEGATE, IMPERSONATION, ACCESS_TYPES
 from .errors import UnknownTimeZone
@@ -143,9 +143,9 @@ class Account:
                     credentials = config.credentials
             else:
                 retry_policy, auth_type = None, None
-            self.ad_response, self.protocol = discover(
+            self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
-            )
+            ).discover()
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:
@@ -155,6 +155,9 @@ class Account:
 
         # Other ways of identifying the account can be added later
         self.identity = Identity(primary_smtp_address=primary_smtp_address)
+
+        # For maintaining affinity in e.g. subscriptions
+        self.affinity_cookie = None
 
         # We may need to override the default server version on a per-account basis because Microsoft may report one
         # server version up-front but delegate account requests to an older backend server.
@@ -752,9 +755,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                     credentials = config.credentials
             else:
                 retry_policy, auth_type = None, None
-            self.ad_response, self.protocol = discover(
+            self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
-            )
+            ).discover()
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:
@@ -764,6 +767,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 
         # Other ways of identifying the account can be added later
         self.identity = Identity(primary_smtp_address=primary_smtp_address)
+
+        # For maintaining affinity in e.g. subscriptions
+        self.affinity_cookie = None
 
         # We may need to override the default server version on a per-account basis because Microsoft may report one
         # server version up-front but delegate account requests to an older backend server.

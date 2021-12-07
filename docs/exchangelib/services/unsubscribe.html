@@ -38,6 +38,7 @@ class Unsubscribe(EWSAccountService):
 
     SERVICE_NAME = &#39;Unsubscribe&#39;
     returns_elements = False
+    prefer_affinity = True
 
     def call(self, subscription_id):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
@@ -76,6 +77,7 @@ class Unsubscribe(EWSAccountService):
 
     SERVICE_NAME = &#39;Unsubscribe&#39;
     returns_elements = False
+    prefer_affinity = True
 
     def call(self, subscription_id):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
@@ -93,6 +95,10 @@ class Unsubscribe(EWSAccountService):
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.unsubscribe.Unsubscribe.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.unsubscribe.Unsubscribe.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -166,6 +172,7 @@ class Unsubscribe(EWSAccountService):
 <li><code><a title="exchangelib.services.unsubscribe.Unsubscribe.SERVICE_NAME" href="#exchangelib.services.unsubscribe.Unsubscribe.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.unsubscribe.Unsubscribe.call" href="#exchangelib.services.unsubscribe.Unsubscribe.call">call</a></code></li>
 <li><code><a title="exchangelib.services.unsubscribe.Unsubscribe.get_payload" href="#exchangelib.services.unsubscribe.Unsubscribe.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.unsubscribe.Unsubscribe.prefer_affinity" href="#exchangelib.services.unsubscribe.Unsubscribe.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.unsubscribe.Unsubscribe.returns_elements" href="#exchangelib.services.unsubscribe.Unsubscribe.returns_elements">returns_elements</a></code></li>
 </ul>
 </li>

@@ -3,6 +3,11 @@ Change Log
 
 HEAD
 ----
+
+
+4.6.2
+-----
+
 - Fix filtering on array-type extended properties.
 - Exceptions in `GetStreamingEvents` responses are now raised.
 - Support affinity cookies for pull and streaming subscriptions.

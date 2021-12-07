@@ -116,8 +116,6 @@ class EWSService(metaclass=abc.ABCMeta):
     supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
-    # Marks services that need affinity to the backend server
-    prefer_affinity = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
@@ -199,13 +197,7 @@ class EWSService(metaclass=abc.ABCMeta):
         self.protocol.config.version = value
 
     def _extra_headers(self, session):
-        headers = {}
-        if self.prefer_affinity:
-            headers[&#39;X-PreferServerAffinity&#39;] = &#39;True&#39;
-        for cookie in session.cookies:
-            if cookie.name == &#39;X-BackEndCookie&#39;:
-                headers[&#39;X-BackEndOverrideCookie&#39;] = cookie.value
-        return headers
+        return {}
 
     @property
     def _account_to_impersonate(self):
@@ -242,6 +234,8 @@ class EWSService(metaclass=abc.ABCMeta):
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def stop_streaming(self):
+        if not self.streaming:
+            raise RuntimeError(&#39;Attempt to stop a non-streaming service&#39;)
         if self._streaming_response:
             self._streaming_response.close()  # Release memory
             self._streaming_response = None
@@ -288,10 +282,15 @@ class EWSService(metaclass=abc.ABCMeta):
                 if self.streaming:
                     self.stop_streaming()
 
+    def _handle_response_cookies(self, session):
+        pass
+
     def _get_response(self, payload, api_version):
         &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
         session = self.protocol.get_session()
-        self._streaming_session, self._streaming_response = None, None
+        if self.streaming:
+            # Make sure to clean up lingering resources
+            self.stop_streaming()
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
@@ -307,6 +306,7 @@ class EWSService(metaclass=abc.ABCMeta):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
+        self._handle_response_cookies(session)
         if self.streaming:
             # We con only release the session when we have fully consumed the response. Save session and response
             # objects for later.
@@ -318,7 +318,7 @@ class EWSService(metaclass=abc.ABCMeta):
     @property
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
+        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
 
     def _get_response_xml(self, payload, **parse_opts):
         &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -370,7 +370,9 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(&#39;Tried versions %s but all were invalid&#39; % self._api_versions_to_try)
+        raise self.NO_VALID_SERVER_VERSIONS(
+            &#39;Tried versions %s but all were invalid&#39; % &#39;, &#39;.join(self._api_versions_to_try)
+        )
 
     def _handle_backoff(self, e):
         &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
@@ -787,6 +789,8 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for services that act on items concerning a single Mailbox on the server.&#34;&#34;&#34;
 
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
 
     def __init__(self, *args, **kwargs):
         self.account = kwargs.pop(&#39;account&#39;)
@@ -801,11 +805,28 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.account.version = value
 
-    def _extra_headers(self, *args, **kwargs):
-        headers = super()._extra_headers(*args, **kwargs)
+    def _handle_response_cookies(self, session):
+        super()._handle_response_cookies(session=session)
+
+        # See self._extra_headers() for documentation on affinity
+        if self.prefer_affinity:
+            for cookie in session.cookies:
+                if cookie.name == &#39;X-BackEndOverrideCookie&#39;:
+                    self.account.affinity_cookie = cookie.value
+                    break
+
+    def _extra_headers(self, session):
+        headers = super()._extra_headers(session=session)
         # See
         # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
         headers[&#39;X-AnchorMailbox&#39;] = self.account.primary_smtp_address
+
+        # See
+        # https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/how-to-maintain-affinity-between-group-of-subscriptions-and-mailbox-server
+        if self.prefer_affinity:
+            headers[&#39;X-PreferServerAffinity&#39;] = &#39;True&#39;
+            if self.account.affinity_cookie:
+                headers[&#39;X-BackEndOverrideCookie&#39;] = self.account.affinity_cookie
         return headers
 
     @property
@@ -1087,6 +1108,8 @@ def parse_folder_elem(elem, folder, account):
     &#34;&#34;&#34;Base class for services that act on items concerning a single Mailbox on the server.&#34;&#34;&#34;
 
     NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
 
     def __init__(self, *args, **kwargs):
         self.account = kwargs.pop(&#39;account&#39;)
@@ -1101,11 +1124,28 @@ def parse_folder_elem(elem, folder, account):
     def _version_hint(self, value):
         self.account.version = value
 
-    def _extra_headers(self, *args, **kwargs):
-        headers = super()._extra_headers(*args, **kwargs)
+    def _handle_response_cookies(self, session):
+        super()._handle_response_cookies(session=session)
+
+        # See self._extra_headers() for documentation on affinity
+        if self.prefer_affinity:
+            for cookie in session.cookies:
+                if cookie.name == &#39;X-BackEndOverrideCookie&#39;:
+                    self.account.affinity_cookie = cookie.value
+                    break
+
+    def _extra_headers(self, session):
+        headers = super()._extra_headers(session=session)
         # See
         # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
         headers[&#39;X-AnchorMailbox&#39;] = self.account.primary_smtp_address
+
+        # See
+        # https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/how-to-maintain-affinity-between-group-of-subscriptions-and-mailbox-server
+        if self.prefer_affinity:
+            headers[&#39;X-PreferServerAffinity&#39;] = &#39;True&#39;
+            if self.account.affinity_cookie:
+                headers[&#39;X-BackEndOverrideCookie&#39;] = self.account.affinity_cookie
         return headers
 
     @property
@@ -1160,6 +1200,13 @@ def parse_folder_elem(elem, folder, account):
 <li><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration" href="update_user_configuration.html#exchangelib.services.update_user_configuration.UpdateUserConfiguration">UpdateUserConfiguration</a></li>
 <li><a title="exchangelib.services.upload_items.UploadItems" href="upload_items.html#exchangelib.services.upload_items.UploadItems">UploadItems</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.common.EWSAccountService.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSService" href="#exchangelib.services.common.EWSService">EWSService</a></b></code>:
@@ -1205,8 +1252,6 @@ def parse_folder_elem(elem, folder, account):
     supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
-    # Marks services that need affinity to the backend server
-    prefer_affinity = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
@@ -1288,13 +1333,7 @@ def parse_folder_elem(elem, folder, account):
         self.protocol.config.version = value
 
     def _extra_headers(self, session):
-        headers = {}
-        if self.prefer_affinity:
-            headers[&#39;X-PreferServerAffinity&#39;] = &#39;True&#39;
-        for cookie in session.cookies:
-            if cookie.name == &#39;X-BackEndCookie&#39;:
-                headers[&#39;X-BackEndOverrideCookie&#39;] = cookie.value
-        return headers
+        return {}
 
     @property
     def _account_to_impersonate(self):
@@ -1331,6 +1370,8 @@ def parse_folder_elem(elem, folder, account):
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
     def stop_streaming(self):
+        if not self.streaming:
+            raise RuntimeError(&#39;Attempt to stop a non-streaming service&#39;)
         if self._streaming_response:
             self._streaming_response.close()  # Release memory
             self._streaming_response = None
@@ -1377,10 +1418,15 @@ def parse_folder_elem(elem, folder, account):
                 if self.streaming:
                     self.stop_streaming()
 
+    def _handle_response_cookies(self, session):
+        pass
+
     def _get_response(self, payload, api_version):
         &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
         session = self.protocol.get_session()
-        self._streaming_session, self._streaming_response = None, None
+        if self.streaming:
+            # Make sure to clean up lingering resources
+            self.stop_streaming()
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
@@ -1396,6 +1442,7 @@ def parse_folder_elem(elem, folder, account):
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
+        self._handle_response_cookies(session)
         if self.streaming:
             # We con only release the session when we have fully consumed the response. Save session and response
             # objects for later.
@@ -1407,7 +1454,7 @@ def parse_folder_elem(elem, folder, account):
     @property
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return [self._version_hint.api_version] + [v for v in API_VERSIONS if v != self._version_hint.api_version]
+        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
 
     def _get_response_xml(self, payload, **parse_opts):
         &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -1459,7 +1506,9 @@ def parse_folder_elem(elem, folder, account):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(&#39;Tried versions %s but all were invalid&#39; % self._api_versions_to_try)
+        raise self.NO_VALID_SERVER_VERSIONS(
+            &#39;Tried versions %s but all were invalid&#39; % &#39;, &#39;.join(self._api_versions_to_try)
+        )
 
     def _handle_backoff(self, e):
         &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
@@ -1915,10 +1964,6 @@ def parse_folder_elem(elem, folder, account):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.common.EWSService.prefer_affinity"><code class="name">var <span class="ident">prefer_affinity</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="exchangelib.services.common.EWSService.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1998,6 +2043,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def stop_streaming(self):
+    if not self.streaming:
+        raise RuntimeError(&#39;Attempt to stop a non-streaming service&#39;)
     if self._streaming_response:
         self._streaming_response.close()  # Release memory
         self._streaming_response = None
@@ -2036,6 +2083,9 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul>
 <li>
 <h4><code><a title="exchangelib.services.common.EWSAccountService" href="#exchangelib.services.common.EWSAccountService">EWSAccountService</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.common.EWSAccountService.prefer_affinity" href="#exchangelib.services.common.EWSAccountService.prefer_affinity">prefer_affinity</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.common.EWSService" href="#exchangelib.services.common.EWSService">EWSService</a></code></h4>
@@ -2049,7 +2099,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.paging_container_name" href="#exchangelib.services.common.EWSService.paging_container_name">paging_container_name</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="#exchangelib.services.common.EWSService.parse">parse</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.prefer_affinity" href="#exchangelib.services.common.EWSService.prefer_affinity">prefer_affinity</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.returns_elements" href="#exchangelib.services.common.EWSService.returns_elements">returns_elements</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.stop_streaming" href="#exchangelib.services.common.EWSService.stop_streaming">stop_streaming</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.supported_from" href="#exchangelib.services.common.EWSService.supported_from">supported_from</a></code></li>

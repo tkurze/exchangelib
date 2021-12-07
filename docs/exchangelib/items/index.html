@@ -467,7 +467,7 @@ we use folder.account.</p></div>
 
     @classmethod
     def timezone_fields(cls):
-        return [f for f in cls.FIELDS if isinstance(f, TimeZoneField)]
+        return tuple(f for f in cls.FIELDS if isinstance(f, TimeZoneField))
 
     def clean_timezone_fields(self, version):
         # Sets proper values on the timezone fields if they are not already set
@@ -643,7 +643,7 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">@classmethod
 def timezone_fields(cls):
-    return [f for f in cls.FIELDS if isinstance(f, TimeZoneField)]</code></pre>
+    return tuple(f for f in cls.FIELDS if isinstance(f, TimeZoneField))</code></pre>
 </details>
 </dd>
 </dl>
@@ -4050,7 +4050,10 @@ we use folder.account.</p></div>
         #   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item
         #
         # Find the correct index for the new extended property, and insert.
-        field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
+        if attr_cls.is_array_type():
+            field = ExtendedPropertyListField(attr_name, value_cls=attr_cls)
+        else:
+            field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
         cls.add_field(field, insert_after=cls.INSERT_AFTER_FIELD)
 
     @classmethod
@@ -4150,7 +4153,10 @@ def register(cls, attr_name, attr_cls):
     #   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item
     #
     # Find the correct index for the new extended property, and insert.
-    field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
+    if attr_cls.is_array_type():
+        field = ExtendedPropertyListField(attr_name, value_cls=attr_cls)
+    else:
+        field = ExtendedPropertyField(attr_name, value_cls=attr_cls)
     cls.add_field(field, insert_after=cls.INSERT_AFTER_FIELD)</code></pre>
 </details>
 </dd>

@@ -46,7 +46,7 @@ from .settings import OofSettings
 from .transport import BASIC, DIGEST, NTLM, GSSAPI, SSPI, OAUTH2, CBA
 from .version import Build, Version
 
-__version__ = &#39;4.6.1&#39;
+__version__ = &#39;4.6.2&#39;
 
 __all__ = [
     &#39;__version__&#39;,
@@ -354,9 +354,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                     credentials = config.credentials
             else:
                 retry_policy, auth_type = None, None
-            self.ad_response, self.protocol = discover(
+            self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
-            )
+            ).discover()
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:
@@ -366,6 +366,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 
         # Other ways of identifying the account can be added later
         self.identity = Identity(primary_smtp_address=primary_smtp_address)
+
+        # For maintaining affinity in e.g. subscriptions
+        self.affinity_cookie = None
 
         # We may need to override the default server version on a per-account basis because Microsoft may report one
         # server version up-front but delegate account requests to an older backend server.
@@ -3736,7 +3739,7 @@ we use folder.account.</p></div>
 
     @classmethod
     def timezone_fields(cls):
-        return [f for f in cls.FIELDS if isinstance(f, TimeZoneField)]
+        return tuple(f for f in cls.FIELDS if isinstance(f, TimeZoneField))
 
     def clean_timezone_fields(self, version):
         # Sets proper values on the timezone fields if they are not already set
@@ -3912,7 +3915,7 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">@classmethod
 def timezone_fields(cls):
-    return [f for f in cls.FIELDS if isinstance(f, TimeZoneField)]</code></pre>
+    return tuple(f for f in cls.FIELDS if isinstance(f, TimeZoneField))</code></pre>
 </details>
 </dd>
 </dl>
@@ -7358,7 +7361,7 @@ def root(self):
     @threaded_cached_property
     def folders(self):
         # Resolve the list of folders, in case it&#39;s a generator
-        return list(self._folders)
+        return tuple(self._folders)
 
     def __len__(self):
         return len(self.folders)
@@ -10200,17 +10203,17 @@ we use folder.account.</p></div>
             if lookup == self.LOOKUP_EXISTS:
                 # value=True will fall through to further processing
                 if not value:
-                    return [~self.__class__(**{key: True})]
+                    return (~self.__class__(**{key: True}),)
 
             if lookup == self.LOOKUP_RANGE:
                 # EWS doesn&#39;t have a &#39;range&#39; operator. Emulate &#39;foo__range=(1, 2)&#39; as &#39;foo__gte=1 and foo__lte=2&#39;
                 # (both values inclusive).
                 if len(value) != 2:
                     raise ValueError(&#34;Value of lookup &#39;%s&#39; must have exactly 2 elements&#34; % key)
-                return [
+                return (
                     self.__class__(**{&#39;%s__gte&#39; % field_path: value[0]}),
                     self.__class__(**{&#39;%s__lte&#39; % field_path: value[1]}),
-                ]
+                )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
             #
@@ -10226,19 +10229,19 @@ we use folder.account.</p></div>
             # &#39;Contains&#39; element which only supports matching on string elements, not arrays.
             #
             # Exact matching of categories (i.e. match [&#39;a&#39;, &#39;b&#39;] but not [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]) could be implemented by
-            # post-processing items by fetch the categories field unconditionally and removing the items that don&#39;t
+            # post-processing items by fetching the categories field unconditionally and removing the items that don&#39;t
             # have an exact match.
             if lookup == self.LOOKUP_IN:
                 # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
                 # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
                 if not is_iterable(value, generators_allowed=True):
                     raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
-                children = [self.__class__(**{field_path: v}) for v in value]
+                children = tuple(self.__class__(**{field_path: v}) for v in value)
                 if not children:
                     # This is an &#39;__in&#39; operator with an empty list as the value. We interpret it to mean &#34;is foo
                     # contained in the empty set?&#34; which is always false. Mark this Q object as such.
-                    return [self.__class__(conn_type=self.NEVER)]
-                return [self.__class__(*children, conn_type=self.OR)]
+                    return (self.__class__(conn_type=self.NEVER),)
+                return (self.__class__(*children, conn_type=self.OR),)
 
             if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
                 # A &#39;__contains&#39; lookup with an list as the value ony makes sense for list fields, since exact match
@@ -10246,8 +10249,8 @@ we use folder.account.</p></div>
                 #
                 # An empty list as value is allowed. We interpret it to mean &#34;are all values in the empty set contained
                 # in foo?&#34; which is always true.
-                children = [self.__class__(**{field_path: v}) for v in value]
-                return [self.__class__(*children, conn_type=self.AND)]
+                children = tuple(self.__class__(**{field_path: v}) for v in value)
+                return (self.__class__(*children, conn_type=self.AND),)
 
             try:
                 op = self._lookup_to_op(lookup)
@@ -10257,13 +10260,13 @@ we use folder.account.</p></div>
             field_path, op = key, self.EQ
 
         if not is_single_kwarg:
-            return [self.__class__(**{key: value})]
+            return (self.__class__(**{key: value}),)
 
         # This is a single-kwarg Q object with a lookup that requires a single value. Make this a leaf
         self.field_path = field_path
         self.op = op
         self.value = value
-        return []
+        return ()
 
     def reduce(self):
         &#34;&#34;&#34;Simplify this object, if possible.&#34;&#34;&#34;

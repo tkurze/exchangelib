@@ -34,7 +34,7 @@ from operator import attrgetter
 from .collections import FolderCollection, SyncCompleted
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound
+    ErrorDeleteDistinguishedFolder, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
@@ -46,7 +46,7 @@ from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, Ge
     CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
     Unsubscribe, GetEvents, GetStreamingEvents, MoveFolder
 from ..services.get_user_configuration import ALL
-from ..util import TNS, require_id
+from ..util import TNS, require_id, is_iterable
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
 
 log = logging.getLogger(__name__)
@@ -683,11 +683,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             if not notification.more_events:
                 break
 
-    def get_streaming_events(self, subscription_id, connection_timeout=1, max_notifications_returned=None):
+    def get_streaming_events(self, subscription_id_or_ids, connection_timeout=1, max_notifications_returned=None):
         &#34;&#34;&#34;Get events since the subscription was created, in streaming mode. This method will block as many minutes
         as specified by &#39;connection_timeout&#39;.
 
-        :param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
+        :param subscription_id_or_ids: A subscription ID, or list of IDs, as acquired by .subscribe_to_streaming()
         :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
         is reached.
         :param max_notifications_returned: If specified, will exit after receiving this number of notifications
@@ -699,16 +699,16 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         request_timeout = connection_timeout*60 + 60
         svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
+        subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+            else [subscription_id_or_ids]
         for i, notification in enumerate(
-                svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout),
+                svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
                 start=1
         ):
             yield notification
             if max_notifications_returned and i &gt;= max_notifications_returned:
                 svc.stop_streaming()
                 break
-        if svc.error_subscription_ids:
-            raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)
 
     def __floordiv__(self, other):
         &#34;&#34;&#34;Support the some_folder // &#39;child_folder&#39; // &#39;child_of_child_folder&#39; navigation syntax.
@@ -1568,11 +1568,11 @@ class StreamingSubscription(BaseSubscription):
             if not notification.more_events:
                 break
 
-    def get_streaming_events(self, subscription_id, connection_timeout=1, max_notifications_returned=None):
+    def get_streaming_events(self, subscription_id_or_ids, connection_timeout=1, max_notifications_returned=None):
         &#34;&#34;&#34;Get events since the subscription was created, in streaming mode. This method will block as many minutes
         as specified by &#39;connection_timeout&#39;.
 
-        :param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
+        :param subscription_id_or_ids: A subscription ID, or list of IDs, as acquired by .subscribe_to_streaming()
         :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
         is reached.
         :param max_notifications_returned: If specified, will exit after receiving this number of notifications
@@ -1584,16 +1584,16 @@ class StreamingSubscription(BaseSubscription):
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         request_timeout = connection_timeout*60 + 60
         svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
+        subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+            else [subscription_id_or_ids]
         for i, notification in enumerate(
-                svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout),
+                svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
                 start=1
         ):
             yield notification
             if max_notifications_returned and i &gt;= max_notifications_returned:
                 svc.stop_streaming()
                 break
-        if svc.error_subscription_ids:
-            raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)
 
     def __floordiv__(self, other):
         &#34;&#34;&#34;Support the some_folder // &#39;child_folder&#39; // &#39;child_of_child_folder&#39; navigation syntax.
@@ -2192,12 +2192,12 @@ sync methods.</p></div>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.get_streaming_events"><code class="name flex">
-<span>def <span class="ident">get_streaming_events</span></span>(<span>self, subscription_id, connection_timeout=1, max_notifications_returned=None)</span>
+<span>def <span class="ident">get_streaming_events</span></span>(<span>self, subscription_id_or_ids, connection_timeout=1, max_notifications_returned=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get events since the subscription was created, in streaming mode. This method will block as many minutes
 as specified by 'connection_timeout'.</p>
-<p>:param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
+<p>:param subscription_id_or_ids: A subscription ID, or list of IDs, as acquired by .subscribe_to_streaming()
 :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
 is reached.
 :param max_notifications_returned: If specified, will exit after receiving this number of notifications
@@ -2208,11 +2208,11 @@ sync methods.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_streaming_events(self, subscription_id, connection_timeout=1, max_notifications_returned=None):
+<pre><code class="python">def get_streaming_events(self, subscription_id_or_ids, connection_timeout=1, max_notifications_returned=None):
     &#34;&#34;&#34;Get events since the subscription was created, in streaming mode. This method will block as many minutes
     as specified by &#39;connection_timeout&#39;.
 
-    :param subscription_id: A subscription ID as acquired by .subscribe_to_streaming()
+    :param subscription_id_or_ids: A subscription ID, or list of IDs, as acquired by .subscribe_to_streaming()
     :param connection_timeout: Timeout of the connection, in minutes. The connection is closed after this timeout
     is reached.
     :param max_notifications_returned: If specified, will exit after receiving this number of notifications
@@ -2224,16 +2224,16 @@ sync methods.</p></div>
     # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
     request_timeout = connection_timeout*60 + 60
     svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
+    subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+        else [subscription_id_or_ids]
     for i, notification in enumerate(
-            svc.call(subscription_ids=[subscription_id], connection_timeout=connection_timeout),
+            svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
             start=1
     ):
         yield notification
         if max_notifications_returned and i &gt;= max_notifications_returned:
             svc.stop_streaming()
-            break
-    if svc.error_subscription_ids:
-        raise ErrorInvalidSubscription(&#39;Invalid subscription IDs: %s&#39; % svc.error_subscription_ids)</code></pre>
+            break</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.get_user_configuration"><code class="name flex">
