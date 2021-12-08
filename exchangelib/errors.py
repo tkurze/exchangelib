@@ -43,8 +43,8 @@ class RateLimitError(TransportError):
         self.total_wait = total_wait
 
     def __str__(self):
-        f'{self.value} (gave up after {self.total_wait:.3f} seconds. ' \
-        f'URL {self.url} returned status code {self.status_code})'
+        return f'{self.value} (gave up after {self.total_wait:.3f} seconds. ' \
+               f'URL {self.url} returned status code {self.status_code})'
 
 
 class SOAPError(TransportError):

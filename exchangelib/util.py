@@ -671,7 +671,7 @@ def split_url(url):
 def get_redirect_url(response, allow_relative=True, require_relative=False):
     # allow_relative=False throws RelativeRedirect error if scheme and hostname are equal to the request
     # require_relative=True throws RelativeRedirect error if scheme and hostname are not equal to the request
-    redirect_url = response.headers.get('location', None)
+    redirect_url = response.headers.get('location')
     if not redirect_url:
         raise TransportError('HTTP redirect but no location header')
     # At least some servers are kind enough to supply a new location. It may be relative

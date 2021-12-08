@@ -285,7 +285,7 @@ class EWSElement(metaclass=EWSMeta):
         # specific, non-documented order and will fail with meaningless errors if the order is wrong.
 
         # Collect attributes
-        attrs = dict()
+        attrs = {}
         for f in self.attribute_fields():
             if f.is_read_only:
                 continue
