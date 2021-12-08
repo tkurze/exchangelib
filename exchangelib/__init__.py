@@ -40,7 +40,8 @@ __all__ = [
 
 # Set a default user agent, e.g. "exchangelib/3.1.1 (python-requests/2.22.0)"
 import requests.utils
-BaseProtocol.USERAGENT = "%s/%s (%s)" % (__name__, __version__, requests.utils.default_user_agent())
+BaseProtocol.USERAGENT = f"{__name__}/{__version__} ({requests.utils.default_user_agent()})"
+
 
 def close_connections():
     from .autodiscover import close_connections as close_autodiscover_connections

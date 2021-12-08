@@ -24,7 +24,7 @@ class SendNotification(EWSService):
     @classmethod
     def _response_tag(cls):
         """Return the name of the element containing the service response."""
-        return '{%s}%s' % (MNS, cls.SERVICE_NAME)
+        return f'{{{MNS}}}{cls.SERVICE_NAME}'
 
     @classmethod
     def _get_elements_in_container(cls, container):

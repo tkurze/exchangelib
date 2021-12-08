@@ -16,19 +16,15 @@ class DeleteItem(EWSAccountService):
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
         from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError("'delete_type' %s must be one of %s" % (
-                delete_type, DELETE_TYPE_CHOICES
-            ))
+            raise ValueError(f"'delete_type' {delete_type} must be one of {DELETE_TYPE_CHOICES}")
         if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
-            raise ValueError("'send_meeting_cancellations' %s must be one of %s" % (
-                send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
-            ))
+            raise ValueError(f"'send_meeting_cancellations' {send_meeting_cancellations} must be one of "
+                             f"{SEND_MEETING_CANCELLATIONS_CHOICES}")
         if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
-            raise ValueError("'affected_task_occurrences' %s must be one of %s" % (
-                affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
-            ))
+            raise ValueError(f"'affected_task_occurrences' {affected_task_occurrences} must be one of "
+                             f"{AFFECTED_TASK_OCCURRENCES_CHOICES}")
         if suppress_read_receipts not in (True, False):
-            raise ValueError("'suppress_read_receipts' %s must be True or False" % suppress_read_receipts)
+            raise ValueError(f"'suppress_read_receipts' {suppress_read_receipts} must be True or False")
         return self._chunked_get_elements(
             self.get_payload,
             items=items,
@@ -43,7 +39,7 @@ class DeleteItem(EWSAccountService):
         # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
         if self.account.version.build >= EXCHANGE_2013_SP1:
             deleteitem = create_element(
-                'm:%s' % self.SERVICE_NAME,
+                f'm:{self.SERVICE_NAME}',
                 attrs=dict(
                     DeleteType=delete_type,
                     SendMeetingCancellations=send_meeting_cancellations,
@@ -53,7 +49,7 @@ class DeleteItem(EWSAccountService):
             )
         else:
             deleteitem = create_element(
-                'm:%s' % self.SERVICE_NAME,
+                f'm:{self.SERVICE_NAME}',
                 attrs=dict(
                     DeleteType=delete_type,
                     SendMeetingCancellations=send_meeting_cancellations,

@@ -104,21 +104,21 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         :param account:
         """
         if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError('Class %s must have a DISTINGUISHED_FOLDER_ID value' % cls)
+            raise ValueError(f'Class {cls} must have a DISTINGUISHED_FOLDER_ID value')
         try:
             return cls.resolve(
                 account=account,
                 folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound('Could not find distinguished folder %s' % cls.DISTINGUISHED_FOLDER_ID)
+            raise ErrorFolderNotFound(f'Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}')
 
     def get_default_folder(self, folder_cls):
         """Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type 'folder_cls'
         """
         if not folder_cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError("'folder_cls' %s must have a DISTINGUISHED_FOLDER_ID value" % folder_cls)
+            raise ValueError(f"'folder_cls' {folder_cls} must have a DISTINGUISHED_FOLDER_ID value")
         # Use cached distinguished folder instance, but only if cache has already been prepped. This is an optimization
         # for accessing e.g. 'account.contacts' without fetching all folders of the account.
         if self._subfolders is not None:
@@ -139,7 +139,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound('No usable default %s folders' % folder_cls)
+        raise ErrorFolderNotFound(f'No usable default {folder_cls} folders')
 
     @property
     def _folders_map(self):
@@ -263,15 +263,13 @@ class Root(RootOfHierarchy):
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
         if candidates:
             if len(candidates) > 1:
-                raise ValueError(
-                    'Multiple possible default %s folders: %s' % (folder_cls, [f.name for f in candidates])
-                )
+                raise ValueError(f'Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}')
             if candidates[0].is_distinguished:
                 log.debug('Found cached distinguished %s folder', folder_cls)
             else:
                 log.debug('Found cached %s folder with localized name', folder_cls)
             return candidates[0]
-        raise ErrorFolderNotFound('No usable default %s folders' % folder_cls)
+        raise ErrorFolderNotFound(f'No usable default {folder_cls} folders')
 
 
 class PublicFoldersRoot(RootOfHierarchy):

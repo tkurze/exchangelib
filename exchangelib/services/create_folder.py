@@ -6,7 +6,7 @@ class CreateFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation"""
 
     SERVICE_NAME = 'CreateFolder'
-    element_container_name = '{%s}Folders' % MNS
+    element_container_name = f'{{{MNS}}}Folders'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -28,7 +28,7 @@ class CreateFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
-        create_folder = create_element('m:%s' % self.SERVICE_NAME)
+        create_folder = create_element(f'm:{self.SERVICE_NAME}')
         parentfolderid = create_element('m:ParentFolderId')
         set_xml_value(parentfolderid, parent_folder, version=self.account.version)
         set_xml_value(create_folder, parentfolderid, version=self.account.version)

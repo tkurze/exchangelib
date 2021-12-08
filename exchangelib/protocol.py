@@ -61,7 +61,7 @@ class BaseProtocol:
     def __init__(self, config):
         from .configuration import Configuration
         if not isinstance(config, Configuration):
-            raise ValueError("'config' %r must be a Configuration instance" % config)
+            raise ValueError(f"'config' {config!r} must be a Configuration instance")
         if not config.service_endpoint:
             raise AttributeError("'config.service_endpoint' must be set")
         self.config = config
@@ -251,7 +251,7 @@ class BaseProtocol:
             raise ValueError('Cannot create session without knowing the auth type')
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
-                raise ValueError('Auth type %r requires credentials' % self.auth_type)
+                raise ValueError(f'Auth type {self.auth_type!r} requires credentials')
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
@@ -282,9 +282,7 @@ class BaseProtocol:
 
     def create_oauth2_session(self):
         if self.auth_type != OAUTH2:
-            raise ValueError(
-                'Auth type must be %r for credentials type %s' % (OAUTH2, self.credentials.__class__.__name__)
-            )
+            raise ValueError(f'Auth type must be {OAUTH2!r} for credentials type {self.credentials.__class__.__name__}')
 
         has_token = False
         scope = ['https://outlook.office365.com/.default']
@@ -328,7 +326,7 @@ class BaseProtocol:
                 })
             client = WebApplicationClient(self.credentials.client_id, **client_params)
         else:
-            token_url = 'https://login.microsoftonline.com/%s/oauth2/v2.0/token' % self.credentials.tenant_id
+            token_url = f'https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token'
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
@@ -500,18 +498,19 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         from .account import Account
         for account, attendee_type, exclude_conflicts in accounts:
             if not isinstance(account, (Account, str)):
-                raise ValueError("'accounts' item %r must be an 'Account' or 'str' instance" % account)
+                raise ValueError(f"'accounts' item {account!r} must be an 'Account' or 'str' instance")
             if attendee_type not in MailboxData.ATTENDEE_TYPES:
-                raise ValueError("'accounts' item %r must be one of %s" % (attendee_type, MailboxData.ATTENDEE_TYPES))
+                raise ValueError(f"'accounts' item {attendee_type!r} must be one of {MailboxData.ATTENDEE_TYPES}")
             if not isinstance(exclude_conflicts, bool):
-                raise ValueError("'accounts' item %r must be a 'bool' instance" % exclude_conflicts)
+                raise ValueError(f"'accounts' item {exclude_conflicts!r} must be a 'bool' instance")
         if start >= end:
-            raise ValueError("'start' must be less than 'end' (%s -> %s)" % (start, end))
+            raise ValueError(f"'start' must be less than 'end' ({start} -> {end})")
         if not isinstance(merged_free_busy_interval, int):
-            raise ValueError("'merged_free_busy_interval' value %r must be an 'int'" % merged_free_busy_interval)
+            raise ValueError(f"'merged_free_busy_interval' value {merged_free_busy_interval!r} must be an 'int'")
         if requested_view not in FreeBusyViewOptions.REQUESTED_VIEWS:
             raise ValueError(
-                "'requested_view' value %r must be one of %s" % (requested_view, FreeBusyViewOptions.REQUESTED_VIEWS))
+                f"'requested_view' value {requested_view!r} must be one of {FreeBusyViewOptions.REQUESTED_VIEWS}"
+            )
         _, _, periods, transitions, transitions_groups = list(self.get_timezones(
             timezones=[start.tzinfo],
             return_full_timezone_data=True
@@ -616,12 +615,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         else:
             fullname, api_version, build = '[unknown]', '[unknown]', '[unknown]'
 
-        return '''\
-EWS url: %s
-Product name: %s
-EWS API version: %s
-Build number: %s
-EWS auth: %s''' % (self.service_endpoint, fullname, api_version, build, self.auth_type)
+        return f'''\
+EWS url: {self.service_endpoint}
+Product name: {fullname}
+EWS API version: {api_version}
+Build number: {build}
+EWS auth: {self.auth_type}'''
 
 
 class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
@@ -686,14 +685,14 @@ class RetryPolicy(metaclass=abc.ABCMeta):
             raise UnauthorizedError('The referenced account is currently locked out')
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
-            raise UnauthorizedError('Invalid credentials for %s' % response.url)
+            raise UnauthorizedError(f'Invalid credentials for {response.url}')
         if 'TimeoutException' in response.headers:
             # A header set by us on CONNECTION_ERRORS
             raise response.headers['TimeoutException']
         # This could be anything. Let higher layers handle this
         raise MalformedResponseError(
-            'Unknown failure in response. Code: %s headers: %s content: %s'
-            % (response.status_code, response.headers, response.text)
+            f'Unknown failure in response. Code: {response.status_code} headers: {response.headers} '
+            f'content: {response.text}'
         )
 
 

@@ -26,25 +26,25 @@ class PropertiesTest(TimedTestCase):
                 with self.subTest(cls=cls):
                     # Make sure that we have an ELEMENT_NAME on all models
                     if cls != BulkCreateResult and not (cls.__doc__ and cls.__doc__.startswith('Base class ')):
-                        self.assertIsNotNone(cls.ELEMENT_NAME, '%s must have an ELEMENT_NAME' % cls)
+                        self.assertIsNotNone(cls.ELEMENT_NAME, f'{cls} must have an ELEMENT_NAME')
                     # Assert that all FIELDS names are unique on the model. Also assert that the class defines
                     # __slots__, that all fields are mentioned in __slots__ and that __slots__ is unique.
                     field_names = set()
                     all_slots = tuple(chain(*(getattr(c, '__slots__', ()) for c in cls.__mro__)))
                     self.assertEqual(len(all_slots), len(set(all_slots)),
-                                     'Model %s: __slots__ contains duplicates: %s' % (cls, sorted(all_slots)))
+                                     f'Model {cls}: __slots__ contains duplicates: {sorted(all_slots)}')
                     for f in cls.FIELDS:
                         with self.subTest(f=f):
                             self.assertNotIn(f.name, field_names,
-                                             'Field name %r is not unique on model %r' % (f.name, cls.__name__))
+                                             f'Field name {f.name!r} is not unique on model {cls.__name__!r}')
                             self.assertIn(f.name, all_slots,
-                                          'Field name %s is not in __slots__ on model %s' % (f.name, cls.__name__))
+                                          f'Field name {f.name!r} is not in __slots__ on model {cls.__name__}')
                             field_names.add(f.name)
                     # Finally, test that all models have a link to MSDN documentation
                     if issubclass(cls, Folder):
                         # We have a long list of folders subclasses. Don't require a docstring for each
                         continue
-                    self.assertIsNotNone(cls.__doc__, '%s is missing a docstring' % cls)
+                    self.assertIsNotNone(cls.__doc__, f'{cls} is missing a docstring')
                     if cls in (DLMailbox, BulkCreateResult, ExternId, Flag):
                         # Some classes are allowed to not have a link
                         continue
@@ -57,7 +57,7 @@ class PropertiesTest(TimedTestCase):
                     # collapse multiline docstrings
                     docstring = ' '.join(doc.strip() for doc in cls.__doc__.split('\n'))
                     self.assertIn('MSDN: https://docs.microsoft.com', docstring,
-                                  '%s is missing an MSDN link in the docstring' % cls)
+                                  f'{cls} is missing an MSDN link in the docstring')
 
     def test_uid(self):
         # Test translation of calendar UIDs. See #453
@@ -82,9 +82,9 @@ class PropertiesTest(TimedTestCase):
         <t:InternetMessageHeader HeaderName="Return-Path">foo@example.com</t:InternetMessageHeader>
     </t:InternetMessageHeaders>
 </Envelope>'''
-        headers_elem = to_xml(payload).find('{%s}InternetMessageHeaders' % TNS)
+        headers_elem = to_xml(payload).find(f'{{{TNS}}}InternetMessageHeaders')
         headers = {}
-        for elem in headers_elem.findall('{%s}InternetMessageHeader' % TNS):
+        for elem in headers_elem.findall(f'{{{TNS}}}InternetMessageHeader'):
             header = MessageHeader.from_xml(elem=elem, account=None)
             headers[header.name] = header.value
         self.assertDictEqual(

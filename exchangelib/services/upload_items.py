@@ -8,7 +8,7 @@ class UploadItems(EWSAccountService):
     """
 
     SERVICE_NAME = 'UploadItems'
-    element_container_name = '{%s}ItemId' % MNS
+    element_container_name = f'{{{MNS}}}ItemId'
 
     def call(self, items):
         # _pool_requests expects 'items', not 'data'
@@ -24,7 +24,7 @@ class UploadItems(EWSAccountService):
 
         :param items:
         """
-        uploaditems = create_element('m:%s' % self.SERVICE_NAME)
+        uploaditems = create_element(f'm:{self.SERVICE_NAME}')
         itemselement = create_element('m:Items')
         uploaditems.append(itemselement)
         for parent_folder, (item_id, is_associated, data_str) in items:

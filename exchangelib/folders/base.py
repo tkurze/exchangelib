@@ -110,7 +110,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @property
     def absolute(self):
-        return ''.join('/%s' % p.name for p in self.parts)
+        return ''.join(f'/{p.name}' for p in self.parts)
 
     def _walk(self):
         for c in self.children:
@@ -164,29 +164,29 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             ├── exchangelib issues
             └── Mom
         """
-        tree = '%s\n' % self.name
+        tree = f'{self.name}\n'
         children = list(self.children)
         for i, c in enumerate(sorted(children, key=attrgetter('name')), start=1):
             nodes = c.tree().split('\n')
             for j, node in enumerate(nodes, start=1):
                 if i != len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
-                    tree += '├── %s\n' % node
+                    tree += f'├── {node}\n'
                 elif i != len(children) and j > 1:
                     # Not the last child, and not name of child
-                    tree += '│   %s\n' % node
+                    tree += f'│   {node}\n'
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
-                    tree += '└── %s\n' % node
+                    tree += f'└── {node}\n'
                 else:  # Last child, and not name of child
-                    tree += '    %s\n' % node
+                    tree += f'    {node}\n'
         return tree.strip()
 
     @classmethod
     def supports_version(cls, version):
         # 'version' is a Version instance, for convenience by callers
         if not isinstance(version, Version):
-            raise ValueError("'version' %r must be a Version instance" % version)
+            raise ValueError(f"'version' {version!r} must be a Version instance")
         if not cls.supported_from:
             return True
         return version.build >= cls.supported_from
@@ -223,7 +223,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         try:
             return cls.ITEM_MODEL_MAP[tag]
         except KeyError:
-            raise ValueError('Item type %s was unexpected in a %s folder' % (tag, cls.__name__))
+            raise ValueError(f'Item type {tag} was unexpected in a {cls.__name__} folder')
 
     @classmethod
     def allowed_item_fields(cls, version):
@@ -247,7 +247,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             except InvalidField:
                 continue
         else:
-            raise InvalidField("%r is not a valid field on %s" % (field, self.supported_item_models))
+            raise InvalidField(f"{field!r} is not a valid field on { self.supported_item_models}")
 
     def normalize_fields(self, fields):
         # Takes a list of fieldnames, Field or FieldPath objects pointing to item fields. Turns them into FieldPath
@@ -263,7 +263,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 field_path = FieldPath(field=field_path)
                 fields[i] = field_path
             if not isinstance(field_path, FieldPath):
-                raise ValueError("Field %r must be a string or FieldPath instance" % field_path)
+                raise ValueError(f"Field {field_path!r} must be a string or FieldPath instance")
             if field_path.field.name == 'start':
                 has_start = True
             elif field_path.field.name == 'end':
@@ -289,7 +289,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 return item_model.get_field_by_fieldname(fieldname)
             except InvalidField:
                 pass
-        raise InvalidField("%r is not a valid field name on %s" % (fieldname, cls.supported_item_models))
+        raise InvalidField(f"{fieldname!r} is not a valid field name on {cls.supported_item_models}")
 
     def get(self, *args, **kwargs):
         return FolderCollection(account=self.account, folders=[self]).get(*args, **kwargs)
@@ -358,14 +358,14 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     def delete(self, delete_type=HARD_DELETE):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError("'delete_type' %s must be one of %s" % (delete_type, DELETE_TYPE_CHOICES))
+            raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         DeleteFolder(account=self.account).get(folders=[self], delete_type=delete_type)
         self.root.remove_folder(self)  # Remove the updated folder from the cache
         self._id = None
 
     def empty(self, delete_type=HARD_DELETE, delete_sub_folders=False):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError("'delete_type' %s must be one of %s" % (delete_type, DELETE_TYPE_CHOICES))
+            raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         EmptyFolder(account=self.account).get(
             folders=[self], delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
@@ -378,9 +378,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # distinguished folders from being deleted. Use with caution!
         _seen = _seen or set()
         if self.id in _seen:
-            raise RecursionError('We already tried to wipe %s' % self)
+            raise RecursionError(f'We already tried to wipe {self}')
         if _level > 16:
-            raise RecursionError('Max recursion level reached: %s' % _level)
+            raise RecursionError(f'Max recursion level reached: {_level}')
         _seen.add(self.id)
         log.warning('Wiping %s', self)
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
@@ -458,14 +458,14 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Resolve a single folder
         folders = list(FolderCollection(account=account, folders=[folder]).resolve())
         if not folders:
-            raise ErrorFolderNotFound('Could not find folder %r' % folder)
+            raise ErrorFolderNotFound(f'Could not find folder {folder!r}')
         if len(folders) != 1:
-            raise ValueError('Expected result length 1, but got %s' % folders)
+            raise ValueError(f'Expected result length 1, but got {folders}')
         f = folders[0]
         if isinstance(f, Exception):
             raise f
         if f.__class__ != cls:
-            raise ValueError("Expected folder %r to be a %s instance" % (f, cls))
+            raise ValueError(f"Expected folder {f!r} to be a {cls} instance")
         return f
 
     @require_id
@@ -525,7 +525,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             event_types=event_types, watermark=watermark, timeout=timeout,
         ))
         if len(s_ids) != 1:
-            raise ValueError('Expected result length 1, but got %s' % s_ids)
+            raise ValueError(f'Expected result length 1, but got {s_ids}')
         s_id = s_ids[0]
         if isinstance(s_id, Exception):
             raise s_id
@@ -546,7 +546,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
         ))
         if len(s_ids) != 1:
-            raise ValueError('Expected result length 1, but got %s' % s_ids)
+            raise ValueError(f'Expected result length 1, but got {s_ids}')
         s_id = s_ids[0]
         if isinstance(s_id, Exception):
             raise s_id
@@ -563,7 +563,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             event_types=event_types,
         ))
         if len(s_ids) != 1:
-            raise ValueError('Expected result length 1, but got %s' % s_ids)
+            raise ValueError(f'Expected result length 1, but got {s_ids}')
         s_id = s_ids[0]
         if isinstance(s_id, Exception):
             raise s_id
@@ -702,7 +702,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         try:
             return SingleFolderQuerySet(account=self.account, folder=self).depth(SHALLOW_FOLDERS).get(name=other)
         except DoesNotExist:
-            raise ErrorFolderNotFound("No subfolder with name '%s'" % other)
+            raise ErrorFolderNotFound(f"No subfolder with name {other!r}")
 
     def __truediv__(self, other):
         """Support the some_folder / 'child_folder' / 'child_of_child_folder' navigation syntax."""
@@ -715,7 +715,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         for c in self.children:
             if c.name == other:
                 return c
-        raise ErrorFolderNotFound("No subfolder with name '%s'" % other)
+        raise ErrorFolderNotFound(f"No subfolder with name {other!r}")
 
     def __repr__(self):
         return self.__class__.__name__ + \
@@ -723,7 +723,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                      self.folder_class, self.id, self.changekey))
 
     def __str__(self):
-        return '%s (%s)' % (self.__class__.__name__, self.name)
+        return f'{self.__class__.__name__} ({self.name})'
 
 
 class Folder(BaseFolder):
@@ -788,7 +788,7 @@ class Folder(BaseFolder):
                 folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound('Could not find distinguished folder %r' % cls.DISTINGUISHED_FOLDER_ID)
+            raise ErrorFolderNotFound(f'Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}')
 
     @property
     def parent(self):
@@ -805,7 +805,7 @@ class Folder(BaseFolder):
             self.parent_folder_id = None
         else:
             if not isinstance(value, BaseFolder):
-                raise ValueError("'value' %r must be a Folder instance" % value)
+                raise ValueError(f"'value' {value!r} must be a Folder instance")
             self.root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
@@ -813,7 +813,7 @@ class Folder(BaseFolder):
         from .roots import RootOfHierarchy
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
-            raise ValueError("'root' %r must be a RootOfHierarchy instance" % self.root)
+            raise ValueError(f"'root' {self.root!r} must be a RootOfHierarchy instance")
 
     @classmethod
     def from_xml_with_root(cls, elem, root):

@@ -18,11 +18,11 @@ class SyncFolderItems(SyncFolder):
     READ_FLAG_CHANGE = 'read_flag_change'
     CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)
     shape_tag = 'm:ItemShape'
-    last_in_range_name = '{%s}IncludesLastItemInRange' % MNS
+    last_in_range_name = f'{{{MNS}}}IncludesLastItemInRange'
 
     def _change_types_map(self):
         res = super()._change_types_map()
-        res['{%s}ReadFlagChange' % TNS] = self.READ_FLAG_CHANGE
+        res[f'{{{TNS}}}ReadFlagChange'] = self.READ_FLAG_CHANGE
         return res
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
@@ -30,9 +30,9 @@ class SyncFolderItems(SyncFolder):
         if max_changes_returned is None:
             max_changes_returned = self.chunk_size
         if max_changes_returned <= 0:
-            raise ValueError("'max_changes_returned' %s must be a positive integer" % max_changes_returned)
+            raise ValueError(f"'max_changes_returned' {max_changes_returned} must be a positive integer")
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-            raise ValueError("'sync_scope' %s must be one of %r" % (sync_scope, self.SYNC_SCOPES))
+            raise ValueError(f"'sync_scope' {sync_scope!r} must be one of {self.SYNC_SCOPES}")
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
@@ -54,7 +54,7 @@ class SyncFolderItems(SyncFolder):
             if change_type == self.READ_FLAG_CHANGE:
                 item = (
                     ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                    xml_text_to_value(elem.find('{%s}IsRead' % TNS).text, bool)
+                    xml_text_to_value(elem.find(f'{{{TNS}}}IsRead').text, bool)
                 )
             elif change_type == self.DELETE:
                 item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)

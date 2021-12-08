@@ -8,7 +8,7 @@ class ExpandDL(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation"""
 
     SERVICE_NAME = 'ExpandDL'
-    element_container_name = '{%s}DLExpansion' % MNS
+    element_container_name = f'{{{MNS}}}DLExpansion'
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -22,6 +22,6 @@ class ExpandDL(EWSService):
             yield Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
-        payload = create_element('m:%s' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         set_xml_value(payload, distribution_list, version=self.protocol.version)
         return payload

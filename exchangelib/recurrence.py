@@ -41,7 +41,7 @@ class AbsoluteYearlyPattern(Pattern):
     month = EnumField(field_uri='Month', enum=MONTHS, is_required=True)
 
     def __str__(self):
-        return 'Occurs on day %s of %s' % (self.day_of_month, _month_to_str(self.month))
+        return f'Occurs on day {self.day_of_month} of {_month_to_str(self.month)}'
 
 
 class RelativeYearlyPattern(Pattern):
@@ -62,11 +62,8 @@ class RelativeYearlyPattern(Pattern):
     month = EnumField(field_uri='Month', enum=MONTHS, is_required=True)
 
     def __str__(self):
-        return 'Occurs on weekday %s in the %s week of %s' % (
-            _weekday_to_str(self.weekday),
-            _week_number_to_str(self.week_number),
-            _month_to_str(self.month)
-        )
+        return f'Occurs on weekday {_weekday_to_str(self.weekday)} in the {_week_number_to_str(self.week_number)} ' \
+               f'week of {_month_to_str(self.month)}'
 
 
 class AbsoluteMonthlyPattern(Pattern):
@@ -83,7 +80,7 @@ class AbsoluteMonthlyPattern(Pattern):
     day_of_month = IntegerField(field_uri='DayOfMonth', min=1, max=31, is_required=True)
 
     def __str__(self):
-        return 'Occurs on day %s of every %s month(s)' % (self.day_of_month, self.interval)
+        return f'Occurs on day {self.day_of_month} of every {self.interval} month(s)'
 
 
 class RelativeMonthlyPattern(Pattern):
@@ -104,11 +101,8 @@ class RelativeMonthlyPattern(Pattern):
     week_number = EnumField(field_uri='DayOfWeekIndex', enum=WEEK_NUMBERS, is_required=True)
 
     def __str__(self):
-        return 'Occurs on weekday %s in the %s week of every %s month(s)' % (
-            _weekday_to_str(self.weekday),
-            _week_number_to_str(self.week_number),
-            self.interval
-        )
+        return f'Occurs on weekday {_weekday_to_str(self.weekday)} in the {_week_number_to_str(self.week_number)} ' \
+               f'week of every {self.interval} month(s)'
 
 
 class WeeklyPattern(Pattern):
@@ -130,9 +124,8 @@ class WeeklyPattern(Pattern):
             weekdays = [_weekday_to_str(self.weekdays)]
         else:
             weekdays = [_weekday_to_str(i) for i in self.weekdays]
-        return 'Occurs on weekdays %s of every %s week(s) where the first day of the week is %s' % (
-            ', '.join(weekdays), self.interval, _weekday_to_str(self.first_day_of_week)
-        )
+        return f'Occurs on weekdays {", ".join(weekdays)} of every {self.interval} week(s) where the first day of ' \
+               f'the week is {_weekday_to_str(self.first_day_of_week)}'
 
 
 class DailyPattern(Pattern):
@@ -144,7 +137,7 @@ class DailyPattern(Pattern):
     interval = IntegerField(field_uri='Interval', min=1, max=999, is_required=True)
 
     def __str__(self):
-        return 'Occurs every %s day(s)' % self.interval
+        return f'Occurs every {self.interval} day(s)'
 
 
 class YearlyRegeneration(Regeneration):
@@ -156,7 +149,7 @@ class YearlyRegeneration(Regeneration):
     interval = IntegerField(field_uri='Interval', min=1, is_required=True)
 
     def __str__(self):
-        return 'Regenerates every %s year(s)' % self.interval
+        return f'Regenerates every {self.interval} year(s)'
 
 
 class MonthlyRegeneration(Regeneration):
@@ -168,7 +161,7 @@ class MonthlyRegeneration(Regeneration):
     interval = IntegerField(field_uri='Interval', min=1, is_required=True)
 
     def __str__(self):
-        return 'Regenerates every %s month(s)' % self.interval
+        return f'Regenerates every {self.interval} month(s)'
 
 
 class WeeklyRegeneration(Regeneration):
@@ -180,7 +173,7 @@ class WeeklyRegeneration(Regeneration):
     interval = IntegerField(field_uri='Interval', min=1, is_required=True)
 
     def __str__(self):
-        return 'Regenerates every %s week(s)' % self.interval
+        return f'Regenerates every {self.interval} week(s)'
 
 
 class DailyRegeneration(Regeneration):
@@ -192,7 +185,7 @@ class DailyRegeneration(Regeneration):
     interval = IntegerField(field_uri='Interval', min=1, is_required=True)
 
     def __str__(self):
-        return 'Regenerates every %s day(s)' % self.interval
+        return f'Regenerates every {self.interval} day(s)'
 
 
 class Boundary(EWSElement, metaclass=EWSMeta):
@@ -208,7 +201,7 @@ class NoEndPattern(Boundary):
     start = DateOrDateTimeField(field_uri='StartDate', is_required=True)
 
     def __str__(self):
-        return 'Starts on %s' % self.start
+        return f'Starts on {self.start}'
 
 
 class EndDatePattern(Boundary):
@@ -222,7 +215,7 @@ class EndDatePattern(Boundary):
     end = DateOrDateTimeField(field_uri='EndDate', is_required=True)
 
     def __str__(self):
-        return 'Starts on %s, ends on %s' % (self.start, self.end)
+        return f'Starts on {self.start}, ends on {self.end}'
 
 
 class NumberedPattern(Boundary):
@@ -236,7 +229,7 @@ class NumberedPattern(Boundary):
     number = IntegerField(field_uri='NumberOfOccurrences', min=1, max=999, is_required=True)
 
     def __str__(self):
-        return 'Starts on %s and occurs %s times' % (self.start, self.number)
+        return f'Starts on {self.start} and occurs {self.number} times'
 
 
 class Occurrence(IdChangeKeyMixIn):
@@ -336,7 +329,7 @@ class Recurrence(EWSElement):
         return cls(pattern=pattern, boundary=boundary)
 
     def __str__(self):
-        return 'Pattern: %s, Boundary: %s' % (self.pattern, self.boundary)
+        return f'Pattern: {self.pattern}, Boundary: {self.boundary}'
 
 
 class TaskRecurrence(Recurrence):

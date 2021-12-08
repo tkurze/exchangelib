@@ -19,7 +19,7 @@ class GetUserConfiguration(EWSAccountService):
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise ValueError("'properties' %r must be one of %s" % (properties, PROPERTIES_CHOICES))
+            raise ValueError(f"'properties' {properties!r} must be one of {PROPERTIES_CHOICES}")
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 user_configuration_name=user_configuration_name, properties=properties
         )))
@@ -36,7 +36,7 @@ class GetUserConfiguration(EWSAccountService):
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        getuserconfiguration = create_element('m:%s' % self.SERVICE_NAME)
+        getuserconfiguration = create_element(f'm:{self.SERVICE_NAME}')
         set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
         user_configuration_properties = create_element('m:UserConfigurationProperties')
         set_xml_value(user_configuration_properties, properties, version=self.account.version)

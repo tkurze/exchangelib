@@ -28,7 +28,7 @@ class GetUserAvailability(EWSService):
             yield FreeBusyView.from_xml(elem=elem, account=None)
 
     def get_payload(self, timezone, mailbox_data, free_busy_view_options):
-        payload = create_element('m:%sRequest' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}Request')
         set_xml_value(payload, timezone, version=self.protocol.version)
         mailbox_data_array = create_element('m:MailboxDataArray')
         set_xml_value(mailbox_data_array, mailbox_data, version=self.protocol.version)
@@ -38,18 +38,18 @@ class GetUserAvailability(EWSService):
 
     @staticmethod
     def _response_messages_tag():
-        return '{%s}FreeBusyResponseArray' % MNS
+        return f'{{{MNS}}}FreeBusyResponseArray'
 
     @classmethod
     def _response_message_tag(cls):
-        return '{%s}FreeBusyResponse' % MNS
+        return f'{{{MNS}}}FreeBusyResponse'
 
     def _get_elements_in_response(self, response):
         for msg in response:
             # Just check the response code and raise errors
-            self._get_element_container(message=msg.find('{%s}ResponseMessage' % MNS))
+            self._get_element_container(message=msg.find(f'{{{MNS}}}ResponseMessage'))
             yield from self._get_elements_in_container(container=msg)
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find('{%s}FreeBusyView' % MNS)]
+        return [container.find(f'{{{MNS}}}FreeBusyView')]

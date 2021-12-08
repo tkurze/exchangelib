@@ -192,7 +192,7 @@ class Account(AutodiscoverBase):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        public_folder_information = elem.find('{%s}PublicFolderInformation' % cls.NAMESPACE)
+        public_folder_information = elem.find(f'{{{cls.NAMESPACE}}}PublicFolderInformation')
         for f in cls.FIELDS:
             if f.name == 'public_folder_smtp_address':
                 if public_folder_information is None:
@@ -258,7 +258,7 @@ class Response(AutodiscoverBase):
         if Protocol.EXCH in protocols:
             return protocols[Protocol.EXCH].ews_url
         raise ValueError(
-            'No EWS URL found in any of the available protocols: %s' % [str(p) for p in self.account.protocols]
+            f'No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}'
         )
 
 
@@ -295,13 +295,13 @@ class Autodiscover(EWSElement):
         :return:
         """
         if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b'<Autodiscover '):
-            raise ValueError('Response is not XML: %s' % bytes_content)
+            raise ValueError(f'Response is not XML: {bytes_content}')
         try:
             root = to_xml(bytes_content).getroot()
         except ParseError:
-            raise ValueError('Error parsing XML: %s' % bytes_content)
+            raise ValueError(f'Error parsing XML: {bytes_content}')
         if root.tag != cls.response_tag():
-            raise ValueError('Unknown root element in XML: %s' % bytes_content)
+            raise ValueError(f'Unknown root element in XML: {bytes_content}')
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
@@ -311,9 +311,9 @@ class Autodiscover(EWSElement):
             message = self.error_response.error.message
             if message in ('The e-mail address cannot be found.', "The email address can't be found."):
                 raise ErrorNonExistentMailbox('The SMTP address has no mailbox associated with it')
-            raise AutoDiscoverFailed('Unknown error %s: %s' % (errorcode, message))
+            raise AutoDiscoverFailed(f'Unknown error {errorcode}: {message}')
         except AttributeError:
-            raise AutoDiscoverFailed('Unknown autodiscover error response: %s' % self)
+            raise AutoDiscoverFailed(f'Unknown autodiscover error response: {self}')
 
     @staticmethod
     def payload(email):

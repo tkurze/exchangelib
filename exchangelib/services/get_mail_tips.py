@@ -24,7 +24,7 @@ class GetMailTips(EWSService):
             yield MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
-        payload = create_element('m:%s' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
         recipients_elem = create_element('m:Recipients')
@@ -44,4 +44,4 @@ class GetMailTips(EWSService):
 
     @classmethod
     def _response_message_tag(cls):
-        return '{%s}MailTipsResponseMessageType' % MNS
+        return f'{{{MNS}}}MailTipsResponseMessageType'

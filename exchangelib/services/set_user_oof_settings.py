@@ -14,13 +14,13 @@ class SetUserOofSettings(EWSAccountService):
 
     def call(self, oof_settings, mailbox):
         if not isinstance(oof_settings, OofSettings):
-            raise ValueError("'oof_settings' %r must be an OofSettings instance" % oof_settings)
+            raise ValueError(f"'oof_settings' {oof_settings!r} must be an OofSettings instance")
         if not isinstance(mailbox, Mailbox):
-            raise ValueError("'mailbox' %r must be an Mailbox instance" % mailbox)
+            raise ValueError(f"'mailbox' {mailbox!r} must be an Mailbox instance")
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):
-        payload = create_element('m:%sRequest' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}Request')
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
         set_xml_value(payload, oof_settings, version=self.account.version)
         return payload
@@ -31,4 +31,4 @@ class SetUserOofSettings(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return '{%s}ResponseMessage' % MNS
+        return f'{{{MNS}}}ResponseMessage'

@@ -16,7 +16,7 @@ class ConvertId(EWSService):
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise ValueError("'destination_format' %r must be one of %s" % (destination_format, ID_FORMATS))
+            raise ValueError(f"'destination_format' {destination_format!r} must be one of {ID_FORMATS}")
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
@@ -33,11 +33,11 @@ class ConvertId(EWSService):
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        convertid = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
+        convertid = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element('m:SourceIds')
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise ValueError("'item' value %r must be an instance of %r" % (item, supported_item_classes))
+                raise ValueError(f"'item' value {item!r} must be an instance of {supported_item_classes}")
             set_xml_value(item_ids, item, version=self.protocol.version)
         if not len(item_ids):
             raise ValueError('"items" must not be empty')

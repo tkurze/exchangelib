@@ -240,7 +240,7 @@ class CommonItemTest(BaseItemTest):
                     continue
                 try:
                     filter_val = f.clean(self.random_val(f))
-                    filter_kwargs = {'%s__in' % f.name: filter_val} if f.is_list else {f.name: filter_val}
+                    filter_kwargs = {f'{f.name}__in': filter_val} if f.is_list else {f.name: filter_val}
 
                     # We raise ValueError when searching on an is_searchable=False field
                     with self.assertRaises(ValueError):
@@ -299,7 +299,7 @@ class CommonItemTest(BaseItemTest):
                             break
                         time.sleep(2)
                         matches = qs.filter(**kw).count()
-                if f.is_list and not val and list(kw)[0].endswith('__%s' % Q.LOOKUP_IN):
+                if f.is_list and not val and list(kw)[0].endswith(f'__{Q.LOOKUP_IN}'):
                     # __in with an empty list returns an empty result
                     self.assertEqual(matches, 0, (f.name, val, kw))
                 else:
@@ -320,12 +320,12 @@ class CommonItemTest(BaseItemTest):
         for f in fields:
             val = getattr(item, f.name)
             # Filter with =, __in and __contains. We could have more filters here, but these should always match.
-            filter_kwargs = [{f.name: val}, {'%s__in' % f.name: [val]}]
+            filter_kwargs = [{f.name: val}, {f'{f.name}__in': [val]}]
             if isinstance(f, TextField) and not isinstance(f, ChoiceField):
                 # Choice fields cannot be filtered using __contains. Sort of makes sense.
                 random_start = get_random_int(min_val=0, max_val=len(val)//2)
                 random_end = get_random_int(min_val=len(val)//2+1, max_val=len(val))
-                filter_kwargs.append({'%s__contains' % f.name: val[random_start:random_end]})
+                filter_kwargs.append({f'{f.name}__contains': val[random_start:random_end]})
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_list_fields(self):
@@ -347,7 +347,7 @@ class CommonItemTest(BaseItemTest):
         for f in fields:
             val = getattr(item, f.name)
             # Filter multi-value fields with =, __in and __contains
-            filter_kwargs = [{'%s__in' % f.name: val}, {'%s__contains' % f.name: val}]
+            filter_kwargs = [{f'{f.name}__in': val}, {f'{f.name}__contains': val}]
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_single_field_index_fields(self):
@@ -374,7 +374,7 @@ class CommonItemTest(BaseItemTest):
                         continue
                     filter_kwargs.extend([
                         {f.name: v}, {path: subval},
-                        {'%s__in' % path: [subval]}, {'%s__contains' % path: [subval]}
+                        {f'{path}__in': [subval]}, {f'{path}__contains': [subval]}
                     ])
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
@@ -403,7 +403,7 @@ class CommonItemTest(BaseItemTest):
                     if subval is None:
                         continue
                     filter_kwargs.extend([
-                        {path: subval}, {'%s__in' % path: [subval]}, {'%s__contains' % path: [subval]}
+                        {path: subval}, {f'{path}__in': [subval]}, {f'{path}__contains': [subval]}
                     ])
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 

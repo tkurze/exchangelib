@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
     """Base class for SyncFolderHierarchy and SyncFolderItems."""
 
-    element_container_name = '{%s}Changes' % MNS
+    element_container_name = f'{{{MNS}}}Changes'
     # Change types
     CREATE = 'create'
     UPDATE = 'update'
@@ -28,13 +28,13 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
 
     def _change_types_map(self):
         return {
-            '{%s}Create' % TNS: self.CREATE,
-            '{%s}Update' % TNS: self.UPDATE,
-            '{%s}Delete' % TNS: self.DELETE,
+            f'{{{TNS}}}Create': self.CREATE,
+            f'{{{TNS}}}Update': self.UPDATE,
+            f'{{{TNS}}}Delete': self.DELETE,
         }
 
     def _get_element_container(self, message, name=None):
-        self.sync_state = message.find('{%s}SyncState' % MNS).text
+        self.sync_state = message.find(f'{{{MNS}}}SyncState').text
         log.debug('Sync state is: %s', self.sync_state)
         self.includes_last_item_in_range = xml_text_to_value(
             message.find(self.last_in_range_name).text, bool
@@ -43,7 +43,7 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
         return super()._get_element_container(message=message, name=name)
 
     def _partial_get_payload(self, folder, shape, additional_fields, sync_state):
-        svc_elem = create_element('m:%s' % self.SERVICE_NAME)
+        svc_elem = create_element(f'm:{self.SERVICE_NAME}')
         foldershape = create_shape_element(
             tag=self.shape_tag, shape=shape, additional_fields=additional_fields, version=self.account.version
         )
@@ -62,7 +62,7 @@ class SyncFolderHierarchy(SyncFolder):
 
     SERVICE_NAME = 'SyncFolderHierarchy'
     shape_tag = 'm:FolderShape'
-    last_in_range_name = '{%s}IncludesLastFolderInRange' % MNS
+    last_in_range_name = f'{{{MNS}}}IncludesLastFolderInRange'
 
     def call(self, folder, shape, additional_fields, sync_state):
         self.sync_state = sync_state

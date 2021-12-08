@@ -29,7 +29,7 @@ class Fields(list):
         for f in fields:
             # Check for duplicate field names
             if f.name in self._dict:
-                raise ValueError('Field %r is a duplicate' % f)
+                raise ValueError(f'Field {f!r} is a duplicate')
             self._dict[f.name] = f
 
     def __getitem__(self, idx_or_slice):
@@ -63,11 +63,11 @@ class Fields(list):
         for i, f in enumerate(self):
             if f.name == field_name:
                 return i
-        raise ValueError('Unknown field name %r' % field_name)
+        raise ValueError(f'Unknown field name {field_name!r}')
 
     def insert(self, index, field):
         if field.name in self._dict:
-            raise ValueError('Field %r is a duplicate' % field)
+            raise ValueError(f'Field {field!r} is a duplicate')
         super().insert(index, field)
         self._dict[field.name] = field
 
@@ -145,7 +145,7 @@ class UID(bytes):
     # https://stackoverflow.com/questions/33757805
 
     def __new__(cls, uid):
-        payload = binascii.hexlify(bytearray('vCal-Uid\x01\x00\x00\x00{}\x00'.format(uid).encode('ascii')))
+        payload = binascii.hexlify(bytearray(f'vCal-Uid\x01\x00\x00\x00{uid}\x00'.encode('ascii')))
         length = binascii.hexlify(bytearray(struct.pack('<I', int(len(payload)/2))))
         encoding = b''.join([
             cls._HEADER, cls._EXCEPTION_REPLACEMENT_TIME, cls._CREATION_TIME, cls._RESERVED, length, payload
@@ -159,7 +159,7 @@ class UID(bytes):
 
 
 def _mangle(field_name):
-    return '__%s' % field_name
+    return f'__{field_name}'
 
 
 class EWSMeta(type, metaclass=abc.ABCMeta):
@@ -234,7 +234,7 @@ class EWSElement(metaclass=EWSMeta):
         for f in self.FIELDS:
             setattr(self, f.name, kwargs.pop(f.name, None))
         if kwargs:
-            raise AttributeError("%s are invalid kwargs for this class" % ', '.join("'%s'" % k for k in kwargs))
+            raise AttributeError(f"{sorted(kwargs.keys())!r} are invalid kwargs for this class")
 
     def __setattr__(self, key, value):
         # Avoid silently accepting spelling errors to field names that are not set via __init__. We need to be able to
@@ -247,8 +247,9 @@ class EWSElement(metaclass=EWSMeta):
         if hasattr(self, key):
             # Property setters
             return super().__setattr__(key, value)
-        raise AttributeError('%r is not a valid attribute. See %s.FIELDS for valid field names' % (
-            key, self.__class__.__name__))
+        raise AttributeError(
+            f'{key!r} is not a valid attribute. See {self.__class__.__name__}.FIELDS for valid field names'
+        )
 
     def clean(self, version=None):
         # Validate attribute values using the field validator
@@ -309,19 +310,19 @@ class EWSElement(metaclass=EWSMeta):
     @classmethod
     def request_tag(cls):
         if not cls.ELEMENT_NAME:
-            raise ValueError('Class %s is missing the ELEMENT_NAME attribute' % cls)
+            raise ValueError(f'Class {cls} is missing the ELEMENT_NAME attribute')
         return {
-            TNS: 't:%s' % cls.ELEMENT_NAME,
-            MNS: 'm:%s' % cls.ELEMENT_NAME,
+            TNS: f't:{cls.ELEMENT_NAME}',
+            MNS: f'm:{cls.ELEMENT_NAME}',
         }[cls.NAMESPACE]
 
     @classmethod
     def response_tag(cls):
         if not cls.NAMESPACE:
-            raise ValueError('Class %s is missing the NAMESPACE attribute' % cls)
+            raise ValueError(f'Class {cls} is missing the NAMESPACE attribute')
         if not cls.ELEMENT_NAME:
-            raise ValueError('Class %s is missing the ELEMENT_NAME attribute' % cls)
-        return '{%s}%s' % (cls.NAMESPACE, cls.ELEMENT_NAME)
+            raise ValueError(f'Class {cls} is missing the ELEMENT_NAME attribute')
+        return f'{{{cls.NAMESPACE}}}{cls.ELEMENT_NAME}'
 
     @classmethod
     def attribute_fields(cls):
@@ -338,7 +339,7 @@ class EWSElement(metaclass=EWSMeta):
         try:
             return cls.FIELDS[fieldname]
         except KeyError:
-            raise InvalidField("'%s' is not a valid field name on '%s'" % (fieldname, cls.__name__))
+            raise InvalidField(f"{fieldname!r} is not a valid field name on {cls.__name__}")
 
     @classmethod
     def validate_field(cls, field, version):
@@ -349,20 +350,21 @@ class EWSElement(metaclass=EWSMeta):
         :param version:
         """
         if not isinstance(version, Version):
-            raise ValueError("'version' %r must be a Version instance" % version)
+            raise ValueError(f"'version' {version!r} must be a Version instance")
         # Allow both Field and FieldPath instances and string field paths as input
         if isinstance(field, str):
             field = cls.get_field_by_fieldname(fieldname=field)
         elif isinstance(field, FieldPath):
             field = field.field
         if not isinstance(field, Field):
-            raise ValueError("Field %r must be a string, Field or FieldPath instance" % field)
+            raise ValueError(f"Field {field!r} must be a string, Field or FieldPath instance")
         cls.get_field_by_fieldname(fieldname=field.name)  # Will raise if field name is invalid
         if not field.supports_version(version):
             # The field exists but is not valid for this version
             raise InvalidFieldForVersion(
-                "Field '%s' is not supported on server version %s (supported from: %s, deprecated from: %s)"
-                % (field.name, version, field.supported_from, field.deprecated_from))
+                f"Field {field.name!r} is not supported on server version {version} "
+                f"(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})"
+            )
 
     @classmethod
     def add_field(cls, field, insert_after):
@@ -408,14 +410,14 @@ class EWSElement(metaclass=EWSMeta):
         return field_vals
 
     def __str__(self):
-        return self.__class__.__name__ + '(%s)' % ', '.join(
-            '%s=%r' % (name, val) for name, val in self._field_vals() if val is not None
+        args_str = ', '.join(
+            f'{name}={val!r}' for name, val in self._field_vals() if val is not None
         )
+        return f'{self.__class__.__name__}({args_str})'
 
     def __repr__(self):
-        return self.__class__.__name__ + '(%s)' % ', '.join(
-            '%s=%r' % (name, val) for name, val in self._field_vals()
-        )
+        args_str = ', '.join(f'{name}={val!r}' for name, val in self._field_vals())
+        return f'{self.__class__.__name__}({args_str})'
 
 
 class MessageHeader(EWSElement):
@@ -510,7 +512,7 @@ class PersonaId(ItemId):
     @classmethod
     def response_tag(cls):
         # This element is in MNS in the request and TNS in the response...
-        return '{%s}%s' % (TNS, cls.ELEMENT_NAME)
+        return f'{{{TNS}}}{cls.ELEMENT_NAME}'
 
 
 class SourceId(ItemId):
@@ -586,7 +588,7 @@ class Mailbox(EWSElement):
             # A OneOff Mailbox (a one-off member of a personal distribution list) may lack these fields, but other
             # Mailboxes require at least one. See also "Remarks" section of
             # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox
-            raise ValueError("Mailbox type %r must have either 'email_address' or 'item_id' set" % self.mailbox_type)
+            raise ValueError(f"Mailbox type {self.mailbox_type!r} must have either 'email_address' or 'item_id' set")
 
     def __hash__(self):
         # Exchange may add 'mailbox_type' and 'name' on insert. We're satisfied if the item_id or email address matches.
@@ -663,7 +665,7 @@ class AvailabilityMailbox(EWSElement):
     @classmethod
     def from_mailbox(cls, mailbox):
         if not isinstance(mailbox, Mailbox):
-            raise ValueError("'mailbox' %r must be a Mailbox instance" % mailbox)
+            raise ValueError(f"'mailbox' {mailbox!r} must be a Mailbox instance")
         return cls(name=mailbox.name, email_address=mailbox.email_address, routing_type=mailbox.routing_type)
 
 
@@ -843,7 +845,7 @@ class TimeZone(EWSElement):
         valid_tg_id = cls._get_valid_transition_id(transitions=transitions, for_year=for_year)
         transitiongroup = transitionsgroups[valid_tg_id]
         if not 0 <= len(transitiongroup) <= 2:
-            raise ValueError('Expected 0-2 transitions in transitionsgroup %s' % transitiongroup)
+            raise ValueError(f'Expected 0-2 transitions in transitionsgroup {transitiongroup}')
 
         standard_time, daylight_time = cls._get_std_and_dst(transitiongroup=transitiongroup, periods=periods, bias=bias)
         return cls(bias=bias, standard_time=standard_time, daylight_time=daylight_time)
@@ -859,7 +861,7 @@ class TimeZone(EWSElement):
                 continue
             valid_period = period
         if valid_period is None:
-            raise TimezoneDefinitionInvalidForYear('Year %s not included in periods %s' % (for_year, periods))
+            raise TimezoneDefinitionInvalidForYear(f'Year {for_year} not included in periods {periods}')
         return int(valid_period['bias'].total_seconds()) // 60  # Convert to minutes
 
     @staticmethod
@@ -871,7 +873,7 @@ class TimeZone(EWSElement):
                 break
             valid_tg_id = tg_id
         if valid_tg_id is None:
-            raise ValueError('No valid transition for year %s: %s' % (for_year, transitions))
+            raise ValueError(f'No valid transition for year {for_year}: {transitions}')
         return valid_tg_id
 
     @staticmethod
@@ -890,7 +892,7 @@ class TimeZone(EWSElement):
                 continue
             # 'offset' is the time of day to transition, as timedelta since midnight. Must be a reasonable value
             if not datetime.timedelta(0) <= transition['offset'] < datetime.timedelta(days=1):
-                raise ValueError("'offset' value %s must be be between 0 and 24 hours" % transition['offset'])
+                raise ValueError(f"'offset' value {transition['offset']} must be be between 0 and 24 hours")
             transition_kwargs = dict(
                 time=(datetime.datetime(2000, 1, 1) + transition['offset']).time(),
                 occurrence=transition['occurrence'],
@@ -906,7 +908,7 @@ class TimeZone(EWSElement):
                 transition_kwargs['bias'] = dst_bias - bias
                 daylight_time = DaylightTime(**transition_kwargs)
                 continue
-            raise ValueError('Unknown transition: %s' % transition)
+            raise ValueError(f'Unknown transition: {transition}')
         return standard_time, daylight_time
 
 
@@ -983,7 +985,7 @@ class FreeBusyView(EWSElement):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        working_hours_elem = elem.find('{%s}WorkingHours' % TNS)
+        working_hours_elem = elem.find(f'{{{TNS}}}WorkingHours')
         for f in cls.FIELDS:
             if f.name in ['working_hours', 'working_hours_timezone']:
                 if working_hours_elem is None:
@@ -1005,7 +1007,7 @@ class RoomList(Mailbox):
     def response_tag(cls):
         # In a GetRoomLists response, room lists are delivered as Address elements. See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/address-emailaddresstype
-        return '{%s}Address' % TNS
+        return f'{{{TNS}}}Address'
 
 
 class Room(Mailbox):
@@ -1015,12 +1017,12 @@ class Room(Mailbox):
 
     @classmethod
     def from_xml(cls, elem, account):
-        id_elem = elem.find('{%s}Id' % TNS)
+        id_elem = elem.find(f'{{{TNS}}}Id')
         item_id_elem = id_elem.find(ItemId.response_tag())
         kwargs = dict(
-            name=get_xml_attr(id_elem, '{%s}Name' % TNS),
-            email_address=get_xml_attr(id_elem, '{%s}EmailAddress' % TNS),
-            mailbox_type=get_xml_attr(id_elem, '{%s}MailboxType' % TNS),
+            name=get_xml_attr(id_elem, f'{{{TNS}}}Name'),
+            email_address=get_xml_attr(id_elem, f'{{{TNS}}}EmailAddress'),
+            mailbox_type=get_xml_attr(id_elem, f'{{{TNS}}}MailboxType'),
             item_id=ItemId.from_xml(elem=item_id_elem, account=account) if item_id_elem else None,
         )
         cls._clear(elem)
@@ -1219,7 +1221,7 @@ class OutOfOffice(EWSElement):
     @classmethod
     def duration_to_start_end(cls, elem, account):
         kwargs = {}
-        duration = elem.find('{%s}Duration' % TNS)
+        duration = elem.find(f'{{{TNS}}}Duration')
         if duration is not None:
             for attr in ('start', 'end'):
                 f = cls.get_field_by_fieldname(attr)
@@ -1280,7 +1282,7 @@ class AlternateId(EWSElement):
     @classmethod
     def response_tag(cls):
         # This element is in TNS in the request and MNS in the response...
-        return '{%s}%s' % (MNS, cls.ELEMENT_NAME)
+        return f'{{{MNS}}}{cls.ELEMENT_NAME}'
 
 
 class AlternatePublicFolderId(EWSElement):

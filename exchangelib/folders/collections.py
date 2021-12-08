@@ -134,7 +134,7 @@ class FolderCollection(SearchableMixIn):
             except InvalidField:
                 continue
         else:
-            raise InvalidField("%r is not a valid field on %s" % (field, self.supported_item_models))
+            raise InvalidField(f"{field!r} is not a valid field on {self.supported_item_models}")
 
     def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                    calendar_view=None, page_size=None, max_items=None, offset=0):
@@ -161,18 +161,18 @@ class FolderCollection(SearchableMixIn):
             log.debug('Query will never return results')
             return
         if shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
+            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
         if depth is None:
             depth = self._get_default_item_traversal_depth()
         if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise ValueError("'depth' %s must be one of %s" % (depth, ITEM_TRAVERSAL_CHOICES))
+            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
         if additional_fields:
             for f in additional_fields:
                 self.validate_item_field(field=f, version=self.account.version)
                 if f.field.is_complex:
-                    raise ValueError("find_items() does not support field '%s'. Use fetch() instead" % f.field.name)
+                    raise ValueError(f"find_items() does not support field {f.field.name!r}. Use fetch() instead")
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-            raise ValueError("'calendar_view' %s must be a CalendarView instance" % calendar_view)
+            raise ValueError(f"'calendar_view' {calendar_view!r} must be a CalendarView instance")
 
         # Build up any restrictions
         if q.is_empty():
@@ -237,16 +237,16 @@ class FolderCollection(SearchableMixIn):
             log.debug('Query will never return results')
             return
         if shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
+            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
         if depth is None:
             depth = self._get_default_item_traversal_depth()
         if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise ValueError("'depth' %s must be one of %s" % (depth, ITEM_TRAVERSAL_CHOICES))
+            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
         if additional_fields:
             for f in additional_fields:
                 Persona.validate_field(field=f, version=self.account.version)
                 if f.field.is_complex:
-                    raise ValueError("find_people() does not support field '%s'" % f.field.name)
+                    raise ValueError(f"find_people() does not support field {f.field.name!r}")
 
         # Build up any restrictions
         if q.is_empty():
@@ -286,11 +286,11 @@ class FolderCollection(SearchableMixIn):
         for f in self.folders:
             if isinstance(f, RootOfHierarchy):
                 if has_non_roots:
-                    raise ValueError('Cannot call GetFolder on a mix of folder types: {}'.format(self.folders))
+                    raise ValueError(f'Cannot call GetFolder on a mix of folder types: {self.folders}')
                 has_roots = True
             else:
                 if has_roots:
-                    raise ValueError('Cannot call GetFolder on a mix of folder types: {}'.format(self.folders))
+                    raise ValueError(f'Cannot call GetFolder on a mix of folder types: {self.folders}')
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
@@ -299,8 +299,8 @@ class FolderCollection(SearchableMixIn):
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            'Folders in this collection do not have a common %s value. You need to define an explicit traversal depth'
-            'with QuerySet.depth() (values: %s)' % (traversal_attr, unique_depths)
+            f'Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit '
+            f'traversal depth with QuerySet.depth() (values: {unique_depths})'
         )
 
     def _get_default_item_traversal_depth(self):
@@ -345,18 +345,18 @@ class FolderCollection(SearchableMixIn):
         else:
             restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
         if shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one of %s" % (shape, SHAPE_CHOICES))
+            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
         if depth is None:
             depth = self._get_default_folder_traversal_depth()
         if depth not in FOLDER_TRAVERSAL_CHOICES:
-            raise ValueError("'depth' %s must be one of %s" % (depth, FOLDER_TRAVERSAL_CHOICES))
+            raise ValueError(f"'depth' {depth!r} must be one of {FOLDER_TRAVERSAL_CHOICES}")
         if additional_fields is None:
             # Default to all non-complex properties. Subfolders will always be of class Folder
             additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
         else:
             for f in additional_fields:
                 if f.field.is_complex:
-                    raise ValueError("find_folders() does not support field '%s'. Use get_folders()." % f.field.name)
+                    raise ValueError(f"find_folders() does not support field {f.field.name!r}. Use get_folders().")
 
         # Add required fields
         additional_fields.update(

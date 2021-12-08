@@ -170,7 +170,7 @@ class GenericItemTest(CommonItemTest):
         test_items = []
         for i in range(4):
             item = self.get_test_item()
-            item.subject = 'Subj %s' % i
+            item.subject = f'Subj {i}'
             test_items.append(item)
         self.test_folder.bulk_create(items=test_items)
         qs = QuerySet(
@@ -192,7 +192,7 @@ class GenericItemTest(CommonItemTest):
             test_items = []
             for i in range(4):
                 item = self.get_test_item()
-                item.extern_id = 'ID %s' % i
+                item.extern_id = f'ID {i}'
                 test_items.append(item)
             self.test_folder.bulk_create(items=test_items)
             qs = QuerySet(
@@ -217,8 +217,8 @@ class GenericItemTest(CommonItemTest):
             for i in range(2):
                 for j in range(2):
                     item = self.get_test_item()
-                    item.subject = 'Subj %s' % i
-                    item.extern_id = 'ID %s' % j
+                    item.subject = f'Subj {i}'
+                    item.extern_id = f'ID {j}'
                     test_items.append(item)
             self.test_folder.bulk_create(items=test_items)
             qs = QuerySet(
@@ -261,7 +261,7 @@ class GenericItemTest(CommonItemTest):
         for i in range(4):
             item = self.get_test_item()
             if i % 2 == 0:
-                item.subject = 'Subj %s' % i
+                item.subject = f'Subj {i}'
             else:
                 item.subject = None
             test_items.append(item)
@@ -285,7 +285,7 @@ class GenericItemTest(CommonItemTest):
             item = self.get_test_item()
             item.subject = self.categories[0]  # Make sure we have something unique to filter on
             if i % 2 == 0:
-                item.categories = ['Cat %s' % i]
+                item.categories = [f'Cat {i}']
             else:
                 item.categories = []
             test_items.append(item)
@@ -637,7 +637,7 @@ class GenericItemTest(CommonItemTest):
         # Also, some servers are misconfigured and don't support querystrings at all. Don't fail on that.
         try:
             self.assertIn(
-                self.test_folder.filter('Subject:%s' % item.subject).count(),
+                self.test_folder.filter(f'Subject:{item.subject}').count(),
                 (0, 1)
             )
         except ErrorInternalServerError as e:

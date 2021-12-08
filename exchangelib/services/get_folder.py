@@ -8,7 +8,7 @@ class GetFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder-operation"""
 
     SERVICE_NAME = 'GetFolder'
-    element_container_name = '{%s}Folders' % MNS
+    element_container_name = f'{{{MNS}}}Folders'
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
         ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation,
     )
@@ -44,7 +44,7 @@ class GetFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
-        getfolder = create_element('m:%s' % self.SERVICE_NAME)
+        getfolder = create_element(f'm:{self.SERVICE_NAME}')
         foldershape = create_shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         )

@@ -11,8 +11,8 @@ class GetSearchableMailboxes(EWSService):
     """
 
     SERVICE_NAME = 'GetSearchableMailboxes'
-    element_container_name = '{%s}SearchableMailboxes' % MNS
-    failed_mailboxes_container_name = '{%s}FailedMailboxes' % MNS
+    element_container_name = f'{{{MNS}}}SearchableMailboxes'
+    failed_mailboxes_container_name = f'{{{MNS}}}FailedMailboxes'
     supported_from = EXCHANGE_2013
 
     def call(self, search_filter, expand_group_membership):
@@ -30,7 +30,7 @@ class GetSearchableMailboxes(EWSService):
             yield cls_map[elem.tag].from_xml(elem=elem, account=None)
 
     def get_payload(self, search_filter, expand_group_membership):
-        payload = create_element('m:%s' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         if search_filter:
             add_xml_child(payload, 'm:SearchFilter', search_filter)
         if expand_group_membership is not None:

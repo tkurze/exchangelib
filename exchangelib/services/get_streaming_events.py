@@ -6,7 +6,7 @@ from ..properties import Notification
 from ..util import create_element, get_xml_attr, get_xml_attrs, MNS, DocumentYielder, DummyResponse
 
 log = logging.getLogger(__name__)
-xml_log = logging.getLogger('%s.xml' % __name__)
+xml_log = logging.getLogger(f'{__name__}.xml')
 
 
 class GetStreamingEvents(EWSAccountService):
@@ -15,7 +15,7 @@ class GetStreamingEvents(EWSAccountService):
     """
 
     SERVICE_NAME = 'GetStreamingEvents'
-    element_container_name = '{%s}Notifications' % MNS
+    element_container_name = f'{{{MNS}}}Notifications'
     prefer_affinity = True
 
     # Connection status values
@@ -68,9 +68,9 @@ class GetStreamingEvents(EWSAccountService):
                 break
 
     def _get_element_container(self, message, name=None):
-        error_ids_elem = message.find('{%s}ErrorSubscriptionIds' % MNS)
-        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, '{%s}SubscriptionId' % MNS)
-        self.connection_status = get_xml_attr(message, '{%s}ConnectionStatus' % MNS)  # Either 'OK' or 'Closed'
+        error_ids_elem = message.find(f'{{{MNS}}}ErrorSubscriptionIds')
+        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f'{{{MNS}}}SubscriptionId')
+        self.connection_status = get_xml_attr(message, f'{{{MNS}}}ConnectionStatus')  # Either 'OK' or 'Closed'
         log.debug('Connection status is: %s', self.connection_status)
         # Upstream normally expects to find a 'name' tag but our response does not always have it. We still want to
         # call upstream, to have exceptions raised. Return an empty list if there is no 'name' tag and no errors.
@@ -83,12 +83,12 @@ class GetStreamingEvents(EWSAccountService):
             # subscriptions seem to never be returned even though the XML spec allows it. This means there's no point in
             # trying to collect any notifications here and delivering a combination of errors and return values.
             if error_ids:
-                e.value += ' (subscription IDs: %s)' % ', '.join(repr(i) for i in error_ids)
+                e.value += f' (subscription IDs: {error_ids})'
             raise e
         return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
-        getstreamingevents = create_element('m:%s' % self.SERVICE_NAME)
+        getstreamingevents = create_element(f'm:{self.SERVICE_NAME}')
         subscriptions_elem = create_element('m:SubscriptionIds')
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, 't:SubscriptionId', subscription_id)

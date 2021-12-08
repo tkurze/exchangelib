@@ -79,12 +79,12 @@ class Account:
         :return:
         """
         if '@' not in primary_smtp_address:
-            raise ValueError("primary_smtp_address %r is not an email address" % primary_smtp_address)
+            raise ValueError(f"primary_smtp_address {primary_smtp_address!r} is not an email address")
         self.fullname = fullname
         # Assume delegate access if individual credentials are provided. Else, assume service user with impersonation
         self.access_type = access_type or (DELEGATE if credentials else IMPERSONATION)
         if self.access_type not in ACCESS_TYPES:
-            raise ValueError("'access_type' %r must be one of %s" % (self.access_type, ACCESS_TYPES))
+            raise ValueError(f"'access_type' {self.access_type!r} must be one of {ACCESS_TYPES}")
         try:
             self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
         except ValueError as e:
@@ -92,12 +92,12 @@ class Account:
             log.warning('Failed to get locale (%s)', e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
-            raise ValueError("Expected 'locale' to be a string, got %r" % self.locale)
+            raise ValueError(f"Expected 'locale' to be a string, got {self.locale!r}")
         if default_timezone:
             try:
                 self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
             except TypeError:
-                raise ValueError("Expected 'default_timezone' to be an EWSTimeZone, got %r" % default_timezone)
+                raise ValueError(f"Expected 'default_timezone' to be an EWSTimeZone, got {default_timezone!r}")
         else:
             try:
                 self.default_timezone = EWSTimeZone.localzone()
@@ -107,7 +107,7 @@ class Account:
                 log.warning('%s. Fallback to UTC', e.args[0])
                 self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
-            raise ValueError("Expected 'config' to be a Configuration, got %r" % config)
+            raise ValueError(f"Expected 'config' to be a Configuration, got {config}")
         if autodiscover:
             if config:
                 retry_policy, auth_type = config.retry_policy, config.auth_type
@@ -631,7 +631,6 @@ class Account:
         return delegates
 
     def __str__(self):
-        txt = '%s' % self.primary_smtp_address
         if self.fullname:
-            txt += ' (%s)' % self.fullname
-        return txt
+            return f'{self.primary_smtp_address} ({self.fullname})'
+        return self.primary_smtp_address

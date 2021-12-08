@@ -80,7 +80,7 @@ def split_field_path(field_path):
       'physical_addresses__Home__street' -> ('physical_addresses', 'Home', 'street')
     """
     if not isinstance(field_path, str):
-        raise ValueError("Field path %r must be a string" % field_path)
+        raise ValueError(f"Field path {field_path!r} must be a string")
     search_parts = field_path.split('__')
     field = search_parts[0]
     try:
@@ -105,22 +105,19 @@ def resolve_field_path(field_path, folder, strict=True):
     if isinstance(field, IndexedField):
         if strict and not label:
             raise ValueError(
-                "IndexedField path '%s' must specify label, e.g. '%s__%s'"
-                % (field_path, fieldname, field.value_cls.get_field_by_fieldname('label').default)
+                f"IndexedField path {field_path!r} must specify label, e.g. "
+                f"'{fieldname}__{field.value_cls.get_field_by_fieldname('label').default}'"
             )
         valid_labels = field.value_cls.get_field_by_fieldname('label').supported_choices(
             version=folder.account.version
         )
         if label and label not in valid_labels:
-            raise ValueError(
-                "Label '%s' on IndexedField path '%s' must be one of %s"
-                % (label, field_path, ', '.join(valid_labels))
-            )
+            raise ValueError(f"Label {label} on IndexedField path {field_path!r} must be one of {valid_labels}")
         if issubclass(field.value_cls, MultiFieldIndexedElement):
             if strict and not subfieldname:
                 raise ValueError(
-                    "IndexedField path '%s' must specify subfield, e.g. '%s__%s__%s'"
-                    % (field_path, fieldname, label, field.value_cls.FIELDS[1].name)
+                    f"IndexedField path {field_path!r} must specify subfield, e.g. "
+                    f"'{fieldname}__{label}__{field.value_cls.FIELDS[1].name}'"
                 )
 
             if subfieldname:
@@ -131,24 +128,19 @@ def resolve_field_path(field_path, folder, strict=True):
                         version=folder.account.version
                     ))
                     raise ValueError(
-                        "Subfield '%s' on IndexedField path '%s' must be one of %s"
-                        % (subfieldname, field_path, fnames)
+                        f"Subfield {subfieldname!r} on IndexedField path {field_path!r} must be one of {fnames}"
                     )
         else:
             if not issubclass(field.value_cls, SingleFieldIndexedElement):
-                raise ValueError("'field.value_cls' %r must be an SingleFieldIndexedElement instance" % field.value_cls)
+                raise ValueError(f"'field.value_cls' {field.value_cls!r} must be an SingleFieldIndexedElement instance")
             if subfieldname:
                 raise ValueError(
-                    "IndexedField path '%s' must not specify subfield, e.g. just '%s__%s'"
-                    % (field_path, fieldname, label)
+                    f"IndexedField path {field_path!r} must not specify subfield, e.g. just {fieldname}__{label}'"
                 )
             subfield = field.value_cls.value_field(version=folder.account.version)
     else:
         if label or subfieldname:
-            raise ValueError(
-                "Field path '%s' must not specify label or subfield, e.g. just '%s'"
-                % (field_path, fieldname)
-            )
+            raise ValueError(f"Field path {field_path!r} must not specify label or subfield, e.g. just {fieldname!r}")
     return field, label, subfield
 
 
@@ -161,11 +153,11 @@ class FieldPath:
     def __init__(self, field, label=None, subfield=None):
         # 'label' and 'subfield' are only used for IndexedField fields
         if not isinstance(field, (FieldURIField, ExtendedPropertyField)):
-            raise ValueError("'field' %r must be an FieldURIField, of ExtendedPropertyField instance" % field)
+            raise ValueError(f"'field' {field!r} must be an FieldURIField, of ExtendedPropertyField instance")
         if label and not isinstance(label, str):
-            raise ValueError("'label' %r must be a %s instance" % (label, str))
+            raise ValueError(f"'label' {label!r} must be a {str} instance")
         if subfield and not isinstance(subfield, SubField):
-            raise ValueError("'subfield' %r must be a SubField instance" % subfield)
+            raise ValueError(f"'subfield' {subfield!r} must be a SubField instance")
         self.field = field
         self.label = label
         self.subfield = subfield
@@ -197,7 +189,7 @@ class FieldPath:
     def to_xml(self):
         if isinstance(self.field, IndexedField):
             if not self.label or not self.subfield:
-                raise ValueError("Field path for indexed field '%s' is missing label and/or subfield" % self.field.name)
+                raise ValueError(f"Field path for indexed field {self.field.name!r} is missing label and/or subfield")
             return self.subfield.field_uri_xml(field_uri=self.field.field_uri, label=self.label)
         return self.field.field_uri_xml()
 
@@ -219,8 +211,8 @@ class FieldPath:
         if self.label:
             from .indexed_properties import SingleFieldIndexedElement
             if issubclass(self.field.value_cls, SingleFieldIndexedElement) or not self.subfield:
-                return '%s__%s' % (self.field.name, self.label)
-            return '%s__%s__%s' % (self.field.name, self.label, self.subfield.name)
+                return f'{self.field.name}__{self.label}'
+            return f'{self.field.name}__{self.label}__{self.subfield.name}'
         return self.field.name
 
     def __eq__(self, other):
@@ -241,9 +233,9 @@ class FieldOrder:
 
     def __init__(self, field_path, reverse=False):
         if not isinstance(field_path, FieldPath):
-            raise ValueError("'field_path' %r must be a FieldPath instance" % field_path)
+            raise ValueError(f"'field_path' {field_path!r} must be a FieldPath instance")
         if not isinstance(reverse, bool):
-            raise ValueError("'reverse' %r must be a boolean" % reverse)
+            raise ValueError(f"'reverse' {reverse!r} must be a boolean")
         self.field_path = field_path
         self.reverse = reverse
 
@@ -293,33 +285,34 @@ class Field(metaclass=abc.ABCMeta):
         # The Exchange build when this field was introduced. When talking with versions prior to this version,
         # we will ignore this field.
         if supported_from is not None and not isinstance(supported_from, Build):
-            raise ValueError("'supported_from' %r must be a Build instance" % supported_from)
+            raise ValueError(f"'supported_from' {supported_from!r} must be a Build instance")
         self.supported_from = supported_from
         # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
         # we will ignore this field.
         if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise ValueError("'deprecated_from' %r must be a Build instance" % deprecated_from)
+            raise ValueError(f"'deprecated_from' {deprecated_from!r} must be a Build instance")
         self.deprecated_from = deprecated_from
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
-            raise InvalidFieldForVersion("Field '%s' does not support EWS builds prior to %s (server has %s)" % (
-                self.name, self.supported_from, version))
+            raise InvalidFieldForVersion(
+                f"Field {self.name!r} does not support EWS builds prior to {self.supported_from} (server has {version})"
+            )
         if value is None:
             if self.is_required and self.default is None:
-                raise ValueError("'%s' is a required field with no default" % self.name)
+                raise ValueError(f"{self.name!r} is a required field with no default")
             return self.default
         if self.is_list:
             if not is_iterable(value):
-                raise ValueError("Field '%s' value %r must be a list" % (self.name, value))
+                raise ValueError(f"Field {self.name!r} value {value!r} must be a list")
             for v in value:
                 if not isinstance(v, self.value_cls):
-                    raise TypeError("Field '%s' value %r must be of type %s" % (self.name, v, self.value_cls))
+                    raise TypeError(f"Field {self.name!r} value {v!r} must be of type {self.value_cls}")
                 if hasattr(v, 'clean'):
                     v.clean(version=version)
         else:
             if not isinstance(value, self.value_cls):
-                raise TypeError("Field '%s' value %r must be of type %s" % (self.name, value, self.value_cls))
+                raise TypeError(f"Field {self.name!r} value {value!r} must be of type {self.value_cls}")
             if hasattr(value, 'clean'):
                 value.clean(version=version)
         return value
@@ -335,7 +328,7 @@ class Field(metaclass=abc.ABCMeta):
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
         if not isinstance(version, Version):
-            raise ValueError("'version' %r must be a Version instance" % version)
+            raise ValueError(f"'version' {version!r} must be a Version instance")
         if self.supported_from and version.build < self.supported_from:
             return False
         if self.deprecated_from and version.build >= self.deprecated_from:
@@ -350,8 +343,9 @@ class Field(metaclass=abc.ABCMeta):
         pass
 
     def __repr__(self):
-        return self.__class__.__name__ + '(%s)' % ', '.join('%s=%r' % (f, getattr(self, f)) for f in (
+        args_str = ', '.join(f'{f}={getattr(self, f)!r}' for f in (
             'name', 'value_cls', 'is_list', 'is_complex', 'default'))
+        return f'{self.__class__.__name__}({args_str})'
 
 
 class FieldURIField(Field):
@@ -402,12 +396,12 @@ class FieldURIField(Field):
     def request_tag(self):
         if not self.field_uri_postfix:
             raise ValueError("'field_uri_postfix' value is missing")
-        return 't:%s' % self.field_uri_postfix
+        return f't:{self.field_uri_postfix}'
 
     def response_tag(self):
         if not self.field_uri_postfix:
             raise ValueError("'field_uri_postfix' value is missing")
-        return '{%s}%s' % (self.namespace, self.field_uri_postfix)
+        return f'{{{self.namespace}}}{self.field_uri_postfix}'
 
     def __hash__(self):
         return hash(self.field_uri)
@@ -436,9 +430,9 @@ class IntegerField(FieldURIField):
     def _clean_single_value(self, v):
         if self.min is not None and v < self.min:
             raise ValueError(
-                "Value %r on field '%s' must be greater than %s" % (v, self.name, self.min))
+                f"Value {v!r} on field {self.name!r} must be greater than {self.min}")
         if self.max is not None and v > self.max:
-            raise ValueError("Value %r on field '%s' must be less than %s" % (v, self.name, self.max))
+            raise ValueError(f"Value {v!r} on field {self.name!r} must be less than {self.max}")
 
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
@@ -477,18 +471,16 @@ class EnumField(IntegerField):
             for i, v in enumerate(value):
                 if isinstance(v, str):
                     if v not in self.enum:
-                        raise ValueError(
-                            "List value '%s' on field '%s' must be one of %s" % (v, self.name, self.enum))
+                        raise ValueError(f"List value {v!r} on field {self.name!r} must be one of {self.enum}")
                     value[i] = self.enum.index(v) + 1
             if not value:
-                raise ValueError("Value '%s' on field '%s' must not be empty" % (value, self.name))
+                raise ValueError(f"Value {value!r} on field {self.name!r} must not be empty")
             if len(value) > len(set(value)):
-                raise ValueError("List entries '%s' on field '%s' must be unique" % (value, self.name))
+                raise ValueError(f"List entries {value!r} on field {self.name!r} must be unique")
         else:
             if isinstance(value, str):
                 if value not in self.enum:
-                    raise ValueError(
-                        "Value '%s' on field '%s' must be one of %s" % (value, self.name, self.enum))
+                    raise ValueError(f"Value {value!r} on field {self.name!r} must be one of {self.enum}")
                 value = self.enum.index(value) + 1
         return super().clean(value, version=version)
 
@@ -648,7 +640,7 @@ class DateTimeField(FieldURIField):
     def clean(self, value, version=None):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
-                raise ValueError("Value '%s' on field '%s' must be timezone aware" % (value, self.name))
+                raise ValueError(f"Value {value!r} on field {self.name!r} must be timezone aware")
             if type(value) is datetime.datetime:
                 value = self.value_cls.from_datetime(value)
         return super().clean(value, version=version)
@@ -753,7 +745,7 @@ class TextListField(TextField):
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
         if iter_elem is not None:
-            return get_xml_attrs(iter_elem, '{%s}String' % TNS)
+            return get_xml_attrs(iter_elem, f'{{{TNS}}}String')
         return self.default
 
 
@@ -766,14 +758,14 @@ class MessageField(TextField):
         reply = elem.find(self.response_tag())
         if reply is None:
             return None
-        message = reply.find('{%s}%s' % (TNS, self.INNER_ELEMENT_NAME))
+        message = reply.find(f'{{{TNS}}}{self.INNER_ELEMENT_NAME}')
         if message is None:
             return None
         return message.text
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
-        message = create_element('t:%s' % self.INNER_ELEMENT_NAME)
+        message = create_element(f't:{self.INNER_ELEMENT_NAME}')
         message.text = value
         return set_xml_value(field_elem, message, version=version)
 
@@ -796,10 +788,10 @@ class CharField(TextField):
             if self.is_list:
                 for v in value:
                     if len(v) > self.max_length:
-                        raise ValueError("'%s' value '%s' exceeds length %s" % (self.name, v, self.max_length))
+                        raise ValueError(f"{self.name!r} value {v!r} exceeds length {self.max_length}")
             else:
                 if len(value) > self.max_length:
-                    raise ValueError("'%s' value '%s' exceeds length %s" % (self.name, value, self.max_length))
+                    raise ValueError(f"{self.name!r} value {value!r} exceeds length {self.max_length}")
         return value
 
 
@@ -826,7 +818,7 @@ class CharListField(CharField):
         super().__init__(*args, **kwargs)
 
     def list_elem_tag(self):
-        return '{%s}%s' % (self.namespace, self.list_elem_name)
+        return f'{{{self.namespace}}}{self.list_elem_name}'
 
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
@@ -859,7 +851,7 @@ class Choice:
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
         if not isinstance(version, Version):
-            raise ValueError("'version' %r must be a Version instance" % version)
+            raise ValueError(f"'version' {version!r} must be a Version instance")
         if not self.supported_from:
             return True
         return version.build >= self.supported_from
@@ -882,14 +874,14 @@ class ChoiceField(CharField):
             if value in valid_choices_for_version:
                 return value
             if value in valid_choices:
-                raise InvalidChoiceForVersion("Choice '%s' only supports EWS builds from %s to %s (server has %s)" % (
-                    self.name, self.supported_from or '*', self.deprecated_from or '*', version))
+                raise InvalidChoiceForVersion(
+                    f"Choice {self.name!r} only supports EWS builds from {self.supported_from or '*'} to "
+                    f"{self.deprecated_from or '*'} (server has {version})"
+                )
         else:
             if value in valid_choices:
                 return value
-        raise ValueError("Invalid choice '%s' for field '%s'. Valid choices are: %s" % (
-            value, self.name, ', '.join(valid_choices)
-        ))
+        raise ValueError(f"Invalid choice {value!r} for field {self.name!r}. Valid choices are: {valid_choices}")
 
     def supported_choices(self, version):
         return tuple(c.value for c in self.choices if c.supports_version(version))
@@ -1072,7 +1064,7 @@ class BaseEmailField(EWSElementField):
                 nested_elem = sub_elem.find(self.value_cls.response_tag())
                 if nested_elem is None:
                     raise ValueError(
-                        'Expected XML element %r missing on field %r' % (self.value_cls.response_tag(), self.name)
+                        f'Expected XML element {self.value_cls.response_tag()!r} missing on field {self.name!r}'
                     )
                 return self.value_cls.from_xml(elem=nested_elem, account=account)
             return self.value_cls.from_xml(elem=sub_elem, account=account)
@@ -1194,7 +1186,7 @@ class SubField(Field):
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if self.is_required and not value:
-            raise ValueError('Value for subfield %r must be non-empty' % self.name)
+            raise ValueError(f'Value for subfield {self.name!r} must be non-empty')
         return value
 
     def __hash__(self):
@@ -1234,13 +1226,13 @@ class NamedSubField(SubField):
 
     def field_uri_xml(self, field_uri, label):
         from .properties import IndexedFieldURI
-        return IndexedFieldURI(field_uri='%s:%s' % (field_uri, self.field_uri), field_index=label).to_xml(version=None)
+        return IndexedFieldURI(field_uri=f'{field_uri}:{self.field_uri}', field_index=label).to_xml(version=None)
 
     def request_tag(self):
-        return 't:%s' % self.field_uri
+        return f't:{self.field_uri}'
 
     def response_tag(self):
-        return '{%s}%s' % (self.namespace, self.field_uri)
+        return f'{{{self.namespace}}}{self.field_uri}'
 
 
 class IndexedField(EWSElementField):
@@ -1252,14 +1244,14 @@ class IndexedField(EWSElementField):
         from .indexed_properties import IndexedElement
         value_cls = kwargs['value_cls']
         if not issubclass(value_cls, IndexedElement):
-            raise ValueError("'value_cls' %r must be a subclass of IndexedElement" % value_cls)
+            raise ValueError(f"'value_cls' {value_cls!r} must be a subclass of IndexedElement")
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
-        return set_xml_value(create_element('t:%s' % self.PARENT_ELEMENT_NAME), value, version)
+        return set_xml_value(create_element(f't:{self.PARENT_ELEMENT_NAME}'), value, version)
 
     def response_tag(self):
-        return '{%s}%s' % (self.namespace, self.PARENT_ELEMENT_NAME)
+        return f'{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}'
 
     def __hash__(self):
         return hash(self.field_uri)
@@ -1279,7 +1271,7 @@ class EmailAddressesField(IndexedField):
         if value is not None:
             default_labels = self.value_cls.LABEL_CHOICES
             if len(value) > len(default_labels):
-                raise ValueError('This field can handle at most %s values (value: %r)' % (len(default_labels), value))
+                raise ValueError(f'This field can handle at most {len(default_labels)} values (value: {value})')
             tmp = []
             for s, default_label in zip(value, default_labels):
                 if not isinstance(s, str):
@@ -1320,7 +1312,7 @@ class ExtendedPropertyField(Field):
     def clean(self, value, version=None):
         if value is None:
             if self.is_required:
-                raise ValueError("'%s' is a required field" % self.name)
+                raise ValueError(f"{self.name!r} is a required field")
             return self.default
         if not isinstance(value, self.value_cls):
             # Allow keeping ExtendedProperty field values as their simple Python type, but run clean() anyway
@@ -1388,7 +1380,7 @@ class ItemField(FieldURIField):
 
 class UnknownEntriesField(CharListField):
     def list_elem_tag(self):
-        return '{%s}UnknownEntry' % self.namespace
+        return f'{{{self.namespace}}}UnknownEntry'
 
 
 class PermissionSetField(EWSElementField):
@@ -1483,9 +1475,9 @@ class TypeValueField(FieldURIField):
                 first = next(iter(value))
             except StopIteration:
                 first = None
-            value_type = '%sArray' % cls.TYPES_MAP_REVERSED[type(first)]
+            value_type = f'{cls.TYPES_MAP_REVERSED[type(first)]}Array'
             if value_type not in cls.TYPES_MAP:
-                raise ValueError('%r is not a supported type' % value)
+                raise ValueError(f'{value!r} is not a supported type')
             return value_type
         return cls.TYPES_MAP_REVERSED[type(value)]
 
@@ -1496,7 +1488,7 @@ class TypeValueField(FieldURIField):
     def clean(self, value, version=None):
         if value is None:
             if self.is_required and self.default is None:
-                raise ValueError("'%s' is a required field with no default" % self.name)
+                raise ValueError(f"{self.name!r} is a required field with no default")
             return self.default
         return value
 
@@ -1504,8 +1496,8 @@ class TypeValueField(FieldURIField):
         field_elem = elem.find(self.response_tag())
         if field_elem is None:
             return self.default
-        value_type_str = get_xml_attr(field_elem, '{%s}Type' % TNS)
-        value = get_xml_attr(field_elem, '{%s}Value' % TNS)
+        value_type_str = get_xml_attr(field_elem, f'{{{TNS}}}Type')
+        value = get_xml_attr(field_elem, f'{{{TNS}}}Value')
         if value_type_str == 'Byte':
             try:
                 # The value is an unsigned integer in the range 0 -> 255. Convert it to a single byte

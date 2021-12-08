@@ -26,14 +26,14 @@ from pygments.lexers.html import XmlLexer
 from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, MalformedResponseError
 
 log = logging.getLogger(__name__)
-xml_log = logging.getLogger('%s.xml' % __name__)
+xml_log = logging.getLogger(f'{__name__}.xml')
 
 
 def require_account(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self.account:
-            raise ValueError('%s must have an account' % self.__class__.__name__)
+            raise ValueError(f'{self.__class__.__name__} must have an account')
         return f(self, *args, **kwargs)
     return wrapper
 
@@ -42,9 +42,9 @@ def require_id(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self.account:
-            raise ValueError('%s must have an account' % self.__class__.__name__)
+            raise ValueError(f'{self.__class__.__name__} must have an account')
         if not self.id:
-            raise ValueError('%s must have an ID' % self.__class__.__name__)
+            raise ValueError(f'{self.__class__.__name__} must have an ID')
         return f(self, *args, **kwargs)
     return wrapper
 
@@ -202,7 +202,7 @@ def value_to_xml_text(value):
         return value.id
     if isinstance(value, AssociatedCalendarItemId):
         return value.id
-    raise TypeError('Unsupported type: %s (%s)' % (type(value), value))
+    raise TypeError(f'Unsupported type: {type(value)} ({value})')
 
 
 def xml_text_to_value(value, value_type):
@@ -244,22 +244,22 @@ def set_xml_value(elem, value, version):
                 elem.append(v.to_xml())
             elif isinstance(v, EWSElement):
                 if not isinstance(version, Version):
-                    raise ValueError("'version' %r must be a Version instance" % version)
+                    raise ValueError(f"'version' {version!r} must be a Version instance")
                 elem.append(v.to_xml(version=version))
             elif isinstance(v, _element_class):
                 elem.append(v)
             elif isinstance(v, str):
                 add_xml_child(elem, 't:String', v)
             else:
-                raise ValueError('Unsupported type %s for list element %s on elem %s' % (type(v), v, elem))
+                raise ValueError(f'Unsupported type {type(v)} for list element {v} on elem {elem}')
     elif isinstance(value, (FieldPath, FieldOrder)):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
         if not isinstance(version, Version):
-            raise ValueError("'version' %r must be a Version instance" % version)
+            raise ValueError(f"'version' {version!r} must be a Version instance")
         elem.append(value.to_xml(version=version))
     else:
-        raise ValueError('Unsupported type %s for value %s on elem %s' % (type(value), value, elem))
+        raise ValueError(f'Unsupported type {type(value)} for value {value} on elem {elem}')
     return elem
 
 
@@ -270,7 +270,7 @@ def safe_xml_value(value, replacement='?'):
 def create_element(name, attrs=None, nsmap=None):
     if ':' in name:
         ns, name = name.split(':')
-        name = '{%s}%s' % (ns_translation[ns], name)
+        name = f'{{{ns_translation[ns]}}}{name}'
     elem = _forgiving_parser.makeelement(name, nsmap=nsmap)
     if attrs:
         # Try hard to keep attribute order, to ensure deterministic output. This simplifies testing.
@@ -453,8 +453,8 @@ class DocumentYielder:
 
     def __init__(self, content_iterator, document_tag='Envelope'):
         self._iterator = content_iterator
-        self._start_token = b'<%s' % document_tag.encode('utf-8')
-        self._end_token = b'/%s>' % document_tag.encode('utf-8')
+        self._start_token = f'<{document_tag}'.encode('utf-8')
+        self._end_token = f'/{document_tag}>'.encode('utf-8')
 
     def get_tag(self, stop_byte):
         tag_buffer = [b'<']
@@ -488,7 +488,7 @@ class DocumentYielder:
                     buffer.append(tag)
                     if tag.endswith(self._end_token):
                         # End of document. Yield a valid document and reset the buffer
-                        yield b"<?xml version='1.0' encoding='utf-8'?>\n%s" % b''.join(buffer)
+                        yield b"<?xml version='1.0' encoding='utf-8'?>\n" + b''.join(buffer)
                         doc_started = False
                         buffer = []
                 elif doc_started:
@@ -520,19 +520,19 @@ def to_xml(bytes_content):
             raise ParseError(str(e), '<not from file>', e.lineno, e.offset)
         else:
             offending_excerpt = offending_line[max(0, e.offset - 20):e.offset + 20]
-            msg = '%s\nOffending text: [...]%s[...]' % (str(e), offending_excerpt)
+            msg = f'{e}\nOffending text: [...]{offending_excerpt}[...]'
             raise ParseError(msg, '<not from file>', e.lineno, e.offset)
     except TypeError:
         try:
             stream.seek(0)
         except (IndexError, io.UnsupportedOperation):
             pass
-        raise ParseError('This is not XML: %r' % stream.read(), '<not from file>', -1, 0)
+        raise ParseError(f'This is not XML: {stream.read()!r}', '<not from file>', -1, 0)
 
     if res.getroot() is None:
         try:
             stream.seek(0)
-            msg = 'No root element found: %r' % stream.read()
+            msg = f'No root element found: {stream.read()!r}'
         except (IndexError, io.UnsupportedOperation):
             msg = 'No root element found'
         raise ParseError(msg, '<not from file>', -1, 0)
@@ -598,7 +598,7 @@ class PrettyXmlHandler(logging.StreamHandler):
                     record.args[key] = self.highlight_xml(self.prettify_xml(value))
                 except Exception as e:
                     # Something bad happened, but we don't want to crash the program just because logging failed
-                    print('XML highlighting failed: %s' % e)
+                    print(f'XML highlighting failed: {e}')
         return super().emit(record)
 
     def is_tty(self):
@@ -659,7 +659,7 @@ def get_domain(email):
     try:
         return email.split('@')[1].lower()
     except (IndexError, AttributeError):
-        raise ValueError("'%s' is not a valid email" % email)
+        raise ValueError(f"{email!r} is not a valid email")
 
 
 def split_url(url):
@@ -688,10 +688,10 @@ def get_redirect_url(response, allow_relative=True, require_relative=False):
     if not redirect_path.startswith('/'):
         # The path is not top-level. Add response path
         redirect_path = (response_path or '/') + redirect_path
-    redirect_url = '%s://%s%s' % ('https' if redirect_has_ssl else 'http', redirect_server, redirect_path)
+    redirect_url = f"{'https' if redirect_has_ssl else 'http'}://{redirect_server}{redirect_path}"
     if redirect_url == request_url:
         # And some are mean enough to redirect to the same location
-        raise TransportError('Redirect to same location: %s' % redirect_url)
+        raise TransportError(f'Redirect to same location: {redirect_url}')
     if not allow_relative and (request_has_ssl == response_has_ssl and request_server == redirect_server):
         raise RelativeRedirect(redirect_url)
     if require_relative and (request_has_ssl != response_has_ssl or request_server != redirect_server):
@@ -911,7 +911,7 @@ def _redirect_or_fail(response, redirects, allow_redirects):
         log.debug("'allow_redirects' only supports relative redirects (%s -> %s)", response.url, e.value)
         raise RedirectError(url=e.value)
     if not allow_redirects:
-        raise TransportError('Redirect not allowed but we were redirected (%s -> %s)' % (response.url, redirect_url))
+        raise TransportError(f'Redirect not allowed but we were redirected ({response.url} -> {redirect_url})')
     log.debug('HTTP redirected to %s', redirect_url)
     redirects += 1
     if redirects > MAX_REDIRECTS:

@@ -10,7 +10,7 @@ class FindPeople(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation"""
 
     SERVICE_NAME = 'FindPeople'
-    element_container_name = '{%s}People' % MNS
+    element_container_name = f'{{{MNS}}}People'
     supported_from = EXCHANGE_2013
     supports_paging = True
 
@@ -68,9 +68,9 @@ class FindPeople(EWSAccountService):
                     offset=0):
         folders = list(folders)
         if len(folders) != 1:
-            raise ValueError('%r can only query one folder' % self.SERVICE_NAME)
+            raise ValueError(f'{self.SERVICE_NAME} can only query one folder')
         folder = folders[0]
-        findpeople = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))
+        findpeople = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
         personashape = create_shape_element(
             tag='m:PersonaShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         )
@@ -100,9 +100,9 @@ class FindPeople(EWSAccountService):
     @staticmethod
     def _get_paging_values(elem):
         """Find paging values. The paging element from FindPeople is different from other paging containers."""
-        item_count = int(elem.find('{%s}TotalNumberOfPeopleInView' % MNS).text)
-        first_matching = int(elem.find('{%s}FirstMatchingRowIndex' % MNS).text)
-        first_loaded = int(elem.find('{%s}FirstLoadedRowIndex' % MNS).text)
+        item_count = int(elem.find(f'{{{MNS}}}TotalNumberOfPeopleInView').text)
+        first_matching = int(elem.find(f'{{{MNS}}}FirstMatchingRowIndex').text)
+        first_loaded = int(elem.find(f'{{{MNS}}}FirstLoadedRowIndex').text)
         log.debug('Got page with total items %s, first matching %s, first loaded %s ', item_count, first_matching,
                   first_loaded)
         next_offset = None  # GetPersona does not support fetching more pages

@@ -61,7 +61,7 @@ class TimedTestCase(unittest.TestCase, metaclass=abc.ABCMeta):
     def tearDown(self):
         t2 = time.monotonic() - self.t1
         if t2 > self.SLOW_TEST_DURATION:
-            print("{:07.3f} : {}".format(t2, self.id()))
+            print(f"{t2:07.3f} : {self.id()}")
 
 
 class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
@@ -76,9 +76,9 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
             with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings.yml')) as f:
                 settings = safe_load(f)
         except FileNotFoundError:
-            print('Skipping %s - no settings.yml file found' % cls.__name__)
+            print(f'Skipping {cls.__name__} - no settings.yml file found')
             print('Copy settings.yml.sample to settings.yml and enter values for your test server')
-            raise unittest.SkipTest('Skipping %s - no settings.yml file found' % cls.__name__)
+            raise unittest.SkipTest(f'Skipping {cls.__name__} - no settings.yml file found')
 
         cls.settings = settings
         cls.verify_ssl = settings.get('verify_ssl', True)
@@ -127,7 +127,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
                 # In the test_extended_distinguished_property test, EWS rull return 4 NULL bytes after char 16 if we
                 # send a longer bytes sequence.
                 return get_random_string(16).encode()
-            raise ValueError('Unsupported field %s' % field)
+            raise ValueError(f'Unsupported field {field}')
         if isinstance(field, URIField):
             return get_random_url()
         if isinstance(field, EmailAddressField):
@@ -258,7 +258,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
                     )
                 ]
             )
-        raise ValueError('Unknown field %s' % field)
+        raise ValueError(f'Unknown field {field}')
 
 
 def get_random_bool():
@@ -272,7 +272,7 @@ def get_random_int(min_val=0, max_val=2147483647):
 def get_random_decimal(min_val=0, max_val=100):
     precision = 2
     val = get_random_int(min_val, max_val * 10**precision) / 10.0**precision
-    return Decimal('{:.2f}'.format(val))
+    return Decimal(f'{val:.2f}')
 
 
 def get_random_choice(choices):

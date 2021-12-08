@@ -27,17 +27,17 @@ class ContactsTest(CommonItemTest):
         label = self.random_val(EmailAddress.get_field_by_fieldname('label'))
         for i in range(4):
             item = self.get_test_item()
-            item.email_addresses = [EmailAddress(email='%s@foo.com' % i, label=label)]
+            item.email_addresses = [EmailAddress(email=f'{i}@foo.com', label=label)]
             test_items.append(item)
         self.test_folder.bulk_create(items=test_items)
         qs = self.test_folder.filter(categories__contains=self.categories)
         self.assertEqual(
-            [i[0].email for i in qs.order_by('email_addresses__%s' % label)
+            [i[0].email for i in qs.order_by(f'email_addresses__{label}')
                 .values_list('email_addresses', flat=True)],
             ['0@foo.com', '1@foo.com', '2@foo.com', '3@foo.com']
         )
         self.assertEqual(
-            [i[0].email for i in qs.order_by('-email_addresses__%s' % label)
+            [i[0].email for i in qs.order_by(f'-email_addresses__{label}')
                 .values_list('email_addresses', flat=True)],
             ['3@foo.com', '2@foo.com', '1@foo.com', '0@foo.com']
         )
@@ -47,17 +47,17 @@ class ContactsTest(CommonItemTest):
         label = self.random_val(PhysicalAddress.get_field_by_fieldname('label'))
         for i in range(4):
             item = self.get_test_item()
-            item.physical_addresses = [PhysicalAddress(street='Elm St %s' % i, label=label)]
+            item.physical_addresses = [PhysicalAddress(street=f'Elm St {i}', label=label)]
             test_items.append(item)
         self.test_folder.bulk_create(items=test_items)
         qs = self.test_folder.filter(categories__contains=self.categories)
         self.assertEqual(
-            [i[0].street for i in qs.order_by('physical_addresses__%s__street' % label)
+            [i[0].street for i in qs.order_by(f'physical_addresses__{label}__street')
                 .values_list('physical_addresses', flat=True)],
             ['Elm St 0', 'Elm St 1', 'Elm St 2', 'Elm St 3']
         )
         self.assertEqual(
-            [i[0].street for i in qs.order_by('-physical_addresses__%s__street' % label)
+            [i[0].street for i in qs.order_by(f'-physical_addresses__{label}__street')
                 .values_list('physical_addresses', flat=True)],
             ['Elm St 3', 'Elm St 2', 'Elm St 1', 'Elm St 0']
         )

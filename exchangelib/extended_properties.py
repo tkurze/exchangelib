@@ -120,8 +120,8 @@ class ExtendedProperty(EWSElement):
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
                 raise ValueError(
-                    "'distinguished_property_set_id' %r must be one of %s"
-                    % (cls.distinguished_property_set_id, sorted(cls.DISTINGUISHED_SETS))
+                    f"'distinguished_property_set_id' {cls.distinguished_property_set_id} must be one of "
+                    f"{sorted(cls.DISTINGUISHED_SETS)}"
                 )
 
     @classmethod
@@ -145,7 +145,7 @@ class ExtendedProperty(EWSElement):
                 raise ValueError("When 'property_tag' is set, only 'property_type' must be set")
             if 0x8000 <= cls.property_tag_as_int() <= 0xFFFE:
                 raise ValueError(
-                    "'property_tag' value '%s' is reserved for custom properties" % cls.property_tag_as_hex()
+                    f"'property_tag' value {cls.property_tag_as_hex()!r} is reserved for custom properties"
                 )
 
     @classmethod
@@ -171,24 +171,24 @@ class ExtendedProperty(EWSElement):
     @classmethod
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
-            raise ValueError(
-                "'property_type' %r must be one of %s" % (cls.property_type, sorted(cls.PROPERTY_TYPES))
-            )
+            raise ValueError(f"'property_type' {cls.property_type!r} must be one of {sorted(cls.PROPERTY_TYPES)}")
 
     def clean(self, version=None):
         self.validate_cls()
         python_type = self.python_type()
         if self.is_array_type():
             if not is_iterable(self.value):
-                raise ValueError("'%s' value %r must be a list" % (self.__class__.__name__, self.value))
+                raise ValueError(f"{self.__class__.__name__!r} value {self.value!r} must be a list")
             for v in self.value:
                 if not isinstance(v, python_type):
                     raise TypeError(
-                        "'%s' value element %r must be an instance of %s" % (self.__class__.__name__, v, python_type))
+                        f"{self.__class__.__name__!r} value element {v!r} must be an instance of {python_type}"
+                    )
         else:
             if not isinstance(self.value, python_type):
                 raise TypeError(
-                    "'%s' value %r must be an instance of %s" % (self.__class__.__name__, self.value, python_type))
+                    f"{self.__class__.__name__!r} value {self.value!r} must be an instance of {python_type}"
+                )
 
     @classmethod
     def _normalize_obj(cls, obj):
@@ -223,12 +223,12 @@ class ExtendedProperty(EWSElement):
         # Gets value of this specific ExtendedProperty from a list of 'ExtendedProperty' XML elements
         python_type = cls.python_type()
         if cls.is_array_type():
-            values = elem.find('{%s}Values' % TNS)
+            values = elem.find(f'{{{TNS}}}Values')
             return [
                 xml_text_to_value(value=val, value_type=python_type)
-                for val in get_xml_attrs(values, '{%s}Value' % TNS)
+                for val in get_xml_attrs(values, f'{{{TNS}}}Value')
             ]
-        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, '{%s}Value' % TNS), value_type=python_type)
+        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f'{{{TNS}}}Value'), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
             # actually found, but there was no XML value. For other types, it would be more problematic

@@ -7,7 +7,7 @@ class ArchiveItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation"""
 
     SERVICE_NAME = 'ArchiveItem'
-    element_container_name = '{%s}Items' % MNS
+    element_container_name = f'{{{MNS}}}Items'
     supported_from = EXCHANGE_2013
 
     def call(self, items, to_folder):
@@ -29,7 +29,7 @@ class ArchiveItem(EWSAccountService):
             yield Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
-        archiveitem = create_element('m:%s' % self.SERVICE_NAME)
+        archiveitem = create_element(f'm:{self.SERVICE_NAME}')
         folder_id = create_folder_ids_element(tag='m:ArchiveSourceFolderId', folders=[to_folder],
                                               version=self.account.version)
         item_ids = create_item_ids_element(items=items, version=self.account.version)

@@ -10,26 +10,27 @@ class UpdateItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation"""
 
     SERVICE_NAME = 'UpdateItem'
-    element_container_name = '{%s}Items' % MNS
+    element_container_name = f'{{{MNS}}}Items'
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
         from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
             SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise ValueError("'conflict_resolution' %s must be one of %s" % (
-                conflict_resolution, CONFLICT_RESOLUTION_CHOICES
-            ))
+            raise ValueError(
+                f"'conflict_resolution' {conflict_resolution!r} must be one of {CONFLICT_RESOLUTION_CHOICES}"
+            )
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise ValueError("'message_disposition' %s must be one of %s" % (
-                message_disposition, MESSAGE_DISPOSITION_CHOICES
-            ))
+            raise ValueError(
+                f"'message_disposition' {message_disposition!r} must be one of {MESSAGE_DISPOSITION_CHOICES}"
+            )
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
-            raise ValueError("'send_meeting_invitations_or_cancellations' %s must be one of %s" % (
-                send_meeting_invitations_or_cancellations, SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
-            ))
+            raise ValueError(
+                f"'send_meeting_invitations_or_cancellations' {send_meeting_invitations_or_cancellations!r} must be "
+                f"one of {SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES}"
+            )
         if suppress_read_receipts not in (True, False):
-            raise ValueError("'suppress_read_receipts' %s must be True or False" % suppress_read_receipts)
+            raise ValueError(f"'suppress_read_receipts' {suppress_read_receipts!r} must be True or False")
         if message_disposition == SEND_ONLY:
             raise ValueError('Cannot send-only existing objects. Use SendItem service instead')
         return self._elems_to_objs(self._chunked_get_elements(
@@ -73,8 +74,7 @@ class UpdateItem(EWSAccountService):
                 unique_fieldnames.remove(f.name)
                 yield f
         if unique_fieldnames:
-            raise ValueError("Field name(s) %s are not valid for a '%s' item" % (
-                ', '.join("'%s'" % f for f in unique_fieldnames), item_model.__name__))
+            raise ValueError(f"Field name(s) {unique_fieldnames} are not valid for a {item_model.__name__!r} item")
 
     def _get_item_update_elems(self, item, fieldnames):
         from ..items import CalendarItem
@@ -91,7 +91,7 @@ class UpdateItem(EWSAccountService):
 
         for field in self._sorted_fields(item_model=item.__class__, fieldnames=fieldnames_copy):
             if field.is_read_only:
-                raise ValueError('%s is a read-only field' % field.name)
+                raise ValueError(f'{field.name} is a read-only field')
             value = self._get_item_value(item, field)
             if value is None or (field.is_list and not value):
                 # A value of None or [] means we want to remove this field from the item
@@ -114,7 +114,7 @@ class UpdateItem(EWSAccountService):
 
     def _get_delete_item_elems(self, field):
         if field.is_required or field.is_required_after_save:
-            raise ValueError('%s is a required field and may not be deleted' % field.name)
+            raise ValueError(f'{field.name!r} is a required field and may not be deleted')
         for field_path in FieldPath(field=field).expand(version=self.account.version):
             yield self._delete_item_elem(field_path=field_path)
 
@@ -154,7 +154,7 @@ class UpdateItem(EWSAccountService):
         # an UpdateItem request.
         if self.account.version.build >= EXCHANGE_2013_SP1:
             updateitem = create_element(
-                'm:%s' % self.SERVICE_NAME,
+                f'm:{self.SERVICE_NAME}',
                 attrs=dict(
                     ConflictResolution=conflict_resolution,
                     MessageDisposition=message_disposition,
@@ -164,7 +164,7 @@ class UpdateItem(EWSAccountService):
             )
         else:
             updateitem = create_element(
-                'm:%s' % self.SERVICE_NAME,
+                f'm:{self.SERVICE_NAME}',
                 attrs=dict(
                     ConflictResolution=conflict_resolution,
                     MessageDisposition=message_disposition,

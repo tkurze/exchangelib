@@ -208,7 +208,7 @@ class AccountTest(EWSTest):
 
             def raise_response_errors(self, response):
                 if response.status_code == 401:
-                    raise UnauthorizedError('Invalid credentials for %s' % response.url)
+                    raise UnauthorizedError(f'Invalid credentials for {response.url}')
                 return super().raise_response_errors(response)
 
         try:

@@ -43,10 +43,8 @@ class RateLimitError(TransportError):
         self.total_wait = total_wait
 
     def __str__(self):
-        return str(
-            '{value} (gave up after {total_wait:.3f} seconds. URL {url} returned status code {status_code})'.format(
-                value=self.value, url=self.url, status_code=self.status_code, total_wait=self.total_wait)
-        )
+        f'{self.value} (gave up after {self.total_wait:.3f} seconds. ' \
+        f'URL {self.url} returned status code {self.status_code})'
 
 
 class SOAPError(TransportError):
@@ -70,7 +68,7 @@ class RedirectError(TransportError):
         super().__init__(str(self))
 
     def __str__(self):
-        return 'We were redirected to %s' % self.url
+        return f'We were redirected to {self.url}'
 
 
 class RelativeRedirect(TransportError):
@@ -95,7 +93,7 @@ class AutoDiscoverRedirect(AutoDiscoverError):
         super().__init__(str(self))
 
     def __str__(self):
-        return 'AutoDiscover redirects to %s' % self.redirect_email
+        return f'AutoDiscover redirects to {self.redirect_email}'
 
 
 class NaiveDateTimeNotAllowed(ValueError):
@@ -103,7 +101,7 @@ class NaiveDateTimeNotAllowed(ValueError):
         super().__init__()
         from .ewsdatetime import EWSDateTime
         if not isinstance(local_dt, EWSDateTime):
-            raise ValueError("'local_dt' value %r must be an EWSDateTime" % local_dt)
+            raise ValueError(f"'local_dt' value {local_dt!r} must be an EWSDateTime")
         self.local_dt = local_dt
 
 
@@ -138,7 +136,7 @@ class CASError(EWSError):
         super().__init__(str(self))
 
     def __str__(self):
-        return 'CAS error: %s' % self.cas_error
+        return f'CAS error: {self.cas_error}'
 
 
 # Somewhat-authoritative list of possible response message error types from EWS. See full list at

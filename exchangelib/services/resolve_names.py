@@ -13,7 +13,7 @@ class ResolveNames(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation"""
 
     SERVICE_NAME = 'ResolveNames'
-    element_container_name = '{%s}ResolutionSet' % MNS
+    element_container_name = f'{{{MNS}}}ResolutionSet'
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
     # Note: paging information is returned as attrs on the 'ResolutionSet' element, but this service does not
@@ -34,9 +34,9 @@ class ResolveNames(EWSService):
                 self.chunk_size, self.SERVICE_NAME
             )
         if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
-            raise ValueError("'search_scope' %s must be one if %s" % (search_scope, SEARCH_SCOPE_CHOICES))
+            raise ValueError(f"'search_scope' {search_scope} must be one if {SEARCH_SCOPE_CHOICES}")
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
-            raise ValueError("'shape' %s must be one if %s" % (contact_data_shape, SHAPE_CHOICES))
+            raise ValueError(f"'shape' {contact_data_shape} must be one if {SHAPE_CHOICES}")
         self.return_full_contact_data = return_full_contact_data
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
@@ -73,7 +73,7 @@ class ResolveNames(EWSService):
                 raise NotImplementedError(
                     "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later")
             attrs['ContactDataShape'] = contact_data_shape
-        payload = create_element('m:%s' % self.SERVICE_NAME, attrs=attrs)
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
         if parent_folders:
             parentfolderids = create_element('m:ParentFolderIds')
             set_xml_value(parentfolderids, parent_folders, version=self.protocol.version)

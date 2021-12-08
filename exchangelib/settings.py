@@ -29,13 +29,13 @@ class OofSettings(EWSElement):
         super().clean(version=version)
         if self.state == self.SCHEDULED:
             if not self.start or not self.end:
-                raise ValueError("'start' and 'end' must be set when state is '%s'" % self.SCHEDULED)
+                raise ValueError(f"'start' and 'end' must be set when state is {self.SCHEDULED!r}")
             if self.start >= self.end:
                 raise ValueError("'start' must be before 'end'")
             if self.end < datetime.datetime.now(tz=UTC):
                 raise ValueError("'end' must be in the future")
         if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
-            raise ValueError("'internal_reply' and 'external_reply' must be set when state is not '%s'" % self.DISABLED)
+            raise ValueError(f"'internal_reply' and 'external_reply' must be set when state is not {self.DISABLED!r}")
 
     @classmethod
     def from_xml(cls, elem, account):
@@ -49,7 +49,7 @@ class OofSettings(EWSElement):
 
     def to_xml(self, version):
         self.clean(version=version)
-        elem = create_element('t:%s' % self.REQUEST_ELEMENT_NAME)
+        elem = create_element(f't:{self.REQUEST_ELEMENT_NAME}')
         for attr in ('state', 'external_audience'):
             value = getattr(self, attr)
             if value is None:

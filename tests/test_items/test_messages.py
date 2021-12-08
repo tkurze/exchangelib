@@ -22,7 +22,7 @@ class MessagesTest(CommonItemTest):
         while True:
             t2 = time.monotonic()
             if t2 - t1 > self.INCOMING_MESSAGE_TIMEOUT:
-                self.skipTest('Too bad. Gave up in %s waiting for the incoming message to show up' % self.id())
+                self.skipTest(f'Too bad. Gave up in {self.id()} waiting for the incoming message to show up')
             try:
                 return self.account.inbox.get(subject=subject)
             except DoesNotExist:
@@ -92,7 +92,7 @@ class MessagesTest(CommonItemTest):
         item.folder = None
         item.send()  # get_test_item() sets the to_recipients to the test account
         sent_item = self.get_incoming_message(item.subject)
-        new_subject = ('Re: %s' % sent_item.subject)[:255]
+        new_subject = (f'Re: {sent_item.subject}')[:255]
         sent_item.reply(subject=new_subject, body='Hello reply', to_recipients=[item.author])
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
@@ -102,7 +102,7 @@ class MessagesTest(CommonItemTest):
         item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
-        new_subject = ('Re: %s' % sent_item.subject)[:255]
+        new_subject = (f'Re: {sent_item.subject}')[:255]
         sent_item.reply_all(subject=new_subject, body='Hello reply')
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
@@ -112,7 +112,7 @@ class MessagesTest(CommonItemTest):
         item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
-        new_subject = ('Re: %s' % sent_item.subject)[:255]
+        new_subject = (f'Re: {sent_item.subject}')[:255]
         sent_item.forward(subject=new_subject, body='Hello reply', to_recipients=[item.author])
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
@@ -122,7 +122,7 @@ class MessagesTest(CommonItemTest):
         item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
-        new_subject = ('Re: %s' % sent_item.subject)[:255]
+        new_subject = (f'Re: {sent_item.subject}')[:255]
         sent_item.create_forward(subject=new_subject, body='Hello reply', to_recipients=[item.author]).send()
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 

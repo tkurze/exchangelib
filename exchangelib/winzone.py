@@ -21,7 +21,7 @@ def generate_map(timeout=10):
     """
     r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
     if r.status_code != 200:
-        raise ValueError('Unexpected response: %s' % r)
+        raise ValueError(f'Unexpected response: {r}')
     tz_map = {}
     timezones_elem = to_xml(r.content).find('windowsZones').find('mapTimezones')
     type_version = timezones_elem.get('typeVersion')

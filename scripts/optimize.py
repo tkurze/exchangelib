@@ -37,7 +37,7 @@ config = Configuration(
     credentials=Credentials(settings['username'], settings['password']),
     retry_policy=FaultTolerance(),
 )
-print('Exchange server: %s' % config.service_endpoint)
+print(f'Exchange server: {config.service_endpoint}')
 
 account = Account(config=config, primary_smtp_address=settings['account'], access_type=DELEGATE)
 
@@ -52,14 +52,14 @@ def generate_items(count):
     tpl_item = CalendarItem(
         start=start,
         end=end,
-        body='This is a performance optimization test of server %s intended to find the optimal batch size and '
-             'concurrent connection pool size of this server.' % account.protocol.server,
+        body=f'This is a performance optimization test of server {account.protocol.server} intended to find the '
+             f'optimal batch size and concurrent connection pool size of this server.',
         location="It's safe to delete this",
         categories=categories,
     )
     for j in range(count):
         item = copy.copy(tpl_item)
-        item.subject = 'Performance optimization test %s by exchangelib' % j,
+        item.subject = f'Performance optimization test {j} by exchangelib',
         yield item
 
 
@@ -75,8 +75,8 @@ def test(items, chunk_size):
     rate1 = len(ids) / delta1
     delta2 = t3 - t2
     rate2 = len(ids) / delta2
-    print(('Time to process %s items (batchsize %s, poolsize %s): %s / %s (%s / %s per sec)' % (
-        len(ids), chunk_size, account.protocol.poolsize, delta1, delta2, rate1, rate2)))
+    print(f'Time to process {len(ids)} items (batchsize {chunk_size}, poolsize {account.protocol.poolsize}): '
+          f'{delta1} / {delta2} ({rate1} / {rate2} per sec)')
 
 
 # Generate items

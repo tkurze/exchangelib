@@ -23,15 +23,15 @@ class GetPersona(EWSAccountService):
 
     def get_payload(self, persona):
         version = self.protocol.version
-        payload = create_element('m:%s' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
         return payload
 
     @classmethod
     def _get_elements_in_container(cls, container):
         from ..items import Persona
-        return container.findall('{%s}%s' % (MNS, Persona.ELEMENT_NAME))
+        return container.findall(f'{{{MNS}}}{Persona.ELEMENT_NAME}')
 
     @classmethod
     def _response_tag(cls):
-        return '{%s}%sResponseMessage' % (MNS, cls.SERVICE_NAME)
+        return f'{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage'

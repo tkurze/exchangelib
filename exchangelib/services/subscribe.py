@@ -24,7 +24,7 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
 
     def _partial_call(self, payload_func, folders, event_types, **kwargs):
         if set(event_types) - set(self.EVENT_TYPES):
-            raise ValueError("'event_types' values must consist of values in %s" % str(self.EVENT_TYPES))
+            raise ValueError(f"'event_types' values must consist of values in {self.EVENT_TYPES}")
         return self._elems_to_objs(self._get_elements(
             payload=payload_func(folders=folders, event_types=event_types, **kwargs)
         ))
@@ -39,7 +39,7 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [(container.find('{%s}SubscriptionId' % MNS), container.find('{%s}Watermark' % MNS))]
+        return [(container.find(f'{{{MNS}}}SubscriptionId'), container.find(f'{{{MNS}}}Watermark'))]
 
     def _partial_payload(self, folders, event_types):
         request_elem = create_element(self.subscription_request_elem_tag)
@@ -65,7 +65,7 @@ class SubscribeToPull(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, timeout):
-        subscribe = create_element('m:%s' % self.SERVICE_NAME)
+        subscribe = create_element(f'm:{self.SERVICE_NAME}')
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, 'm:Watermark', watermark)
@@ -84,7 +84,7 @@ class SubscribeToPush(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, status_frequency, url):
-        subscribe = create_element('m:%s' % self.SERVICE_NAME)
+        subscribe = create_element(f'm:{self.SERVICE_NAME}')
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, 'm:Watermark', watermark)
@@ -110,10 +110,10 @@ class SubscribeToStreaming(Subscribe):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find('{%s}SubscriptionId' % MNS)]
+        return [container.find(f'{{{MNS}}}SubscriptionId')]
 
     def get_payload(self, folders, event_types):
-        subscribe = create_element('m:%s' % self.SERVICE_NAME)
+        subscribe = create_element(f'm:{self.SERVICE_NAME}')
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         subscribe.append(request_elem)
         return subscribe

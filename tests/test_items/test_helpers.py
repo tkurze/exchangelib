@@ -27,13 +27,13 @@ class ItemHelperTest(BaseItemTest):
             item.save(update_fields=['xxx'])
         self.assertEqual(
             e.exception.args[0],
-            "Field name(s) 'xxx' are not valid for a '%s' item" % self.ITEM_CLASS.__name__
+            f"Field name(s) ['xxx'] are not valid for a {self.ITEM_CLASS.__name__!r} item"
         )
         with self.assertRaises(ValueError) as e:
             item.save(update_fields='subject')
         self.assertEqual(
             e.exception.args[0],
-            "Field name(s) 's', 'u', 'b', 'j', 'e', 'c', 't' are not valid for a '%s' item" % self.ITEM_CLASS.__name__
+            f"Field name(s) ['s', 'u', 'b', 'j', 'e', 'c', 't'] are not valid for a {self.ITEM_CLASS.__name__!r} item"
         )
 
     def test_soft_delete(self):

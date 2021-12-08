@@ -92,12 +92,12 @@ class EWSService(metaclass=abc.ABCMeta):
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
         if not isinstance(self.chunk_size, int):
-            raise ValueError("'chunk_size' %r must be an integer" % chunk_size)
+            raise ValueError(f"'chunk_size' {chunk_size!r} must be an integer")
         if self.chunk_size < 1:
             raise ValueError("'chunk_size' must be a positive number")
         if self.supported_from and protocol.version.build < self.supported_from:
             raise NotImplementedError(
-                '%r is only supported on %r and later' % (self.SERVICE_NAME, self.supported_from.fullname())
+                f'{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later'
             )
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
@@ -143,10 +143,10 @@ class EWSService(metaclass=abc.ABCMeta):
             return None
         if expect_result is False:
             if res:
-                raise ValueError('Expected result length 0, but got %r' % res)
+                raise ValueError(f'Expected result length 0, but got {res}')
             return None
         if len(res) != 1:
-            raise ValueError('Expected result length 1, but got %r' % res)
+            raise ValueError(f'Expected result length 1, but got {res}')
         return res[0]
 
     def parse(self, xml):
@@ -244,7 +244,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     raise e
 
                 # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
-                raise ErrorServerBusy('Reraised from %s(%s)' % (e.__class__.__name__, e))
+                raise ErrorServerBusy(f'Reraised from {e.__class__.__name__}({e})')
             except Exception:
                 # This may run from a thread pool, which obfuscates the stack trace. Print trace immediately.
                 account = self.account if isinstance(self, EWSAccountService) else None
@@ -342,9 +342,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(
-            'Tried versions %s but all were invalid' % ', '.join(self._api_versions_to_try)
-        )
+        raise self.NO_VALID_SERVER_VERSIONS(f'Tried versions {self._api_versions_to_try} but all were invalid')
 
     def _handle_backoff(self, e):
         """Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
@@ -384,17 +382,17 @@ class EWSService(metaclass=abc.ABCMeta):
     @classmethod
     def _response_tag(cls):
         """Return the name of the element containing the service response."""
-        return '{%s}%sResponse' % (MNS, cls.SERVICE_NAME)
+        return f'{{{MNS}}}{cls.SERVICE_NAME}Response'
 
     @staticmethod
     def _response_messages_tag():
         """Return the name of the element containing service response messages."""
-        return '{%s}ResponseMessages' % MNS
+        return f'{{{MNS}}}ResponseMessages'
 
     @classmethod
     def _response_message_tag(cls):
         """Return the name of the element of a single response message."""
-        return '{%s}%sResponseMessage' % (MNS, cls.SERVICE_NAME)
+        return f'{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage'
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
@@ -402,12 +400,12 @@ class EWSService(metaclass=abc.ABCMeta):
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
-            raise SOAPError('Bad SOAP response: %s' % e)
-        header = root.find('{%s}Header' % SOAPNS)
+            raise SOAPError(f'Bad SOAP response: {e}')
+        header = root.find(f'{{{SOAPNS}}}Header')
         if header is None:
             # This is normal when the response contains SOAP-level errors
             log.debug('No header in XML response')
-        body = root.find('{%s}Body' % SOAPNS)
+        body = root.find(f'{{{SOAPNS}}}Body')
         if body is None:
             raise MalformedResponseError('No Body element in SOAP response')
         return header, body
@@ -416,11 +414,9 @@ class EWSService(metaclass=abc.ABCMeta):
         """Return the elements in the response containing the response messages. Raises any SOAP exceptions."""
         response = body.find(self._response_tag())
         if response is None:
-            fault = body.find('{%s}Fault' % SOAPNS)
+            fault = body.find(f'{{{SOAPNS}}}Fault')
             if fault is None:
-                raise SOAPError(
-                    'Unknown SOAP response (expected %s or Fault): %s' % (self._response_tag(), xml_to_str(body))
-                )
+                raise SOAPError(f'Unknown SOAP response (expected {self._response_tag()} or Fault): {xml_to_str(body)}')
             self._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
         response_messages = response.find(self._response_messages_tag())
         if response_messages is None:
@@ -439,34 +435,33 @@ class EWSService(metaclass=abc.ABCMeta):
         detail = fault.find('detail')
         if detail is not None:
             code, msg = None, ''
-            if detail.find('{%s}ResponseCode' % ENS) is not None:
-                code = get_xml_attr(detail, '{%s}ResponseCode' % ENS).strip()
-            if detail.find('{%s}Message' % ENS) is not None:
-                msg = get_xml_attr(detail, '{%s}Message' % ENS).strip()
-            msg_xml = detail.find('{%s}MessageXml' % TNS)  # Crazy. Here, it's in the TNS namespace
+            if detail.find(f'{{{ENS}}}ResponseCode') is not None:
+                code = get_xml_attr(detail, f'{{{ENS}}}ResponseCode').strip()
+            if detail.find(f'{{{ENS}}}Message') is not None:
+                msg = get_xml_attr(detail, f'{{{ENS}}}Message').strip()
+            msg_xml = detail.find(f'{{{TNS}}}MessageXml')  # Crazy. Here, it's in the TNS namespace
             if code == 'ErrorServerBusy':
                 back_off = None
                 try:
-                    value = msg_xml.find('{%s}Value' % TNS)
+                    value = msg_xml.find(f'{{{TNS}}}Value')
                     if value.get('Name') == 'BackOffMilliseconds':
                         back_off = int(value.text) / 1000.0  # Convert to seconds
                 except (TypeError, AttributeError):
                     pass
                 raise ErrorServerBusy(msg, back_off=back_off)
             if code == 'ErrorSchemaValidation' and msg_xml is not None:
-                violation = get_xml_attr(msg_xml, '{%s}Violation' % TNS)
+                violation = get_xml_attr(msg_xml, f'{{{TNS}}}Violation')
                 if violation is not None:
-                    msg = '%s %s' % (msg, violation)
+                    msg = f'{msg} {violation}'
             try:
                 raise vars(errors)[code](msg)
             except KeyError:
-                detail = '%s: code: %s msg: %s (%s)' % (cls.SERVICE_NAME, code, msg, xml_to_str(detail))
+                detail = f'{cls.SERVICE_NAME}: code: {code} msg: {msg} ({xml_to_str(detail)})'
         try:
             raise vars(errors)[faultcode](faultstring)
         except KeyError:
             pass
-        raise SOAPError('SOAP error code: %s string: %s actor: %s detail: %s' % (
-            faultcode, faultstring, faultactor, detail))
+        raise SOAPError(f'SOAP error code: {faultcode} string: {faultstring} actor: {faultactor} detail: {detail}')
 
     def _get_element_container(self, message, name=None):
         """Return the XML element in a response element that contains the elements we want the service to return. For
@@ -496,19 +491,19 @@ class EWSService(metaclass=abc.ABCMeta):
         response_class = message.get('ResponseClass')
         # ResponseCode, MessageText: See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
-        response_code = get_xml_attr(message, '{%s}ResponseCode' % MNS)
+        response_code = get_xml_attr(message, f'{{{MNS}}}ResponseCode')
         if response_class == 'Success' and response_code == 'NoError':
             if not name:
                 return message
             container = message.find(name)
             if container is None:
-                raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (name, xml_to_str(message)))
+                raise MalformedResponseError(f'No {name} elements in ResponseMessage ({xml_to_str(message)})')
             return container
         if response_code == 'NoError':
             return True
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
-        msg_text = get_xml_attr(message, '{%s}MessageText' % MNS)
-        msg_xml = message.find('{%s}MessageXml' % MNS)
+        msg_text = get_xml_attr(message, f'{{{MNS}}}MessageText')
+        msg_xml = message.find(f'{{{MNS}}}MessageXml')
         if response_class == 'Warning':
             try:
                 raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
@@ -518,7 +513,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 log.warning(str(e))
                 container = message.find(name)
                 if container is None:
-                    raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (name, xml_to_str(message)))
+                    raise MalformedResponseError(f'No {name} elements in ResponseMessage ({xml_to_str(message)})')
                 return container
         # rspclass == 'Error', or 'Success' and not 'NoError'
         try:
@@ -530,30 +525,29 @@ class EWSService(metaclass=abc.ABCMeta):
     def _get_exception(code, text, msg_xml):
         """Parse error messages contained in EWS responses and raise as exceptions defined in this package."""
         if not code:
-            return TransportError('Empty ResponseCode in ResponseMessage (MessageText: %s, MessageXml: %s)' % (
-                text, msg_xml))
+            return TransportError(f'Empty ResponseCode in ResponseMessage (MessageText: {text}, MessageXml: {msg_xml})')
         if msg_xml is not None:
             # If this is an ErrorInvalidPropertyRequest error, the xml may contain a specific FieldURI
             for elem_cls in (FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI):
                 elem = msg_xml.find(elem_cls.response_tag())
                 if elem is not None:
                     field_uri = elem_cls.from_xml(elem, account=None)
-                    text += ' (field: %s)' % field_uri
+                    text += f' (field: {field_uri})'
                     break
 
             # If this is an ErrorInvalidValueForProperty error, the xml may contain the name and value of the property
             if code == 'ErrorInvalidValueForProperty':
                 msg_parts = {}
-                for elem in msg_xml.findall('{%s}Value' % TNS):
+                for elem in msg_xml.findall(f'{{{TNS}}}Value'):
                     key, val = elem.get('Name'), elem.text
                     if key:
                         msg_parts[key] = val
                 if msg_parts:
-                    text += ' (%s)' % ', '.join('%s: %s' % (k, v) for k, v in msg_parts.items())
+                    text += f" ({', '.join(f'{k}: {v}' for k, v in msg_parts.items())})"
 
             # If this is an ErrorInternalServerError error, the xml may contain a more specific error code
             inner_code, inner_text = None, None
-            for value_elem in msg_xml.findall('{%s}Value' % TNS):
+            for value_elem in msg_xml.findall(f'{{{TNS}}}Value'):
                 name = value_elem.get('Name')
                 if name == 'InnerErrorResponseCode':
                     inner_code = value_elem.text
@@ -562,17 +556,18 @@ class EWSService(metaclass=abc.ABCMeta):
             if inner_code:
                 try:
                     # Raise the error as the inner error code
-                    return vars(errors)[inner_code]('%s (raised from: %s(%r))' % (inner_text, code, text))
+                    return vars(errors)[inner_code](f'{inner_text} (raised from: {code}({text!r}))')
                 except KeyError:
                     # Inner code is unknown to us. Just append to the original text
-                    text += ' (inner error: %s(%r))' % (inner_code, inner_text)
+                    text += f' (inner error: {inner_code}({inner_text!r}))'
         try:
             # Raise the error corresponding to the ResponseCode
             return vars(errors)[code](text)
         except KeyError:
             # Should not happen
-            return TransportError('Unknown ResponseCode in ResponseMessage: %s (MessageText: %s, MessageXml: %s)' % (
-                    code, text, msg_xml))
+            return TransportError(
+                f'Unknown ResponseCode in ResponseMessage: {code} (MessageText: {text}, MessageXml: {msg_xml})'
+            )
 
     def _get_elements_in_response(self, response):
         """Take a list of 'SomeServiceResponseMessage' elements and return the elements in each response message that
@@ -628,8 +623,9 @@ class EWSService(metaclass=abc.ABCMeta):
     def _get_elems_from_page(self, elem, max_items, total_item_count):
         container = elem.find(self.element_container_name)
         if container is None:
-            raise MalformedResponseError('No %s elements in ResponseMessage (%s)' % (
-                self.element_container_name, xml_to_str(elem)))
+            raise MalformedResponseError(
+                f'No {self.element_container_name} elements in ResponseMessage ({xml_to_str(elem)})'
+            )
         for e in self._get_elements_in_container(container=container):
             if max_items and total_item_count >= max_items:
                 # No need to continue. Break out of elements loop
@@ -645,7 +641,7 @@ class EWSService(metaclass=abc.ABCMeta):
         page_elems = list(self._get_elements(payload=payload))
         if len(page_elems) != expected_message_count:
             raise MalformedResponseError(
-                "Expected %s items in 'response', got %s" % (expected_message_count, len(page_elems))
+                f"Expected {expected_message_count} items in 'response', got {len(page_elems)}"
             )
         return page_elems
 
@@ -894,7 +890,7 @@ def parse_folder_elem(elem, folder, account):
                 folder_cls = cls
                 break
         if not folder_cls:
-            raise ValueError('Unknown distinguished folder ID: %s' % folder.id)
+            raise ValueError(f'Unknown distinguished folder ID: {folder.id}')
         f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
     else:
         # 'folder' is a generic FolderId instance. We don't know the root so assume account.root.

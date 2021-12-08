@@ -237,7 +237,7 @@ class SyncTest(BaseItemTest):
         # Test a single bad notification
         with self.assertRaises(ErrorInvalidSubscription) as e:
             list(test_folder.get_streaming_events('AAA-', connection_timeout=1, max_notifications_returned=1))
-        self.assertEqual(e.exception.value, "Subscription is invalid. (subscription IDs: 'AAA-')")
+        self.assertEqual(e.exception.value, "Subscription is invalid. (subscription IDs: ['AAA-'])")
 
         # Test a combination of a good and a bad notification
         with self.assertRaises(ErrorInvalidSubscription) as e:
@@ -246,7 +246,7 @@ class SyncTest(BaseItemTest):
                 list(test_folder.get_streaming_events(
                     ('AAA-', subscription_id), connection_timeout=1, max_notifications_returned=1
                 ))
-        self.assertEqual(e.exception.value, "Subscription is invalid. (subscription IDs: 'AAA-')")
+        self.assertEqual(e.exception.value, "Subscription is invalid. (subscription IDs: ['AAA-'])")
 
     def test_push_message_parsing(self):
         xml = b'''\

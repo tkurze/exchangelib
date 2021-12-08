@@ -46,7 +46,7 @@ except ImportError:
     pass
 
 DEFAULT_ENCODING = 'utf-8'
-DEFAULT_HEADERS = {'Content-Type': 'text/xml; charset=%s' % DEFAULT_ENCODING, 'Accept-Encoding': 'gzip, deflate'}
+DEFAULT_HEADERS = {'Content-Type': f'text/xml; charset={DEFAULT_ENCODING}', 'Accept-Encoding': 'gzip, deflate'}
 
 
 def wrap(content, api_version, account_to_impersonate=None, timezone=None):
@@ -84,7 +84,7 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
         ):
             val = getattr(account_to_impersonate, attr)
             if val:
-                add_xml_child(connectingsid, 't:%s' % tag, val)
+                add_xml_child(connectingsid, f't:{tag}', val)
                 break
         exchangeimpersonation.append(connectingsid)
         header.append(exchangeimpersonation)

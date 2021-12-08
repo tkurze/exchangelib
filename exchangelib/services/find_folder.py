@@ -7,8 +7,8 @@ class FindFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder-operation"""
 
     SERVICE_NAME = 'FindFolder'
-    element_container_name = '{%s}Folders' % TNS
-    paging_container_name = '{%s}RootFolder' % MNS
+    element_container_name = f'{{{TNS}}}Folders'
+    paging_container_name = f'{{{MNS}}}RootFolder'
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -30,7 +30,7 @@ class FindFolder(EWSAccountService):
         """
         roots = {f.root for f in folders}
         if len(roots) != 1:
-            raise ValueError('FindFolder must be called with folders in the same root hierarchy (%r)' % roots)
+            raise ValueError(f'FindFolder must be called with folders in the same root hierarchy ({roots})')
         self.root = roots.pop()
         return self._elems_to_objs(self._paged_call(
                 payload_func=self.get_payload,
@@ -55,7 +55,7 @@ class FindFolder(EWSAccountService):
             yield Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
-        findfolder = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))
+        findfolder = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
         foldershape = create_shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         )

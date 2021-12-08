@@ -73,18 +73,14 @@ for msg in a.calendar.view(start=now, end=cal_items_before)\
     if msg.start < now:
         continue
     minutes_to_appointment = int((msg.start - now).total_seconds() / 60)
-    subj = 'You have a meeting in %s minutes' % minutes_to_appointment
-    body = '%s-%s: %s\n%s' % (
-        msg.start.astimezone(tz).strftime('%H:%M'),
-        msg.end.astimezone(tz).strftime('%H:%M'),
-        msg.subject[:150],
-        msg.location
-    )
+    subj = f'You have a meeting in {minutes_to_appointment} minutes'
+    body = f"{msg.start.astimezone(tz).strftime('%H:%M')}-{msg.end.astimezone(tz).strftime('%H:%M')}: " \
+           f"{msg.subject[:150]}\n{msg.location}"
     zenity(**{'info': None, 'no-markup': None, 'title': subj, 'text': body})
 
 for msg in a.inbox.filter(datetime_received__gt=emails_since, is_read=False)\
         .only('datetime_received', 'subject', 'text_body')\
         .order_by('datetime_received')[:10]:
-    subj = 'New mail: %s' % msg.subject
+    subj = f'New mail: {msg.subject}'
     clean_body = '\n'.join(line for line in msg.text_body.split('\n') if line)
     notify(subj, clean_body[:200])

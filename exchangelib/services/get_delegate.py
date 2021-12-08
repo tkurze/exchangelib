@@ -26,7 +26,7 @@ class GetDelegate(EWSAccountService):
             yield DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
-        payload = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(IncludePermissions=include_permissions))
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
             set_xml_value(payload, user_ids, version=self.protocol.version)
@@ -38,4 +38,4 @@ class GetDelegate(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return '{%s}DelegateUserResponseMessageType' % MNS
+        return f'{{{MNS}}}DelegateUserResponseMessageType'

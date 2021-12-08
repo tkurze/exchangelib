@@ -116,7 +116,7 @@ class TransportTest(TimedTestCase):
                 ('sid', 'SID'),
                 ('smtp_address', 'SmtpAddress'),
         ):
-            val = '%s@example.com' % attr
+            val = f'{attr}@example.com'
             account = MockAccount(
                 access_type=DELEGATE, identity=Identity(**{attr: val}), default_timezone=MockTZ('XXX')
             )
@@ -128,7 +128,7 @@ class TransportTest(TimedTestCase):
             )
             self.assertEqual(
                 PrettyXmlHandler.prettify_xml(wrapped),
-                '''<?xml version='1.0' encoding='utf-8'?>
+                f'''<?xml version='1.0' encoding='utf-8'?>
 <s:Envelope
     xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
     xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
@@ -148,4 +148,4 @@ class TransportTest(TimedTestCase):
     <AAA/>
   </s:Body>
 </s:Envelope>
-'''.format(tag=tag, val=val).encode())
+'''.encode())

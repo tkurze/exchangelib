@@ -194,14 +194,14 @@ class Autodiscovery:
         try:
             r = self._get_authenticated_response(protocol=protocol)
         except TransportError as e:
-            raise AutoDiscoverFailed('Response error: %s' % e)
+            raise AutoDiscoverFailed(f'Response error: {e}')
         if r.status_code == 200:
             try:
                 ad = Autodiscover.from_bytes(bytes_content=r.content)
                 return self._step_5(ad=ad)
             except ValueError as e:
-                raise AutoDiscoverFailed('Invalid response: %s' % e)
-        raise AutoDiscoverFailed('Invalid response code: %s' % r.status_code)
+                raise AutoDiscoverFailed(f'Invalid response: {e}')
+        raise AutoDiscoverFailed(f'Invalid response code: {r.status_code}')
 
     def _redirect_url_is_valid(self, url):
         """Three separate responses can be “Redirect responses”:
@@ -252,7 +252,7 @@ class Autodiscovery:
         if not self._is_valid_hostname(hostname):
             # 'requests' is really bad at reporting that a hostname cannot be resolved. Let's check this separately.
             # Don't retry on DNS errors. They will most likely be persistent.
-            raise TransportError('%r has no DNS entry' % hostname)
+            raise TransportError(f'{hostname!r} has no DNS entry')
 
         kwargs = dict(
             url=url, headers=DEFAULT_HEADERS.copy(), allow_redirects=False, timeout=AutodiscoverProtocol.TIMEOUT
@@ -337,7 +337,7 @@ class Autodiscovery:
                 # This type of credentials *must* use the OAuth auth type
                 auth_type = OAUTH2
             elif self.credentials is None and auth_type in CREDENTIALS_REQUIRED:
-                raise ValueError('Auth type %r was detected but no credentials were provided' % auth_type)
+                raise ValueError(f'Auth type {auth_type!r} was detected but no credentials were provided')
             ad_protocol = AutodiscoverProtocol(
                 config=Configuration(
                     service_endpoint=url,
@@ -394,7 +394,7 @@ class Autodiscovery:
         log.debug('Attempting to get SRV records for %s', hostname)
         records = []
         try:
-            answers = self.resolver.resolve('%s.' % hostname, 'SRV')
+            answers = self.resolver.resolve(f'{hostname}.', 'SRV')
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
             log.debug('DNS lookup failure: %s', e)
             return records
@@ -419,7 +419,7 @@ class Autodiscovery:
         :param hostname:
         :return:
         """
-        url = 'https://%s/Autodiscover/Autodiscover.xml' % hostname
+        url = f'https://{hostname}/Autodiscover/Autodiscover.xml'
         log.info('Step 1: Trying autodiscover on %r with email %r', url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
@@ -435,7 +435,7 @@ class Autodiscovery:
         :param hostname:
         :return:
         """
-        url = 'https://autodiscover.%s/Autodiscover/Autodiscover.xml' % hostname
+        url = f'https://autodiscover.{hostname}/Autodiscover/Autodiscover.xml'
         log.info('Step 2: Trying autodiscover on %r with email %r', url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
@@ -458,7 +458,7 @@ class Autodiscovery:
         :param hostname:
         :return:
         """
-        url = 'http://autodiscover.%s/Autodiscover/Autodiscover.xml' % hostname
+        url = f'http://autodiscover.{hostname}/Autodiscover/Autodiscover.xml'
         log.info('Step 3: Trying autodiscover on %r with email %r', url, self.email)
         try:
             _, r = self._get_unauthenticated_response(url=url, method='get')
@@ -491,7 +491,7 @@ class Autodiscovery:
         :param hostname:
         :return:
         """
-        dns_hostname = '_autodiscover._tcp.%s' % hostname
+        dns_hostname = f'_autodiscover._tcp.{hostname}'
         log.info('Step 4: Trying autodiscover on %r with email %r', dns_hostname, self.email)
         srv_records = self._get_srv_records(dns_hostname)
         try:
@@ -500,7 +500,7 @@ class Autodiscovery:
             srv_host = None
         if not srv_host:
             return self._step_6()
-        redirect_url = 'https://%s/Autodiscover/Autodiscover.xml' % srv_host
+        redirect_url = f'https://{srv_host}/Autodiscover/Autodiscover.xml'
         if self._redirect_url_is_valid(url=redirect_url):
             is_valid_response, ad = self._attempt_response(url=redirect_url)
             if is_valid_response:
@@ -551,8 +551,8 @@ class Autodiscovery:
         future requests.
         """
         raise AutoDiscoverFailed(
-            'All steps in the autodiscover protocol failed for email %r. If you think this is an error, consider doing '
-            'an official test at https://testconnectivity.microsoft.com' % self.email)
+            f'All steps in the autodiscover protocol failed for email {self.email}. If you think this is an error, '
+            f'consider doing an official test at https://testconnectivity.microsoft.com')
 
 
 def _select_srv_host(srv_records):

@@ -80,7 +80,7 @@ class Item(BaseItem):
             for a in self.attachments:
                 if a.parent_item:
                     if a.parent_item is not self:
-                        raise ValueError("'parent_item' of attachment %s must point to this item" % a)
+                        raise ValueError(f"'parent_item' of attachment {a} must point to this item")
                 else:
                     a.parent_item = self
                 self.attach(self.attachments)
@@ -170,7 +170,7 @@ class Item(BaseItem):
     @require_account
     def _update(self, update_fieldnames, message_disposition, conflict_resolution, send_meeting_invitations):
         if not self.changekey:
-            raise ValueError('%s must have changekey' % self.__class__.__name__)
+            raise ValueError(f'{self.__class__.__name__} must have changekey')
         if not update_fieldnames:
             # The fields to update was not specified explicitly. Update all fields where update is possible
             update_fieldnames = self._update_fieldnames()

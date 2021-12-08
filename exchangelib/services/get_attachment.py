@@ -12,11 +12,11 @@ class GetAttachment(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation"""
 
     SERVICE_NAME = 'GetAttachment'
-    element_container_name = '{%s}Attachments' % MNS
+    element_container_name = f'{{{MNS}}}Attachments'
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise ValueError("'body_type' %s must be one of %s" % (body_type, BODY_TYPE_CHOICES))
+            raise ValueError(f"'body_type' {body_type!r} must be one of {BODY_TYPE_CHOICES}")
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, include_mime_content=include_mime_content,
             body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
@@ -32,7 +32,7 @@ class GetAttachment(EWSAccountService):
             yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-        payload = create_element('m:%s' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         shape_elem = create_element('m:AttachmentShape')
         if include_mime_content:
             add_xml_child(shape_elem, 't:IncludeMimeContent', 'true')

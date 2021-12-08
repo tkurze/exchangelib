@@ -9,7 +9,7 @@ class CreateAttachment(EWSAccountService):
     """
 
     SERVICE_NAME = 'CreateAttachment'
-    element_container_name = '{%s}Attachments' % MNS
+    element_container_name = f'{{{MNS}}}Attachments'
 
     def call(self, parent_item, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
@@ -25,7 +25,7 @@ class CreateAttachment(EWSAccountService):
 
     def get_payload(self, items, parent_item):
         from ..items import BaseItem
-        payload = create_element('m:%s' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         version = self.account.version
         if isinstance(parent_item, BaseItem):
             # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId

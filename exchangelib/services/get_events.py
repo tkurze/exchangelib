@@ -32,7 +32,7 @@ class GetEvents(EWSAccountService):
         return container.findall(Notification.response_tag())
 
     def get_payload(self, subscription_id, watermark):
-        getstreamingevents = create_element('m:%s' % self.SERVICE_NAME)
+        getstreamingevents = create_element(f'm:{self.SERVICE_NAME}')
         add_xml_child(getstreamingevents, 'm:SubscriptionId', subscription_id)
         add_xml_child(getstreamingevents, 'm:Watermark', watermark)
         return getstreamingevents

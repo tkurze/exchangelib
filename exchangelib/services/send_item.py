@@ -11,11 +11,11 @@ class SendItem(EWSAccountService):
     def call(self, items, saved_item_folder):
         from ..folders import BaseFolder, FolderId
         if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-            raise ValueError("'saved_item_folder' %r must be a Folder or FolderId instance" % saved_item_folder)
+            raise ValueError(f"'saved_item_folder' {saved_item_folder!r} must be a Folder or FolderId instance")
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
-        senditem = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+        senditem = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
         item_ids = create_item_ids_element(items=items, version=self.account.version)
         senditem.append(item_ids)
         if saved_item_folder:

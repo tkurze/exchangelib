@@ -53,12 +53,15 @@ class FieldTest(TimedTestCase):
         field = DateTimeField('foo', field_uri='bar')
         with self.assertRaises(ValueError) as e:
             field.clean(datetime.datetime(2017, 1, 1))  # Datetime values must be timezone aware
-        self.assertEqual(str(e.exception), "Value '2017-01-01 00:00:00' on field 'foo' must be timezone aware")
+        self.assertEqual(
+            str(e.exception),
+            "Value datetime.datetime(2017, 1, 1, 0, 0) on field 'foo' must be timezone aware"
+        )
 
         field = ChoiceField('foo', field_uri='bar', choices=[Choice('foo'), Choice('bar')])
         with self.assertRaises(ValueError) as e:
             field.clean('XXX')  # Value must be a valid choice
-        self.assertEqual(str(e.exception), "Invalid choice 'XXX' for field 'foo'. Valid choices are: foo, bar")
+        self.assertEqual(str(e.exception), "Invalid choice 'XXX' for field 'foo'. Valid choices are: ['foo', 'bar']")
 
         # A few tests on extended properties that override base methods
         field = ExtendedPropertyField('foo', value_cls=ExternId, is_required=True)
@@ -119,13 +122,13 @@ class FieldTest(TimedTestCase):
         field = EnumListField('foo', field_uri='bar', enum=['a', 'b', 'c'])
         with self.assertRaises(ValueError)as e:
             field.clean([])
-        self.assertEqual(str(e.exception), "Value '[]' on field 'foo' must not be empty")
+        self.assertEqual(str(e.exception), "Value [] on field 'foo' must not be empty")
         with self.assertRaises(ValueError) as e:
             field.clean([0])
         self.assertEqual(str(e.exception), "Value 0 on field 'foo' must be greater than 1")
         with self.assertRaises(ValueError) as e:
             field.clean([1, 1])  # Values must be unique
-        self.assertEqual(str(e.exception), "List entries '[1, 1]' on field 'foo' must be unique")
+        self.assertEqual(str(e.exception), "List entries [1, 1] on field 'foo' must be unique")
         with self.assertRaises(ValueError) as e:
             field.clean(['d'])
         self.assertEqual(str(e.exception), "List value 'd' on field 'foo' must be one of ['a', 'b', 'c']")
@@ -141,7 +144,7 @@ class FieldTest(TimedTestCase):
         <t:Foo>THIS_IS_GARBAGE</t:Foo>
     </t:Item>
 </Envelope>'''
-        elem = to_xml(payload).find('{%s}Item' % TNS)
+        elem = to_xml(payload).find(f'{{{TNS}}}Item')
         for field_cls in (Base64Field, BooleanField, IntegerField, DateField, DateTimeField, DecimalField):
             field = field_cls('foo', field_uri='item:Foo', is_required=True, default='DUMMY')
             self.assertEqual(field.from_xml(elem=elem, account=account), None)
@@ -154,7 +157,7 @@ class FieldTest(TimedTestCase):
         <t:Foo Id="THIS_IS_GARBAGE"></t:Foo>
     </t:Item>
 </Envelope>'''
-        elem = to_xml(payload).find('{%s}Item' % TNS)
+        elem = to_xml(payload).find(f'{{{TNS}}}Item')
         field = TimeZoneField('foo', field_uri='item:Foo', default='DUMMY')
         self.assertEqual(field.from_xml(elem=elem, account=account), None)
 
@@ -193,7 +196,7 @@ class FieldTest(TimedTestCase):
         <t:DateTimeSent>2017-06-21T18:40:02Z</t:DateTimeSent>
     </t:Item>
 </Envelope>'''
-        elem = to_xml(payload).find('{%s}Item' % TNS)
+        elem = to_xml(payload).find(f'{{{TNS}}}Item')
         self.assertEqual(
             field.from_xml(elem=elem, account=account), datetime.datetime(2017, 6, 21, 18, 40, 2, tzinfo=utc)
         )
@@ -206,7 +209,7 @@ class FieldTest(TimedTestCase):
         <t:DateTimeSent>2017-06-21T18:40:02</t:DateTimeSent>
     </t:Item>
 </Envelope>'''
-        elem = to_xml(payload).find('{%s}Item' % TNS)
+        elem = to_xml(payload).find(f'{{{TNS}}}Item')
         self.assertEqual(
             field.from_xml(elem=elem, account=account), datetime.datetime(2017, 6, 21, 18, 40, 2, tzinfo=tz)
         )
@@ -219,7 +222,7 @@ class FieldTest(TimedTestCase):
         <t:DateTimeSent>THIS_IS_GARBAGE</t:DateTimeSent>
     </t:Item>
 </Envelope>'''
-        elem = to_xml(payload).find('{%s}Item' % TNS)
+        elem = to_xml(payload).find(f'{{{TNS}}}Item')
         self.assertEqual(field.from_xml(elem=elem, account=account), None)
 
         # Element not found returns default value
@@ -229,7 +232,7 @@ class FieldTest(TimedTestCase):
     <t:Item>
     </t:Item>
 </Envelope>'''
-        elem = to_xml(payload).find('{%s}Item' % TNS)
+        elem = to_xml(payload).find(f'{{{TNS}}}Item')
         self.assertEqual(field.from_xml(elem=elem, account=account), default_value)
 
     def test_single_field_indexed_element(self):

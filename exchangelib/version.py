@@ -78,7 +78,7 @@ class Build:
         self.major_build = major_build
         self.minor_build = minor_build
         if major_version < 8:
-            raise ValueError("Exchange major versions below 8 don't support EWS (%s)" % self)
+            raise ValueError(f"Exchange major versions below 8 don't support EWS ({self})")
 
     @classmethod
     def from_xml(cls, elem):
@@ -110,7 +110,7 @@ class Build:
 
         :param s:
         """
-        bin_s = '{:032b}'.format(int(s, 16))  # Convert string to 32-bit binary string
+        bin_s = f'{int(s, 16):032b}'  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
         minor_version = int(bin_s[10:16], 2)
         build_number = int(bin_s[17:32], 2)
@@ -122,7 +122,7 @@ class Build:
         try:
             return self.API_VERSION_MAP[self.major_version][self.minor_version]
         except KeyError:
-            raise ValueError('API version for build %s is unknown' % self)
+            raise ValueError(f'API version for build {self} is unknown')
 
     def fullname(self):
         return VERSIONS[self.api_version()][1]
@@ -162,7 +162,7 @@ class Build:
         return self.__cmp__(other) >= 0
 
     def __str__(self):
-        return '%s.%s.%s.%s' % (self.major_version, self.minor_version, self.major_build, self.minor_build)
+        return f'{self.major_version}.{self.minor_version}.{self.major_build}.{self.minor_build}'
 
     def __repr__(self):
         return self.__class__.__name__ \
@@ -230,7 +230,7 @@ class Version:
         except ResponseMessageError as e:
             # We may have survived long enough to get a new version
             if not protocol.config.version.build:
-                raise TransportError('No valid version headers found in response (%r)' % e)
+                raise TransportError(f'No valid version headers found in response ({e!r})')
         if not protocol.config.version.build:
             raise TransportError('No valid version headers found in response')
         return protocol.version
@@ -242,13 +242,13 @@ class Version:
 
     @classmethod
     def from_soap_header(cls, requested_api_version, header):
-        info = header.find('{%s}ServerVersionInfo' % TNS)
+        info = header.find(f'{{{TNS}}}ServerVersionInfo')
         if info is None:
-            raise TransportError('No ServerVersionInfo in header: %r' % xml_to_str(header))
+            raise TransportError(f'No ServerVersionInfo in header: {xml_to_str(header)!r}')
         try:
             build = Build.from_xml(elem=info)
         except ValueError:
-            raise TransportError('Bad ServerVersionInfo in response: %r' % xml_to_str(header))
+            raise TransportError(f'Bad ServerVersionInfo in response: {xml_to_str(header)!r}')
         # Not all Exchange servers send the Version element
         api_version_from_server = info.get('Version') or build.api_version()
         if api_version_from_server != requested_api_version:
@@ -277,4 +277,4 @@ class Version:
         return self.__class__.__name__ + repr((self.build, self.api_version))
 
     def __str__(self):
-        return 'Build=%s, API=%s, Fullname=%s' % (self.build, self.api_version, self.fullname)
+        return f'Build={self.build}, API={self.api_version}, Fullname={self.fullname}'

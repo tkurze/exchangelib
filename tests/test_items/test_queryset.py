@@ -17,7 +17,7 @@ class ItemQuerySetTest(BaseItemTest):
         test_items = []
         for i in range(4):
             item = self.get_test_item()
-            item.subject = 'Item %s' % i
+            item.subject = f'Item {i}'
             item.save()
             test_items.append(item)
         qs = QuerySet(
@@ -201,7 +201,7 @@ class ItemQuerySetTest(BaseItemTest):
         test_items = []
         for i in range(4):
             item = self.get_test_item()
-            item.subject = 'Item %s' % i
+            item.subject = f'Item {i}'
             item.save()
             test_items.append(item)
         qs = QuerySet(
@@ -274,7 +274,7 @@ class ItemQuerySetTest(BaseItemTest):
         items = []
         for i in range(4):
             item = self.get_test_item()
-            item.subject = 'Subj %s' % i
+            item.subject = f'Subj {i}'
             del item.attachments[:]
             items.append(item)
         self.test_folder.bulk_create(items=items)

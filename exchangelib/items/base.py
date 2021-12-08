@@ -79,15 +79,15 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
         :return:
         """
         if not cls.INSERT_AFTER_FIELD:
-            raise ValueError('Class %s is missing INSERT_AFTER_FIELD value' % cls)
+            raise ValueError(f'Class {cls} is missing INSERT_AFTER_FIELD value')
         try:
             cls.get_field_by_fieldname(attr_name)
         except InvalidField:
             pass
         else:
-            raise ValueError("'%s' is already registered" % attr_name)
+            raise ValueError(f"{attr_name!r} is already registered")
         if not issubclass(attr_cls, ExtendedProperty):
-            raise ValueError("%r must be a subclass of ExtendedProperty" % attr_cls)
+            raise ValueError(f"{attr_cls!r} must be a subclass of ExtendedProperty")
         # Check if class attributes are properly defined
         attr_cls.validate_cls()
         # ExtendedProperty is not a real field, but a placeholder in the fields list. See
@@ -110,9 +110,9 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
         try:
             field = cls.get_field_by_fieldname(attr_name)
         except InvalidField:
-            raise ValueError("'%s' is not registered" % attr_name)
+            raise ValueError(f"{attr_name!r} is not registered")
         if not isinstance(field, ExtendedPropertyField):
-            raise ValueError("'%s' is not registered as an ExtendedProperty" % attr_name)
+            raise ValueError(f"{attr_name} is not registered as an ExtendedProperty")
         cls.remove_field(field)
 
 
@@ -136,11 +136,11 @@ class BaseItem(RegisterMixIn, metaclass=EWSMeta):
         from ..account import Account
         self.account = kwargs.pop('account', None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise ValueError("'account' %r must be an Account instance" % self.account)
+            raise ValueError(f"'account' {self.account!r} must be an Account instance")
         self.folder = kwargs.pop('folder', None)
         if self.folder is not None:
             if not isinstance(self.folder, BaseFolder):
-                raise ValueError("'folder' %r must be a Folder instance" % self.folder)
+                raise ValueError(f"'folder' {self.folder!r} must be a Folder instance")
             if self.folder.account is not None:
                 if self.account is not None:
                     # Make sure the account from kwargs matches the folder account
@@ -179,7 +179,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
         from ..account import Account
         self.account = kwargs.pop('account', None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise ValueError("'account' %r must be an Account instance" % self.account)
+            raise ValueError(f"'account' {self.account!r} must be an Account instance")
         super().__init__(**kwargs)
 
     @require_account

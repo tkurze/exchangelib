@@ -42,26 +42,25 @@ class Configuration:
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
-            raise ValueError("'credentials' %r must be a Credentials instance" % credentials)
+            raise ValueError(f"'credentials' {credentials!r} must be a Credentials instance")
         if isinstance(credentials, OAuth2Credentials) and auth_type is None:
             # This type of credentials *must* use the OAuth auth type
             auth_type = OAUTH2
         if server and service_endpoint:
             raise AttributeError("Only one of 'server' or 'service_endpoint' must be provided")
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise ValueError("'auth_type' %r must be one of %s"
-                             % (auth_type, ', '.join("'%s'" % k for k in sorted(AUTH_TYPE_MAP))))
+            raise ValueError(f"'auth_type' {auth_type!r} must be one of {sorted(AUTH_TYPE_MAP)}")
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
-            raise ValueError("'version' %r must be a Version instance" % version)
+            raise ValueError(f"'version' {version!r} must be a Version instance")
         if not isinstance(retry_policy, RetryPolicy):
-            raise ValueError("'retry_policy' %r must be a RetryPolicy instance" % retry_policy)
+            raise ValueError(f"'retry_policy' {retry_policy!r} must be a RetryPolicy instance")
         if not isinstance(max_connections, (int, type(None))):
             raise ValueError("'max_connections' must be an integer")
         self._credentials = credentials
         if server:
-            self.service_endpoint = 'https://%s/EWS/Exchange.asmx' % server
+            self.service_endpoint = f'https://{server}/EWS/Exchange.asmx'
         else:
             self.service_endpoint = service_endpoint
         self.auth_type = auth_type
@@ -81,6 +80,7 @@ class Configuration:
         return split_url(self.service_endpoint)[1]
 
     def __repr__(self):
-        return self.__class__.__name__ + '(%s)' % ', '.join('%s=%r' % (k, getattr(self, k)) for k in (
+        args_str = ', '.join(f'{k}={getattr(self, k)!r}' for k in (
             'credentials', 'service_endpoint', 'auth_type', 'version', 'retry_policy'
         ))
+        return f'{self.__class__.__name__}({args_str})'

@@ -72,7 +72,7 @@ class EWSDateTimeTest(TimedTestCase):
         with self.assertRaises(UnknownTimeZone) as e:
             del EWSTimeZone.IANA_TO_MS_MAP['Africa/Tripoli']
             EWSTimeZone('Africa/Tripoli')
-        self.assertEqual(e.exception.args[0], 'No Windows timezone name found for timezone "Africa/Tripoli"')
+        self.assertEqual(e.exception.args[0], "No Windows timezone name found for timezone 'Africa/Tripoli'")
 
         # Test __eq__ with non-EWSTimeZone compare
         self.assertFalse(EWSTimeZone('GMT') == zoneinfo.ZoneInfo('UTC'))

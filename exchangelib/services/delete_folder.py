@@ -12,7 +12,7 @@ class DeleteFolder(EWSAccountService):
         return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
 
     def get_payload(self, folders, delete_type):
-        deletefolder = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(DeleteType=delete_type))
+        deletefolder = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(DeleteType=delete_type))
         folder_ids = create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version)
         deletefolder.append(folder_ids)
         return deletefolder

@@ -63,10 +63,10 @@ class QuerySet(SearchableMixIn):
     def __init__(self, folder_collection, request_type=ITEM):
         from .folders import FolderCollection
         if not isinstance(folder_collection, FolderCollection):
-            raise ValueError("folder_collection value '%s' must be a FolderCollection instance" % folder_collection)
+            raise ValueError(f"folder_collection value {folder_collection!r} must be a FolderCollection instance")
         self.folder_collection = folder_collection  # A FolderCollection instance
         if request_type not in self.REQUEST_TYPES:
-            raise ValueError("'request_type' %r must be one of %s" % (request_type, self.REQUEST_TYPES))
+            raise ValueError(f"'request_type' {request_type} must be one of {self.REQUEST_TYPES}")
         self.request_type = request_type
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -89,13 +89,13 @@ class QuerySet(SearchableMixIn):
         # new_qs = qs.exclude(bar='baz')  # This should work, and should fetch from the server
         #
         if not isinstance(self.q, Q):
-            raise ValueError("self.q value '%s' must be None or a Q instance" % self.q)
+            raise ValueError(f"self.q value {self.q!r} must be None or a Q instance")
         if not isinstance(self.only_fields, (type(None), tuple)):
-            raise ValueError("self.only_fields value '%s' must be None or a tuple" % self.only_fields)
+            raise ValueError(f"self.only_fields value {self.only_fields!r} must be None or a tuple")
         if not isinstance(self.order_fields, (type(None), tuple)):
-            raise ValueError("self.order_fields value '%s' must be None or a tuple" % self.order_fields)
+            raise ValueError(f"self.order_fields value {self.order_fields!r} must be None or a tuple")
         if self.return_format not in self.RETURN_TYPES:
-            raise ValueError("self.return_value '%s' must be one of %s" % (self.return_format, self.RETURN_TYPES))
+            raise ValueError(f"self.return_value {self.return_format!r} must be one of {self.RETURN_TYPES}")
         # Only mutable objects need to be deepcopied. Folder should be the same object
         new_qs = self.__class__(self.folder_collection, request_type=self.request_type)
         new_qs.q = deepcopy(self.q)
@@ -118,7 +118,7 @@ class QuerySet(SearchableMixIn):
                 return FieldPath.from_string(field_path=field_path, folder=folder)
             except InvalidField:
                 pass
-        raise InvalidField("Unknown field path %r on folders %s" % (field_path, self.folder_collection.folders))
+        raise InvalidField(f"Unknown field path {field_path!r} on folders {self.folder_collection.folders}")
 
     def _get_field_order(self, field_path):
         from .items import Persona
@@ -132,7 +132,7 @@ class QuerySet(SearchableMixIn):
                 return FieldOrder.from_string(field_path=field_path, folder=folder)
             except InvalidField:
                 pass
-        raise InvalidField("Unknown field path %r on folders %s" % (field_path, self.folder_collection.folders))
+        raise InvalidField(f"Unknown field path {field_path!r} on folders {self.folder_collection.folders}")
 
     @property
     def _id_field(self):
@@ -144,7 +144,7 @@ class QuerySet(SearchableMixIn):
 
     def _additional_fields(self):
         if not isinstance(self.only_fields, tuple):
-            raise ValueError("'only_fields' value %r must be a tuple" % self.only_fields)
+            raise ValueError(f"'only_fields' value {self.only_fields!r} must be a tuple")
         # Remove ItemId and ChangeKey. We get them unconditionally
         additional_fields = {f for f in self.only_fields if not f.field.is_attribute}
         if self.request_type != self.ITEM:
@@ -252,10 +252,10 @@ class QuerySet(SearchableMixIn):
             except TypeError as e:
                 if 'unorderable types' not in e.args[0]:
                     raise
-                raise ValueError((
-                    "Cannot sort on field '%s'. The field has no default value defined, and there are either items "
-                    "with None values for this field, or the query contains exception instances (original error: %s).")
-                                 % (f.field_path, e))
+                raise ValueError(
+                    f"Cannot sort on field {f.field_path!r}. The field has no default value defined, and there are "
+                    f"either items with None values for this field, or the query contains exception instances "
+                    f"(original error: {e}).")
         if not extra_order_fields:
             return items
 
@@ -439,7 +439,7 @@ class QuerySet(SearchableMixIn):
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError("%s in only()" % e.args[0])
+            raise ValueError(f"{e.args[0]} in only()")
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         return new_qs
@@ -453,7 +453,7 @@ class QuerySet(SearchableMixIn):
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
         except ValueError as e:
-            raise ValueError("%s in order_by()" % e.args[0])
+            raise ValueError(f"{e.args[0]} in order_by()")
         new_qs = self._copy_self()
         new_qs.order_fields = order_fields
         return new_qs
@@ -471,7 +471,7 @@ class QuerySet(SearchableMixIn):
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError("%s in values()" % e.args[0])
+            raise ValueError(f"{e.args[0]} in values()")
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         new_qs.return_format = self.VALUES
@@ -483,13 +483,13 @@ class QuerySet(SearchableMixIn):
         """
         flat = kwargs.pop('flat', False)
         if kwargs:
-            raise AttributeError('Unknown kwargs: %s' % kwargs)
+            raise AttributeError(f'Unknown kwargs: {kwargs}')
         if flat and len(args) != 1:
             raise ValueError('flat=True requires exactly one field name')
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError("%s in values_list()" % e.args[0])
+            raise ValueError(f"{e.args[0]} in values_list()")
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         new_qs.return_format = self.FLAT if flat else self.VALUES_LIST
@@ -652,8 +652,9 @@ class QuerySet(SearchableMixIn):
         )
 
     def __str__(self):
-        fmt_args = [('q', str(self.q)), ('folders', '[%s]' % ', '.join(str(f) for f in self.folder_collection.folders))]
-        return self.__class__.__name__ + '(%s)' % ', '.join('%s=%s' % (k, v) for k, v in fmt_args)
+        fmt_args = [('q', str(self.q)), ('folders', f"[{', '.join(str(f) for f in self.folder_collection.folders)}]")]
+        args_str = ', '.join(f'{k}={v}' for k, v in fmt_args)
+        return f'{self.__class__.__name__}({args_str})'
 
 
 def _get_value_or_default(field, item):

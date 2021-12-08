@@ -10,23 +10,24 @@ class CreateItem(EWSAccountService):
     """
 
     SERVICE_NAME = 'CreateItem'
-    element_container_name = '{%s}Items' % MNS
+    element_container_name = f'{{{MNS}}}Items'
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         from ..folders import BaseFolder, FolderId
         from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
             SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise ValueError("'message_disposition' %s must be one of %s" % (
-                message_disposition, MESSAGE_DISPOSITION_CHOICES
-            ))
+            raise ValueError(
+                f"'message_disposition' {message_disposition!r} must be one of {MESSAGE_DISPOSITION_CHOICES}"
+            )
         if send_meeting_invitations not in SEND_MEETING_INVITATIONS_CHOICES:
-            raise ValueError("'send_meeting_invitations' %s must be one of %s" % (
-                send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
-            ))
+            raise ValueError(
+                f"'send_meeting_invitations' {send_meeting_invitations!r} must be one of "
+                f"{SEND_MEETING_INVITATIONS_CHOICES}"
+            )
         if folder is not None:
             if not isinstance(folder, (BaseFolder, FolderId)):
-                raise ValueError("'folder' %r must be a Folder or FolderId instance" % folder)
+                raise ValueError(f"'folder' {folder!r} must be a Folder or FolderId instance")
             if folder.account != self.account:
                 raise ValueError('"Folder must belong to this account')
         if message_disposition == SAVE_ONLY and folder is None:
@@ -79,7 +80,7 @@ class CreateItem(EWSAccountService):
         :param send_meeting_invitations:
         """
         createitem = create_element(
-            'm:%s' % self.SERVICE_NAME,
+            f'm:{self.SERVICE_NAME}',
             attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
         )
         if folder:

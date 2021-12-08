@@ -53,7 +53,7 @@ class EWSDate(datetime.date):
     @classmethod
     def from_date(cls, d):
         if type(d) is not datetime.date:
-            raise ValueError("%r must be a date instance" % d)
+            raise ValueError(f"{d!r} must be a date instance")
         return cls(d.year, d.month, d.day)
 
     @classmethod
@@ -90,7 +90,7 @@ class EWSDateTime(datetime.datetime):
             # Don't allow pytz or dateutil timezones here. They are not safe to use as direct input for datetime()
             tzinfo = EWSTimeZone.from_timezone(tzinfo)
         if not isinstance(tzinfo, (EWSTimeZone, type(None))):
-            raise ValueError('tzinfo %r must be an EWSTimeZone instance' % tzinfo)
+            raise ValueError(f'tzinfo {tzinfo!r} must be an EWSTimeZone instance')
         if len(args) == 8:
             args = args[:7] + (tzinfo,)
         else:
@@ -103,7 +103,7 @@ class EWSDateTime(datetime.datetime):
         * 2009-01-15T13:45:56+01:00
         """
         if not self.tzinfo:
-            raise ValueError('%r must be timezone-aware' % self)
+            raise ValueError(f'{self!r} must be timezone-aware')
         if self.tzinfo.key == 'UTC':
             if self.microsecond:
                 return self.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
@@ -113,7 +113,7 @@ class EWSDateTime(datetime.datetime):
     @classmethod
     def from_datetime(cls, d):
         if type(d) is not datetime.datetime:
-            raise ValueError("%r must be a datetime instance" % d)
+            raise ValueError(f"{d!r} must be a datetime instance")
         if d.tzinfo is None:
             tz = None
         elif isinstance(d.tzinfo, EWSTimeZone):
@@ -217,7 +217,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         try:
             instance.ms_id = cls.IANA_TO_MS_MAP[instance.key][0]
         except KeyError:
-            raise UnknownTimeZone('No Windows timezone name found for timezone "%s"' % instance.key)
+            raise UnknownTimeZone(f'No Windows timezone name found for timezone {instance.key!r}')
 
         # We don't need the Windows long-format timezone name in long format. It's used in timezone XML elements, but
         # EWS happily accepts empty strings. For a full list of timezones supported by the target server, including
@@ -244,7 +244,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
                 # EWS sometimes returns an ID that has a region/location format, e.g. 'Europe/Copenhagen'. Try the
                 # string unaltered.
                 return cls(ms_id)
-            raise UnknownTimeZone("Windows timezone ID '%s' is unknown by CLDR" % ms_id)
+            raise UnknownTimeZone(f'Windows timezone ID {ms_id!r} is unknown by CLDR')
 
     @classmethod
     def from_pytz(cls, tz):
@@ -284,7 +284,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
                 'pytz_deprecation_shim': lambda z: cls.from_timezone(z.unwrap_shim())
             }[tz_module](tz)
         except KeyError:
-            raise TypeError('Unsupported tzinfo type: %r' % tz)
+            raise TypeError(f'Unsupported tzinfo type: {tz!r}')
 
     @classmethod
     def localzone(cls):
@@ -308,7 +308,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
     def localize(self, dt, is_dst=False):
         warnings.warn('replace tz.localize() with dt.replace(tzinfo=tz)', DeprecationWarning, stacklevel=2)
         if dt.tzinfo is not None:
-            raise ValueError('%r must be timezone-unaware' % dt)
+            raise ValueError(f'{dt} must be timezone-unaware')
         dt = dt.replace(tzinfo=self)
         if is_dst is not None:
             # DST dates are assumed to always be after non-DST dates

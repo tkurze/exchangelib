@@ -8,7 +8,7 @@ class GetRooms(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation"""
 
     SERVICE_NAME = 'GetRooms'
-    element_container_name = '{%s}Rooms' % MNS
+    element_container_name = f'{{{MNS}}}Rooms'
     supported_from = EXCHANGE_2010
 
     def call(self, roomlist):
@@ -22,6 +22,6 @@ class GetRooms(EWSService):
             yield Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, roomlist):
-        getrooms = create_element('m:%s' % self.SERVICE_NAME)
+        getrooms = create_element(f'm:{self.SERVICE_NAME}')
         set_xml_value(getrooms, roomlist, version=self.protocol.version)
         return getrooms

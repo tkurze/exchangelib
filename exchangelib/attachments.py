@@ -48,7 +48,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
     def clean(self, version=None):
         from .items import Item
         if self.parent_item is not None and not isinstance(self.parent_item, Item):
-            raise ValueError("'parent_item' value %r must be an Item instance" % self.parent_item)
+            raise ValueError(f"'parent_item' value {self.parent_item!r} must be an Item instance")
         if self.content_type is None and self.name is not None:
             self.content_type = mimetypes.guess_type(self.name)[0] or 'application/octet-stream'
         super().clean(version=version)
@@ -58,7 +58,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
         if self.attachment_id:
             raise ValueError('This attachment has already been created')
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError('Parent item %s must have an account' % self.parent_item)
+            raise ValueError(f'Parent item {self.parent_item} must have an account')
         item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
         attachment_id = item.attachment_id
         if attachment_id.root_id != self.parent_item.id:
@@ -76,7 +76,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
         if not self.attachment_id:
             raise ValueError('This attachment has not been created')
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError('Parent item %s must have an account' % self.parent_item)
+            raise ValueError(f'Parent item {self.parent_item} must have an account')
         root_item_id = DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
         if root_item_id.id != self.parent_item.id:
             raise ValueError("'root_item_id.id' mismatch")
@@ -93,9 +93,10 @@ class Attachment(EWSElement, metaclass=EWSMeta):
         return hash(tuple(getattr(self, f) for f in self._slots_keys if f != 'parent_item'))
 
     def __repr__(self):
-        return self.__class__.__name__ + '(%s)' % ', '.join(
-            '%s=%r' % (f.name, getattr(self, f.name)) for f in self.FIELDS if f.name not in ('_item', '_content')
+        args_str = ', '.join(
+            f'{f.name}={getattr(self, f.name)!r}' for f in self.FIELDS if f.name not in ('_item', '_content')
         )
+        return f'{self.__class__.__name__}({args_str})'
 
 
 class FileAttachment(Attachment):
@@ -124,7 +125,7 @@ class FileAttachment(Attachment):
         # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
         # store the full attachment content in-memory.
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError('%s must have an account' % self.__class__.__name__)
+            raise ValueError(f'{self.__class__.__name__} must have an account')
         self._fp = FileAttachmentIO(attachment=self)
 
     @property
@@ -145,7 +146,7 @@ class FileAttachment(Attachment):
     def content(self, value):
         """Replace the attachment content."""
         if not isinstance(value, bytes):
-            raise ValueError("'value' %r must be a bytes object" % value)
+            raise ValueError(f"'value' {value!r} must be a bytes object")
         self._content = value
 
     @classmethod
@@ -192,7 +193,7 @@ class ItemAttachment(Attachment):
             return self._item
         # We have an ID to the data but still haven't called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError('%s must have an account' % self.__class__.__name__)
+            raise ValueError(f'{self.__class__.__name__} must have an account')
         additional_fields = {
             FieldPath(field=f) for f in BaseFolder.allowed_item_fields(version=self.parent_item.account.version)
         }
@@ -207,7 +208,7 @@ class ItemAttachment(Attachment):
     def item(self, value):
         from .items import Item
         if not isinstance(value, Item):
-            raise ValueError("'value' %r must be an Item object" % value)
+            raise ValueError(f"'value' {value!r} must be an Item object")
         self._item = value
 
     @classmethod

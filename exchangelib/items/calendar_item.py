@@ -181,7 +181,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
     def clean(self, version=None):
         super().clean(version=version)
         if self.start and self.end and self.end < self.start:
-            raise ValueError("'end' must be greater than 'start' (%s -> %s)" % (self.start, self.end))
+            raise ValueError(f"'end' must be greater than 'start' ({self.start} -> {self.end})")
         if version:
             self.clean_timezone_fields(version=version)
 
@@ -216,7 +216,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
             if field_name == 'end':
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, '_%s_timezone' % field_name)
+            tz = getattr(item, f'_{field_name}_timezone')
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 

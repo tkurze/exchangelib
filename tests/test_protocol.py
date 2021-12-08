@@ -526,7 +526,7 @@ class ProtocolTest(EWSTest):
         self.account.calendar.filter(start__lt=end, end__gt=start, categories__contains=self.categories).delete()
         items = []
         for i in range(75):
-            subject = 'Test Subject %s' % i
+            subject = f'Test Subject {i}'
             item = CalendarItem(
                 start=start,
                 end=end,

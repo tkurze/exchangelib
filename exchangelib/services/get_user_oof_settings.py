@@ -10,7 +10,7 @@ class GetUserOofSettings(EWSAccountService):
     """
 
     SERVICE_NAME = 'GetUserOofSettings'
-    element_container_name = '{%s}OofSettings' % TNS
+    element_container_name = f'{{{TNS}}}OofSettings'
 
     def call(self, mailbox):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))
@@ -23,7 +23,7 @@ class GetUserOofSettings(EWSAccountService):
             yield OofSettings.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, mailbox):
-        payload = create_element('m:%sRequest' % self.SERVICE_NAME)
+        payload = create_element(f'm:{self.SERVICE_NAME}Request')
         return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
 
     @classmethod
@@ -38,4 +38,4 @@ class GetUserOofSettings(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return '{%s}ResponseMessage' % MNS
+        return f'{{{MNS}}}ResponseMessage'

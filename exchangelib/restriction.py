@@ -75,7 +75,7 @@ class Q:
         # Parse args which must now be Q objects
         for q in args:
             if not isinstance(q, self.__class__):
-                raise ValueError("Non-keyword arg %r must be a Q instance" % q)
+                raise ValueError(f"Non-keyword arg {q!r} must be a Q instance")
         self.children.extend(args)
 
         # Parse keyword args and extract the filter
@@ -108,10 +108,10 @@ class Q:
                 # EWS doesn't have a 'range' operator. Emulate 'foo__range=(1, 2)' as 'foo__gte=1 and foo__lte=2'
                 # (both values inclusive).
                 if len(value) != 2:
-                    raise ValueError("Value of lookup '%s' must have exactly 2 elements" % key)
+                    raise ValueError(f"Value of lookup {key!r} must have exactly 2 elements")
                 return (
-                    self.__class__(**{'%s__gte' % field_path: value[0]}),
-                    self.__class__(**{'%s__lte' % field_path: value[1]}),
+                    self.__class__(**{f'{field_path}__gte': value[0]}),
+                    self.__class__(**{f'{field_path}__lte': value[1]}),
                 )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
@@ -134,7 +134,7 @@ class Q:
                 # EWS doesn't have an '__in' operator. Allow '__in' lookups on list and non-list field types,
                 # specifying a list value. We'll emulate it as a set of OR'ed exact matches.
                 if not is_iterable(value, generators_allowed=True):
-                    raise ValueError("Value for lookup %r must be a list" % key)
+                    raise ValueError(f"Value for lookup {key!r} must be a list")
                 children = tuple(self.__class__(**{field_path: v}) for v in value)
                 if not children:
                     # This is an '__in' operator with an empty list as the value. We interpret it to mean "is foo
@@ -154,7 +154,7 @@ class Q:
             try:
                 op = self._lookup_to_op(lookup)
             except KeyError:
-                raise ValueError("Lookup '%s' is not supported (called as '%s=%r')" % (lookup, key, value))
+                raise ValueError(f"Lookup {lookup!r} is not supported (called as '{key}={value!r}')")
         else:
             field_path, op = key, self.EQ
 
@@ -257,7 +257,7 @@ class Q:
             return create_element(xml_tag_map[op])
         valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
         if op not in valid_ops:
-            raise ValueError("'op' %s must be one of %s" % (op, valid_ops))
+            raise ValueError(f"'op' {op!r} must be one of {valid_ops}")
 
         # For description of Contains attribute values, see
         #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
@@ -287,7 +287,7 @@ class Q:
         elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
             match_mode = 'Prefixed'
         else:
-            raise ValueError('Unsupported op: %s' % op)
+            raise ValueError(f'Unsupported op: {op}')
         if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
             compare_mode = 'IgnoreCase'
         else:
@@ -316,18 +316,18 @@ class Q:
         if self.query_string:
             return self.query_string
         if self.is_leaf():
-            expr = '%s %s %r' % (self.field_path, self.op, self.value)
+            expr = f'{self.field_path} {self.op} {self.value!r}'
         else:
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-            expr = (' %s ' % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
-                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else '(%s)' % c.expr())
+            expr = (f' {self.AND if self.conn_type == self.NOT else self.conn_type} ').join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f'({c.expr()})')
                 for c in sorted(self.children, key=lambda i: i.field_path or '')
             )
         if self.conn_type == self.NOT:
             # Add the NOT operator. Put children in parens if there is more than one child.
             if self.is_leaf() or len(self.children) == 1:
-                return self.conn_type + ' %s' % expr
-            return self.conn_type + ' (%s)' % expr
+                return self.conn_type + f' {expr}'
+            return self.conn_type + f' ({expr})'
         return expr
 
     def to_xml(self, folders, version, applies_to):
@@ -358,25 +358,23 @@ class Q:
                 raise ValueError('Query strings cannot be combined with other settings')
             return
         if self.conn_type not in self.CONN_TYPES:
-            raise ValueError("'conn_type' %s must be one of %s" % (self.conn_type, self.CONN_TYPES))
+            raise ValueError(f"'conn_type' {self.conn_type!r} must be one of {self.CONN_TYPES}")
         if not self.is_leaf():
             for q in self.children:
                 if q.query_string and len(self.children) > 1:
-                    raise ValueError(
-                        'A query string cannot be combined with other restrictions'
-                    )
+                    raise ValueError('A query string cannot be combined with other restrictions')
             return
         if not self.field_path:
             raise ValueError("'field_path' must be set")
         if self.op not in self.OP_TYPES:
-            raise ValueError("'op' %s must be one of %s" % (self.op, self.OP_TYPES))
+            raise ValueError(f"'op' {self.op} must be one of {self.OP_TYPES}")
         if self.op == self.EXISTS and self.value is not True:
             raise ValueError("'value' must be True when operator is EXISTS")
         if self.value is None:
-            raise ValueError('Value for filter on field path "%s" cannot be None' % self.field_path)
+            raise ValueError(f'Value for filter on field path {self.field_path!r} cannot be None')
         if is_iterable(self.value, generators_allowed=True):
             raise ValueError(
-                'Value %r for filter on field path "%s" must be a single value' % (self.value, self.field_path)
+                f'Value {self.value!r} for filter on field path {self.field_path!r} must be a single value'
             )
 
     def _validate_field_path(self, field_path, folder, applies_to, version):
@@ -387,11 +385,11 @@ class Q:
         else:
             folder.validate_item_field(field=field_path.field, version=version)
         if not field_path.field.is_searchable:
-            raise ValueError("EWS does not support filtering on field '%s'" % field_path.field.name)
+            raise ValueError(f"EWS does not support filtering on field {field_path.field.name!r}")
         if field_path.subfield and not field_path.subfield.is_searchable:
-            raise ValueError("EWS does not support filtering on subfield '%s'" % field_path.subfield.name)
+            raise ValueError(f"EWS does not support filtering on subfield {field_path.subfield.name!r}")
         if issubclass(field_path.field.value_cls, MultiFieldIndexedElement) and not field_path.subfield:
-            raise ValueError("Field path '%s' must contain a subfield" % self.field_path)
+            raise ValueError(f"Field path {self.field_path!r} must contain a subfield")
 
     def _get_field_path(self, folders, applies_to, version):
         # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
@@ -408,7 +406,7 @@ class Q:
             self._validate_field_path(field_path=field_path, folder=folder, applies_to=applies_to, version=version)
             break
         else:
-            raise InvalidField("Unknown field path %r on folders %s" % (self.field_path, folders))
+            raise InvalidField(f"Unknown field path {self.field_path!r} on folders {folders}")
         return field_path
 
     def _get_clean_value(self, field_path, version):
@@ -516,10 +514,10 @@ class Q:
     def __repr__(self):
         if self.is_leaf():
             if self.query_string:
-                return self.__class__.__name__ + '(%r)' % self.query_string
+                return self.__class__.__name__ + f'({self.query_string!r})'
             if self.is_never():
-                return self.__class__.__name__ + '(conn_type=%r)' % (self.conn_type)
-            return self.__class__.__name__ + '(%s %s %r)' % (self.field_path, self.op, self.value)
+                return self.__class__.__name__ + f'(conn_type={self.conn_type!r})'
+            return self.__class__.__name__ + f'({self.field_path} {self.op} {self.value!r})'
         sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or ''))
         if self.conn_type == self.NOT or len(self.children) > 1:
             return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
@@ -536,15 +534,15 @@ class Restriction:
 
     def __init__(self, q, folders, applies_to):
         if not isinstance(q, Q):
-            raise ValueError("'q' value %r must be a Q instance" % q)
+            raise ValueError(f"'q' value {q} must be a Q instance")
         if q.is_empty():
             raise ValueError("Q object must not be empty")
         from .folders import BaseFolder
         for folder in folders:
             if not isinstance(folder, BaseFolder):
-                raise ValueError("'folder' value %r must be a Folder instance" % folder)
+                raise ValueError(f"'folder' value {folder!r} must be a Folder instance")
         if applies_to not in self.RESTRICTION_TYPES:
-            raise ValueError("'applies_to' must be one of %s" % (self.RESTRICTION_TYPES,))
+            raise ValueError(f"'applies_to' {applies_to!r} must be one of {self.RESTRICTION_TYPES}")
         self.q = q
         self.folders = folders
         self.applies_to = applies_to

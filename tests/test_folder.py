@@ -198,7 +198,7 @@ class FolderTest(EWSTest):
         # Create some items
         items = []
         for i in range(3):
-            subject = 'Test Subject %s' % i
+            subject = f'Test Subject {i}'
             item = Message(account=self.account, folder=f, is_read=False, subject=subject, categories=self.categories)
             item.save()
             items.append(item)
@@ -319,8 +319,8 @@ class FolderTest(EWSTest):
         self.assertEqual(len(list(self.account.contacts.glob('gal*'))), 1)  # Test case-insensitivity
         self.assertGreaterEqual(len(list(self.account.contacts.glob('/'))), 5)
         self.assertGreaterEqual(len(list(self.account.contacts.glob('../*'))), 5)
-        self.assertEqual(len(list(self.account.root.glob('**/%s' % self.account.contacts.name))), 1)
-        self.assertEqual(len(list(self.account.root.glob('Top of*/%s' % self.account.contacts.name))), 1)
+        self.assertEqual(len(list(self.account.root.glob(f'**/{self.account.contacts.name}'))), 1)
+        self.assertEqual(len(list(self.account.root.glob(f'Top of*/{self.account.contacts.name}'))), 1)
 
     def test_collection_filtering(self):
         self.assertGreaterEqual(self.account.root.tois.children.all().count(), 0)
@@ -575,7 +575,7 @@ class FolderTest(EWSTest):
             get_random_datetime(tz=self.account.default_timezone): get_random_string(8),
             get_random_str_tuple(4, 4): get_random_datetime(tz=self.account.default_timezone),
         }
-        xml_data = b'<foo>%s</foo>' % get_random_string(16).encode('utf-8')
+        xml_data = f'<foo>{get_random_string(16)}</foo>'.encode('utf-8')
         binary_data = get_random_bytes(100)
         f.create_user_configuration(name=name, dictionary=dictionary, xml_data=xml_data, binary_data=binary_data)
 

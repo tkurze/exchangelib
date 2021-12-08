@@ -26,9 +26,7 @@ def shelve_filename():
     except KeyError:
         # getuser() fails on some systems. Provide a sane default. See issue #448
         user = 'exchangelib'
-    return 'exchangelib.{version}.cache.{user}.py{major}{minor}'.format(
-        version=version, user=user, major=major, minor=minor
-    )
+    return f'exchangelib.{version}.cache.{user}.py{major}{minor}'
 
 
 AUTODISCOVER_PERSISTENT_STORAGE = os.path.join(tempfile.gettempdir(), shelve_filename())

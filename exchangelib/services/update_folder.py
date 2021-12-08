@@ -7,7 +7,7 @@ class UpdateFolder(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation"""
 
     SERVICE_NAME = 'UpdateFolder'
-    element_container_name = '{%s}Folders' % MNS
+    element_container_name = f'{{{MNS}}}Folders'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,13 +54,13 @@ class UpdateFolder(EWSAccountService):
         for fieldname in self._sort_fieldnames(folder_model=folder_model, fieldnames=fieldnames_set):
             field = folder_model.get_field_by_fieldname(fieldname)
             if field.is_read_only:
-                raise ValueError('%s is a read-only field' % field.name)
+                raise ValueError(f'{field.name!r} is a read-only field')
             value = field.clean(getattr(folder, field.name), version=self.account.version)  # Make sure the value is OK
 
             if value is None or (field.is_list and not value):
                 # A value of None or [] means we want to remove this field from the item
                 if field.is_required or field.is_required_after_save:
-                    raise ValueError('%s is a required field and may not be deleted' % field.name)
+                    raise ValueError(f'{field.name!r} is a required field and may not be deleted')
                 for field_path in FieldPath(field=field).expand(version=self.account.version):
                     yield self._delete_folder_elem(field_path=field_path)
                 continue
@@ -69,7 +69,7 @@ class UpdateFolder(EWSAccountService):
 
     def get_payload(self, folders):
         from ..folders import BaseFolder, FolderId
-        updatefolder = create_element('m:%s' % self.SERVICE_NAME)
+        updatefolder = create_element(f'm:{self.SERVICE_NAME}')
         folderchanges = create_element('m:FolderChanges')
         version = self.account.version
         for folder, fieldnames in folders:

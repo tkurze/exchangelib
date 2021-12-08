@@ -21,7 +21,7 @@ class FolderQuerySet:
     def __init__(self, folder_collection):
         from .collections import FolderCollection
         if not isinstance(folder_collection, FolderCollection):
-            raise ValueError("'folder_collection' %r must be a FolderCollection instance" % folder_collection)
+            raise ValueError(f"'folder_collection' {folder_collection!r} must be a FolderCollection instance")
         self.folder_collection = folder_collection
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -51,7 +51,7 @@ class FolderQuerySet:
                     only_fields.append(field_path)
                     break
             else:
-                raise InvalidField("Unknown field %r on folders %s" % (arg, self.folder_collection.folders))
+                raise InvalidField(f"Unknown field {arg!r} on folders {self.folder_collection.folders}")
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         return new_qs
@@ -81,7 +81,7 @@ class FolderQuerySet:
         if not folders:
             raise DoesNotExist('Could not find a child folder matching the query')
         if len(folders) != 1:
-            raise MultipleObjectsReturned('Expected result length 1, but got %s' % folders)
+            raise MultipleObjectsReturned(f'Expected result length 1, but got {folders}')
         f = folders[0]
         if isinstance(f, Exception):
             raise f
@@ -142,7 +142,7 @@ class FolderQuerySet:
                 continue
             # Add the extra field values to the folders we fetched with find_folders()
             if f.__class__ != complex_f.__class__:
-                raise ValueError('Type mismatch: %s vs %s' % (f, complex_f))
+                raise ValueError(f'Type mismatch: {f} vs {complex_f}')
             for complex_field in complex_fields:
                 field_name = complex_field.field.name
                 setattr(f, field_name, getattr(complex_f, field_name))
@@ -165,7 +165,7 @@ class SingleFolderQuerySet(FolderQuerySet):
         if not folders:
             raise DoesNotExist('Could not find a folder matching the query')
         if len(folders) != 1:
-            raise MultipleObjectsReturned('Expected result length 1, but got %s' % folders)
+            raise MultipleObjectsReturned(f'Expected result length 1, but got {folders}')
         f = folders[0]
         if isinstance(f, Exception):
             raise f

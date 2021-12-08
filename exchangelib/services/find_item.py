@@ -6,8 +6,8 @@ class FindItem(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem-operation"""
 
     SERVICE_NAME = 'FindItem'
-    element_container_name = '{%s}Items' % TNS
-    paging_container_name = '{%s}RootFolder' % MNS
+    element_container_name = f'{{{TNS}}}Items'
+    paging_container_name = f'{{{MNS}}}RootFolder'
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -66,7 +66,7 @@ class FindItem(EWSAccountService):
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                     calendar_view, page_size, offset=0):
-        finditem = create_element('m:%s' % self.SERVICE_NAME, attrs=dict(Traversal=depth))
+        finditem = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
         itemshape = create_shape_element(
             tag='m:ItemShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         )
