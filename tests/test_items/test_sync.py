@@ -23,8 +23,7 @@ class SyncTest(BaseItemTest):
         # Context manager already unsubscribed us
         with self.assertRaises(ErrorSubscriptionNotFound):
             self.account.inbox.unsubscribe(subscription_id)
-        # Test affinity cookie
-        self.assertIsNotNone(self.account.affinity_cookie)
+        # Affinity cookie is not always sent by the server for pull subscriptions
 
     def test_push_subscribe(self):
         with self.account.inbox.push_subscription(
