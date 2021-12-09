@@ -64,15 +64,23 @@ class SyncFolderHierarchy(SyncFolder):
     shape_tag = 'm:FolderShape'
     last_in_range_name = f'{{{MNS}}}IncludesLastFolderInRange'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folder = None  # A hack to communicate parsing args to _elems_to_objs()
+
     def call(self, folder, shape, additional_fields, sync_state):
         self.sync_state = sync_state
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        self.folder = folder
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
                 sync_state=sync_state,
-        )):
+        )))
+
+    def _elems_to_objs(self, elems):
+        change_types = self._change_types_map()
+        for elem in elems:
             if isinstance(elem, Exception):
                 yield elem
                 continue
@@ -83,7 +91,7 @@ class SyncFolderHierarchy(SyncFolder):
                 # We can't find() the element because we don't know which tag to look for. The change element can
                 # contain multiple folder types, each with their own tag.
                 folder_elem = elem[0]
-                folder = parse_folder_elem(elem=folder_elem, folder=folder, account=self.account)
+                folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
             yield change_type, folder
 
     def get_payload(self, folder, shape, additional_fields, sync_state):

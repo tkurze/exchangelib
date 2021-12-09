@@ -166,7 +166,7 @@ class FolderCollection(SearchableMixIn):
         """Private method to call the FindItem service.
 
         :param q: a Q instance containing any restrictions
-        :param shape: controls whether to return (id, chanegkey) tuples or Item objects. If additional_fields is
+        :param shape: controls whether to return (id, changekey) tuples or Item objects. If additional_fields is
           non-null, we always return Item objects. (Default value = ID_ONLY)
         :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
         :param additional_fields: the extra properties we want on the return objects. Default is no properties. Be aware
@@ -227,7 +227,7 @@ class FolderCollection(SearchableMixIn):
         """Private method to call the FindPeople service.
 
         :param q: a Q instance containing any restrictions
-        :param shape: controls whether to return (id, chanegkey) tuples or Persona objects. If additional_fields is
+        :param shape: controls whether to return (id, changekey) tuples or Persona objects. If additional_fields is
           non-null, we always return Persona objects. (Default value = ID_ONLY)
         :param depth: controls the whether to return soft-deleted items or not. (Default value = None)
         :param additional_fields: the extra properties we want on the return objects. Default is no properties.

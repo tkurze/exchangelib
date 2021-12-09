@@ -157,7 +157,7 @@ class Persona(IdChangeKeyMixIn):
     callback_phones = PhoneNumberAttributedValueField(field_uri='persona:CallbackPhones')
     car_phones = PhoneNumberAttributedValueField(field_uri='persona:CarPhones')
     home_faxes = PhoneNumberAttributedValueField(field_uri='persona:HomeFaxes')
-    orgnaization_main_phones = PhoneNumberAttributedValueField(field_uri='persona:OrganizationMainPhones')
+    organization_main_phones = PhoneNumberAttributedValueField(field_uri='persona:OrganizationMainPhones')
     other_faxes = PhoneNumberAttributedValueField(field_uri='persona:OtherFaxes')
     other_telephones = PhoneNumberAttributedValueField(field_uri='persona:OtherTelephones')
     other_phones2 = PhoneNumberAttributedValueField(field_uri='persona:OtherPhones2')

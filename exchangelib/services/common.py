@@ -157,7 +157,8 @@ class EWSService(metaclass=abc.ABCMeta):
 
     def _elems_to_objs(self, elems):
         """Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions)."""
-        raise NotImplementedError()
+        if self.returns_elements:
+            raise NotImplementedError()
 
     @property
     def _version_hint(self):

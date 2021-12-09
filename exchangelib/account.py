@@ -16,7 +16,7 @@ from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, 
     Notes, Outbox, PeopleConnect, PublicFoldersRoot, QuickContacts, RecipientCache, RecoverableItemsDeletions, \
     RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Root, SearchFolders, SentItems, \
     ServerFailures, SyncIssues, Tasks, ToDoSearch, VoiceMail
-from .items import HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
+from .items import HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCES, ID_ONLY
 from .properties import Mailbox, SendingAs
 from .protocol import Protocol
 from .queryset import QuerySet
@@ -451,7 +451,7 @@ class Account:
         )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
-                    affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+                    affected_task_occurrences=ALL_OCCURRENCES, suppress_read_receipts=True, chunk_size=None):
         """Bulk delete items.
 
         :param ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -460,7 +460,7 @@ class Account:
         :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
             SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
         :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
-            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCES)
         :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
         :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 

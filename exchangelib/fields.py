@@ -62,7 +62,7 @@ class InvalidField(ValueError):
 
 
 class InvalidFieldForVersion(ValueError):
-    """Used when a field is not supported on the given Exchnage version."""
+    """Used when a field is not supported on the given Exchange version."""
 
 
 class InvalidChoiceForVersion(ValueError):
@@ -829,7 +829,7 @@ class CharListField(CharField):
 
 class URIField(TextField):
     """Helper to mark strings that must conform to xsd:anyURI.
-    If we want an URI validator, see http://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri
+    If we want a URI validator, see https://stackoverflow.com/questions/14466585/is-this-regex-correct-for-xsdanyuri
     """
 
 

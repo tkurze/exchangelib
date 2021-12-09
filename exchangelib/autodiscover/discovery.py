@@ -534,7 +534,7 @@ class Autodiscovery:
         if ad_response.redirect_url:
             log.debug('Got a redirect URL: %s', ad_response.redirect_url)
             # We are diverging a bit from the protocol here. We will never get an HTTP 302 since earlier steps already
-            # followed the redirects where possible. Instead, we handle retirect responses here.
+            # followed the redirects where possible. Instead, we handle redirect responses here.
             if self._redirect_url_is_valid(url=ad_response.redirect_url):
                 is_valid_response, ad = self._attempt_response(url=ad_response.redirect_url)
                 if is_valid_response:

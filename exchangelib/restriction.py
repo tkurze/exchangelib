@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class Q:
-    """A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic."""
+    """A class with an API similar to Django Q objects. Used to implement advanced filtering logic."""
 
     # Connection types
     AND = 'AND'
@@ -319,7 +319,7 @@ class Q:
             expr = f'{self.field_path} {self.op} {self.value!r}'
         else:
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-            expr = (f' {self.AND if self.conn_type == self.NOT else self.conn_type} ').join(
+            expr = f' {self.AND if self.conn_type == self.NOT else self.conn_type} '.join(
                 (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f'({c.expr()})')
                 for c in sorted(self.children, key=lambda i: i.field_path or '')
             )

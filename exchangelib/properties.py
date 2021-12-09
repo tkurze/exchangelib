@@ -1440,9 +1440,9 @@ class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
     ID_ELEMENT_CLS = None
 
     def __init__(self, **kwargs):
-        _id = self.ID_ELEMENT_CLS(kwargs.pop('id', None), kwargs.pop('changekey', None))
-        if _id.id or _id.changekey:
-            kwargs['_id'] = _id
+        _id, _changekey = kwargs.pop('id', None), kwargs.pop('changekey', None)
+        if _id or _changekey:
+            kwargs['_id'] = self.ID_ELEMENT_CLS(_id, _changekey)
         super().__init__(**kwargs)
 
     @classmethod

@@ -43,9 +43,9 @@ SEND_MEETING_CANCELLATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_TO_AL
 
 # AffectedTaskOccurrences values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-ALL_OCCURRENCIES = 'AllOccurrences'
+ALL_OCCURRENCES = 'AllOccurrences'
 SPECIFIED_OCCURRENCE_ONLY = 'SpecifiedOccurrenceOnly'
-AFFECTED_TASK_OCCURRENCES_CHOICES = (ALL_OCCURRENCIES, SPECIFIED_OCCURRENCE_ONLY)
+AFFECTED_TASK_OCCURRENCES_CHOICES = (ALL_OCCURRENCES, SPECIFIED_OCCURRENCE_ONLY)
 
 # ConflictResolution values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem

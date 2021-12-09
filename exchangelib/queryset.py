@@ -44,8 +44,8 @@ class SearchableMixIn:
 
 
 class QuerySet(SearchableMixIn):
-    """A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports chaining to
-    build up complex queries.
+    """A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+    chaining to build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
     """

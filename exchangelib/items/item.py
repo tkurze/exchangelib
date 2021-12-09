@@ -1,7 +1,7 @@
 import logging
 
 from .base import BaseItem, SAVE_ONLY, SEND_AND_SAVE_COPY, ID_ONLY, SEND_TO_NONE, \
-    AUTO_RESOLVE, SOFT_DELETE, HARD_DELETE, ALL_OCCURRENCIES, MOVE_TO_DELETED_ITEMS
+    AUTO_RESOLVE, SOFT_DELETE, HARD_DELETE, ALL_OCCURRENCES, MOVE_TO_DELETED_ITEMS
 from ..fields import BooleanField, IntegerField, TextField, CharListField, ChoiceField, URIField, BodyField, \
     DateTimeField, MessageHeaderField, AttachmentField, Choice, EWSElementField, EffectiveRightsField, CultureField, \
     CharField, MimeContentField, FieldPath
@@ -225,7 +225,7 @@ class Item(BaseItem):
         self._id = self.ID_ELEMENT_CLS(*res)
         self.folder = to_folder
 
-    def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+    def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                       suppress_read_receipts=True):
         # Delete and move to the trash folder.
         self._delete(delete_type=MOVE_TO_DELETED_ITEMS, send_meeting_cancellations=send_meeting_cancellations,
@@ -233,7 +233,7 @@ class Item(BaseItem):
         self._id = None
         self.folder = self.account.trash
 
-    def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+    def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                     suppress_read_receipts=True):
         # Delete and move to the dumpster, if it is enabled.
         self._delete(delete_type=SOFT_DELETE, send_meeting_cancellations=send_meeting_cancellations,
@@ -241,7 +241,7 @@ class Item(BaseItem):
         self._id = None
         self.folder = self.account.recoverable_items_deletions
 
-    def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+    def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                suppress_read_receipts=True):
         # Remove the item permanently. No copies are stored anywhere.
         self._delete(delete_type=HARD_DELETE, send_meeting_cancellations=send_meeting_cancellations,
