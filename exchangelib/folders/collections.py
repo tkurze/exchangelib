@@ -136,6 +136,31 @@ class FolderCollection(SearchableMixIn):
         else:
             raise InvalidField(f"{field!r} is not a valid field on {self.supported_item_models}")
 
+    def _rinse_args(self, q, shape, depth, additional_fields, field_validator):
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
+        if depth is None:
+            depth = self._get_default_item_traversal_depth()
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
+        if additional_fields:
+            for f in additional_fields:
+                field_validator(field=f, version=self.account.version)
+                if f.field.is_complex:
+                    raise ValueError(f"Field {f.field.name!r} not supported for this service")
+
+        # Build up any restrictions
+        if q.is_empty():
+            restriction = None
+            query_string = None
+        elif q.query_string:
+            restriction = None
+            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+        else:
+            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
+            query_string = None
+        return depth, restriction, query_string
+
     def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
                    calendar_view=None, page_size=None, max_items=None, offset=0):
         """Private method to call the FindItem service.
@@ -160,30 +185,13 @@ class FolderCollection(SearchableMixIn):
         if q.is_never():
             log.debug('Query will never return results')
             return
-        if shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
-        if depth is None:
-            depth = self._get_default_item_traversal_depth()
-        if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
-        if additional_fields:
-            for f in additional_fields:
-                self.validate_item_field(field=f, version=self.account.version)
-                if f.field.is_complex:
-                    raise ValueError(f"find_items() does not support field {f.field.name!r}. Use fetch() instead")
+        depth, restriction, query_string = self._rinse_args(
+            q=q, shape=shape, depth=depth, additional_fields=additional_fields,
+            field_validator=self.validate_item_field
+        )
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
             raise ValueError(f"'calendar_view' {calendar_view!r} must be a CalendarView instance")
 
-        # Build up any restrictions
-        if q.is_empty():
-            restriction = None
-            query_string = None
-        elif q.query_string:
-            restriction = None
-            query_string = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
-        else:
-            restriction = Restriction(q, folders=self.folders, applies_to=Restriction.ITEMS)
-            query_string = None
         log.debug(
             'Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)',
             self.account,
@@ -236,28 +244,11 @@ class FolderCollection(SearchableMixIn):
         if q.is_never():
             log.debug('Query will never return results')
             return
-        if shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
-        if depth is None:
-            depth = self._get_default_item_traversal_depth()
-        if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
-        if additional_fields:
-            for f in additional_fields:
-                Persona.validate_field(field=f, version=self.account.version)
-                if f.field.is_complex:
-                    raise ValueError(f"find_people() does not support field {f.field.name!r}")
+        depth, restriction, query_string = self._rinse_args(
+            q=q, shape=shape, depth=depth, additional_fields=additional_fields,
+            field_validator=Persona.validate_field
+        )
 
-        # Build up any restrictions
-        if q.is_empty():
-            restriction = None
-            query_string = None
-        elif q.query_string:
-            restriction = None
-            query_string = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
-        else:
-            restriction = Restriction(q, folders=[folder], applies_to=Restriction.ITEMS)
-            query_string = None
         yield from FindPeople(account=self.account, chunk_size=page_size).call(
                 folder=folder,
                 additional_fields=additional_fields,
