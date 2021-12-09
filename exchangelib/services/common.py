@@ -19,7 +19,8 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark, \
     ErrorInvalidSyncStateData, ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, \
     ErrorConnectionFailedTransientError
-from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId
+from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId, FolderId, \
+    DistinguishedFolderId
 from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
     xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError, DummyResponse
@@ -844,7 +845,6 @@ def create_shape_element(tag, shape, additional_fields, version):
 
 
 def create_folder_ids_element(tag, folders, version):
-    from ..folders import FolderId
     folder_ids = create_element(tag)
     for folder in folders:
         if not isinstance(folder, FolderId):
@@ -876,7 +876,7 @@ def create_attachment_ids_element(items, version):
 
 
 def parse_folder_elem(elem, folder, account):
-    from ..folders import BaseFolder, Folder, DistinguishedFolderId, RootOfHierarchy
+    from ..folders import BaseFolder, Folder, RootOfHierarchy
     if isinstance(elem, Exception):
         return elem
     if isinstance(folder, RootOfHierarchy):

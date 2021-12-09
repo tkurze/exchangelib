@@ -1,4 +1,5 @@
 from .common import EWSAccountService
+from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
 
@@ -13,7 +14,7 @@ class CreateItem(EWSAccountService):
     element_container_name = f'{{{MNS}}}Items'
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
-        from ..folders import BaseFolder, FolderId
+        from ..folders import BaseFolder
         from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
             SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
