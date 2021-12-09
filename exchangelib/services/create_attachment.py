@@ -33,7 +33,7 @@ class CreateAttachment(EWSAccountService):
         set_xml_value(payload, to_item_id(parent_item, ParentItemId, version=version), version=version)
         attachments = create_element('m:Attachments')
         for item in items:
-            set_xml_value(attachments, item, version=self.account.version)
+            set_xml_value(attachments, item, version=version)
         if not len(attachments):
             raise ValueError('"items" must not be empty')
         payload.append(attachments)
