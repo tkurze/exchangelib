@@ -80,14 +80,12 @@ class CreateItem(EWSAccountService):
         :param message_disposition:
         :param send_meeting_invitations:
         """
-        createitem = create_element(
+        payload = create_element(
             f'm:{self.SERVICE_NAME}',
             attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
         )
         if folder:
-            saveditemfolderid = create_element('m:SavedItemFolderId')
-            set_xml_value(saveditemfolderid, folder, version=self.account.version)
-            createitem.append(saveditemfolderid)
+            payload.append(set_xml_value(create_element('m:SavedItemFolderId'), folder, version=self.account.version))
         item_elems = create_element('m:Items')
         for item in items:
             if not item.account:
@@ -95,5 +93,5 @@ class CreateItem(EWSAccountService):
             set_xml_value(item_elems, item, version=self.account.version)
         if not len(item_elems):
             raise ValueError('"items" must not be empty')
-        createitem.append(item_elems)
-        return createitem
+        payload.append(item_elems)
+        return payload

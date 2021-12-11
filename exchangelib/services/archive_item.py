@@ -29,10 +29,9 @@ class ArchiveItem(EWSAccountService):
             yield Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
-        archiveitem = create_element(f'm:{self.SERVICE_NAME}')
-        folder_id = create_folder_ids_element(tag='m:ArchiveSourceFolderId', folders=[to_folder],
-                                              version=self.account.version)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        archiveitem.append(folder_id)
-        archiveitem.append(item_ids)
-        return archiveitem
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(
+            create_folder_ids_element(tag='m:ArchiveSourceFolderId', folders=[to_folder], version=self.account.version)
+        )
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        return payload

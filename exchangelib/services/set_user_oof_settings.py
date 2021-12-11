@@ -22,8 +22,7 @@ class SetUserOofSettings(EWSAccountService):
     def get_payload(self, oof_settings, mailbox):
         payload = create_element(f'm:{self.SERVICE_NAME}Request')
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
-        set_xml_value(payload, oof_settings, version=self.account.version)
-        return payload
+        return set_xml_value(payload, oof_settings, version=self.account.version)
 
     def _get_element_container(self, message, name=None):
         message = message.find(self._response_message_tag())

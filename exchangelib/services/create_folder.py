@@ -28,10 +28,7 @@ class CreateFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
-        create_folder = create_element(f'm:{self.SERVICE_NAME}')
-        parentfolderid = create_element('m:ParentFolderId')
-        set_xml_value(parentfolderid, parent_folder, version=self.account.version)
-        set_xml_value(create_folder, parentfolderid, version=self.account.version)
-        folder_ids = create_folder_ids_element(tag='m:Folders', folders=folders, version=self.account.version)
-        create_folder.append(folder_ids)
-        return create_folder
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(set_xml_value(create_element('m:ParentFolderId'), parent_folder, version=self.account.version))
+        payload.append(create_folder_ids_element(tag='m:Folders', folders=folders, version=self.account.version))
+        return payload

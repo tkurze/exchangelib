@@ -25,10 +25,7 @@ class MoveItem(EWSAccountService):
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs
-        moveitem = create_element(f'm:{self.SERVICE_NAME}')
-        tofolderid = create_element('m:ToFolderId')
-        set_xml_value(tofolderid, to_folder, version=self.account.version)
-        moveitem.append(tofolderid)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        moveitem.append(item_ids)
-        return moveitem
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(set_xml_value(create_element('m:ToFolderId'), to_folder, version=self.account.version))
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        return payload

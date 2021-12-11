@@ -55,23 +55,20 @@ class FindFolder(EWSAccountService):
             yield Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
-        findfolder = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
-        foldershape = create_shape_element(
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
+        payload.append(create_shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        findfolder.append(foldershape)
+        ))
         if self.account.version.build >= EXCHANGE_2010:
-            indexedpageviewitem = create_element(
+            indexed_page_folder_view = create_element(
                 'm:IndexedPageFolderView',
                 attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint='Beginning')
             )
-            findfolder.append(indexedpageviewitem)
+            payload.append(indexed_page_folder_view)
         else:
             if offset != 0:
                 raise ValueError('Offsets are only supported from Exchange 2010')
         if restriction:
-            findfolder.append(restriction.to_xml(version=self.account.version))
-        parentfolderids = create_element('m:ParentFolderIds')
-        set_xml_value(parentfolderids, folders, version=self.account.version)
-        findfolder.append(parentfolderids)
-        return findfolder
+            payload.append(restriction.to_xml(version=self.account.version))
+        payload.append(set_xml_value(create_element('m:ParentFolderIds'), folders, version=self.account.version))
+        return payload

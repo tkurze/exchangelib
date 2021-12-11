@@ -36,9 +36,9 @@ class GetUserConfiguration(EWSAccountService):
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        getuserconfiguration = create_element(f'm:{self.SERVICE_NAME}')
-        set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
-        user_configuration_properties = create_element('m:UserConfigurationProperties')
-        set_xml_value(user_configuration_properties, properties, version=self.account.version)
-        getuserconfiguration.append(user_configuration_properties)
-        return getuserconfiguration
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        set_xml_value(payload, user_configuration_name, version=self.account.version)
+        payload.append(
+            set_xml_value(create_element('m:UserConfigurationProperties'), properties, version=self.account.version)
+        )
+        return payload

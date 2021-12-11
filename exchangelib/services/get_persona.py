@@ -22,10 +22,11 @@ class GetPersona(EWSAccountService):
         return Persona.from_xml(elem=elem, account=None)
 
     def get_payload(self, persona):
-        version = self.protocol.version
-        payload = create_element(f'm:{self.SERVICE_NAME}')
-        set_xml_value(payload, to_item_id(persona, PersonaId, version=version), version=version)
-        return payload
+        return set_xml_value(
+            create_element(f'm:{self.SERVICE_NAME}'),
+            to_item_id(persona, PersonaId, version=self.protocol.version),
+            version=self.protocol.version
+        )
 
     @classmethod
     def _get_elements_in_container(cls, container):

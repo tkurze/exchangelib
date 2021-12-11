@@ -70,32 +70,30 @@ class FindPeople(EWSAccountService):
         if len(folders) != 1:
             raise ValueError(f'{self.SERVICE_NAME} can only query one folder')
         folder = folders[0]
-        findpeople = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
-        personashape = create_shape_element(
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
+        payload.append(create_shape_element(
             tag='m:PersonaShape', shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        findpeople.append(personashape)
-        view_type = create_element(
+        ))
+        payload.append(create_element(
             'm:IndexedPageItemView',
             attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint='Beginning')
-        )
-        findpeople.append(view_type)
+        ))
         if restriction:
-            findpeople.append(restriction.to_xml(version=self.account.version))
+            payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            findpeople.append(set_xml_value(
+            payload.append(set_xml_value(
                 create_element('m:SortOrder'),
                 order_fields,
                 version=self.account.version
             ))
-        findpeople.append(set_xml_value(
+        payload.append(set_xml_value(
             create_element('m:ParentFolderId'),
             folder,
             version=self.account.version
         ))
         if query_string:
-            findpeople.append(query_string.to_xml(version=self.account.version))
-        return findpeople
+            payload.append(query_string.to_xml(version=self.account.version))
+        return payload
 
     @staticmethod
     def _get_paging_values(elem):

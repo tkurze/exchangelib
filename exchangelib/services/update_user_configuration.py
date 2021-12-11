@@ -14,6 +14,4 @@ class UpdateUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
     def get_payload(self, user_configuration):
-        updateuserconfiguration = create_element(f'm:{self.SERVICE_NAME}')
-        set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
-        return updateuserconfiguration
+        return set_xml_value(create_element(f'm:{self.SERVICE_NAME}'), user_configuration, version=self.account.version)

@@ -467,7 +467,7 @@ class Account:
         :return: a list of either True or exception instances, in the same order as the input
         """
         log.debug(
-            'Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)',
+            'Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurrences: %s)',
             self,
             delete_type,
             send_meeting_cancellations,

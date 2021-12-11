@@ -66,14 +66,15 @@ class SyncFolderItems(SyncFolder):
             yield change_type, item
 
     def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        syncfolderitems = self._partial_get_payload(
+        sync_folder_items = self._partial_get_payload(
             folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
         )
         is_empty, ignore = (True, None) if ignore is None else peek(ignore)
         if not is_empty:
-            item_ids = create_item_ids_element(items=ignore, version=self.account.version, tag='m:Ignore')
-            syncfolderitems.append(item_ids)
-        add_xml_child(syncfolderitems, 'm:MaxChangesReturned', max_changes_returned)
+            sync_folder_items.append(
+                create_item_ids_element(items=ignore, version=self.account.version, tag='m:Ignore')
+            )
+        add_xml_child(sync_folder_items, 'm:MaxChangesReturned', max_changes_returned)
         if sync_scope:
-            add_xml_child(syncfolderitems, 'm:SyncScope', sync_scope)
-        return syncfolderitems
+            add_xml_child(sync_folder_items, 'm:SyncScope', sync_scope)
+        return sync_folder_items

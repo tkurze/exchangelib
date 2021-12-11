@@ -88,13 +88,13 @@ class GetStreamingEvents(EWSAccountService):
         return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
-        getstreamingevents = create_element(f'm:{self.SERVICE_NAME}')
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         subscriptions_elem = create_element('m:SubscriptionIds')
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, 't:SubscriptionId', subscription_id)
         if not len(subscriptions_elem):
             raise ValueError('"subscription_ids" must not be empty')
 
-        getstreamingevents.append(subscriptions_elem)
-        add_xml_child(getstreamingevents, 'm:ConnectionTimeout', connection_timeout)
-        return getstreamingevents
+        payload.append(subscriptions_elem)
+        add_xml_child(payload, 'm:ConnectionTimeout', connection_timeout)
+        return payload

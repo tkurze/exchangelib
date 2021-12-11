@@ -30,11 +30,9 @@ class GetItem(EWSAccountService):
             yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
-        getitem = create_element(f'm:{self.SERVICE_NAME}')
-        itemshape = create_shape_element(
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(create_shape_element(
             tag='m:ItemShape', shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        getitem.append(itemshape)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        getitem.append(item_ids)
-        return getitem
+        ))
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        return payload

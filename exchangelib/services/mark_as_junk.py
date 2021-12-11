@@ -26,7 +26,6 @@ class MarkAsJunk(EWSAccountService):
 
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message
-        mark_as_junk = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IsJunk=is_junk, MoveItem=move_item))
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        mark_as_junk.append(item_ids)
-        return mark_as_junk
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        return payload

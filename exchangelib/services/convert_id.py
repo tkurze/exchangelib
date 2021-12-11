@@ -33,7 +33,7 @@ class ConvertId(EWSService):
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        convertid = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(DestinationFormat=destination_format))
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element('m:SourceIds')
         for item in items:
             if not isinstance(item, supported_item_classes):
@@ -41,8 +41,8 @@ class ConvertId(EWSService):
             set_xml_value(item_ids, item, version=self.protocol.version)
         if not len(item_ids):
             raise ValueError('"items" must not be empty')
-        convertid.append(item_ids)
-        return convertid
+        payload.append(item_ids)
+        return payload
 
     @classmethod
     def _get_elements_in_container(cls, container):

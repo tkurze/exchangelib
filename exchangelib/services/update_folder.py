@@ -57,21 +57,21 @@ class BaseUpdateService(EWSAccountService):
             yield self._set_field_elem(target_model=target_model, field_path=FieldPath(field=field), value=value)
 
     def _set_field_elem(self, target_model, field_path, value):
-        setfield = create_element(self.SET_FIELD_ELEMENT_NAME)
-        set_xml_value(setfield, field_path, version=self.account.version)
+        set_field = create_element(self.SET_FIELD_ELEMENT_NAME)
+        set_xml_value(set_field, field_path, version=self.account.version)
         folder = create_element(target_model.request_tag())
         field_elem = field_path.field.to_xml(value, version=self.account.version)
         set_xml_value(folder, field_elem, version=self.account.version)
-        setfield.append(folder)
-        return setfield
+        set_field.append(folder)
+        return set_field
 
     def _delete_field_elems(self, field):
         for field_path in FieldPath(field=field).expand(version=self.account.version):
             yield self._delete_field_elem(field_path=field_path)
 
     def _delete_field_elem(self, field_path):
-        deletefolderfield = create_element(self.DELETE_FIELD_ELEMENT_NAME)
-        return set_xml_value(deletefolderfield, field_path, version=self.account.version)
+        delete_folder_field = create_element(self.DELETE_FIELD_ELEMENT_NAME)
+        return set_xml_value(delete_folder_field, field_path, version=self.account.version)
 
     def _update_elems(self, target, fieldnames):
         target_model = target.__class__
@@ -152,6 +152,6 @@ class UpdateFolder(BaseUpdateService):
     def get_payload(self, folders):
         # Takes a list of (Folder, fieldnames) tuples where 'Folder' is a instance of a subclass of Folder and
         # 'fieldnames' are the attribute names that were updated.
-        updatefolder = create_element(f'm:{self.SERVICE_NAME}')
-        updatefolder.append(self._changes_elem(target_changes=folders))
-        return updatefolder
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(self._changes_elem(target_changes=folders))
+        return payload

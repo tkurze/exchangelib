@@ -16,11 +16,10 @@ class SendItem(EWSAccountService):
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
-        senditem = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        senditem.append(item_ids)
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
         if saved_item_folder:
-            saveditemfolderid = create_element('m:SavedItemFolderId')
-            set_xml_value(saveditemfolderid, saved_item_folder, version=self.account.version)
-            senditem.append(saveditemfolderid)
-        return senditem
+            payload.append(
+                set_xml_value(create_element('m:SavedItemFolderId'), saved_item_folder, version=self.account.version)
+            )
+        return payload

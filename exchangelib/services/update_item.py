@@ -100,6 +100,6 @@ class UpdateItem(BaseUpdateService):
         )
         if self.account.version.build >= EXCHANGE_2013_SP1:
             attrs['SuppressReadReceipts'] = suppress_read_receipts
-        updateitem = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
-        updateitem.append(self._changes_elem(target_changes=items))
-        return updateitem
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
+        payload.append(self._changes_elem(target_changes=items))
+        return payload

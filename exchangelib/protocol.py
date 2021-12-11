@@ -538,7 +538,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return GetRoomLists(protocol=self).call()
 
     def get_rooms(self, roomlist):
-        return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
+        return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))
 
     def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
         """Resolve accounts on the server using partial account data, e.g. an email address or initials.

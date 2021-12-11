@@ -43,16 +43,14 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
         return super()._get_element_container(message=message, name=name)
 
     def _partial_get_payload(self, folder, shape, additional_fields, sync_state):
-        svc_elem = create_element(f'm:{self.SERVICE_NAME}')
-        foldershape = create_shape_element(
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(create_shape_element(
             tag=self.shape_tag, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        svc_elem.append(foldershape)
-        folder_id = create_folder_ids_element(tag='m:SyncFolderId', folders=[folder], version=self.account.version)
-        svc_elem.append(folder_id)
+        ))
+        payload.append(create_folder_ids_element(tag='m:SyncFolderId', folders=[folder], version=self.account.version))
         if sync_state:
-            add_xml_child(svc_elem, 'm:SyncState', sync_state)
-        return svc_elem
+            add_xml_child(payload, 'm:SyncState', sync_state)
+        return payload
 
 
 class SyncFolderHierarchy(SyncFolder):

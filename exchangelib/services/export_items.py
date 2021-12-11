@@ -21,10 +21,9 @@ class ExportItems(EWSAccountService):
             yield elem.text  # All we want is the 64bit string in the 'Data' tag
 
     def get_payload(self, items):
-        exportitems = create_element(f'm:{self.SERVICE_NAME}')
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        exportitems.append(item_ids)
-        return exportitems
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        return payload
 
     # We need to override this since ExportItemsResponseMessage is formatted a
     # little bit differently. .

@@ -14,6 +14,6 @@ class CreateUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
     def get_payload(self, user_configuration):
-        createuserconfiguration = create_element(f'm:{self.SERVICE_NAME}')
-        set_xml_value(createuserconfiguration, user_configuration, version=self.protocol.version)
-        return createuserconfiguration
+        return set_xml_value(
+            create_element(f'm:{self.SERVICE_NAME}'), user_configuration, version=self.protocol.version
+        )

@@ -596,12 +596,12 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         """Return all item changes to a folder, as a generator. If sync_state is specified, get all item changes after
         this sync state. After fully consuming the generator, self.item_sync_state will hold the new sync state.
 
-        :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
+        :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderItems service.
         :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
         :param ignore: A list of Item IDs to ignore in the sync
         :param max_changes_returned: The max number of change
         :param sync_scope: Specify whether to return just items, or items and folder associated information. Possible
-           values are specified in SyncFolderitems.SYNC_SCOPES
+           values are specified in SyncFolderItems.SYNC_SCOPES
         :return: A generator of (change_type, item) tuples
         """
         if not sync_state:
@@ -623,7 +623,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         changes after this sync state. After fully consuming the generator, self.folder_sync_state will hold the new
         sync state.
 
-        :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderitems service.
+        :param sync_state: The state of the sync. Returned by a successful call to the SyncFolderItems service.
         :param only_fields: A list of string or FieldPath items specifying the fields to fetch. Default to all fields
         :return:
         """

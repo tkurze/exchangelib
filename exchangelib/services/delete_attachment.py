@@ -1,6 +1,6 @@
 from .common import EWSAccountService, create_attachment_ids_element
 from ..properties import RootItemId
-from ..util import create_element
+from ..util import create_element, set_xml_value
 
 
 class DeleteAttachment(EWSAccountService):
@@ -25,7 +25,8 @@ class DeleteAttachment(EWSAccountService):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
-        payload = create_element(f'm:{self.SERVICE_NAME}')
-        attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-        payload.append(attachment_ids)
-        return payload
+        return set_xml_value(
+            create_element(f'm:{self.SERVICE_NAME}'),
+            create_attachment_ids_element(items=items, version=self.account.version),
+            version=self.account.version
+        )

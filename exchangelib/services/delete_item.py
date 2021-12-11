@@ -37,26 +37,13 @@ class DeleteItem(EWSAccountService):
     def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
                     suppress_read_receipts):
         # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
+        attrs = dict(
+            DeleteType=delete_type,
+            SendMeetingCancellations=send_meeting_cancellations,
+            AffectedTaskOccurrences=affected_task_occurrences,
+        )
         if self.account.version.build >= EXCHANGE_2013_SP1:
-            deleteitem = create_element(
-                f'm:{self.SERVICE_NAME}',
-                attrs=dict(
-                    DeleteType=delete_type,
-                    SendMeetingCancellations=send_meeting_cancellations,
-                    AffectedTaskOccurrences=affected_task_occurrences,
-                    SuppressReadReceipts=suppress_read_receipts,
-                )
-            )
-        else:
-            deleteitem = create_element(
-                f'm:{self.SERVICE_NAME}',
-                attrs=dict(
-                    DeleteType=delete_type,
-                    SendMeetingCancellations=send_meeting_cancellations,
-                    AffectedTaskOccurrences=affected_task_occurrences,
-                 )
-            )
-
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        deleteitem.append(item_ids)
-        return deleteitem
+            attrs['SuppressReadReceipts'] = suppress_read_receipts
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
+        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        return payload

@@ -75,8 +75,7 @@ class ResolveNames(EWSService):
             attrs['ContactDataShape'] = contact_data_shape
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
         if parent_folders:
-            parentfolderids = create_element('m:ParentFolderIds')
-            set_xml_value(parentfolderids, parent_folders, version=self.protocol.version)
+            set_xml_value(create_element('m:ParentFolderIds'), parent_folders, version=self.protocol.version)
         for entry in unresolved_entries:
             add_xml_child(payload, 'm:UnresolvedEntry', entry)
         if not len(payload):

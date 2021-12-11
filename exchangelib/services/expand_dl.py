@@ -22,6 +22,4 @@ class ExpandDL(EWSService):
             yield Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
-        payload = create_element(f'm:{self.SERVICE_NAME}')
-        set_xml_value(payload, distribution_list, version=self.protocol.version)
-        return payload
+        return set_xml_value(create_element(f'm:{self.SERVICE_NAME}'), distribution_list, version=self.protocol.version)

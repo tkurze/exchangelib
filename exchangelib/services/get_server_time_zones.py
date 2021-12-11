@@ -51,9 +51,9 @@ class GetServerTimeZones(EWSService):
             yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
-    def _get_periods(timezonedef):
+    def _get_periods(timezone_def):
         tz_periods = {}
-        periods = timezonedef.find(f'{{{TNS}}}Periods')
+        periods = timezone_def.find(f'{{{TNS}}}Periods')
         for period in periods.findall(f'{{{TNS}}}Period'):
             # Convert e.g. "trule:Microsoft/Registry/W. Europe Standard Time/2006-Daylight" to (2006, 'Daylight')
             p_year, p_type = period.get('Id').rsplit('/', 1)[1].split('-')
@@ -64,20 +64,20 @@ class GetServerTimeZones(EWSService):
         return tz_periods
 
     @staticmethod
-    def _get_transitions_groups(timezonedef):
+    def _get_transitions_groups(timezone_def):
         tz_transitions_groups = {}
-        transitiongroups = timezonedef.find(f'{{{TNS}}}TransitionsGroups')
-        if transitiongroups is not None:
-            for transitiongroup in transitiongroups.findall(f'{{{TNS}}}TransitionsGroup'):
-                tg_id = int(transitiongroup.get('Id'))
+        transition_groups = timezone_def.find(f'{{{TNS}}}TransitionsGroups')
+        if transition_groups is not None:
+            for transition_group in transition_groups.findall(f'{{{TNS}}}TransitionsGroup'):
+                tg_id = int(transition_group.get('Id'))
                 tz_transitions_groups[tg_id] = []
-                for transition in transitiongroup.findall(f'{{{TNS}}}Transition'):
+                for transition in transition_group.findall(f'{{{TNS}}}Transition'):
                     # Apply same conversion to To as for period IDs
                     to_year, to_type = transition.find(f'{{{TNS}}}To').text.rsplit('/', 1)[1].split('-')
                     tz_transitions_groups[tg_id].append(dict(
                         to=(int(to_year), to_type),
                     ))
-                for transition in transitiongroup.findall(f'{{{TNS}}}RecurringDayTransition'):
+                for transition in transition_group.findall(f'{{{TNS}}}RecurringDayTransition'):
                     # Apply same conversion to To as for period IDs
                     to_year, to_type = transition.find(f'{{{TNS}}}To').text.rsplit('/', 1)[1].split('-')
                     occurrence = xml_text_to_value(transition.find(f'{{{TNS}}}Occurrence').text, int)
@@ -94,9 +94,9 @@ class GetServerTimeZones(EWSService):
         return tz_transitions_groups
 
     @staticmethod
-    def _get_transitions(timezonedef):
+    def _get_transitions(timezone_def):
         tz_transitions = {}
-        transitions = timezonedef.find(f'{{{TNS}}}Transitions')
+        transitions = timezone_def.find(f'{{{TNS}}}Transitions')
         if transitions is not None:
             for transition in transitions.findall(f'{{{TNS}}}Transition'):
                 to = transition.find(f'{{{TNS}}}To')

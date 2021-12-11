@@ -23,8 +23,11 @@ class GetUserOofSettings(EWSAccountService):
             yield OofSettings.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, mailbox):
-        payload = create_element(f'm:{self.SERVICE_NAME}Request')
-        return set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
+        return set_xml_value(
+            create_element(f'm:{self.SERVICE_NAME}Request'),
+            AvailabilityMailbox.from_mailbox(mailbox),
+            version=self.account.version
+        )
 
     @classmethod
     def _get_elements_in_container(cls, container):

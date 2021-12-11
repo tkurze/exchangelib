@@ -65,13 +65,13 @@ class SubscribeToPull(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, timeout):
-        subscribe = create_element(f'm:{self.SERVICE_NAME}')
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, 'm:Watermark', watermark)
         add_xml_child(request_elem, 't:Timeout', timeout)  # In minutes
-        subscribe.append(request_elem)
-        return subscribe
+        payload.append(request_elem)
+        return payload
 
 
 class SubscribeToPush(Subscribe):
@@ -84,14 +84,14 @@ class SubscribeToPush(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, status_frequency, url):
-        subscribe = create_element(f'm:{self.SERVICE_NAME}')
+        payload = create_element(f'm:{self.SERVICE_NAME}')
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, 'm:Watermark', watermark)
         add_xml_child(request_elem, 't:StatusFrequency', status_frequency)  # In minutes
         add_xml_child(request_elem, 't:URL', url)
-        subscribe.append(request_elem)
-        return subscribe
+        payload.append(request_elem)
+        return payload
 
 
 class SubscribeToStreaming(Subscribe):
@@ -113,7 +113,6 @@ class SubscribeToStreaming(Subscribe):
         return [container.find(f'{{{MNS}}}SubscriptionId')]
 
     def get_payload(self, folders, event_types):
-        subscribe = create_element(f'm:{self.SERVICE_NAME}')
-        request_elem = self._partial_payload(folders=folders, event_types=event_types)
-        subscribe.append(request_elem)
-        return subscribe
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(self._partial_payload(folders=folders, event_types=event_types))
+        return payload

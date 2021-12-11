@@ -33,8 +33,7 @@ class GetUserAvailability(EWSService):
         mailbox_data_array = create_element('m:MailboxDataArray')
         set_xml_value(mailbox_data_array, mailbox_data, version=self.protocol.version)
         payload.append(mailbox_data_array)
-        set_xml_value(payload, free_busy_view_options, version=self.protocol.version)
-        return payload
+        return set_xml_value(payload, free_busy_view_options, version=self.protocol.version)
 
     @staticmethod
     def _response_messages_tag():

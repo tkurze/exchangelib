@@ -44,11 +44,9 @@ class GetFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
-        getfolder = create_element(f'm:{self.SERVICE_NAME}')
-        foldershape = create_shape_element(
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload.append(create_shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        getfolder.append(foldershape)
-        folder_ids = create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version)
-        getfolder.append(folder_ids)
-        return getfolder
+        ))
+        payload.append(create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version))
+        return payload

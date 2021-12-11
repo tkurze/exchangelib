@@ -252,7 +252,7 @@ class ProtocolTest(EWSTest):
         roomlist = RoomList(email_address='my.roomlist@example.com')
         ws = GetRooms(self.account.protocol)
         with self.assertRaises(ErrorNameResolutionNoResults):
-            list(ws.call(roomlist=roomlist))
+            list(ws.call(room_list=roomlist))
         # Test shortcut
         with self.assertRaises(ErrorNameResolutionNoResults):
             list(self.account.protocol.get_rooms('my.roomlist@example.com'))

@@ -69,11 +69,11 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     """
     envelope = create_element('s:Envelope', nsmap=ns_translation)
     header = create_element('s:Header')
-    requestserverversion = create_element('t:RequestServerVersion', attrs=dict(Version=api_version))
-    header.append(requestserverversion)
+    request_server_version = create_element('t:RequestServerVersion', attrs=dict(Version=api_version))
+    header.append(request_server_version)
     if account_to_impersonate:
-        exchangeimpersonation = create_element('t:ExchangeImpersonation')
-        connectingsid = create_element('t:ConnectingSID')
+        exchange_impersonation = create_element('t:ExchangeImpersonation')
+        connecting_sid = create_element('t:ConnectingSID')
         # We have multiple options for uniquely identifying the user. Here's a prioritized list in accordance with
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
         for attr, tag in (
@@ -84,15 +84,15 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
         ):
             val = getattr(account_to_impersonate, attr)
             if val:
-                add_xml_child(connectingsid, f't:{tag}', val)
+                add_xml_child(connecting_sid, f't:{tag}', val)
                 break
-        exchangeimpersonation.append(connectingsid)
-        header.append(exchangeimpersonation)
+        exchange_impersonation.append(connecting_sid)
+        header.append(exchange_impersonation)
     if timezone:
-        timezonecontext = create_element('t:TimeZoneContext')
-        timezonedefinition = create_element('t:TimeZoneDefinition', attrs=dict(Id=timezone.ms_id))
-        timezonecontext.append(timezonedefinition)
-        header.append(timezonecontext)
+        timezone_context = create_element('t:TimeZoneContext')
+        timezone_definition = create_element('t:TimeZoneDefinition', attrs=dict(Id=timezone.ms_id))
+        timezone_context.append(timezone_definition)
+        header.append(timezone_context)
     envelope.append(header)
     body = create_element('s:Body')
     body.append(content)

@@ -14,6 +14,6 @@ class DeleteUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration_name=user_configuration_name))
 
     def get_payload(self, user_configuration_name):
-        deleteuserconfiguration = create_element(f'm:{self.SERVICE_NAME}')
-        set_xml_value(deleteuserconfiguration, user_configuration_name, version=self.account.version)
-        return deleteuserconfiguration
+        return set_xml_value(
+            create_element(f'm:{self.SERVICE_NAME}'), user_configuration_name, version=self.account.version
+        )

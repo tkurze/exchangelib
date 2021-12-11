@@ -72,7 +72,7 @@ class EWSService(metaclass=abc.ABCMeta):
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
     paging_container_name = None  # The name of the element that contains paging information and the paged results
-    returns_elements = True  # If False, the service does not return response elements, just the RsponseCode status
+    returns_elements = True  # If False, the service does not return response elements, just the ResponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
         EWSWarning, ErrorCannotDeleteObject, ErrorInvalidChangeKey, ErrorItemNotFound, ErrorItemSave,
@@ -431,9 +431,9 @@ class EWSService(metaclass=abc.ABCMeta):
     def _raise_soap_errors(cls, fault):
         """Parse error messages contained in SOAP headers and raise as exceptions defined in this package."""
         # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
-        faultcode = get_xml_attr(fault, 'faultcode')
-        faultstring = get_xml_attr(fault, 'faultstring')
-        faultactor = get_xml_attr(fault, 'faultactor')
+        fault_code = get_xml_attr(fault, 'faultcode')
+        fault_string = get_xml_attr(fault, 'faultstring')
+        fault_actor = get_xml_attr(fault, 'faultactor')
         detail = fault.find('detail')
         if detail is not None:
             code, msg = None, ''
@@ -460,10 +460,10 @@ class EWSService(metaclass=abc.ABCMeta):
             except KeyError:
                 detail = f'{cls.SERVICE_NAME}: code: {code} msg: {msg} ({xml_to_str(detail)})'
         try:
-            raise vars(errors)[faultcode](faultstring)
+            raise vars(errors)[fault_code](fault_string)
         except KeyError:
             pass
-        raise SOAPError(f'SOAP error code: {faultcode} string: {faultstring} actor: {faultactor} detail: {detail}')
+        raise SOAPError(f'SOAP error code: {fault_code} string: {fault_string} actor: {fault_actor} detail: {detail}')
 
     def _get_element_container(self, message, name=None):
         """Return the XML element in a response element that contains the elements we want the service to return. For

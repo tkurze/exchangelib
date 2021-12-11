@@ -66,11 +66,10 @@ class FindItem(EWSAccountService):
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                     calendar_view, page_size, offset=0):
-        finditem = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
-        itemshape = create_shape_element(
+        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
+        payload.append(create_shape_element(
             tag='m:ItemShape', shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        finditem.append(itemshape)
+        ))
         if calendar_view is None:
             view_type = create_element(
                 'm:IndexedPageItemView',
@@ -78,20 +77,20 @@ class FindItem(EWSAccountService):
             )
         else:
             view_type = calendar_view.to_xml(version=self.account.version)
-        finditem.append(view_type)
+        payload.append(view_type)
         if restriction:
-            finditem.append(restriction.to_xml(version=self.account.version))
+            payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            finditem.append(set_xml_value(
+            payload.append(set_xml_value(
                 create_element('m:SortOrder'),
                 order_fields,
                 version=self.account.version
             ))
-        finditem.append(set_xml_value(
+        payload.append(set_xml_value(
             create_element('m:ParentFolderIds'),
             folders,
             version=self.account.version
         ))
         if query_string:
-            finditem.append(query_string.to_xml(version=self.account.version))
-        return finditem
+            payload.append(query_string.to_xml(version=self.account.version))
+        return payload

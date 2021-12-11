@@ -24,23 +24,24 @@ class UploadItems(EWSAccountService):
 
         :param items:
         """
-        uploaditems = create_element(f'm:{self.SERVICE_NAME}')
-        itemselement = create_element('m:Items')
-        uploaditems.append(itemselement)
+        payload = create_element(f'm:{self.SERVICE_NAME}')
+        items_elem = create_element('m:Items')
+        payload.append(items_elem)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the "UpdateOrCreate" create action.
             attrs = dict(CreateAction='Update' if item_id else 'CreateNew')
             if is_associated is not None:
                 attrs['IsAssociated'] = is_associated
             item = create_element('t:Item', attrs=attrs)
-            parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
-            set_xml_value(item, parentfolderid, version=self.account.version)
+            parent_folder_id = ParentFolderId(parent_folder.id, parent_folder.changekey)
+            set_xml_value(item, parent_folder_id, version=self.account.version)
             if item_id:
-                itemid = to_item_id(item_id, ItemId, version=self.account.version)
-                set_xml_value(item, itemid, version=self.account.version)
+                set_xml_value(
+                    item, to_item_id(item_id, ItemId, version=self.account.version), version=self.account.version
+                )
             add_xml_child(item, 't:Data', data_str)
-            itemselement.append(item)
-        return uploaditems
+            items_elem.append(item)
+        return payload
 
     def _elems_to_objs(self, elems):
         for elem in elems:

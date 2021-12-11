@@ -99,7 +99,7 @@ def resolve_field_path(field_path, folder, strict=True):
     label and SubField object.
     """
     from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
-    fieldname, label, subfieldname = split_field_path(field_path)
+    fieldname, label, subfield_name = split_field_path(field_path)
     field = folder.get_item_field_by_fieldname(fieldname)
     subfield = None
     if isinstance(field, IndexedField):
@@ -114,32 +114,32 @@ def resolve_field_path(field_path, folder, strict=True):
         if label and label not in valid_labels:
             raise ValueError(f"Label {label} on IndexedField path {field_path!r} must be one of {valid_labels}")
         if issubclass(field.value_cls, MultiFieldIndexedElement):
-            if strict and not subfieldname:
+            if strict and not subfield_name:
                 raise ValueError(
                     f"IndexedField path {field_path!r} must specify subfield, e.g. "
                     f"'{fieldname}__{label}__{field.value_cls.FIELDS[1].name}'"
                 )
 
-            if subfieldname:
+            if subfield_name:
                 try:
-                    subfield = field.value_cls.get_field_by_fieldname(subfieldname)
+                    subfield = field.value_cls.get_field_by_fieldname(subfield_name)
                 except ValueError:
-                    fnames = ', '.join(f.name for f in field.value_cls.supported_fields(
+                    field_names = ', '.join(f.name for f in field.value_cls.supported_fields(
                         version=folder.account.version
                     ))
                     raise ValueError(
-                        f"Subfield {subfieldname!r} on IndexedField path {field_path!r} must be one of {fnames}"
+                        f"Subfield {subfield_name!r} on IndexedField path {field_path!r} must be one of {field_names}"
                     )
         else:
             if not issubclass(field.value_cls, SingleFieldIndexedElement):
                 raise ValueError(f"'field.value_cls' {field.value_cls!r} must be an SingleFieldIndexedElement instance")
-            if subfieldname:
+            if subfield_name:
                 raise ValueError(
                     f"IndexedField path {field_path!r} must not specify subfield, e.g. just {fieldname}__{label}'"
                 )
             subfield = field.value_cls.value_field(version=folder.account.version)
     else:
-        if label or subfieldname:
+        if label or subfield_name:
             raise ValueError(f"Field path {field_path!r} must not specify label or subfield, e.g. just {fieldname!r}")
     return field, label, subfield
 
@@ -171,11 +171,11 @@ class FieldPath:
         # For indexed properties, get either the full property set, the property with matching label, or a particular
         # subfield.
         if self.label:
-            for subitem in getattr(item, self.field.name):
-                if subitem.label == self.label:
+            for sub_item in getattr(item, self.field.name):
+                if sub_item.label == self.label:
                     if self.subfield:
-                        return getattr(subitem, self.subfield.name)
-                    return subitem
+                        return getattr(sub_item, self.subfield.name)
+                    return sub_item
             return None  # No item with this label
         return getattr(item, self.field.name)
 
@@ -349,7 +349,7 @@ class Field(metaclass=abc.ABCMeta):
 
 
 class FieldURIField(Field):
-    """A field that has a FieldURI value in EWS. This means it's value is contained in an XML element or arrtibute. It
+    """A field that has a FieldURI value in EWS. This means it's value is contained in an XML element or attribute. It
     may additionally be a label for searching, filtering and limiting fields. In that case, the FieldURI format will be
     'itemtype:FieldName'
     """
@@ -1345,11 +1345,9 @@ class ExtendedPropertyField(Field):
         extended_property = create_element(self.value_cls.request_tag())
         set_xml_value(extended_property, self.field_uri_xml(), version=version)
         if isinstance(value, self.value_cls):
-            set_xml_value(extended_property, value, version=version)
-        else:
-            # Allow keeping ExtendedProperty field values as their simple Python type
-            set_xml_value(extended_property, self.value_cls(value), version=version)
-        return extended_property
+            return set_xml_value(extended_property, value, version=version)
+        # Allow keeping ExtendedProperty field values as their simple Python type
+        return set_xml_value(extended_property, self.value_cls(value), version=version)
 
     def __hash__(self):
         return hash(self.name)

@@ -50,8 +50,7 @@ class GetAttachment(EWSAccountService):
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
-        attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-        payload.append(attachment_ids)
+        payload.append(create_attachment_ids_element(items=items, version=self.account.version))
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):
