@@ -1,5 +1,4 @@
 import time
-import warnings
 
 from exchangelib.folders import Inbox, FolderCollection
 from exchangelib.items import Message, SHALLOW, ASSOCIATED
@@ -148,19 +147,6 @@ class ItemQuerySetTest(BaseItemTest):
             [i.categories[0] for i in qs.only('categories').order_by('subject')],
             [test_cat, test_cat, test_cat, test_cat]
         )
-        # Test iterator
-        with warnings.catch_warnings():
-            # iterator() is deprecated but we still want to test it. Silence the DeprecationWarning
-            warnings.simplefilter("ignore")
-            self.assertEqual(
-                {(i.subject, i.categories[0]) for i in qs.iterator()},
-                {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
-            )
-            # Test that iterator() preserves the result format
-            self.assertEqual(
-                {(i[0], i[1][0]) for i in qs.values_list('subject', 'categories').iterator()},
-                {('Item 0', test_cat), ('Item 1', test_cat), ('Item 2', test_cat), ('Item 3', test_cat)}
-            )
         self.assertEqual(qs.get(subject='Item 3').subject, 'Item 3')
         with self.assertRaises(DoesNotExist):
             qs.get(subject='Item XXX')

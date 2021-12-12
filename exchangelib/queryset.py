@@ -1,6 +1,5 @@
 import abc
 import logging
-import warnings
 from copy import deepcopy
 from itertools import islice
 

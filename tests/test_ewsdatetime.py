@@ -3,7 +3,6 @@ import datetime
 import dateutil.tz
 import pytz
 import requests_mock
-import warnings
 try:
     import zoneinfo
 except ImportError:
@@ -106,37 +105,6 @@ class EWSDateTimeTest(TimedTestCase):
             EWSTimeZone('UTC'),
             EWSTimeZone.from_timezone(datetime.timezone.utc)
         )
-
-    def test_localize(self):
-        # Test some corner cases around DST
-        tz = EWSTimeZone('Europe/Copenhagen')
-        with warnings.catch_warnings():
-            # localize() is deprecated but we still want to test it. Silence the DeprecationWarning
-            warnings.simplefilter("ignore")
-            self.assertEqual(
-                str(tz.localize(EWSDateTime(2023, 10, 29, 2, 36, 0), is_dst=False)),
-                '2023-10-29 02:36:00+01:00'
-            )
-            self.assertEqual(
-                str(tz.localize(EWSDateTime(2023, 10, 29, 2, 36, 0), is_dst=None)),
-                '2023-10-29 02:36:00+02:00'
-            )
-            self.assertEqual(
-                str(tz.localize(EWSDateTime(2023, 10, 29, 2, 36, 0), is_dst=True)),
-                '2023-10-29 02:36:00+02:00'
-            )
-            self.assertEqual(
-                str(tz.localize(EWSDateTime(2023, 3, 26, 2, 36, 0), is_dst=False)),
-                '2023-03-26 02:36:00+01:00'
-            )
-            self.assertEqual(
-                str(tz.localize(EWSDateTime(2023, 3, 26, 2, 36, 0), is_dst=None)),
-                '2023-03-26 02:36:00+01:00'
-            )
-            self.assertEqual(
-                str(tz.localize(EWSDateTime(2023, 3, 26, 2, 36, 0), is_dst=True)),
-                '2023-03-26 02:36:00+02:00'
-            )
 
     def test_ewsdatetime(self):
         # Test a static timezone
