@@ -6,6 +6,8 @@ HEAD
 - Fixed some spelling mistakes:
   - `ALL_OCCURRENCIES` to `ALL_OCCURRENCES` in `exchangelib.items.base`
   - `Persona.orgnaization_main_phones` to `organization_main_phones`
+- Removed deprecated methods `EWSTimeZone.localize()`, `EWSTimeZone.normalize()`,
+  `EWSTimeZone.timezone()` and `QuerySet.iterator()`.
 
 
 4.6.2

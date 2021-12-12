@@ -504,11 +504,6 @@ class QuerySet(SearchableMixIn):
         new_qs._depth = depth
         return new_qs
 
-    def iterator(self):
-        # Return an iterator over the results
-        warnings.warn('QuerySet no longer caches results. .iterator() is a no-op.', DeprecationWarning, stacklevel=2)
-        return self.__iter__()
-
     ###########################
     #
     # Methods that end chaining

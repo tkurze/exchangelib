@@ -296,32 +296,6 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         # Handle both old and new versions of tzlocal that may return pytz or zoneinfo objects, respectively
         return cls.from_timezone(tz)
 
-    @classmethod
-    def timezone(cls, location):
-        warnings.warn('replace EWSTimeZone.timezone() with just EWSTimeZone()', DeprecationWarning, stacklevel=2)
-        return cls(location)
-
-    def normalize(self, dt, is_dst=False):
-        warnings.warn('normalization is now handled gracefully', DeprecationWarning, stacklevel=2)
-        return dt
-
-    def localize(self, dt, is_dst=False):
-        warnings.warn('replace tz.localize() with dt.replace(tzinfo=tz)', DeprecationWarning, stacklevel=2)
-        if dt.tzinfo is not None:
-            raise ValueError(f'{dt} must be timezone-unaware')
-        dt = dt.replace(tzinfo=self)
-        if is_dst is not None:
-            # DST dates are assumed to always be after non-DST dates
-            dt_before = dt.replace(fold=0)
-            dt_after = dt.replace(fold=1)
-            dst_before = dt_before.dst()
-            dst_after = dt_after.dst()
-            if dst_before > dst_after:
-                dt = dt_before if is_dst else dt_after
-            elif dst_before < dst_after:
-                dt = dt_after if is_dst else dt_before
-        return dt
-
     def fromutc(self, dt):
         t = super().fromutc(dt)
         if isinstance(t, EWSDateTime):
