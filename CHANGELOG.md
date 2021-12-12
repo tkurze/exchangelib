@@ -3,6 +3,9 @@ Change Log
 
 HEAD
 ----
+- Fixed some spelling mistakes:
+  - `ALL_OCCURRENCIES` to `ALL_OCCURRENCES` in `exchangelib.items.base`
+  - `Persona.orgnaization_main_phones` to `organization_main_phones`
 
 
 4.6.2
