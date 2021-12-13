@@ -19,7 +19,7 @@ from exchangelib.queryset import Q
 from exchangelib.util import value_to_xml_text
 
 from ..common import EWSTest, get_random_string, get_random_datetime_range, get_random_date, \
-    get_random_decimal, get_random_choice, get_random_int, get_random_datetime
+    get_random_decimal, get_random_choice, get_random_substring, get_random_datetime
 
 
 class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
@@ -323,9 +323,7 @@ class CommonItemTest(BaseItemTest):
             filter_kwargs = [{f.name: val}, {f'{f.name}__in': [val]}]
             if isinstance(f, TextField) and not isinstance(f, ChoiceField):
                 # Choice fields cannot be filtered using __contains. Sort of makes sense.
-                random_start = get_random_int(min_val=0, max_val=len(val)//2)
-                random_end = get_random_int(min_val=len(val)//2+1, max_val=len(val))
-                filter_kwargs.append({f'{f.name}__contains': val[random_start:random_end]})
+                filter_kwargs.append({f'{f.name}__contains': get_random_substring(val)})
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_list_fields(self):
@@ -374,7 +372,7 @@ class CommonItemTest(BaseItemTest):
                         continue
                     filter_kwargs.extend([
                         {f.name: v}, {path: subval},
-                        {f'{path}__in': [subval]}, {f'{path}__contains': [subval]}
+                        {f'{path}__in': [subval]}, {f'{path}__contains': get_random_substring(subval)}
                     ])
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
@@ -403,7 +401,7 @@ class CommonItemTest(BaseItemTest):
                     if subval is None:
                         continue
                     filter_kwargs.extend([
-                        {path: subval}, {f'{path}__in': [subval]}, {f'{path}__contains': [subval]}
+                        {path: subval}, {f'{path}__in': [subval]}, {f'{path}__contains': get_random_substring(subval)}
                     ])
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 

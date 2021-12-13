@@ -293,6 +293,12 @@ def get_random_string(length, spaces=True, special=True):
     return res
 
 
+def get_random_substring(val):
+    random_start = get_random_int(min_val=0, max_val=len(val) // 2)
+    random_end = get_random_int(min_val=len(val) // 2 + 1, max_val=len(val))
+    return val[random_start:random_end]
+
+
 def get_random_byte():
     return get_random_bytes(1)
 

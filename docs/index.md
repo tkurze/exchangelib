@@ -930,6 +930,7 @@ ordered_items = a.inbox.all().order_by('subject')
 reverse_ordered_items = a.inbox.all().order_by('-subject')
  # Indexed properties can be ordered on their individual components
 sorted_by_home_street = a.contacts.all().order_by(
+  'phone_numbers__CarPhone',
   'physical_addresses__Home__street'
 )
 # Beware that sorting is done client-side here
@@ -1031,6 +1032,14 @@ qs.filter(categories__exists=True)
 # Returns items that have no categories set, i.e. the field does not exist on
 # the item on the server.
 qs.filter(categories__exists=False)
+
+# When filtering on indexed properties, you need to specify the full path to the
+# value you want to filter on.
+a.contacts.filter(phone_numbers__CarPhone='123456')
+a.contacts.filter(phone_numbers__CarPhone__contains='123')
+a.contacts.filter(physical_addresses__Home__street='Elm Street')
+a.contacts.filter(physical_addresses__Home__street__contains='Elm')
+
 ```
 
 WARNING: Filtering on the 'body' field is not fully supported by EWS. There
