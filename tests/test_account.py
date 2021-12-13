@@ -5,7 +5,8 @@ from exchangelib.account import Account
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
 from exchangelib.credentials import Credentials, DELEGATE
-from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, UnauthorizedError
+from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, UnauthorizedError, ErrorNotDelegate, \
+    ErrorDelegateNoUser
 from exchangelib.folders import Calendar
 from exchangelib.items import Message
 from exchangelib.properties import DelegateUser, UserId, DelegatePermissions
@@ -116,14 +117,13 @@ class AccountTest(EWSTest):
     def test_delegate(self):
         # The test server does not have any delegate info. Test that account.delegates works, and mock to test parsing
         # of a non-empty response.
-        self.assertGreaterEqual(
-            len(self.account.delegates),
-            0
-        )
-        self.assertGreaterEqual(
-            len(list(GetDelegate(account=self.account).call(user_ids=['foo@example.com'], include_permissions=True))),
-            0
-        )
+        self.assertGreaterEqual(len(self.account.delegates), 0)
+        with self.assertRaises(ErrorDelegateNoUser):
+            list(GetDelegate(account=self.account).call(user_ids=['foo@example.com'], include_permissions=True))
+        with self.assertRaises(ErrorNotDelegate):
+            list(GetDelegate(account=self.account).call(
+                user_ids=[self.account.primary_smtp_address], include_permissions=True
+            ))
 
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>

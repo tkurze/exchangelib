@@ -1,5 +1,5 @@
 from .common import EWSAccountService
-from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
+from ..properties import DLMailbox, DelegateUser, UserId  # The service expects a Mailbox element in the MNS namespace
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2007_SP1
 
@@ -25,7 +25,12 @@ class GetDelegate(EWSAccountService):
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
-            set_xml_value(payload, user_ids, version=self.protocol.version)
+            user_ids_elem = create_element('m:UserIds')
+            for user_id in user_ids:
+                if isinstance(user_id, str):
+                    user_id = UserId(primary_smtp_address=user_id)
+                set_xml_value(user_ids_elem, user_id, version=self.protocol.version)
+            set_xml_value(payload, user_ids_elem, version=self.protocol.version)
         return payload
 
     @classmethod

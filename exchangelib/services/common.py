@@ -19,7 +19,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark, \
     ErrorInvalidSyncStateData, ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, \
-    ErrorConnectionFailedTransientError
+    ErrorConnectionFailedTransientError, ErrorDelegateNoUser, ErrorNotDelegate
 from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId, FolderId, \
@@ -43,6 +43,7 @@ KNOWN_EXCEPTIONS = (
     ErrorConnectionFailed,
     ErrorConnectionFailedTransientError,
     ErrorCreateItemAccessDenied,
+    ErrorDelegateNoUser,
     ErrorDeleteDistinguishedFolder,
     ErrorExceededConnectionCount,
     ErrorFolderNotFound,
@@ -63,6 +64,7 @@ KNOWN_EXCEPTIONS = (
     ErrorNonExistentMailbox,
     ErrorNoPublicFolderReplicaAvailable,
     ErrorNoRespondingCASInDestinationSite,
+    ErrorNotDelegate,
     ErrorQuotaExceeded,
     ErrorTimeoutExpired,
     RateLimitError,
