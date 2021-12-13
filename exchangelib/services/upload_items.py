@@ -33,8 +33,7 @@ class UploadItems(EWSAccountService):
             if is_associated is not None:
                 attrs['IsAssociated'] = is_associated
             item = create_element('t:Item', attrs=attrs)
-            parent_folder_id = ParentFolderId(parent_folder.id, parent_folder.changekey)
-            set_xml_value(item, parent_folder_id, version=self.account.version)
+            set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
                 set_xml_value(
                     item, to_item_id(item_id, ItemId, version=self.account.version), version=self.account.version
