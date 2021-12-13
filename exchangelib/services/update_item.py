@@ -46,12 +46,10 @@ class UpdateItem(BaseUpdateService):
             suppress_read_receipts=suppress_read_receipts,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield Item.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        if elem is None:
+            return elem
+        return Item.id_from_xml(elem)
 
     def _update_elems(self, target, fieldnames):
         fieldnames_copy = list(fieldnames)

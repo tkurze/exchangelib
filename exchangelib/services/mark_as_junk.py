@@ -13,12 +13,10 @@ class MarkAsJunk(EWSAccountService):
             self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
         )
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield MovedItemId.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        if elem is None:
+            return elem
+        return MovedItemId.id_from_xml(elem)
 
     @classmethod
     def _get_elements_in_container(cls, container):

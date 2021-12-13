@@ -14,12 +14,8 @@ class SendNotification(EWSService):
     def call(self):
         raise NotImplementedError()
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Notification.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
     def _response_tag(cls):

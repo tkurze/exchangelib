@@ -21,12 +21,8 @@ class ArchiveItem(EWSAccountService):
         """
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Item.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
         payload = create_element(f'm:{self.SERVICE_NAME}')

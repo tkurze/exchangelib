@@ -20,12 +20,8 @@ class GetEvents(EWSAccountService):
                 subscription_id=subscription_id, watermark=watermark,
         )))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Notification.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
     def _get_elements_in_container(cls, container):

@@ -20,12 +20,8 @@ class GetUserAvailability(EWSService):
             free_busy_view_options=free_busy_view_options
         )))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield FreeBusyView.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return FreeBusyView.from_xml(elem=elem, account=None)
 
     def get_payload(self, timezone, mailbox_data, free_busy_view_options):
         payload = create_element(f'm:{self.SERVICE_NAME}Request')

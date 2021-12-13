@@ -14,6 +14,7 @@ class GetSearchableMailboxes(EWSService):
     element_container_name = f'{{{MNS}}}SearchableMailboxes'
     failed_mailboxes_container_name = f'{{{MNS}}}FailedMailboxes'
     supported_from = EXCHANGE_2013
+    cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
 
     def call(self, search_filter, expand_group_membership):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
@@ -21,13 +22,8 @@ class GetSearchableMailboxes(EWSService):
                 expand_group_membership=expand_group_membership,
         )))
 
-    def _elems_to_objs(self, elems):
-        cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=None)
 
     def get_payload(self, search_filter, expand_group_membership):
         payload = create_element(f'm:{self.SERVICE_NAME}')

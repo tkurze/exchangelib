@@ -14,6 +14,7 @@ class GetAttachment(EWSAccountService):
 
     SERVICE_NAME = 'GetAttachment'
     element_container_name = f'{{{MNS}}}Attachments'
+    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
@@ -23,13 +24,8 @@ class GetAttachment(EWSAccountService):
             body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
         ))
 
-    def _elems_to_objs(self, elems):
-        cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         payload = create_element(f'm:{self.SERVICE_NAME}')

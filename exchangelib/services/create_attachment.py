@@ -12,17 +12,13 @@ class CreateAttachment(EWSAccountService):
 
     SERVICE_NAME = 'CreateAttachment'
     element_container_name = f'{{{MNS}}}Attachments'
+    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, parent_item, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
 
-    def _elems_to_objs(self, elems):
-        cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, parent_item):
         payload = create_element(f'm:{self.SERVICE_NAME}')

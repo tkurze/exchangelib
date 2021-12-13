@@ -24,12 +24,8 @@ class GetUserConfiguration(EWSAccountService):
                 user_configuration_name=user_configuration_name, properties=properties
         )))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield UserConfiguration.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return UserConfiguration.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):

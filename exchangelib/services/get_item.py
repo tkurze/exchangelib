@@ -22,12 +22,8 @@ class GetItem(EWSAccountService):
             self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
         payload = create_element(f'm:{self.SERVICE_NAME}')

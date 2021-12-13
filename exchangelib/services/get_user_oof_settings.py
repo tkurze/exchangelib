@@ -15,12 +15,8 @@ class GetUserOofSettings(EWSAccountService):
     def call(self, mailbox):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield OofSettings.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return OofSettings.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, mailbox):
         return set_xml_value(

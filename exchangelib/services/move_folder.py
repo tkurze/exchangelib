@@ -15,12 +15,10 @@ class MoveFolder(EWSAccountService):
             raise ValueError(f"'to_folder' {to_folder!r} must be a Folder or FolderId instance")
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+    def _elem_to_obj(self, elem):
+        if elem is None:
+            return elem
+        return FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
 
     def get_payload(self, folders, to_folder):
         # Takes a list of folders and returns their new folder IDs

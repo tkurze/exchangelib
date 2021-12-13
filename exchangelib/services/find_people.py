@@ -54,15 +54,10 @@ class FindPeople(EWSPagingService):
             )
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            if self.shape == ID_ONLY and self.additional_fields is None:
-                yield Persona.id_from_xml(elem)
-                continue
-            yield Persona.from_xml(elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        if self.shape == ID_ONLY and self.additional_fields is None:
+            return Persona.id_from_xml(elem)
+        return Persona.from_xml(elem, account=self.account)
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
                     offset=0):

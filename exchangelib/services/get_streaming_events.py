@@ -35,12 +35,8 @@ class GetStreamingEvents(EWSAccountService):
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
         )))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Notification.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):

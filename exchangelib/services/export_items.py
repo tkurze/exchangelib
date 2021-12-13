@@ -13,12 +13,8 @@ class ExportItems(EWSAccountService):
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.text  # All we want is the 64bit string in the 'Data' tag
+    def _elem_to_obj(self, elem):
+        return elem.text  # All we want is the 64bit string in the 'Data' tag
 
     def get_payload(self, items):
         payload = create_element(f'm:{self.SERVICE_NAME}')

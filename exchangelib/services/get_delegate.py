@@ -18,12 +18,8 @@ class GetDelegate(EWSAccountService):
             include_permissions=include_permissions,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield DelegateUser.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IncludePermissions=include_permissions))

@@ -13,12 +13,8 @@ class DeleteAttachment(EWSAccountService):
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield RootItemId.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return RootItemId.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):

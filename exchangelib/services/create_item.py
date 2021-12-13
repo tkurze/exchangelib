@@ -45,15 +45,12 @@ class CreateItem(EWSAccountService):
             send_meeting_invitations=send_meeting_invitations,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            if isinstance(elem, bool):
-                yield elem
-                continue
-            yield BulkCreateResult.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        if elem is None:
+            return elem
+        if isinstance(elem, bool):
+            return elem
+        return BulkCreateResult.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):

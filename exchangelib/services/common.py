@@ -162,8 +162,16 @@ class EWSService(metaclass=abc.ABCMeta):
 
     def _elems_to_objs(self, elems):
         """Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions)."""
-        if self.returns_elements:
-            raise NotImplementedError()
+        if not self.returns_elements:
+            raise ValueError("Incorrect call to method when 'returns_elements' is False")
+        for elem in elems:
+            if isinstance(elem, Exception):
+                yield elem
+                continue
+            yield self._elem_to_obj(elem)
+
+    def _elem_to_obj(self, elem):
+        raise NotImplementedError()
 
     @property
     def _version_hint(self):

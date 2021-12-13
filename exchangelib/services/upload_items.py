@@ -43,12 +43,8 @@ class UploadItems(EWSAccountService):
             items_elem.append(item)
         return payload
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
+    def _elem_to_obj(self, elem):
+        return elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
 
     @classmethod
     def _get_elements_in_container(cls, container):

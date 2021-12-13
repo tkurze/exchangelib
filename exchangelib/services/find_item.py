@@ -54,15 +54,10 @@ class FindItem(EWSPagingService):
             )
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            if self.shape == ID_ONLY and self.additional_fields is None:
-                yield Item.id_from_xml(elem)
-                continue
-            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        if self.shape == ID_ONLY and self.additional_fields is None:
+            return Item.id_from_xml(elem)
+        return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                     calendar_view, page_size, offset=0):

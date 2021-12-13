@@ -38,17 +38,13 @@ class GetServerTimeZones(EWSService):
                 payload.append(tz_ids)
         return payload
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            tz_id = elem.get('Id')
-            tz_name = elem.get('Name')
-            tz_periods = self._get_periods(elem)
-            tz_transitions_groups = self._get_transitions_groups(elem)
-            tz_transitions = self._get_transitions(elem)
-            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
+    def _elem_to_obj(self, elem):
+        tz_id = elem.get('Id')
+        tz_name = elem.get('Name')
+        tz_periods = self._get_periods(elem)
+        tz_transitions_groups = self._get_transitions_groups(elem)
+        tz_transitions = self._get_transitions(elem)
+        return tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
 
     @staticmethod
     def _get_periods(timezone_def):

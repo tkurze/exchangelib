@@ -29,13 +29,9 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
             payload=payload_func(folders=folders, event_types=event_types, **kwargs)
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            subscription_elem, watermark_elem = elem
-            yield subscription_elem.text, watermark_elem.text
+    def _elem_to_obj(self, elem):
+        subscription_elem, watermark_elem = elem
+        return subscription_elem.text, watermark_elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -101,12 +97,8 @@ class SubscribeToStreaming(Subscribe):
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.text
+    def _elem_to_obj(self, elem):
+        return elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):

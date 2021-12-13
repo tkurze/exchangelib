@@ -20,11 +20,8 @@ class SyncFolderItems(SyncFolder):
     CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)
     shape_tag = 'm:ItemShape'
     last_in_range_name = f'{{{MNS}}}IncludesLastItemInRange'
-
-    def _change_types_map(self):
-        res = super()._change_types_map()
-        res[f'{{{TNS}}}ReadFlagChange'] = self.READ_FLAG_CHANGE
-        return res
+    change_types_map = SyncFolder.change_types_map
+    change_types_map[f'{{{TNS}}}ReadFlagChange'] = READ_FLAG_CHANGE
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
@@ -44,26 +41,21 @@ class SyncFolderItems(SyncFolder):
                 sync_scope=sync_scope,
         )))
 
-    def _elems_to_objs(self, elems):
-        change_types = self._change_types_map()
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            change_type = change_types[elem.tag]
-            if change_type == self.READ_FLAG_CHANGE:
-                item = (
-                    ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                    xml_text_to_value(elem.find(f'{{{TNS}}}IsRead').text, bool)
-                )
-            elif change_type == self.DELETE:
-                item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
-            else:
-                # We can't find() the element because we don't know which tag to look for. The change element can
-                # contain multiple item types, each with their own tag.
-                item_elem = elem[0]
-                item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
-            yield change_type, item
+    def _elem_to_obj(self, elem):
+        change_type = self.change_types_map[elem.tag]
+        if change_type == self.READ_FLAG_CHANGE:
+            item = (
+                ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
+                xml_text_to_value(elem.find(f'{{{TNS}}}IsRead').text, bool)
+            )
+        elif change_type == self.DELETE:
+            item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
+        else:
+            # We can't find() the element because we don't know which tag to look for. The change element can
+            # contain multiple item types, each with their own tag.
+            item_elem = elem[0]
+            item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
+        return change_type, item
 
     def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         sync_folder_items = self._partial_get_payload(

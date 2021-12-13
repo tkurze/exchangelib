@@ -19,19 +19,17 @@ class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
     CHANGE_TYPES = (CREATE, UPDATE, DELETE)
     shape_tag = None
     last_in_range_name = None
+    change_types_map = {
+        f'{{{TNS}}}Create': CREATE,
+        f'{{{TNS}}}Update': UPDATE,
+        f'{{{TNS}}}Delete': DELETE,
+    }
 
     def __init__(self, *args, **kwargs):
         # These values are reset and set each time call() is consumed
         self.sync_state = None
         self.includes_last_item_in_range = None
         super().__init__(*args, **kwargs)
-
-    def _change_types_map(self):
-        return {
-            f'{{{TNS}}}Create': self.CREATE,
-            f'{{{TNS}}}Update': self.UPDATE,
-            f'{{{TNS}}}Delete': self.DELETE,
-        }
 
     def _get_element_container(self, message, name=None):
         self.sync_state = message.find(f'{{{MNS}}}SyncState').text
@@ -76,21 +74,16 @@ class SyncFolderHierarchy(SyncFolder):
                 sync_state=sync_state,
         )))
 
-    def _elems_to_objs(self, elems):
-        change_types = self._change_types_map()
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            change_type = change_types[elem.tag]
-            if change_type == self.DELETE:
-                folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
-            else:
-                # We can't find() the element because we don't know which tag to look for. The change element can
-                # contain multiple folder types, each with their own tag.
-                folder_elem = elem[0]
-                folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
-            yield change_type, folder
+    def _elem_to_obj(self, elem):
+        change_type = self.change_types_map[elem.tag]
+        if change_type == self.DELETE:
+            folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+        else:
+            # We can't find() the element because we don't know which tag to look for. The change element can
+            # contain multiple folder types, each with their own tag.
+            folder_elem = elem[0]
+            folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
+        return change_type, folder
 
     def get_payload(self, folder, shape, additional_fields, sync_state):
         return self._partial_get_payload(

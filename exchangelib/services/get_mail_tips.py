@@ -16,12 +16,8 @@ class GetMailTips(EWSService):
             mail_tips_requested=mail_tips_requested,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield MailTips.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
         payload = create_element(f'm:{self.SERVICE_NAME}')

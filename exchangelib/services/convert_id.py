@@ -13,6 +13,9 @@ class ConvertId(EWSService):
 
     SERVICE_NAME = 'ConvertId'
     supported_from = EXCHANGE_2007_SP1
+    cls_map = {cls.response_tag(): cls for cls in (
+        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+    )}
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
@@ -21,15 +24,8 @@ class ConvertId(EWSService):
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
 
-    def _elems_to_objs(self, elems):
-        cls_map = {cls.response_tag(): cls for cls in (
-            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        )}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem, account=None)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId

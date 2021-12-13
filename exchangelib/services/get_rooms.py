@@ -14,12 +14,8 @@ class GetRooms(EWSService):
     def call(self, room_list):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(room_list=room_list)))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Room.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, room_list):
         return set_xml_value(create_element(f'm:{self.SERVICE_NAME}'), room_list, version=self.protocol.version)

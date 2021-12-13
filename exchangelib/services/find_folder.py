@@ -47,12 +47,8 @@ class FindFolder(EWSPagingService):
                 )
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Folder.from_xml_with_root(elem=elem, root=self.root)
+    def _elem_to_obj(self, elem):
+        return Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))

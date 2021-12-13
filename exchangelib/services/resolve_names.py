@@ -47,20 +47,15 @@ class ResolveNames(EWSService):
             contact_data_shape=contact_data_shape,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            if self.return_full_contact_data:
-                mailbox_elem = elem.find(Mailbox.response_tag())
-                contact_elem = elem.find(Contact.response_tag())
-                yield (
-                    None if mailbox_elem is None else Mailbox.from_xml(elem=mailbox_elem, account=None),
-                    None if contact_elem is None else Contact.from_xml(elem=contact_elem, account=None),
-                )
-            else:
-                yield Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None)
+    def _elem_to_obj(self, elem):
+        if self.return_full_contact_data:
+            mailbox_elem = elem.find(Mailbox.response_tag())
+            contact_elem = elem.find(Contact.response_tag())
+            return (
+                None if mailbox_elem is None else Mailbox.from_xml(elem=mailbox_elem, account=None),
+                None if contact_elem is None else Contact.from_xml(elem=contact_elem, account=None),
+            )
+        return Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None)
 
     def get_payload(self, unresolved_entries, parent_folders, return_full_contact_data, search_scope,
                     contact_data_shape):
