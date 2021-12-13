@@ -742,11 +742,27 @@ class TextListField(TextField):
 
     is_list = True
 
+    def __init__(self, *args, **kwargs):
+        self.list_elem_name = kwargs.pop('list_elem_name', 'String')
+        super().__init__(*args, **kwargs)
+
+    def list_elem_request_tag(self):
+        return f't:{self.list_elem_name}'
+
+    def list_elem_response_tag(self):
+        return f'{{{self.namespace}}}{self.list_elem_name}'
+
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
         if iter_elem is not None:
-            return get_xml_attrs(iter_elem, f'{{{TNS}}}String')
+            return get_xml_attrs(iter_elem, self.list_elem_response_tag())
         return self.default
+
+    def to_xml(self, value, version):
+        field_elem = create_element(self.request_tag())
+        for v in value:
+            field_elem.append(set_xml_value(create_element(self.list_elem_request_tag()), v, version=version))
+        return field_elem
 
 
 class MessageField(TextField):
@@ -785,13 +801,8 @@ class CharField(TextField):
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if value is not None:
-            if self.is_list:
-                for v in value:
-                    if len(v) > self.max_length:
-                        raise ValueError(f"{self.name!r} value {v!r} exceeds length {self.max_length}")
-            else:
-                if len(value) > self.max_length:
-                    raise ValueError(f"{self.name!r} value {value!r} exceeds length {self.max_length}")
+            if len(value) > self.max_length:
+                raise ValueError(f"{self.name!r} value {value!r} exceeds length {self.max_length}")
         return value
 
 
@@ -808,23 +819,23 @@ class IdField(CharField):
         self.is_attribute = True
 
 
-class CharListField(CharField):
-    """Like CharField, but for lists of strings."""
-
-    is_list = True
+class CharListField(TextListField):
+    """Like TextListField, but for string values with a limited length."""
 
     def __init__(self, *args, **kwargs):
-        self.list_elem_name = kwargs.pop('list_elem_name', 'String')
+        self.max_length = kwargs.pop('max_length', 255)
+        if not 1 <= self.max_length <= 255:
+            # A field supporting messages longer than 255 chars should be TextField
+            raise ValueError("'max_length' must be in the range 1-255")
         super().__init__(*args, **kwargs)
 
-    def list_elem_tag(self):
-        return f'{{{self.namespace}}}{self.list_elem_name}'
-
-    def from_xml(self, elem, account):
-        iter_elem = elem.find(self.response_tag())
-        if iter_elem is not None:
-            return get_xml_attrs(iter_elem, self.list_elem_tag())
-        return self.default
+    def clean(self, value, version=None):
+        value = super().clean(value, version=version)
+        if value is not None:
+            for v in value:
+                if len(v) > self.max_length:
+                    raise ValueError(f"{self.name!r} value {v!r} exceeds length {self.max_length}")
+        return value
 
 
 class URIField(TextField):
