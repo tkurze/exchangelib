@@ -238,24 +238,15 @@ def set_xml_value(elem, value, version):
         elem.text = value_to_xml_text(value)
     elif isinstance(value, _element_class):
         elem.append(value)
-    elif is_iterable(value, generators_allowed=True):
-        for v in value:
-            if isinstance(v, (FieldPath, FieldOrder)):
-                elem.append(v.to_xml())
-            elif isinstance(v, EWSElement):
-                if not isinstance(version, Version):
-                    raise ValueError(f"'version' {version!r} must be a Version instance")
-                elem.append(v.to_xml(version=version))
-            elif isinstance(v, _element_class):
-                elem.append(v)
-            else:
-                raise ValueError(f'Unsupported type {type(v)} for list element {v} on elem {elem}')
     elif isinstance(value, (FieldPath, FieldOrder)):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
         if not isinstance(version, Version):
             raise ValueError(f"'version' {version!r} must be a Version instance")
         elem.append(value.to_xml(version=version))
+    elif is_iterable(value, generators_allowed=True):
+        for v in value:
+            set_xml_value(elem, v, version)
     else:
         raise ValueError(f'Unsupported type {type(value)} for value {value} on elem {elem}')
     return elem
