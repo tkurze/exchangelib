@@ -1,5 +1,6 @@
 from .common import EWSAccountService, parse_folder_elem, to_item_id
 from ..fields import FieldPath, IndexedField
+from ..folders import BaseFolder
 from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
@@ -144,7 +145,6 @@ class UpdateFolder(BaseUpdateService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def _target_elem(self, target):
-        from ..folders import BaseFolder
         if isinstance(target, (BaseFolder, FolderId)):
             return target.to_xml(version=self.account.version)
         return to_item_id(target, FolderId, version=self.account.version)

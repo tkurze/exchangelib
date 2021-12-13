@@ -1,4 +1,5 @@
 from .common import EWSAccountService, create_item_ids_element, create_shape_element
+from ..folders.base import BaseFolder
 from ..util import create_element, MNS
 
 
@@ -22,7 +23,6 @@ class GetItem(EWSAccountService):
         ))
 
     def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
         for elem in elems:
             if isinstance(elem, Exception):
                 yield elem

@@ -4,7 +4,6 @@ from ..extended_properties import ExtendedProperty
 from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
     CharField, IdElementField, AttachmentField, ExtendedPropertyListField
 from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, EWSMeta
-from ..services import CreateItem
 from ..util import require_account
 from ..version import EXCHANGE_2007_SP1
 
@@ -184,6 +183,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None):
+        from ..services import CreateItem
         if copy_to_folder and not save_copy:
             raise AttributeError("'save_copy' must be True when 'copy_to_folder' is set")
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
@@ -201,6 +201,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
         :param folder:
         :return:
         """
+        from ..services import CreateItem
         return CreateItem(account=self.account).get(
             items=[self],
             folder=folder,

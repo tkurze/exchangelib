@@ -1,5 +1,6 @@
 import logging
 from .common import EWSAccountService, create_shape_element
+from ..items import Persona, ID_ONLY
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
 
@@ -54,7 +55,6 @@ class FindPeople(EWSAccountService):
         ))
 
     def _elems_to_objs(self, elems):
-        from ..items import Persona, ID_ONLY
         for elem in elems:
             if isinstance(elem, Exception):
                 yield elem

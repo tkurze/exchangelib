@@ -4,7 +4,6 @@ from .base import BaseReplyItem, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND
 from .item import Item
 from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
 from ..properties import ReferenceItemId, ReminderMessageData
-from ..services import SendItem, MarkAsJunk
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
 
@@ -46,6 +45,7 @@ class Message(Item):
     @require_account
     def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
              send_meeting_invitations=SEND_TO_NONE):
+        from ..services import SendItem
         # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
         # not yet exist in EWS.
         if copy_to_folder and not save_copy:
@@ -153,6 +153,7 @@ class Message(Item):
         :param move_item: If true, the item will be moved to the junk folder.
         :return:
         """
+        from ..services import MarkAsJunk
         res = MarkAsJunk(account=self.account).get(
             items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
         )

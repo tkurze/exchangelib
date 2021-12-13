@@ -11,7 +11,6 @@ from ..fields import BooleanField, IntegerField, TextField, ChoiceField, URIFiel
     AssociatedCalendarItemIdField, DateOrDateTimeField, EWSElementListField, AppointmentStateField
 from ..properties import Attendee, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId, EWSMeta
 from ..recurrence import FirstOccurrence, LastOccurrence, Occurrence, DeletedOccurrence
-from ..services import CreateItem
 from ..util import set_xml_value, require_account
 from ..version import EXCHANGE_2010, EXCHANGE_2013
 
@@ -364,6 +363,7 @@ class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
         # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
         # the list of IDs.
+        from ..services import CreateItem
         res = list(CreateItem(account=self.account).call(
             items=[self],
             folder=self.folder,

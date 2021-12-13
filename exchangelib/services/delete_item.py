@@ -1,4 +1,5 @@
 from .common import EWSAccountService, create_item_ids_element
+from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
 
@@ -14,7 +15,6 @@ class DeleteItem(EWSAccountService):
     returns_elements = False
 
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
-        from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
         if delete_type not in DELETE_TYPE_CHOICES:
             raise ValueError(f"'delete_type' {delete_type} must be one of {DELETE_TYPE_CHOICES}")
         if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:

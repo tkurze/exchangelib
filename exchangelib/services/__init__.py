@@ -7,8 +7,8 @@ Exchange EWS operations overview:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/ews-operations-in-exchange
 """
 
-from .archive_item import ArchiveItem
 from .common import CHUNK_SIZE
+from .archive_item import ArchiveItem
 from .convert_id import ConvertId
 from .copy_item import CopyItem
 from .create_attachment import CreateAttachment

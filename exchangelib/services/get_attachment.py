@@ -1,6 +1,7 @@
 from itertools import chain
 
 from .common import EWSAccountService, create_attachment_ids_element
+from ..attachments import FileAttachment, ItemAttachment
 from ..util import create_element, add_xml_child, set_xml_value, DummyResponse, StreamingBase64Parser,\
     StreamingContentHandler, ElementNotFound, MNS
 
@@ -23,7 +24,6 @@ class GetAttachment(EWSAccountService):
         ))
 
     def _elems_to_objs(self, elems):
-        from ..attachments import FileAttachment, ItemAttachment
         cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
         for elem in elems:
             if isinstance(elem, Exception):
@@ -70,7 +70,6 @@ class GetAttachment(EWSAccountService):
         if not parse_opts.get('stream_file_content', False):
             return super()._get_soap_messages(body, **parse_opts)
 
-        from ..attachments import FileAttachment
         # 'body' is actually the raw response passed on by '_get_soap_parts'
         r = body
         parser = StreamingBase64Parser()

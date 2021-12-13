@@ -1,4 +1,6 @@
 from .common import EWSAccountService, to_item_id
+from ..attachments import FileAttachment, ItemAttachment
+from ..items import BaseItem
 from ..properties import ParentItemId
 from ..util import create_element, set_xml_value, MNS
 
@@ -15,7 +17,6 @@ class CreateAttachment(EWSAccountService):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
 
     def _elems_to_objs(self, elems):
-        from ..attachments import FileAttachment, ItemAttachment
         cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
         for elem in elems:
             if isinstance(elem, Exception):
@@ -24,7 +25,6 @@ class CreateAttachment(EWSAccountService):
             yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, parent_item):
-        from ..items import BaseItem
         payload = create_element(f'm:{self.SERVICE_NAME}')
         version = self.account.version
         if isinstance(parent_item, BaseItem):

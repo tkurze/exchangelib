@@ -1,4 +1,5 @@
 from .common import EWSAccountService, to_item_id
+from ..items import Persona
 from ..properties import PersonaId
 from ..util import create_element, set_xml_value, MNS
 
@@ -12,7 +13,6 @@ class GetPersona(EWSAccountService):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))
 
     def _elems_to_objs(self, elems):
-        from ..items import Persona
         elements = list(elems)
         if len(elements) != 1:
             raise ValueError('Expected exactly one element in response')
@@ -30,7 +30,6 @@ class GetPersona(EWSAccountService):
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        from ..items import Persona
         return container.findall(f'{{{MNS}}}{Persona.ELEMENT_NAME}')
 
     @classmethod

@@ -7,7 +7,6 @@ from ..fields import BooleanField, IntegerField, TextField, CharListField, Choic
     CharField, MimeContentField, FieldPath
 from ..properties import ConversationId, ParentFolderId, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId, \
     ResponseObjects, Fields
-from ..services import GetItem, CreateItem, UpdateItem, DeleteItem, MoveItem, CopyItem, ArchiveItem
 from ..util import is_iterable, require_account, require_id
 from ..version import EXCHANGE_2010, EXCHANGE_2013
 
@@ -132,6 +131,7 @@ class Item(BaseItem):
     def _create(self, message_disposition, send_meeting_invitations):
         # Return a BulkCreateResult because we want to return the ID of both the main item *and* attachments. In send
         # and send-and-save-copy mode, the server does not return an ID, so we just return True.
+        from ..services import CreateItem
         return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
@@ -169,6 +169,7 @@ class Item(BaseItem):
 
     @require_account
     def _update(self, update_fieldnames, message_disposition, conflict_resolution, send_meeting_invitations):
+        from ..services import UpdateItem
         if not self.changekey:
             raise ValueError(f'{self.__class__.__name__} must have changekey')
         if not update_fieldnames:
@@ -187,6 +188,7 @@ class Item(BaseItem):
     def refresh(self):
         # Updates the item based on fresh data from EWS
         from ..folders import Folder
+        from ..services import GetItem
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
@@ -204,6 +206,7 @@ class Item(BaseItem):
 
     @require_id
     def copy(self, to_folder):
+        from ..services import CopyItem
         # If 'to_folder' is a public folder or a folder in a different mailbox then None is returned
         return CopyItem(account=self.account).get(
             items=[self],
@@ -213,6 +216,7 @@ class Item(BaseItem):
 
     @require_id
     def move(self, to_folder):
+        from ..services import MoveItem
         res = MoveItem(account=self.account).get(
             items=[self],
             to_folder=to_folder,
@@ -250,6 +254,7 @@ class Item(BaseItem):
 
     @require_id
     def _delete(self, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
+        from ..services import DeleteItem
         DeleteItem(account=self.account).get(
             items=[self],
             delete_type=delete_type,
@@ -260,6 +265,7 @@ class Item(BaseItem):
 
     @require_id
     def archive(self, to_folder):
+        from ..services import ArchiveItem
         return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)
 
     def attach(self, attachments):

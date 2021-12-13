@@ -1,5 +1,7 @@
 from .common import to_item_id
 from ..ewsdatetime import EWSDate
+from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+    SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY, Item, CalendarItem
 from ..properties import ItemId
 from ..util import create_element, MNS
 from ..version import EXCHANGE_2013_SP1
@@ -18,8 +20,6 @@ class UpdateItem(BaseUpdateService):
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
-            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
             raise ValueError(
                 f"'conflict_resolution' {conflict_resolution!r} must be one of {CONFLICT_RESOLUTION_CHOICES}"
@@ -47,7 +47,6 @@ class UpdateItem(BaseUpdateService):
         ))
 
     def _elems_to_objs(self, elems):
-        from ..items import Item
         for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem
@@ -55,7 +54,6 @@ class UpdateItem(BaseUpdateService):
             yield Item.id_from_xml(elem)
 
     def _update_elems(self, target, fieldnames):
-        from ..items import CalendarItem
         fieldnames_copy = list(fieldnames)
 
         if target.__class__ == CalendarItem:
@@ -70,7 +68,6 @@ class UpdateItem(BaseUpdateService):
         yield from super()._update_elems(target=target, fieldnames=fieldnames_copy)
 
     def _get_value(self, target, field):
-        from ..items import CalendarItem
         value = super()._get_value(target, field)
 
         if target.__class__ == CalendarItem:

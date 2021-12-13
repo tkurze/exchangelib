@@ -8,8 +8,6 @@ from ..items import Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
 from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
-from ..services import FindFolder, GetFolder, FindItem, FindPeople, SyncFolderItems, SyncFolderHierarchy, \
-    SubscribeToPull, SubscribeToPush, SubscribeToStreaming
 from ..util import require_account
 
 log = logging.getLogger(__name__)
@@ -179,6 +177,7 @@ class FolderCollection(SearchableMixIn):
 
         :return: a generator for the returned item IDs or items
         """
+        from ..services import FindItem
         if not self.folders:
             log.debug('Folder list is empty')
             return
@@ -201,7 +200,7 @@ class FolderCollection(SearchableMixIn):
             additional_fields,
             restriction.q if restriction else None,
         )
-        yield from FindItem(account=self.account, chunk_size=page_size).call(
+        yield from FindItem(account=self.account, page_size=page_size).call(
             folders=self.folders,
             additional_fields=additional_fields,
             restriction=restriction,
@@ -238,6 +237,7 @@ class FolderCollection(SearchableMixIn):
 
         :return: a generator for the returned personas
         """
+        from ..services import FindPeople
         folder = self._get_single_folder()
         if not folder:
             return
@@ -249,7 +249,7 @@ class FolderCollection(SearchableMixIn):
             field_validator=Persona.validate_field
         )
 
-        yield from FindPeople(account=self.account, chunk_size=page_size).call(
+        yield from FindPeople(account=self.account, page_size=page_size).call(
                 folder=folder,
                 additional_fields=additional_fields,
                 restriction=restriction,
@@ -321,6 +321,7 @@ class FolderCollection(SearchableMixIn):
     @require_account
     def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
                      offset=0):
+        from ..services import FindFolder
         # 'depth' controls whether to return direct children or recurse into sub-folders
         from .base import BaseFolder, Folder
         if q is None:
@@ -354,7 +355,7 @@ class FolderCollection(SearchableMixIn):
             (FieldPath(field=BaseFolder.get_field_by_fieldname(f)) for f in self.REQUIRED_FOLDER_FIELDS)
         )
 
-        yield from FindFolder(account=self.account, chunk_size=page_size).call(
+        yield from FindFolder(account=self.account, page_size=page_size).call(
                 folders=self.folders,
                 additional_fields=additional_fields,
                 restriction=restriction,
@@ -365,6 +366,7 @@ class FolderCollection(SearchableMixIn):
         )
 
     def get_folders(self, additional_fields=None):
+        from ..services import GetFolder
         # Expand folders with their full set of properties
         from .base import BaseFolder
         if not self.folders:
@@ -385,31 +387,40 @@ class FolderCollection(SearchableMixIn):
                 shape=ID_ONLY,
         )
 
-    def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+    def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
+        from ..services import SubscribeToPull
         if not self.folders:
             log.debug('Folder list is empty')
             return
+        if not event_types:
+            event_types = SubscribeToPull.EVENT_TYPES
         yield from SubscribeToPull(account=self.account).call(
             folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
         )
 
-    def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
-                          status_frequency=1):
+    def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
+        from ..services import SubscribeToPush
         if not self.folders:
             log.debug('Folder list is empty')
             return
+        if not event_types:
+            event_types = SubscribeToPush.EVENT_TYPES
         yield from SubscribeToPush(account=self.account).call(
             folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
             url=callback_url,
         )
 
-    def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+    def subscribe_to_streaming(self, event_types=None):
+        from ..services import SubscribeToStreaming
         if not self.folders:
             log.debug('Folder list is empty')
             return
+        if not event_types:
+            event_types = SubscribeToStreaming.EVENT_TYPES
         yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
+        from ..services import SyncFolderItems
         folder = self._get_single_folder()
         if not folder:
             return
@@ -442,6 +453,7 @@ class FolderCollection(SearchableMixIn):
         raise SyncCompleted(sync_state=svc.sync_state)
 
     def sync_hierarchy(self, sync_state=None, only_fields=None):
+        from ..services import SyncFolderHierarchy
         folder = self._get_single_folder()
         if not folder:
             return

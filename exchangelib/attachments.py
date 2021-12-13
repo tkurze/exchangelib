@@ -5,7 +5,6 @@ import mimetypes
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
     ItemField, IdField, FieldPath
 from .properties import EWSElement, EWSMeta
-from .services import GetAttachment, CreateAttachment, DeleteAttachment
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +53,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
         super().clean(version=version)
 
     def attach(self):
+        from .services import CreateAttachment
         # Adds this attachment to an item and updates the changekey of the parent item
         if self.attachment_id:
             raise ValueError('This attachment has already been created')
@@ -72,6 +72,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
         self.attachment_id = attachment_id
 
     def detach(self):
+        from .services import DeleteAttachment
         # Deletes an attachment remotely and updates the changekey of the parent item
         if not self.attachment_id:
             raise ValueError('This attachment has not been created')
@@ -187,6 +188,7 @@ class ItemAttachment(Attachment):
     @property
     def item(self):
         from .folders import BaseFolder
+        from .services import GetAttachment
         if self.attachment_id is None:
             return self._item
         if self._item is not None:
@@ -245,6 +247,7 @@ class FileAttachmentIO(io.RawIOBase):
             return len(output)
 
     def __enter__(self):
+        from .services import GetAttachment
         self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
             attachment_id=self._attachment.attachment_id
         )

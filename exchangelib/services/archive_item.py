@@ -1,4 +1,5 @@
 from .common import EWSAccountService, create_folder_ids_element, create_item_ids_element
+from ..items import Item
 from ..util import create_element, MNS
 from ..version import EXCHANGE_2013
 
@@ -21,7 +22,6 @@ class ArchiveItem(EWSAccountService):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
     def _elems_to_objs(self, elems):
-        from ..items import Item
         for elem in elems:
             if isinstance(elem, Exception):
                 yield elem

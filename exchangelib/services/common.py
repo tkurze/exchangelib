@@ -4,6 +4,7 @@ import traceback
 from itertools import chain
 
 from .. import errors
+from ..attachments import AttachmentId
 from ..credentials import IMPERSONATION, OAuth2Credentials
 from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired, ErrorBatchProcessingStopped, \
     ErrorQuotaExceeded, ErrorCannotDeleteObject, ErrorCreateItemAccessDenied, ErrorFolderNotFound, \
@@ -19,6 +20,8 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark, \
     ErrorInvalidSyncStateData, ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, \
     ErrorConnectionFailedTransientError
+from ..folders import BaseFolder, Folder, RootOfHierarchy
+from ..items import BaseItem
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId, FolderId, \
     DistinguishedFolderId
 from ..transport import wrap
@@ -816,8 +819,6 @@ def to_item_id(item, item_cls, version):
     if isinstance(item, item_cls):
         # Allow any subclass of item_cls, e.g. OccurrenceItemId when ItemId is passed
         return item
-    from ..folders import BaseFolder
-    from ..items import BaseItem
     if isinstance(item, (BaseFolder, BaseItem)):
         return item.to_id_xml(version=version)
     if isinstance(item, (tuple, list)):
@@ -865,7 +866,6 @@ def create_item_ids_element(items, version, tag='m:ItemIds'):
 
 
 def create_attachment_ids_element(items, version):
-    from ..attachments import AttachmentId
     attachment_ids = create_element('m:AttachmentIds')
     for item in items:
         attachment_id = item if isinstance(item, AttachmentId) else AttachmentId(id=item)
@@ -876,7 +876,6 @@ def create_attachment_ids_element(items, version):
 
 
 def parse_folder_elem(elem, folder, account):
-    from ..folders import BaseFolder, Folder, RootOfHierarchy
     if isinstance(elem, Exception):
         return elem
     if isinstance(folder, RootOfHierarchy):

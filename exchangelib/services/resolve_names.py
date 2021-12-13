@@ -2,6 +2,7 @@ import logging
 
 from .common import EWSService
 from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
+from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES,Contact
 from ..properties import Mailbox
 from ..util import create_element, set_xml_value, add_xml_child, MNS
 from ..version import EXCHANGE_2010_SP2
@@ -27,7 +28,6 @@ class ResolveNames(EWSService):
 
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
-        from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES
         if self.chunk_size > 100:
             log.warning(
                 'Chunk size %s is dangerously high. %s supports returning at most 100 candidates for a lookup',
@@ -48,7 +48,6 @@ class ResolveNames(EWSService):
         ))
 
     def _elems_to_objs(self, elems):
-        from ..items import Contact
         for elem in elems:
             if isinstance(elem, Exception):
                 yield elem

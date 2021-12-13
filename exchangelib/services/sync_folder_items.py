@@ -1,5 +1,6 @@
 from .common import add_xml_child, create_item_ids_element
 from .sync_folder_hierarchy import SyncFolder
+from ..folders import BaseFolder
 from ..properties import ItemId
 from ..util import xml_text_to_value, peek, TNS, MNS
 
@@ -44,7 +45,6 @@ class SyncFolderItems(SyncFolder):
         )))
 
     def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
         change_types = self._change_types_map()
         for elem in elems:
             if isinstance(elem, Exception):

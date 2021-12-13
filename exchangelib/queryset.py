@@ -8,7 +8,6 @@ from .fields import FieldPath, FieldOrder
 from .items import CalendarItem, ID_ONLY
 from .properties import InvalidField
 from .restriction import Q
-from .services import CHUNK_SIZE
 from .version import EXCHANGE_2010
 
 log = logging.getLogger(__name__)
@@ -306,6 +305,7 @@ class QuerySet(SearchableMixIn):
         raise IndexError()
 
     def _getitem_slice(self, s):
+        from .services import CHUNK_SIZE
         if ((s.start or 0) < 0) or ((s.stop or 0) < 0) or ((s.step or 0) < 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.

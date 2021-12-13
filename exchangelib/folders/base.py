@@ -14,10 +14,6 @@ from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOIC
 from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, UserConfiguration, \
     UserConfigurationName, UserConfigurationNameMNS, EWSMeta
 from ..queryset import SearchableMixIn, DoesNotExist
-from ..services import CreateFolder, UpdateFolder, DeleteFolder, EmptyFolder, GetUserConfiguration, \
-    CreateUserConfiguration, UpdateUserConfiguration, DeleteUserConfiguration, SubscribeToPush, SubscribeToPull, \
-    Unsubscribe, GetEvents, GetStreamingEvents, MoveFolder
-from ..services.get_user_configuration import ALL
 from ..util import TNS, require_id, is_iterable
 from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
 
@@ -314,6 +310,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         return self.account.bulk_create(folder=self, items=items, *args, **kwargs)
 
     def save(self, update_fields=None):
+        from ..services import CreateFolder, UpdateFolder
         if self.id is None:
             # New folder
             if update_fields:
@@ -347,6 +344,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         return self
 
     def move(self, to_folder):
+        from ..services import MoveFolder
         res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
         folder_id, changekey = res.id, res.changekey
         if self.id != folder_id:
@@ -357,6 +355,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         self.root.update_folder(self)  # Update the folder in the cache
 
     def delete(self, delete_type=HARD_DELETE):
+        from ..services import DeleteFolder
         if delete_type not in DELETE_TYPE_CHOICES:
             raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         DeleteFolder(account=self.account).get(folders=[self], delete_type=delete_type)
@@ -364,6 +363,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         self._id = None
 
     def empty(self, delete_type=HARD_DELETE, delete_sub_folders=False):
+        from ..services import EmptyFolder
         if delete_type not in DELETE_TYPE_CHOICES:
             raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         EmptyFolder(account=self.account).get(
@@ -479,7 +479,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         return self
 
     @require_id
-    def get_user_configuration(self, name, properties=ALL):
+    def get_user_configuration(self, name, properties=None):
+        from ..services import GetUserConfiguration
+        from ..services.get_user_configuration import ALL
+        if properties is None:
+            properties = ALL
         return GetUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self),
             properties=properties,
@@ -487,6 +491,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @require_id
     def create_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
+        from ..services import CreateUserConfiguration
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -497,6 +502,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @require_id
     def update_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
+        from ..services import UpdateUserConfiguration
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -507,12 +513,13 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @require_id
     def delete_user_configuration(self, name):
+        from ..services import DeleteUserConfiguration
         return DeleteUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
         )
 
     @require_id
-    def subscribe_to_pull(self, event_types=SubscribeToPull.EVENT_TYPES, watermark=None, timeout=60):
+    def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
         """Create a pull subscription.
 
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPull.EVENT_TYPES
@@ -521,6 +528,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         GetEvents request for this subscription.
         :return: The subscription ID and a watermark
         """
+        from ..services import SubscribeToPull
+        if event_types is None:
+            event_types = SubscribeToPull.EVENT_TYPES
         s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
             event_types=event_types, watermark=watermark, timeout=timeout,
         ))
@@ -532,8 +542,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         return s_id
 
     @require_id
-    def subscribe_to_push(self, callback_url, event_types=SubscribeToPush.EVENT_TYPES, watermark=None,
-                          status_frequency=1):
+    def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
         """Create a push subscription.
 
         :param callback_url: A client-defined URL that the server will call
@@ -542,6 +551,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :param status_frequency: The frequency, in minutes, that the callback URL will be called with.
         :return: The subscription ID and a watermark
         """
+        from ..services import SubscribeToPush
+        if event_types is None:
+            event_types = SubscribeToPush.EVENT_TYPES
         s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
             event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
         ))
@@ -553,12 +565,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         return s_id
 
     @require_id
-    def subscribe_to_streaming(self, event_types=SubscribeToPush.EVENT_TYPES):
+    def subscribe_to_streaming(self, event_types=None):
         """Create a streaming subscription.
 
         :param event_types: List of event types to subscribe to. Possible values defined in SubscribeToPush.EVENT_TYPES
         :return: The subscription ID
         """
+        from ..services import SubscribeToStreaming
+        if event_types is None:
+            event_types = SubscribeToStreaming.EVENT_TYPES
         s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(
             event_types=event_types,
         ))
@@ -590,6 +605,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         This method doesn't need the current folder instance, but it makes sense to keep the method along the other
         sync methods.
         """
+        from ..services import Unsubscribe
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
@@ -648,6 +664,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         This method doesn't need the current folder instance, but it makes sense to keep the method along the other
         sync methods.
         """
+        from ..services import GetEvents
         svc = GetEvents(account=self.account)
         while True:
             notification = svc.get(subscription_id=subscription_id, watermark=watermark)
@@ -668,6 +685,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         This method doesn't need the current folder instance, but it makes sense to keep the method along the other
         sync methods.
         """
+        from ..services import GetStreamingEvents
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         request_timeout = connection_timeout*60 + 60
         svc = GetStreamingEvents(account=self.account, timeout=request_timeout)

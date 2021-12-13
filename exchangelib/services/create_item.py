@@ -1,4 +1,7 @@
 from .common import EWSAccountService
+from ..folders import BaseFolder
+from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
+    SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES, BulkCreateResult
 from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
@@ -14,9 +17,6 @@ class CreateItem(EWSAccountService):
     element_container_name = f'{{{MNS}}}Items'
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
-        from ..folders import BaseFolder
-        from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
-            SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
             raise ValueError(
                 f"'message_disposition' {message_disposition!r} must be one of {MESSAGE_DISPOSITION_CHOICES}"
@@ -46,7 +46,6 @@ class CreateItem(EWSAccountService):
         ))
 
     def _elems_to_objs(self, elems):
-        from ..items import BulkCreateResult
         for elem in elems:
             if isinstance(elem, (Exception, type(None))):
                 yield elem

@@ -1,4 +1,5 @@
 from .common import EWSAccountService, create_folder_ids_element
+from ..folders import BaseFolder
 from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
@@ -10,7 +11,6 @@ class MoveFolder(EWSAccountService):
     element_container_name = f'{{{MNS}}}Folders'
 
     def call(self, folders, to_folder):
-        from ..folders import BaseFolder
         if not isinstance(to_folder, (BaseFolder, FolderId)):
             raise ValueError(f"'to_folder' {to_folder!r} must be a Folder or FolderId instance")
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
