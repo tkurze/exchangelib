@@ -1,5 +1,5 @@
 import logging
-from .common import EWSAccountService, create_shape_element
+from .common import EWSPagingService, create_shape_element
 from ..items import Persona, ID_ONLY
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
@@ -7,7 +7,7 @@ from ..version import EXCHANGE_2013
 log = logging.getLogger(__name__)
 
 
-class FindPeople(EWSAccountService):
+class FindPeople(EWSPagingService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation"""
 
     SERVICE_NAME = 'FindPeople'
@@ -49,7 +49,7 @@ class FindPeople(EWSAccountService):
                 query_string=query_string,
                 shape=shape,
                 depth=depth,
-                page_size=self.chunk_size,
+                page_size=self.page_size,
                 offset=offset,
             )
         ))

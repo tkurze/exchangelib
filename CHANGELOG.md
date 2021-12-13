@@ -5,9 +5,14 @@ HEAD
 ----
 - Fixed some spelling mistakes:
   - `ALL_OCCURRENCIES` to `ALL_OCCURRENCES` in `exchangelib.items.base`
-  - `Persona.orgnaization_main_phones` to `organization_main_phones`
+  - `Persona.orgnaization_main_phones` to `Persona.organization_main_phones`
 - Removed deprecated methods `EWSTimeZone.localize()`, `EWSTimeZone.normalize()`,
   `EWSTimeZone.timezone()` and `QuerySet.iterator()`.
+- Disambiguated `chunk_size` and `page_size` in querysets and services. Add a
+  new `QuerySet.chunk_size` attribute and let it replace the task that
+  `QuerySet.page_size` previously had. Chunk size is the number of items we send
+  in e.g. a `GetItem` call, while `page_size` is the number of items we request
+  per page in services like `FindItem` that support paging.
 
 
 4.6.2

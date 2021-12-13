@@ -29,7 +29,7 @@ class SyncFolderItems(SyncFolder):
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
         if max_changes_returned is None:
-            max_changes_returned = self.chunk_size
+            max_changes_returned = self.page_size
         if max_changes_returned <= 0:
             raise ValueError(f"'max_changes_returned' {max_changes_returned} must be a positive integer")
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:

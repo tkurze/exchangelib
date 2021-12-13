@@ -1,14 +1,14 @@
 import abc
 import logging
 
-from .common import EWSAccountService, add_xml_child, create_folder_ids_element, create_shape_element, parse_folder_elem
+from .common import EWSPagingService, add_xml_child, create_folder_ids_element, create_shape_element, parse_folder_elem
 from ..properties import FolderId
 from ..util import create_element, xml_text_to_value, MNS, TNS
 
 log = logging.getLogger(__name__)
 
 
-class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
+class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
     """Base class for SyncFolderHierarchy and SyncFolderItems."""
 
     element_container_name = f'{{{MNS}}}Changes'

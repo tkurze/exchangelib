@@ -373,7 +373,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             # We don't know exactly what was deleted, so invalidate the entire folder cache to be safe
             self.root.clear_cache()
 
-    def wipe(self, page_size=None, _seen=None, _level=0):
+    def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
         # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         _seen = _seen or set()
@@ -396,13 +396,18 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 self.empty(delete_sub_folders=False)
             except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
                 log.warning('Not allowed to empty %s. Trying to delete items instead', self)
+                kwargs = {}
+                if page_size is not None:
+                    kwargs['page_size'] = page_size
+                if chunk_size is not None:
+                    kwargs['chunk_size'] = chunk_size
                 try:
-                    self.all().delete(**dict(page_size=page_size) if page_size else {})
+                    self.all().delete(**kwargs)
                 except (ErrorAccessDenied, ErrorCannotDeleteObject, ErrorItemNotFound):
                     log.warning('Not allowed to delete items in %s', self)
         _level += 1
         for f in self.children:
-            f.wipe(page_size=page_size, _seen=_seen, _level=_level)
+            f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
             # Remove non-distinguished children that are empty and have no subfolders
             if f.is_deletable and not f.children:
                 log.warning('Deleting folder %s', f)

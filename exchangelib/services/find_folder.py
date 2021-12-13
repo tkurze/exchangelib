@@ -1,10 +1,10 @@
-from .common import EWSAccountService, create_shape_element
+from .common import EWSPagingService, create_shape_element
 from ..folders import Folder
 from ..util import create_element, set_xml_value, TNS, MNS
 from ..version import EXCHANGE_2010
 
 
-class FindFolder(EWSAccountService):
+class FindFolder(EWSPagingService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder-operation"""
 
     SERVICE_NAME = 'FindFolder'
@@ -42,7 +42,7 @@ class FindFolder(EWSAccountService):
                     restriction=restriction,
                     shape=shape,
                     depth=depth,
-                    page_size=self.chunk_size,
+                    page_size=self.page_size,
                     offset=offset,
                 )
         ))

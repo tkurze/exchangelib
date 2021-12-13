@@ -869,13 +869,6 @@ a.inbox.filter(subject__startswith='Invoice').mark_as_junk(
 )
 ```
 
-You can change the default page size of bulk operations if you have a slow
-or busy server.
-
-```python
-a.inbox.filter(subject__startswith='Invoice').delete(page_size=25)
-```
-
 ## Searching
 
 Searching is modeled after the Django QuerySet API, and a large part of
@@ -1121,16 +1114,25 @@ FolderCollection(account=a, folders=[a.inbox, a.calendar]).filter(subject='foo')
 
 ## Paging
 
-Paging EWS services, e.g. `FindItem` and `FindFolder`, have a default page size of 100. You can
-change this value globally if you want:
+Paging EWS services, e.g. `FindItem` and `FindFolder`, have a default page size of 100. This is the
+number of items fetched per page when paging is requested. You can change this value globally:
+
+```python
+import exchangelib.services
+exchangelib.services.PAGE_SIZE = 25
+```
+
+Other EWS services like `GetItem` and `GetFolder`, have a default chunk size of 100. This value is
+used when we request a large number of items and need to split up the requested items into multiple
+requests. You can change this value globally:
 
 ```python
 import exchangelib.services
 exchangelib.services.CHUNK_SIZE = 25
 ```
 
-If you are working with very small or very large items, this may not be a reasonable
-value. For example, if you want to retrieve and save emails with large attachments,
+If you are working with very small or very large items, these may not be a reasonable
+values. For example, if you want to retrieve and save emails with large attachments,
 you can change this value on a per-queryset basis:
 
 ```python
@@ -1138,10 +1140,17 @@ from exchangelib import Account
 
 a = Account(...)
 qs = a.inbox.all().only('mime_content')
-qs.page_size = 5
+qs.page_size = 200  # Number of IDs for FindItem to get per page
+qs.chunk_size = 5  # Number of full items for GetItem to request per call
 for msg in qs:
     with open('%s.eml' % msg.item_id, 'w') as f:
         f.write(msg.mime_content)
+```
+
+You can also change the default page and chunk size of bulk operations via QuerySets:
+
+```python
+a.inbox.filter(subject__startswith='Invoice').delete(page_size=1000, chunk_size=100)
 ```
 
 Finally, the bulk methods defined on the `Account` class have an optional `chunk_size`

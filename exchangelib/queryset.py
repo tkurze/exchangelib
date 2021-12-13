@@ -72,6 +72,7 @@ class QuerySet(SearchableMixIn):
         self.return_format = self.NONE
         self.calendar_view = None
         self.page_size = None
+        self.chunk_size = None
         self.max_items = None
         self.offset = 0
         self._depth = None
@@ -102,6 +103,7 @@ class QuerySet(SearchableMixIn):
         new_qs.return_format = self.return_format
         new_qs.calendar_view = self.calendar_view
         new_qs.page_size = self.page_size
+        new_qs.chunk_size = self.chunk_size
         new_qs.max_items = self.max_items
         new_qs.offset = self.offset
         new_qs._depth = self._depth
@@ -228,7 +230,7 @@ class QuerySet(SearchableMixIn):
                 items = self.folder_collection.account.fetch(
                     ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
-                    chunk_size=self.page_size,
+                    chunk_size=self.chunk_size,
                 )
             else:
                 if not additional_fields:
@@ -305,7 +307,7 @@ class QuerySet(SearchableMixIn):
         raise IndexError()
 
     def _getitem_slice(self, s):
-        from .services import CHUNK_SIZE
+        from .services import PAGE_SIZE
         if ((s.start or 0) < 0) or ((s.stop or 0) < 0) or ((s.step or 0) < 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
@@ -319,7 +321,7 @@ class QuerySet(SearchableMixIn):
             new_qs.offset = s.start
         elif s.stop is not None:
             new_qs.max_items = s.stop
-        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items < CHUNK_SIZE:
+        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items < PAGE_SIZE:
             new_qs.page_size = new_qs.max_items
         return islice(new_qs.__iter__(), None, None, s.step)
 
@@ -528,16 +530,17 @@ class QuerySet(SearchableMixIn):
         return items[0]
 
     def count(self, page_size=1000):
-        """Get the query count, with as little effort as possible 'page_size' is the number of items to
-        fetch from the server per request. We're only fetching the IDs, so keep it high
+        """Get the query count, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
         """
         new_qs = self._copy_self()
         new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         new_qs.page_size = page_size
+        # 'chunk_size' not needed since we never need to call GetItem
         return len(list(new_qs.__iter__()))
 
     def exists(self):
@@ -553,42 +556,45 @@ class QuerySet(SearchableMixIn):
         new_qs.return_format = self.NONE
         return new_qs
 
-    def delete(self, page_size=1000, **delete_kwargs):
-        """Delete the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and delete per request. We're only fetching the IDs, so keep it high.
+    def delete(self, page_size=1000, chunk_size=100, **delete_kwargs):
+        """Delete the items matching the query, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to delete per request. (Default value = 100)
         :param delete_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_delete(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **delete_kwargs
         )
 
-    def send(self, page_size=1000, **send_kwargs):
-        """Send the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and send per request. We're only fetching the IDs, so keep it high.
+    def send(self, page_size=1000, chunk_size=100, **send_kwargs):
+        """Send the items matching the query, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to send per request. (Default value = 100)
         :param send_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_send(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **send_kwargs
         )
 
-    def copy(self, to_folder, page_size=1000, **copy_kwargs):
-        """Copy the items matching the query, with as little effort as possible. 'page_size' is the number of items
-        to fetch and copy per request. We're only fetching the IDs, so keep it high.
+    def copy(self, to_folder, page_size=1000, chunk_size=100, **copy_kwargs):
+        """Copy the items matching the query, with as little effort as possible
 
         :param to_folder:
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to copy per request. (Default value = 100)
         :param copy_kwargs:
         """
         ids = self._id_only_copy_self()
@@ -596,52 +602,58 @@ class QuerySet(SearchableMixIn):
         return self.folder_collection.account.bulk_copy(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **copy_kwargs
         )
 
-    def move(self, to_folder, page_size=1000):
+    def move(self, to_folder, page_size=1000, chunk_size=100):
         """Move the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and move per request. We're only fetching the IDs, so keep it high.
 
         :param to_folder:
-        :param page_size: (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to move per request. (Default value = 100)
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_move(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
         )
 
-    def archive(self, to_folder, page_size=1000):
+    def archive(self, to_folder, page_size=1000, chunk_size=100):
         """Archive the items matching the query, with as little effort as possible. 'page_size' is the number of items
         to fetch and move per request. We're only fetching the IDs, so keep it high.
 
         :param to_folder:
-        :param page_size: (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to archive per request. (Default value = 100)
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_archive(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
         )
 
-    def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+    def mark_as_junk(self, page_size=1000, chunk_size=1000, **mark_as_junk_kwargs):
         """Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
         items to fetch and mark per request. We're only fetching the IDs, so keep it high.
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to mark as junk per request. (Default value = 100)
         :param mark_as_junk_kwargs:
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_mark_as_junk(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **mark_as_junk_kwargs
         )
 

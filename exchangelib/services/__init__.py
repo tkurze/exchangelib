@@ -7,7 +7,7 @@ Exchange EWS operations overview:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/ews-operations-in-exchange
 """
 
-from .common import CHUNK_SIZE
+from .common import CHUNK_SIZE, PAGE_SIZE
 from .archive_item import ArchiveItem
 from .convert_id import ConvertId
 from .copy_item import CopyItem
@@ -58,6 +58,7 @@ from .upload_items import UploadItems
 
 __all__ = [
     'CHUNK_SIZE',
+    'PAGE_SIZE',
     'ArchiveItem',
     'ConvertId',
     'CopyItem',

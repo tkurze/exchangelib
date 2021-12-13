@@ -31,7 +31,8 @@ from ..version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
 
-CHUNK_SIZE = 100  # A default chunk size for all services
+PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
 KNOWN_EXCEPTIONS = (
     ErrorAccessDenied,
@@ -94,9 +95,9 @@ class EWSService(metaclass=abc.ABCMeta):
     supports_paging = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
-        self.chunk_size = chunk_size or CHUNK_SIZE  # The number of items to send in a single request
+        self.chunk_size = chunk_size or CHUNK_SIZE
         if not isinstance(self.chunk_size, int):
-            raise ValueError(f"'chunk_size' {chunk_size!r} must be an integer")
+            raise ValueError(f"'chunk_size' {self.chunk_size!r} must be an integer")
         if self.chunk_size < 1:
             raise ValueError("'chunk_size' must be a positive number")
         if self.supported_from and protocol.version.build < self.supported_from:
@@ -625,47 +626,70 @@ class EWSService(metaclass=abc.ABCMeta):
             return list(container)
         return [True]
 
-    def _get_elems_from_page(self, elem, max_items, total_item_count):
-        container = elem.find(self.element_container_name)
-        if container is None:
-            raise MalformedResponseError(
-                f'No {self.element_container_name} elements in ResponseMessage ({xml_to_str(elem)})'
-            )
-        for e in self._get_elements_in_container(container=container):
-            if max_items and total_item_count >= max_items:
-                # No need to continue. Break out of elements loop
-                log.debug("'max_items' count reached (elements)")
-                break
-            yield e
 
-    def _get_pages(self, payload_func, kwargs, expected_message_count):
-        """Request a page, or a list of pages if multiple collections are pages in a single request. Return each
-        page.
-        """
-        payload = payload_func(**kwargs)
-        page_elems = list(self._get_elements(payload=payload))
-        if len(page_elems) != expected_message_count:
-            raise MalformedResponseError(
-                f"Expected {expected_message_count} items in 'response', got {len(page_elems)}"
-            )
-        return page_elems
+class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
+    """Base class for services that act on items concerning a single Mailbox on the server."""
 
-    @staticmethod
-    def _get_next_offset(paging_infos):
-        next_offsets = {p['next_offset'] for p in paging_infos if p['next_offset'] is not None}
-        if not next_offsets:
-            # Paging is done for all messages
-            return None
-        # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-        # because the collections that we are iterating may change while iterating. We'll do our best but we cannot
-        # guarantee 100% consistency when large collections are simultaneously being changed on the server.
-        #
-        # It's not possible to supply a per-folder offset when iterating multiple folders, so we'll just have to
-        # choose something that is most likely to work. Select the lowest of all the values to at least make sure
-        # we don't miss any items, although we may then get duplicates ¯\_(ツ)_/¯
-        if len(next_offsets) > 1:
-            log.warning('Inconsistent next_offset values: %r. Using lowest value', next_offsets)
-        return min(next_offsets)
+    NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
+    # Marks services that need affinity to the backend server
+    prefer_affinity = False
+
+    def __init__(self, *args, **kwargs):
+        self.account = kwargs.pop('account')
+        kwargs['protocol'] = self.account.protocol
+        super().__init__(*args, **kwargs)
+
+    @property
+    def _version_hint(self):
+        return self.account.version
+
+    @_version_hint.setter
+    def _version_hint(self, value):
+        self.account.version = value
+
+    def _handle_response_cookies(self, session):
+        super()._handle_response_cookies(session=session)
+
+        # See self._extra_headers() for documentation on affinity
+        if self.prefer_affinity:
+            for cookie in session.cookies:
+                if cookie.name == 'X-BackEndOverrideCookie':
+                    self.account.affinity_cookie = cookie.value
+                    break
+
+    def _extra_headers(self, session):
+        headers = super()._extra_headers(session=session)
+        # See
+        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+        headers['X-AnchorMailbox'] = self.account.primary_smtp_address
+
+        # See
+        # https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/how-to-maintain-affinity-between-group-of-subscriptions-and-mailbox-server
+        if self.prefer_affinity:
+            headers['X-PreferServerAffinity'] = 'True'
+            if self.account.affinity_cookie:
+                headers['X-BackEndOverrideCookie'] = self.account.affinity_cookie
+        return headers
+
+    @property
+    def _account_to_impersonate(self):
+        if self.account.access_type == IMPERSONATION:
+            return self.account.identity
+        return None
+
+    @property
+    def _timezone(self):
+        return self.account.default_timezone
+
+
+class EWSPagingService(EWSAccountService):
+    def __init__(self, *args, **kwargs):
+        self.page_size = kwargs.pop('page_size', None) or PAGE_SIZE
+        if not isinstance(self.page_size, int):
+            raise ValueError(f"'page_size' {self.page_size!r} must be an integer")
+        if self.page_size < 1:
+            raise ValueError("'page_size' must be a positive number")
+        super().__init__(*args, **kwargs)
 
     def _paged_call(self, payload_func, max_items, folders, **kwargs):
         """Call a service that supports paging requests. Return a generator over all response items. Keeps track of
@@ -757,60 +781,47 @@ class EWSService(metaclass=abc.ABCMeta):
             paging_elem = None
         return paging_elem, next_offset
 
+    def _get_elems_from_page(self, elem, max_items, total_item_count):
+        container = elem.find(self.element_container_name)
+        if container is None:
+            raise MalformedResponseError(
+                f'No {self.element_container_name} elements in ResponseMessage ({xml_to_str(elem)})'
+            )
+        for e in self._get_elements_in_container(container=container):
+            if max_items and total_item_count >= max_items:
+                # No need to continue. Break out of elements loop
+                log.debug("'max_items' count reached (elements)")
+                break
+            yield e
 
-class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
-    """Base class for services that act on items concerning a single Mailbox on the server."""
+    def _get_pages(self, payload_func, kwargs, expected_message_count):
+        """Request a page, or a list of pages if multiple collections are pages in a single request. Return each
+        page.
+        """
+        payload = payload_func(**kwargs)
+        page_elems = list(self._get_elements(payload=payload))
+        if len(page_elems) != expected_message_count:
+            raise MalformedResponseError(
+                f"Expected {expected_message_count} items in 'response', got {len(page_elems)}"
+            )
+        return page_elems
 
-    NO_VALID_SERVER_VERSIONS = ErrorInvalidSchemaVersionForMailboxVersion
-    # Marks services that need affinity to the backend server
-    prefer_affinity = False
-
-    def __init__(self, *args, **kwargs):
-        self.account = kwargs.pop('account')
-        kwargs['protocol'] = self.account.protocol
-        super().__init__(*args, **kwargs)
-
-    @property
-    def _version_hint(self):
-        return self.account.version
-
-    @_version_hint.setter
-    def _version_hint(self, value):
-        self.account.version = value
-
-    def _handle_response_cookies(self, session):
-        super()._handle_response_cookies(session=session)
-
-        # See self._extra_headers() for documentation on affinity
-        if self.prefer_affinity:
-            for cookie in session.cookies:
-                if cookie.name == 'X-BackEndOverrideCookie':
-                    self.account.affinity_cookie = cookie.value
-                    break
-
-    def _extra_headers(self, session):
-        headers = super()._extra_headers(session=session)
-        # See
-        # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
-        headers['X-AnchorMailbox'] = self.account.primary_smtp_address
-
-        # See
-        # https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/how-to-maintain-affinity-between-group-of-subscriptions-and-mailbox-server
-        if self.prefer_affinity:
-            headers['X-PreferServerAffinity'] = 'True'
-            if self.account.affinity_cookie:
-                headers['X-BackEndOverrideCookie'] = self.account.affinity_cookie
-        return headers
-
-    @property
-    def _account_to_impersonate(self):
-        if self.account.access_type == IMPERSONATION:
-            return self.account.identity
-        return None
-
-    @property
-    def _timezone(self):
-        return self.account.default_timezone
+    @staticmethod
+    def _get_next_offset(paging_infos):
+        next_offsets = {p['next_offset'] for p in paging_infos if p['next_offset'] is not None}
+        if not next_offsets:
+            # Paging is done for all messages
+            return None
+        # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
+        # because the collections that we are iterating may change while iterating. We'll do our best but we cannot
+        # guarantee 100% consistency when large collections are simultaneously being changed on the server.
+        #
+        # It's not possible to supply a per-folder offset when iterating multiple folders, so we'll just have to
+        # choose something that is most likely to work. Select the lowest of all the values to at least make sure
+        # we don't miss any items, although we may then get duplicates ¯\_(ツ)_/¯
+        if len(next_offsets) > 1:
+            log.warning('Inconsistent next_offset values: %r. Using lowest value', next_offsets)
+        return min(next_offsets)
 
 
 def to_item_id(item, item_cls, version):

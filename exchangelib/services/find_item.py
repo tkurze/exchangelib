@@ -1,10 +1,10 @@
-from .common import EWSAccountService, create_shape_element
+from .common import EWSPagingService, create_shape_element
 from ..folders.base import BaseFolder
 from ..items import Item, ID_ONLY
 from ..util import create_element, set_xml_value, TNS, MNS
 
 
-class FindItem(EWSAccountService):
+class FindItem(EWSPagingService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem-operation"""
 
     SERVICE_NAME = 'FindItem'
@@ -49,7 +49,7 @@ class FindItem(EWSAccountService):
                 shape=shape,
                 depth=depth,
                 calendar_view=calendar_view,
-                page_size=self.chunk_size,
+                page_size=self.page_size,
                 offset=offset,
             )
         ))
