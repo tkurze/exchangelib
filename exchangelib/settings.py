@@ -55,22 +55,22 @@ class OofSettings(EWSElement):
             if value is None:
                 continue
             f = self.get_field_by_fieldname(attr)
-            set_xml_value(elem, f.to_xml(value, version=version), version=version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         if self.start or self.end:
             duration = create_element('t:Duration')
             if self.start:
                 f = self.get_field_by_fieldname('start')
-                set_xml_value(duration, f.to_xml(self.start, version=version), version)
+                set_xml_value(duration, f.to_xml(self.start, version=version))
             if self.end:
                 f = self.get_field_by_fieldname('end')
-                set_xml_value(duration, f.to_xml(self.end, version=version), version)
+                set_xml_value(duration, f.to_xml(self.end, version=version))
             elem.append(duration)
         for attr in ('internal_reply', 'external_reply'):
             value = getattr(self, attr)
             if value is None:
                 value = ''  # The value can be empty, but the XML element must always be present
             f = self.get_field_by_fieldname(attr)
-            set_xml_value(elem, f.to_xml(value, version=version), version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         return elem
 
     def __hash__(self):

@@ -246,7 +246,7 @@ def set_xml_value(elem, value, version=None):
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:
-            set_xml_value(elem, v, version)
+            set_xml_value(elem, v, version=version)
     else:
         raise ValueError(f'Unsupported type {type(value)} for value {value} on elem {elem}')
     return elem

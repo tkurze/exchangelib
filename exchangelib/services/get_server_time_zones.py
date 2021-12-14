@@ -33,7 +33,7 @@ class GetServerTimeZones(EWSService):
             if not is_empty:
                 tz_ids = create_element('m:Ids')
                 for timezone in timezones:
-                    tz_id = set_xml_value(create_element('t:Id'), timezone.ms_id, version=self.protocol.version)
+                    tz_id = set_xml_value(create_element('t:Id'), timezone.ms_id)
                     tz_ids.append(tz_id)
                 payload.append(tz_ids)
         return payload

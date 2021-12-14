@@ -260,7 +260,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
                 # We already generated an XML element for this field, but it contains a plain date at this point, which
                 # is invalid. Replace the value.
                 field = self.get_field_by_fieldname(field_name)
-                set_xml_value(elem=elem.find(field.response_tag()), value=value, version=version)
+                set_xml_value(elem.find(field.response_tag()), value)
         return elem
 
 
