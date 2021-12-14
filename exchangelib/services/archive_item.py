@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_folder_ids_element, create_item_ids_element
+from .common import EWSAccountService, folder_ids_element, item_ids_element
 from ..items import Item
 from ..util import create_element, MNS
 from ..version import EXCHANGE_2013
@@ -27,7 +27,7 @@ class ArchiveItem(EWSAccountService):
     def get_payload(self, items, to_folder):
         payload = create_element(f'm:{self.SERVICE_NAME}')
         payload.append(
-            create_folder_ids_element(folders=[to_folder], version=self.account.version, tag='m:ArchiveSourceFolderId')
+            folder_ids_element(folders=[to_folder], version=self.account.version, tag='m:ArchiveSourceFolderId')
         )
-        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        payload.append(item_ids_element(items=items, version=self.account.version))
         return payload

@@ -1,6 +1,6 @@
 from itertools import chain
 
-from .common import EWSAccountService, create_attachment_ids_element
+from .common import EWSAccountService, attachment_ids_element
 from ..attachments import FileAttachment, ItemAttachment
 from ..util import create_element, add_xml_child, set_xml_value, DummyResponse, StreamingBase64Parser,\
     StreamingContentHandler, ElementNotFound, MNS
@@ -46,7 +46,7 @@ class GetAttachment(EWSAccountService):
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
-        payload.append(create_attachment_ids_element(items=items, version=self.account.version))
+        payload.append(attachment_ids_element(items=items, version=self.account.version))
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):

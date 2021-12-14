@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_folder_ids_element
+from .common import EWSAccountService, folder_ids_element
 from ..util import create_element
 
 
@@ -18,5 +18,5 @@ class EmptyFolder(EWSAccountService):
             f'm:{self.SERVICE_NAME}',
             attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
-        payload.append(create_folder_ids_element(folders=folders, version=self.account.version))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload

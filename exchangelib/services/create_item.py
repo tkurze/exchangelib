@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_folder_ids_element
+from .common import EWSAccountService, folder_ids_element
 from ..folders import BaseFolder
 from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
     SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES, BulkCreateResult
@@ -81,7 +81,7 @@ class CreateItem(EWSAccountService):
             attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
         )
         if folder:
-            payload.append(create_folder_ids_element(
+            payload.append(folder_ids_element(
                 folders=[folder], version=self.account.version, tag='m:SavedItemFolderId'
             ))
         item_elems = create_element('m:Items')

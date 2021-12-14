@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_item_ids_element, create_shape_element
+from .common import EWSAccountService, item_ids_element, shape_element
 from ..folders.base import BaseFolder
 from ..util import create_element, MNS
 
@@ -27,8 +27,8 @@ class GetItem(EWSAccountService):
 
     def get_payload(self, items, additional_fields, shape):
         payload = create_element(f'm:{self.SERVICE_NAME}')
-        payload.append(create_shape_element(
+        payload.append(shape_element(
             tag='m:ItemShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         ))
-        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        payload.append(item_ids_element(items=items, version=self.account.version))
         return payload

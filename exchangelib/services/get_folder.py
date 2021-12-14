@@ -1,5 +1,4 @@
-from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element, \
-    create_shape_element
+from .common import EWSAccountService, parse_folder_elem, folder_ids_element, shape_element
 from ..errors import ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation
 from ..util import create_element, MNS
 
@@ -45,8 +44,8 @@ class GetFolder(EWSAccountService):
 
     def get_payload(self, folders, additional_fields, shape):
         payload = create_element(f'm:{self.SERVICE_NAME}')
-        payload.append(create_shape_element(
+        payload.append(shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         ))
-        payload.append(create_folder_ids_element(folders=folders, version=self.account.version))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload

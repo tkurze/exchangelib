@@ -1,4 +1,4 @@
-from .common import add_xml_child, create_item_ids_element
+from .common import add_xml_child, item_ids_element
 from .sync_folder_hierarchy import SyncFolder
 from ..folders import BaseFolder
 from ..properties import ItemId
@@ -63,9 +63,7 @@ class SyncFolderItems(SyncFolder):
         )
         is_empty, ignore = (True, None) if ignore is None else peek(ignore)
         if not is_empty:
-            sync_folder_items.append(
-                create_item_ids_element(items=ignore, version=self.account.version, tag='m:Ignore')
-            )
+            sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag='m:Ignore'))
         add_xml_child(sync_folder_items, 'm:MaxChangesReturned', max_changes_returned)
         if sync_scope:
             add_xml_child(sync_folder_items, 'm:SyncScope', sync_scope)

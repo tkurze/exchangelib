@@ -1,5 +1,5 @@
 import logging
-from .common import EWSPagingService, create_shape_element, create_folder_ids_element
+from .common import EWSPagingService, shape_element, folder_ids_element
 from ..items import Persona, ID_ONLY
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
@@ -66,7 +66,7 @@ class FindPeople(EWSPagingService):
             raise ValueError(f'{self.SERVICE_NAME} can only query one folder')
         folder = folders[0]
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
-        payload.append(create_shape_element(
+        payload.append(shape_element(
             tag='m:PersonaShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         ))
         payload.append(create_element(
@@ -81,9 +81,7 @@ class FindPeople(EWSPagingService):
                 order_fields,
                 version=self.account.version
             ))
-        payload.append(
-            create_folder_ids_element(folders=[folder], version=self.account.version, tag='m:ParentFolderId')
-        )
+        payload.append(folder_ids_element(folders=[folder], version=self.account.version, tag='m:ParentFolderId'))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload

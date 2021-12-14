@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_item_ids_element
+from .common import EWSAccountService, item_ids_element
 from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
@@ -45,5 +45,5 @@ class DeleteItem(EWSAccountService):
         if self.account.version.build >= EXCHANGE_2013_SP1:
             attrs['SuppressReadReceipts'] = suppress_read_receipts
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
-        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        payload.append(item_ids_element(items=items, version=self.account.version))
         return payload

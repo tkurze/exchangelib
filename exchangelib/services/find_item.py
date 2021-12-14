@@ -1,4 +1,4 @@
-from .common import EWSPagingService, create_shape_element, create_folder_ids_element
+from .common import EWSPagingService, shape_element, folder_ids_element
 from ..folders.base import BaseFolder
 from ..items import Item, ID_ONLY
 from ..util import create_element, set_xml_value, TNS, MNS
@@ -62,7 +62,7 @@ class FindItem(EWSPagingService):
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                     calendar_view, page_size, offset=0):
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
-        payload.append(create_shape_element(
+        payload.append(shape_element(
             tag='m:ItemShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         ))
         if calendar_view is None:
@@ -81,9 +81,7 @@ class FindItem(EWSPagingService):
                 order_fields,
                 version=self.account.version
             ))
-        payload.append(create_folder_ids_element(
-            folders=folders, version=self.protocol.version, tag='m:ParentFolderIds',
-        ))
+        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag='m:ParentFolderIds'))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload

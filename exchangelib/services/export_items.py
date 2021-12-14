@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_item_ids_element
+from .common import EWSAccountService, item_ids_element
 from ..errors import ResponseMessageError
 from ..util import create_element, MNS
 
@@ -18,7 +18,7 @@ class ExportItems(EWSAccountService):
 
     def get_payload(self, items):
         payload = create_element(f'm:{self.SERVICE_NAME}')
-        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
     # We need to override this since ExportItemsResponseMessage is formatted a

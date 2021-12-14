@@ -852,7 +852,7 @@ def to_item_id(item, item_cls):
     return item_cls(item.id, item.changekey)
 
 
-def create_shape_element(tag, shape, additional_fields, version):
+def shape_element(tag, shape, additional_fields, version):
     shape_elem = create_element(tag)
     add_xml_child(shape_elem, 't:BaseShape', shape)
     if additional_fields:
@@ -869,7 +869,7 @@ def create_shape_element(tag, shape, additional_fields, version):
     return shape_elem
 
 
-def create_folder_ids_element(folders, version, tag='m:FolderIds'):
+def folder_ids_element(folders, version, tag='m:FolderIds'):
     folder_ids = create_element(tag)
     for folder in folders:
         set_xml_value(folder_ids, to_item_id(folder, FolderId), version=version)
@@ -878,7 +878,7 @@ def create_folder_ids_element(folders, version, tag='m:FolderIds'):
     return folder_ids
 
 
-def create_item_ids_element(items, version, tag='m:ItemIds'):
+def item_ids_element(items, version, tag='m:ItemIds'):
     item_ids = create_element(tag)
     for item in items:
         set_xml_value(item_ids, to_item_id(item, ItemId), version=version)
@@ -887,8 +887,8 @@ def create_item_ids_element(items, version, tag='m:ItemIds'):
     return item_ids
 
 
-def create_attachment_ids_element(items, version):
-    attachment_ids = create_element('m:AttachmentIds')
+def attachment_ids_element(items, version, tag='m:AttachmentIds'):
+    attachment_ids = create_element(tag)
     for item in items:
         attachment_id = item if isinstance(item, AttachmentId) else AttachmentId(id=item)
         set_xml_value(attachment_ids, attachment_id, version=version)

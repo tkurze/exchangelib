@@ -1,6 +1,6 @@
 import logging
 
-from .common import EWSService, create_folder_ids_element
+from .common import EWSService, folder_ids_element
 from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
 from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES, Contact
 from ..properties import Mailbox
@@ -69,8 +69,8 @@ class ResolveNames(EWSService):
             attrs['ContactDataShape'] = contact_data_shape
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
         if parent_folders:
-            payload.append(create_folder_ids_element(
-                folders=parent_folders, version=self.protocol.version, tag='m:ParentFolderIds',
+            payload.append(folder_ids_element(
+                folders=parent_folders, version=self.protocol.version, tag='m:ParentFolderIds'
             ))
         for entry in unresolved_entries:
             add_xml_child(payload, 'm:UnresolvedEntry', entry)

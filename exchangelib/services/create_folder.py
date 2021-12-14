@@ -1,4 +1,4 @@
-from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element
+from .common import EWSAccountService, parse_folder_elem, folder_ids_element
 from ..util import create_element, MNS
 
 
@@ -30,7 +30,7 @@ class CreateFolder(EWSAccountService):
     def get_payload(self, folders, parent_folder):
         payload = create_element(f'm:{self.SERVICE_NAME}')
         payload.append(
-            create_folder_ids_element(folders=[parent_folder], version=self.account.version, tag='m:ParentFolderId')
+            folder_ids_element(folders=[parent_folder], version=self.account.version, tag='m:ParentFolderId')
         )
-        payload.append(create_folder_ids_element(folders=folders, version=self.account.version, tag='m:Folders'))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag='m:Folders'))
         return payload

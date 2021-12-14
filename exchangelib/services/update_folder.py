@@ -107,6 +107,8 @@ class BaseUpdateService(EWSAccountService):
     def _changes_elem(self, target_changes):
         changes = create_element(self.CHANGES_ELEMENT_NAME)
         for target, fieldnames in target_changes:
+            if not target.account:
+                target.account = self.account
             changes.append(self._change_elem(target=target, fieldnames=fieldnames))
         if not len(changes):
             raise ValueError('List of changes must not be empty')

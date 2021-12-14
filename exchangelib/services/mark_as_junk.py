@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_item_ids_element
+from .common import EWSAccountService, item_ids_element
 from ..properties import MovedItemId
 from ..util import create_element
 
@@ -25,5 +25,5 @@ class MarkAsJunk(EWSAccountService):
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IsJunk=is_junk, MoveItem=move_item))
-        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        payload.append(item_ids_element(items=items, version=self.account.version))
         return payload

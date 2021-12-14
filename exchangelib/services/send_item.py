@@ -1,4 +1,4 @@
-from .common import EWSAccountService, create_item_ids_element, create_folder_ids_element
+from .common import EWSAccountService, item_ids_element, folder_ids_element
 from ..folders import BaseFolder
 from ..properties import FolderId
 from ..util import create_element
@@ -17,9 +17,9 @@ class SendItem(EWSAccountService):
 
     def get_payload(self, items, saved_item_folder):
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
-        payload.append(create_item_ids_element(items=items, version=self.account.version))
+        payload.append(item_ids_element(items=items, version=self.account.version))
         if saved_item_folder:
-            payload.append(create_folder_ids_element(
+            payload.append(folder_ids_element(
                 folders=[saved_item_folder], version=self.account.version, tag='m:SavedItemFolderId'
             ))
         return payload
