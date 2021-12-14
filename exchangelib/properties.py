@@ -304,7 +304,7 @@ class EWSElement(metaclass=EWSMeta):
             value = getattr(self, f.name)
             if value is None or (f.is_list and not value):
                 continue
-            set_xml_value(elem, f.to_xml(value, version=version), version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         return elem
 
     @classmethod
@@ -1483,8 +1483,8 @@ class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
             return None, None
         return id_elem.get(cls.ID_ELEMENT_CLS.ID_ATTR), id_elem.get(cls.ID_ELEMENT_CLS.CHANGEKEY_ATTR)
 
-    def to_id_xml(self, version):
-        return self._id.to_xml(version=version)
+    def to_id(self):
+        return self._id
 
     def __eq__(self, other):
         if isinstance(other, tuple):
@@ -1519,7 +1519,7 @@ class UserConfigurationName(EWSElement):
     def clean(self, version=None):
         from .folders import BaseFolder
         if isinstance(self.folder, BaseFolder):
-            self.folder = self.folder.to_folder_id()
+            self.folder = self.folder.to_id()
         super().clean(version=version)
 
     @classmethod

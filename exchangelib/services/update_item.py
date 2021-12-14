@@ -82,7 +82,7 @@ class UpdateItem(BaseUpdateService):
     def _target_elem(self, target):
         if not target.account:
             target.account = self.account
-        return to_item_id(target, ItemId, version=self.account.version)
+        return to_item_id(target, ItemId)
 
     def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
                     suppress_read_receipts):

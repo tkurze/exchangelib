@@ -26,7 +26,7 @@ class CreateAttachment(EWSAccountService):
         if isinstance(parent_item, BaseItem):
             # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId
             parent_item = ParentItemId(parent_item.id, parent_item.changekey)
-        set_xml_value(payload, to_item_id(parent_item, ParentItemId, version=version), version=version)
+        set_xml_value(payload, to_item_id(parent_item, ParentItemId), version=self.account.version)
         attachments = create_element('m:Attachments')
         for item in items:
             set_xml_value(attachments, item, version=version)

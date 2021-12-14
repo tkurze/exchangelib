@@ -1,5 +1,5 @@
 import logging
-from .common import EWSPagingService, create_shape_element
+from .common import EWSPagingService, create_shape_element, create_folder_ids_element
 from ..items import Persona, ID_ONLY
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
@@ -81,11 +81,9 @@ class FindPeople(EWSPagingService):
                 order_fields,
                 version=self.account.version
             ))
-        payload.append(set_xml_value(
-            create_element('m:ParentFolderId'),
-            folder,
-            version=self.account.version
-        ))
+        payload.append(
+            create_folder_ids_element(folders=[folder], version=self.account.version, tag='m:ParentFolderId')
+        )
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload

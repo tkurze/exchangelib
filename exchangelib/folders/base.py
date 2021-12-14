@@ -434,7 +434,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             kwargs['name'] = cls.DISTINGUISHED_FOLDER_ID
         return kwargs
 
-    def to_folder_id(self):
+    def to_id(self):
         if self.is_distinguished:
             # Don't add the changekey here. When modifying folder content, we usually don't care if others have changed
             # the folder content since we fetched the changekey.
@@ -447,16 +447,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         if self.id:
             return FolderId(id=self.id, changekey=self.changekey)
         raise ValueError('Must be a distinguished folder or have an ID')
-
-    def to_xml(self, version):
-        try:
-            return self.to_folder_id().to_xml(version=version)
-        except ValueError:
-            return super().to_xml(version=version)
-
-    def to_id_xml(self, version):
-        # Folder(name='Foo') is a perfectly valid ID to e.g. create a folder
-        return self.to_xml(version=version)
 
     @classmethod
     def resolve(cls, account, folder):

@@ -1,6 +1,6 @@
-from .common import EWSPagingService, create_shape_element
+from .common import EWSPagingService, create_shape_element, create_folder_ids_element
 from ..folders import Folder
-from ..util import create_element, set_xml_value, TNS, MNS
+from ..util import create_element, TNS, MNS
 from ..version import EXCHANGE_2010
 
 
@@ -66,5 +66,7 @@ class FindFolder(EWSPagingService):
                 raise ValueError('Offsets are only supported from Exchange 2010')
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
-        payload.append(set_xml_value(create_element('m:ParentFolderIds'), folders, version=self.account.version))
+        payload.append(create_folder_ids_element(
+            folders=folders, version=self.protocol.version, tag='m:ParentFolderIds',
+        ))
         return payload

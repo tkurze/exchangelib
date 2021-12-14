@@ -39,7 +39,7 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
 
     def _partial_payload(self, folders, event_types):
         request_elem = create_element(self.subscription_request_elem_tag)
-        folder_ids = create_folder_ids_element(tag='t:FolderIds', folders=folders, version=self.account.version)
+        folder_ids = create_folder_ids_element(folders=folders, version=self.account.version, tag='t:FolderIds')
         request_elem.append(folder_ids)
         event_types_elem = create_element('t:EventTypes')
         for event_type in event_types:

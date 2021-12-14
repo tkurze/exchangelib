@@ -1,7 +1,7 @@
 from .common import EWSAccountService, create_folder_ids_element
 from ..folders import BaseFolder
 from ..properties import FolderId
-from ..util import create_element, set_xml_value, MNS
+from ..util import create_element, MNS
 
 
 class MoveFolder(EWSAccountService):
@@ -23,6 +23,6 @@ class MoveFolder(EWSAccountService):
     def get_payload(self, folders, to_folder):
         # Takes a list of folders and returns their new folder IDs
         payload = create_element(f'm:{self.SERVICE_NAME}')
-        payload.append(set_xml_value(create_element('m:ToFolderId'), to_folder, version=self.account.version))
-        payload.append(create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version))
+        payload.append(create_folder_ids_element(folders=[to_folder], version=self.account.version, tag='m:ToFolderId'))
+        payload.append(create_folder_ids_element(folders=folders, version=self.account.version))
         return payload

@@ -1259,7 +1259,7 @@ class IndexedField(EWSElementField):
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
-        return set_xml_value(create_element(f't:{self.PARENT_ELEMENT_NAME}'), value, version)
+        return set_xml_value(create_element(f't:{self.PARENT_ELEMENT_NAME}'), value, version=version)
 
     def response_tag(self):
         return f'{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}'

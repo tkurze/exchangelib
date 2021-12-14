@@ -1,6 +1,5 @@
 from .common import EWSAccountService, parse_folder_elem, to_item_id
 from ..fields import FieldPath, IndexedField
-from ..folders import BaseFolder
 from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
@@ -91,11 +90,11 @@ class BaseUpdateService(EWSAccountService):
 
             yield from self._set_field_elems(target_model=target_model, field=field, value=value)
 
-    def _change_elem(self, target, target_elem, fieldnames):
+    def _change_elem(self, target, fieldnames):
         if not fieldnames:
             raise ValueError('"fieldnames" must not be empty')
         change = create_element(self.CHANGE_ELEMENT_NAME)
-        set_xml_value(change, target_elem, version=self.account.version)
+        set_xml_value(change, self._target_elem(target), version=self.account.version)
         updates = create_element('t:Updates')
         for elem in self._update_elems(target=target, fieldnames=fieldnames):
             updates.append(elem)
@@ -108,10 +107,7 @@ class BaseUpdateService(EWSAccountService):
     def _changes_elem(self, target_changes):
         changes = create_element(self.CHANGES_ELEMENT_NAME)
         for target, fieldnames in target_changes:
-            target_elem = self._target_elem(target)
-            changes.append(self._change_elem(
-                target=target, target_elem=target_elem, fieldnames=fieldnames
-            ))
+            changes.append(self._change_elem(target=target, fieldnames=fieldnames))
         if not len(changes):
             raise ValueError('List of changes must not be empty')
         return changes
@@ -145,9 +141,7 @@ class UpdateFolder(BaseUpdateService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def _target_elem(self, target):
-        if isinstance(target, (BaseFolder, FolderId)):
-            return target.to_xml(version=self.account.version)
-        return to_item_id(target, FolderId, version=self.account.version)
+        return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
         # Takes a list of (Folder, fieldnames) tuples where 'Folder' is a instance of a subclass of Folder and

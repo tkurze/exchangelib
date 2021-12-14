@@ -24,7 +24,7 @@ class GetPersona(EWSAccountService):
     def get_payload(self, persona):
         return set_xml_value(
             create_element(f'm:{self.SERVICE_NAME}'),
-            to_item_id(persona, PersonaId, version=self.protocol.version),
+            to_item_id(persona, PersonaId),
             version=self.protocol.version
         )
 

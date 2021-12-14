@@ -23,7 +23,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
 from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId, FolderId, \
-    DistinguishedFolderId
+    DistinguishedFolderId, BaseItemId
 from ..transport import wrap
 from ..util import chunkify, create_element, add_xml_child, get_xml_attr, to_xml, post_ratelimited, \
     xml_to_str, set_xml_value, SOAPNS, TNS, MNS, ENS, ParseError, DummyResponse
@@ -834,14 +834,17 @@ class EWSPagingService(EWSAccountService):
         return min(next_offsets)
 
 
-def to_item_id(item, item_cls, version):
+def to_item_id(item, item_cls):
     # Coerce a tuple, dict or object to an 'item_cls' instance. Used to create [Parent][Item|Folder]Id instances from a
     # variety of input.
-    if isinstance(item, item_cls):
-        # Allow any subclass of item_cls, e.g. OccurrenceItemId when ItemId is passed
+    if isinstance(item, BaseItemId):
+        # Allow any BaseItemId subclass to pass unaltered
         return item
     if isinstance(item, (BaseFolder, BaseItem)):
-        return item.to_id_xml(version=version)
+        try:
+            return item.to_id()
+        except ValueError:
+            return item
     if isinstance(item, (tuple, list)):
         return item_cls(*item)
     if isinstance(item, dict):
@@ -866,12 +869,10 @@ def create_shape_element(tag, shape, additional_fields, version):
     return shape_elem
 
 
-def create_folder_ids_element(tag, folders, version):
+def create_folder_ids_element(folders, version, tag='m:FolderIds'):
     folder_ids = create_element(tag)
     for folder in folders:
-        if not isinstance(folder, FolderId):
-            folder = to_item_id(folder, FolderId, version=version)
-        set_xml_value(folder_ids, folder, version=version)
+        set_xml_value(folder_ids, to_item_id(folder, FolderId), version=version)
     if not len(folder_ids):
         raise ValueError('"folders" must not be empty')
     return folder_ids
@@ -880,7 +881,7 @@ def create_folder_ids_element(tag, folders, version):
 def create_item_ids_element(items, version, tag='m:ItemIds'):
     item_ids = create_element(tag)
     for item in items:
-        set_xml_value(item_ids, to_item_id(item, ItemId, version=version), version=version)
+        set_xml_value(item_ids, to_item_id(item, ItemId), version=version)
     if not len(item_ids):
         raise ValueError('"items" must not be empty')
     return item_ids

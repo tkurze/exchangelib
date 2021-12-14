@@ -45,7 +45,7 @@ class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
         payload.append(create_shape_element(
             tag=self.shape_tag, shape=shape, additional_fields=additional_fields, version=self.account.version
         ))
-        payload.append(create_folder_ids_element(tag='m:SyncFolderId', folders=[folder], version=self.account.version))
+        payload.append(create_folder_ids_element(folders=[folder], version=self.account.version, tag='m:SyncFolderId'))
         if sync_state:
             add_xml_child(payload, 'm:SyncState', sync_state)
         return payload

@@ -48,5 +48,5 @@ class GetFolder(EWSAccountService):
         payload.append(create_shape_element(
             tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
         ))
-        payload.append(create_folder_ids_element(tag='m:FolderIds', folders=folders, version=self.account.version))
+        payload.append(create_folder_ids_element(folders=folders, version=self.account.version))
         return payload

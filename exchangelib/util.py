@@ -229,7 +229,7 @@ def xml_text_to_value(value, value_type):
     }[value_type](value)
 
 
-def set_xml_value(elem, value, version):
+def set_xml_value(elem, value, version=None):
     from .ewsdatetime import EWSDateTime, EWSDate
     from .fields import FieldPath, FieldOrder
     from .properties import EWSElement
@@ -276,7 +276,7 @@ def create_element(name, attrs=None, nsmap=None):
 def add_xml_child(tree, name, value):
     # We're calling add_xml_child many places where we don't have the version handy. Don't pass EWSElement or list of
     # EWSElement to this function!
-    tree.append(set_xml_value(elem=create_element(name), value=value, version=None))
+    tree.append(set_xml_value(elem=create_element(name), value=value))
 
 
 class StreamingContentHandler(xml.sax.handler.ContentHandler):

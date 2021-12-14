@@ -1,4 +1,4 @@
-from .common import EWSPagingService, create_shape_element
+from .common import EWSPagingService, create_shape_element, create_folder_ids_element
 from ..folders.base import BaseFolder
 from ..items import Item, ID_ONLY
 from ..util import create_element, set_xml_value, TNS, MNS
@@ -81,10 +81,8 @@ class FindItem(EWSPagingService):
                 order_fields,
                 version=self.account.version
             ))
-        payload.append(set_xml_value(
-            create_element('m:ParentFolderIds'),
-            folders,
-            version=self.account.version
+        payload.append(create_folder_ids_element(
+            folders=folders, version=self.protocol.version, tag='m:ParentFolderIds',
         ))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))

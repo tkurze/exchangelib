@@ -35,9 +35,7 @@ class UploadItems(EWSAccountService):
             item = create_element('t:Item', attrs=attrs)
             set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
-                set_xml_value(
-                    item, to_item_id(item_id, ItemId, version=self.account.version), version=self.account.version
-                )
+                set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
             add_xml_child(item, 't:Data', data_str)
             items_elem.append(item)
         return payload
