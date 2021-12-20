@@ -289,7 +289,7 @@ class SyncTest(BaseItemTest):
         # Test SendNotification
         ws = SendNotification(protocol=None)
         self.assertEqual(
-            PrettyXmlHandler.prettify_xml(ws.ok_response()),
+            PrettyXmlHandler.prettify_xml(ws.ok_payload()),
             b'''\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope
@@ -305,7 +305,7 @@ class SyncTest(BaseItemTest):
 '''
         )
         self.assertEqual(
-            PrettyXmlHandler.prettify_xml(ws.unsubscribe_response()),
+            PrettyXmlHandler.prettify_xml(ws.unsubscribe_payload()),
             b'''\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope
