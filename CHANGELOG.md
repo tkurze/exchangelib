@@ -13,6 +13,8 @@ HEAD
   `QuerySet.page_size` previously had. Chunk size is the number of items we send
   in e.g. a `GetItem` call, while `page_size` is the number of items we request
   per page in services like `FindItem` that support paging.
+- Support creating a proper response when getting a notification request
+  on the callback URL of a push subscription.
 
 
 4.6.2

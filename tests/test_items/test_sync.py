@@ -5,6 +5,7 @@ from exchangelib.folders import Inbox
 from exchangelib.items import Message
 from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent, Notification
 from exchangelib.services import SendNotification
+from exchangelib.util import PrettyXmlHandler
 
 from .test_basics import BaseItemTest
 from ..common import get_random_string
@@ -282,4 +283,40 @@ class SyncTest(BaseItemTest):
             list(ws.parse(xml)),
             [Notification(subscription_id='XXXXX=', previous_watermark='AAAAA=', more_events=False,
                           events=[StatusEvent(watermark='BBBBB=')])]
+        )
+
+    def test_push_message_responses(self):
+        # Test SendNotification
+        ws = SendNotification(protocol=None)
+        self.assertEqual(
+            PrettyXmlHandler.prettify_xml(ws.ok_response()),
+            b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+  <s:Body>
+    <m:SendNotificationResult>
+      <m:SubscriptionStatus>OK</m:SubscriptionStatus>
+    </m:SendNotificationResult>
+  </s:Body>
+</s:Envelope>
+'''
+        )
+        self.assertEqual(
+            PrettyXmlHandler.prettify_xml(ws.unsubscribe_response()),
+            b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+  <s:Body>
+    <m:SendNotificationResult>
+      <m:SubscriptionStatus>Unsubscribe</m:SubscriptionStatus>
+    </m:SendNotificationResult>
+  </s:Body>
+</s:Envelope>
+'''
         )

@@ -1709,7 +1709,8 @@ subscription_id, watermark = a.inbox.subscribe_to_pull()
 
 Here's how to create a push subscription. The server will regularly send an HTTP POST
 request to the callback URL to deliver changes or a status message. There is also support
-for  parsing the POST data that the Exchange server sends to the callback URL.
+for parsing the POST data that the Exchange server sends to the callback URL, and for
+creating proper responses to these URLs.
 ```python
 subscription_id, watermark = a.inbox.subscribe_to_push(
   callback_url='https://my_app.example.com/callback_url'
@@ -1727,11 +1728,16 @@ from flask import Flask, request
 app = Flask(__name__)
 
 @app.route('/callback_url', methods=['POST'])
-def upload_file():
+def notify_me():
     ws = SendNotification(protocol=None)
     for notification in ws.parse(request.data):
         # ws.parse() returns Notification objects
         pass
+    data = ws.ok_payload()
+    # Or, if you want to end the subscription:
+    data = ws.unsubscribe_payload()
+
+    return data, 201, {'Content-Type': 'text/xml; charset=utf-8'}
 ```
 
 Here's how to create a streaming subscription that can be used to stream events from the
@@ -1741,7 +1747,8 @@ subscription_id = a.inbox.subscribe_to_streaming()
 ```
 
 Cancel the subscription when you're done synchronizing. This is not supported for push
-subscriptions. They cancel automatically after a certain amount of failed attempts.
+subscriptions. They cancel automatically after a certain amount of failed attempts, or
+you can let your callback URL send an unsubscribe response as described above.
 ```python
 a.inbox.unsubscribe(subscription_id)
 ```
