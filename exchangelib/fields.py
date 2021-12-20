@@ -1270,6 +1270,7 @@ class IndexedField(EWSElementField):
 
 class EmailAddressesField(IndexedField):
     is_list = True
+    is_complex = True
 
     PARENT_ELEMENT_NAME = 'EmailAddresses'
 
@@ -1295,6 +1296,7 @@ class EmailAddressesField(IndexedField):
 
 class PhoneNumberField(IndexedField):
     is_list = True
+    is_complex = True
 
     PARENT_ELEMENT_NAME = 'PhoneNumbers'
 
@@ -1306,6 +1308,7 @@ class PhoneNumberField(IndexedField):
 
 class PhysicalAddressField(IndexedField):
     is_list = True
+    is_complex = True
 
     PARENT_ELEMENT_NAME = 'PhysicalAddresses'
 
@@ -1316,6 +1319,8 @@ class PhysicalAddressField(IndexedField):
 
 
 class ExtendedPropertyField(Field):
+    is_complex = True
+
     def __init__(self, *args, **kwargs):
         self.value_cls = kwargs.pop('value_cls')
         super().__init__(*args, **kwargs)

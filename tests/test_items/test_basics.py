@@ -287,17 +287,17 @@ class CommonItemTest(BaseItemTest):
         for kw in filter_kwargs:
             with self.subTest(f=f, kw=kw):
                 matches = qs.filter(**kw).count()
-                if isinstance(f, TextField) and f.is_complex:
-                    # Complex text fields sometimes fail a search using generated data. In production,
+                if f.is_complex:
+                    # Complex fields sometimes fail a search using generated data. In production,
                     # they almost always work anyway. Give it one more try after 10 seconds; it seems EWS does
                     # some sort of indexing that needs to catch up.
                     if not matches and isinstance(f, BodyField):
                         # The body field is particularly nasty in this area. Give up
                         continue
-                    for _ in range(5):
+                    for i in range(1, 6):
                         if matches:
                             break
-                        time.sleep(2)
+                        time.sleep(i*2)
                         matches = qs.filter(**kw).count()
                 if f.is_list and not val and list(kw)[0].endswith(f'__{Q.LOOKUP_IN}'):
                     # __in with an empty list returns an empty result
