@@ -49,7 +49,7 @@ DEFAULT_ENCODING = 'utf-8'
 DEFAULT_HEADERS = {'Content-Type': f'text/xml; charset={DEFAULT_ENCODING}', 'Accept-Encoding': 'gzip, deflate'}
 
 
-def wrap(content, api_version, account_to_impersonate=None, timezone=None):
+def wrap(content, api_version=None, account_to_impersonate=None, timezone=None):
     """Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
     ExchangeImpersonation allows to act as the user we want to impersonate.
 
@@ -69,8 +69,9 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     """
     envelope = create_element('s:Envelope', nsmap=ns_translation)
     header = create_element('s:Header')
-    request_server_version = create_element('t:RequestServerVersion', attrs=dict(Version=api_version))
-    header.append(request_server_version)
+    if api_version:
+        request_server_version = create_element('t:RequestServerVersion', attrs=dict(Version=api_version))
+        header.append(request_server_version)
     if account_to_impersonate:
         exchange_impersonation = create_element('t:ExchangeImpersonation')
         connecting_sid = create_element('t:ConnectingSID')
@@ -93,7 +94,8 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
         timezone_definition = create_element('t:TimeZoneDefinition', attrs=dict(Id=timezone.ms_id))
         timezone_context.append(timezone_definition)
         header.append(timezone_context)
-    envelope.append(header)
+    if len(header):
+        envelope.append(header)
     body = create_element('s:Body')
     body.append(content)
     envelope.append(body)
