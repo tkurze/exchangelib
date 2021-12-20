@@ -77,7 +77,7 @@ To install the very latest code, install directly from GitHub instead:
 pip install git+https://github.com/ecederstrand/exchangelib.git
 ```
 
-`exchangelib` uses the `lxml` package, and `pykerberos` to support Kerberos authentication.
+This package uses the `lxml` package, and `pykerberos` to support Kerberos authentication.
 To be able to install these, you may need to install some additional operating system packages.
 
 On Ubuntu:
@@ -231,8 +231,8 @@ account = Account(primary_smtp_address='john@example.com', config=config,
                   autodiscover=False, access_type=DELEGATE)
 ```
 
-exchangelib will attempt to guess the server version and authentication
-method. If you have a really bizarre or locked-down installation and the
+We will attempt to guess the server version and authentication method
+automatically. If you have a really bizarre or locked-down installation and the
 guessing fails, or you want to avoid the extra network traffic, you can set
 the auth method and version explicitly instead:
 
@@ -246,7 +246,7 @@ config = Configuration(
 )
 ```
 
-By default, 'exchangelib' will only create 1 connection to the server. If you
+By default, only one single connection to the server is created. If you
 are using threads to send multiple requests concurrently, you may want to
 increase this limit. The Exchange server may have rate-limiting policies in
 place for the connecting credentials, so make sure to agree with your Exchange
@@ -341,7 +341,7 @@ credentials = OAuth2AuthorizationCodeCredentials(
 config = Configuration(credentials=credentials, auth_type=OAUTH2)
 ```
 
-Applications using the authorization code flow that let exchangelib refresh
+Applications using the authorization code flow that refreshes
 access tokens for them probably want to store the refreshed tokens so users
 don't have to re-authorize. Subclass OAuth2AuthorizationCodeCredentials and
 override on_token_auto_refreshed():
@@ -356,8 +356,8 @@ class MyCredentials(OAuth2AuthorizationCodeCredentials):
 
 For applications that use the authorization code flow and rely on an external
 provider to refresh access tokens (and thus are unable to provide a client ID
-and secret to exchangelib), subclass OAuth2AuthorizationCodeCredentials and
-override refresh().
+and secret to this package), subclass `OAuth2AuthorizationCodeCredentials` and
+override `refresh()`.
 
 ```python
 class MyCredentials(OAuth2AuthorizationCodeCredentials):
@@ -432,7 +432,7 @@ class RootCAAdapter(requests.adapters.HTTPAdapter):
         }[urlparse(url).hostname]
         super().cert_verify(conn=conn, url=url, verify=cert_file, cert=cert)
 
-# Tell exchangelib to use this adapter class instead of the default
+# Use this adapter class instead of the default
 BaseProtocol.HTTP_ADAPTER_CLS = RootCAAdapter
 ```
 
@@ -450,31 +450,30 @@ class ProxyAdapter(requests.adapters.HTTPAdapter):
         }
         return super().send(*args, **kwargs)
 
-# Tell exchangelib to use this adapter class instead of the default
+# Use this adapter class instead of the default
 BaseProtocol.HTTP_ADAPTER_CLS = ProxyAdapter
 ```
 
-`exchangelib` provides a sample adapter which ignores TLS validation
-errors. Use at own risk.
+A sample adapter is provided which ignores TLS validation errors. Use at own risk.
 
 ```python
 from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
 
-# Tell exchangelib to use this adapter class instead of the default
+# Use this adapter class instead of the default
 BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 ```
 
 ### User-Agent
 
 You can supply a custom 'User-Agent' for your application.
-By default, `exchangelib` will use: `exchangelib/<version> (python-requests/<version>)`
+The default is `exchangelib/<version> (python-requests/<version>)`
 
 Here's an example using different User-Agent:
 
 ```python
 from exchangelib.protocol import BaseProtocol
 
-# Tell exchangelib to use this user-agent instead of the default
+# Use this user-agent instead of the default
 BaseProtocol.USERAGENT = "Auto-Reply/0.1.0"
 ```
 
@@ -536,7 +535,7 @@ root
 │   └── todos
 └── archive
     ├── Last Job
-    ├── exchangelib issues
+    ├── GitLab issues
     └── Mom
 '''
 ```
@@ -1304,7 +1303,7 @@ can access them. Create a subclass of `ExtendedProperty` and define a set of
 matching setup values:
 
 ```python
-from exchangelib import Account, ExtendedProperty, CalendarItem, Folder, Message
+from exchangelib import Account, ExtendedProperty, CalendarItem
 
 a = Account(...)
 
@@ -1361,6 +1360,8 @@ RootOfHierarchy folder classes.
 
 Here's an example of getting the size (in bytes) of a folder:
 ```python
+from exchangelib import ExtendedProperty, Folder
+
 class FolderSize(ExtendedProperty):
     property_tag = 0x0e08
     property_type = 'Integer'
@@ -1386,6 +1387,8 @@ https://docs.microsoft.com/en-us/dotnet/api/microsoft.exchange.webservices.data.
 In conclusion, the definition for the due date becomes:
 
 ```python
+from exchangelib import ExtendedProperty, Message
+
 class FlagDue(ExtendedProperty):
     property_set_id = '00062003-0000-0000-C000-000000000046'
     property_id = 0x8105
@@ -1714,7 +1717,7 @@ subscription_id, watermark = a.inbox.subscribe_to_push(
 ```
 
 When the server sends a push notification, the POST data contains a
-'SendNotification' XML document. You can use exchangelib in the callback URL
+`SendNotification` XML document. You can use this package in the callback URL
 implementation to parse this data. Here's a short example of a Flask app that
 handles these documents:
 ```python
