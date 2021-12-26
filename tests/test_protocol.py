@@ -19,7 +19,7 @@ from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoR
     TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox
-from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
+from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, close_connections
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM
@@ -87,7 +87,7 @@ class ProtocolTest(EWSTest):
         p = Protocol(config=config)
         self.assertNotEqual(base_p, p)
 
-        Protocol.clear_cache()
+        close_connections()  # Also clears cache
 
     def test_close(self):
         # Don't use example.com here - it does not resolve or answer on all ISPs

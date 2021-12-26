@@ -39,7 +39,7 @@ class BaseProtocol:
     # The maximum number of sessions (== TCP connections, see below) we will open to this service endpoint. Keep this
     # low unless you have an agreement with the Exchange admin on the receiving end to hammer the server and
     # rate-limiting policies have been disabled for the connecting user. Changing this setting only makes sense if
-    # you are using a thread pool to run multiple concurrent workers in this process.
+    # you are using threads to run multiple concurrent workers in this process.
     SESSION_POOLSIZE = 1
     # We want only 1 TCP connection per Session object. We may have lots of different credentials hitting the server and
     # each credential needs its own session (NTLM auth will only send credentials once and then secure the connection,
@@ -593,19 +593,14 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
     def __getstate__(self):
-        # The lock and thread pool cannot be pickled
+        # The lock cannot be pickled
         state = super().__getstate__()
         del state['_version_lock']
-        try:
-            del state['thread_pool']
-        except KeyError:
-            # thread_pool is a cached property and may not exist
-            pass
         return state
 
     def __setstate__(self, state):
-        # Restore the lock. The thread pool is a cached property and will be recreated automatically.
-        self.__dict__.update(state)
+        # Restore the lock
+        super().__setstate__(state)
         self._version_lock = Lock()
 
     def __str__(self):

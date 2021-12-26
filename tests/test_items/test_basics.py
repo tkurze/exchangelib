@@ -299,7 +299,7 @@ class CommonItemTest(BaseItemTest):
                         if matches:
                             break
                         retries += 1
-                        time.sleep(retries*2)
+                        time.sleep(retries*retries)  # Exponential sleep
                         matches = qs.filter(**kw).count()
                 # __in with an empty list returns an empty result
                 expected = 0 if f.is_list and not val and list(kw)[0].endswith(f'__in') else 1
@@ -378,7 +378,6 @@ class CommonItemTest(BaseItemTest):
 
     def test_filter_on_multi_field_index_fields(self):
         # Test that we can filter on all index fields
-        # TODO: Test filtering on subfields of IndexedField
         item = self.get_test_item()
         fields = []
         for f in self._reduce_fields_for_filter(item, self.get_item_fields()):

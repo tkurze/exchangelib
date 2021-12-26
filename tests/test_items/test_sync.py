@@ -150,7 +150,7 @@ class SyncTest(BaseItemTest):
 
             # Test that we see a create event
             i1 = self.get_test_item(folder=test_folder).save()
-            time.sleep(5)  # TODO: For some reason, events do not trigger instantly
+            time.sleep(5)  # For some reason, events do not trigger instantly
             notifications = list(test_folder.get_events(subscription_id, watermark))
             created_event, watermark = self._filter_events(notifications, CreatedEvent, i1.id)
             self.assertEqual(created_event.item_id.id, i1.id)
@@ -158,7 +158,7 @@ class SyncTest(BaseItemTest):
             # Test that we see an update event
             i1.subject = get_random_string(8)
             i1.save(update_fields=['subject'])
-            time.sleep(5)  # TODO: For some reason, events do not trigger instantly
+            time.sleep(5)  # For some reason, events do not trigger instantly
             notifications = list(test_folder.get_events(subscription_id, watermark))
             modified_event, watermark = self._filter_events(notifications, ModifiedEvent, i1.id)
             self.assertEqual(modified_event.item_id.id, i1.id)
@@ -166,7 +166,7 @@ class SyncTest(BaseItemTest):
             # Test that we see a delete event
             i1_id = i1.id
             i1.delete()
-            time.sleep(5)  # TODO: For some reason, events do not trigger instantly
+            time.sleep(5)  # For some reason, events do not trigger instantly
             notifications = list(test_folder.get_events(subscription_id, watermark))
             deleted_event, watermark = self._filter_events(notifications, DeletedEvent, i1_id)
             self.assertEqual(deleted_event.item_id.id, i1_id)

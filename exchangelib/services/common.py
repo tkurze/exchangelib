@@ -262,7 +262,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
                 raise ErrorServerBusy(f'Reraised from {e.__class__.__name__}({e})')
             except Exception:
-                # This may run from a thread pool, which obfuscates the stack trace. Print trace immediately.
+                # This may run in a thread, which obfuscates the stack trace. Print trace immediately.
                 account = self.account if isinstance(self, EWSAccountService) else None
                 log.warning('Account %s: Exception in _get_elements: %s', account, traceback.format_exc(20))
                 raise
