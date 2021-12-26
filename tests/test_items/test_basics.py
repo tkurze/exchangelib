@@ -286,6 +286,7 @@ class CommonItemTest(BaseItemTest):
     def _run_filter_tests(self, qs, f, filter_kwargs, val):
         for kw in filter_kwargs:
             with self.subTest(f=f, kw=kw):
+                retries = 0
                 matches = qs.filter(**kw).count()
                 if f.is_complex:
                     # Complex fields sometimes fail a search using generated data. In production,
@@ -294,16 +295,15 @@ class CommonItemTest(BaseItemTest):
                     if not matches and isinstance(f, BodyField):
                         # The body field is particularly nasty in this area. Give up
                         continue
-                    for i in range(1, 6):
+                    for _ in range(5):
                         if matches:
                             break
-                        time.sleep(i*2)
+                        retries += 1
+                        time.sleep(retries*2)
                         matches = qs.filter(**kw).count()
-                if f.is_list and not val and list(kw)[0].endswith(f'__{Q.LOOKUP_IN}'):
-                    # __in with an empty list returns an empty result
-                    self.assertEqual(matches, 0, (f.name, val, kw))
-                else:
-                    self.assertEqual(matches, 1, (f.name, val, kw))
+                # __in with an empty list returns an empty result
+                expected = 0 if f.is_list and not val and list(kw)[0].endswith(f'__in') else 1
+                self.assertEqual(matches, expected, (f.name, val, kw, retries))
 
     def test_filter_on_simple_fields(self):
         # Test that we can filter on all simple fields
