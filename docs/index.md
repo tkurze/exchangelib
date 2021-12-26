@@ -760,11 +760,12 @@ You can also edit a draft of a reply or forward
 ```python
 from exchangelib import FileAttachment
 
-forward_draft = m.create_forward(
+save_result = m.create_forward(
     subject='Fwd: Daily motivation',
     body='Hey, look at this!',
-    to_recipients=['carl@example.com', 'denice@example.com']
-).save(a.drafts) # gives you back the item
+    to_recipients=['erik@cederstrand.dk']
+).save(a.drafts)  # gives you back a BulkCreateResult containing the ID and changekey
+forward_draft = a.drafts.get(id=save_result.id, changekey=save_result.changekey)
 forward_draft.reply_to = ['erik@example.com']
 forward_draft.attach(FileAttachment(
   name='my_file.txt', content='hello world'.encode('utf-8'))
