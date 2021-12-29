@@ -3,7 +3,7 @@ import logging
 from fnmatch import fnmatch
 from operator import attrgetter
 
-from .collections import FolderCollection, SyncCompleted
+from .collections import FolderCollection, SyncCompleted, PullSubscription, PushSubscription, StreamingSubscription
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
     ErrorDeleteDistinguishedFolder, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound
@@ -847,39 +847,3 @@ class Folder(BaseFolder):
             if folder_cls == Folder:
                 log.debug('Fallback to class Folder (folder_class %s, name %s)', folder.folder_class, folder.name)
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})
-
-
-class BaseSubscription(metaclass=abc.ABCMeta):
-    def __init__(self, folder, **subscription_kwargs):
-        self.folder = folder
-        self.subscription_kwargs = subscription_kwargs
-        self.subscription_id = None
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, *args, **kwargs):
-        self.folder.unsubscribe(subscription_id=self.subscription_id)
-        self.subscription_id = None
-
-
-class PullSubscription(BaseSubscription):
-    def __enter__(self):
-        self.subscription_id, watermark = self.folder.subscribe_to_pull(**self.subscription_kwargs)
-        return self.subscription_id, watermark
-
-
-class PushSubscription(BaseSubscription):
-    def __enter__(self):
-        self.subscription_id, watermark = self.folder.subscribe_to_push(**self.subscription_kwargs)
-        return self.subscription_id, watermark
-
-    def __exit__(self, *args, **kwargs):
-        # Cannot unsubscribe to push subscriptions
-        pass
-
-
-class StreamingSubscription(BaseSubscription):
-    def __enter__(self):
-        self.subscription_id = self.folder.subscribe_to_streaming(**self.subscription_kwargs)
-        return self.subscription_id

@@ -1,3 +1,4 @@
+import abc
 import logging
 
 from cached_property import threaded_cached_property
@@ -419,6 +420,27 @@ class FolderCollection(SearchableMixIn):
             event_types = SubscribeToStreaming.EVENT_TYPES
         return SubscribeToStreaming(account=self.account).get(folders=self.folders, event_types=event_types)
 
+    def pull_subscription(self, **kwargs):
+        return PullSubscription(folder=self, **kwargs)
+
+    def push_subscription(self, **kwargs):
+        return PushSubscription(folder=self, **kwargs)
+
+    def streaming_subscription(self, **kwargs):
+        return StreamingSubscription(folder=self, **kwargs)
+
+    def unsubscribe(self, subscription_id):
+        """Unsubscribe. Only applies to pull and streaming notifications.
+
+        :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|streaming]()
+        :return: True
+
+        This method doesn't need the current collection instance, but it makes sense to keep the method along the other
+        sync methods.
+        """
+        from ..services import Unsubscribe
+        return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
+
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         from ..services import SyncFolderItems
         folder = self._get_single_folder()
@@ -486,3 +508,39 @@ class FolderCollection(SearchableMixIn):
             if svc.includes_last_item_in_range:  # Try again if there are more items
                 break
         raise SyncCompleted(sync_state=svc.sync_state)
+
+
+class BaseSubscription(metaclass=abc.ABCMeta):
+    def __init__(self, folder, **subscription_kwargs):
+        self.folder = folder
+        self.subscription_kwargs = subscription_kwargs
+        self.subscription_id = None
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        self.folder.unsubscribe(subscription_id=self.subscription_id)
+        self.subscription_id = None
+
+
+class PullSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_pull(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+
+class PushSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id, watermark = self.folder.subscribe_to_push(**self.subscription_kwargs)
+        return self.subscription_id, watermark
+
+    def __exit__(self, *args, **kwargs):
+        # Cannot unsubscribe to push subscriptions
+        pass
+
+
+class StreamingSubscription(BaseSubscription):
+    def __enter__(self):
+        self.subscription_id = self.folder.subscribe_to_streaming(**self.subscription_kwargs)
+        return self.subscription_id

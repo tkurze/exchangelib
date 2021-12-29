@@ -24,6 +24,12 @@ class SyncTest(BaseItemTest):
         # Context manager already unsubscribed us
         with self.assertRaises(ErrorSubscriptionNotFound):
             self.account.inbox.unsubscribe(subscription_id)
+        # Test via folder collection
+        with self.account.root.tois.children.pull_subscription() as (subscription_id, watermark):
+            self.assertIsNotNone(subscription_id)
+            self.assertIsNotNone(watermark)
+        with self.assertRaises(ErrorSubscriptionNotFound):
+            self.account.root.tois.children.unsubscribe(subscription_id)
         # Affinity cookie is not always sent by the server for pull subscriptions
 
     def test_push_subscribe(self):
@@ -34,6 +40,14 @@ class SyncTest(BaseItemTest):
             self.assertIsNotNone(watermark)
         with self.assertRaises(ErrorInvalidSubscription):
             self.account.inbox.unsubscribe(subscription_id)
+        # Test via folder collection
+        with self.account.root.tois.children.push_subscription(
+                callback_url='https://example.com/foo'
+        ) as (subscription_id, watermark):
+            self.assertIsNotNone(subscription_id)
+            self.assertIsNotNone(watermark)
+        with self.assertRaises(ErrorInvalidSubscription):
+            self.account.root.tois.children.unsubscribe(subscription_id)
 
     def test_streaming_subscribe(self):
         self.account.affinity_cookie = None
@@ -42,6 +56,12 @@ class SyncTest(BaseItemTest):
         # Context manager already unsubscribed us
         with self.assertRaises(ErrorSubscriptionNotFound):
             self.account.inbox.unsubscribe(subscription_id)
+        # Test via folder collection
+        with self.account.root.tois.children.streaming_subscription() as subscription_id:
+            self.assertIsNotNone(subscription_id)
+        with self.assertRaises(ErrorSubscriptionNotFound):
+            self.account.root.tois.children.unsubscribe(subscription_id)
+
         # Test affinity cookie
         self.assertIsNotNone(self.account.affinity_cookie)
 
