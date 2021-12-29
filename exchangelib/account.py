@@ -605,10 +605,7 @@ class Account:
             # We accept generators, so it's not always convenient for caller to know up-front if 'ids' is empty. Allow
             # empty 'ids' and return early.
             return
-        # GetPersona only accepts one persona ID per request. Crazy.
-        svc = GetPersona(account=self)
-        for i in ids:
-            yield svc.call(persona=i)
+        yield from GetPersona(account=self).call(personas=ids)
 
     @property
     def mail_tips(self):

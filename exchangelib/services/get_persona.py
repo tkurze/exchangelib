@@ -9,16 +9,12 @@ class GetPersona(EWSAccountService):
 
     SERVICE_NAME = 'GetPersona'
 
-    def call(self, persona):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))
+    def call(self, personas):
+        # GetPersona only accepts one persona ID per request. Crazy.
+        for persona in personas:
+            yield from self._elems_to_objs(self._get_elements(payload=self.get_payload(persona=persona)))
 
-    def _elems_to_objs(self, elems):
-        elements = list(elems)
-        if len(elements) != 1:
-            raise ValueError('Expected exactly one element in response')
-        elem = elements[0]
-        if isinstance(elem, Exception):
-            raise elem
+    def _elem_to_obj(self, elem):
         return Persona.from_xml(elem=elem, account=None)
 
     def get_payload(self, persona):

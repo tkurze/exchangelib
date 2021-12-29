@@ -187,7 +187,7 @@ class ContactsTest(CommonItemTest):
    </s:Body>
 </s:Envelope>'''
         ws = GetPersona(account=self.account)
-        persona = ws.parse(xml)
+        persona = list(ws.parse(xml))[0]
         self.assertEqual(persona.id, 'AAQkADEzAQAKtOtR=')
         self.assertEqual(persona.persona_type, 'Person')
         self.assertEqual(
@@ -221,7 +221,5 @@ class ContactsTest(CommonItemTest):
     def test_get_persona_failure(self):
         # The test server may not have any personas. Just test that the service response with something we can parse
         persona = Persona(id='AAA=', changekey='xxx')
-        try:
-            GetPersona(account=self.account).call(persona=persona)
-        except ErrorInvalidIdMalformed:
-            pass
+        with self.assertRaises(ErrorInvalidIdMalformed):
+            GetPersona(account=self.account).get(personas=[persona])

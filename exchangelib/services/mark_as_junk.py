@@ -14,8 +14,6 @@ class MarkAsJunk(EWSAccountService):
         )
 
     def _elem_to_obj(self, elem):
-        if elem is None:
-            return elem
         return MovedItemId.id_from_xml(elem)
 
     @classmethod
