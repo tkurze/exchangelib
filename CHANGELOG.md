@@ -15,6 +15,8 @@ HEAD
   per page in services like `FindItem` that support paging.
 - Support creating a proper response when getting a notification request
   on the callback URL of a push subscription.
+- `FolderCollection.subscribe_to_[pull|push|streaming]` now return a single
+  subscription instead of a 1-element generator.
 
 
 4.6.2

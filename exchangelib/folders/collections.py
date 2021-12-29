@@ -394,7 +394,7 @@ class FolderCollection(SearchableMixIn):
             return
         if not event_types:
             event_types = SubscribeToPull.EVENT_TYPES
-        yield from SubscribeToPull(account=self.account).call(
+        return SubscribeToPull(account=self.account).get(
             folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
         )
 
@@ -405,7 +405,7 @@ class FolderCollection(SearchableMixIn):
             return
         if not event_types:
             event_types = SubscribeToPush.EVENT_TYPES
-        yield from SubscribeToPush(account=self.account).call(
+        return SubscribeToPush(account=self.account).get(
             folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
             url=callback_url,
         )
@@ -417,7 +417,7 @@ class FolderCollection(SearchableMixIn):
             return
         if not event_types:
             event_types = SubscribeToStreaming.EVENT_TYPES
-        yield from SubscribeToStreaming(account=self.account).call(folders=self.folders, event_types=event_types)
+        return SubscribeToStreaming(account=self.account).get(folders=self.folders, event_types=event_types)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         from ..services import SyncFolderItems

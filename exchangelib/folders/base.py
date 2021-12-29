@@ -526,15 +526,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         from ..services import SubscribeToPull
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
-        s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
+        return FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
             event_types=event_types, watermark=watermark, timeout=timeout,
-        ))
-        if len(s_ids) != 1:
-            raise ValueError(f'Expected result length 1, but got {s_ids}')
-        s_id = s_ids[0]
-        if isinstance(s_id, Exception):
-            raise s_id
-        return s_id
+        )
 
     @require_id
     def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
@@ -549,15 +543,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         from ..services import SubscribeToPush
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
-        s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
+        return FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
             event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
-        ))
-        if len(s_ids) != 1:
-            raise ValueError(f'Expected result length 1, but got {s_ids}')
-        s_id = s_ids[0]
-        if isinstance(s_id, Exception):
-            raise s_id
-        return s_id
+        )
 
     @require_id
     def subscribe_to_streaming(self, event_types=None):
@@ -569,15 +557,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         from ..services import SubscribeToStreaming
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
-        s_ids = list(FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(
-            event_types=event_types,
-        ))
-        if len(s_ids) != 1:
-            raise ValueError(f'Expected result length 1, but got {s_ids}')
-        s_id = s_ids[0]
-        if isinstance(s_id, Exception):
-            raise s_id
-        return s_id
+        return FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(event_types=event_types)
 
     @require_id
     def pull_subscription(self, **kwargs):
