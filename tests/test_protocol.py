@@ -18,10 +18,10 @@ from exchangelib.items import CalendarItem
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
-    SearchableMailbox, FailedMailbox, Mailbox, DLMailbox
+    SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, close_connections
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
-    SetUserOofSettings
+    SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM
 from exchangelib.version import Build, Version
@@ -429,6 +429,42 @@ class ProtocolTest(EWSTest):
             self.account.protocol.expand_dl(
                 DLMailbox(email_address='non_existent_distro@example.com', mailbox_type='PublicDL')
             )
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:ExpandDLResponse ResponseClass="Success"
+            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
+            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+      <m:ResponseMessages>
+        <m:ExpandDLResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:DLExpansion TotalItemsInView="3" IncludesLastItemInRange="true">
+            <t:Mailbox>
+              <t:Name>Foo Smith</t:Name>
+              <t:EmailAddress>foo@example.com</t:EmailAddress>
+              <t:RoutingType>SMTP</t:RoutingType>
+              <t:MailboxType>Mailbox</t:MailboxType>
+            </t:Mailbox>
+            <t:Mailbox>
+              <t:Name>Bar Smith</t:Name>
+              <t:EmailAddress>bar@example.com</t:EmailAddress>
+              <t:RoutingType>SMTP</t:RoutingType>
+              <t:MailboxType>Mailbox</t:MailboxType>
+            </t:Mailbox>
+          </m:DLExpansion>
+        </m:ExpandDLResponseMessage>
+      </m:ResponseMessages>
+    </ExpandDLResponse>
+  </soap:Body>
+</soap:Envelope>'''
+        self.assertListEqual(
+            list(ExpandDL(protocol=self.account.protocol).parse(xml)),
+            [
+                Mailbox(name='Foo Smith', email_address='foo@example.com'),
+                Mailbox(name='Bar Smith', email_address='bar@example.com'),
+            ]
+        )
 
     def test_oof_settings(self):
         # First, ensure a common starting point
@@ -526,6 +562,16 @@ class ProtocolTest(EWSTest):
                     destination_format=fmt))
             self.assertEqual(len(res), 1)
             self.assertEqual(res[0].format, fmt)
+        # Test bad format
+        with self.assertRaises(ValueError) as e:
+            self.account.protocol.convert_ids(
+                [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
+                destination_format='XXX')
+        self.assertEqual(e.exception.args[0], f"'destination_format' 'XXX' must be one of {ID_FORMATS}")
+        # Test bad item type
+        with self.assertRaises(ValueError) as e:
+            list(self.account.protocol.convert_ids([ItemId(id=1)], destination_format='EwsId'))
+        self.assertIn('must be an instance of', e.exception.args[0])
 
     def test_sessionpool(self):
         # First, empty the calendar

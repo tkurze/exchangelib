@@ -570,6 +570,14 @@ class FolderTest(EWSTest):
         # and must not start with "IPM.Configuration"
         name = get_random_string(16, spaces=False, special=False)
 
+        # Bad property
+        with self.assertRaises(ValueError) as e:
+            f.get_user_configuration(name=name, properties='XXX')
+        self.assertEqual(
+            e.exception.args[0],
+            "'properties' 'XXX' must be one of ('Id', 'Dictionary', 'XmlData', 'BinaryData', 'All')"
+        )
+
         # Should not exist yet
         with self.assertRaises(ErrorItemNotFound):
             f.get_user_configuration(name=name)
@@ -612,6 +620,12 @@ class FolderTest(EWSTest):
         self.assertEqual(config.dictionary, {'bar': 'foo', 456: 'a', 'b': True})
         self.assertEqual(config.xml_data, b'<foo>baz</foo>')
         self.assertEqual(config.binary_data, b'YYY')
+
+        # Fetch again but only one property type
+        config = f.get_user_configuration(name=name, properties='XmlData')
+        self.assertEqual(config.dictionary, None)
+        self.assertEqual(config.xml_data, b'<foo>baz</foo>')
+        self.assertEqual(config.binary_data, None)
 
         # Delete the config
         f.delete_user_configuration(name=name)

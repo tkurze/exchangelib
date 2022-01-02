@@ -1,7 +1,10 @@
 from exchangelib.attachments import FileAttachment, ItemAttachment, AttachmentId
 from exchangelib.errors import ErrorItemNotFound, ErrorInvalidIdMalformed
+from exchangelib.fields import FieldPath
 from exchangelib.folders import Inbox
 from exchangelib.items import Item, Message
+from exchangelib.properties import HTMLBody
+from exchangelib.services import GetAttachment
 from exchangelib.util import chunkify
 
 from .test_items.test_basics import BaseItemTest
@@ -105,6 +108,36 @@ class AttachmentsTest(BaseItemTest):
         self.assertEqual(fresh_attachments[0].name, 'attachment2')
         self.assertEqual(fresh_attachments[0].item.subject, attached_item1.subject)
         self.assertEqual(fresh_attachments[0].item.body, attached_item1.body)
+
+    def test_raw_service_call(self):
+        item = self.get_test_item(folder=self.test_folder)
+        attached_item1 = self.get_test_item(folder=self.test_folder)
+        attached_item1.body = HTMLBody('<html><body>Hello HTML</body></html>')
+        att1 = ItemAttachment(name='attachment1', item=attached_item1)
+        item.attach(att1)
+        item.save()
+        with self.assertRaises(ValueError):
+            # Bad body_type
+            GetAttachment(account=att1.parent_item.account).get(
+                items=[att1.attachment_id], include_mime_content=True, body_type='XXX', filter_html_content=None,
+                additional_fields=[],
+            )
+        # Test body_type
+        attachment = GetAttachment(account=att1.parent_item.account).get(
+            items=[att1.attachment_id], include_mime_content=True, body_type='Text', filter_html_content=None,
+            additional_fields=[FieldPath(field=self.ITEM_CLASS.get_field_by_fieldname('body'))],
+        )
+        self.assertEqual(attachment.item.body, 'Hello HTML\r\n')
+        # Test filter_html_content. I wonder what unsafe HTML is.
+        attachment = GetAttachment(account=att1.parent_item.account).get(
+            items=[att1.attachment_id], include_mime_content=False, body_type='HTML', filter_html_content=True,
+            additional_fields=[FieldPath(field=self.ITEM_CLASS.get_field_by_fieldname('body'))],
+        )
+        self.assertEqual(
+            attachment.item.body,
+            '<html>\r\n<head>\r\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\r\n'
+            '</head>\r\n<body>\r\nHello HTML\r\n</body>\r\n</html>\r\n'
+        )
 
     def test_file_attachments(self):
         item = self.get_test_item(folder=self.test_folder)

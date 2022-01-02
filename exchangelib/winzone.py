@@ -30,8 +30,6 @@ def generate_map(timeout=10):
             if e.get('territory') == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
                 # "preferred" region/location timezone name.
-                if not location:
-                    raise ValueError('Expected location')
                 tz_map[location] = e.get('other'), e.get('territory')
     return type_version, other_version, tz_map
 
