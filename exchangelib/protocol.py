@@ -540,10 +540,11 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def get_rooms(self, roomlist):
         return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))
 
-    def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
+    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None, shape=None):
         """Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
         :param names: A list of identifiers to query
+        :param parent_folders: A list of contact folders to search in
         :param return_full_contact_data: If True, returns full contact data (Default value = False)
         :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
         :param shape: (Default value = None)
@@ -551,8 +552,8 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         """
         return list(ResolveNames(protocol=self).call(
-            unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
-            contact_data_shape=shape,
+            unresolved_entries=names, parent_folders=parent_folders, return_full_contact_data=return_full_contact_data,
+            search_scope=search_scope, contact_data_shape=shape,
         ))
 
     def expand_dl(self, distribution_list):

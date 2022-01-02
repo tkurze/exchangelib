@@ -14,7 +14,7 @@ import requests_mock
 
 from exchangelib.credentials import Credentials
 from exchangelib.configuration import Configuration
-from exchangelib.items import CalendarItem
+from exchangelib.items import CalendarItem, SEARCH_SCOPE_CHOICES
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
@@ -296,12 +296,35 @@ class ProtocolTest(EWSTest):
         )
 
     def test_resolvenames(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             self.account.protocol.resolve_names(names=[], search_scope='XXX')
-        with self.assertRaises(ValueError):
+        self.assertEqual(
+            e.exception.args[0],
+            f"'search_scope' XXX must be one of {SEARCH_SCOPE_CHOICES}"
+        )
+        with self.assertRaises(ValueError) as e:
             self.account.protocol.resolve_names(names=[], shape='XXX')
+        self.assertEqual(e.exception.args[0], "'shape' XXX must be one of ('IdOnly', 'Default', 'AllProperties')")
+        with self.assertRaises(ValueError) as e:
+            ResolveNames(protocol=self.account.protocol, chunk_size=500).call(unresolved_entries=None)
+        self.assertEqual(
+            e.exception.args[0],
+            "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup"
+        )
         self.assertGreaterEqual(
             self.account.protocol.resolve_names(names=['xxx@example.com']),
+            []
+        )
+        self.assertGreaterEqual(
+            self.account.protocol.resolve_names(names=['xxx@example.com'], search_scope='ActiveDirectoryContacts'),
+            []
+        )
+        self.assertGreaterEqual(
+            self.account.protocol.resolve_names(names=['xxx@example.com'], shape='AllProperties'),
+            []
+        )
+        self.assertGreaterEqual(
+            self.account.protocol.resolve_names(names=['xxx@example.com'], parent_folders=[self.account.contacts]),
             []
         )
         self.assertEqual(

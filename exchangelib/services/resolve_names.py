@@ -29,14 +29,14 @@ class ResolveNames(EWSService):
     def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
              contact_data_shape=None):
         if self.chunk_size > 100:
-            raise AttributeError(
-                'Chunk size %s is too high. %s supports returning at most 100 candidates for a lookup',
-                self.chunk_size, self.SERVICE_NAME
+            raise ValueError(
+                f'Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 '
+                f'candidates for a lookup',
             )
         if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
-            raise ValueError(f"'search_scope' {search_scope} must be one if {SEARCH_SCOPE_CHOICES}")
+            raise ValueError(f"'search_scope' {search_scope} must be one of {SEARCH_SCOPE_CHOICES}")
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {contact_data_shape} must be one if {SHAPE_CHOICES}")
+            raise ValueError(f"'shape' {contact_data_shape} must be one of {SHAPE_CHOICES}")
         self.return_full_contact_data = return_full_contact_data
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
