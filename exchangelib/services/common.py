@@ -874,8 +874,6 @@ def folder_ids_element(folders, version, tag='m:FolderIds'):
     folder_ids = create_element(tag)
     for folder in folders:
         set_xml_value(folder_ids, to_item_id(folder, FolderId), version=version)
-    if not len(folder_ids):
-        raise ValueError("'folders' must not be empty")
     return folder_ids
 
 
@@ -883,8 +881,6 @@ def item_ids_element(items, version, tag='m:ItemIds'):
     item_ids = create_element(tag)
     for item in items:
         set_xml_value(item_ids, to_item_id(item, ItemId), version=version)
-    if not len(item_ids):
-        raise ValueError("'items' must not be empty")
     return item_ids
 
 
@@ -893,26 +889,21 @@ def attachment_ids_element(items, version, tag='m:AttachmentIds'):
     for item in items:
         attachment_id = item if isinstance(item, AttachmentId) else AttachmentId(id=item)
         set_xml_value(attachment_ids, attachment_id, version=version)
-    if not len(attachment_ids):
-        raise ValueError("'items' must not be empty")
     return attachment_ids
 
 
 def parse_folder_elem(elem, folder, account):
-    if isinstance(elem, Exception):
-        return elem
     if isinstance(folder, RootOfHierarchy):
         f = folder.from_xml(elem=elem, account=folder.account)
     elif isinstance(folder, Folder):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
     elif isinstance(folder, DistinguishedFolderId):
         # We don't know the root, so assume account.root.
-        folder_cls = None
         for cls in account.root.WELLKNOWN_FOLDERS:
             if cls.DISTINGUISHED_FOLDER_ID == folder.id:
                 folder_cls = cls
                 break
-        if not folder_cls:
+        else:
             raise ValueError(f'Unknown distinguished folder ID: {folder.id}')
         f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
     else:
