@@ -92,7 +92,7 @@ class BaseUpdateService(EWSAccountService):
 
     def _change_elem(self, target, fieldnames):
         if not fieldnames:
-            raise ValueError('"fieldnames" must not be empty')
+            raise ValueError("'fieldnames' must not be empty")
         change = create_element(self.CHANGE_ELEMENT_NAME)
         set_xml_value(change, self._target_elem(target), version=self.account.version)
         updates = create_element('t:Updates')

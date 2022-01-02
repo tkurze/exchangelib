@@ -89,7 +89,7 @@ class GetStreamingEvents(EWSAccountService):
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, 't:SubscriptionId', subscription_id)
         if not len(subscriptions_elem):
-            raise ValueError('"subscription_ids" must not be empty')
+            raise ValueError("'subscription_ids' must not be empty")
 
         payload.append(subscriptions_elem)
         add_xml_child(payload, 'm:ConnectionTimeout', connection_timeout)

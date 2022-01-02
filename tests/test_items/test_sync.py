@@ -278,6 +278,16 @@ class SyncTest(BaseItemTest):
         # Test that we can get the failing subscription IDs from the response message
         test_folder = self.account.drafts
 
+        # Test with empty list of subscription
+        with self.assertRaises(ValueError) as e:
+            list(test_folder.get_streaming_events([], connection_timeout=1, max_notifications_returned=1))
+        self.assertEqual(e.exception.args[0], "'subscription_ids' must not be empty")
+
+        # Test with bad connection_timeout
+        with self.assertRaises(ValueError) as e:
+            list(test_folder.get_streaming_events('AAA-', connection_timeout=-1, max_notifications_returned=1))
+        self.assertEqual(e.exception.args[0], "'connection_timeout' must be a positive integer")
+
         # Test a single bad notification
         with self.assertRaises(ErrorInvalidSubscription) as e:
             list(test_folder.get_streaming_events('AAA-', connection_timeout=1, max_notifications_returned=1))

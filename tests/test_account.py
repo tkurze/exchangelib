@@ -119,7 +119,6 @@ class AccountTest(EWSTest):
             recipients=[],
             mail_tips_requested='All',
         ))
-        #self.assertEqual(e.exception.args[0], '"recipients" must not be empty')
 
     def test_delegate(self):
         # The test server does not have any delegate info. Test that account.delegates works, and mock to test parsing
