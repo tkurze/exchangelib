@@ -8,7 +8,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     SyncIssues, MyContacts, ToDoSearch, FolderCollection, DistinguishedFolderId, Files, \
     DefaultFoldersChangeHistory, PassThroughSearchResults, SmsAndChatsSync, GraphAnalytics, Signal, \
     PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy, Companies, \
-    OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot
+    OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot, NON_DELETABLE_FOLDERS
 from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
 from exchangelib.queryset import Q
 from exchangelib.services import GetFolder
@@ -449,6 +449,9 @@ class FolderTest(EWSTest):
         f2 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
 
         f1_id, f1_changekey, f1_parent = f1.id, f1.changekey, f1.parent
+        with self.assertRaises(ValueError) as e:
+            f1.move(to_folder='XXX')  # Must be folder instance
+        self.assertEqual(e.exception.args[0], "'to_folder' 'XXX' must be a Folder or FolderId instance")
         f1.move(f2)
         self.assertEqual(f1.id, f1_id)
         self.assertNotEqual(f1.changekey, f1_changekey)
@@ -470,6 +473,12 @@ class FolderTest(EWSTest):
         f.name = get_random_string(16)
         f.save()
         f.delete()
+
+    def test_non_deletable_folders(self):
+        for f in self.account.root.walk():
+            if f.__class__ not in NON_DELETABLE_FOLDERS:
+                continue
+            self.assertEqual(f.is_deletable, False)
 
     def test_folder_query_set(self):
         # Create a folder hierarchy and test a folder queryset

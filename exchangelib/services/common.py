@@ -165,7 +165,8 @@ class EWSService(metaclass=abc.ABCMeta):
     def _elems_to_objs(self, elems):
         """Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions)."""
         for elem in elems:
-            if isinstance(elem, Exception):
+            # Allow None here. Some services don't return an ID if the target folder is outside the mailbox.
+            if isinstance(elem, (Exception, type(None))):
                 yield elem
                 continue
             yield self._elem_to_obj(elem)

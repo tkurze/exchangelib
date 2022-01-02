@@ -74,6 +74,4 @@ class ResolveNames(EWSService):
             ))
         for entry in unresolved_entries:
             add_xml_child(payload, 'm:UnresolvedEntry', entry)
-        if not len(payload):
-            raise ValueError('"unresolved_entries" must not be empty')
         return payload

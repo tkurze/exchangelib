@@ -308,6 +308,9 @@ class SyncTest(BaseItemTest):
     def test_push_message_responses(self):
         # Test SendNotification
         ws = SendNotification(protocol=None)
+        with self.assertRaises(ValueError):
+            # Invalid status
+            ws.get_payload(status='XXX')
         self.assertEqual(
             PrettyXmlHandler.prettify_xml(ws.ok_payload()),
             b'''\

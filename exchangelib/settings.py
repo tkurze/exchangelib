@@ -52,8 +52,6 @@ class OofSettings(EWSElement):
         elem = create_element(f't:{self.REQUEST_ELEMENT_NAME}')
         for attr in ('state', 'external_audience'):
             value = getattr(self, attr)
-            if value is None:
-                continue
             f = self.get_field_by_fieldname(attr)
             set_xml_value(elem, f.to_xml(value, version=version))
         if self.start or self.end:

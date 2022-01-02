@@ -20,7 +20,8 @@ from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoR
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, close_connections
-from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes
+from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
+    SetUserOofSettings
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM
 from exchangelib.version import Build, Version
@@ -475,6 +476,13 @@ class ProtocolTest(EWSTest):
             start=start,
             end=end,
         )
+        with self.assertRaises(ValueError):
+            self.account.oof_settings = 'XXX'
+        with self.assertRaises(ValueError):
+            SetUserOofSettings(account=self.account).get(
+                oof_settings=oof,
+                mailbox='XXX',
+            )
         self.account.oof_settings = oof
         # TODO: For some reason, disabling OOF does not always work. Don't assert because we want a stable test suite
         if self.account.oof_settings != oof:

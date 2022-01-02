@@ -47,8 +47,6 @@ class UpdateItem(BaseUpdateService):
         ))
 
     def _elem_to_obj(self, elem):
-        if elem is None:
-            return elem
         return Item.id_from_xml(elem)
 
     def _update_elems(self, target, fieldnames):

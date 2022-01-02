@@ -110,8 +110,6 @@ class BaseUpdateService(EWSAccountService):
             if not target.account:
                 target.account = self.account
             changes.append(self._change_elem(target=target, fieldnames=fieldnames))
-        if not len(changes):
-            raise ValueError('List of changes must not be empty')
         return changes
 
 

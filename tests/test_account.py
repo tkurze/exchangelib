@@ -9,9 +9,9 @@ from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, Unauthori
     ErrorDelegateNoUser
 from exchangelib.folders import Calendar
 from exchangelib.items import Message
-from exchangelib.properties import DelegateUser, UserId, DelegatePermissions
+from exchangelib.properties import DelegateUser, UserId, DelegatePermissions, SendingAs
 from exchangelib.protocol import Protocol, FaultTolerance
-from exchangelib.services import GetDelegate
+from exchangelib.services import GetDelegate, GetMailTips
 from exchangelib.version import Version, EXCHANGE_2007_SP1
 
 from .common import EWSTest
@@ -113,6 +113,13 @@ class AccountTest(EWSTest):
     def test_mail_tips(self):
         # Test that mail tips work
         self.assertEqual(self.account.mail_tips.recipient_address, self.account.primary_smtp_address)
+        # recipients must not be empty
+        list(GetMailTips(protocol=self.account.protocol).call(
+            sending_as=SendingAs(email_address=self.account.primary_smtp_address),
+            recipients=[],
+            mail_tips_requested='All',
+        ))
+        #self.assertEqual(e.exception.args[0], '"recipients" must not be empty')
 
     def test_delegate(self):
         # The test server does not have any delegate info. Test that account.delegates works, and mock to test parsing

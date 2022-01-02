@@ -90,6 +90,9 @@ class GenericItemTest(CommonItemTest):
             item.move(to_folder=self.test_folder)  # Must be an existing item
         item = self.get_test_item()
         item.save()
+        with self.assertRaises(ValueError) as e:
+            item.move(to_folder='XXX')  # Must be folder instance
+        self.assertEqual(e.exception.args[0], "'to_folder' 'XXX' must be a Folder or FolderId instance")
         item_id, changekey = item.id, item.changekey
         item.delete()
         item.id, item.changekey = item_id, changekey
@@ -129,6 +132,9 @@ class GenericItemTest(CommonItemTest):
             item.send()  # Must have account on send
         item = self.get_test_item()
         item.save()
+        with self.assertRaises(ValueError) as e:
+            item.send(copy_to_folder='XXX', save_copy=True)  # Invalid folder
+        self.assertEqual(e.exception.args[0], "'saved_item_folder' 'XXX' must be a Folder or FolderId instance")
         item_id, changekey = item.id, item.changekey
         item.delete()
         item.id, item.changekey = item_id, changekey

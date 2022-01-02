@@ -26,8 +26,6 @@ class GetMailTips(EWSService):
         recipients_elem = create_element('m:Recipients')
         for recipient in recipients:
             set_xml_value(recipients_elem, recipient, version=self.protocol.version)
-        if not len(recipients_elem):
-            raise ValueError('"recipients" must not be empty')
         payload.append(recipients_elem)
 
         if mail_tips_requested:

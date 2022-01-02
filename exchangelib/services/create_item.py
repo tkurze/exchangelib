@@ -46,8 +46,6 @@ class CreateItem(EWSAccountService):
         ))
 
     def _elem_to_obj(self, elem):
-        if elem is None:
-            return elem
         if isinstance(elem, bool):
             return elem
         return BulkCreateResult.from_xml(elem=elem, account=self.account)
@@ -89,7 +87,5 @@ class CreateItem(EWSAccountService):
             if not item.account:
                 item.account = self.account
             set_xml_value(item_elems, item, version=self.account.version)
-        if not len(item_elems):
-            raise ValueError('"items" must not be empty')
         payload.append(item_elems)
         return payload
