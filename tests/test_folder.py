@@ -1,5 +1,5 @@
 from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
-    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound
+    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists
 from exchangelib.extended_properties import ExtendedProperty
 from exchangelib.items import Message
 from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
@@ -402,8 +402,10 @@ class FolderTest(EWSTest):
             self.account.root.deregister(FolderSize)
 
     def test_create_update_empty_delete(self):
-        f = Messages(parent=self.account.inbox, name=get_random_string(16))
-        f.save()
+        name = get_random_string(16)
+        f = Messages(parent=self.account.inbox, name=name).save()
+        with self.assertRaises(ErrorFolderExists):
+            Messages(parent=self.account.inbox, name=name).save()
         self.assertIsNotNone(f.id)
         self.assertIsNotNone(f.changekey)
 

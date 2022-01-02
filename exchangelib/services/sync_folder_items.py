@@ -11,10 +11,10 @@ class SyncFolderItems(SyncFolder):
     """
 
     SERVICE_NAME = 'SyncFolderItems'
-    SYNC_SCOPES = {
+    SYNC_SCOPES = (
         'NormalItems',
         'NormalAndAssociatedItems',
-    }
+    )
     # Extra change type
     READ_FLAG_CHANGE = 'read_flag_change'
     CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)

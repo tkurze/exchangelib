@@ -33,8 +33,6 @@ class UpdateItem(BaseUpdateService):
                 f"'send_meeting_invitations_or_cancellations' {send_meeting_invitations_or_cancellations!r} must be "
                 f"one of {SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES}"
             )
-        if suppress_read_receipts not in (True, False):
-            raise ValueError(f"'suppress_read_receipts' {suppress_read_receipts!r} must be True or False")
         if message_disposition == SEND_ONLY:
             raise ValueError('Cannot send-only existing objects. Use SendItem service instead')
         return self._elems_to_objs(self._chunked_get_elements(

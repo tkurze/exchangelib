@@ -57,7 +57,7 @@ class Configuration:
         if not isinstance(retry_policy, RetryPolicy):
             raise ValueError(f"'retry_policy' {retry_policy!r} must be a RetryPolicy instance")
         if not isinstance(max_connections, (int, type(None))):
-            raise ValueError("'max_connections' must be an integer")
+            raise ValueError(f"'max_connections' {max_connections!r} must be an integer")
         self._credentials = credentials
         if server:
             self.service_endpoint = f'https://{server}/EWS/Exchange.asmx'

@@ -45,7 +45,7 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
         for event_type in event_types:
             add_xml_child(event_types_elem, 't:EventType', event_type)
         if not len(event_types_elem):
-            raise ValueError('"event_types" must not be empty')
+            raise ValueError("'event_types' must not be empty")
         request_elem.append(event_types_elem)
         return request_elem
 

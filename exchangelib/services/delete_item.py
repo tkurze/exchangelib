@@ -23,8 +23,6 @@ class DeleteItem(EWSAccountService):
         if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
             raise ValueError(f"'affected_task_occurrences' {affected_task_occurrences} must be one of "
                              f"{AFFECTED_TASK_OCCURRENCES_CHOICES}")
-        if suppress_read_receipts not in (True, False):
-            raise ValueError(f"'suppress_read_receipts' {suppress_read_receipts} must be True or False")
         return self._chunked_get_elements(
             self.get_payload,
             items=items,

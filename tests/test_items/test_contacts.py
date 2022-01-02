@@ -9,8 +9,8 @@ from exchangelib.folders import Contacts
 from exchangelib.indexed_properties import EmailAddress, PhysicalAddress, PhoneNumber
 from exchangelib.items import Contact, DistributionList, Persona
 from exchangelib.properties import Mailbox, Member, Attribution, SourceId, FolderId, StringAttributedValue, \
-    PhoneNumberAttributedValue, PersonaPhoneNumberTypeValue
-from exchangelib.services import GetPersona
+    PhoneNumberAttributedValue, PersonaPhoneNumberTypeValue, EmailAddress as EmailAddressProp
+from exchangelib.services import GetPersona, FindPeople
 
 from ..common import get_random_string, get_random_email
 from .test_basics import CommonItemTest
@@ -125,6 +125,41 @@ class ContactsTest(CommonItemTest):
                 self.test_folder.people().only('display_name').filter(display_name='john').order_by('display_name')
             )),
             0
+        )
+        # Test with a querystring filter
+        self.assertGreaterEqual(len(list(self.test_folder.people().filter('DisplayName:john'))), 0)
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body>
+      <m:FindPeopleResponse ResponseClass="Success"
+            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseCode>NoError</m:ResponseCode>
+      <m:People>
+        <m:Persona>
+          <t:PersonaId Id="AAAA=" />
+          <t:DisplayName>Foo B. Smith</t:DisplayName>
+          <t:EmailAddress>
+            <t:Name>Foo Smith</t:Name>
+            <t:EmailAddress>foo@example.com</t:EmailAddress>
+            <t:RoutingType>SMTP</t:RoutingType>
+          </t:EmailAddress>
+          <t:RelevanceScore>2147483647</t:RelevanceScore>
+        </m:Persona>
+      </m:People>
+      <m:TotalNumberOfPeopleInView>1</m:TotalNumberOfPeopleInView>
+    </m:FindPeopleResponse>
+  </s:Body>
+</s:Envelope>'''
+        self.assertListEqual(
+            list(FindPeople(account=self.account).parse(xml)),
+            [Persona(
+                id='AAAA=',
+                display_name='Foo B. Smith',
+                email_address=EmailAddressProp(name='Foo Smith', email_address='foo@example.com'),
+                relevance_score='2147483647',
+            )]
         )
 
     def test_get_persona(self):

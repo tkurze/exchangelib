@@ -33,6 +33,9 @@ class ConfigurationTest(TimedTestCase):
         with self.assertRaises(ValueError) as e:
             Configuration(retry_policy='foo')
         self.assertEqual(e.exception.args[0], "'retry_policy' 'foo' must be a RetryPolicy instance")
+        with self.assertRaises(ValueError) as e:
+            Configuration(max_connections='foo')
+        self.assertEqual(e.exception.args[0], "'max_connections' 'foo' must be an integer")
 
     def test_magic(self):
         config = Configuration(

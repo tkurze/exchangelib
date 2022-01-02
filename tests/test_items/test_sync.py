@@ -3,8 +3,8 @@ import time
 from exchangelib.errors import ErrorInvalidSubscription, ErrorSubscriptionNotFound
 from exchangelib.folders import Inbox
 from exchangelib.items import Message
-from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent, Notification
-from exchangelib.services import SendNotification
+from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent, Notification, ItemId
+from exchangelib.services import SendNotification, SubscribeToPull
 from exchangelib.util import PrettyXmlHandler
 
 from .test_basics import BaseItemTest
@@ -15,6 +15,17 @@ class SyncTest(BaseItemTest):
     TEST_FOLDER = 'inbox'
     FOLDER_CLASS = Inbox
     ITEM_CLASS = Message
+
+    def test_subscribe_invalid_kwargs(self):
+        with self.assertRaises(ValueError) as e:
+            self.account.inbox.subscribe_to_pull(event_types=['XXX'])
+        self.assertEqual(
+            e.exception.args[0],
+            f"'event_types' values must consist of values in {SubscribeToPull.EVENT_TYPES}"
+        )
+        with self.assertRaises(ValueError) as e:
+            self.account.inbox.subscribe_to_pull(event_types=[])
+        self.assertEqual(e.exception.args[0], "'event_types' must not be empty")
 
     def test_pull_subscribe(self):
         self.account.affinity_cookie = None
@@ -102,10 +113,23 @@ class SyncTest(BaseItemTest):
     def test_sync_folder_items(self):
         test_folder = self.get_test_folder().save()
 
+        with self.assertRaises(ValueError) as e:
+            list(test_folder.sync_items(max_changes_returned=-1))
+        self.assertEqual(e.exception.args[0], "'max_changes_returned' -1 must be a positive integer")
+        with self.assertRaises(ValueError) as e:
+            list(test_folder.sync_items(sync_scope='XXX'))
+        self.assertEqual(
+            e.exception.args[0],
+            "'sync_scope' 'XXX' must be one of ('NormalItems', 'NormalAndAssociatedItems')"
+        )
+
         # Test that item_sync_state is set after calling sync_hierarchy
         self.assertIsNone(test_folder.item_sync_state)
         list(test_folder.sync_items())
         self.assertIsNotNone(test_folder.item_sync_state)
+        # Test non-default values
+        list(test_folder.sync_items(sync_scope='NormalItems'))
+        list(test_folder.sync_items(ignore=[ItemId(id='AAA=')]))
 
         # Test that we see a create event
         i1 = self.get_test_item(folder=test_folder).save()

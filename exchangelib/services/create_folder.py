@@ -1,4 +1,5 @@
 from .common import EWSAccountService, parse_folder_elem, folder_ids_element
+from ..errors import ErrorFolderExists
 from ..util import create_element, MNS
 
 
@@ -7,6 +8,9 @@ class CreateFolder(EWSAccountService):
 
     SERVICE_NAME = 'CreateFolder'
     element_container_name = f'{{{MNS}}}Folders'
+    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
+        ErrorFolderExists,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

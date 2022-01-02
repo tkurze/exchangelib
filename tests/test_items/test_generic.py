@@ -12,6 +12,7 @@ from exchangelib.folders import Inbox, FolderCollection
 from exchangelib.items import CalendarItem, Message
 from exchangelib.queryset import QuerySet
 from exchangelib.restriction import Restriction, Q
+from exchangelib.services import CreateItem, UpdateItem, DeleteItem
 from exchangelib.version import Build, EXCHANGE_2007, EXCHANGE_2013
 
 from ..common import get_random_string, mock_version
@@ -143,6 +144,115 @@ class GenericItemTest(CommonItemTest):
         item = self.get_test_item()
         with self.assertRaises(AttributeError):
             item.send(copy_to_folder=self.account.trash, save_copy=False)  # Inconsistent args
+
+    def test_invalid_createitem_args(self):
+        with self.assertRaises(ValueError) as e:
+            CreateItem(account=self.account).call(
+                items=[],
+                folder=None,
+                message_disposition='XXX',
+                send_meeting_invitations='SendToNone',
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'message_disposition' 'XXX' must be one of ('SaveOnly', 'SendOnly', 'SendAndSaveCopy')"
+        )
+        with self.assertRaises(ValueError) as e:
+            CreateItem(account=self.account).call(
+                items=[],
+                folder=None,
+                message_disposition='SaveOnly',
+                send_meeting_invitations='XXX',
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'send_meeting_invitations' 'XXX' must be one of ('SendToNone', 'SendOnlyToAll', 'SendToAllAndSaveCopy')"
+        )
+        with self.assertRaises(ValueError) as e:
+            CreateItem(account=self.account).call(
+                items=[],
+                folder='XXX',
+                message_disposition='SaveOnly',
+                send_meeting_invitations='SendToNone',
+            )
+        self.assertEqual(e.exception.args[0], "'folder' 'XXX' must be a Folder or FolderId instance")
+
+    def test_invalid_deleteitem_args(self):
+        with self.assertRaises(ValueError) as e:
+            DeleteItem(account=self.account).call(
+                items=[],
+                delete_type='XXX',
+                send_meeting_cancellations='SendToNone',
+                affected_task_occurrences='AllOccurrences',
+                suppress_read_receipts=True,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'delete_type' XXX must be one of ('HardDelete', 'SoftDelete', 'MoveToDeletedItems')"
+        )
+        with self.assertRaises(ValueError) as e:
+            DeleteItem(account=self.account).call(
+                items=[],
+                delete_type='HardDelete',
+                send_meeting_cancellations='XXX',
+                affected_task_occurrences='AllOccurrences',
+                suppress_read_receipts=True,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'send_meeting_cancellations' XXX must be one of ('SendToNone', 'SendOnlyToAll', 'SendToAllAndSaveCopy')"
+        )
+        with self.assertRaises(ValueError) as e:
+            DeleteItem(account=self.account).call(
+                items=[],
+                delete_type='HardDelete',
+                send_meeting_cancellations='SendToNone',
+                affected_task_occurrences='XXX',
+                suppress_read_receipts=True,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'affected_task_occurrences' XXX must be one of ('AllOccurrences', 'SpecifiedOccurrenceOnly')"
+        )
+
+    def test_invalid_updateitem_args(self):
+        with self.assertRaises(ValueError) as e:
+            UpdateItem(account=self.account).call(
+                items=[],
+                conflict_resolution='XXX',
+                message_disposition='SaveOnly',
+                send_meeting_invitations_or_cancellations='SendToNone',
+                suppress_read_receipts=True,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'conflict_resolution' 'XXX' must be one of ('NeverOverwrite', 'AutoResolve', 'AlwaysOverwrite')"
+        )
+        with self.assertRaises(ValueError) as e:
+            UpdateItem(account=self.account).call(
+                items=[],
+                conflict_resolution='NeverOverwrite',
+                message_disposition='XXX',
+                send_meeting_invitations_or_cancellations='SendToNone',
+                suppress_read_receipts=True,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'message_disposition' 'XXX' must be one of ('SaveOnly', 'SendOnly', 'SendAndSaveCopy')"
+        )
+        with self.assertRaises(ValueError) as e:
+            UpdateItem(account=self.account).call(
+                items=[],
+                conflict_resolution='NeverOverwrite',
+                message_disposition='SaveOnly',
+                send_meeting_invitations_or_cancellations='XXX',
+                suppress_read_receipts=True,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'send_meeting_invitations_or_cancellations' 'XXX' must be one of "
+            "('SendToNone', 'SendOnlyToAll', 'SendOnlyToChanged', 'SendToAllAndSaveCopy', 'SendToChangedAndSaveCopy')"
+        )
 
     def test_unsupported_fields(self):
         # Create a field that is not supported by any current versions. Test that we fail when using this field
