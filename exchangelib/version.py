@@ -66,13 +66,13 @@ class Build:
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
-            raise ValueError("'major_version' must be an integer")
+            raise ValueError(f"'major_version' {major_version!r} must be an integer")
         if not isinstance(minor_version, int):
-            raise ValueError("'minor_version' must be an integer")
+            raise ValueError(f"'minor_version' {minor_version!r} must be an integer")
         if not isinstance(major_build, int):
-            raise ValueError("'major_build' must be an integer")
+            raise ValueError(f"'major_build' {major_build!r} must be an integer")
         if not isinstance(minor_build, int):
-            raise ValueError("'minor_build' must be an integer")
+            raise ValueError(f"'minor_build' {minor_build!r} must be an integer")
         self.major_version = major_version
         self.minor_version = minor_version
         self.major_build = major_build
@@ -188,15 +188,17 @@ class Version:
     __slots__ = 'build', 'api_version'
 
     def __init__(self, build, api_version=None):
-        if not isinstance(build, (Build, type(None))):
-            raise ValueError("'build' must be a Build instance")
-        self.build = build
         if api_version is None:
+            if not isinstance(build, Build):
+                raise ValueError(f"'build' {build!r} must be a Build instance")
             self.api_version = build.api_version()
         else:
+            if not isinstance(build, (Build, type(None))):
+                raise ValueError(f"'build' {build!r} must be a Build instance")
             if not isinstance(api_version, str):
-                raise ValueError("'api_version' must be a string")
+                raise ValueError(f"'api_version' {api_version!r} must be a string")
             self.api_version = api_version
+        self.build = build
 
     @property
     def fullname(self):

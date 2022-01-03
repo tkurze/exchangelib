@@ -573,7 +573,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-        :param search_filter: Is set, must be a single email alias (Default value = None)
+        :param search_filter: If set, must be a single email alias (Default value = None)
         :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
         :return: a list of SearchableMailbox, FailedMailbox or Exception instances

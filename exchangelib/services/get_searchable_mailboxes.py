@@ -37,13 +37,8 @@ class GetSearchableMailboxes(EWSService):
         for msg in response:
             for container_name in (self.element_container_name, self.failed_mailboxes_container_name):
                 try:
-                    container_or_exc = self._get_element_container(message=msg, name=container_name)
+                    container = self._get_element_container(message=msg, name=container_name)
                 except MalformedResponseError:
-                    # Responses may contain no failed mailboxes. _get_element_container() does not accept this.
-                    if container_name == self.failed_mailboxes_container_name:
-                        continue
-                    raise
-                if isinstance(container_or_exc, (bool, Exception)):
-                    yield container_or_exc
+                    # Responses may contain no mailboxes of either kind. _get_element_container() does not accept this.
                     continue
-                yield from self._get_elements_in_container(container=container_or_exc)
+                yield from self._get_elements_in_container(container=container)

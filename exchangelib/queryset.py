@@ -87,14 +87,6 @@ class QuerySet(SearchableMixIn):
         # items = list(qs)
         # new_qs = qs.exclude(bar='baz')  # This should work, and should fetch from the server
         #
-        if not isinstance(self.q, Q):
-            raise ValueError(f"self.q value {self.q!r} must be None or a Q instance")
-        if not isinstance(self.only_fields, (type(None), tuple)):
-            raise ValueError(f"self.only_fields value {self.only_fields!r} must be None or a tuple")
-        if not isinstance(self.order_fields, (type(None), tuple)):
-            raise ValueError(f"self.order_fields value {self.order_fields!r} must be None or a tuple")
-        if self.return_format not in self.RETURN_TYPES:
-            raise ValueError(f"self.return_value {self.return_format!r} must be one of {self.RETURN_TYPES}")
         # Only mutable objects need to be deepcopied. Folder should be the same object
         new_qs = self.__class__(self.folder_collection, request_type=self.request_type)
         new_qs.q = deepcopy(self.q)

@@ -8,6 +8,41 @@ from .common import TimedTestCase
 
 
 class VersionTest(TimedTestCase):
+    def test_invalid_version_args(self):
+        with self.assertRaises(ValueError) as e:
+            Version(build='XXX')
+        self.assertEqual(e.exception.args[0], "'build' 'XXX' must be a Build instance")
+        with self.assertRaises(ValueError) as e:
+            Version(build='XXX', api_version='XXX')
+        self.assertEqual(e.exception.args[0], "'build' 'XXX' must be a Build instance")
+        with self.assertRaises(ValueError) as e:
+            Version(build=Build(15, 1, 2, 3), api_version=999)
+        self.assertEqual(e.exception.args[0], "'api_version' 999 must be a string")
+
+    def test_invalid_build_args(self):
+        with self.assertRaises(ValueError) as e:
+            Build('XXX', 2, 3, 4)
+        self.assertEqual(e.exception.args[0], "'major_version' 'XXX' must be an integer")
+        with self.assertRaises(ValueError) as e:
+            Build(1, 'XXX', 3, 4)
+        self.assertEqual(e.exception.args[0], "'minor_version' 'XXX' must be an integer")
+        with self.assertRaises(ValueError) as e:
+            Build(1, 2, 'XXX', 4)
+        self.assertEqual(e.exception.args[0], "'major_build' 'XXX' must be an integer")
+        with self.assertRaises(ValueError) as e:
+            Build(1, 2, 3, 'XXX')
+        self.assertEqual(e.exception.args[0], "'minor_build' 'XXX' must be an integer")
+
+    def test_comparison(self):
+        self.assertEqual(Version(Build(15, 1, 2, 3)), Version(Build(15, 1, 2, 3)))
+        self.assertNotEqual(Version(Build(15, 1, 2, 3)), Version(Build(15, 1)))
+        self.assertNotEqual(Version(Build(15, 1, 2, 3), api_version='XXX'), Version(None, api_version='XXX'))
+        self.assertNotEqual(Version(None, api_version='XXX'), Version(Build(15, 1, 2), api_version='XXX'))
+        self.assertEqual(Version(Build(15, 1, 2, 3), 'XXX'), Version(Build(15, 1, 2, 3), 'XXX'))
+        self.assertNotEqual(Version(Build(15, 1, 2, 3), 'XXX'), Version(Build(15, 1, 2, 3), 'YYY'))
+        self.assertNotEqual(Version(Build(15, 1, 2, 3), 'XXX'), Version(Build(99, 88), 'XXX'))
+        self.assertNotEqual(Version(Build(15, 1, 2, 3), 'XXX'), Version(Build(99, 88), 'YYY'))
+
     def test_default_api_version(self):
         # Test that a version gets a reasonable api_version value if we don't set one explicitly
         version = Version(build=Build(15, 1, 2, 3))

@@ -235,6 +235,10 @@ class UtilTest(EWSTest):
                 r, session = post_ratelimited(protocol=protocol, session=session, url='http://', headers=None, data='')
             self.assertEqual(rle.exception.status_code, 503)
             self.assertEqual(rle.exception.url, url)
+            self.assertRegex(
+                str(rle.exception),
+                r'Max timeout reached \(gave up after .* seconds. URL https://example.com returned status code 503\)'
+            )
             self.assertTrue(1 <= rle.exception.total_wait < 2)  # One RETRY_WAIT plus some overhead
 
             # Test something larger than the default wait, so we retry at least once
@@ -244,6 +248,10 @@ class UtilTest(EWSTest):
                 r, session = post_ratelimited(protocol=protocol, session=session, url='http://', headers=None, data='')
             self.assertEqual(rle.exception.status_code, 503)
             self.assertEqual(rle.exception.url, url)
+            self.assertRegex(
+                str(rle.exception),
+                r'Max timeout reached \(gave up after .* seconds. URL https://example.com returned status code 503\)'
+            )
             # We double the wait for each retry, so this is RETRY_WAIT + 2*RETRY_WAIT plus some overhead
             self.assertTrue(3 <= rle.exception.total_wait < 4, rle.exception.total_wait)
         finally:

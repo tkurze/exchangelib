@@ -397,7 +397,9 @@ class ProtocolTest(EWSTest):
     def test_get_searchable_mailboxes(self):
         # Insufficient privileges for the test account, so let's just test the exception
         with self.assertRaises(ErrorAccessDenied):
-            self.account.protocol.get_searchable_mailboxes('non_existent_distro@example.com')
+            self.account.protocol.get_searchable_mailboxes(search_filter='non_existent_distro@example.com')
+        with self.assertRaises(ErrorAccessDenied):
+            self.account.protocol.get_searchable_mailboxes(expand_group_membership=True)
 
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
@@ -409,7 +411,7 @@ class ProtocolTest(EWSTest):
          <m:SearchableMailboxes>
             <t:SearchableMailbox>
                <t:Guid>33a408fe-2574-4e3b-49f5-5e1e000a3035</t:Guid>
-               <t:PrimarySmtpAddress>LOLgroup@contoso.com</t:PrimarySmtpAddress>
+               <t:PrimarySmtpAddress>LOLgroup@example.com</t:PrimarySmtpAddress>
                <t:IsExternalMailbox>false</t:IsExternalMailbox>
                <t:ExternalEmailAddress/>
                <t:DisplayName>LOLgroup</t:DisplayName>
@@ -417,7 +419,7 @@ class ProtocolTest(EWSTest):
                <t:ReferenceId>/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup</t:ReferenceId>
             </t:SearchableMailbox>
             <t:FailedMailbox>
-               <t:Mailbox>FAILgroup@contoso.com</t:Mailbox>
+               <t:Mailbox>FAILgroup@example.com</t:Mailbox>
                <t:ErrorCode>123</t:ErrorCode>
                <t:ErrorMessage>Catastrophic Failure</t:ErrorMessage>
                <t:IsArchive>true</t:IsArchive>
@@ -430,7 +432,7 @@ class ProtocolTest(EWSTest):
         self.assertListEqual(list(ws.parse(xml)), [
             SearchableMailbox(
                 guid='33a408fe-2574-4e3b-49f5-5e1e000a3035',
-                primary_smtp_address='LOLgroup@contoso.com',
+                primary_smtp_address='LOLgroup@example.com',
                 is_external=False,
                 external_email=None,
                 display_name='LOLgroup',
@@ -438,7 +440,7 @@ class ProtocolTest(EWSTest):
                 reference_id='/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup',
             ),
             FailedMailbox(
-                mailbox='FAILgroup@contoso.com',
+                mailbox='FAILgroup@example.com',
                 error_code=123,
                 error_message='Catastrophic Failure',
                 is_archive=True,

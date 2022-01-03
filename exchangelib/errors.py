@@ -87,22 +87,10 @@ class AutoDiscoverCircularRedirect(AutoDiscoverError):
     pass
 
 
-class AutoDiscoverRedirect(AutoDiscoverError):
-    def __init__(self, redirect_email):
-        self.redirect_email = redirect_email
-        super().__init__(str(self))
-
-    def __str__(self):
-        return f'AutoDiscover redirects to {self.redirect_email}'
-
-
 class NaiveDateTimeNotAllowed(ValueError):
     def __init__(self, local_dt):
         super().__init__()
-        from .ewsdatetime import EWSDateTime
-        if not isinstance(local_dt, EWSDateTime):
-            raise ValueError(f"'local_dt' value {local_dt!r} must be an EWSDateTime")
-        self.local_dt = local_dt
+        self.local_dt = local_dt  # An EWSDateTime instance
 
 
 class UnknownTimeZone(EWSError):

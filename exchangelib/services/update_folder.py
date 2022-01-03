@@ -1,10 +1,12 @@
+import abc
+
 from .common import EWSAccountService, parse_folder_elem, to_item_id
 from ..fields import FieldPath, IndexedField
 from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
 
-class BaseUpdateService(EWSAccountService):
+class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
     """Base class for UpdateFolder and UpdateItem"""
     SET_FIELD_ELEMENT_NAME = None
     DELETE_FIELD_ELEMENT_NAME = None
@@ -101,8 +103,9 @@ class BaseUpdateService(EWSAccountService):
         change.append(updates)
         return change
 
+    @abc.abstractmethod
     def _target_elem(self, target):
-        raise NotImplementedError()
+        pass
 
     def _changes_elem(self, target_changes):
         changes = create_element(self.CHANGES_ELEMENT_NAME)

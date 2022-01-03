@@ -516,6 +516,7 @@ class BaseSubscription(metaclass=abc.ABCMeta):
         self.subscription_kwargs = subscription_kwargs
         self.subscription_id = None
 
+    @abc.abstractmethod
     def __enter__(self):
         pass
 

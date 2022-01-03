@@ -32,6 +32,10 @@ class SyncTest(BaseItemTest):
         with self.account.inbox.pull_subscription() as (subscription_id, watermark):
             self.assertIsNotNone(subscription_id)
             self.assertIsNotNone(watermark)
+        # Test with watermark
+        with self.account.inbox.pull_subscription(watermark=watermark) as (subscription_id, watermark):
+            self.assertIsNotNone(subscription_id)
+            self.assertIsNotNone(watermark)
         # Context manager already unsubscribed us
         with self.assertRaises(ErrorSubscriptionNotFound):
             self.account.inbox.unsubscribe(subscription_id)
@@ -49,6 +53,14 @@ class SyncTest(BaseItemTest):
         ) as (subscription_id, watermark):
             self.assertIsNotNone(subscription_id)
             self.assertIsNotNone(watermark)
+        # Test with watermark
+        with self.account.inbox.push_subscription(
+                callback_url='https://example.com/foo',
+                watermark=watermark,
+        ) as (subscription_id, watermark):
+            self.assertIsNotNone(subscription_id)
+            self.assertIsNotNone(watermark)
+        # Cannot unsubscribe. Must be done as response to callback URL request
         with self.assertRaises(ErrorInvalidSubscription):
             self.account.inbox.unsubscribe(subscription_id)
         # Test via folder collection

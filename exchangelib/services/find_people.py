@@ -22,7 +22,7 @@ class FindPeople(EWSPagingService):
         self.shape = None
 
     def call(self, folder, additional_fields, restriction, order_fields, shape, query_string, depth, max_items, offset):
-        """Find items in an account.
+        """Find items in an account. This service can only be called on a single folder.
 
         :param folder: the Folder object to query
         :param additional_fields: the extra fields that should be returned with the item, as FieldPath objects
@@ -41,7 +41,7 @@ class FindPeople(EWSPagingService):
         return self._elems_to_objs(self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
-            folders=[folder],  # We can only query one folder, so there will only be one element in response
+            folders=[folder],  # We just need the list to satisfy self._paged_call()
             **dict(
                 additional_fields=additional_fields,
                 restriction=restriction,
@@ -61,10 +61,7 @@ class FindPeople(EWSPagingService):
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
                     offset=0):
-        folders = list(folders)
-        if len(folders) != 1:
-            raise ValueError(f'{self.SERVICE_NAME} can only query one folder')
-        folder = folders[0]
+        # We actually only support a single folder, but self._paged_call() sends us a list
         payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
         payload.append(shape_element(
             tag='m:PersonaShape', shape=shape, additional_fields=additional_fields, version=self.account.version
@@ -81,7 +78,7 @@ class FindPeople(EWSPagingService):
                 order_fields,
                 version=self.account.version
             ))
-        payload.append(folder_ids_element(folders=[folder], version=self.account.version, tag='m:ParentFolderId'))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag='m:ParentFolderId'))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload
