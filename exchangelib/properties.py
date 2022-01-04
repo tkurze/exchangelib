@@ -429,7 +429,7 @@ class MessageHeader(EWSElement):
     value = SubField()
 
 
-class BaseItemId(EWSElement):
+class BaseItemId(EWSElement, metaclass=EWSMeta):
     """Base class for ItemId elements."""
 
     ID_ATTR = None

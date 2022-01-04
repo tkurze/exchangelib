@@ -2,6 +2,7 @@ from .base import Folder
 from .collections import FolderCollection
 from ..items import CalendarItem, Contact, Message, Task, DistributionList, MeetingRequest, MeetingResponse, \
     MeetingCancellation, ITEM_CLASSES, ASSOCIATED
+from ..properties import EWSMeta
 from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1
 
 
@@ -167,8 +168,8 @@ class Contacts(Folder):
     }
 
 
-class WellknownFolder(Folder):
-    """A base class to use until we have a more specific folder implementation for this folder."""
+class WellknownFolder(Folder, metaclass=EWSMeta):
+    """Base class to use until we have a more specific folder implementation for this folder."""
 
     supported_item_models = ITEM_CLASSES
 

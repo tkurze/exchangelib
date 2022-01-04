@@ -268,7 +268,7 @@ class Field(metaclass=abc.ABCMeta):
     def __init__(self, name=None, is_required=False, is_required_after_save=False, is_read_only=False,
                  is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None,
                  supported_from=None, deprecated_from=None):
-        self.name = name
+        self.name = name  # Usually set by the EWSMeta metaclass
         self.default = default  # Default value if none is given
         self.is_required = is_required
         # Some fields cannot be deleted on update. Default to True if 'is_required' is set
@@ -390,17 +390,17 @@ class FieldURIField(Field):
     def field_uri_xml(self):
         from .properties import FieldURI
         if not self.field_uri:
-            raise ValueError("'field_uri' value is missing")
+            raise ValueError(f"'field_uri' value is missing on field '{self.name}'")
         return FieldURI(field_uri=self.field_uri).to_xml(version=None)
 
     def request_tag(self):
         if not self.field_uri_postfix:
-            raise ValueError("'field_uri_postfix' value is missing")
+            raise ValueError(f"'field_uri_postfix' value is missing on field '{self.name}'")
         return f't:{self.field_uri_postfix}'
 
     def response_tag(self):
         if not self.field_uri_postfix:
-            raise ValueError("'field_uri_postfix' value is missing")
+            raise ValueError(f"'field_uri_postfix' value is missing on field '{self.name}'")
         return f'{{{self.namespace}}}{self.field_uri_postfix}'
 
     def __hash__(self):
@@ -1061,8 +1061,8 @@ class MessageHeaderField(EWSElementListField):
         super().__init__(*args, **kwargs)
 
 
-class BaseEmailField(EWSElementField):
-    """A base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for."""
+class BaseEmailField(EWSElementField, metaclass=abc.ABCMeta):
+    """Base class for EWSElement classes that have an 'email_address' field that we want to provide helpers for."""
 
     is_complex = True  # FindItem only returns the name, not the email address
 
@@ -1253,7 +1253,7 @@ class NamedSubField(SubField):
         return f'{{{self.namespace}}}{self.field_uri}'
 
 
-class IndexedField(EWSElementField):
+class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
     """A base class for all indexed fields."""
 
     PARENT_ELEMENT_NAME = None

@@ -264,8 +264,8 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         return elem
 
 
-class BaseMeetingItem(Item):
-    """A base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)
+class BaseMeetingItem(Item, metaclass=EWSMeta):
+    """Base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
         Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
