@@ -39,6 +39,15 @@ class RecurrenceTest(TimedTestCase):
         pattern = DailyRegeneration(interval=6)
         self.assertEqual(str(pattern), 'Regenerates every 6 day(s)')
 
+        d_start = datetime.date(2017, 9, 1)
+        d_end = datetime.date(2017, 9, 7)
+        boundary = NoEndPattern(start=d_start)
+        self.assertEqual(str(boundary), 'Starts on 2017-09-01')
+        boundary = EndDatePattern(start=d_start, end=d_end)
+        self.assertEqual(str(boundary), 'Starts on 2017-09-01, ends on 2017-09-07')
+        boundary = NumberedPattern(start=d_start, number=1)
+        self.assertEqual(str(boundary), 'Starts on 2017-09-01 and occurs 1 time(s)')
+
     def test_validation(self):
         p = DailyPattern(interval=3)
         d_start = datetime.date(2017, 9, 1)

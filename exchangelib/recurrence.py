@@ -224,7 +224,7 @@ class NumberedPattern(Boundary):
     number = IntegerField(field_uri='NumberOfOccurrences', min=1, max=999, is_required=True)
 
     def __str__(self):
-        return f'Starts on {self.start} and occurs {self.number} times'
+        return f'Starts on {self.start} and occurs {self.number} time(s)'
 
 
 class Occurrence(IdChangeKeyMixIn):
