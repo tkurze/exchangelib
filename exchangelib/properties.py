@@ -1872,9 +1872,8 @@ class TimeZoneDefinition(EWSElement):
             daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
             return standard_time, daylight_time, standard_period
         for transition in transitions_group.transitions:
-            # 'offset' is the time of day to transition, as timedelta since midnight. Must be a reasonable value
-            if not datetime.timedelta(0) <= transition.offset < datetime.timedelta(days=1):
-                raise ValueError(f"'offset' value {transition['offset']} must be be between 0 and 24 hours")
+            # 'offset' is the time of day to transition, as timedelta since midnight. Check that it's a reasonable value
+            transition.clean(version=None)
             transition_kwargs = dict(
                 time=(datetime.datetime(2000, 1, 1) + transition.offset).time(),
                 occurrence=transition.occurrence,

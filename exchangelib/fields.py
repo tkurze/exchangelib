@@ -644,6 +644,19 @@ class TimeDeltaField(FieldURIField):
 
     value_cls = datetime.timedelta
 
+    def __init__(self, *args, **kwargs):
+        self.min = kwargs.pop('min', datetime.timedelta(0))
+        self.max = kwargs.pop('max', datetime.timedelta(days=1))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        if self.min is not None and value < self.min:
+            raise ValueError(
+                f"Value {value!r} on field {self.name!r} must be greater than {self.min}")
+        if self.max is not None and value > self.max:
+            raise ValueError(f"Value {value!r} on field {self.name!r} must be less than {self.max}")
+        return super().clean(value, version=version)
+
 
 class DateTimeField(FieldURIField):
     """A field that handles datetime values."""
