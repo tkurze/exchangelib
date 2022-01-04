@@ -639,6 +639,12 @@ class TimeField(FieldURIField):
         return self.default
 
 
+class TimeDeltaField(FieldURIField):
+    """A field that handles timedelta values."""
+
+    value_cls = datetime.timedelta
+
+
 class DateTimeField(FieldURIField):
     """A field that handles datetime values."""
 
@@ -996,6 +1002,21 @@ class EWSElementListField(EWSElementField):
 
     is_list = True
     is_complex = True
+
+
+class TransitionListField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import BaseTransition
+        kwargs['value_cls'] = BaseTransition
+        super().__init__(*args, **kwargs)
+
+    def from_xml(self, elem, account):
+        iter_elem = elem.find(self.response_tag()) if self.field_uri else elem
+        if iter_elem is not None:
+            return [
+                self.value_cls.transition_model_from_tag(e.tag).from_xml(elem=e, account=account) for e in iter_elem
+            ]
+        return self.default
 
 
 class AssociatedCalendarItemIdField(EWSElementField):

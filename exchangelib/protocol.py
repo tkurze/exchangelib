@@ -475,7 +475,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           (Default value = None)
         :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-        :return: A list of (tz_id, name, periods, transitions) tuples
+        :return: A generator of TimeZoneDefinition objects
         """
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -511,17 +511,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
             raise ValueError(
                 f"'requested_view' value {requested_view!r} must be one of {FreeBusyViewOptions.REQUESTED_VIEWS}"
             )
-        _, _, periods, transitions, transitions_groups = list(self.get_timezones(
+        tz_definition = list(self.get_timezones(
             timezones=[start.tzinfo],
             return_full_timezone_data=True
         ))[0]
         return GetUserAvailability(self).call(
-                timezone=TimeZone.from_server_timezone(
-                    periods=periods,
-                    transitions=transitions,
-                    transitionsgroups=transitions_groups,
-                    for_year=start.year
-                ),
+                timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
                 mailbox_data=[MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
                     attendee_type=attendee_type,

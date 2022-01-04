@@ -13,7 +13,7 @@ from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTim
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
     RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField, \
     Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField, GenericEventListField, \
-    InvalidField, InvalidFieldForVersion
+    DateTimeBackedDateField, TimeDeltaField, TransitionListField, InvalidField, InvalidFieldForVersion
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
 from .version import Version, EXCHANGE_2013, Build
 
@@ -799,12 +799,15 @@ class TimeZone(EWSElement):
         :return: A Microsoft timezone ID, as a string
         """
         candidates = set()
-        for tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups in timezones:
-            candidate = self.from_server_timezone(tz_periods, tz_transitions, tz_transitions_groups, for_year)
+        for tz_definition in timezones:
+            candidate = self.from_server_timezone(
+                tz_definition=tz_definition,
+                for_year=for_year,
+            )
             if candidate == self:
-                log.debug('Found exact candidate: %s (%s)', tz_id, tz_name)
+                log.debug('Found exact candidate: %s (%s)', tz_definition.id, tz_definition.name)
                 # We prefer this timezone over anything else. Return immediately.
-                return tz_id
+                return tz_definition.id
             # Reduce list based on base bias and standard / daylight bias values
             if candidate.bias != self.bias:
                 continue
@@ -824,8 +827,8 @@ class TimeZone(EWSElement):
                     continue
                 if candidate.daylight_time.bias != self.daylight_time.bias:
                     continue
-            log.debug('Found candidate with matching biases: %s (%s)', tz_id, tz_name)
-            candidates.add(tz_id)
+            log.debug('Found candidate with matching biases: %s (%s)', tz_definition.id, tz_definition.name)
+            candidates.add(tz_definition.id)
         if not candidates:
             raise ValueError('No server timezones match this timezone definition')
         if len(candidates) == 1:
@@ -835,81 +838,10 @@ class TimeZone(EWSElement):
         return candidates.pop()
 
     @classmethod
-    def from_server_timezone(cls, periods, transitions, transitionsgroups, for_year):
+    def from_server_timezone(cls, tz_definition, for_year):
         # Creates a TimeZone object from the result of a GetServerTimeZones call with full timezone data
-
-        # Get the default bias
-        bias = cls._get_bias(periods=periods, for_year=for_year)
-
-        # Get a relevant transition ID
-        valid_tg_id = cls._get_valid_transition_id(transitions=transitions, for_year=for_year)
-        transitiongroup = transitionsgroups[valid_tg_id]
-        if not 0 <= len(transitiongroup) <= 2:
-            raise ValueError(f'Expected 0-2 transitions in transitionsgroup {transitiongroup}')
-
-        standard_time, daylight_time = cls._get_std_and_dst(transitiongroup=transitiongroup, periods=periods, bias=bias)
-        return cls(bias=bias, standard_time=standard_time, daylight_time=daylight_time)
-
-    @staticmethod
-    def _get_bias(periods, for_year):
-        # Set a default bias
-        valid_period = None
-        for (year, period_type), period in sorted(periods.items()):
-            if year > for_year:
-                break
-            if period_type != 'Standard':
-                continue
-            valid_period = period
-        if valid_period is None:
-            raise TimezoneDefinitionInvalidForYear(f'Year {for_year} not included in periods {periods}')
-        return int(valid_period['bias'].total_seconds()) // 60  # Convert to minutes
-
-    @staticmethod
-    def _get_valid_transition_id(transitions, for_year):
-        # Look through the transitions, and pick the relevant one according to the 'for_year' value
-        valid_tg_id = None
-        for tg_id, from_date in sorted(transitions.items()):
-            if from_date and from_date.year > for_year:
-                break
-            valid_tg_id = tg_id
-        if valid_tg_id is None:
-            raise ValueError(f'No valid transition for year {for_year}: {transitions}')
-        return valid_tg_id
-
-    @staticmethod
-    def _get_std_and_dst(transitiongroup, periods, bias):
-        # Return 'standard_time' and 'daylight_time' objects. We do unnecessary work here, but it keeps code simple.
-        standard_time, daylight_time = None, None
-        for transition in transitiongroup:
-            period = periods[transition['to']]
-            if len(transition) == 1:
-                # This is a simple transition representing a timezone with no DST. Some servers don't accept TimeZone
-                # elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime objects
-                # with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn't break the
-                # well-behaving servers.
-                standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
-                daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
-                continue
-            # 'offset' is the time of day to transition, as timedelta since midnight. Must be a reasonable value
-            if not datetime.timedelta(0) <= transition['offset'] < datetime.timedelta(days=1):
-                raise ValueError(f"'offset' value {transition['offset']} must be be between 0 and 24 hours")
-            transition_kwargs = dict(
-                time=(datetime.datetime(2000, 1, 1) + transition['offset']).time(),
-                occurrence=transition['occurrence'],
-                iso_month=transition['iso_month'],
-                weekday=transition['iso_weekday'],
-            )
-            if period['name'] == 'Standard':
-                transition_kwargs['bias'] = 0
-                standard_time = StandardTime(**transition_kwargs)
-                continue
-            if period['name'] == 'Daylight':
-                dst_bias = int(period['bias'].total_seconds()) // 60  # Convert to minutes
-                transition_kwargs['bias'] = dst_bias - bias
-                daylight_time = DaylightTime(**transition_kwargs)
-                continue
-            raise ValueError(f'Unknown transition: {transition}')
-        return standard_time, daylight_time
+        std_time, daylight_time, period = tz_definition.get_std_and_dst(for_year=for_year)
+        return cls(bias=period.bias_in_minutes, standard_time=std_time, daylight_time=daylight_time)
 
 
 class CalendarView(EWSElement):
@@ -1778,3 +1710,185 @@ class Notification(EWSElement):
     previous_watermark = CharField(field_uri='PreviousWatermark')
     more_events = BooleanField(field_uri='MoreEvents')
     events = GenericEventListField('')
+
+
+class BaseTransition(EWSElement, metaclass=EWSMeta):
+    """Base class for all other transition classes"""
+
+    to = CharField(field_uri='To')
+    kind = CharField(field_uri='Kind', is_attribute=True)  # An attribute on the 'To' element
+
+    @staticmethod
+    def transition_model_from_tag(tag):
+        return {cls.response_tag(): cls for cls in (
+            Transition, AbsoluteDateTransition, RecurringDateTransition, RecurringDayTransition
+        )}[tag]
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kind = elem.find(cls.get_field_by_fieldname('to').response_tag()).get('Kind')
+        res = super().from_xml(elem=elem, account=account)
+        res.kind = kind
+        return res
+
+
+class Transition(BaseTransition):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transition"""
+
+    ELEMENT_NAME = 'Transition'
+
+
+class AbsoluteDateTransition(BaseTransition):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutedatetransition"""
+
+    ELEMENT_NAME = 'AbsoluteDateTransition'
+
+    date = DateTimeBackedDateField(field_uri='DateTime')
+
+
+class RecurringDayTransition(BaseTransition):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdaytransition"""
+
+    ELEMENT_NAME = 'RecurringDayTransition'
+
+    offset = TimeDeltaField(field_uri='TimeOffset')
+    month = IntegerField(field_uri='Month')
+    # Valid ISO 8601 weekday, as a number in range 1 -> 7 (1 being Monday)
+    day_of_week = EnumField(field_uri='DayOfWeek', enum=WEEKDAY_NAMES)
+    occurrence = IntegerField(field_uri='Occurrence')
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = super().from_xml(elem, account)
+        # See TimeZoneTransition.from_xml()
+        if res.occurrence == -1:
+            res.occurrence = 5
+        return res
+
+
+class RecurringDateTransition(BaseTransition):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdatetransition"""
+
+    ELEMENT_NAME = 'RecurringDateTransition'
+
+    offset = TimeDeltaField(field_uri='TimeOffset')
+    month = IntegerField(field_uri='Month')
+    day = IntegerField(field_uri='Day')  # Day of month
+
+
+class Period(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/period"""
+
+    ELEMENT_NAME = 'Period'
+
+    id = CharField(field_uri='Id', is_attribute=True)
+    name = CharField(field_uri='Name', is_attribute=True)
+    bias = TimeDeltaField(field_uri='Bias', is_attribute=True)
+
+    def _split_id(self):
+        to_year, to_type = self.id.rsplit('/', 1)[1].split('-')
+        return int(to_year), to_type
+
+    @property
+    def year(self):
+        return self._split_id()[0]
+
+    @property
+    def type(self):
+        return self._split_id()[1]
+
+    @property
+    def bias_in_minutes(self):
+        return int(self.bias.total_seconds()) // 60  # Convert to minutes
+
+
+class TransitionsGroup(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transitionsgroup"""
+
+    ELEMENT_NAME = 'TransitionsGroup'
+
+    id = CharField(field_uri='Id', is_attribute=True)
+    transitions = TransitionListField(value_cls=BaseTransition)
+
+
+class TimeZoneDefinition(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonedefinition"""
+
+    ELEMENT_NAME = 'TimeZoneDefinition'
+
+    id = CharField(field_uri='Id', is_attribute=True)
+    name = CharField(field_uri='Name', is_attribute=True)
+
+    periods = EWSElementListField(field_uri='Periods', value_cls=Period)
+    transitions_groups = EWSElementListField(field_uri='TransitionsGroups', value_cls=TransitionsGroup)
+    transitions = TransitionListField(field_uri='Transitions', value_cls=BaseTransition)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        return super().from_xml(elem, account)
+
+    def _get_standard_period(self, for_year):
+        # Look through periods and pick a relevant period according to the 'for_year' value
+        valid_period = None
+        for period in sorted(self.periods, key=lambda p: (p.year, p.type)):
+            if period.year > for_year:
+                break
+            if period.type != 'Standard':
+                continue
+            valid_period = period
+        if valid_period is None:
+            raise TimezoneDefinitionInvalidForYear(f'Year {for_year} not included in periods {self.periods}')
+        return valid_period
+
+    def _get_transitions_group(self, for_year):
+        # Look through the transitions, and pick the relevant transition group according to the 'for_year' value
+        transitions_group = None
+        transitions_groups_map = {tg.id: tg for tg in self.transitions_groups}
+        for transition in sorted(self.transitions, key=lambda t: t.to):
+            if transition.kind != 'Group':
+                continue
+            if isinstance(transition, AbsoluteDateTransition) and transition.date.year > for_year:
+                break
+            transitions_group = transitions_groups_map[transition.to]
+        if transitions_group is None:
+            raise ValueError(f'No valid transition group for year {for_year}: {self.transitions}')
+        return transitions_group
+
+    def get_std_and_dst(self, for_year):
+        # Return 'standard_time' and 'daylight_time' objects. We do unnecessary work here, but it keeps code simple.
+        transitions_group = self._get_transitions_group(for_year)
+        if not 0 <= len(transitions_group.transitions) <= 2:
+            raise ValueError(f'Expected 0-2 transitions in transitions group {transitions_group}')
+
+        standard_period = self._get_standard_period(for_year)
+        periods_map = {p.id: p for p in self.periods}
+        standard_time, daylight_time = None, None
+        if len(transitions_group.transitions) == 1:
+            # This is a simple transition group representing a timezone with no DST. Some servers don't accept
+            # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+            # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn't break
+            # the well-behaving servers.
+            standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
+            daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
+            return standard_time, daylight_time, standard_period
+        for transition in transitions_group.transitions:
+            # 'offset' is the time of day to transition, as timedelta since midnight. Must be a reasonable value
+            if not datetime.timedelta(0) <= transition.offset < datetime.timedelta(days=1):
+                raise ValueError(f"'offset' value {transition['offset']} must be be between 0 and 24 hours")
+            transition_kwargs = dict(
+                time=(datetime.datetime(2000, 1, 1) + transition.offset).time(),
+                occurrence=transition.occurrence,
+                iso_month=transition.month,
+                weekday=transition.day_of_week,
+            )
+            period = periods_map[transition.to]
+            if period.name == 'Standard':
+                transition_kwargs['bias'] = 0
+                standard_time = StandardTime(**transition_kwargs)
+                continue
+            if period.name == 'Daylight':
+                transition_kwargs['bias'] = period.bias_in_minutes - standard_period.bias_in_minutes
+                daylight_time = DaylightTime(**transition_kwargs)
+                continue
+            raise ValueError(f'Unknown transition: {transition}')
+        return standard_time, daylight_time, standard_period

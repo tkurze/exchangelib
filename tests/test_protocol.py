@@ -20,7 +20,7 @@ from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoR
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, close_connections
-from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
+from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
     SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM
@@ -159,18 +159,18 @@ class ProtocolTest(EWSTest):
         self.assertEqual(protocol._session_pool.qsize(), 1)
 
     def test_get_timezones(self):
-        ws = GetServerTimeZones(self.account.protocol)
-        data = ws.call()
-        self.assertAlmostEqual(len(list(data)), 130, delta=30, msg=data)
         # Test shortcut
+        data = list(self.account.protocol.get_timezones())
         self.assertAlmostEqual(len(list(self.account.protocol.get_timezones())), 130, delta=30, msg=data)
         # Test translation to TimeZone objects
-        for _, _, periods, transitions, transitionsgroups in self.account.protocol.get_timezones(
+        for tz_definition in self.account.protocol.get_timezones(
                 return_full_timezone_data=True):
             try:
-                TimeZone.from_server_timezone(
-                    periods=periods, transitions=transitions, transitionsgroups=transitionsgroups, for_year=2018,
+                tz = TimeZone.from_server_timezone(
+                    tz_definition=tz_definition,
+                    for_year=2018,
                 )
+                self.assertEqual(tz.bias, tz_definition.get_std_and_dst(for_year=2018)[2].bias_in_minutes)
             except TimezoneDefinitionInvalidForYear:
                 pass
 
