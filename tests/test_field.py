@@ -241,5 +241,10 @@ class FieldTest(TimedTestCase):
             a = CharField()
             b = CharField()
 
-        with self.assertRaises(ValueError):
-            TestField.value_field()
+        with self.assertRaises(ValueError) as e:
+            TestField.value_field(version=Version(EXCHANGE_2013))
+        self.assertEqual(
+            e.exception.args[0],
+            "Class <class 'tests.test_field.FieldTest.test_single_field_indexed_element.<locals>.TestField'> "
+            "must have only one value field (found ('a', 'b'))"
+        )

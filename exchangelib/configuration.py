@@ -4,7 +4,7 @@ from cached_property import threaded_cached_property
 
 from .credentials import BaseCredentials, OAuth2Credentials
 from .protocol import RetryPolicy, FailFast
-from .transport import AUTH_TYPE_MAP, OAUTH2
+from .transport import AUTH_TYPE_MAP, OAUTH2, CREDENTIALS_REQUIRED
 from .util import split_url
 from .version import Version
 
@@ -46,6 +46,8 @@ class Configuration:
         if isinstance(credentials, OAuth2Credentials) and auth_type is None:
             # This type of credentials *must* use the OAuth auth type
             auth_type = OAUTH2
+        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+            raise ValueError(f'Auth type {auth_type!r} was detected but no credentials were provided')
         if server and service_endpoint:
             raise AttributeError("Only one of 'server' or 'service_endpoint' must be provided")
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:

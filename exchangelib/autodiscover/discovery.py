@@ -9,11 +9,9 @@ from .cache import autodiscover_cache
 from .properties import Autodiscover
 from .protocol import AutodiscoverProtocol
 from ..configuration import Configuration
-from ..credentials import OAuth2Credentials
 from ..errors import AutoDiscoverFailed, AutoDiscoverCircularRedirect, TransportError, RedirectError, UnauthorizedError
 from ..protocol import Protocol, FailFast
-from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, OAUTH2, GSSAPI, AUTH_TYPE_MAP, \
-    CREDENTIALS_REQUIRED
+from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, GSSAPI, AUTH_TYPE_MAP
 from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, \
     DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
 from ..version import Version
@@ -333,11 +331,6 @@ class Autodiscovery:
         log.debug('Attempting to get a valid response from %s', url)
         try:
             auth_type, r = self._get_unauthenticated_response(url=url)
-            if isinstance(self.credentials, OAuth2Credentials):
-                # This type of credentials *must* use the OAuth auth type
-                auth_type = OAUTH2
-            elif self.credentials is None and auth_type in CREDENTIALS_REQUIRED:
-                raise ValueError(f'Auth type {auth_type!r} was detected but no credentials were provided')
             ad_protocol = AutodiscoverProtocol(
                 config=Configuration(
                     service_endpoint=url,

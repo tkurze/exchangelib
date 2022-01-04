@@ -36,6 +36,7 @@ class ConfigurationTest(TimedTestCase):
         with self.assertRaises(ValueError) as e:
             Configuration(max_connections='foo')
         self.assertEqual(e.exception.args[0], "'max_connections' 'foo' must be an integer")
+        self.assertEqual(Configuration().server, None)  # Test that property works when service_endpoint is None
 
     def test_magic(self):
         config = Configuration(

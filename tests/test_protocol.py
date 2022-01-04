@@ -24,7 +24,7 @@ from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, Res
     SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM
-from exchangelib.version import Build, Version
+from exchangelib.version import Build, Version, EXCHANGE_2010_SP1
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
 from .common import EWSTest, get_random_datetime_range, get_random_string, RANDOM_DATE_MIN, RANDOM_DATE_MAX
@@ -310,6 +310,13 @@ class ProtocolTest(EWSTest):
         self.assertEqual(
             e.exception.args[0],
             "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup"
+        )
+        with self.assertRaises(NotImplementedError) as e:
+            self.account.protocol.version.build = EXCHANGE_2010_SP1
+            self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
+        self.assertEqual(
+            e.exception.args[0],
+            f"'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
         )
         self.assertGreaterEqual(
             self.account.protocol.resolve_names(names=['xxx@example.com']),

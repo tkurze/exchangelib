@@ -16,10 +16,10 @@ class SingleFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
     """Base class for all classes that implement an indexed element with a single field."""
 
     @classmethod
-    def value_field(cls, version=None):
+    def value_field(cls, version):
         fields = cls.supported_fields(version=version)
         if len(fields) != 1:
-            raise ValueError(f'This class must have only one field (found {fields})')
+            raise ValueError(f'Class {cls} must have only one value field (found {tuple(f.name for f in fields)})')
         return fields[0]
 
 
