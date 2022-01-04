@@ -486,8 +486,6 @@ class EnumField(IntegerField):
 
     def as_string(self, value):
         # Converts an integer in the enum to its equivalent string
-        if isinstance(value, str):
-            return value
         if self.is_list:
             return [self.enum[v - 1] for v in sorted(value)]
         return self.enum[value - 1]
@@ -515,6 +513,15 @@ class EnumListField(EnumField):
     """Like EnumField, but for lists of enum values."""
 
     is_list = True
+
+
+class WeekdaysField(EnumListField):
+    """Like EnumListField, allow a single value instead of a 1-element list."""
+
+    def clean(self, value, version=None):
+        if isinstance(value, (int, str)):
+            value = [value]
+        return super().clean(value, version)
 
 
 class EnumAsIntField(EnumField):

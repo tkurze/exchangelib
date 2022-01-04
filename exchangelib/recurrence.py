@@ -1,7 +1,7 @@
 import logging
 
-from .fields import IntegerField, EnumField, EnumListField, DateOrDateTimeField, DateTimeField, EWSElementField, \
-    IdElementField, MONTHS, WEEK_NUMBERS, WEEKDAYS
+from .fields import IntegerField, EnumField, WeekdaysField, DateOrDateTimeField, DateTimeField, EWSElementField, \
+    IdElementField, MONTHS, WEEK_NUMBERS, WEEKDAYS, WEEKDAY_NAMES
 from .properties import EWSElement, IdChangeKeyMixIn, ItemId, EWSMeta
 
 log = logging.getLogger(__name__)
@@ -51,9 +51,9 @@ class RelativeYearlyPattern(Pattern):
 
     ELEMENT_NAME = 'RelativeYearlyRecurrence'
 
-    # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -> 7 (1 being Monday).
-    # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
-    # is interpreted as the first day, weekday, or weekend day in the month, respectively.
+    # Valid ISO 8601 weekday, as a number in range 1 -> 7 (1 being Monday). The value can also be one of the DAY
+    # (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which is interpreted as the first day, weekday, or weekend
+    # day of the year. Despite the field name in EWS, this is not a list.
     weekday = EnumField(field_uri='DaysOfWeek', enum=WEEKDAYS, is_required=True)
     # Week number of the month, in range 1 -> 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks
@@ -92,9 +92,9 @@ class RelativeMonthlyPattern(Pattern):
 
     # Interval, in months, in range 1 -> 99
     interval = IntegerField(field_uri='Interval', min=1, max=99, is_required=True)
-    # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -> 7 (1 being Monday).
-    # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
-    # is interpreted as the first day, weekday, or weekend day in the month, respectively.
+    # Valid ISO 8601 weekday, as a number in range 1 -> 7 (1 being Monday). The value can also be one of the DAY
+    # (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which is interpreted as the first day, weekday, or weekend
+    # day of the month. Despite the field name in EWS, this is not a list.
     weekday = EnumField(field_uri='DaysOfWeek', enum=WEEKDAYS, is_required=True)
     # Week number of the month, in range 1 -> 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks.
@@ -113,17 +113,12 @@ class WeeklyPattern(Pattern):
     # Interval, in weeks, in range 1 -> 99
     interval = IntegerField(field_uri='Interval', min=1, max=99, is_required=True)
     # List of valid ISO 8601 weekdays, as list of numbers in range 1 -> 7 (1 being Monday)
-    weekdays = EnumListField(field_uri='DaysOfWeek', enum=WEEKDAYS, is_required=True)
+    weekdays = WeekdaysField(field_uri='DaysOfWeek', enum=WEEKDAY_NAMES, is_required=True)
     # The first day of the week. Defaults to Monday
-    first_day_of_week = EnumField(field_uri='FirstDayOfWeek', enum=WEEKDAYS, default=1, is_required=True)
+    first_day_of_week = EnumField(field_uri='FirstDayOfWeek', enum=WEEKDAY_NAMES, default=1, is_required=True)
 
     def __str__(self):
-        if isinstance(self.weekdays, str):
-            weekdays = [self.weekdays]
-        elif isinstance(self.weekdays, int):
-            weekdays = [_weekday_to_str(self.weekdays)]
-        else:
-            weekdays = [_weekday_to_str(i) for i in self.weekdays]
+        weekdays = [_weekday_to_str(i) for i in self.get_field_by_fieldname('weekdays').clean(self.weekdays)]
         return f'Occurs on weekdays {", ".join(weekdays)} of every {self.interval} week(s) where the first day of ' \
                f'the week is {_weekday_to_str(self.first_day_of_week)}'
 
@@ -285,7 +280,8 @@ class Recurrence(EWSElement):
     """
 
     ELEMENT_NAME = 'Recurrence'
-    PATTERN_CLASSES = PATTERN_CLASSES
+    PATTERN_CLASS_MAP = {cls.response_tag(): cls for cls in PATTERN_CLASSES}
+    BOUNDARY_CLASS_MAP = {cls.response_tag(): cls for cls in BOUNDARY_CLASSES}
 
     pattern = EWSElementField(value_cls=Pattern)
     boundary = EWSElementField(value_cls=Boundary)
@@ -310,22 +306,12 @@ class Recurrence(EWSElement):
 
     @classmethod
     def from_xml(cls, elem, account):
-        for pattern_cls in cls.PATTERN_CLASSES:
-            pattern_elem = elem.find(pattern_cls.response_tag())
-            if pattern_elem is None:
-                continue
-            pattern = pattern_cls.from_xml(elem=pattern_elem, account=account)
-            break
-        else:
-            pattern = None
-        for boundary_cls in BOUNDARY_CLASSES:
-            boundary_elem = elem.find(boundary_cls.response_tag())
-            if boundary_elem is None:
-                continue
-            boundary = boundary_cls.from_xml(elem=boundary_elem, account=account)
-            break
-        else:
-            boundary = None
+        pattern, boundary = None, None
+        for child_elem in elem:
+            if child_elem.tag in cls.PATTERN_CLASS_MAP:
+                pattern = cls.PATTERN_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
+            elif child_elem.tag in cls.BOUNDARY_CLASS_MAP:
+                boundary = cls.BOUNDARY_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
         return cls(pattern=pattern, boundary=boundary)
 
     def __str__(self):
@@ -337,4 +323,4 @@ class TaskRecurrence(Recurrence):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-taskrecurrencetype
     """
 
-    PATTERN_CLASSES = PATTERN_CLASSES + REGENERATION_CLASSES
+    PATTERN_CLASS_MAP = {cls.response_tag(): cls for cls in PATTERN_CLASSES + REGENERATION_CLASSES}

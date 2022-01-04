@@ -2,11 +2,13 @@ import datetime
 
 from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound
 from exchangelib.ewsdatetime import UTC
+from exchangelib.fields import NOVEMBER, WEEKEND_DAY, WEEK_DAY, THIRD, MONDAY, WEDNESDAY
 from exchangelib.folders import Calendar
 from exchangelib.items import CalendarItem, BulkCreateResult
 from exchangelib.items.calendar_item import SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
-from exchangelib.recurrence import Recurrence, DailyPattern, Occurrence, FirstOccurrence, LastOccurrence, \
-    DeletedOccurrence
+from exchangelib.recurrence import Recurrence, Occurrence, FirstOccurrence, LastOccurrence, DeletedOccurrence, \
+AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
+    DailyPattern
 
 from ..common import get_random_string, get_random_datetime_range, get_random_date
 from .test_basics import CommonItemTest
@@ -227,6 +229,31 @@ class CalendarTest(CommonItemTest):
         self.test_folder.bulk_create(items=[item1, item2])
         list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('start'))
         list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('-start'))
+
+    def test_all_recurring_pattern_types(self):
+        start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
+        end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
+
+        for pattern in (
+                AbsoluteYearlyPattern(day_of_month=13, month=NOVEMBER),
+                RelativeYearlyPattern(weekday=1, week_number=THIRD, month=11),
+                RelativeYearlyPattern(weekday=WEEKEND_DAY, week_number=3, month=11),
+                AbsoluteMonthlyPattern(interval=3, day_of_month=13),
+                RelativeMonthlyPattern(interval=3, weekday=2, week_number=3),
+                RelativeMonthlyPattern(interval=3, weekday=WEEK_DAY, week_number=3),
+                WeeklyPattern(interval=3, weekdays=[MONDAY, WEDNESDAY], first_day_of_week=1),
+                DailyPattern(interval=1),
+        ):
+            master_item = self.ITEM_CLASS(
+                folder=self.test_folder,
+                start=start,
+                end=end,
+                recurrence=Recurrence(pattern=pattern, start=start.date(), number=4),
+                categories=self.categories,
+            ).save()
+            master_item.refresh()
+            self.assertEqual(pattern, master_item.recurrence.pattern)
+            master_item.delete()
 
     def test_recurring_item(self):
         # Create a recurring calendar item. Test that occurrence fields are correct on the master item

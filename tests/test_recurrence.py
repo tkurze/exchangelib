@@ -1,8 +1,9 @@
 import datetime
 
-from exchangelib.fields import MONDAY, FEBRUARY, AUGUST, SECOND, LAST, WEEKEND_DAY
+from exchangelib.fields import MONDAY, FEBRUARY, AUGUST, SECOND, LAST, SUNDAY, WEEKEND_DAY
 from exchangelib.recurrence import Recurrence, AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, \
-    RelativeMonthlyPattern, WeeklyPattern, DailyPattern, NoEndPattern, EndDatePattern, NumberedPattern
+    RelativeMonthlyPattern, WeeklyPattern, DailyPattern, NoEndPattern, EndDatePattern, NumberedPattern, \
+    YearlyRegeneration, MonthlyRegeneration, WeeklyRegeneration, DailyRegeneration
 
 from .common import TimedTestCase
 
@@ -11,17 +12,32 @@ class RecurrenceTest(TimedTestCase):
     def test_magic(self):
         pattern = AbsoluteYearlyPattern(month=FEBRUARY, day_of_month=28)
         self.assertEqual(str(pattern), 'Occurs on day 28 of February')
-        pattern = RelativeYearlyPattern(month=AUGUST, week_number=SECOND, weekday=MONDAY)
-        self.assertEqual(str(pattern), 'Occurs on weekday Monday in the Second week of August')
+        pattern = RelativeYearlyPattern(month=AUGUST, week_number=SECOND, weekday=WEEKEND_DAY)
+        self.assertEqual(str(pattern), 'Occurs on weekday WeekendDay in the Second week of August')
         pattern = AbsoluteMonthlyPattern(interval=3, day_of_month=31)
         self.assertEqual(str(pattern), 'Occurs on day 31 of every 3 month(s)')
         pattern = RelativeMonthlyPattern(interval=2, week_number=LAST, weekday=5)
         self.assertEqual(str(pattern), 'Occurs on weekday Friday in the Last week of every 2 month(s)')
-        pattern = WeeklyPattern(interval=4, weekdays=WEEKEND_DAY, first_day_of_week=7)
-        self.assertEqual(str(pattern),
-                         'Occurs on weekdays WeekendDay of every 4 week(s) where the first day of the week is Sunday')
+        pattern = WeeklyPattern(interval=4, weekdays=[1, 7], first_day_of_week=7)
+        self.assertEqual(
+            str(pattern),
+            'Occurs on weekdays Monday, Sunday of every 4 week(s) where the first day of the week is Sunday'
+        )
+        pattern = WeeklyPattern(interval=4, weekdays=[MONDAY, SUNDAY], first_day_of_week=7)
+        self.assertEqual(
+            str(pattern),
+            'Occurs on weekdays Monday, Sunday of every 4 week(s) where the first day of the week is Sunday'
+        )
         pattern = DailyPattern(interval=6)
         self.assertEqual(str(pattern), 'Occurs every 6 day(s)')
+        pattern = YearlyRegeneration(interval=6)
+        self.assertEqual(str(pattern), 'Regenerates every 6 year(s)')
+        pattern = MonthlyRegeneration(interval=6)
+        self.assertEqual(str(pattern), 'Regenerates every 6 month(s)')
+        pattern = WeeklyRegeneration(interval=6)
+        self.assertEqual(str(pattern), 'Regenerates every 6 week(s)')
+        pattern = DailyRegeneration(interval=6)
+        self.assertEqual(str(pattern), 'Regenerates every 6 day(s)')
 
     def test_validation(self):
         p = DailyPattern(interval=3)
