@@ -8,6 +8,7 @@ class BuildTest(TimedTestCase):
         with self.assertRaises(ValueError):
             Build(7, 0)
         self.assertEqual(str(Build(9, 8, 7, 6)), '9.8.7.6')
+        hash(Build(9, 8, 7, 6))
 
     def test_compare(self):
         self.assertEqual(Build(15, 0, 1, 2), Build(15, 0, 1, 2))
