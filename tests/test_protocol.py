@@ -94,7 +94,7 @@ class ProtocolTest(EWSTest):
         p = Protocol(config=config)
         self.assertNotEqual(base_p, p)
 
-        close_connections()  # Also clears cache
+        Protocol.clear_cache()
 
     def test_close(self):
         # Don't use example.com here - it does not resolve or answer on all ISPs

@@ -95,12 +95,10 @@ class Message(Item):
                 self.send(save_copy=False, conflict_resolution=conflict_resolution,
                           send_meeting_invitations=send_meeting_invitations)
             else:
-                res = self._create(
+                self._create(
                     message_disposition=SEND_AND_SAVE_COPY,
                     send_meeting_invitations=send_meeting_invitations
                 )
-                if res is not True:
-                    raise ValueError('Unexpected response in send-only mode')
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):

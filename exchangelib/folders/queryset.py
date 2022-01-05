@@ -123,6 +123,9 @@ class FolderQuerySet:
         # Fetch all properties for the found folders
         resolveable_folders = []
         for f in folders:
+            if isinstance(f, Exception):
+                yield f
+                continue
             if not f.get_folder_allowed:
                 log.debug('GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder', f)
                 yield f
@@ -134,9 +137,6 @@ class FolderQuerySet:
             account=self.folder_collection.account, folders=resolveable_folders
         ).get_folders(additional_fields=complex_fields)
         for f, complex_f in zip(resolveable_folders, complex_folders):
-            if isinstance(f, Exception):
-                yield f
-                continue
             if isinstance(complex_f, Exception):
                 yield complex_f
                 continue
@@ -161,12 +161,4 @@ class SingleFolderQuerySet(FolderQuerySet):
         return self.__class__(account=self.folder_collection.account, folder=self.folder_collection.folders[0])
 
     def resolve(self):
-        folders = list(self.folder_collection.resolve())
-        if not folders:
-            raise DoesNotExist('Could not find a folder matching the query')
-        if len(folders) != 1:
-            raise MultipleObjectsReturned(f'Expected result length 1, but got {folders}')
-        f = folders[0]
-        if isinstance(f, Exception):
-            raise f
-        return f
+        return list(self.folder_collection.resolve())[0]

@@ -36,6 +36,7 @@ __all__ = [
     'Q',
     'BASIC', 'DIGEST', 'NTLM', 'GSSAPI', 'SSPI', 'OAUTH2', 'CBA',
     'Build', 'Version',
+    'close_connections',
 ]
 
 # Set a default user agent, e.g. "exchangelib/3.1.1 (python-requests/2.22.0)"
