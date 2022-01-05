@@ -390,7 +390,30 @@ class SyncTest(BaseItemTest):
 '''
         )
 
-    def test_get_streaming_events_exceptions(self):
+    def test_get_streaming_events_connection_closed(self):
+        # Test that we respect connection status
+        xml = b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:GetStreamingEventsResponse
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+      <m:ResponseMessages>
+        <m:GetStreamingEventsResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:ConnectionStatus>Closed</m:ConnectionStatus>
+        </m:GetStreamingEventsResponseMessage>
+      </m:ResponseMessages>
+    </m:GetStreamingEventsResponse>
+  </s:Body>
+</s:Envelope>'''
+        ws = GetStreamingEvents(account=self.account)
+        self.assertEqual(ws.connection_status, None)
+        list(ws.parse(xml))
+        self.assertEqual(ws.connection_status, ws.CLOSED)
+
+    def test_get_streaming_events_bad_response(self):
         # Test special error handling in this service. It's almost impossible to trigger a ParseError through the
         # DocumentYielder, so we test with a SOAP message without a body element.
         xml = b'''\
