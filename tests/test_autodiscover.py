@@ -1,7 +1,8 @@
 from collections import namedtuple
 import glob
+import sys
 from types import MethodType
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import dns
 import requests_mock
@@ -11,6 +12,7 @@ from exchangelib.credentials import Credentials, DELEGATE
 import exchangelib.autodiscover.discovery
 from exchangelib.autodiscover import close_connections, clear_cache, autodiscover_cache, AutodiscoverProtocol, \
     Autodiscovery, AutodiscoverCache
+from exchangelib.autodiscover.cache import shelve_filename
 from exchangelib.autodiscover.properties import Autodiscover
 from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
@@ -606,3 +608,13 @@ class AutodiscoverTest(EWSTest):
             del cache
         finally:
             AutodiscoverCache.close = tmp
+
+    def test_shelve_filename(self):
+        major, minor = sys.version_info[:2]
+        self.assertEqual(shelve_filename(), f'exchangelib.2.cache.erik.py{major}{minor}')
+
+    @patch('getpass.getuser', side_effect=KeyError())
+    def test_shelve_filename_getuser_failure(self, m):
+        # Test that shelve_filename can handle a failing getuser()
+        major, minor = sys.version_info[:2]
+        self.assertEqual(shelve_filename(), f'exchangelib.2.cache.exchangelib.py{major}{minor}')
