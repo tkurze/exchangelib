@@ -717,3 +717,62 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
             del protocol
         finally:
             Protocol.close = tmp
+
+    @requests_mock.mock()
+    def test_version_guess(self, m):
+        protocol = Protocol(config=Configuration(
+            service_endpoint='https://example.com/EWS/Exchange.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
+            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
+        ))
+        # Test that we can get the version even on error responses
+        m.post('https://example.com/EWS/Exchange.asmx', status_code=200, content=b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
+    <h:ServerVersionInfo xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"
+    MajorVersion="15" MinorVersion="1" MajorBuildNumber="2345" MinorBuildNumber="6789" Version="V2017_07_11"/>
+  </s:Header>
+  <s:Body>
+    <m:ResolveNamesResponse
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:ResolveNamesResponseMessage ResponseClass="Error">
+          <m:MessageText>Multiple results were found.</m:MessageText>
+          <m:ResponseCode>ErrorNameResolutionMultipleResults</m:ResponseCode>
+          <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+        </m:ResolveNamesResponseMessage>
+      </m:ResponseMessages>
+    </m:ResolveNamesResponse>
+  </s:Body>
+</s:Envelope>''')
+        Version.guess(protocol)
+        self.assertEqual(protocol.version.build, Build(15, 1, 2345, 6789))
+
+        # Test exception when there are no version headers
+        m.post('https://example.com/EWS/Exchange.asmx', status_code=200, content=b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
+  </s:Header>
+  <s:Body>
+    <m:ResolveNamesResponse
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:ResolveNamesResponseMessage ResponseClass="Error">
+          <m:MessageText>.</m:MessageText>
+          <m:ResponseCode>ErrorNameResolutionMultipleResults</m:ResponseCode>
+          <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+        </m:ResolveNamesResponseMessage>
+      </m:ResponseMessages>
+    </m:ResolveNamesResponse>
+  </s:Body>
+</s:Envelope>''')
+        with self.assertRaises(TransportError) as e:
+            Version.guess(protocol)
+        self.assertEqual(
+            e.exception.args[0],
+            "No valid version headers found in response (ErrorNameResolutionMultipleResults('.'))"
+        )

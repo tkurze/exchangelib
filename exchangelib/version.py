@@ -235,7 +235,7 @@ class Version:
                 raise TransportError(f'No valid version headers found in response ({e!r})')
         if not protocol.config.version.build:
             raise TransportError('No valid version headers found in response')
-        return protocol.version
+        return protocol.config.version
 
     @staticmethod
     def _is_invalid_version_string(version):
