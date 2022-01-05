@@ -482,3 +482,22 @@ class CalendarTest(CommonItemTest):
             master_item.delete()  # Item is gone from the server, so this should fail
         with self.assertRaises(ErrorItemNotFound):
             third_occurrence.delete()  # Item is gone from the server, so this should fail
+
+    def test_invalid_updateitem_items(self):
+        # Test here because CalendarItem is the only item that has a requiref field with no default
+        item = self.get_test_item().save()
+        with self.assertRaises(ValueError) as e:
+            self.account.bulk_update([(item, [])])
+        self.assertEqual(e.exception.args[0], "'fieldnames' must not be empty")
+
+        start = item.start
+        item.start = None
+        with self.assertRaises(ValueError) as e:
+            self.account.bulk_update([(item, ['start'])])
+        self.assertEqual(e.exception.args[0], "'start' is a required field with no default")
+
+        item.start = start
+        item.is_meeting = None
+        with self.assertRaises(ValueError) as e:
+            self.account.bulk_update([(item, ['is_meeting'])])
+        self.assertEqual(e.exception.args[0], "'is_meeting' is a read-only field")

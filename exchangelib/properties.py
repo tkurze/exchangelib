@@ -1416,6 +1416,8 @@ class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
         return id_elem.get(cls.ID_ELEMENT_CLS.ID_ATTR), id_elem.get(cls.ID_ELEMENT_CLS.CHANGEKEY_ATTR)
 
     def to_id(self):
+        if self._id is None:
+            raise ValueError('Must have an ID')
         return self._id
 
     def __eq__(self, other):

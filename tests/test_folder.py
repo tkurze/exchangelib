@@ -78,6 +78,12 @@ class FolderTest(EWSTest):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
         self.assertGreater(len(folders), 40, sorted(f.name for f in folders))
 
+    def test_find_folders_multiple_roots(self):
+        coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])
+        with self.assertRaises(ValueError) as e:
+            list(coll.find_folders(depth='Shallow'))
+        self.assertIn('FindFolder must be called with folders in the same root hierarchy', e.exception.args[0])
+
     def test_find_folders_compat(self):
         with self.assertRaises(NotImplementedError) as e:
             coll = FolderCollection(account=self.account, folders=[self.account.root])
@@ -298,6 +304,13 @@ class FolderTest(EWSTest):
             self.account.calendar.parent.parent.name,
             'root'
         )
+        # Setters
+        parent = self.account.calendar.parent
+        with self.assertRaises(ValueError) as e:
+            self.account.calendar.parent = 'XXX'
+        self.assertEqual(e.exception.args[0], "'value' 'XXX' must be a Folder instance")
+        self.account.calendar.parent = None
+        self.account.calendar.parent = parent
 
     def test_children(self):
         self.assertIn(
@@ -332,6 +345,9 @@ class FolderTest(EWSTest):
         self.assertGreaterEqual(len(list(self.account.contacts.glob('../*'))), 5)
         self.assertEqual(len(list(self.account.root.glob(f'**/{self.account.contacts.name}'))), 1)
         self.assertEqual(len(list(self.account.root.glob(f'Top of*/{self.account.contacts.name}'))), 1)
+        with self.assertRaises(ValueError) as e:
+            list(self.account.root.glob('../*'))
+        self.assertEqual(e.exception.args[0], 'Already at top')
 
     def test_collection_filtering(self):
         self.assertGreaterEqual(self.account.root.tois.children.all().count(), 0)
@@ -358,6 +374,10 @@ class FolderTest(EWSTest):
             (self.account.root / '.').id,
             self.account.root.id
         )
+        with self.assertRaises(ValueError) as e:
+            _ = self.account.root / '..'
+        self.assertEqual(e.exception.args[0], 'Already at top')
+
 
     def test_double_div_navigation(self):
         self.account.root.clear_cache()  # Clear the cache
@@ -445,10 +465,16 @@ class FolderTest(EWSTest):
         f.wipe()
         self.assertEqual(len(list(f.children)), 0)
 
+        item_id, changekey = f.id, f.changekey
         f.delete()
         with self.assertRaises(ValueError):
             # No longer has an ID
             f.refresh()
+
+        with self.assertRaises(ErrorItemNotFound):
+            f.id, f.changekey = item_id, changekey
+            # Invalid ID
+            f.save()
 
         # Delete all subfolders of inbox
         for c in self.account.inbox.children:
