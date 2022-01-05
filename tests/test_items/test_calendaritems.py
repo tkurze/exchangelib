@@ -7,7 +7,7 @@ from exchangelib.folders import Calendar
 from exchangelib.items import CalendarItem, BulkCreateResult
 from exchangelib.items.calendar_item import SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
 from exchangelib.recurrence import Recurrence, Occurrence, FirstOccurrence, LastOccurrence, DeletedOccurrence, \
-AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
+    AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
     DailyPattern
 
 from ..common import get_random_string, get_random_datetime_range, get_random_date

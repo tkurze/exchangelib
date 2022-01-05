@@ -21,7 +21,7 @@ from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoR
     TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId
-from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, close_connections
+from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
 from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
     SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings

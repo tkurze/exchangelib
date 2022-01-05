@@ -302,7 +302,7 @@ class CommonItemTest(BaseItemTest):
                         time.sleep(retries*retries)  # Exponential sleep
                         matches = qs.filter(**kw).count()
                 # __in with an empty list returns an empty result
-                expected = 0 if f.is_list and not val and list(kw)[0].endswith(f'__in') else 1
+                expected = 0 if f.is_list and not val and list(kw)[0].endswith('__in') else 1
                 self.assertEqual(matches, expected, (f.name, val, kw, retries))
 
     def test_filter_on_simple_fields(self):

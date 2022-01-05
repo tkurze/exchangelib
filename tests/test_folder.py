@@ -404,7 +404,7 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorFolderNotFound):
             _ = self.account.root // 'XXX'
 
-        # Check that thi didn't trigger caching
+        # Check that this didn't trigger caching
         self.assertIsNone(self.account.root._subfolders)
 
     def test_extended_properties(self):
