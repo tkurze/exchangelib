@@ -18,6 +18,9 @@ class ConfigurationTest(TimedTestCase):
         with self.assertRaises(ValueError) as e:
             Configuration(credentials='foo')
         self.assertEqual(e.exception.args[0], "'credentials' 'foo' must be a Credentials instance")
+        with self.assertRaises(ValueError) as e:
+            Configuration(credentials=None, auth_type=NTLM)
+        self.assertEqual(e.exception.args[0], "Auth type 'NTLM' was detected but no credentials were provided")
         with self.assertRaises(AttributeError) as e:
             Configuration(server='foo', service_endpoint='bar')
         self.assertEqual(e.exception.args[0], "Only one of 'server' or 'service_endpoint' must be provided")

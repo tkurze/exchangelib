@@ -2,13 +2,19 @@ import logging
 
 from cached_property import threaded_cached_property
 
-from .credentials import BaseCredentials, OAuth2Credentials
+from .credentials import BaseCredentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
 from .protocol import RetryPolicy, FailFast
 from .transport import AUTH_TYPE_MAP, OAUTH2, CREDENTIALS_REQUIRED
 from .util import split_url
 from .version import Version
 
 log = logging.getLogger(__name__)
+
+DEFAULT_AUTH_TYPE = {
+    # This type of credentials *must* use the OAuth auth type
+    OAuth2Credentials: OAUTH2,
+    OAuth2AuthorizationCodeCredentials: OAUTH2,
+}
 
 
 class Configuration:
@@ -43,9 +49,9 @@ class Configuration:
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise ValueError(f"'credentials' {credentials!r} must be a Credentials instance")
-        if isinstance(credentials, OAuth2Credentials) and auth_type is None:
-            # This type of credentials *must* use the OAuth auth type
-            auth_type = OAUTH2
+        if auth_type is None:
+            # Set a default auth type for the credentials where this makes sense
+            auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
         elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(f'Auth type {auth_type!r} was detected but no credentials were provided')
         if server and service_endpoint:
