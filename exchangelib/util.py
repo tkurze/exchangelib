@@ -628,11 +628,11 @@ class DummyRequest:
 class DummyResponse:
     """A class to fake a requests Response object for functions that expect this."""
 
-    def __init__(self, url, headers, request_headers, content=b'', status_code=503, history=None):
+    def __init__(self, url, headers, request_headers, content=b'', status_code=503, streaming=False, history=None):
         self.status_code = status_code
         self.url = url
         self.headers = headers
-        self.content = content
+        self.content = iter((bytes([b]) for b in content)) if streaming else content
         self.text = content.decode('utf-8', errors='ignore')
         self.request = DummyRequest(headers=request_headers)
         self.history = history

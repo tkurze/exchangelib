@@ -1,10 +1,10 @@
 import time
 
-from exchangelib.errors import ErrorInvalidSubscription, ErrorSubscriptionNotFound
+from exchangelib.errors import ErrorInvalidSubscription, ErrorSubscriptionNotFound, MalformedResponseError
 from exchangelib.folders import Inbox
 from exchangelib.items import Message
 from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent, Notification, ItemId
-from exchangelib.services import SendNotification, SubscribeToPull
+from exchangelib.services import SendNotification, SubscribeToPull, GetStreamingEvents
 from exchangelib.util import PrettyXmlHandler
 
 from .test_basics import BaseItemTest
@@ -389,3 +389,13 @@ class SyncTest(BaseItemTest):
 </s:Envelope>
 '''
         )
+
+    def test_get_streaming_events_exceptions(self):
+        # Test special error handling in this service. It's almost impossible to trigger a ParseError through the
+        # DocumentYielder, so we test with a SOAP message without a body element.
+        xml = b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+</Envelope>'''
+        with self.assertRaises(MalformedResponseError):
+            list(GetStreamingEvents(account=self.account).parse(xml))
