@@ -13,6 +13,7 @@ except ImportError:
 import psutil
 import requests_mock
 
+from exchangelib import close_connections
 from exchangelib.credentials import Credentials
 from exchangelib.configuration import Configuration
 from exchangelib.items import CalendarItem, SEARCH_SCOPE_CHOICES
@@ -32,6 +33,10 @@ from .common import EWSTest, get_random_datetime_range, get_random_string, RANDO
 
 
 class ProtocolTest(EWSTest):
+
+    def test_close_connections_helper(self):
+        # Just test that it doesn't break
+        close_connections()
 
     def test_pickle(self):
         # Test that we can pickle, repr and str Protocols
