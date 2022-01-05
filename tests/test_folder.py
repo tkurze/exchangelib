@@ -378,6 +378,11 @@ class FolderTest(EWSTest):
             _ = self.account.root / '..'
         self.assertEqual(e.exception.args[0], 'Already at top')
 
+        # Test invalid subfolder
+        with self.assertRaises(ErrorFolderNotFound):
+            _ = self.account.root / 'XXX'
+
+
     def test_double_div_navigation(self):
         self.account.root.clear_cache()  # Clear the cache
 
