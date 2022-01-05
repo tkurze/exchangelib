@@ -316,7 +316,7 @@ class ProtocolTest(EWSTest):
             self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
         self.assertEqual(
             e.exception.args[0],
-            f"'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
+            "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
         )
         self.assertGreaterEqual(
             self.account.protocol.resolve_names(names=['xxx@example.com']),

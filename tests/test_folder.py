@@ -12,6 +12,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
 from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
 from exchangelib.queryset import Q
 from exchangelib.services import GetFolder
+from exchangelib.version import EXCHANGE_2007
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
     get_random_byte
@@ -76,6 +77,16 @@ class FolderTest(EWSTest):
     def test_find_folders(self):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
         self.assertGreater(len(folders), 40, sorted(f.name for f in folders))
+
+    def test_find_folders_compat(self):
+        with self.assertRaises(NotImplementedError) as e:
+            coll = FolderCollection(account=self.account, folders=[self.account.root])
+            self.account.protocol.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
+            list(coll.find_folders(offset=1))
+        self.assertEqual(
+            e.exception.args[0],
+            "'offset' is only supported for Exchange 2010 servers and later"
+        )
 
     def test_find_folders_with_restriction(self):
         # Exact match

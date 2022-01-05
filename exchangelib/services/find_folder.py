@@ -63,7 +63,7 @@ class FindFolder(EWSPagingService):
             payload.append(indexed_page_folder_view)
         else:
             if offset != 0:
-                raise ValueError('Offsets are only supported from Exchange 2010')
+                raise NotImplementedError("'offset' is only supported for Exchange 2010 servers and later")
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
         payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag='m:ParentFolderIds'))
