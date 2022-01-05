@@ -317,33 +317,33 @@ class SyncTest(BaseItemTest):
     def test_push_message_parsing(self):
         xml = b'''\
 <?xml version="1.0" encoding="utf-8"?>
-<soap11:Envelope
-    xmlns:soap11="http://schemas.xmlsoap.org/soap/envelope/">
-    <soap11:Header>
+<s:Envelope
+        xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Header>
         <t:RequestServerVersion
-            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" Version="Exchange2016"
-            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
-        </soap11:Header>
-        <soap11:Body>
-            <m:SendNotification
+                xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" Version="Exchange2016"
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"/>
+    </s:Header>
+    <s:Body>
+        <m:SendNotification
                 xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
                 xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
-                <m:ResponseMessages>
-                    <m:SendNotificationResponseMessage ResponseClass="Success">
-                        <m:ResponseCode>NoError</m:ResponseCode>
-                        <m:Notification>
-                            <t:SubscriptionId>XXXXX=</t:SubscriptionId>
-                            <t:PreviousWatermark>AAAAA=</t:PreviousWatermark>
-                            <t:MoreEvents>false</t:MoreEvents>
-                            <t:StatusEvent>
-                                <t:Watermark>BBBBB=</t:Watermark>
-                            </t:StatusEvent>
-                        </m:Notification>
-                    </m:SendNotificationResponseMessage>
-                </m:ResponseMessages>
-            </m:SendNotification>
-        </soap11:Body>
-    </soap11:Envelope>'''
+            <m:ResponseMessages>
+                <m:SendNotificationResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:Notification>
+                        <t:SubscriptionId>XXXXX=</t:SubscriptionId>
+                        <t:PreviousWatermark>AAAAA=</t:PreviousWatermark>
+                        <t:MoreEvents>false</t:MoreEvents>
+                        <t:StatusEvent>
+                            <t:Watermark>BBBBB=</t:Watermark>
+                        </t:StatusEvent>
+                    </m:Notification>
+                </m:SendNotificationResponseMessage>
+            </m:ResponseMessages>
+        </m:SendNotification>
+    </s:Body>
+</s:Envelope>'''
         ws = SendNotification(protocol=None)
         self.assertListEqual(
             list(ws.parse(xml)),
@@ -395,7 +395,7 @@ class SyncTest(BaseItemTest):
         # DocumentYielder, so we test with a SOAP message without a body element.
         xml = b'''\
 <?xml version='1.0' encoding='utf-8'?>
-<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
-</Envelope>'''
+<s:Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+</s:Envelope>'''
         with self.assertRaises(MalformedResponseError):
             list(GetStreamingEvents(account=self.account).parse(xml))
