@@ -442,10 +442,12 @@ class DocumentYielder:
 
     def __init__(self, content_iterator, document_tag='Envelope'):
         self._iterator = content_iterator
-        self._start_token = f'<{document_tag}'.encode('utf-8')
-        self._end_token = f'/{document_tag}>'.encode('utf-8')
+        self._document_tag = document_tag.encode()
 
-    def get_tag(self, stop_byte):
+    def _get_tag(self):
+        """Iterate over the bytes until we have a full tag in the buffer. If there's a '>' in an attr value, then we'll
+        exit on that, but it's OK becaus wejust need the plain tag name later.
+        """
         tag_buffer = [b'<']
         while True:
             try:
@@ -453,9 +455,19 @@ class DocumentYielder:
             except StopIteration:
                 break
             tag_buffer.append(c)
-            if c == stop_byte:
+            if c == b'>':
                 break
         return b''.join(tag_buffer)
+
+    @staticmethod
+    def _normalize_tag(tag):
+        """Returns the plain tag name given a range of tag formats:
+        * <tag>
+        * <ns:tag>
+        * <ns:tag foo='bar'>
+        * </ns:tag foo='bar'>
+        """
+        return tag.strip(b'<>/').split(b' ')[0].split(b':')[-1]
 
     def __iter__(self):
         """Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
@@ -467,15 +479,15 @@ class DocumentYielder:
             while True:
                 c = next(self._iterator)
                 if not doc_started and c == b'<':
-                    tag = self.get_tag(stop_byte=b' ')
-                    if tag.startswith(self._start_token):
+                    tag = self._get_tag()
+                    if self._normalize_tag(tag) == self._document_tag:
                         # Start of document. Collect bytes from this point
                         buffer.append(tag)
                         doc_started = True
                 elif doc_started and c == b'<':
-                    tag = self.get_tag(stop_byte=b'>')
+                    tag = self._get_tag()
                     buffer.append(tag)
-                    if tag.endswith(self._end_token):
+                    if self._normalize_tag(tag) == self._document_tag:
                         # End of document. Yield a valid document and reset the buffer
                         yield b"<?xml version='1.0' encoding='utf-8'?>\n" + b''.join(buffer)
                         doc_started = False

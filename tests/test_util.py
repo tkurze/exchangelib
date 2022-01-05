@@ -10,7 +10,7 @@ from exchangelib.errors import RelativeRedirect, TransportError, RateLimitError,
 from exchangelib.protocol import FailFast, FaultTolerance
 import exchangelib.util
 from exchangelib.util import chunkify, peek, get_redirect_url, get_domain, PrettyXmlHandler, to_xml, BOM_UTF8, \
-    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS
+    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder
 
 from .common import EWSTest, mock_post, mock_session_exception
 
@@ -275,3 +275,42 @@ class UtilTest(EWSTest):
         self.assertEqual(safe_b64decode(b'SGVsbG8gd29ybGQ='), b'Hello world')
         # Test incorrectly padded binary data
         self.assertEqual(safe_b64decode(b'SGVsbG8gd29ybGQ'), b'Hello world')
+
+    def test_document_yielder(self):
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b'<b>a</b>'), 'b')),
+            [b"<?xml version='1.0' encoding='utf-8'?>\n<b>a</b>"]
+        )
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b'<b>a</b><b>c</b><b>b</b>'), 'b')),
+            [
+                b"<?xml version='1.0' encoding='utf-8'?>\n<b>a</b>",
+                b"<?xml version='1.0' encoding='utf-8'?>\n<b>c</b>",
+                b"<?xml version='1.0' encoding='utf-8'?>\n<b>b</b>",
+            ]
+        )
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b'<XXX></XXX>'), 'XXX')),
+            [b"<?xml version='1.0' encoding='utf-8'?>\n<XXX></XXX>"]
+        )
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b'<ns:XXX></ns:XXX>'), 'XXX')),
+            [b"<?xml version='1.0' encoding='utf-8'?>\n<ns:XXX></ns:XXX>"]
+        )
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b"<ns:XXX a='b'></ns:XXX>"), 'XXX')),
+            [b"<?xml version='1.0' encoding='utf-8'?>\n<ns:XXX a='b'></ns:XXX>"]
+        )
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b"<ns:XXX a='b' c='d'></ns:XXX>"), 'XXX')),
+            [b"<?xml version='1.0' encoding='utf-8'?>\n<ns:XXX a='b' c='d'></ns:XXX>"]
+        )
+        # Test 'dangerous' chars in attr values
+        self.assertListEqual(
+            list(DocumentYielder(_bytes_to_iter(b"<ns:XXX a='>b'></ns:XXX>"), 'XXX')),
+            [b"<?xml version='1.0' encoding='utf-8'?>\n<ns:XXX a='>b'></ns:XXX>"]
+        )
+
+
+def _bytes_to_iter(content):
+    return iter((bytes([b]) for b in content))
