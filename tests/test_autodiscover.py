@@ -1,4 +1,5 @@
 from collections import namedtuple
+import getpass
 import glob
 import sys
 from types import MethodType
@@ -611,7 +612,7 @@ class AutodiscoverTest(EWSTest):
 
     def test_shelve_filename(self):
         major, minor = sys.version_info[:2]
-        self.assertEqual(shelve_filename(), f'exchangelib.2.cache.erik.py{major}{minor}')
+        self.assertEqual(shelve_filename(), f'exchangelib.2.cache.{getpass.getuser()}.py{major}{minor}')
 
     @patch('getpass.getuser', side_effect=KeyError())
     def test_shelve_filename_getuser_failure(self, m):
