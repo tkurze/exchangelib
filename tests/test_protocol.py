@@ -3,6 +3,7 @@ import os
 import pickle
 import socket
 import tempfile
+from unittest.mock import Mock
 import warnings
 try:
     import zoneinfo
@@ -694,3 +695,16 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                 os.environ.pop('REQUESTS_CA_BUNDLE', None)  # May already have been deleted
                 BaseProtocol.HTTP_ADAPTER_CLS = default_adapter_cls
                 self.account.protocol.credentials = self.account.protocol.credentials
+
+    def test_del_on_error(self):
+        # Test that __del__ can handle exceptions on close()
+        protocol = Protocol(config=Configuration(
+            service_endpoint='http://httpbin.org',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
+            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast(),
+            max_connections=3
+        ))
+        protocol.close = Mock(side_effect=Exception('XXX'))
+        with self.assertRaises(Exception):
+            protocol.close()
+        del protocol

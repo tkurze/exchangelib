@@ -1,6 +1,7 @@
 from collections import namedtuple
 import glob
 from types import MethodType
+from unittest.mock import Mock
 
 import dns
 import requests_mock
@@ -9,7 +10,7 @@ from exchangelib.account import Account
 from exchangelib.credentials import Credentials, DELEGATE
 import exchangelib.autodiscover.discovery
 from exchangelib.autodiscover import close_connections, clear_cache, autodiscover_cache, AutodiscoverProtocol, \
-    Autodiscovery
+    Autodiscovery, AutodiscoverCache
 from exchangelib.autodiscover.properties import Autodiscover
 from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
@@ -593,3 +594,11 @@ class AutodiscoverTest(EWSTest):
 </Autodiscover>'''
         with self.assertRaises(ValueError):
             Autodiscover.from_bytes(xml).response.ews_url
+
+    def test_del_on_error(self):
+        # Test that __del__ can handle exceptions on close()
+        cache = AutodiscoverCache()
+        cache.close = Mock(side_effect=Exception('XXX'))
+        with self.assertRaises(Exception):
+            cache.close()
+        del cache
