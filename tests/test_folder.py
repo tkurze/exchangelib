@@ -1,5 +1,5 @@
 from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
-    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists
+    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists, ErrorFolderNotFound
 from exchangelib.extended_properties import ExtendedProperty
 from exchangelib.items import Message
 from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
@@ -378,7 +378,6 @@ class FolderTest(EWSTest):
             _ = self.account.root / '..'
         self.assertEqual(e.exception.args[0], 'Already at top')
 
-
     def test_double_div_navigation(self):
         self.account.root.clear_cache()  # Clear the cache
 
@@ -400,6 +399,12 @@ class FolderTest(EWSTest):
             (self.account.root // '.').id,
             self.account.root.id
         )
+
+        # Test invalid subfolder
+        with self.assertRaises(ErrorFolderNotFound):
+            _ = self.account.root // 'XXX'
+
+        # Check that thi didn't trigger caching
         self.assertIsNone(self.account.root._subfolders)
 
     def test_extended_properties(self):
