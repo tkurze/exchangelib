@@ -20,7 +20,7 @@ from exchangelib.items import CalendarItem, SEARCH_SCOPE_CHOICES
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
     TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
-    SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId
+    SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId, MailboxData, FreeBusyViewOptions
 from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
 from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
     SetUserOofSettings, ExpandDL
@@ -187,19 +187,38 @@ class ProtocolTest(EWSTest):
         end = datetime.datetime.now(tz=tz) + datetime.timedelta(hours=6)
         accounts = [(self.account, 'Organizer', False)]
 
-        with self.assertRaises(ValueError):
-            self.account.protocol.get_free_busy_info(accounts=[(123, 'XXX', 'XXX')], start=0, end=0)
-        with self.assertRaises(ValueError):
-            self.account.protocol.get_free_busy_info(accounts=[(self.account, 'XXX', 'XXX')], start=0, end=0)
-        with self.assertRaises(ValueError):
-            self.account.protocol.get_free_busy_info(accounts=[(self.account, 'Organizer', 'XXX')], start=0, end=0)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError) as e:
+            self.account.protocol.get_free_busy_info(accounts=[(123, 'XXX', 'XXX')], start=start, end=end)
+        self.assertEqual(
+            e.exception.args[0],
+            "Field 'email' value 123 must be of type <class 'exchangelib.properties.Email'>"
+        )
+        with self.assertRaises(ValueError) as e:
+            self.account.protocol.get_free_busy_info(accounts=[(self.account, 'XXX', 'XXX')], start=start, end=end)
+        self.assertEqual(
+            e.exception.args[0],
+            f"Invalid choice 'XXX' for field 'attendee_type'. Valid choices are {sorted(MailboxData.ATTENDEE_TYPES)}"
+        )
+        with self.assertRaises(TypeError) as e:
+            self.account.protocol.get_free_busy_info(accounts=[(self.account, 'Organizer', 'X')], start=start, end=end)
+        self.assertEqual(e.exception.args[0], "Field 'exclude_conflicts' value 'X' must be of type <class 'bool'>")
+        with self.assertRaises(ValueError) as e:
             self.account.protocol.get_free_busy_info(accounts=accounts, start=end, end=start)
-        with self.assertRaises(ValueError):
+        self.assertIn("'start' must be less than 'end'", e.exception.args[0])
+        with self.assertRaises(TypeError) as e:
             self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end,
                                                      merged_free_busy_interval='XXX')
-        with self.assertRaises(ValueError):
+        self.assertEqual(
+            e.exception.args[0],
+            "Field 'merged_free_busy_interval' value 'XXX' must be of type <class 'int'>"
+        )
+        with self.assertRaises(ValueError) as e:
             self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end, requested_view='XXX')
+        self.assertEqual(
+            e.exception.args[0],
+            f"Invalid choice 'XXX' for field 'requested_view'. Valid choices are "
+            f"{sorted(FreeBusyViewOptions.REQUESTED_VIEWS)}"
+        )
 
         for view_info in self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end):
             self.assertIsInstance(view_info, FreeBusyView)

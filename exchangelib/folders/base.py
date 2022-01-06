@@ -9,8 +9,7 @@ from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFol
     ErrorDeleteDistinguishedFolder, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
-from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, DELETE_TYPE_CHOICES, HARD_DELETE, \
-    SHALLOW as SHALLOW_ITEMS
+from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, HARD_DELETE, SHALLOW as SHALLOW_ITEMS
 from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, UserConfiguration, \
     UserConfigurationName, UserConfigurationNameMNS, EWSMeta
 from ..queryset import SearchableMixIn, DoesNotExist
@@ -356,16 +355,12 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     def delete(self, delete_type=HARD_DELETE):
         from ..services import DeleteFolder
-        if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         DeleteFolder(account=self.account).get(folders=[self], delete_type=delete_type)
         self.root.remove_folder(self)  # Remove the updated folder from the cache
         self._id = None
 
     def empty(self, delete_type=HARD_DELETE, delete_sub_folders=False):
         from ..services import EmptyFolder
-        if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         EmptyFolder(account=self.account).get(
             folders=[self], delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )

@@ -1,4 +1,5 @@
 from .common import EWSAccountService, folder_ids_element
+from ..items import DELETE_TYPE_CHOICES
 from ..util import create_element
 
 
@@ -9,6 +10,8 @@ class EmptyFolder(EWSAccountService):
     returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
+        if delete_type not in DELETE_TYPE_CHOICES:
+            raise ValueError(f"'delete_type' {delete_type!r} must be one of {DELETE_TYPE_CHOICES}")
         return self._chunked_get_elements(
             self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )

@@ -711,6 +711,11 @@ class TimeWindow(EWSElement):
     start = DateTimeField(field_uri='StartTime', is_required=True)
     end = DateTimeField(field_uri='EndTime', is_required=True)
 
+    def clean(self, version=None):
+        if self.start >= self.end:
+            raise ValueError(f"'start' must be less than 'end' ({self.start} -> {self.end})")
+        super().clean(version=version)
+
 
 class FreeBusyViewOptions(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/freebusyviewoptions"""

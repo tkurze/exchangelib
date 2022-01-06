@@ -3,9 +3,8 @@ import logging
 
 from cached_property import threaded_cached_property
 
-from .queryset import FOLDER_TRAVERSAL_CHOICES
 from ..fields import FieldPath, InvalidField
-from ..items import Persona, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, ID_ONLY
+from ..items import Persona, ID_ONLY
 from ..properties import CalendarView
 from ..queryset import QuerySet, SearchableMixIn, Q
 from ..restriction import Restriction
@@ -135,13 +134,9 @@ class FolderCollection(SearchableMixIn):
         else:
             raise InvalidField(f"{field!r} is not a valid field on {self.supported_item_models}")
 
-    def _rinse_args(self, q, shape, depth, additional_fields, field_validator):
-        if shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
+    def _rinse_args(self, q, depth, additional_fields, field_validator):
         if depth is None:
             depth = self._get_default_item_traversal_depth()
-        if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
         if additional_fields:
             for f in additional_fields:
                 field_validator(field=f, version=self.account.version)
@@ -186,7 +181,7 @@ class FolderCollection(SearchableMixIn):
             log.debug('Query will never return results')
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, shape=shape, depth=depth, additional_fields=additional_fields,
+            q=q, depth=depth, additional_fields=additional_fields,
             field_validator=self.validate_item_field
         )
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
@@ -246,7 +241,7 @@ class FolderCollection(SearchableMixIn):
             log.debug('Query will never return results')
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, shape=shape, depth=depth, additional_fields=additional_fields,
+            q=q, depth=depth, additional_fields=additional_fields,
             field_validator=Persona.validate_field
         )
 
@@ -337,12 +332,8 @@ class FolderCollection(SearchableMixIn):
             restriction = None
         else:
             restriction = Restriction(q, folders=self.folders, applies_to=Restriction.FOLDERS)
-        if shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
         if depth is None:
             depth = self._get_default_folder_traversal_depth()
-        if depth not in FOLDER_TRAVERSAL_CHOICES:
-            raise ValueError(f"'depth' {depth!r} must be one of {FOLDER_TRAVERSAL_CHOICES}")
         if additional_fields is None:
             # Default to all non-complex properties. Subfolders will always be of class Folder
             additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)

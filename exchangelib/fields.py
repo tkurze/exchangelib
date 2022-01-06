@@ -918,7 +918,7 @@ class ChoiceField(CharField):
         else:
             if value in valid_choices:
                 return value
-        raise ValueError(f"Invalid choice {value!r} for field {self.name!r}. Valid choices are: {valid_choices}")
+        raise ValueError(f"Invalid choice {value!r} for field {self.name!r}. Valid choices are {sorted(valid_choices)}")
 
     def supported_choices(self, version):
         return tuple(c.value for c in self.choices if c.supports_version(version))

@@ -496,21 +496,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: A generator of FreeBusyView objects
         """
         from .account import Account
-        for account, attendee_type, exclude_conflicts in accounts:
-            if not isinstance(account, (Account, str)):
-                raise ValueError(f"'accounts' item {account!r} must be an 'Account' or 'str' instance")
-            if attendee_type not in MailboxData.ATTENDEE_TYPES:
-                raise ValueError(f"'accounts' item {attendee_type!r} must be one of {MailboxData.ATTENDEE_TYPES}")
-            if not isinstance(exclude_conflicts, bool):
-                raise ValueError(f"'accounts' item {exclude_conflicts!r} must be a 'bool' instance")
-        if start >= end:
-            raise ValueError(f"'start' must be less than 'end' ({start} -> {end})")
-        if not isinstance(merged_free_busy_interval, int):
-            raise ValueError(f"'merged_free_busy_interval' value {merged_free_busy_interval!r} must be an 'int'")
-        if requested_view not in FreeBusyViewOptions.REQUESTED_VIEWS:
-            raise ValueError(
-                f"'requested_view' value {requested_view!r} must be one of {FreeBusyViewOptions.REQUESTED_VIEWS}"
-            )
         tz_definition = list(self.get_timezones(
             timezones=[start.tzinfo],
             return_full_timezone_data=True

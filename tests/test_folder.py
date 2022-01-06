@@ -382,7 +382,6 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorFolderNotFound):
             _ = self.account.root / 'XXX'
 
-
     def test_double_div_navigation(self):
         self.account.root.clear_cache()  # Clear the cache
 

@@ -1,6 +1,6 @@
 import logging
 from .common import EWSPagingService, shape_element, folder_ids_element
-from ..items import Persona, ID_ONLY
+from ..items import Persona, ID_ONLY, SHAPE_CHOICES, ITEM_TRAVERSAL_CHOICES
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2013
 
@@ -36,6 +36,10 @@ class FindPeople(EWSPagingService):
 
         :return: XML elements for the matching items
         """
+        if shape not in SHAPE_CHOICES:
+            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise ValueError(f"'depth' {depth!r} must be one of {ITEM_TRAVERSAL_CHOICES}")
         self.additional_fields = additional_fields
         self.shape = shape
         return self._elems_to_objs(self._paged_call(

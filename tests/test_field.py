@@ -61,7 +61,7 @@ class FieldTest(TimedTestCase):
         field = ChoiceField('foo', field_uri='bar', choices=[Choice('foo'), Choice('bar')])
         with self.assertRaises(ValueError) as e:
             field.clean('XXX')  # Value must be a valid choice
-        self.assertEqual(str(e.exception), "Invalid choice 'XXX' for field 'foo'. Valid choices are: ['foo', 'bar']")
+        self.assertEqual(str(e.exception), "Invalid choice 'XXX' for field 'foo'. Valid choices are ['bar', 'foo']")
 
         # A few tests on extended properties that override base methods
         field = ExtendedPropertyField('foo', value_cls=ExternId, is_required=True)
