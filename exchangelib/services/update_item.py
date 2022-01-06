@@ -1,4 +1,5 @@
 from .common import to_item_id
+from ..errors import InvalidEnumValue
 from ..ewsdatetime import EWSDate
 from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
     SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY, Item, CalendarItem
@@ -21,17 +22,13 @@ class UpdateItem(BaseUpdateService):
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise ValueError(
-                f"'conflict_resolution' {conflict_resolution!r} must be one of {CONFLICT_RESOLUTION_CHOICES}"
-            )
+            raise InvalidEnumValue('conflict_resolution', conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise ValueError(
-                f"'message_disposition' {message_disposition!r} must be one of {MESSAGE_DISPOSITION_CHOICES}"
-            )
+            raise InvalidEnumValue('message_disposition', message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
-            raise ValueError(
-                f"'send_meeting_invitations_or_cancellations' {send_meeting_invitations_or_cancellations!r} must be "
-                f"one of {SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES}"
+            raise InvalidEnumValue(
+                'send_meeting_invitations_or_cancellations', send_meeting_invitations_or_cancellations,
+                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
             )
         if message_disposition == SEND_ONLY:
             raise ValueError('Cannot send-only existing objects. Use SendItem service instead')

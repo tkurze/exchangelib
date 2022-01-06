@@ -1,4 +1,5 @@
 from .common import EWSService, add_xml_child
+from ..errors import InvalidEnumValue
 from ..properties import Notification
 from ..transport import wrap
 from ..util import create_element, MNS
@@ -37,7 +38,7 @@ class SendNotification(EWSService):
 
     def get_payload(self, status):
         if status not in self.STATUS_CHOICES:
-            raise ValueError(f"'status' {status!r} must be one of {self.STATUS_CHOICES}")
+            raise InvalidEnumValue('status', status, self.STATUS_CHOICES)
         payload = create_element(f'm:{self.SERVICE_NAME}Result')
         add_xml_child(payload, 'm:SubscriptionStatus', status)
         return payload

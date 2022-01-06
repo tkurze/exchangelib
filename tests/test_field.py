@@ -28,9 +28,9 @@ class FieldTest(TimedTestCase):
         self.assertEqual(field.clean(None), 'XXX')
 
         field = CharListField('foo', field_uri='bar')
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             field.clean('XXX')  # Must be a list type
-        self.assertEqual(str(e.exception), "Field 'foo' value 'XXX' must be a list")
+        self.assertEqual(str(e.exception), "Field 'foo' value 'XXX' must be of type <class 'list'>")
 
         field = CharListField('foo', field_uri='bar')
         with self.assertRaises(TypeError) as e:
@@ -70,7 +70,7 @@ class FieldTest(TimedTestCase):
         self.assertEqual(str(e.exception), "'foo' is a required field")
         with self.assertRaises(TypeError) as e:
             field.clean(123)  # Correct type is required
-        self.assertEqual(str(e.exception), "'ExternId' value 123 must be an instance of <class 'str'>")
+        self.assertEqual(str(e.exception), "Field 'ExternId' value 123 must be of type <class 'str'>")
         self.assertEqual(field.clean('XXX'), 'XXX')  # We can clean a simple value and keep it as a simple value
         self.assertEqual(field.clean(ExternId('XXX')), ExternId('XXX'))  # We can clean an ExternId instance as well
 
@@ -81,12 +81,12 @@ class FieldTest(TimedTestCase):
         with self.assertRaises(ValueError)as e:
             field.clean(None)  # Value is required
         self.assertEqual(str(e.exception), "'foo' is a required field")
-        with self.assertRaises(ValueError)as e:
+        with self.assertRaises(TypeError)as e:
             field.clean(123)  # Must be an iterable
-        self.assertEqual(str(e.exception), "'ExternIdArray' value 123 must be a list")
+        self.assertEqual(str(e.exception), "Field 'ExternIdArray' value 123 must be of type <class 'list'>")
         with self.assertRaises(TypeError) as e:
             field.clean([123])  # Correct type is required
-        self.assertEqual(str(e.exception), "'ExternIdArray' value element 123 must be an instance of <class 'str'>")
+        self.assertEqual(str(e.exception), "Field 'ExternIdArray' list value 123 must be of type <class 'str'>")
 
         # Test min/max on IntegerField
         field = IntegerField('foo', field_uri='bar', min=5, max=10)

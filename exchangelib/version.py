@@ -1,7 +1,7 @@
 import logging
 import re
 
-from .errors import TransportError, ResponseMessageError
+from .errors import TransportError, ResponseMessageError, InvalidTypeError
 from .util import xml_to_str, TNS
 
 log = logging.getLogger(__name__)
@@ -66,13 +66,13 @@ class Build:
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
-            raise ValueError(f"'major_version' {major_version!r} must be an integer")
+            raise InvalidTypeError('major_version', major_version, int)
         if not isinstance(minor_version, int):
-            raise ValueError(f"'minor_version' {minor_version!r} must be an integer")
+            raise InvalidTypeError('minor_version', minor_version, int)
         if not isinstance(major_build, int):
-            raise ValueError(f"'major_build' {major_build!r} must be an integer")
+            raise InvalidTypeError('major_build', major_build, int)
         if not isinstance(minor_build, int):
-            raise ValueError(f"'minor_build' {minor_build!r} must be an integer")
+            raise InvalidTypeError('minor_build', minor_build, int)
         self.major_version = major_version
         self.minor_version = minor_version
         self.major_build = major_build
@@ -190,13 +190,13 @@ class Version:
     def __init__(self, build, api_version=None):
         if api_version is None:
             if not isinstance(build, Build):
-                raise ValueError(f"'build' {build!r} must be a Build instance")
+                raise InvalidTypeError('build', build, Build)
             self.api_version = build.api_version()
         else:
             if not isinstance(build, (Build, type(None))):
-                raise ValueError(f"'build' {build!r} must be a Build instance")
+                raise InvalidTypeError('build', build, Build)
             if not isinstance(api_version, str):
-                raise ValueError(f"'api_version' {api_version!r} must be a string")
+                raise InvalidTypeError('api_version', api_version, str)
             self.api_version = api_version
         self.build = build
 

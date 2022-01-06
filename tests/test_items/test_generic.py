@@ -12,7 +12,7 @@ from exchangelib.folders import Inbox, FolderCollection
 from exchangelib.items import CalendarItem, Message
 from exchangelib.queryset import QuerySet
 from exchangelib.restriction import Restriction, Q
-from exchangelib.services import CreateItem, UpdateItem, DeleteItem
+from exchangelib.services import CreateItem, UpdateItem, DeleteItem, FindItem, FindPeople
 from exchangelib.version import Build, EXCHANGE_2007, EXCHANGE_2013
 
 from ..common import get_random_string, mock_version
@@ -91,9 +91,13 @@ class GenericItemTest(CommonItemTest):
             item.move(to_folder=self.test_folder)  # Must be an existing item
         item = self.get_test_item()
         item.save()
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             item.move(to_folder='XXX')  # Must be folder instance
-        self.assertEqual(e.exception.args[0], "'to_folder' 'XXX' must be a Folder or FolderId instance")
+        self.assertEqual(
+            e.exception.args[0],
+            "'to_folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
+            "<class 'exchangelib.properties.FolderId'>)"
+        )
         item_id, changekey = item.id, item.changekey
         item.delete()
         item.id, item.changekey = item_id, changekey
@@ -133,9 +137,13 @@ class GenericItemTest(CommonItemTest):
             item.send()  # Must have account on send
         item = self.get_test_item()
         item.save()
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             item.send(copy_to_folder='XXX', save_copy=True)  # Invalid folder
-        self.assertEqual(e.exception.args[0], "'saved_item_folder' 'XXX' must be a Folder or FolderId instance")
+        self.assertEqual(
+            e.exception.args[0],
+            "'saved_item_folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
+            "<class 'exchangelib.properties.FolderId'>)"
+        )
         item_id, changekey = item.id, item.changekey
         item.delete()
         item.id, item.changekey = item_id, changekey
@@ -155,7 +163,7 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'message_disposition' 'XXX' must be one of ('SaveOnly', 'SendOnly', 'SendAndSaveCopy')"
+            "'message_disposition' 'XXX' must be one of ['SaveOnly', 'SendAndSaveCopy', 'SendOnly']"
         )
         with self.assertRaises(ValueError) as e:
             CreateItem(account=self.account).call(
@@ -166,16 +174,20 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'send_meeting_invitations' 'XXX' must be one of ('SendToNone', 'SendOnlyToAll', 'SendToAllAndSaveCopy')"
+            "'send_meeting_invitations' 'XXX' must be one of ['SendOnlyToAll', 'SendToAllAndSaveCopy', 'SendToNone']"
         )
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             CreateItem(account=self.account).call(
                 items=[],
                 folder='XXX',
                 message_disposition='SaveOnly',
                 send_meeting_invitations='SendToNone',
             )
-        self.assertEqual(e.exception.args[0], "'folder' 'XXX' must be a Folder or FolderId instance")
+        self.assertEqual(
+            e.exception.args[0],
+            "'folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
+            "<class 'exchangelib.properties.FolderId'>)"
+        )
 
     def test_invalid_deleteitem_args(self):
         with self.assertRaises(ValueError) as e:
@@ -188,7 +200,7 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'delete_type' XXX must be one of ('HardDelete', 'SoftDelete', 'MoveToDeletedItems')"
+            "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
         )
         with self.assertRaises(ValueError) as e:
             DeleteItem(account=self.account).call(
@@ -200,7 +212,7 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'send_meeting_cancellations' XXX must be one of ('SendToNone', 'SendOnlyToAll', 'SendToAllAndSaveCopy')"
+            "'send_meeting_cancellations' 'XXX' must be one of ['SendOnlyToAll', 'SendToAllAndSaveCopy', 'SendToNone']"
         )
         with self.assertRaises(ValueError) as e:
             DeleteItem(account=self.account).call(
@@ -212,7 +224,7 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'affected_task_occurrences' XXX must be one of ('AllOccurrences', 'SpecifiedOccurrenceOnly')"
+            "'affected_task_occurrences' 'XXX' must be one of ['AllOccurrences', 'SpecifiedOccurrenceOnly']"
         )
 
     def test_invalid_updateitem_args(self):
@@ -226,7 +238,7 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'conflict_resolution' 'XXX' must be one of ('NeverOverwrite', 'AutoResolve', 'AlwaysOverwrite')"
+            "'conflict_resolution' 'XXX' must be one of ['AlwaysOverwrite', 'AutoResolve', 'NeverOverwrite']"
         )
         with self.assertRaises(ValueError) as e:
             UpdateItem(account=self.account).call(
@@ -238,7 +250,7 @@ class GenericItemTest(CommonItemTest):
             )
         self.assertEqual(
             e.exception.args[0],
-            "'message_disposition' 'XXX' must be one of ('SaveOnly', 'SendOnly', 'SendAndSaveCopy')"
+            "'message_disposition' 'XXX' must be one of ['SaveOnly', 'SendAndSaveCopy', 'SendOnly']"
         )
         with self.assertRaises(ValueError) as e:
             UpdateItem(account=self.account).call(
@@ -251,7 +263,77 @@ class GenericItemTest(CommonItemTest):
         self.assertEqual(
             e.exception.args[0],
             "'send_meeting_invitations_or_cancellations' 'XXX' must be one of "
-            "('SendToNone', 'SendOnlyToAll', 'SendOnlyToChanged', 'SendToAllAndSaveCopy', 'SendToChangedAndSaveCopy')"
+            "['SendOnlyToAll', 'SendOnlyToChanged', 'SendToAllAndSaveCopy', 'SendToChangedAndSaveCopy', 'SendToNone']"
+        )
+
+    def test_invalid_finditem_args(self):
+        with self.assertRaises(ValueError) as e:
+            FindItem(account=self.account).call(
+                folders=None,
+                additional_fields=None,
+                restriction=None,
+                order_fields=None,
+                shape='XXX',
+                query_string=None,
+                depth='Shallow',
+                calendar_view=None,
+                max_items=None,
+                offset=None,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']"
+        )
+        with self.assertRaises(ValueError) as e:
+            FindItem(account=self.account).call(
+                folders=None,
+                additional_fields=None,
+                restriction=None,
+                order_fields=None,
+                shape='IdOnly',
+                query_string=None,
+                depth='XXX',
+                calendar_view=None,
+                max_items=None,
+                offset=None,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'depth' 'XXX' must be one of ['Associated', 'Shallow', 'SoftDeleted']"
+        )
+
+    def test_invalid_findpeople_args(self):
+        with self.assertRaises(ValueError) as e:
+            FindPeople(account=self.account).call(
+                folder=None,
+                additional_fields=None,
+                restriction=None,
+                order_fields=None,
+                shape='XXX',
+                query_string=None,
+                depth='Shallow',
+                max_items=None,
+                offset=None,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']"
+        )
+        with self.assertRaises(ValueError) as e:
+            FindPeople(account=self.account).call(
+                folder=None,
+                additional_fields=None,
+                restriction=None,
+                order_fields=None,
+                shape='IdOnly',
+                query_string=None,
+                depth='XXX',
+                max_items=None,
+                offset=None,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'depth' 'XXX' must be one of ['Associated', 'Shallow', 'SoftDeleted']"
         )
 
     def test_unsupported_fields(self):
@@ -478,7 +560,7 @@ class GenericItemTest(CommonItemTest):
             common_qs.filter(categories__contains=item.categories).count(),  # Exact match
             1
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             common_qs.filter(categories__in='ci6xahH1').count()  # Plain string is not supported
         self.assertEqual(
             common_qs.filter(categories__in=['ci6xahH1']).count(),  # Same, but as list
@@ -738,7 +820,7 @@ class GenericItemTest(CommonItemTest):
                                     applies_to=Restriction.ITEMS)
 
         # We don't allow QueryString in combination with other restrictions
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             self.test_folder.filter('Subject:XXX', foo='bar')
         with self.assertRaises(ValueError):
             self.test_folder.filter('Subject:XXX').filter(foo='bar')

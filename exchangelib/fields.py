@@ -4,6 +4,7 @@ import logging
 from decimal import Decimal, InvalidOperation
 from importlib import import_module
 
+from .errors import InvalidTypeError
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
 from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
     xml_text_to_value, TNS
@@ -80,7 +81,7 @@ def split_field_path(field_path):
       'physical_addresses__Home__street' -> ('physical_addresses', 'Home', 'street')
     """
     if not isinstance(field_path, str):
-        raise ValueError(f"Field path {field_path!r} must be a string")
+        raise InvalidTypeError('field_path', field_path, str)
     search_parts = field_path.split('__')
     field = search_parts[0]
     try:
@@ -112,7 +113,9 @@ def resolve_field_path(field_path, folder, strict=True):
             version=folder.account.version
         )
         if label and label not in valid_labels:
-            raise ValueError(f"Label {label} on IndexedField path {field_path!r} must be one of {valid_labels}")
+            raise ValueError(
+                f"Label {label!r} on IndexedField path {field_path!r} must be one of {sorted(valid_labels)}"
+            )
         if issubclass(field.value_cls, MultiFieldIndexedElement):
             if strict and not subfield_name:
                 raise ValueError(
@@ -128,11 +131,12 @@ def resolve_field_path(field_path, folder, strict=True):
                         version=folder.account.version
                     ))
                     raise ValueError(
-                        f"Subfield {subfield_name!r} on IndexedField path {field_path!r} must be one of {field_names}"
+                        f"Subfield {subfield_name!r} on IndexedField path {field_path!r} "
+                        f"must be one of {sorted(field_names)}"
                     )
         else:
             if not issubclass(field.value_cls, SingleFieldIndexedElement):
-                raise ValueError(f"'field.value_cls' {field.value_cls!r} must be an SingleFieldIndexedElement instance")
+                raise InvalidTypeError('field.value_cls', field.value_cls, SingleFieldIndexedElement)
             if subfield_name:
                 raise ValueError(
                     f"IndexedField path {field_path!r} must not specify subfield, e.g. just {fieldname}__{label}'"
@@ -153,11 +157,11 @@ class FieldPath:
     def __init__(self, field, label=None, subfield=None):
         # 'label' and 'subfield' are only used for IndexedField fields
         if not isinstance(field, (FieldURIField, ExtendedPropertyField)):
-            raise ValueError(f"'field' {field!r} must be an FieldURIField, of ExtendedPropertyField instance")
+            raise InvalidTypeError('field', field, (FieldURIField, ExtendedPropertyField))
         if label and not isinstance(label, str):
-            raise ValueError(f"'label' {label!r} must be a {str} instance")
+            raise InvalidTypeError('label', label, str)
         if subfield and not isinstance(subfield, SubField):
-            raise ValueError(f"'subfield' {subfield!r} must be a SubField instance")
+            raise InvalidTypeError('subfield', subfield, SubField)
         self.field = field
         self.label = label
         self.subfield = subfield
@@ -233,9 +237,9 @@ class FieldOrder:
 
     def __init__(self, field_path, reverse=False):
         if not isinstance(field_path, FieldPath):
-            raise ValueError(f"'field_path' {field_path!r} must be a FieldPath instance")
+            raise InvalidTypeError('field_path', field_path, FieldPath)
         if not isinstance(reverse, bool):
-            raise ValueError(f"'reverse' {reverse!r} must be a boolean")
+            raise InvalidTypeError('reverse', reverse, bool)
         self.field_path = field_path
         self.reverse = reverse
 
@@ -285,12 +289,12 @@ class Field(metaclass=abc.ABCMeta):
         # The Exchange build when this field was introduced. When talking with versions prior to this version,
         # we will ignore this field.
         if supported_from is not None and not isinstance(supported_from, Build):
-            raise ValueError(f"'supported_from' {supported_from!r} must be a Build instance")
+            raise InvalidTypeError('supported_from', supported_from, Build)
         self.supported_from = supported_from
         # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
         # we will ignore this field.
         if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise ValueError(f"'deprecated_from' {deprecated_from!r} must be a Build instance")
+            raise InvalidTypeError('deprecated_from', deprecated_from, Build)
         self.deprecated_from = deprecated_from
 
     def clean(self, value, version=None):
@@ -304,7 +308,7 @@ class Field(metaclass=abc.ABCMeta):
             return self.default
         if self.is_list:
             if not is_iterable(value):
-                raise ValueError(f"Field {self.name!r} value {value!r} must be a list")
+                raise TypeError(f"Field {self.name!r} value {value!r} must be of type {list}")
             for v in value:
                 if not isinstance(v, self.value_cls):
                     raise TypeError(f"Field {self.name!r} value {v!r} must be of type {self.value_cls}")
@@ -328,7 +332,7 @@ class Field(metaclass=abc.ABCMeta):
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
         if not isinstance(version, Version):
-            raise ValueError(f"'version' {version!r} must be a Version instance")
+            raise InvalidTypeError('version', version, Version)
         if self.supported_from and version.build < self.supported_from:
             return False
         if self.deprecated_from and version.build >= self.deprecated_from:
@@ -471,7 +475,7 @@ class EnumField(IntegerField):
             for i, v in enumerate(value):
                 if isinstance(v, str):
                     if v not in self.enum:
-                        raise ValueError(f"List value {v!r} on field {self.name!r} must be one of {self.enum}")
+                        raise ValueError(f"List value {v!r} on field {self.name!r} must be one of {sorted(self.enum)}")
                     value[i] = self.enum.index(v) + 1
             if not value:
                 raise ValueError(f"Value {value!r} on field {self.name!r} must not be empty")
@@ -480,7 +484,7 @@ class EnumField(IntegerField):
         else:
             if isinstance(value, str):
                 if value not in self.enum:
-                    raise ValueError(f"Value {value!r} on field {self.name!r} must be one of {self.enum}")
+                    raise ValueError(f"Value {value!r} on field {self.name!r} must be one of {sorted(self.enum)}")
                 value = self.enum.index(value) + 1
         return super().clean(value, version=version)
 
@@ -888,7 +892,7 @@ class Choice:
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
         if not isinstance(version, Version):
-            raise ValueError(f"'version' {version!r} must be a Version instance")
+            raise InvalidTypeError('version', version, Version)
         if not self.supported_from:
             return True
         return version.build >= self.supported_from
@@ -1296,7 +1300,7 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
         from .indexed_properties import IndexedElement
         value_cls = kwargs['value_cls']
         if not issubclass(value_cls, IndexedElement):
-            raise ValueError(f"'value_cls' {value_cls!r} must be a subclass of IndexedElement")
+            raise TypeError(f"'value_cls' {value_cls!r} must be a subclass of type {IndexedElement}")
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):

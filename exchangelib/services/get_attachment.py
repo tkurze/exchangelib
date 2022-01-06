@@ -2,6 +2,7 @@ from itertools import chain
 
 from .common import EWSAccountService, attachment_ids_element
 from ..attachments import FileAttachment, ItemAttachment
+from ..errors import InvalidEnumValue
 from ..util import create_element, add_xml_child, set_xml_value, DummyResponse, StreamingBase64Parser,\
     StreamingContentHandler, ElementNotFound, MNS
 
@@ -18,7 +19,7 @@ class GetAttachment(EWSAccountService):
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise ValueError(f"'body_type' {body_type!r} must be one of {BODY_TYPE_CHOICES}")
+            raise InvalidEnumValue('body_type', body_type, BODY_TYPE_CHOICES)
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, include_mime_content=include_mime_content,
             body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,

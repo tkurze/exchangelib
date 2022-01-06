@@ -1,4 +1,5 @@
 from .common import EWSAccountService
+from ..errors import InvalidTypeError
 from ..properties import AvailabilityMailbox, Mailbox
 from ..settings import OofSettings
 from ..util import create_element, set_xml_value, MNS
@@ -14,9 +15,9 @@ class SetUserOofSettings(EWSAccountService):
 
     def call(self, oof_settings, mailbox):
         if not isinstance(oof_settings, OofSettings):
-            raise ValueError(f"'oof_settings' {oof_settings!r} must be an OofSettings instance")
+            raise InvalidTypeError('oof_settings', oof_settings, OofSettings)
         if not isinstance(mailbox, Mailbox):
-            raise ValueError(f"'mailbox' {mailbox!r} must be an Mailbox instance")
+            raise InvalidTypeError('mailbox', mailbox, Mailbox)
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):

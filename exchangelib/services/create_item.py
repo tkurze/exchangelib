@@ -1,4 +1,5 @@
 from .common import EWSAccountService, folder_ids_element
+from ..errors import InvalidEnumValue, InvalidTypeError
 from ..folders import BaseFolder
 from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
     SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES, BulkCreateResult
@@ -18,17 +19,14 @@ class CreateItem(EWSAccountService):
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise ValueError(
-                f"'message_disposition' {message_disposition!r} must be one of {MESSAGE_DISPOSITION_CHOICES}"
-            )
+            raise InvalidEnumValue('message_disposition', message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations not in SEND_MEETING_INVITATIONS_CHOICES:
-            raise ValueError(
-                f"'send_meeting_invitations' {send_meeting_invitations!r} must be one of "
-                f"{SEND_MEETING_INVITATIONS_CHOICES}"
+            raise InvalidEnumValue(
+                'send_meeting_invitations', send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
             )
         if folder is not None:
             if not isinstance(folder, (BaseFolder, FolderId)):
-                raise ValueError(f"'folder' {folder!r} must be a Folder or FolderId instance")
+                raise InvalidTypeError('folder', folder, (BaseFolder, FolderId))
             if folder.account != self.account:
                 raise ValueError('"Folder must belong to this account')
         if message_disposition == SAVE_ONLY and folder is None:

@@ -1,7 +1,7 @@
 import logging
 
 from .common import EWSAccountService, add_xml_child
-from ..errors import EWSError
+from ..errors import EWSError, InvalidTypeError
 from ..properties import Notification
 from ..util import create_element, get_xml_attr, get_xml_attrs, MNS, DocumentYielder, DummyResponse
 
@@ -29,8 +29,10 @@ class GetStreamingEvents(EWSAccountService):
         self.streaming = True
 
     def call(self, subscription_ids, connection_timeout):
+        if not isinstance(connection_timeout, int):
+            raise InvalidTypeError('connection_timeout', connection_timeout, int)
         if connection_timeout < 1:
-            raise ValueError("'connection_timeout' must be a positive integer")
+            raise ValueError(f"'connection_timeout' {connection_timeout} must be a positive integer")
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
         )))

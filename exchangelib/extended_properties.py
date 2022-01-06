@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
 
+from .errors import InvalidEnumValue
 from .ewsdatetime import EWSDateTime
 from .properties import EWSElement, ExtendedFieldURI
 from .util import create_element, add_xml_child, get_xml_attrs, get_xml_attr, set_xml_value, value_to_xml_text, \
@@ -119,9 +120,8 @@ class ExtendedProperty(EWSElement):
                     "When 'distinguished_property_set_id' is set, 'property_id' or 'property_name' must also be set"
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
-                raise ValueError(
-                    f"'distinguished_property_set_id' {cls.distinguished_property_set_id} must be one of "
-                    f"{sorted(cls.DISTINGUISHED_SETS)}"
+                raise InvalidEnumValue(
+                    'distinguished_property_set_id', cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
                 )
 
     @classmethod
@@ -171,24 +171,20 @@ class ExtendedProperty(EWSElement):
     @classmethod
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
-            raise ValueError(f"'property_type' {cls.property_type!r} must be one of {sorted(cls.PROPERTY_TYPES)}")
+            raise InvalidEnumValue('property_type', cls.property_type, cls.PROPERTY_TYPES)
 
     def clean(self, version=None):
         self.validate_cls()
         python_type = self.python_type()
         if self.is_array_type():
             if not is_iterable(self.value):
-                raise ValueError(f"{self.__class__.__name__!r} value {self.value!r} must be a list")
+                raise TypeError(f"Field {self.__class__.__name__!r} value {self.value!r} must be of type {list}")
             for v in self.value:
                 if not isinstance(v, python_type):
-                    raise TypeError(
-                        f"{self.__class__.__name__!r} value element {v!r} must be an instance of {python_type}"
-                    )
+                    raise TypeError(f"Field {self.__class__.__name__!r} list value {v!r} must be of type {python_type}")
         else:
             if not isinstance(self.value, python_type):
-                raise TypeError(
-                    f"{self.__class__.__name__!r} value {self.value!r} must be an instance of {python_type}"
-                )
+                raise TypeError(f"Field {self.__class__.__name__!r} value {self.value!r} must be of type {python_type}")
 
     @classmethod
     def _normalize_obj(cls, obj):

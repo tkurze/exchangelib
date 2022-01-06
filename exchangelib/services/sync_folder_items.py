@@ -1,5 +1,6 @@
 from .common import add_xml_child, item_ids_element
 from .sync_folder_hierarchy import SyncFolder
+from ..errors import InvalidEnumValue, InvalidTypeError
 from ..folders import BaseFolder
 from ..properties import ItemId
 from ..util import xml_text_to_value, peek, TNS, MNS
@@ -27,10 +28,12 @@ class SyncFolderItems(SyncFolder):
         self.sync_state = sync_state
         if max_changes_returned is None:
             max_changes_returned = self.page_size
+        if not isinstance(max_changes_returned, int):
+            raise InvalidTypeError('max_changes_returned', max_changes_returned, int)
         if max_changes_returned <= 0:
             raise ValueError(f"'max_changes_returned' {max_changes_returned} must be a positive integer")
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-            raise ValueError(f"'sync_scope' {sync_scope!r} must be one of {self.SYNC_SCOPES}")
+            raise InvalidEnumValue('sync_scope', sync_scope, self.SYNC_SCOPES)
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,

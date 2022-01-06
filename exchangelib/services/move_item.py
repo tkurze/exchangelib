@@ -1,4 +1,5 @@
 from .common import EWSAccountService, item_ids_element, folder_ids_element
+from ..errors import InvalidTypeError
 from ..folders import BaseFolder
 from ..items import Item
 from ..properties import FolderId
@@ -13,7 +14,7 @@ class MoveItem(EWSAccountService):
 
     def call(self, items, to_folder):
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise ValueError(f"'to_folder' {to_folder!r} must be a Folder or FolderId instance")
+            raise InvalidTypeError('to_folder', to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
     def _elem_to_obj(self, elem):

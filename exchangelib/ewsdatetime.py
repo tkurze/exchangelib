@@ -7,7 +7,7 @@ except ImportError:
     from backports import zoneinfo
 import tzlocal
 
-from .errors import NaiveDateTimeNotAllowed, UnknownTimeZone
+from .errors import NaiveDateTimeNotAllowed, UnknownTimeZone, InvalidTypeError
 from .winzone import IANA_TO_MS_TIMEZONE_MAP, MS_TIMEZONE_TO_IANA_MAP
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class EWSDate(datetime.date):
     @classmethod
     def from_date(cls, d):
         if type(d) is not datetime.date:
-            raise ValueError(f"{d!r} must be a date instance")
+            raise InvalidTypeError('d', d, datetime.date)
         return cls(d.year, d.month, d.day)
 
     @classmethod
@@ -89,7 +89,7 @@ class EWSDateTime(datetime.datetime):
             # Don't allow pytz or dateutil timezones here. They are not safe to use as direct input for datetime()
             tzinfo = EWSTimeZone.from_timezone(tzinfo)
         if not isinstance(tzinfo, (EWSTimeZone, type(None))):
-            raise ValueError(f'tzinfo {tzinfo!r} must be an EWSTimeZone instance')
+            raise InvalidTypeError('tzinfo', tzinfo, EWSTimeZone)
         if len(args) == 8:
             args = args[:7] + (tzinfo,)
         else:
@@ -112,7 +112,7 @@ class EWSDateTime(datetime.datetime):
     @classmethod
     def from_datetime(cls, d):
         if type(d) is not datetime.datetime:
-            raise ValueError(f"{d!r} must be a datetime instance")
+            raise InvalidTypeError('d', d, datetime.datetime)
         if d.tzinfo is None:
             tz = None
         elif isinstance(d.tzinfo, EWSTimeZone):

@@ -35,9 +35,8 @@ class AccountTest(EWSTest):
             Account(primary_smtp_address='blah@example.com', autodiscover=False)
         self.assertEqual(str(e.exception), 'non-autodiscover requires a config')
         with self.assertRaises(ValueError) as e:
-            # access type must be one of ACCESS_TYPES
             Account(primary_smtp_address='blah@example.com', access_type=123)
-        self.assertEqual(str(e.exception), "'access_type' 123 must be one of ('impersonation', 'delegate')")
+        self.assertEqual(str(e.exception), "'access_type' 123 must be one of ['delegate', 'impersonation']")
         with self.assertRaises(ValueError) as e:
             # locale must be a string
             Account(primary_smtp_address='blah@example.com', locale=123)

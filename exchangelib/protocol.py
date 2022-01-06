@@ -19,7 +19,7 @@ from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached, RateLimitError, CASError, \
-    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError
+    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError, InvalidTypeError
 from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
@@ -61,7 +61,7 @@ class BaseProtocol:
     def __init__(self, config):
         from .configuration import Configuration
         if not isinstance(config, Configuration):
-            raise ValueError(f"'config' {config!r} must be a Configuration instance")
+            raise InvalidTypeError('config', config, Configuration)
         if not config.service_endpoint:
             raise AttributeError("'config.service_endpoint' must be set")
         self.config = config
@@ -520,7 +520,8 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def get_rooms(self, roomlist):
         return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))
 
-    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None, shape=None):
+    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None,
+                      shape=None):
         """Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
         :param names: A list of identifiers to query

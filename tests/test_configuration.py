@@ -15,9 +15,12 @@ from .common import TimedTestCase, get_random_string
 
 class ConfigurationTest(TimedTestCase):
     def test_init(self):
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             Configuration(credentials='foo')
-        self.assertEqual(e.exception.args[0], "'credentials' 'foo' must be a Credentials instance")
+        self.assertEqual(
+            e.exception.args[0],
+            "'credentials' 'foo' must be of type <class 'exchangelib.credentials.BaseCredentials'>"
+        )
         with self.assertRaises(ValueError) as e:
             Configuration(credentials=None, auth_type=NTLM)
         self.assertEqual(e.exception.args[0], "Auth type 'NTLM' was detected but no credentials were provided")
@@ -30,15 +33,17 @@ class ConfigurationTest(TimedTestCase):
             e.exception.args[0],
             f"'auth_type' 'foo' must be one of {sorted(AUTH_TYPE_MAP)}"
         )
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             Configuration(version='foo')
-        self.assertEqual(e.exception.args[0], "'version' 'foo' must be a Version instance")
-        with self.assertRaises(ValueError) as e:
+        self.assertEqual(e.exception.args[0], "'version' 'foo' must be of type <class 'exchangelib.version.Version'>")
+        with self.assertRaises(TypeError) as e:
             Configuration(retry_policy='foo')
-        self.assertEqual(e.exception.args[0], "'retry_policy' 'foo' must be a RetryPolicy instance")
-        with self.assertRaises(ValueError) as e:
+        self.assertEqual(
+            e.exception.args[0], "'retry_policy' 'foo' must be of type <class 'exchangelib.protocol.RetryPolicy'>"
+        )
+        with self.assertRaises(TypeError) as e:
             Configuration(max_connections='foo')
-        self.assertEqual(e.exception.args[0], "'max_connections' 'foo' must be an integer")
+        self.assertEqual(e.exception.args[0], "'max_connections' 'foo' must be of type <class 'int'>")
         self.assertEqual(Configuration().server, None)  # Test that property works when service_endpoint is None
 
     def test_magic(self):

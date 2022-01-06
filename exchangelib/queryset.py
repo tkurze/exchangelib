@@ -3,7 +3,7 @@ import logging
 from copy import deepcopy
 from itertools import islice
 
-from .errors import MultipleObjectsReturned, DoesNotExist
+from .errors import MultipleObjectsReturned, DoesNotExist, InvalidEnumValue, InvalidTypeError
 from .fields import FieldPath, FieldOrder
 from .items import CalendarItem, ID_ONLY
 from .properties import InvalidField
@@ -61,10 +61,10 @@ class QuerySet(SearchableMixIn):
     def __init__(self, folder_collection, request_type=ITEM):
         from .folders import FolderCollection
         if not isinstance(folder_collection, FolderCollection):
-            raise ValueError(f"folder_collection value {folder_collection!r} must be a FolderCollection instance")
+            raise InvalidTypeError('folder_collection', folder_collection, FolderCollection)
         self.folder_collection = folder_collection  # A FolderCollection instance
         if request_type not in self.REQUEST_TYPES:
-            raise ValueError(f"'request_type' {request_type} must be one of {self.REQUEST_TYPES}")
+            raise InvalidEnumValue('request_type', request_type, self.REQUEST_TYPES)
         self.request_type = request_type
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -136,7 +136,7 @@ class QuerySet(SearchableMixIn):
 
     def _additional_fields(self):
         if not isinstance(self.only_fields, tuple):
-            raise ValueError(f"'only_fields' value {self.only_fields!r} must be a tuple")
+            raise InvalidTypeError('only_fields', self.only_fields, tuple)
         # Remove ItemId and ChangeKey. We get them unconditionally
         additional_fields = {f for f in self.only_fields if not f.field.is_attribute}
         if self.request_type != self.ITEM:

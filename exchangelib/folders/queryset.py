@@ -1,6 +1,7 @@
 import logging
 from copy import deepcopy
 
+from ..errors import InvalidTypeError
 from ..properties import InvalidField, FolderId
 from ..queryset import DoesNotExist, MultipleObjectsReturned
 from ..restriction import Q
@@ -21,7 +22,7 @@ class FolderQuerySet:
     def __init__(self, folder_collection):
         from .collections import FolderCollection
         if not isinstance(folder_collection, FolderCollection):
-            raise ValueError(f"'folder_collection' {folder_collection!r} must be a FolderCollection instance")
+            raise InvalidTypeError('folder_collection', folder_collection, FolderCollection)
         self.folder_collection = folder_collection
         self.q = Q()  # Default to no restrictions
         self.only_fields = None

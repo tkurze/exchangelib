@@ -23,7 +23,8 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 
-from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, MalformedResponseError
+from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, MalformedResponseError, \
+    InvalidTypeError
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger(f'{__name__}.xml')
@@ -242,7 +243,7 @@ def set_xml_value(elem, value, version=None):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
         if not isinstance(version, Version):
-            raise ValueError(f"'version' {version!r} must be a Version instance")
+            raise InvalidTypeError('version', version, Version)
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:

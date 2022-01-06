@@ -50,7 +50,7 @@ class ExtendedPropertyTest(BaseItemTest):
             # Test deregister
             with self.assertRaises(ValueError):
                 self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=TestProp)  # Already registered
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 self.ITEM_CLASS.register(attr_name='XXX', attr_cls=Mailbox)  # Not an extended property
         finally:
             self.ITEM_CLASS.deregister(attr_name=attr_name)

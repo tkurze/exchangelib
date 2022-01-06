@@ -6,7 +6,7 @@ from cached_property import threaded_cached_property
 from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import DELEGATE, IMPERSONATION, ACCESS_TYPES
-from .errors import UnknownTimeZone
+from .errors import UnknownTimeZone, InvalidEnumValue
 from .ewsdatetime import EWSTimeZone, UTC
 from .fields import FieldPath
 from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, ArchiveMsgFolderRoot, \
@@ -84,7 +84,7 @@ class Account:
         # Assume delegate access if individual credentials are provided. Else, assume service user with impersonation
         self.access_type = access_type or (DELEGATE if credentials else IMPERSONATION)
         if self.access_type not in ACCESS_TYPES:
-            raise ValueError(f"'access_type' {self.access_type!r} must be one of {ACCESS_TYPES}")
+            raise InvalidEnumValue('access_type', self.access_type, ACCESS_TYPES)
         try:
             self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
         except ValueError as e:
@@ -610,7 +610,6 @@ class Account:
     @property
     def mail_tips(self):
         """See self.oof_settings about caching considerations."""
-        # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
         return GetMailTips(protocol=self.protocol).get(
             sending_as=SendingAs(email_address=self.primary_smtp_address),
             recipients=[Mailbox(email_address=self.primary_smtp_address)],

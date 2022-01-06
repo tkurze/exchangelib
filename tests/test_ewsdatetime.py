@@ -189,9 +189,9 @@ class EWSDateTimeTest(TimedTestCase):
         with self.assertRaises(ValueError):
             dt.ewsformat()
         # Test wrong tzinfo type
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             EWSDateTime(2000, 1, 2, 3, 4, 5, tzinfo=pytz.timezone('Europe/Copenhagen'))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             EWSDateTime.from_datetime(EWSDateTime(2000, 1, 2, 3, 4, 5))
 
     def test_generate(self):
@@ -231,5 +231,5 @@ class EWSDateTimeTest(TimedTestCase):
         self.assertIsInstance(dt, EWSDate)
         self.assertEqual(dt, EWSDate(2000, 1, 1))
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             EWSDate.from_date(EWSDate(2000, 1, 2))

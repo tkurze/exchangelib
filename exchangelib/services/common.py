@@ -19,7 +19,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark, \
     ErrorInvalidSyncStateData, ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, \
-    ErrorConnectionFailedTransientError, ErrorDelegateNoUser, ErrorNotDelegate
+    ErrorConnectionFailedTransientError, ErrorDelegateNoUser, ErrorNotDelegate, InvalidTypeError
 from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId, FolderId, \
@@ -99,12 +99,13 @@ class EWSService(metaclass=abc.ABCMeta):
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or CHUNK_SIZE
         if not isinstance(self.chunk_size, int):
-            raise ValueError(f"'chunk_size' {self.chunk_size!r} must be an integer")
+            raise InvalidTypeError('chunk_size', chunk_size, int)
         if self.chunk_size < 1:
-            raise ValueError("'chunk_size' must be a positive number")
+            raise ValueError(f"'chunk_size' {self.chunk_size} must be a positive number")
         if self.supported_from and protocol.version.build < self.supported_from:
             raise NotImplementedError(
-                f'{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later'
+                f'{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later. '
+                f'Your current version is {protocol.version.build.fullname()!r}.'
             )
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
@@ -697,7 +698,7 @@ class EWSPagingService(EWSAccountService):
     def __init__(self, *args, **kwargs):
         self.page_size = kwargs.pop('page_size', None) or PAGE_SIZE
         if not isinstance(self.page_size, int):
-            raise ValueError(f"'page_size' {self.page_size!r} must be an integer")
+            raise InvalidTypeError('page_size', self.page_size, int)
         if self.page_size < 1:
             raise ValueError("'page_size' must be a positive number")
         super().__init__(*args, **kwargs)

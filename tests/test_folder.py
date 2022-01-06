@@ -11,7 +11,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot, NON_DELETABLE_FOLDERS
 from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
 from exchangelib.queryset import Q
-from exchangelib.services import GetFolder
+from exchangelib.services import GetFolder, DeleteFolder, FindFolder
 from exchangelib.version import EXCHANGE_2007
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
@@ -74,6 +74,47 @@ class FolderTest(EWSTest):
             0,
         )
 
+    def test_invalid_deletefolder_args(self):
+        with self.assertRaises(ValueError) as e:
+            DeleteFolder(account=self.account).call(
+                folders=[],
+                delete_type='XXX',
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
+        )
+
+    def test_invalid_findfolder_args(self):
+        with self.assertRaises(ValueError) as e:
+            FindFolder(account=self.account).call(
+                folders=['XXX'],
+                additional_fields=None,
+                restriction=None,
+                shape='XXX',
+                depth='Shallow',
+                max_items=None,
+                offset=None,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']"
+        )
+        with self.assertRaises(ValueError) as e:
+            FindFolder(account=self.account).call(
+                folders=['XXX'],
+                additional_fields=None,
+                restriction=None,
+                shape='IdOnly',
+                depth='XXX',
+                max_items=None,
+                offset=None,
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'depth' 'XXX' must be one of ['Deep', 'Shallow', 'SoftDeleted']"
+        )
+
     def test_find_folders(self):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
         self.assertGreater(len(folders), 40, sorted(f.name for f in folders))
@@ -82,13 +123,17 @@ class FolderTest(EWSTest):
         coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])
         with self.assertRaises(ValueError) as e:
             list(coll.find_folders(depth='Shallow'))
-        self.assertIn('FindFolder must be called with folders in the same root hierarchy', e.exception.args[0])
+        self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
 
     def test_find_folders_compat(self):
-        with self.assertRaises(NotImplementedError) as e:
-            coll = FolderCollection(account=self.account, folders=[self.account.root])
-            self.account.protocol.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
-            list(coll.find_folders(offset=1))
+        coll = FolderCollection(account=self.account, folders=[self.account.root])
+        tmp = self.account.protocol.version.build
+        self.account.protocol.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
+        try:
+            with self.assertRaises(NotImplementedError) as e:
+                list(coll.find_folders(offset=1))
+        finally:
+            self.account.protocol.version.build = tmp
         self.assertEqual(
             e.exception.args[0],
             "'offset' is only supported for Exchange 2010 servers and later"
@@ -306,9 +351,11 @@ class FolderTest(EWSTest):
         )
         # Setters
         parent = self.account.calendar.parent
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             self.account.calendar.parent = 'XXX'
-        self.assertEqual(e.exception.args[0], "'value' 'XXX' must be a Folder instance")
+        self.assertEqual(
+            e.exception.args[0], "'value' 'XXX' must be of type <class 'exchangelib.folders.base.BaseFolder'>"
+        )
         self.account.calendar.parent = None
         self.account.calendar.parent = parent
 
@@ -497,9 +544,13 @@ class FolderTest(EWSTest):
         f2 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
 
         f1_id, f1_changekey, f1_parent = f1.id, f1.changekey, f1.parent
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             f1.move(to_folder='XXX')  # Must be folder instance
-        self.assertEqual(e.exception.args[0], "'to_folder' 'XXX' must be a Folder or FolderId instance")
+        self.assertEqual(
+            e.exception.args[0],
+            "'to_folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
+            "<class 'exchangelib.properties.FolderId'>)"
+        )
         f1.move(f2)
         self.assertEqual(f1.id, f1_id)
         self.assertNotEqual(f1.changekey, f1_changekey)
@@ -602,7 +653,7 @@ class FolderTest(EWSTest):
             f0.delete()
 
     def test_folder_query_set_failures(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             FolderQuerySet('XXX')
         fld_qs = SingleFolderQuerySet(account=self.account, folder=self.account.inbox)
         with self.assertRaises(InvalidField):
@@ -623,7 +674,7 @@ class FolderTest(EWSTest):
             f.get_user_configuration(name=name, properties='XXX')
         self.assertEqual(
             e.exception.args[0],
-            "'properties' 'XXX' must be one of ('Id', 'Dictionary', 'XmlData', 'BinaryData', 'All')"
+            "'properties' 'XXX' must be one of ['All', 'BinaryData', 'Dictionary', 'Id', 'XmlData']"
         )
 
         # Should not exist yet

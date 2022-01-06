@@ -2,6 +2,7 @@ import logging
 
 from cached_property import threaded_cached_property
 
+from .errors import InvalidEnumValue, InvalidTypeError
 from .credentials import BaseCredentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
 from .protocol import RetryPolicy, FailFast
 from .transport import AUTH_TYPE_MAP, OAUTH2, CREDENTIALS_REQUIRED
@@ -48,7 +49,7 @@ class Configuration:
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
-            raise ValueError(f"'credentials' {credentials!r} must be a Credentials instance")
+            raise InvalidTypeError('credentials', credentials, BaseCredentials)
         if auth_type is None:
             # Set a default auth type for the credentials where this makes sense
             auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
@@ -57,15 +58,15 @@ class Configuration:
         if server and service_endpoint:
             raise AttributeError("Only one of 'server' or 'service_endpoint' must be provided")
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise ValueError(f"'auth_type' {auth_type!r} must be one of {sorted(AUTH_TYPE_MAP)}")
+            raise InvalidEnumValue('auth_type', auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
-            raise ValueError(f"'version' {version!r} must be a Version instance")
+            raise InvalidTypeError('version', version, Version)
         if not isinstance(retry_policy, RetryPolicy):
-            raise ValueError(f"'retry_policy' {retry_policy!r} must be a RetryPolicy instance")
+            raise InvalidTypeError('retry_policy', retry_policy, RetryPolicy)
         if not isinstance(max_connections, (int, type(None))):
-            raise ValueError(f"'max_connections' {max_connections!r} must be an integer")
+            raise InvalidTypeError('max_connections', max_connections, int)
         self._credentials = credentials
         if server:
             self.service_endpoint = f'https://{server}/EWS/Exchange.asmx'

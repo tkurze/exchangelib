@@ -8,6 +8,10 @@ import abc
 import logging
 from threading import RLock
 
+from oauthlib.oauth2 import OAuth2Token
+
+from .errors import InvalidTypeError
+
 log = logging.getLogger(__name__)
 
 IMPERSONATION = 'impersonation'
@@ -140,7 +144,7 @@ class OAuth2Credentials(BaseCredentials):
         """
         # Ensure we don't update the object in the middle of a new session being created, which could cause a race.
         if not isinstance(access_token, dict):
-            raise ValueError("'access_token' must be an OAuth2Token")
+            raise InvalidTypeError('access_token', access_token, OAuth2Token)
         with self.lock:
             log.debug('%s auth token for %s', 'Refreshing' if self.access_token else 'Setting', self.client_id)
             self.access_token = access_token
@@ -200,7 +204,7 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
         super().__init__(**kwargs)
         self.authorization_code = authorization_code
         if access_token is not None and not isinstance(access_token, dict):
-            raise ValueError("'access_token' must be an OAuth2Token")
+            raise InvalidTypeError('access_token', access_token, OAuth2Token)
         self.access_token = access_token
 
     def __repr__(self):

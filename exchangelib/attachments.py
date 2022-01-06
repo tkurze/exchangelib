@@ -2,6 +2,7 @@ import io
 import logging
 import mimetypes
 
+from .errors import InvalidTypeError
 from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
     ItemField, IdField, FieldPath
 from .properties import EWSElement, EWSMeta
@@ -47,7 +48,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
     def clean(self, version=None):
         from .items import Item
         if self.parent_item is not None and not isinstance(self.parent_item, Item):
-            raise ValueError(f"'parent_item' value {self.parent_item!r} must be an Item instance")
+            raise InvalidTypeError('parent_item', self.parent_item, Item)
         if self.content_type is None and self.name is not None:
             self.content_type = mimetypes.guess_type(self.name)[0] or 'application/octet-stream'
         super().clean(version=version)
@@ -147,7 +148,7 @@ class FileAttachment(Attachment):
     def content(self, value):
         """Replace the attachment content."""
         if not isinstance(value, bytes):
-            raise ValueError(f"'value' {value!r} must be a bytes object")
+            raise InvalidTypeError('value', value, bytes)
         self._content = value
 
     @classmethod
@@ -210,7 +211,7 @@ class ItemAttachment(Attachment):
     def item(self, value):
         from .items import Item
         if not isinstance(value, Item):
-            raise ValueError(f"'value' {value!r} must be an Item object")
+            raise InvalidTypeError('value', value, Item)
         self._item = value
 
     @classmethod

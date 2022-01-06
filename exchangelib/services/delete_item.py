@@ -1,4 +1,5 @@
 from .common import EWSAccountService, item_ids_element
+from ..errors import InvalidEnumValue
 from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
@@ -16,13 +17,15 @@ class DeleteItem(EWSAccountService):
 
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError(f"'delete_type' {delete_type} must be one of {DELETE_TYPE_CHOICES}")
+            raise InvalidEnumValue('delete_type', delete_type, DELETE_TYPE_CHOICES)
         if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
-            raise ValueError(f"'send_meeting_cancellations' {send_meeting_cancellations} must be one of "
-                             f"{SEND_MEETING_CANCELLATIONS_CHOICES}")
+            raise InvalidEnumValue(
+                'send_meeting_cancellations', send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
+            )
         if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
-            raise ValueError(f"'affected_task_occurrences' {affected_task_occurrences} must be one of "
-                             f"{AFFECTED_TASK_OCCURRENCES_CHOICES}")
+            raise InvalidEnumValue(
+                'affected_task_occurrences', affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
+            )
         return self._chunked_get_elements(
             self.get_payload,
             items=items,

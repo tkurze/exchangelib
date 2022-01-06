@@ -6,7 +6,7 @@ from operator import attrgetter
 from .collections import FolderCollection, SyncCompleted, PullSubscription, PushSubscription, StreamingSubscription
 from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound
+    ErrorDeleteDistinguishedFolder, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, InvalidTypeError
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, HARD_DELETE, SHALLOW as SHALLOW_ITEMS
@@ -181,7 +181,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     def supports_version(cls, version):
         # 'version' is a Version instance, for convenience by callers
         if not isinstance(version, Version):
-            raise ValueError(f"'version' {version!r} must be a Version instance")
+            raise InvalidTypeError('version', version, Version)
         if not cls.supported_from:
             return True
         return version.build >= cls.supported_from
@@ -258,7 +258,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 field_path = FieldPath(field=field_path)
                 fields[i] = field_path
             if not isinstance(field_path, FieldPath):
-                raise ValueError(f"Field {field_path!r} must be a string or FieldPath instance")
+                raise InvalidTypeError('field_path', field_path, FieldPath)
             if field_path.field.name == 'start':
                 has_start = True
             elif field_path.field.name == 'end':
@@ -793,7 +793,7 @@ class Folder(BaseFolder):
             self.parent_folder_id = None
         else:
             if not isinstance(value, BaseFolder):
-                raise ValueError(f"'value' {value!r} must be a Folder instance")
+                raise InvalidTypeError('value', value, BaseFolder)
             self.root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
@@ -801,7 +801,7 @@ class Folder(BaseFolder):
         from .roots import RootOfHierarchy
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
-            raise ValueError(f"'root' {self.root!r} must be a RootOfHierarchy instance")
+            raise InvalidTypeError('root', self.root, RootOfHierarchy)
 
     @classmethod
     def from_xml_with_root(cls, elem, root):

@@ -1,4 +1,5 @@
 from .common import EWSPagingService, shape_element, folder_ids_element
+from ..errors import InvalidEnumValue
 from ..folders import Folder
 from ..folders.queryset import FOLDER_TRAVERSAL_CHOICES
 from ..items import SHAPE_CHOICES
@@ -31,14 +32,14 @@ class FindFolder(EWSPagingService):
 
         :return: XML elements for the matching folders
         """
+        if shape not in SHAPE_CHOICES:
+            raise InvalidEnumValue('shape', shape, SHAPE_CHOICES)
+        if depth not in FOLDER_TRAVERSAL_CHOICES:
+            raise InvalidEnumValue('depth', depth, FOLDER_TRAVERSAL_CHOICES)
         roots = {f.root for f in folders}
         if len(roots) != 1:
-            raise ValueError(f'FindFolder must be called with folders in the same root hierarchy ({roots})')
+            raise ValueError(f"All folders in 'roots' must have the same root hierarchy ({roots})")
         self.root = roots.pop()
-        if shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {shape!r} must be one of {SHAPE_CHOICES}")
-        if depth not in FOLDER_TRAVERSAL_CHOICES:
-            raise ValueError(f"'depth' {depth!r} must be one of {FOLDER_TRAVERSAL_CHOICES}")
         return self._elems_to_objs(self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,

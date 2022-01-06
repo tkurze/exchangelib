@@ -7,7 +7,7 @@ import struct
 from inspect import getmro
 from threading import Lock
 
-from .errors import TimezoneDefinitionInvalidForYear
+from .errors import TimezoneDefinitionInvalidForYear, InvalidTypeError
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
@@ -350,14 +350,14 @@ class EWSElement(metaclass=EWSMeta):
         :param version:
         """
         if not isinstance(version, Version):
-            raise ValueError(f"'version' {version!r} must be a Version instance")
+            raise InvalidTypeError('version', version, Version)
         # Allow both Field and FieldPath instances and string field paths as input
         if isinstance(field, str):
             field = cls.get_field_by_fieldname(fieldname=field)
         elif isinstance(field, FieldPath):
             field = field.field
         if not isinstance(field, Field):
-            raise ValueError(f"Field {field!r} must be a string, Field or FieldPath instance")
+            raise InvalidTypeError('field', field, Field)
         cls.get_field_by_fieldname(fieldname=field.name)  # Will raise if field name is invalid
         if not field.supports_version(version):
             # The field exists but is not valid for this version
@@ -665,7 +665,7 @@ class AvailabilityMailbox(EWSElement):
     @classmethod
     def from_mailbox(cls, mailbox):
         if not isinstance(mailbox, Mailbox):
-            raise ValueError(f"'mailbox' {mailbox!r} must be a Mailbox instance")
+            raise InvalidTypeError('mailbox', mailbox, Mailbox)
         return cls(name=mailbox.name, email_address=mailbox.email_address, routing_type=mailbox.routing_type)
 
 

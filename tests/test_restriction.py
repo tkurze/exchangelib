@@ -171,5 +171,5 @@ class RestrictionTest(TimedTestCase):
 
         with self.assertRaises(ValueError):
             Q('this is a QS') & Q(foo='bar')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             Q(5)

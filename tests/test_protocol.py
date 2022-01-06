@@ -325,20 +325,26 @@ class ProtocolTest(EWSTest):
             self.account.protocol.resolve_names(names=[], search_scope='XXX')
         self.assertEqual(
             e.exception.args[0],
-            f"'search_scope' XXX must be one of {SEARCH_SCOPE_CHOICES}"
+            f"'search_scope' 'XXX' must be one of {sorted(SEARCH_SCOPE_CHOICES)}"
         )
         with self.assertRaises(ValueError) as e:
             self.account.protocol.resolve_names(names=[], shape='XXX')
-        self.assertEqual(e.exception.args[0], "'shape' XXX must be one of ('IdOnly', 'Default', 'AllProperties')")
+        self.assertEqual(
+            e.exception.args[0], "'contact_data_shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']"
+        )
         with self.assertRaises(ValueError) as e:
             ResolveNames(protocol=self.account.protocol, chunk_size=500).call(unresolved_entries=None)
         self.assertEqual(
             e.exception.args[0],
             "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup"
         )
-        with self.assertRaises(NotImplementedError) as e:
-            self.account.protocol.version.build = EXCHANGE_2010_SP1
-            self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
+        tmp = self.account.protocol.version.build
+        self.account.protocol.version.build = EXCHANGE_2010_SP1
+        try:
+            with self.assertRaises(NotImplementedError) as e:
+                self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
+        finally:
+            self.account.protocol.version.build = tmp
         self.assertEqual(
             e.exception.args[0],
             "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
@@ -569,9 +575,9 @@ class ProtocolTest(EWSTest):
             start=start,
             end=end,
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             self.account.oof_settings = 'XXX'
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             SetUserOofSettings(account=self.account).get(
                 oof_settings=oof,
                 mailbox='XXX',
@@ -624,11 +630,11 @@ class ProtocolTest(EWSTest):
             self.account.protocol.convert_ids(
                 [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
                 destination_format='XXX')
-        self.assertEqual(e.exception.args[0], f"'destination_format' 'XXX' must be one of {ID_FORMATS}")
+        self.assertEqual(e.exception.args[0], f"'destination_format' 'XXX' must be one of {sorted(ID_FORMATS)}")
         # Test bad item type
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             list(self.account.protocol.convert_ids([ItemId(id=1)], destination_format='EwsId'))
-        self.assertIn('must be an instance of', e.exception.args[0])
+        self.assertIn('must be of type', e.exception.args[0])
 
     def test_sessionpool(self):
         # First, empty the calendar

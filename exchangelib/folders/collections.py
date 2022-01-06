@@ -3,6 +3,7 @@ import logging
 
 from cached_property import threaded_cached_property
 
+from ..errors import InvalidTypeError
 from ..fields import FieldPath, InvalidField
 from ..items import Persona, ID_ONLY
 from ..properties import CalendarView
@@ -185,7 +186,7 @@ class FolderCollection(SearchableMixIn):
             field_validator=self.validate_item_field
         )
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-            raise ValueError(f"'calendar_view' {calendar_view!r} must be a CalendarView instance")
+            raise InvalidTypeError('calendar_view', calendar_view, CalendarView)
 
         log.debug(
             'Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)',

@@ -1,4 +1,5 @@
 from .common import EWSService
+from ..errors import InvalidEnumValue, InvalidTypeError
 from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
 from ..util import create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
@@ -19,7 +20,7 @@ class ConvertId(EWSService):
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise ValueError(f"'destination_format' {destination_format!r} must be one of {ID_FORMATS}")
+            raise InvalidEnumValue('destination_format', destination_format, ID_FORMATS)
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
@@ -33,7 +34,7 @@ class ConvertId(EWSService):
         item_ids = create_element('m:SourceIds')
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise ValueError(f"'item' value {item!r} must be an instance of {supported_item_classes}")
+                raise InvalidTypeError('item', item, supported_item_classes)
             set_xml_value(item_ids, item, version=self.protocol.version)
         payload.append(item_ids)
         return payload

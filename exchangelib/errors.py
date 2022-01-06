@@ -11,6 +11,28 @@ class DoesNotExist(Exception):
     pass
 
 
+class InvalidEnumValue(ValueError):
+    def __init__(self, field_name, value, choices):
+        self.field_name = field_name
+        self.value = value
+        self.choices = choices
+        super().__init__(str(self))
+
+    def __str__(self):
+        return f'{self.field_name!r} {self.value!r} must be one of {sorted(self.choices)}'
+
+
+class InvalidTypeError(TypeError):
+    def __init__(self, field_name, value, valid_type):
+        self.field_name = field_name
+        self.value = value
+        self.valid_type = valid_type
+        super().__init__(str(self))
+
+    def __str__(self):
+        return f'{self.field_name!r} {self.value!r} must be of type {self.valid_type}'
+
+
 class EWSError(Exception):
     """Global error type within this module."""
 

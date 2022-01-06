@@ -1,5 +1,6 @@
 import logging
 
+from ..errors import InvalidTypeError
 from ..extended_properties import ExtendedProperty
 from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
     CharField, IdElementField, AttachmentField, ExtendedPropertyListField
@@ -84,9 +85,9 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
         except InvalidField:
             pass
         else:
-            raise ValueError(f"{attr_name!r} is already registered")
+            raise ValueError(f"'attr_name' {attr_name!r} is already registered")
         if not issubclass(attr_cls, ExtendedProperty):
-            raise ValueError(f"{attr_cls!r} must be a subclass of ExtendedProperty")
+            raise TypeError(f"'attr_cls' {attr_cls!r} must be a subclass of type {ExtendedProperty}")
         # Check if class attributes are properly defined
         attr_cls.validate_cls()
         # ExtendedProperty is not a real field, but a placeholder in the fields list. See
@@ -135,11 +136,11 @@ class BaseItem(RegisterMixIn, metaclass=EWSMeta):
         from ..account import Account
         self.account = kwargs.pop('account', None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise ValueError(f"'account' {self.account!r} must be an Account instance")
+            raise InvalidTypeError('account', self.account, Account)
         self.folder = kwargs.pop('folder', None)
         if self.folder is not None:
             if not isinstance(self.folder, BaseFolder):
-                raise ValueError(f"'folder' {self.folder!r} must be a Folder instance")
+                raise InvalidTypeError('folder', self.folder, BaseFolder)
             if self.folder.account is not None:
                 if self.account is not None:
                     # Make sure the account from kwargs matches the folder account
@@ -178,7 +179,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
         from ..account import Account
         self.account = kwargs.pop('account', None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise ValueError(f"'account' {self.account!r} must be an Account instance")
+            raise InvalidTypeError('account', self.account, Account)
         super().__init__(**kwargs)
 
     @require_account

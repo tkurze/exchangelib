@@ -1,6 +1,7 @@
 import logging
 from copy import copy
 
+from .errors import InvalidEnumValue, InvalidTypeError
 from .fields import InvalidField, FieldPath, DateTimeBackedDateField
 from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
 from .version import EXCHANGE_2010
@@ -75,7 +76,7 @@ class Q:
         # Parse args which must now be Q objects
         for q in args:
             if not isinstance(q, self.__class__):
-                raise ValueError(f"Non-keyword arg {q!r} must be a Q instance")
+                raise TypeError(f"Non-keyword arg {q!r} must be of type {Q}")
         self.children.extend(args)
 
         # Parse keyword args and extract the filter
@@ -134,7 +135,7 @@ class Q:
                 # EWS doesn't have an '__in' operator. Allow '__in' lookups on list and non-list field types,
                 # specifying a list value. We'll emulate it as a set of OR'ed exact matches.
                 if not is_iterable(value, generators_allowed=True):
-                    raise ValueError(f"Value for lookup {key!r} must be a list")
+                    raise TypeError(f"Value for lookup {key!r} must be of type {list}")
                 children = tuple(self.__class__(**{field_path: v}) for v in value)
                 if not children:
                     # This is an '__in' operator with an empty list as the value. We interpret it to mean "is foo
@@ -257,7 +258,7 @@ class Q:
             return create_element(xml_tag_map[op])
         valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
         if op not in valid_ops:
-            raise ValueError(f"'op' {op!r} must be one of {valid_ops}")
+            raise InvalidEnumValue('op', op, valid_ops)
 
         # For description of Contains attribute values, see
         #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
@@ -358,7 +359,7 @@ class Q:
                 raise ValueError('Query strings cannot be combined with other settings')
             return
         if self.conn_type not in self.CONN_TYPES:
-            raise ValueError(f"'conn_type' {self.conn_type!r} must be one of {self.CONN_TYPES}")
+            raise InvalidEnumValue('conn_type', self.conn_type, self.CONN_TYPES)
         if not self.is_leaf():
             for q in self.children:
                 if q.query_string and len(self.children) > 1:
@@ -367,7 +368,7 @@ class Q:
         if not self.field_path:
             raise ValueError("'field_path' must be set")
         if self.op not in self.OP_TYPES:
-            raise ValueError(f"'op' {self.op} must be one of {self.OP_TYPES}")
+            raise InvalidEnumValue('op', self.op, self.OP_TYPES)
         if self.op == self.EXISTS and self.value is not True:
             raise ValueError("'value' must be True when operator is EXISTS")
         if self.value is None:
@@ -534,15 +535,15 @@ class Restriction:
 
     def __init__(self, q, folders, applies_to):
         if not isinstance(q, Q):
-            raise ValueError(f"'q' value {q} must be a Q instance")
+            raise InvalidTypeError('q', q, Q)
         if q.is_empty():
             raise ValueError("Q object must not be empty")
         from .folders import BaseFolder
         for folder in folders:
             if not isinstance(folder, BaseFolder):
-                raise ValueError(f"'folder' value {folder!r} must be a Folder instance")
+                raise InvalidTypeError('folder', folder, BaseFolder)
         if applies_to not in self.RESTRICTION_TYPES:
-            raise ValueError(f"'applies_to' {applies_to!r} must be one of {self.RESTRICTION_TYPES}")
+            raise InvalidEnumValue('applies_to', applies_to, self.RESTRICTION_TYPES)
         self.q = q
         self.folders = folders
         self.applies_to = applies_to

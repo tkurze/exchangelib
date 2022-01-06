@@ -1,4 +1,5 @@
 from .common import EWSAccountService, item_ids_element, folder_ids_element
+from ..errors import InvalidTypeError
 from ..folders import BaseFolder
 from ..properties import FolderId
 from ..util import create_element
@@ -12,7 +13,7 @@ class SendItem(EWSAccountService):
 
     def call(self, items, saved_item_folder):
         if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-            raise ValueError(f"'saved_item_folder' {saved_item_folder!r} must be a Folder or FolderId instance")
+            raise InvalidTypeError('saved_item_folder', saved_item_folder, (BaseFolder, FolderId))
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):

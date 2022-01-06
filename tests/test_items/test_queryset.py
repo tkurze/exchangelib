@@ -59,7 +59,7 @@ class ItemQuerySetTest(BaseItemTest):
             [(i.subject, i.categories[0]) for i in qs.order_by('subject').reverse()],
             [('Item 3', test_cat), ('Item 2', test_cat), ('Item 1', test_cat), ('Item 0', test_cat)]
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             list(qs.values([]))
         self.assertEqual(
             list(qs.order_by('subject').values('subject')),

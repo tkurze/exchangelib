@@ -1,4 +1,5 @@
 from .common import EWSAccountService
+from ..errors import InvalidEnumValue
 from ..properties import UserConfiguration
 from ..util import create_element, set_xml_value
 
@@ -19,7 +20,7 @@ class GetUserConfiguration(EWSAccountService):
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise ValueError(f"'properties' {properties!r} must be one of {PROPERTIES_CHOICES}")
+            raise InvalidEnumValue('properties', properties, PROPERTIES_CHOICES)
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 user_configuration_name=user_configuration_name, properties=properties
         )))

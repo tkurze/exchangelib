@@ -1,7 +1,7 @@
 import logging
 
 from .common import EWSService, folder_ids_element
-from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults
+from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, InvalidEnumValue
 from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES, Contact
 from ..properties import Mailbox
 from ..util import create_element, add_xml_child, MNS
@@ -34,9 +34,9 @@ class ResolveNames(EWSService):
                 f'candidates for a lookup',
             )
         if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
-            raise ValueError(f"'search_scope' {search_scope} must be one of {SEARCH_SCOPE_CHOICES}")
+            raise InvalidEnumValue('search_scope', search_scope, SEARCH_SCOPE_CHOICES)
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
-            raise ValueError(f"'shape' {contact_data_shape} must be one of {SHAPE_CHOICES}")
+            raise InvalidEnumValue('contact_data_shape', contact_data_shape, SHAPE_CHOICES)
         self.return_full_contact_data = return_full_contact_data
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload,
