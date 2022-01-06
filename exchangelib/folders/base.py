@@ -656,9 +656,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         sync methods.
         """
         from ..services import GetStreamingEvents
-        # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
-        request_timeout = connection_timeout*60 + 60
-        svc = GetStreamingEvents(account=self.account, timeout=request_timeout)
+        svc = GetStreamingEvents(account=self.account)
         subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
             else [subscription_id_or_ids]
         for i, notification in enumerate(

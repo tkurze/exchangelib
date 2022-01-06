@@ -33,6 +33,8 @@ class GetStreamingEvents(EWSAccountService):
             raise InvalidTypeError('connection_timeout', connection_timeout, int)
         if connection_timeout < 1:
             raise ValueError(f"'connection_timeout' {connection_timeout} must be a positive integer")
+        # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
+        self.timeout = connection_timeout * 60 + 60
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 subscription_ids=subscription_ids, connection_timeout=connection_timeout,
         )))

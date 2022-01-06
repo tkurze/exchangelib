@@ -300,7 +300,7 @@ class SyncTest(BaseItemTest):
 
         # Test with bad connection_timeout
         with self.assertRaises(TypeError) as e:
-            list(test_folder.get_streaming_events('AAA-', connection_timeout=-1, max_notifications_returned='XXX'))
+            list(test_folder.get_streaming_events('AAA-', connection_timeout='XXX', max_notifications_returned=1))
         self.assertEqual(e.exception.args[0], "'connection_timeout' 'XXX' must be of type <class 'int'>")
         with self.assertRaises(ValueError) as e:
             list(test_folder.get_streaming_events('AAA-', connection_timeout=-1, max_notifications_returned=1))
