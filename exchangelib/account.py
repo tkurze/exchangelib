@@ -45,10 +45,7 @@ class Identity:
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__:
-            if getattr(self, k) != getattr(other, k):
-                return False
-        return True
+        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__)
 
     def __hash__(self):
         return hash(repr(self))

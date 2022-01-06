@@ -35,10 +35,7 @@ class SrvRecord:
         self.srv = srv
 
     def __eq__(self, other):
-        for k in self.__dict__:
-            if getattr(self, k) != getattr(other, k):
-                return False
-        return True
+        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__)
 
 
 class Autodiscovery:

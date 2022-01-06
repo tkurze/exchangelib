@@ -47,12 +47,7 @@ class BaseCredentials(metaclass=abc.ABCMeta):
         return (getattr(self, k) for k in self.__dict__ if k != '_lock')
 
     def __eq__(self, other):
-        for k in self.__dict__:
-            if k == '_lock':
-                continue
-            if getattr(self, k) != getattr(other, k):
-                return False
-        return True
+        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__ if k != '_lock')
 
     def __hash__(self):
         return hash(tuple(self._get_hash_values()))
