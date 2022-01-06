@@ -11,7 +11,7 @@ from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, S
     OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot, NON_DELETABLE_FOLDERS
 from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
 from exchangelib.queryset import Q
-from exchangelib.services import GetFolder, DeleteFolder, FindFolder
+from exchangelib.services import GetFolder, DeleteFolder, FindFolder, EmptyFolder
 from exchangelib.version import EXCHANGE_2007
 
 from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
@@ -79,6 +79,18 @@ class FolderTest(EWSTest):
             DeleteFolder(account=self.account).call(
                 folders=[],
                 delete_type='XXX',
+            )
+        self.assertEqual(
+            e.exception.args[0],
+            "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
+        )
+
+    def test_invalid_emptyfolder_args(self):
+        with self.assertRaises(ValueError) as e:
+            EmptyFolder(account=self.account).call(
+                folders=[],
+                delete_type='XXX',
+                delete_sub_folders=False,
             )
         self.assertEqual(
             e.exception.args[0],

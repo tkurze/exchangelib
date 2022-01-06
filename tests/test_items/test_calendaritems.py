@@ -490,13 +490,22 @@ class CalendarTest(CommonItemTest):
             self.account.bulk_update([(item, [])])
         self.assertEqual(e.exception.args[0], "'fieldnames' must not be empty")
 
+        # Test a field that has is_required=True
         start = item.start
         item.start = None
         with self.assertRaises(ValueError) as e:
             self.account.bulk_update([(item, ['start'])])
         self.assertEqual(e.exception.args[0], "'start' is a required field with no default")
-
         item.start = start
+
+        # Test a field that has is_required_after_safe=True
+        uid = item.uid
+        item.uid = None
+        with self.assertRaises(ValueError) as e:
+            self.account.bulk_update([(item, ['uid'])])
+        self.assertEqual(e.exception.args[0], "'uid' is a required field and may not be deleted")
+        item.uid = uid
+
         item.is_meeting = None
         with self.assertRaises(ValueError) as e:
             self.account.bulk_update([(item, ['is_meeting'])])
