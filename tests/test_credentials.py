@@ -26,6 +26,7 @@ class CredentialsTest(TimedTestCase):
     def test_pickle(self):
         # Test that we can pickle, hash, repr, str and compare various credentials types
         for o in (
+            Identity('XXX', 'YYY', 'ZZZ', 'WWW'),
             Credentials('XXX', 'YYY'),
             OAuth2Credentials('XXX', 'YYY', 'ZZZZ'),
             OAuth2Credentials('XXX', 'YYY', 'ZZZZ', identity=Identity('AAA')),

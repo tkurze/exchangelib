@@ -1,12 +1,15 @@
 from collections import namedtuple
 import pickle
 
+from unittest.mock import patch
+
 from exchangelib.account import Account
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
 from exchangelib.credentials import Credentials, DELEGATE
 from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, UnauthorizedError, ErrorNotDelegate, \
-    ErrorDelegateNoUser
+    ErrorDelegateNoUser, UnknownTimeZone
+from exchangelib.ewsdatetime import UTC
 from exchangelib.folders import Calendar
 from exchangelib.items import Message
 from exchangelib.properties import DelegateUser, UserId, DelegatePermissions, SendingAs
@@ -37,18 +40,54 @@ class AccountTest(EWSTest):
         with self.assertRaises(ValueError) as e:
             Account(primary_smtp_address='blah@example.com', access_type=123)
         self.assertEqual(str(e.exception), "'access_type' 123 must be one of ['delegate', 'impersonation']")
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             # locale must be a string
             Account(primary_smtp_address='blah@example.com', locale=123)
-        self.assertEqual(str(e.exception), "Expected 'locale' to be a string, got 123")
-        with self.assertRaises(ValueError) as e:
+        self.assertEqual(str(e.exception), "'locale' 123 must be of type <class 'str'>")
+        with self.assertRaises(TypeError) as e:
             # default timezone must be an EWSTimeZone
             Account(primary_smtp_address='blah@example.com', default_timezone=123)
-        self.assertEqual(str(e.exception), "Expected 'default_timezone' to be an EWSTimeZone, got 123")
-        with self.assertRaises(ValueError) as e:
+        self.assertEqual(
+            str(e.exception), "'default_timezone' 123 must be of type <class 'exchangelib.ewsdatetime.EWSTimeZone'>"
+        )
+        with self.assertRaises(TypeError) as e:
             # config must be a Configuration
             Account(primary_smtp_address='blah@example.com', config=123)
-        self.assertEqual(str(e.exception), "Expected 'config' to be a Configuration, got 123")
+        self.assertEqual(
+            str(e.exception), "'config' 123 must be of type <class 'exchangelib.configuration.Configuration'>"
+        )
+
+    @patch('locale.getlocale', side_effect=ValueError())
+    def test_getlocale_failure(self, m):
+        a = Account(
+            primary_smtp_address=self.account.primary_smtp_address,
+            access_type=DELEGATE,
+            config=Configuration(
+                service_endpoint=self.account.protocol.service_endpoint,
+                credentials=Credentials(self.account.protocol.credentials.username, 'WRONG_PASSWORD'),
+                version=self.account.version,
+                auth_type=self.account.protocol.auth_type,
+                retry_policy=self.retry_policy,
+            ),
+            autodiscover=False,
+        )
+        self.assertEqual(a.locale, None)
+
+    @patch('tzlocal.get_localzone', side_effect=UnknownTimeZone(''))
+    def test_tzlocal_failure(self, m):
+        a = Account(
+            primary_smtp_address=self.account.primary_smtp_address,
+            access_type=DELEGATE,
+            config=Configuration(
+                service_endpoint=self.account.protocol.service_endpoint,
+                credentials=Credentials(self.account.protocol.credentials.username, 'WRONG_PASSWORD'),
+                version=self.account.version,
+                auth_type=self.account.protocol.auth_type,
+                retry_policy=self.retry_policy,
+            ),
+            autodiscover=False,
+        )
+        self.assertEqual(a.default_timezone, UTC)
 
     def test_get_default_folder(self):
         # Test a normal folder lookup with GetFolder

@@ -1130,6 +1130,11 @@ class GenericItemTest(CommonItemTest):
             self.assertEqual(old_val, new_val, (f.name, old_val, new_val))
 
         # Test detach
+        with self.assertRaises(ValueError) as e:
+            attachment2.parent_item = 'XXX'
+            item.detach(attachment2)
+        self.assertEqual(e.exception.args[0], "Attachment does not belong to this item")
+        attachment2.parent_item = item
         item.detach(attachment2)
         self.assertTrue(attachment2.attachment_id is None)
         self.assertTrue(attachment2.parent_item is None)

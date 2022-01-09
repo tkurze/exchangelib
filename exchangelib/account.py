@@ -1,4 +1,4 @@
-from locale import getlocale
+import locale as stdlib_locale
 from logging import getLogger
 
 from cached_property import threaded_cached_property
@@ -6,7 +6,7 @@ from cached_property import threaded_cached_property
 from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import DELEGATE, IMPERSONATION, ACCESS_TYPES
-from .errors import UnknownTimeZone, InvalidEnumValue
+from .errors import UnknownTimeZone, InvalidEnumValue, InvalidTypeError
 from .ewsdatetime import EWSTimeZone, UTC
 from .fields import FieldPath
 from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, ArchiveMsgFolderRoot, \
@@ -83,18 +83,19 @@ class Account:
         if self.access_type not in ACCESS_TYPES:
             raise InvalidEnumValue('access_type', self.access_type, ACCESS_TYPES)
         try:
-            self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
+            # get_locale() might not be able to determine the locale
+            self.locale = locale or stdlib_locale.getlocale()[0] or None
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
             log.warning('Failed to get locale (%s)', e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
-            raise ValueError(f"Expected 'locale' to be a string, got {self.locale!r}")
+            raise InvalidTypeError('locale', self.locale, str)
         if default_timezone:
             try:
                 self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
             except TypeError:
-                raise ValueError(f"Expected 'default_timezone' to be an EWSTimeZone, got {default_timezone!r}")
+                raise InvalidTypeError('default_timezone', default_timezone, EWSTimeZone)
         else:
             try:
                 self.default_timezone = EWSTimeZone.localzone()
@@ -104,7 +105,7 @@ class Account:
                 log.warning('%s. Fallback to UTC', e.args[0])
                 self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
-            raise ValueError(f"Expected 'config' to be a Configuration, got {config}")
+            raise InvalidTypeError('config', config, Configuration)
         if autodiscover:
             if config:
                 retry_policy, auth_type = config.retry_policy, config.auth_type
