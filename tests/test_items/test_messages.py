@@ -96,6 +96,17 @@ class MessagesTest(CommonItemTest):
         sent_item.reply(subject=new_subject, body='Hello reply', to_recipients=[item.author])
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
+    def test_create_reply(self):
+        # Test that we can save a reply without sending it
+        item = self.get_test_item(folder=None)
+        item.folder = None
+        item.send()
+        sent_item = self.get_incoming_message(item.subject)
+        new_subject = (f'Re: {sent_item.subject}')[:255]
+        sent_item.create_reply(subject=new_subject, body='Hello reply', to_recipients=[item.author])\
+            .save(self.account.drafts)
+        self.assertEqual(self.account.drafts.filter(subject=new_subject).count(), 1)
+
     def test_reply_all(self):
         # Test that we can reply-all a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item(folder=None)
@@ -123,7 +134,11 @@ class MessagesTest(CommonItemTest):
         item.send()
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f'Re: {sent_item.subject}')[:255]
-        sent_item.create_forward(subject=new_subject, body='Hello reply', to_recipients=[item.author]).send()
+        forward_item = sent_item.create_forward(subject=new_subject, body='Hello reply', to_recipients=[item.author])
+        with self.assertRaises(AttributeError) as e:
+            forward_item.send(save_copy=False, copy_to_folder=self.account.sent)
+        self.assertEqual(e.exception.args[0], "'save_copy' must be True when 'copy_to_folder' is set")
+        forward_item.send()
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
     def test_mark_as_junk(self):

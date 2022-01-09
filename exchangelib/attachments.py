@@ -62,10 +62,6 @@ class Attachment(EWSElement, metaclass=EWSMeta):
             raise ValueError(f'Parent item {self.parent_item} must have an account')
         item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
         attachment_id = item.attachment_id
-        if attachment_id.root_id != self.parent_item.id:
-            raise ValueError("'root_id' vs. 'id' mismatch")
-        if attachment_id.root_changekey == self.parent_item.changekey:
-            raise ValueError('root_id changekey match')
         self.parent_item.changekey = attachment_id.root_changekey
         # EWS does not like receiving root_id and root_changekey on subsequent requests
         attachment_id.root_id = None
@@ -79,12 +75,7 @@ class Attachment(EWSElement, metaclass=EWSMeta):
             raise ValueError('This attachment has not been created')
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(f'Parent item {self.parent_item} must have an account')
-        root_item_id = DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
-        if root_item_id.id != self.parent_item.id:
-            raise ValueError("'root_item_id.id' mismatch")
-        if root_item_id.changekey == self.parent_item.changekey:
-            raise ValueError("'root_item_id.changekey' match")
-        self.parent_item.changekey = root_item_id.changekey
+        DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
         self.parent_item = None
         self.attachment_id = None
 

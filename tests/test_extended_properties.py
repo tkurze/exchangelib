@@ -1,5 +1,5 @@
 from exchangelib.extended_properties import ExtendedProperty, Flag
-from exchangelib.items import Message, CalendarItem
+from exchangelib.items import Message, CalendarItem, BaseItem
 from exchangelib.folders import Inbox
 from exchangelib.properties import Mailbox
 
@@ -48,10 +48,22 @@ class ExtendedPropertyTest(BaseItemTest):
             self.assertEqual(new_prop_val, item.dead_beef)
 
             # Test deregister
-            with self.assertRaises(ValueError):
-                self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=TestProp)  # Already registered
-            with self.assertRaises(TypeError):
-                self.ITEM_CLASS.register(attr_name='XXX', attr_cls=Mailbox)  # Not an extended property
+            with self.assertRaises(ValueError) as e:
+                self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=TestProp)
+            self.assertEqual(e.exception.args[0], "'attr_name' 'dead_beef' is already registered")
+            with self.assertRaises(TypeError) as e:
+                self.ITEM_CLASS.register(attr_name='XXX', attr_cls=Mailbox)
+            self.assertEqual(
+                e.exception.args[0],
+                "'attr_cls' <class 'exchangelib.properties.Mailbox'> must be a subclass of type "
+                "<class 'exchangelib.extended_properties.ExtendedProperty'>"
+            )
+            with self.assertRaises(ValueError) as e:
+                BaseItem.register(attr_name=attr_name, attr_cls=Mailbox)
+                self.assertEqual(
+                    e.exception.args[0],
+                    "Class <class 'exchangelib.items.base.BaseItem'> is missing INSERT_AFTER_FIELD value"
+                )
         finally:
             self.ITEM_CLASS.deregister(attr_name=attr_name)
         self.assertNotIn(attr_name, {f.name for f in self.ITEM_CLASS.supported_fields(self.account.version)})

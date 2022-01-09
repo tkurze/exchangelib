@@ -16,26 +16,43 @@ class AttachmentsTest(BaseItemTest):
     FOLDER_CLASS = Inbox
     ITEM_CLASS = Message
 
+    def test_magic(self):
+        for item in (FileAttachment(name='XXX'), ItemAttachment(name='XXX')):
+            self.assertIn('name=', str(item))
+            self.assertIn(item.__class__.__name__, repr(item))
+
     def test_attachment_failure(self):
         att1 = FileAttachment(name='my_file_1.txt', content='Hello from unicode æøå'.encode('utf-8'))
         att1.attachment_id = 'XXX'
-        with self.assertRaises(ValueError):
-            att1.attach()  # Cannot have an attachment ID
+        with self.assertRaises(ValueError) as e:
+            att1.attach()
+        self.assertEqual(e.exception.args[0], "This attachment has already been created")
         att1.attachment_id = None
-        with self.assertRaises(ValueError):
-            att1.attach()  # Must have a parent item
+        with self.assertRaises(ValueError) as e:
+            att1.attach()
+        self.assertEqual(e.exception.args[0], "Parent item None must have an account")
         att1.parent_item = Item()
-        with self.assertRaises(ValueError):
-            att1.attach()  # Parent item must have an account
+        with self.assertRaises(ValueError) as e:
+            att1.attach()
+        self.assertEqual(e.exception.args[0], "Parent item Item(attachments=[]) must have an account")
         att1.parent_item = None
-        with self.assertRaises(ValueError):
-            att1.detach()  # Must have an attachment ID
+        with self.assertRaises(ValueError) as e:
+            att1.detach()
+        self.assertEqual(e.exception.args[0], "This attachment has not been created")
         att1.attachment_id = 'XXX'
-        with self.assertRaises(ValueError):
-            att1.detach()  # Must have a parent item
+        with self.assertRaises(ValueError) as e:
+            att1.detach()
+        self.assertEqual(e.exception.args[0], "Parent item None must have an account")
         att1.parent_item = Item()
-        with self.assertRaises(ValueError):
-            att1.detach()  # Parent item must have an account
+        with self.assertRaises(ValueError) as e:
+            att1.detach()
+        self.assertEqual(e.exception.args[0], "Parent item Item(attachments=[]) must have an account")
+        att1.parent_item = 'XXX'
+        with self.assertRaises(TypeError) as e:
+            att1.clean()
+        self.assertEqual(
+            e.exception.args[0], "'parent_item' 'XXX' must be of type <class 'exchangelib.items.item.Item'>"
+        )
         att1.parent_item = None
         att1.attachment_id = None
 
@@ -44,6 +61,9 @@ class AttachmentsTest(BaseItemTest):
         att1 = FileAttachment(name='my_file_1.txt', content=binary_file_content)
         self.assertIn("name='my_file_1.txt'", str(att1))
         att1.content = binary_file_content  # Test property setter
+        with self.assertRaises(TypeError) as e:
+            att1.content = 'XXX'
+        self.assertEqual(e.exception.args[0], "'value' 'XXX' must be of type <class 'bytes'>")
         self.assertEqual(att1.content, binary_file_content)  # Test property getter
         att1.attachment_id = 'xxx'
         self.assertEqual(att1.content, binary_file_content)  # Test property getter when attachment_id is set
@@ -56,6 +76,9 @@ class AttachmentsTest(BaseItemTest):
         att1 = ItemAttachment(name='attachment1', item=attached_item1)
         self.assertIn("name='attachment1'", str(att1))
         att1.item = attached_item1  # Test property setter
+        with self.assertRaises(TypeError) as e:
+            att1.item = 'XXX'
+        self.assertEqual(e.exception.args[0], "'value' 'XXX' must be of type <class 'exchangelib.items.item.Item'>")
         self.assertEqual(att1.item, attached_item1)  # Test property getter
         self.assertEqual(att1.item, attached_item1)  # Test property getter
         att1.attachment_id = 'xxx'

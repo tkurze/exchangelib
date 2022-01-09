@@ -8,7 +8,7 @@ from exchangelib.attachments import ItemAttachment
 from exchangelib.errors import ErrorItemNotFound, ErrorInternalServerError
 from exchangelib.extended_properties import ExtendedProperty, ExternId
 from exchangelib.fields import ExtendedPropertyField, CharField
-from exchangelib.folders import Inbox, FolderCollection
+from exchangelib.folders import Inbox, FolderCollection, Root
 from exchangelib.items import CalendarItem, Message
 from exchangelib.queryset import QuerySet
 from exchangelib.restriction import Restriction, Q
@@ -39,6 +39,17 @@ class GenericItemTest(CommonItemTest):
                         setattr(item, f.name, 'a')
 
     def test_invalid_direct_args(self):
+        with self.assertRaises(TypeError) as e:
+            self.ITEM_CLASS(account='XXX')
+        self.assertEqual(e.exception.args[0], "'account' 'XXX' must be of type <class 'exchangelib.account.Account'>")
+        with self.assertRaises(TypeError) as e:
+            self.ITEM_CLASS(folder='XXX')
+        self.assertEqual(
+            e.exception.args[0], "'folder' 'XXX' must be of type <class 'exchangelib.folders.base.BaseFolder'>"
+        )
+        with self.assertRaises(ValueError) as e:
+            self.ITEM_CLASS(account=self.account, folder=self.FOLDER_CLASS(root=Root(account='XXX')))
+        self.assertEqual(e.exception.args[0], "'account' does not match 'folder.account'")
         item = self.get_test_item()
         item.account = None
         with self.assertRaises(ValueError):
