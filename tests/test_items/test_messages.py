@@ -2,9 +2,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import time
 
+from exchangelib.attachments import FileAttachment
 from exchangelib.folders import Inbox
 from exchangelib.items import Message
 from exchangelib.queryset import DoesNotExist
+from exchangelib.version import EXCHANGE_2010_SP2
 
 from ..common import get_random_string
 from .test_basics import CommonItemTest
@@ -36,6 +38,15 @@ class MessagesTest(CommonItemTest):
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
         self.assertEqual(self.test_folder.filter(categories__contains=item.categories).count(), 0)
+
+    def test_send_pre_2013(self):
+        # Test < Exchange 2013 fallback for attachments and send-only mode
+        item = self.get_test_item()
+        item.attach(FileAttachment(name='file_attachment', content=b'file_attachment'))
+        self.account.version.build = EXCHANGE_2010_SP2
+        item.send(save_copy=False)
+        self.assertIsNone(item.id)
+        self.assertIsNone(item.changekey)
 
     def test_send_and_save(self):
         # Test that we can send_and_save Message items
@@ -103,6 +114,10 @@ class MessagesTest(CommonItemTest):
         item.send()
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f'Re: {sent_item.subject}')[:255]
+        with self.assertRaises(ValueError) as e:
+            sent_item.author = None
+            sent_item.create_reply(subject=new_subject, body='Hello reply').save(self.account.drafts)
+        self.assertEqual(e.exception.args[0], "'to_recipients' must be set when message has no 'author'")
         sent_item.create_reply(subject=new_subject, body='Hello reply', to_recipients=[item.author])\
             .save(self.account.drafts)
         self.assertEqual(self.account.drafts.filter(subject=new_subject).count(), 1)
