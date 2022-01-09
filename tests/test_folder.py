@@ -665,13 +665,21 @@ class FolderTest(EWSTest):
             f0.delete()
 
     def test_folder_query_set_failures(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(TypeError) as e:
             FolderQuerySet('XXX')
+        self.assertEqual(
+            e.exception.args[0],
+            "'folder_collection' 'XXX' must be of type <class 'exchangelib.folders.collections.FolderCollection'>"
+        )
+        # Test FolderQuerySet._copy_cls()
+        self.assertEqual(list(FolderQuerySet(FolderCollection(account=self.account, folders=[])).only('name')), [])
         fld_qs = SingleFolderQuerySet(account=self.account, folder=self.account.inbox)
-        with self.assertRaises(InvalidField):
+        with self.assertRaises(InvalidField) as e:
             fld_qs.only('XXX')
-        with self.assertRaises(InvalidField):
+        self.assertIn("Unknown field 'XXX' on folders", e.exception.args[0])
+        with self.assertRaises(InvalidField) as e:
             list(fld_qs.filter(XXX='XXX'))
+        self.assertIn("Unknown field path 'XXX' on folders", e.exception.args[0])
 
     def test_user_configuration(self):
         """Test that we can do CRUD operations on user configuration data."""
