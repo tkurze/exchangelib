@@ -117,6 +117,20 @@ class UtilTest(EWSTest):
             to_xml(b'<t:Foo><t:Bar>Baz</t:Bar></t:Foo>')
         self.assertIn('Offending text: [...]<t:Foo><t:Bar>Baz</t[...]', e.exception.args[0])
 
+    @patch('lxml.etree.parse', side_effect=AssertionError('XXX'))
+    def test_to_xml_failure_2(self, m):
+        # Not all lxml versions throw ParseError on the same XML, so we have to mock
+        with self.assertRaises(ParseError) as e:
+            to_xml(b'<t:Foo><t:Bar>Baz</t:Bar></t:Foo>')
+        self.assertIn('XXX', e.exception.args[0])
+
+    @patch('lxml.etree.parse', side_effect=TypeError(''))
+    def test_to_xml_failure_3(self, m):
+        # Not all lxml versions throw ParseError on the same XML, so we have to mock
+        with self.assertRaises(ParseError) as e:
+            to_xml(b'<t:Foo><t:Bar>Baz</t:Bar></t:Foo>')
+        self.assertEqual(e.exception.args[0], "This is not XML: b'<t:Foo><t:Bar>Baz</t:Bar></t:Foo>'")
+
     def test_is_xml(self):
         self.assertEqual(is_xml(b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
         self.assertEqual(is_xml(BOM_UTF8+b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
