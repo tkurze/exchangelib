@@ -231,45 +231,46 @@ class Root(RootOfHierarchy):
         # Try to pick a suitable default folder. we do this by:
         #  1. Searching the full folder list for a folder with the distinguished folder name
         #  2. Searching TOIS for a direct child folder of the same type that is marked as distinguished
-        #  3. Searching TOIS for a direct child folder of the same type that is has a localized name
+        #  3. Searching TOIS for a direct child folder of the same type that has a localized name
         #  4. Searching root for a direct child folder of the same type that is marked as distinguished
-        #  5. Searching root for a direct child folder of the same type that is has a localized name
+        #  5. Searching root for a direct child folder of the same type that has a localized name
         log.debug('Searching default %s folder in full folder list', folder_cls)
 
         for f in self._folders_map.values():
-            # Require exact class to not match e.g. RecipientCache instead of Contacts
+            # Require exact type, to avoid matching with subclasses (e.g. RecipientCache and Contacts)
             if f.__class__ == folder_cls and f.has_distinguished_name:
                 log.debug('Found cached %s folder with default distinguished name', folder_cls)
                 return f
 
-        # Try direct children of TOIS first, unless we're trying to get the TOIS folder. TOIS might not exist.
+        # Try direct children of TOIS first, unless we're trying to get the TOIS folder
         if folder_cls != MsgFolderRoot:
             try:
                 return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
             except MISSING_FOLDER_ERRORS:
-                # No candidates, or TOIS does not exist, or we don't have access
+                # No candidates, or TOIS does not exist, or we don't have access to TOIS
                 pass
 
-        # No candidates in TOIS. Try direct children of root.
+        # Finally, try direct children of root
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
 
     def _get_candidate(self, folder_cls, folder_coll):
-        # Get a single the folder of the same type in folder_coll
+        # Look for a single useful folder of type folder_cls in folder_coll
         same_type = [f for f in folder_coll if f.__class__ == folder_cls]
         are_distinguished = [f for f in same_type if f.is_distinguished]
         if are_distinguished:
             candidates = are_distinguished
         else:
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
-        if candidates:
-            if len(candidates) > 1:
-                raise ValueError(f'Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}')
-            if candidates[0].is_distinguished:
-                log.debug('Found cached distinguished %s folder', folder_cls)
-            else:
-                log.debug('Found cached %s folder with localized name', folder_cls)
-            return candidates[0]
-        raise ErrorFolderNotFound(f'No usable default {folder_cls} folders')
+        if not candidates:
+            raise ErrorFolderNotFound(f'No usable default {folder_cls} folders')
+        if len(candidates) > 1:
+            raise ValueError(f'Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}')
+        candidate = candidates[0]
+        if candidate.is_distinguished:
+            log.debug('Found distinguished %s folder', folder_cls)
+        else:
+            log.debug('Found %s folder with localized name %s', folder_cls, candidate.name)
+        return candidate
 
 
 class PublicFoldersRoot(RootOfHierarchy):
