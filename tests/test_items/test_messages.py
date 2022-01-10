@@ -48,6 +48,13 @@ class MessagesTest(CommonItemTest):
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
 
+    def test_send_no_copy(self):
+        # Test < Exchange 2013 fallback for attachments and send-only mode
+        item = self.get_test_item()
+        item.send(save_copy=False)
+        self.assertIsNone(item.id)
+        self.assertIsNone(item.changekey)
+
     def test_send_and_save(self):
         # Test that we can send_and_save Message items
         item = self.get_test_item()
