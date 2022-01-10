@@ -1,7 +1,7 @@
 import time
 
 from exchangelib.errors import ErrorInvalidSubscription, ErrorSubscriptionNotFound, MalformedResponseError
-from exchangelib.folders import Inbox
+from exchangelib.folders import Inbox, FolderCollection
 from exchangelib.items import Message
 from exchangelib.properties import StatusEvent, CreatedEvent, ModifiedEvent, DeletedEvent, Notification, ItemId
 from exchangelib.services import SendNotification, SubscribeToPull, GetStreamingEvents
@@ -71,6 +71,11 @@ class SyncTest(BaseItemTest):
             self.assertIsNotNone(watermark)
         with self.assertRaises(ErrorInvalidSubscription):
             self.account.root.tois.children.unsubscribe(subscription_id)
+
+    def test_empty_folder_collection(self):
+        self.assertEqual(FolderCollection(account=None, folders=[]).subscribe_to_pull(), None)
+        self.assertEqual(FolderCollection(account=None, folders=[]).subscribe_to_push('http://example.com'), None)
+        self.assertEqual(FolderCollection(account=None, folders=[]).subscribe_to_streaming(), None)
 
     def test_streaming_subscribe(self):
         self.account.affinity_cookie = None

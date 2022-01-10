@@ -236,8 +236,6 @@ class FolderCollection(SearchableMixIn):
         """
         from ..services import FindPeople
         folder = self._get_single_folder()
-        if not folder:
-            return
         if q.is_never():
             log.debug('Query will never return results')
             return
@@ -436,8 +434,6 @@ class FolderCollection(SearchableMixIn):
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         from ..services import SyncFolderItems
         folder = self._get_single_folder()
-        if not folder:
-            return
         if only_fields is None:
             # We didn't restrict list of field paths. Get all fields from the server, including extended properties.
             additional_fields = {FieldPath(field=f) for f in folder.allowed_item_fields(version=self.account.version)}
@@ -469,8 +465,6 @@ class FolderCollection(SearchableMixIn):
     def sync_hierarchy(self, sync_state=None, only_fields=None):
         from ..services import SyncFolderHierarchy
         folder = self._get_single_folder()
-        if not folder:
-            return
         if only_fields is None:
             # We didn't restrict list of field paths. Get all fields from the server, including extended properties.
             additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
