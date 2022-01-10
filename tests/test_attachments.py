@@ -53,6 +53,9 @@ class AttachmentsTest(BaseItemTest):
         self.assertEqual(
             e.exception.args[0], "'parent_item' 'XXX' must be of type <class 'exchangelib.items.item.Item'>"
         )
+        with self.assertRaises(ValueError) as e:
+            Message(attachments=[att1])
+        self.assertIn('must point to this item', e.exception.args[0])
         att1.parent_item = None
         att1.attachment_id = None
 
