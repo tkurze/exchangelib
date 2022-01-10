@@ -233,3 +233,5 @@ class EWSDateTimeTest(TimedTestCase):
 
         with self.assertRaises(TypeError):
             EWSDate.from_date(EWSDate(2000, 1, 2))
+
+        self.assertEqual(EWSDate.fromordinal(730120), EWSDate(2000, 1, 1))
