@@ -3,7 +3,7 @@ import os
 import pickle
 import socket
 import tempfile
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import warnings
 try:
     import zoneinfo
@@ -18,10 +18,10 @@ from exchangelib.credentials import Credentials
 from exchangelib.configuration import Configuration
 from exchangelib.items import CalendarItem, SEARCH_SCOPE_CHOICES
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
-    TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear
+    TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear, RateLimitError
 from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
     SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId, MailboxData, FreeBusyViewOptions
-from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast
+from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, FaultTolerance
 from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
     SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings
@@ -801,3 +801,21 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
             e.exception.args[0],
             "No valid version headers found in response (ErrorNameResolutionMultipleResults('.'))"
         )
+
+    @patch('requests.sessions.Session.post', side_effect=ConnectionResetError('XXX'))
+    def test_get_service_authtype(self, m):
+        with self.assertRaises(TransportError) as e:
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/EWS/Exchange.asmx',
+                credentials=Credentials(get_random_string(8), get_random_string(8)),
+                auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
+            ))
+        self.assertEqual(e.exception.args[0], 'XXX')
+
+        with self.assertRaises(RateLimitError) as e:
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/EWS/Exchange.asmx',
+                credentials=Credentials(get_random_string(8), get_random_string(8)),
+                auth_type=None, version=Version(Build(15, 1)), retry_policy=FaultTolerance(max_wait=0.5)
+            ))
+        self.assertEqual(e.exception.args[0], 'Max timeout reached')
