@@ -5,6 +5,7 @@ from ..properties import EWSElement
 from ..transport import DEFAULT_ENCODING, NOAUTH, NTLM, BASIC, GSSAPI, SSPI, CBA
 from ..util import create_element, add_xml_child, to_xml, is_xml, xml_to_str, AUTODISCOVER_REQUEST_NS, \
     AUTODISCOVER_BASE_NS, AUTODISCOVER_RESPONSE_NS as RNS, ParseError
+from ..version import Version
 
 
 class AutodiscoverBase(EWSElement):
@@ -153,7 +154,7 @@ class Protocol(SimpleProtocol):
             'negotiate': SSPI,  # Unsure about this one
             'nego2': GSSAPI,
             'anonymous': NOAUTH,  # Seen in some docs even though it's not mentioned in MSDN
-        }.get(self.auth_package.lower(), NTLM)  # Default to NTLM
+        }.get(self.auth_package.lower(), None)
 
 
 class Error(EWSElement):
@@ -241,22 +242,33 @@ class Response(AutodiscoverBase):
             return None
 
     @property
-    def ews_url(self):
-        """Return the EWS URL contained in the response.
+    def version(self):
+        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+        # other ones that point to the same endpoint.
+        ews_url = self.protocol.ews_url
+        for protocol in self.account.protocols:
+            if not protocol.ews_url or not protocol.server_version:
+                continue
+            if protocol.ews_url.lower() == ews_url.lower():
+                return Version(build=protocol.server_version)
+        return None
+
+    @property
+    def protocol(self):
+        """Return the protocol containing an EWS URL.
 
         A response may contain a number of possible protocol types. EXPR is meant for EWS. See
         https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16
 
         We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.
 
-        Additionally, some responses may contain and EXPR with no EWS URL. In that case, return the URL from EXCH, if
-        available.
+        Additionally, some responses may contain an EXPR with no EWS URL. In that case, return EXCH, if available.
         """
         protocols = {p.type: p for p in self.account.protocols if p.ews_url}
         if Protocol.EXPR in protocols:
-            return protocols[Protocol.EXPR].ews_url
+            return protocols[Protocol.EXPR]
         if Protocol.EXCH in protocols:
-            return protocols[Protocol.EXCH].ews_url
+            return protocols[Protocol.EXCH]
         raise ValueError(
             f'No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}'
         )

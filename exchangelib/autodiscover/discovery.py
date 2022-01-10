@@ -14,7 +14,6 @@ from ..protocol import Protocol, FailFast
 from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, GSSAPI, AUTH_TYPE_MAP
 from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, \
     DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
-from ..version import Version
 
 log = logging.getLogger(__name__)
 
@@ -151,29 +150,19 @@ class Autodiscovery:
         return resolver
 
     def _build_response(self, ad_response):
-        ews_url = ad_response.ews_url
+        ews_url = ad_response.protocol.ews_url
         if not ews_url:
             raise AutoDiscoverFailed("Response is missing an 'ews_url' value")
         if not ad_response.autodiscover_smtp_address:
             # Autodiscover does not always return an email address. In that case, the requesting email should be used
             ad_response.user.autodiscover_smtp_address = self.email
 
-        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
-        # other ones that point to the same endpoint.
-        for protocol in ad_response.account.protocols:
-            if not protocol.ews_url or not protocol.server_version:
-                continue
-            if protocol.ews_url.lower() == ews_url.lower():
-                version = Version(build=protocol.server_version)
-                break
-        else:
-            version = None
         # We may not want to use the auth_package hints in the AD response. It could be incorrect and we can just guess.
         protocol = Protocol(
             config=Configuration(
                 service_endpoint=ews_url,
                 credentials=self.credentials,
-                version=version,
+                version=ad_response.version,
                 auth_type=self.auth_type,
                 retry_policy=self.retry_policy,
             )
