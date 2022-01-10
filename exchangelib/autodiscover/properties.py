@@ -325,7 +325,7 @@ class Autodiscover(EWSElement):
                 raise ErrorNonExistentMailbox('The SMTP address has no mailbox associated with it')
             raise AutoDiscoverFailed(f'Unknown error {errorcode}: {message}')
         except AttributeError:
-            raise AutoDiscoverFailed(f'Unknown autodiscover error response: {self}')
+            raise AutoDiscoverFailed(f'Unknown autodiscover error response: {self.error_response}')
 
     @staticmethod
     def payload(email):

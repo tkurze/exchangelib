@@ -14,7 +14,7 @@ import exchangelib.autodiscover.discovery
 from exchangelib.autodiscover import close_connections, clear_cache, autodiscover_cache, AutodiscoverProtocol, \
     Autodiscovery, AutodiscoverCache
 from exchangelib.autodiscover.cache import shelve_filename
-from exchangelib.autodiscover.properties import Autodiscover, Response, Account as ADAccount
+from exchangelib.autodiscover.properties import Autodiscover, Response, Account as ADAccount, ErrorResponse, Error
 from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
 from exchangelib.protocol import FaultTolerance, FailFast
@@ -609,6 +609,21 @@ class AutodiscoverTest(EWSTest):
 </Autodiscover>'''
         with self.assertRaises(ValueError):
             Autodiscover.from_bytes(xml).response.protocol.ews_url
+
+    def test_raise_errors(self):
+        with self.assertRaises(AutoDiscoverFailed) as e:
+            Autodiscover().raise_errors()
+        self.assertEqual(e.exception.args[0], 'Unknown autodiscover error response: None')
+        with self.assertRaises(AutoDiscoverFailed) as e:
+            Autodiscover(
+                error_response=ErrorResponse(error=Error(code='YYY', message='XXX'))
+            ).raise_errors()
+        self.assertEqual(e.exception.args[0], 'Unknown error YYY: XXX')
+        with self.assertRaises(ErrorNonExistentMailbox) as e:
+            Autodiscover(
+                error_response=ErrorResponse(error=Error(message='The e-mail address cannot be found.'))
+            ).raise_errors()
+        self.assertEqual(e.exception.args[0], 'The SMTP address has no mailbox associated with it')
 
     def test_del_on_error(self):
         # Test that __del__ can handle exceptions on close()
