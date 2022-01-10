@@ -18,7 +18,7 @@ from exchangelib.autodiscover.properties import Autodiscover, Response, Account 
 from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
 from exchangelib.protocol import FaultTolerance, FailFast
-from exchangelib.transport import NTLM
+from exchangelib.transport import NTLM, NOAUTH
 from exchangelib.util import get_domain
 from .common import EWSTest, get_random_string
 
@@ -113,6 +113,8 @@ class AutodiscoverTest(EWSTest):
         )
         self.assertEqual(ad_response.autodiscover_smtp_address, self.account.primary_smtp_address)
         self.assertEqual(ad_response.protocol.auth_type, self.account.protocol.auth_type)
+        ad_response.protocol.auth_required = False
+        self.assertEqual(ad_response.protocol.auth_type, NOAUTH)
         self.assertEqual(protocol.service_endpoint.lower(), self.account.protocol.service_endpoint.lower())
         self.assertEqual(protocol.version.build, self.account.protocol.version.build)
 
