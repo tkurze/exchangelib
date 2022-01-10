@@ -10,7 +10,7 @@ from exchangelib.errors import RelativeRedirect, TransportError, RateLimitError,
 from exchangelib.protocol import FailFast, FaultTolerance
 import exchangelib.util
 from exchangelib.util import chunkify, peek, get_redirect_url, get_domain, PrettyXmlHandler, to_xml, BOM_UTF8, \
-    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder
+    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder, is_xml
 
 from .common import EWSTest, mock_post, mock_session_exception
 
@@ -113,6 +113,11 @@ class UtilTest(EWSTest):
         except ParseError as e:
             # Not all lxml versions throw an error here, so we can't use assertRaises
             self.assertIn('Offending text: [...]<t:Foo><t:Bar>Baz</t[...]', e.args[0])
+
+    def test_is_xml(self):
+        self.assertEqual(is_xml(b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
+        self.assertEqual(is_xml(BOM_UTF8+b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
+        self.assertEqual(is_xml(b'XXX'), False)
 
     def test_get_domain(self):
         self.assertEqual(get_domain('foo@example.com'), 'example.com')
