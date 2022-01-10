@@ -52,9 +52,7 @@ class Fields(list):
         return self
 
     def __contains__(self, item):
-        if isinstance(item, str):
-            return item in self._dict
-        return super().__contains__(item)
+        return item in self._dict
 
     def copy(self):
         return self.__class__(*self)

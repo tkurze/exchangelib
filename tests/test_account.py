@@ -12,7 +12,8 @@ from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, Unauthori
 from exchangelib.ewsdatetime import UTC
 from exchangelib.folders import Calendar
 from exchangelib.items import Message
-from exchangelib.properties import DelegateUser, UserId, DelegatePermissions, SendingAs
+from exchangelib.properties import DelegateUser, UserId, DelegatePermissions, SendingAs, MailTips, RecipientAddress, \
+    OutOfOffice
 from exchangelib.protocol import Protocol, FaultTolerance
 from exchangelib.services import GetDelegate, GetMailTips
 from exchangelib.version import Version, EXCHANGE_2007_SP1
@@ -157,6 +158,42 @@ class AccountTest(EWSTest):
             recipients=[],
             mail_tips_requested='All',
         ))
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:GetMailTipsResponse ResponseClass="Success"
+                   xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types"
+                   xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+            <m:ResponseCode>NoError</m:ResponseCode>
+            <m:ResponseMessages>
+                <m:MailTipsResponseMessageType ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:MailTips>
+                        <t:RecipientAddress>
+                            <t:EmailAddress>user2@contoso.com</t:EmailAddress>
+                            <t:RoutingType>SMTP</t:RoutingType>
+                        </t:RecipientAddress>
+                        <t:OutOfOffice>
+                            <t:ReplyBody>
+                                <t:Message/>
+                            </t:ReplyBody>
+                        </t:OutOfOffice>
+                        <t:CustomMailTip>Hello World Mailtips</t:CustomMailTip>
+                    </m:MailTips>
+                </m:MailTipsResponseMessageType>
+            </m:ResponseMessages>
+        </m:GetMailTipsResponse>
+    </s:Body>
+</s:Envelope>'''
+        self.assertEqual(
+            list(GetMailTips(protocol=None).parse(xml)),
+            [MailTips(
+                recipient_address=RecipientAddress(email_address='user2@contoso.com'),
+                out_of_office=OutOfOffice(),
+                custom_mail_tip='Hello World Mailtips',
+            )]
+        )
 
     def test_delegate(self):
         # The test server does not have any delegate info. Test that account.delegates works, and mock to test parsing

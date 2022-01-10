@@ -6,7 +6,7 @@ from exchangelib.fields import TextField, InvalidField, InvalidFieldForVersion
 from exchangelib.folders import Folder, RootOfHierarchy
 from exchangelib.indexed_properties import PhysicalAddress
 from exchangelib.items import Item, BulkCreateResult
-from exchangelib.properties import EWSElement, MessageHeader
+from exchangelib.properties import EWSElement, MessageHeader, Fields
 from exchangelib.extended_properties import ExternId, Flag
 from exchangelib.util import to_xml, TNS
 from exchangelib.version import Version, EXCHANGE_2010, EXCHANGE_2013
@@ -66,6 +66,14 @@ class PropertiesTest(TimedTestCase):
             b'\x04\x00\x00\x00\x82\x00\xe0\x00t\xc5\xb7\x10\x1a\x82\xe0\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
             b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x001\x00\x00\x00vCal-Uid\x01\x00\x00\x00'
             b'261cbc18-1f65-5a0a-bd11-23b1e224cc2f\x00'
+        )
+        self.assertEqual(
+            UID.to_global_object_id(
+                '040000008200E00074C5B7101A82E00800000000FF7FEDCAA34CD701000000000000000010000000DA513DCB6FE1904891890D'
+                'BA92380E52'
+            ),
+            b'\x04\x00\x00\x00\x82\x00\xe0\x00t\xc5\xb7\x10\x1a\x82\xe0\x08\x00\x00\x00\x00\xff\x7f\xed\xca\xa3L\xd7'
+            b'\x01\x00\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00\x00\xdaQ=\xcbo\xe1\x90H\x91\x89\r\xba\x928\x0eR'
         )
 
     def test_internet_message_headers(self):
@@ -184,3 +192,20 @@ class PropertiesTest(TimedTestCase):
         self.assertEqual(
             e.exception.args[0], "'invalid_attr' is not a valid attribute. See ItemId.FIELDS for valid field names"
         )
+
+    def test_fields(self):
+        with self.assertRaises(ValueError) as e:
+            Fields(
+                TextField(name='xxx'),
+                TextField(name='xxx'),
+            )
+        self.assertIn('is a duplicate', e.exception.args[0])
+        fields = Fields(TextField(name='xxx'), TextField(name='yyy'))
+        self.assertEqual(fields, fields.copy())
+        self.assertFalse(123 in fields)
+        with self.assertRaises(ValueError) as e:
+            fields.index_by_name('zzz')
+        self.assertEqual(e.exception.args[0], "Unknown field name 'zzz'")
+        with self.assertRaises(ValueError) as e:
+            fields.insert(0, TextField(name='xxx'))
+        self.assertIn('is a duplicate', e.exception.args[0])

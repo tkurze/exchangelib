@@ -28,7 +28,11 @@ class ExtendedPropertyTest(BaseItemTest):
         with self.assertRaises(ValueError):
             self.ITEM_CLASS.deregister('subject')  # Not an extended property
 
+        # Test that we can clean an item before and after registry
+        item = self.ITEM_CLASS()
+        item.clean(version=self.account.version)
         self.ITEM_CLASS.register(attr_name=attr_name, attr_cls=TestProp)
+        item.clean(version=self.account.version)
         try:
             # After register
             self.assertEqual(TestProp.python_type(), int)
