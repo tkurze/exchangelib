@@ -620,14 +620,15 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
         super().__init__(*args, **kwargs)
 
     def parse_bytes(self, xml_bytes):
-        root = lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
+        root = to_xml(xml_bytes)
         for elem in root.iter():
             # Anonymize element attribute values known to contain private data
             for attr in set(elem.keys()) & self.PRIVATE_TAGS:
                 elem.set(attr, 'DEADBEEF=')
             # Anonymize anything requested by the caller
             for s in self.forbidden_strings:
-                elem.text.replace(s, '[REMOVED]')
+                if elem.text is not None:
+                    elem.text = elem.text.replace(s, '[REMOVED]')
         return root
 
 

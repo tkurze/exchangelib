@@ -11,7 +11,8 @@ from exchangelib.errors import RelativeRedirect, TransportError, RateLimitError,
 from exchangelib.protocol import FailFast, FaultTolerance
 import exchangelib.util
 from exchangelib.util import chunkify, peek, get_redirect_url, get_domain, PrettyXmlHandler, to_xml, BOM_UTF8, \
-    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder, is_xml, xml_to_str
+    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder, is_xml, xml_to_str, \
+    AnonymizingXmlHandler
 
 from .common import EWSTest, mock_post, mock_session_exception
 
@@ -139,6 +140,20 @@ class UtilTest(EWSTest):
     def test_xml_to_str(self):
         with self.assertRaises(AttributeError):
             xml_to_str('XXX', encoding=None, xml_declaration=True)
+
+    def test_anonymizing_handler(self):
+        h = AnonymizingXmlHandler(forbidden_strings=('XXX', 'yyy'))
+        self.assertEqual(xml_to_str(h.parse_bytes(b'''\
+<Root>
+  <t:ItemId Id="AQApA=" ChangeKey="AQAAAB"/>
+  <Foo>XXX</Foo>
+  <Foo><Bar>Hello yyy world</Bar></Foo>
+</Root>''')), '''\
+<Root>
+  <t:ItemId Id="DEADBEEF=" ChangeKey="DEADBEEF="/>
+  <Foo>[REMOVED]</Foo>
+  <Foo><Bar>Hello [REMOVED] world</Bar></Foo>
+</Root>''')
 
     def test_get_domain(self):
         self.assertEqual(get_domain('foo@example.com'), 'example.com')
