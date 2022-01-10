@@ -14,7 +14,7 @@ import exchangelib.autodiscover.discovery
 from exchangelib.autodiscover import close_connections, clear_cache, autodiscover_cache, AutodiscoverProtocol, \
     Autodiscovery, AutodiscoverCache
 from exchangelib.autodiscover.cache import shelve_filename
-from exchangelib.autodiscover.properties import Autodiscover
+from exchangelib.autodiscover.properties import Autodiscover, Response, Account as ADAccount
 from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
 from exchangelib.protocol import FaultTolerance, FailFast
@@ -94,6 +94,15 @@ class AutodiscoverTest(EWSTest):
         for protocol in autodiscover_cache._protocols.values():
             str(protocol)
             repr(protocol)
+
+    def test_response_properties(self):
+        # Test edge cases of Response properties
+        self.assertEqual(Response().redirect_address, None)
+        self.assertEqual(Response(account=ADAccount(action=ADAccount.REDIRECT_URL)).redirect_address, None)
+        self.assertEqual(Response().redirect_url, None)
+        self.assertEqual(Response(account=ADAccount(action=ADAccount.SETTINGS)).redirect_url, None)
+        self.assertEqual(Response().autodiscover_smtp_address, None)
+        self.assertEqual(Response(account=ADAccount(action=ADAccount.REDIRECT_ADDR)).autodiscover_smtp_address, None)
 
     def test_autodiscover_empty_cache(self):
         # A live test of the entire process with an empty cache
