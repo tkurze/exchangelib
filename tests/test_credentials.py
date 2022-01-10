@@ -44,3 +44,23 @@ class CredentialsTest(TimedTestCase):
                 self.assertEqual(hash(o), hash(unpickled_o))
                 self.assertEqual(repr(o), repr(unpickled_o))
                 self.assertEqual(str(o), str(unpickled_o))
+
+    def test_oauth_validation(self):
+        with self.assertRaises(TypeError) as e:
+            OAuth2AuthorizationCodeCredentials(client_id='WWW', client_secret='XXX', access_token='XXX')
+        self.assertEqual(
+            e.exception.args[0],
+            "'access_token' 'XXX' must be of type <class 'oauthlib.oauth2.rfc6749.tokens.OAuth2Token'>"
+        )
+
+        c = OAuth2Credentials('XXX', 'YYY', 'ZZZZ')
+        c.refresh('XXX')  # No-op
+
+        with self.assertRaises(TypeError) as e:
+            c.on_token_auto_refreshed('XXX')
+        self.assertEqual(
+            e.exception.args[0],
+            "'access_token' 'XXX' must be of type <class 'oauthlib.oauth2.rfc6749.tokens.OAuth2Token'>"
+        )
+        c.on_token_auto_refreshed(dict(access_token='XXX'))
+        self.assertIsInstance(c.sig(), int)
