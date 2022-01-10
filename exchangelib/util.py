@@ -153,7 +153,7 @@ def xml_to_str(tree, encoding=None, xml_declaration=False):
     :return:
     """
     if xml_declaration and not encoding:
-        raise ValueError("'xml_declaration' is not supported when 'encoding' is None")
+        raise AttributeError("'xml_declaration' is not supported when 'encoding' is None")
     if encoding:
         return lxml.etree.tostring(tree, encoding=encoding, xml_declaration=True)
     return lxml.etree.tostring(tree, encoding=str, xml_declaration=False)
@@ -522,7 +522,7 @@ def to_xml(bytes_content):
             raise ParseError(str(e), '<not from file>', e.lineno, e.offset)
         else:
             offending_excerpt = offending_line[max(0, e.offset - 20):e.offset + 20]
-            msg = f'{e}\nOffending text: [...]{offending_excerpt}[...]'
+            msg = f'{e}\nOffending text: [...]{offending_excerpt.decode("utf-8", errors="ignore")}[...]'
             raise ParseError(msg, '<not from file>', e.lineno, e.offset)
     except TypeError:
         try:

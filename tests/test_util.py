@@ -1,6 +1,7 @@
 import io
 from itertools import chain
 import logging
+from unittest.mock import patch
 
 import requests
 import requests_mock
@@ -10,7 +11,7 @@ from exchangelib.errors import RelativeRedirect, TransportError, RateLimitError,
 from exchangelib.protocol import FailFast, FaultTolerance
 import exchangelib.util
 from exchangelib.util import chunkify, peek, get_redirect_url, get_domain, PrettyXmlHandler, to_xml, BOM_UTF8, \
-    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder, is_xml
+    ParseError, post_ratelimited, safe_b64decode, CONNECTION_ERRORS, DocumentYielder, is_xml, xml_to_str
 
 from .common import EWSTest, mock_post, mock_session_exception
 
@@ -108,16 +109,22 @@ class UtilTest(EWSTest):
         to_xml(BOM_UTF8+b'<?xml version="1.0" encoding="UTF-8"?><foo>&broken</foo>')
         with self.assertRaises(ParseError):
             to_xml(b'foo')
-        try:
+
+    @patch('lxml.etree.parse', side_effect=ParseError('', '', 1, 0))
+    def test_to_xml_failure(self, m):
+        # Not all lxml versions throw ParseError on the same XML, so we have to mock
+        with self.assertRaises(ParseError) as e:
             to_xml(b'<t:Foo><t:Bar>Baz</t:Bar></t:Foo>')
-        except ParseError as e:
-            # Not all lxml versions throw an error here, so we can't use assertRaises
-            self.assertIn('Offending text: [...]<t:Foo><t:Bar>Baz</t[...]', e.args[0])
+        self.assertIn('Offending text: [...]<t:Foo><t:Bar>Baz</t[...]', e.exception.args[0])
 
     def test_is_xml(self):
         self.assertEqual(is_xml(b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
         self.assertEqual(is_xml(BOM_UTF8+b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
         self.assertEqual(is_xml(b'XXX'), False)
+
+    def test_xml_to_str(self):
+        with self.assertRaises(AttributeError):
+            xml_to_str('XXX', encoding=None, xml_declaration=True)
 
     def test_get_domain(self):
         self.assertEqual(get_domain('foo@example.com'), 'example.com')
