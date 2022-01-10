@@ -8,6 +8,7 @@ class GetDelegate(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation"""
 
     SERVICE_NAME = 'GetDelegate'
+    ERRORS_TO_CATCH_IN_RESPONSE = ()
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):

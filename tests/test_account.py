@@ -8,7 +8,7 @@ from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
 from exchangelib.credentials import Credentials, DELEGATE
 from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, UnauthorizedError, ErrorNotDelegate, \
-    ErrorDelegateNoUser, UnknownTimeZone
+    ErrorDelegateNoUser, UnknownTimeZone, ErrorInvalidUserSid
 from exchangelib.ewsdatetime import UTC
 from exchangelib.folders import Calendar
 from exchangelib.items import Message
@@ -162,6 +162,8 @@ class AccountTest(EWSTest):
         # The test server does not have any delegate info. Test that account.delegates works, and mock to test parsing
         # of a non-empty response.
         self.assertGreaterEqual(len(self.account.delegates), 0)
+        with self.assertRaises(ErrorInvalidUserSid):
+            list(GetDelegate(account=self.account).call(user_ids=[UserId(sid='XXX')], include_permissions=True))
         with self.assertRaises(ErrorDelegateNoUser):
             list(GetDelegate(account=self.account).call(user_ids=['foo@example.com'], include_permissions=True))
         with self.assertRaises(ErrorNotDelegate):

@@ -117,6 +117,13 @@ class ContactsTest(CommonItemTest):
 
         dl.delete()
 
+    def test_fetch_personas(self):
+        # Test QuerySet input
+        self.assertGreaterEqual(
+            len(list(self.account.fetch_personas(self.test_folder.people().filter(display_name='john')))),
+            0
+        )
+
     def test_find_people(self):
         # The test server may not have any contacts. Just test that the FindPeople and GetPersona services work.
         self.assertGreaterEqual(len(list(self.test_folder.people())), 0)
