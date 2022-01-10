@@ -13,7 +13,7 @@ from ..errors import AutoDiscoverFailed, AutoDiscoverCircularRedirect, Transport
 from ..protocol import Protocol, FailFast
 from ..transport import get_auth_method_from_response, DEFAULT_HEADERS, NOAUTH, GSSAPI, AUTH_TYPE_MAP
 from ..util import post_ratelimited, get_domain, get_redirect_url, _back_off_if_needed, \
-    DummyResponse, CONNECTION_ERRORS, TLS_ERRORS
+    DummyResponse, ParseError, CONNECTION_ERRORS, TLS_ERRORS
 
 log = logging.getLogger(__name__)
 
@@ -182,9 +182,10 @@ class Autodiscovery:
         if r.status_code == 200:
             try:
                 ad = Autodiscover.from_bytes(bytes_content=r.content)
-                return self._step_5(ad=ad)
-            except ValueError as e:
+            except ParseError as e:
                 raise AutoDiscoverFailed(f'Invalid response: {e}')
+            else:
+                return self._step_5(ad=ad)
         raise AutoDiscoverFailed(f'Invalid response code: {r.status_code}')
 
     def _redirect_url_is_valid(self, url):
@@ -339,14 +340,15 @@ class Autodiscovery:
         if r.status_code == 200:
             try:
                 ad = Autodiscover.from_bytes(bytes_content=r.content)
+            except ParseError as e:
+                log.debug('Invalid response: %s', e)
+            else:
                 # We got a valid response. Unless this is a URL redirect response, we cache the result
                 if ad.response is None or not ad.response.redirect_url:
                     cache_key = self._cache_key
                     log.debug('Adding cache entry for key %s: %s', cache_key, ad_protocol.service_endpoint)
                     autodiscover_cache[cache_key] = ad_protocol
                 return True, ad
-            except ValueError as e:
-                log.debug('Invalid response: %s', e)
         return False, None
 
     def _is_valid_hostname(self, hostname):

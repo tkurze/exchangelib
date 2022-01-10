@@ -19,7 +19,7 @@ from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
 from exchangelib.protocol import FaultTolerance, FailFast
 from exchangelib.transport import NTLM, NOAUTH
-from exchangelib.util import get_domain
+from exchangelib.util import get_domain, ParseError
 from .common import EWSTest, get_random_string
 
 
@@ -500,12 +500,17 @@ class AutodiscoverTest(EWSTest):
 
     def test_parse_response(self):
         # Test parsing of various XML responses
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ParseError) as e:
             Autodiscover.from_bytes(b'XXX')  # Invalid response
+        self.assertEqual(e.exception.args[0], "Response is not XML: b'XXX'")
 
         xml = b'''<?xml version="1.0" encoding="utf-8"?><foo>bar</foo>'''
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ParseError) as e:
             Autodiscover.from_bytes(xml)  # Invalid XML response
+        self.assertEqual(
+            e.exception.args[0],
+            'Unknown root element in XML: b\'<?xml version="1.0" encoding="utf-8"?><foo>bar</foo>\''
+        )
 
         # Redirect to different email address
         xml = b'''\

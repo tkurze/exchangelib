@@ -306,14 +306,11 @@ class Autodiscover(EWSElement):
         :param bytes_content:
         :return:
         """
-        if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b'<Autodiscover '):
-            raise ValueError(f'Response is not XML: {bytes_content}')
-        try:
-            root = to_xml(bytes_content).getroot()
-        except ParseError:
-            raise ValueError(f'Error parsing XML: {bytes_content}')
+        if not is_xml(bytes_content):
+            raise ParseError(f'Response is not XML: {bytes_content}', '<not from file>', -1, 0)
+        root = to_xml(bytes_content).getroot()  # May raise ParseError
         if root.tag != cls.response_tag():
-            raise ValueError(f'Unknown root element in XML: {bytes_content}')
+            raise ParseError(f'Unknown root element in XML: {bytes_content}', '<not from file>', -1, 0)
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
