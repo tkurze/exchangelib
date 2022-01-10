@@ -115,12 +115,20 @@ class MessagesTest(CommonItemTest):
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f'Re: {sent_item.subject}')[:255]
         with self.assertRaises(ValueError) as e:
+            tmp = sent_item.author
             sent_item.author = None
-            sent_item.create_reply(subject=new_subject, body='Hello reply').save(self.account.drafts)
+            try:
+                sent_item.create_reply(subject=new_subject, body='Hello reply').save(self.account.drafts)
+            finally:
+                sent_item.author = tmp
         self.assertEqual(e.exception.args[0], "'to_recipients' must be set when message has no 'author'")
         sent_item.create_reply(subject=new_subject, body='Hello reply', to_recipients=[item.author])\
             .save(self.account.drafts)
         self.assertEqual(self.account.drafts.filter(subject=new_subject).count(), 1)
+        # Test with no to_recipients
+        sent_item.create_reply(subject=new_subject, body='Hello reply')\
+            .save(self.account.drafts)
+        self.assertEqual(self.account.drafts.filter(subject=new_subject).count(), 2)
 
     def test_reply_all(self):
         with self.assertRaises(TypeError) as e:
