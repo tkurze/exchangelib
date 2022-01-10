@@ -563,7 +563,7 @@ class PrettyXmlHandler(logging.StreamHandler):
 
     @staticmethod
     def parse_bytes(xml_bytes):
-        return lxml.etree.parse(io.BytesIO(xml_bytes), parser=_forgiving_parser)  # nosec
+        return to_xml(xml_bytes)
 
     @classmethod
     def prettify_xml(cls, xml_bytes):
