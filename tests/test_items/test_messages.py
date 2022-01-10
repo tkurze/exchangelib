@@ -4,7 +4,7 @@ import time
 
 from exchangelib.attachments import FileAttachment
 from exchangelib.folders import Inbox
-from exchangelib.items import Message
+from exchangelib.items import Message, ReplyToItem
 from exchangelib.queryset import DoesNotExist
 from exchangelib.version import EXCHANGE_2010_SP2
 
@@ -123,6 +123,9 @@ class MessagesTest(CommonItemTest):
         self.assertEqual(self.account.drafts.filter(subject=new_subject).count(), 1)
 
     def test_reply_all(self):
+        with self.assertRaises(TypeError) as e:
+            ReplyToItem(account='XXX')
+        self.assertEqual(e.exception.args[0], "'account' 'XXX' must be of type <class 'exchangelib.account.Account'>")
         # Test that we can reply-all a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item(folder=None)
         item.folder = None
