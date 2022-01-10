@@ -66,17 +66,17 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     @property
     @abc.abstractmethod
     def account(self):
-        pass
+        """Return the account this folder belongs to"""
 
     @property
     @abc.abstractmethod
     def root(self):
-        pass
+        """Return the root folder this folder belongs to"""
 
     @property
     @abc.abstractmethod
     def parent(self):
-        pass
+        """Return the parent folder of this folder"""
 
     @property
     def is_deletable(self):

@@ -625,27 +625,26 @@ class RetryPolicy(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def fail_fast(self):
-        # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
-        # policy is used.
-        pass
+        """Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
+        policy is used."""
 
     @property
     @abc.abstractmethod
     def back_off_until(self):
-        pass
+        """Return a datetime to back off until"""
 
     @back_off_until.setter
     @abc.abstractmethod
     def back_off_until(self, value):
-        pass
+        """Setter for back off values"""
 
     @abc.abstractmethod
     def back_off(self, seconds):
-        pass
+        """Set a new back off until value"""
 
     @abc.abstractmethod
     def may_retry_on_error(self, response, wait):
-        pass
+        """Return whether retries should still be attempted"""
 
     def raise_response_errors(self, response):
         cas_error = response.headers.get('X-CasErrorCode')

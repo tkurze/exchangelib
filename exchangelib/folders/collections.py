@@ -510,7 +510,7 @@ class BaseSubscription(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __enter__(self):
-        pass
+        """Create the subscription"""
 
     def __exit__(self, *args, **kwargs):
         self.folder.unsubscribe(subscription_id=self.subscription_id)

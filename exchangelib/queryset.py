@@ -18,27 +18,27 @@ class SearchableMixIn:
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):
-        pass
+        """Return a single object"""
 
     @abc.abstractmethod
     def all(self):
-        pass
+        """Return all objects, unfiltered"""
 
     @abc.abstractmethod
     def none(self):
-        pass
+        """Return an empty result"""
 
     @abc.abstractmethod
     def filter(self, *args, **kwargs):
-        pass
+        """Apply filters to a query"""
 
     @abc.abstractmethod
     def exclude(self, *args, **kwargs):
-        pass
+        """Apply filters to a query"""
 
     @abc.abstractmethod
     def people(self):
-        pass
+        """Search for personas"""
 
 
 class QuerySet(SearchableMixIn):

@@ -105,7 +105,7 @@ class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _target_elem(self, target):
-        pass
+        """Convert the object to update to an XML element"""
 
     def _changes_elem(self, target_changes):
         changes = create_element(self.CHANGES_ELEMENT_NAME)

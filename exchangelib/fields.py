@@ -323,11 +323,11 @@ class Field(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def from_xml(self, elem, account):
-        pass
+        """Read a value from the given element"""
 
     @abc.abstractmethod
     def to_xml(self, value, version):
-        pass
+        """Convert this field to an XML element"""
 
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
@@ -344,7 +344,7 @@ class Field(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __hash__(self):
-        pass
+        """Field instances must be hashable"""
 
     def __repr__(self):
         args_str = ', '.join(f'{f}={getattr(self, f)!r}' for f in (
