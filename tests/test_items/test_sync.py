@@ -95,6 +95,8 @@ class SyncTest(BaseItemTest):
         self.assertIsNone(test_folder.folder_sync_state)
         list(test_folder.sync_hierarchy())
         self.assertIsNotNone(test_folder.folder_sync_state)
+        # Test non-default values
+        list(test_folder.sync_hierarchy(only_fields=['name']))
 
         # Test that we see a create event
         f1 = self.FOLDER_CLASS(parent=test_folder, name=get_random_string(8)).save()
@@ -143,6 +145,7 @@ class SyncTest(BaseItemTest):
         list(test_folder.sync_items())
         self.assertIsNotNone(test_folder.item_sync_state)
         # Test non-default values
+        list(test_folder.sync_items(only_fields=['subject']))
         list(test_folder.sync_items(sync_scope='NormalItems'))
         list(test_folder.sync_items(ignore=[ItemId(id='AAA=')]))
 

@@ -475,10 +475,13 @@ class FolderCollection(SearchableMixIn):
             # We didn't restrict list of field paths. Get all fields from the server, including extended properties.
             additional_fields = {FieldPath(field=f) for f in folder.supported_fields(version=self.account.version)}
         else:
-            for f in only_fields:
-                folder.validate_field(field=f, version=self.account.version)
-            # Remove ItemId and ChangeKey. We get them unconditionally
-            additional_fields = {f for f in folder.normalize_fields(fields=only_fields) if not f.field.is_attribute}
+            additional_fields = set()
+            for field_name in only_fields:
+                folder.validate_field(field=field_name, version=self.account.version)
+                f = folder.get_field_by_fieldname(fieldname=field_name)
+                if not f.is_attribute:
+                    # Remove ItemId and ChangeKey. We get them unconditionally
+                    additional_fields.add(FieldPath(field=f))
 
         # Add required fields
         additional_fields.update(
