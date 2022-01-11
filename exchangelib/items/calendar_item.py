@@ -364,18 +364,12 @@ class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
         # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
         # the list of IDs.
         from ..services import CreateItem
-        res = list(CreateItem(account=self.account).call(
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
-        ))
-        for r in res:
-            if isinstance(r, Exception):
-                raise r
-        if len(res) == 1:
-            return res[0]
-        return res
+        )
 
 
 class AcceptItem(BaseMeetingReplyItem):

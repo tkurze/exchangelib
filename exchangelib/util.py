@@ -167,7 +167,7 @@ def get_xml_attr(tree, name):
 
 
 def get_xml_attrs(tree, name):
-    return list(elem.text for elem in tree.findall(name) if elem.text is not None)
+    return [elem.text for elem in tree.findall(name) if elem.text is not None]
 
 
 def value_to_xml_text(value):
@@ -635,20 +635,22 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
 class DummyRequest:
     """A class to fake a requests Request object for functions that expect this."""
 
-    def __init__(self, headers):
-        self.headers = headers
+    def __init__(self, headers=None):
+        self.headers = headers or {}
 
 
 class DummyResponse:
     """A class to fake a requests Response object for functions that expect this."""
 
-    def __init__(self, url, headers, request_headers, content=b'', status_code=503, streaming=False, history=None):
+    def __init__(self, url=None, headers=None, request_headers=None, content=b'', status_code=503, streaming=False,
+                 history=None):
         self.status_code = status_code
         self.url = url
-        self.headers = headers
+        self.headers = headers or {}
         self.content = iter((bytes([b]) for b in content)) if streaming else content
         self.text = content.decode('utf-8', errors='ignore')
         self.request = DummyRequest(headers=request_headers)
+        self.reason = ''
         self.history = history
 
     def iter_content(self):
@@ -810,7 +812,7 @@ Response XML: %(xml_response)s'''
                       thread_id, retry, timeout, url, wait)
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
-            r = DummyResponse(url=url, headers={}, request_headers=headers)
+            r = DummyResponse(url=url, request_headers=headers)
             try:
                 r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout,
                                  stream=stream)

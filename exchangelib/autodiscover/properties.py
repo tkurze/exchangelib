@@ -154,7 +154,7 @@ class Protocol(SimpleProtocol):
             'negotiate': SSPI,  # Unsure about this one
             'nego2': GSSAPI,
             'anonymous': NOAUTH,  # Seen in some docs even though it's not mentioned in MSDN
-        }.get(self.auth_package.lower(), None)
+        }.get(self.auth_package.lower())
 
 
 class Error(EWSElement):

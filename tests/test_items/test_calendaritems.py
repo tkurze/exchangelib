@@ -9,6 +9,7 @@ from exchangelib.items.calendar_item import MeetingRequest, AcceptItem, SINGLE, 
 from exchangelib.recurrence import Recurrence, Occurrence, FirstOccurrence, LastOccurrence, DeletedOccurrence, \
     AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
     DailyPattern
+from exchangelib.version import Version, EXCHANGE_2007
 
 from ..common import get_random_string, get_random_datetime_range, get_random_date
 from .test_basics import CommonItemTest
@@ -229,6 +230,10 @@ class CalendarTest(CommonItemTest):
         self.test_folder.bulk_create(items=[item1, item2])
         list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('start'))
         list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('-start'))
+
+        # Test that client-side ordering on non-selected fields works
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only('end').order_by('start'))
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only('end').order_by('-start'))
 
     def test_all_recurring_pattern_types(self):
         start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
@@ -524,7 +529,7 @@ class CalendarTest(CommonItemTest):
         self.assertEqual(e.exception.args[0], "'id' is a required field with no default")
 
         with self.assertRaises(ErrorMissingInformationReferenceItemId) as e:
-           AcceptItem(account=self.account).send()
+            AcceptItem(account=self.account).send()
 
     def test_clean(self):
         start = get_random_date()
@@ -536,3 +541,32 @@ class CalendarTest(CommonItemTest):
         with self.assertRaises(ValueError) as e:
             CalendarItem(start=end_dt, end=start_dt).clean(version=self.account.version)
         self.assertIn("'end' must be greater than 'start'", e.exception.args[0])
+
+        item = CalendarItem(start=start_dt, end=end_dt)
+        item.clean(version=Version(EXCHANGE_2007))
+        self.assertEqual(item._meeting_timezone, start_dt.tzinfo)
+        self.assertEqual(item._start_timezone, None)
+        self.assertEqual(item._end_timezone, None)
+
+    def test_tz_field_for_field_name(self):
+        self.assertEqual(
+            CalendarItem(account=self.account).tz_field_for_field_name('start').name,
+            '_start_timezone',
+        )
+        self.assertEqual(
+            CalendarItem(account=self.account).tz_field_for_field_name('end').name,
+            '_end_timezone',
+        )
+        tmp = self.account.version.build
+        try:
+            self.account.version.build = EXCHANGE_2007
+            self.assertEqual(
+                CalendarItem(account=self.account).tz_field_for_field_name('start').name,
+                '_meeting_timezone',
+            )
+            self.assertEqual(
+                CalendarItem(account=self.account).tz_field_for_field_name('end').name,
+                '_meeting_timezone',
+            )
+        finally:
+            self.account.version.build = tmp

@@ -1,9 +1,10 @@
 import requests_mock
+from unittest.mock import Mock
 
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
-    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError
+    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError, ErrorExceededConnectionCount
 from exchangelib.folders import FolderCollection
-from exchangelib.protocol import FaultTolerance
+from exchangelib.protocol import FaultTolerance, FailFast
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder
 from exchangelib.util import create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
@@ -190,6 +191,36 @@ class ServicesTest(EWSTest):
         with self.assertRaises(ErrorInvalidServerVersion):
             list(svc._get_elements(create_element('XXX')))
 
+    def test_handle_backoff(self):
+        # Test that we can handle backoff messages
+        svc = ResolveNames(self.account.protocol)
+        tmp = svc._response_generator
+        orig_policy = self.account.protocol.config.retry_policy
+        try:
+            # We need to fail fast so we don't end up in an infinite loop
+            self.account.protocol.config.retry_policy = FailFast()
+            svc._response_generator = Mock(side_effect=ErrorServerBusy('XXX', back_off=1))
+            with self.assertRaises(ErrorServerBusy) as e:
+                list(svc._get_elements(create_element('XXX')))
+            self.assertEqual(e.exception.args[0], 'XXX')
+        finally:
+            svc._response_generator = tmp
+            self.account.protocol.config.retry_policy = orig_policy
+
+    def test_exceeded_connection_count(self):
+        # Test server repeatedly returning ErrorExceededConnectionCount
+        svc = ResolveNames(self.account.protocol)
+        tmp = svc._get_soap_messages
+        orig_policy = self.account.protocol.config.retry_policy
+        try:
+            # We need to fail fast so we don't end up in an infinite loop
+            svc._get_soap_messages = Mock(side_effect=ErrorExceededConnectionCount('XXX'))
+            with self.assertRaises(ErrorExceededConnectionCount) as e:
+                list(svc.call(unresolved_entries=['XXX']))
+            self.assertEqual(e.exception.args[0], 'XXX')
+        finally:
+            svc._get_soap_messages = tmp
+
     @requests_mock.mock()
     def test_invalid_soap_response(self, m):
         m.post(self.account.protocol.service_endpoint, text='XXX')
@@ -200,8 +231,8 @@ class ServicesTest(EWSTest):
         # Test that we can recover from a wrong API version. This is needed in version guessing and when the
         # autodiscover response returns a wrong server version for the account
         old_version = self.account.version.api_version
-        self.account.version.api_version = 'Exchange2016'  # Newer EWS versions require a valid value
         try:
+            self.account.version.api_version = 'Exchange2016'  # Newer EWS versions require a valid value
             list(self.account.inbox.filter(subject=get_random_string(16)))
             self.assertEqual(old_version, self.account.version.api_version)
         finally:

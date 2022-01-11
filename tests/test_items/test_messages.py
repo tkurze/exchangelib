@@ -44,8 +44,8 @@ class MessagesTest(CommonItemTest):
         item = self.get_test_item()
         item.attach(FileAttachment(name='file_attachment', content=b'file_attachment'))
         tmp = self.account.version.build
-        self.account.version.build = EXCHANGE_2010_SP2
         try:
+            self.account.version.build = EXCHANGE_2010_SP2
             item.send(save_copy=False)
         finally:
             self.account.version.build = tmp
@@ -127,8 +127,8 @@ class MessagesTest(CommonItemTest):
         new_subject = (f'Re: {sent_item.subject}')[:255]
         with self.assertRaises(ValueError) as e:
             tmp = sent_item.author
-            sent_item.author = None
             try:
+                sent_item.author = None
                 sent_item.create_reply(subject=new_subject, body='Hello reply').save(self.account.drafts)
             finally:
                 sent_item.author = tmp

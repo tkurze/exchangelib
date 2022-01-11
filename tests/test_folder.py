@@ -1,5 +1,8 @@
+from unittest.mock import Mock
+
 from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
-    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists, ErrorFolderNotFound
+    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists, ErrorFolderNotFound, \
+    ErrorCannotEmptyFolder
 from exchangelib.extended_properties import ExtendedProperty
 from exchangelib.items import Message
 from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
@@ -161,8 +164,8 @@ class FolderTest(EWSTest):
     def test_find_folders_compat(self):
         coll = FolderCollection(account=self.account, folders=[self.account.root])
         tmp = self.account.version.build
-        self.account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
         try:
+            self.account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
             with self.assertRaises(NotImplementedError) as e:
                 list(coll.find_folders(offset=1))
         finally:
@@ -575,6 +578,20 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorDeleteDistinguishedFolder):
             self.account.inbox.delete()
 
+    def test_wipe_without_empty(self):
+        name = get_random_string(16)
+        f = Messages(parent=self.account.inbox, name=name).save()
+        Messages(parent=f, name=get_random_string(16)).save()
+        self.assertEqual(len(list(f.children)), 1)
+        tmp = f.empty
+        try:
+            f.empty = Mock(side_effect=ErrorCannotEmptyFolder('XXX'))
+            f.wipe()
+        finally:
+            f.empty = tmp
+
+        self.assertEqual(len(list(f.children)), 0)
+
     def test_move(self):
         f1 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
         f2 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
@@ -890,4 +907,28 @@ class FolderTest(EWSTest):
                     )
                 ], unknown_entries=None
             ),
+        )
+
+    def test_get_candidate(self):
+        # _get_candidate is a private method, but it's really difficult to recreate a situation where it's used.
+        f1 = Inbox(name='XXX', is_distinguished=True)
+        f2 = Inbox(name=Inbox.LOCALIZED_NAMES[self.account.locale][0])
+        with self.assertRaises(ErrorFolderNotFound) as e:
+            self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[])
+        self.assertEqual(
+            e.exception.args[0], "No usable default <class 'exchangelib.folders.known_folders.Inbox'> folders"
+        )
+        self.assertEqual(
+            self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f1]),
+            f1
+        )
+        self.assertEqual(
+            self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f2]),
+            f2
+        )
+        with self.assertRaises(ValueError) as e:
+            self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f1, f1])
+        self.assertEqual(
+            e.exception.args[0],
+            "Multiple possible default <class 'exchangelib.folders.known_folders.Inbox'> folders: ['XXX', 'XXX']"
         )

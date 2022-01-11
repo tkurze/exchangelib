@@ -145,7 +145,7 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
                 except CONNECTION_ERRORS as e:
                     # Don't retry on TLS errors. They will most likely be persistent.
                     total_wait = time.monotonic() - t_start
-                    r = DummyResponse(url=service_endpoint, headers={}, request_headers=headers)
+                    r = DummyResponse(url=service_endpoint, request_headers=headers)
                     if retry_policy.may_retry_on_error(response=r, wait=total_wait):
                         wait = _retry_after(r, RETRY_WAIT)
                         log.info("Connection error on URL %s (retry %s, error: %s). Cool down %s secs",
