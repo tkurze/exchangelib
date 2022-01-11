@@ -632,11 +632,13 @@ class AutodiscoverTest(EWSTest):
 
     def test_del_on_error(self):
         # Test that __del__ can handle exceptions on close()
+        tmp = AutodiscoverCache.close
         cache = AutodiscoverCache()
-        cache.close = Mock(side_effect=Exception('XXX'))
+        AutodiscoverCache.close = Mock(side_effect=Exception('XXX'))
         with self.assertRaises(Exception):
             cache.close()
         del cache
+        AutodiscoverCache.close = tmp
 
     def test_shelve_filename(self):
         major, minor = sys.version_info[:2]
