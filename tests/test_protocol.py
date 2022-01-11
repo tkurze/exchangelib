@@ -204,11 +204,11 @@ EWS auth: NTLM''')
         ))
         session = protocol.get_session()
         protocol.release_session(session)
-        protocol.release_session(session)
+        self.assertEqual(session.usage_count, 1)
         for _ in range(2):
             session = protocol.get_session()
             protocol.release_session(session)
-        self.assertEqual(session.usage_count, 2)
+        self.assertEqual(session.usage_count, 3)
         tmp = Protocol.MAX_SESSION_USAGE_COUNT
         try:
             Protocol.MAX_SESSION_USAGE_COUNT = 1
