@@ -35,6 +35,26 @@ from .common import EWSTest, get_random_datetime_range, get_random_string, RANDO
 
 
 class ProtocolTest(EWSTest):
+    def test_magic(self):
+        o = Protocol(config=Configuration(
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
+            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
+        ))
+        self.assertEqual(str(o), '''\
+EWS url: https://example.com/Foo.asmx
+Product name: Microsoft Exchange Server 2016
+EWS API version: Exchange2016
+Build number: 15.1.0.0
+EWS auth: NTLM''')
+        o.config.version = None
+        self.assertEqual(str(o), '''\
+EWS url: https://example.com/Foo.asmx
+Product name: [unknown]
+EWS API version: [unknown]
+Build number: [unknown]
+EWS auth: NTLM''')
+
     def test_close_connections_helper(self):
         # Just test that it doesn't break
         close_connections()
@@ -124,7 +144,7 @@ class ProtocolTest(EWSTest):
             auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast(),
             max_connections=3
         ))
-        # Merely getting a session should not create conections
+        # Merely getting a session should not create connections
         session = protocol.get_session()
         self.assertEqual(conn_count(), 0)
         # Open one URL - we have 1 connection
@@ -174,6 +194,30 @@ class ProtocolTest(EWSTest):
         with self.assertRaises(SessionPoolMinSizeReached):
             protocol.decrease_poolsize()
         self.assertEqual(protocol._session_pool.qsize(), 1)
+
+    def test_max_usage_count(self):
+        protocol = Protocol(config=Configuration(
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
+            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast(),
+            max_connections=1
+        ))
+        session = protocol.get_session()
+        protocol.release_session(session)
+        protocol.release_session(session)
+        for _ in range(2):
+            session = protocol.get_session()
+            protocol.release_session(session)
+        self.assertEqual(session.usage_count, 2)
+        tmp = Protocol.MAX_SESSION_USAGE_COUNT
+        try:
+            Protocol.MAX_SESSION_USAGE_COUNT = 1
+            for _ in range(2):
+                session = protocol.get_session()
+                protocol.release_session(session)
+            self.assertEqual(session.usage_count, 1)
+        finally:
+            Protocol.MAX_SESSION_USAGE_COUNT = tmp
 
     def test_get_timezones(self):
         # Test shortcut
@@ -847,6 +891,21 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
             ))
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
 
+    def test_create_session_failure(self):
+        protocol = Protocol(config=Configuration(
+            service_endpoint='https://example.com/Foo.asmx', credentials=None,
+            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast()
+        ))
+        with self.assertRaises(ValueError) as e:
+            protocol.config.auth_type = None
+            protocol.create_session()
+        self.assertEqual(e.exception.args[0], 'Cannot create session without knowing the auth type')
+        with self.assertRaises(ValueError) as e:
+            protocol.config.auth_type = NTLM
+            protocol.credentials = None
+            protocol.create_session()
+        self.assertEqual(e.exception.args[0], "Auth type 'NTLM' requires credentials")
+
     def test_noauth_session(self):
         self.assertEqual(
             Protocol(config=Configuration(
@@ -864,11 +923,13 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                 credentials=OAuth2Credentials('XXX', 'YYY', 'ZZZZ'),
                 auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
             )).create_session()
-        with self.assertRaises(InvalidGrantError):
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/Foo.asmx',
-                credentials=OAuth2AuthorizationCodeCredentials(
-                    client_id='WWW', client_secret='XXX', authorization_code='YYY'
-                ),
-                auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
-            )).create_session()
+
+        protocol = Protocol(config=Configuration(
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=OAuth2AuthorizationCodeCredentials(
+                client_id='WWW', client_secret='XXX', authorization_code='YYY', access_token={'access_token': 'ZZZ'}
+            ),
+            auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
+        ))
+        session = protocol.create_session()
+        protocol.refresh_credentials(session)
