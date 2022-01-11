@@ -828,9 +828,8 @@ class CharField(TextField):
 
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
-        if value is not None:
-            if len(value) > self.max_length:
-                raise ValueError(f"{self.name!r} value {value!r} exceeds length {self.max_length}")
+        if value is not None and len(value) > self.max_length:
+            raise ValueError(f"{self.name!r} value {value!r} exceeds length {self.max_length}")
         return value
 
 

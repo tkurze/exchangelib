@@ -13,7 +13,6 @@ from threading import Lock
 
 import requests.adapters
 import requests.sessions
-import requests.utils
 from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient
 from requests_oauthlib import OAuth2Session
 

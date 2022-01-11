@@ -383,7 +383,7 @@ class FolderCollection(SearchableMixIn):
         from ..services import SubscribeToPull
         if not self.folders:
             log.debug('Folder list is empty')
-            return
+            return None
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
         return SubscribeToPull(account=self.account).get(
@@ -394,7 +394,7 @@ class FolderCollection(SearchableMixIn):
         from ..services import SubscribeToPush
         if not self.folders:
             log.debug('Folder list is empty')
-            return
+            return None
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
         return SubscribeToPush(account=self.account).get(
@@ -406,7 +406,7 @@ class FolderCollection(SearchableMixIn):
         from ..services import SubscribeToStreaming
         if not self.folders:
             log.debug('Folder list is empty')
-            return
+            return None
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
         return SubscribeToStreaming(account=self.account).get(folders=self.folders, event_types=event_types)

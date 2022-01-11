@@ -218,6 +218,7 @@ class FileAttachmentIO(io.RawIOBase):
 
     def __init__(self, attachment):
         self._attachment = attachment
+        self._stream = None
         self._overflow = None
 
     def readable(self):
