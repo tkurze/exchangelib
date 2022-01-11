@@ -231,6 +231,10 @@ class CalendarTest(CommonItemTest):
         list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('start'))
         list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('-start'))
 
+        # Test that client-side ordering on non-selected fields works
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only('end').order_by('start'))
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only('end').order_by('-start'))
+
     def test_all_recurring_pattern_types(self):
         start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
         end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
