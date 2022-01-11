@@ -9,6 +9,7 @@ from exchangelib.items.calendar_item import MeetingRequest, AcceptItem, SINGLE, 
 from exchangelib.recurrence import Recurrence, Occurrence, FirstOccurrence, LastOccurrence, DeletedOccurrence, \
     AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
     DailyPattern
+from exchangelib.version import Version, EXCHANGE_2007
 
 from ..common import get_random_string, get_random_datetime_range, get_random_date
 from .test_basics import CommonItemTest
@@ -536,3 +537,9 @@ class CalendarTest(CommonItemTest):
         with self.assertRaises(ValueError) as e:
             CalendarItem(start=end_dt, end=start_dt).clean(version=self.account.version)
         self.assertIn("'end' must be greater than 'start'", e.exception.args[0])
+
+        item = CalendarItem(start=start_dt, end=end_dt)
+        item.clean(version=Version(EXCHANGE_2007))
+        self.assertEqual(item._meeting_timezone, start_dt.tzinfo)
+        self.assertEqual(item._start_timezone, None)
+        self.assertEqual(item._end_timezone, None)
