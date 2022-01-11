@@ -1,4 +1,5 @@
 import requests_mock
+from unittest.mock import Mock
 
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
     ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError
@@ -190,6 +191,13 @@ class ServicesTest(EWSTest):
         with self.assertRaises(ErrorInvalidServerVersion):
             list(svc._get_elements(create_element('XXX')))
 
+    def test_handle_backoff(self):
+        # Test that we can handle backoff messages
+        svc = ResolveNames(self.account.protocol)
+        try:
+            svc.
+        list(svc._get_elements(create_element('XXX')))
+
     @requests_mock.mock()
     def test_invalid_soap_response(self, m):
         m.post(self.account.protocol.service_endpoint, text='XXX')
@@ -200,8 +208,8 @@ class ServicesTest(EWSTest):
         # Test that we can recover from a wrong API version. This is needed in version guessing and when the
         # autodiscover response returns a wrong server version for the account
         old_version = self.account.version.api_version
-        self.account.version.api_version = 'Exchange2016'  # Newer EWS versions require a valid value
         try:
+            self.account.version.api_version = 'Exchange2016'  # Newer EWS versions require a valid value
             list(self.account.inbox.filter(subject=get_random_string(16)))
             self.assertEqual(old_version, self.account.version.api_version)
         finally:

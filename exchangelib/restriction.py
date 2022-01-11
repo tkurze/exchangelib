@@ -1,7 +1,7 @@
 import logging
 from copy import copy
 
-from .errors import InvalidEnumValue, InvalidTypeError
+from .errors import InvalidEnumValue
 from .fields import InvalidField, FieldPath, DateTimeBackedDateField
 from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
 from .version import EXCHANGE_2010

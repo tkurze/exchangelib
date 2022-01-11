@@ -164,8 +164,8 @@ class FolderTest(EWSTest):
     def test_find_folders_compat(self):
         coll = FolderCollection(account=self.account, folders=[self.account.root])
         tmp = self.account.version.build
-        self.account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
         try:
+            self.account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
             with self.assertRaises(NotImplementedError) as e:
                 list(coll.find_folders(offset=1))
         finally:

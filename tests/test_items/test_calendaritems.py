@@ -529,7 +529,7 @@ class CalendarTest(CommonItemTest):
         self.assertEqual(e.exception.args[0], "'id' is a required field with no default")
 
         with self.assertRaises(ErrorMissingInformationReferenceItemId) as e:
-           AcceptItem(account=self.account).send()
+            AcceptItem(account=self.account).send()
 
     def test_clean(self):
         start = get_random_date()
@@ -558,8 +558,8 @@ class CalendarTest(CommonItemTest):
             '_end_timezone',
         )
         tmp = self.account.version.build
-        self.account.version.build = EXCHANGE_2007
         try:
+            self.account.version.build = EXCHANGE_2007
             self.assertEqual(
                 CalendarItem(account=self.account).tz_field_for_field_name('start').name,
                 '_meeting_timezone',

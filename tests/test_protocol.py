@@ -340,8 +340,8 @@ class ProtocolTest(EWSTest):
             "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup"
         )
         tmp = self.account.protocol.version.build
-        self.account.protocol.version.build = EXCHANGE_2010_SP1
         try:
+            self.account.protocol.version.build = EXCHANGE_2010_SP1
             with self.assertRaises(NotImplementedError) as e:
                 self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
         finally:
