@@ -258,7 +258,7 @@ class Autodiscovery:
                     # Don't retry on TLS errors. They will most likely be persistent.
                     raise TransportError(str(e))
                 except CONNECTION_ERRORS as e:
-                    r = DummyResponse(url=url, headers={}, request_headers=kwargs['headers'])
+                    r = DummyResponse(url=url, request_headers=kwargs['headers'])
                     total_wait = time.monotonic() - t_start
                     if self.INITIAL_RETRY_POLICY.may_retry_on_error(response=r, wait=total_wait):
                         log.debug("Connection error on URL %s (retry %s, error: %s). Cool down", url, retry, e)
@@ -304,8 +304,7 @@ class Autodiscovery:
             # isn't necessarily the right endpoint to use.
             raise TransportError(str(e))
         except RedirectError as e:
-            r = DummyResponse(url=protocol.service_endpoint, headers={'location': e.url}, request_headers=None,
-                              status_code=302)
+            r = DummyResponse(url=protocol.service_endpoint, headers={'location': e.url}, status_code=302)
         return r
 
     def _attempt_response(self, url):
@@ -444,7 +443,7 @@ class Autodiscovery:
         try:
             _, r = self._get_unauthenticated_response(url=url, method='get')
         except TransportError:
-            r = DummyResponse(url=url, headers={}, request_headers={})
+            r = DummyResponse(url=url)
         if r.status_code in (301, 302) and 'location' in r.headers:
             redirect_url = get_redirect_url(r)
             if self._redirect_url_is_valid(url=redirect_url):

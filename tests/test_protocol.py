@@ -821,7 +821,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
             ))
         self.assertEqual(e.exception.args[0], 'Max timeout reached')
 
-    @patch('requests.sessions.Session.post', return_value=DummyResponse(url='https://example.com/EWS/Exchange.asmx', headers={}, request_headers={}, status_code=401))
+    @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=401))
     def test_get_service_authtype_401(self, m):
         with self.assertRaises(TransportError) as e:
             Protocol(config=Configuration(
@@ -831,7 +831,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
             ))
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
 
-    @patch('requests.sessions.Session.post', return_value=DummyResponse(url='https://example.com/EWS/Exchange.asmx', headers={}, request_headers={}, status_code=501))
+    @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=501))
     def test_get_service_authtype_501(self, m):
         with self.assertRaises(TransportError) as e:
             Protocol(config=Configuration(

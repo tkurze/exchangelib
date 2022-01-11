@@ -54,7 +54,7 @@ class GetStreamingEvents(EWSAccountService):
         r = body
         for i, doc in enumerate(DocumentYielder(r.iter_content()), start=1):
             xml_log.debug('''Response XML (docs counter: %(i)s): %(xml_response)s''', dict(i=i, xml_response=doc))
-            response = DummyResponse(url=None, headers=None, request_headers=None, content=doc)
+            response = DummyResponse(content=doc)
             try:
                 _, body = super()._get_soap_parts(response=response, **parse_opts)
             except Exception:

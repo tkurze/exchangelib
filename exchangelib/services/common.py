@@ -159,7 +159,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     def parse(self, xml):
         """Used mostly for testing, when we want to parse static XML data."""
-        resp = DummyResponse(url=None, headers=None, request_headers=None, content=xml, streaming=self.streaming)
+        resp = DummyResponse(content=xml, streaming=self.streaming)
         _, body = self._get_soap_parts(response=resp)
         return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
 
