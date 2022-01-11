@@ -2,10 +2,11 @@ import requests_mock
 from unittest.mock import Mock
 
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
-    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError, ErrorExceededConnectionCount
+    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError, ErrorExceededConnectionCount, \
+    ErrorInternalServerError, ErrorInvalidValueForProperty
 from exchangelib.folders import FolderCollection
 from exchangelib.protocol import FaultTolerance, FailFast
-from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder
+from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder, DeleteItem
 from exchangelib.util import create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
 
@@ -23,6 +24,71 @@ class ServicesTest(EWSTest):
             list(GetRoomLists(protocol=account.protocol).call())
         with self.assertRaises(NotImplementedError):
             list(GetRooms(protocol=account.protocol).call('XXX'))
+
+    def test_inner_error_parsing(self):
+        # Test that we can parse an exception response via SOAP body
+        xml = b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:DeleteItemResponse
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:DeleteItemResponseMessage ResponseClass="Error">
+          <m:MessageText>An internal server error occurred. The operation failed.</m:MessageText>
+          <m:ResponseCode>ErrorInternalServerError</m:ResponseCode>
+          <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+          <m:MessageXml>
+            <t:Value Name="InnerErrorMessageText">Cannot delete message because the destination folder is out of quota.</t:Value>
+            <t:Value Name="InnerErrorResponseCode">ErrorQuotaExceededOnDelete</t:Value>
+            <t:Value Name="InnerErrorDescriptiveLinkKey">0</t:Value>
+          </m:MessageXml>
+        </m:DeleteItemResponseMessage>
+      </m:ResponseMessages>
+    </m:DeleteItemResponse>
+  </s:Body>
+</s:Envelope>'''
+        ws = DeleteItem(account=self.account)
+        with self.assertRaises(ErrorInternalServerError) as e:
+            list(ws.parse(xml))
+        self.assertEqual(
+            e.exception.args[0],
+            "An internal server error occurred. The operation failed. (inner error: "
+            "ErrorQuotaExceededOnDelete('Cannot delete message because the destination folder is out of quota.'))"
+        )
+
+    def test_invalid_value_extras(self):
+        # Test that we can parse an exception response via SOAP body
+        xml = b'''\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:DeleteItemResponse
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:DeleteItemResponseMessage ResponseClass="Error">
+          <m:MessageText>The specified value is invalid for property.</m:MessageText>
+          <m:ResponseCode>ErrorInvalidValueForProperty</m:ResponseCode>
+          <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+          <m:MessageXml>
+            <t:Value Name="Foo">XXX</t:Value>
+            <t:Value Name="Bar">YYY</t:Value>
+          </m:MessageXml>
+        </m:DeleteItemResponseMessage>
+      </m:ResponseMessages>
+    </m:DeleteItemResponse>
+  </s:Body>
+</s:Envelope>'''
+        ws = DeleteItem(account=self.account)
+        with self.assertRaises(ErrorInvalidValueForProperty) as e:
+            list(ws.parse(xml))
+        self.assertEqual(e.exception.args[0], "The specified value is invalid for property. (Foo: XXX, Bar: YYY)")
 
     def test_error_server_busy(self):
         # Test that we can parse an exception response via SOAP body
