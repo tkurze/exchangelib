@@ -43,8 +43,12 @@ class MessagesTest(CommonItemTest):
         # Test < Exchange 2013 fallback for attachments and send-only mode
         item = self.get_test_item()
         item.attach(FileAttachment(name='file_attachment', content=b'file_attachment'))
+        tmp = self.account.version.build
         self.account.version.build = EXCHANGE_2010_SP2
-        item.send(save_copy=False)
+        try:
+            item.send(save_copy=False)
+        finally:
+            self.account.version.build = tmp
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
 

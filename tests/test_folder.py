@@ -139,13 +139,13 @@ class FolderTest(EWSTest):
 
     def test_find_folders_compat(self):
         coll = FolderCollection(account=self.account, folders=[self.account.root])
-        tmp = self.account.protocol.version.build
-        self.account.protocol.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
+        tmp = self.account.version.build
+        self.account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
         try:
             with self.assertRaises(NotImplementedError) as e:
                 list(coll.find_folders(offset=1))
         finally:
-            self.account.protocol.version.build = tmp
+            self.account.version.build = tmp
         self.assertEqual(
             e.exception.args[0],
             "'offset' is only supported for Exchange 2010 servers and later"
