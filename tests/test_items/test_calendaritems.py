@@ -1,11 +1,11 @@
 import datetime
 
-from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound
+from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound, ErrorMissingInformationReferenceItemId
 from exchangelib.ewsdatetime import UTC
 from exchangelib.fields import NOVEMBER, WEEKEND_DAY, WEEK_DAY, THIRD, MONDAY, WEDNESDAY
 from exchangelib.folders import Calendar
 from exchangelib.items import CalendarItem, BulkCreateResult
-from exchangelib.items.calendar_item import SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
+from exchangelib.items.calendar_item import MeetingRequest, AcceptItem, SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
 from exchangelib.recurrence import Recurrence, Occurrence, FirstOccurrence, LastOccurrence, DeletedOccurrence, \
     AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
     DailyPattern
@@ -510,3 +510,29 @@ class CalendarTest(CommonItemTest):
         with self.assertRaises(ValueError) as e:
             self.account.bulk_update([(item, ['is_meeting'])])
         self.assertEqual(e.exception.args[0], "'is_meeting' is a read-only field")
+
+    def test_meeting_request(self):
+        # The test server only has one account so we cannot test meeting invitations
+        with self.assertRaises(ValueError) as e:
+            MeetingRequest(account=self.account).accept()
+        self.assertEqual(e.exception.args[0], "'id' is a required field with no default")
+        with self.assertRaises(ValueError) as e:
+            MeetingRequest(account=self.account).decline()
+        self.assertEqual(e.exception.args[0], "'id' is a required field with no default")
+        with self.assertRaises(ValueError) as e:
+            MeetingRequest(account=self.account).tentatively_accept()
+        self.assertEqual(e.exception.args[0], "'id' is a required field with no default")
+
+        with self.assertRaises(ErrorMissingInformationReferenceItemId) as e:
+           AcceptItem(account=self.account).send()
+
+    def test_clean(self):
+        start = get_random_date()
+        start_dt, end_dt = get_random_datetime_range(
+            start_date=start,
+            end_date=start + datetime.timedelta(days=365),
+            tz=self.account.default_timezone
+        )
+        with self.assertRaises(ValueError) as e:
+            CalendarItem(start=end_dt, end=start_dt).clean(version=self.account.version)
+        self.assertIn("'end' must be greater than 'start'", e.exception.args[0])
