@@ -2,7 +2,7 @@ import requests_mock
 from unittest.mock import Mock
 
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
-    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError
+    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError, ErrorExceededConnectionCount
 from exchangelib.folders import FolderCollection
 from exchangelib.protocol import FaultTolerance, FailFast
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder
@@ -206,6 +206,20 @@ class ServicesTest(EWSTest):
         finally:
             svc._response_generator = tmp
             self.account.protocol.config.retry_policy = orig_policy
+
+    def test_exceeded_connection_count(self):
+        # Test server repeatedly returning ErrorExceededConnectionCount
+        svc = ResolveNames(self.account.protocol)
+        tmp = svc._get_soap_messages
+        orig_policy = self.account.protocol.config.retry_policy
+        try:
+            # We need to fail fast so we don't end up in an infinite loop
+            svc._get_soap_messages = Mock(side_effect=ErrorExceededConnectionCount('XXX'))
+            with self.assertRaises(ErrorExceededConnectionCount) as e:
+                list(svc.call(unresolved_entries=['XXX']))
+            self.assertEqual(e.exception.args[0], 'XXX')
+        finally:
+            svc._get_soap_messages = tmp
 
     @requests_mock.mock()
     def test_invalid_soap_response(self, m):
