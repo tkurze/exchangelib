@@ -700,7 +700,7 @@ class EWSPagingService(EWSAccountService):
         if not isinstance(self.page_size, int):
             raise InvalidTypeError('page_size', self.page_size, int)
         if self.page_size < 1:
-            raise ValueError("'page_size' must be a positive number")
+            raise ValueError(f"'page_size' {self.page_size} must be a positive number")
         super().__init__(*args, **kwargs)
 
     def _paged_call(self, payload_func, max_items, folders, **kwargs):

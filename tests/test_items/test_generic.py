@@ -283,7 +283,13 @@ class GenericItemTest(CommonItemTest):
         self.assertEqual(e.exception.args[0], "'page_size' 'XXX' must be of type <class 'int'>")
         with self.assertRaises(ValueError) as e:
             FindItem(account=self.account, page_size=-1)
-        self.assertEqual(e.exception.args[0], "'page_size' must be a positive number")
+        self.assertEqual(e.exception.args[0], "'page_size' -1 must be a positive number")
+        with self.assertRaises(TypeError) as e:
+            FindItem(account=self.account, chunk_size='XXX')
+        self.assertEqual(e.exception.args[0], "'chunk_size' 'XXX' must be of type <class 'int'>")
+        with self.assertRaises(ValueError) as e:
+            FindItem(account=self.account, chunk_size=-1)
+        self.assertEqual(e.exception.args[0], "'chunk_size' -1 must be a positive number")
         with self.assertRaises(ValueError) as e:
             FindItem(account=self.account).call(
                 folders=None,
