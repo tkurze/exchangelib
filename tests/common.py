@@ -87,15 +87,19 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
             BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
         # Create an account shared by all tests
-        tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
+        cls.tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
         cls.retry_policy = FaultTolerance(max_wait=600)
-        config = Configuration(
+        cls.config = Configuration(
             server=settings['server'],
             credentials=Credentials(settings['username'], settings['password']),
             retry_policy=cls.retry_policy,
         )
-        cls.account = Account(primary_smtp_address=settings['account'], access_type=DELEGATE, config=config,
-                              locale='da_DK', default_timezone=tz)
+        cls.account = cls.get_account()
+
+    @classmethod
+    def get_account(cls):
+        return Account(primary_smtp_address=cls.settings['account'], access_type=DELEGATE, config=cls.config,
+                              locale='da_DK', default_timezone=cls.tz)
 
     def setUp(self):
         super().setUp()

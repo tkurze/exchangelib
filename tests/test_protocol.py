@@ -394,12 +394,10 @@ EWS auth: NTLM''')
             "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup"
         )
         tmp = self.account.protocol.version.build
-        try:
-            self.account.protocol.version.build = EXCHANGE_2010_SP1
-            with self.assertRaises(NotImplementedError) as e:
-                self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
-        finally:
-            self.account.protocol.version.build = tmp
+        self.account.protocol.version.build = EXCHANGE_2010_SP1
+        with self.assertRaises(NotImplementedError) as e:
+            self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
+        self.account.protocol.version.build = tmp
         self.assertEqual(
             e.exception.args[0],
             "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"

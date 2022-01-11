@@ -162,14 +162,11 @@ class FolderTest(EWSTest):
         self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
 
     def test_find_folders_compat(self):
-        coll = FolderCollection(account=self.account, folders=[self.account.root])
-        tmp = self.account.version.build
-        try:
-            self.account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
-            with self.assertRaises(NotImplementedError) as e:
-                list(coll.find_folders(offset=1))
-        finally:
-            self.account.version.build = tmp
+        account = self.get_account()
+        coll = FolderCollection(account=account, folders=[account.root])
+        account.version.build = EXCHANGE_2007  # Need to set it after the last auto-config of version
+        with self.assertRaises(NotImplementedError) as e:
+            list(coll.find_folders(offset=1))
         self.assertEqual(
             e.exception.args[0],
             "'offset' is only supported for Exchange 2010 servers and later"
