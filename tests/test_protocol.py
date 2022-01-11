@@ -26,6 +26,7 @@ from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearch
     SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM
+from exchangelib.util import DummyResponse
 from exchangelib.version import Build, Version, EXCHANGE_2010_SP1
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
@@ -819,3 +820,23 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                 auth_type=None, version=Version(Build(15, 1)), retry_policy=FaultTolerance(max_wait=0.5)
             ))
         self.assertEqual(e.exception.args[0], 'Max timeout reached')
+
+    @patch('requests.sessions.Session.post', return_value=DummyResponse(url='https://example.com/EWS/Exchange.asmx', headers={}, request_headers={}, status_code=401))
+    def test_get_service_authtype_401(self, m):
+        with self.assertRaises(TransportError) as e:
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/EWS/Exchange.asmx',
+                credentials=Credentials(get_random_string(8), get_random_string(8)),
+                auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
+            ))
+        self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
+
+    @patch('requests.sessions.Session.post', return_value=DummyResponse(url='https://example.com/EWS/Exchange.asmx', headers={}, request_headers={}, status_code=501))
+    def test_get_service_authtype_501(self, m):
+        with self.assertRaises(TransportError) as e:
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/EWS/Exchange.asmx',
+                credentials=Credentials(get_random_string(8), get_random_string(8)),
+                auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
+            ))
+        self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
