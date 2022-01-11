@@ -59,11 +59,6 @@ class BaseProtocol:
     USERAGENT = None
 
     def __init__(self, config):
-        from .configuration import Configuration
-        if not isinstance(config, Configuration):
-            raise InvalidTypeError('config', config, Configuration)
-        if not config.service_endpoint:
-            raise AttributeError("'config.service_endpoint' must be set")
         self.config = config
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
@@ -370,8 +365,12 @@ class CachingProtocol(type):
         #
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
-
         config = kwargs['config']
+        from .configuration import Configuration
+        if not isinstance(config, Configuration):
+            raise InvalidTypeError('config', config, Configuration)
+        if not config.service_endpoint:
+            raise AttributeError("'config.service_endpoint' must be set")
         _protocol_cache_key = cls._cache_key(config)
 
         try:

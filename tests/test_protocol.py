@@ -33,10 +33,19 @@ from .common import EWSTest, get_random_datetime_range, get_random_string, RANDO
 
 
 class ProtocolTest(EWSTest):
-
     def test_close_connections_helper(self):
         # Just test that it doesn't break
         close_connections()
+
+    def test_init(self):
+        with self.assertRaises(TypeError) as e:
+            Protocol(config='XXX')
+        self.assertEqual(
+            e.exception.args[0], "'config' 'XXX' must be of type <class 'exchangelib.configuration.Configuration'>"
+        )
+        with self.assertRaises(AttributeError) as e:
+            Protocol(config=Configuration())
+        self.assertEqual(e.exception.args[0], "'config.service_endpoint' must be set")
 
     def test_pickle(self):
         # Test that we can pickle, repr and str Protocols
