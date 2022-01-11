@@ -4,7 +4,7 @@ from unittest.mock import Mock
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
     ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError
 from exchangelib.folders import FolderCollection
-from exchangelib.protocol import FaultTolerance
+from exchangelib.protocol import FaultTolerance, FailFast
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder
 from exchangelib.util import create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
@@ -194,9 +194,18 @@ class ServicesTest(EWSTest):
     def test_handle_backoff(self):
         # Test that we can handle backoff messages
         svc = ResolveNames(self.account.protocol)
+        tmp = svc._response_generator
+        orig_policy = self.account.protocol.config.retry_policy
         try:
-            svc.
-        list(svc._get_elements(create_element('XXX')))
+            # We need to fail fast so we don't end up in an infinite loop
+            self.account.protocol.config.retry_policy = FailFast()
+            svc._response_generator = Mock(side_effect=ErrorServerBusy('XXX', back_off=1))
+            with self.assertRaises(ErrorServerBusy) as e:
+                list(svc._get_elements(create_element('XXX')))
+            self.assertEqual(e.exception.args[0], 'XXX')
+        finally:
+            svc._response_generator = tmp
+            self.account.protocol.config.retry_policy = orig_policy
 
     @requests_mock.mock()
     def test_invalid_soap_response(self, m):
