@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
     ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError, ErrorExceededConnectionCount, \
-    ErrorInternalServerError, ErrorInvalidValueForProperty
+    ErrorInternalServerError, ErrorInvalidValueForProperty, ErrorSchemaValidation
 from exchangelib.folders import FolderCollection
 from exchangelib.protocol import FaultTolerance, FailFast
 from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder, DeleteItem
@@ -118,6 +118,33 @@ class ServicesTest(EWSTest):
         with self.assertRaises(ErrorServerBusy) as e:
             ws.parse(xml)
         self.assertEqual(e.exception.back_off, 297.749)  # Test that we correctly parse the BackOffMilliseconds value
+
+    def test_error_schema_validation(self):
+        # Test that we can parse extra info with ErrorSchemaValidation
+        xml = b'''\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <s:Fault>
+            <faultcode xmlns:a="http://schemas.microsoft.com/exchange/services/2006/types">a:ErrorSchemaValidation</faultcode>
+            <faultstring>XXX</faultstring>
+            <detail>
+                <e:ResponseCode xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">ErrorSchemaValidation</e:ResponseCode>
+                <e:Message xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">YYY</e:Message>
+                <t:MessageXml xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+                    <t:LineNumber>123</t:LineNumber>
+                    <t:LinePosition>456</t:LinePosition>
+                    <t:Violation>ZZZ</t:Violation>
+                </t:MessageXml>
+            </detail>
+        </s:Fault>
+    </s:Body>
+</s:Envelope>'''
+        version = mock_version(build=EXCHANGE_2010)
+        ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
+        with self.assertRaises(ErrorSchemaValidation) as e:
+            ws.parse(xml)
+        self.assertEqual(e.exception.args[0], 'YYY ZZZ (line: 123 position: 456)')
 
     @requests_mock.mock(real_http=True)
     def test_error_too_many_objects_opened(self, m):

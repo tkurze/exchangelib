@@ -468,9 +468,13 @@ class EWSService(metaclass=abc.ABCMeta):
                     pass
                 raise ErrorServerBusy(msg, back_off=back_off)
             if code == 'ErrorSchemaValidation' and msg_xml is not None:
+                line_number = get_xml_attr(msg_xml, f'{{{TNS}}}LineNumber')
+                line_position = get_xml_attr(msg_xml, f'{{{TNS}}}LinePosition')
                 violation = get_xml_attr(msg_xml, f'{{{TNS}}}Violation')
-                if violation is not None:
+                if violation:
                     msg = f'{msg} {violation}'
+                if line_number or line_position:
+                    msg = f'{msg} (line: {line_number} position: {line_position})'
             try:
                 raise vars(errors)[code](msg)
             except KeyError:
