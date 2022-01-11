@@ -15,7 +15,7 @@ from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTim
     Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField, GenericEventListField, \
     DateTimeBackedDateField, TimeDeltaField, TransitionListField, InvalidField, InvalidFieldForVersion
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
-from .version import Version, EXCHANGE_2013, Build
+from .version import EXCHANGE_2013, Build
 
 log = logging.getLogger(__name__)
 
@@ -347,15 +347,11 @@ class EWSElement(metaclass=EWSMeta):
         :param field:
         :param version:
         """
-        if not isinstance(version, Version):
-            raise InvalidTypeError('version', version, Version)
         # Allow both Field and FieldPath instances and string field paths as input
         if isinstance(field, str):
             field = cls.get_field_by_fieldname(fieldname=field)
         elif isinstance(field, FieldPath):
             field = field.field
-        if not isinstance(field, Field):
-            raise InvalidTypeError('field', field, Field)
         cls.get_field_by_fieldname(fieldname=field.name)  # Will raise if field name is invalid
         if not field.supports_version(version):
             # The field exists but is not valid for this version

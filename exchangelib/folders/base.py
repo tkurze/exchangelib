@@ -14,7 +14,7 @@ from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderI
     UserConfigurationName, UserConfigurationNameMNS, EWSMeta
 from ..queryset import SearchableMixIn, DoesNotExist
 from ..util import TNS, require_id, is_iterable
-from ..version import Version, EXCHANGE_2007_SP1, EXCHANGE_2010
+from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010
 
 log = logging.getLogger(__name__)
 
@@ -180,8 +180,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     @classmethod
     def supports_version(cls, version):
         # 'version' is a Version instance, for convenience by callers
-        if not isinstance(version, Version):
-            raise InvalidTypeError('version', version, Version)
         if not cls.supported_from:
             return True
         return version.build >= cls.supported_from
@@ -225,24 +223,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Return non-ID fields of all item classes allowed in this folder type
         fields = set()
         for item_model in cls.supported_item_models:
-            fields.update(
-                set(item_model.supported_fields(version=version))
-            )
+            fields.update(set(item_model.supported_fields(version=version)))
         return fields
 
     def validate_item_field(self, field, version):
-        # Takes a fieldname, Field or FieldPath object pointing to an item field, and checks that it is valid
-        # for the item types supported by this folder.
-
-        # For each field, check if the field is valid for any of the item models supported by this folder
-        for item_model in self.supported_item_models:
-            try:
-                item_model.validate_field(field=field, version=version)
-                break
-            except InvalidField:
-                continue
-        else:
-            raise InvalidField(f"{field!r} is not a valid field on { self.supported_item_models}")
+        FolderCollection(account=self.account, folders=[self]).validate_item_field(field=field, version=version)
 
     def normalize_fields(self, fields):
         # Takes a list of fieldnames, Field or FieldPath objects pointing to item fields. Turns them into FieldPath
@@ -257,8 +242,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             elif isinstance(field_path, Field):
                 field_path = FieldPath(field=field_path)
                 fields[i] = field_path
-            if not isinstance(field_path, FieldPath):
-                raise InvalidTypeError('field_path', field_path, FieldPath)
             if field_path.field.name == 'start':
                 has_start = True
             elif field_path.field.name == 'end':

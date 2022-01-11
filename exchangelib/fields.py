@@ -8,7 +8,7 @@ from .errors import InvalidTypeError
 from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
 from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
     xml_text_to_value, TNS
-from .version import Build, Version, EXCHANGE_2013
+from .version import Build, EXCHANGE_2013
 
 log = logging.getLogger(__name__)
 
@@ -155,13 +155,13 @@ class FieldPath:
     """
 
     def __init__(self, field, label=None, subfield=None):
+        """
+
+        :param field: A FieldURIField or ExtendedPropertyField instance
+        :param label: a str
+        :param subfield: A SubField instance
+        """
         # 'label' and 'subfield' are only used for IndexedField fields
-        if not isinstance(field, (FieldURIField, ExtendedPropertyField)):
-            raise InvalidTypeError('field', field, (FieldURIField, ExtendedPropertyField))
-        if label and not isinstance(label, str):
-            raise InvalidTypeError('label', label, str)
-        if subfield and not isinstance(subfield, SubField):
-            raise InvalidTypeError('subfield', subfield, SubField)
         self.field = field
         self.label = label
         self.subfield = subfield
@@ -234,12 +234,12 @@ class FieldPath:
 
 class FieldOrder:
     """Holds values needed to call server-side sorting on a single field path."""
-
     def __init__(self, field_path, reverse=False):
-        if not isinstance(field_path, FieldPath):
-            raise InvalidTypeError('field_path', field_path, FieldPath)
-        if not isinstance(reverse, bool):
-            raise InvalidTypeError('reverse', reverse, bool)
+        """
+
+        :param field_path: A FieldPath instance
+        :param reverse: A bool
+        """
         self.field_path = field_path
         self.reverse = reverse
 
@@ -331,8 +331,6 @@ class Field(metaclass=abc.ABCMeta):
 
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
-        if not isinstance(version, Version):
-            raise InvalidTypeError('version', version, Version)
         if self.supported_from and version.build < self.supported_from:
             return False
         if self.deprecated_from and version.build >= self.deprecated_from:
@@ -891,8 +889,6 @@ class Choice:
 
     def supports_version(self, version):
         # 'version' is a Version instance, for convenience by callers
-        if not isinstance(version, Version):
-            raise InvalidTypeError('version', version, Version)
         if not self.supported_from:
             return True
         return version.build >= self.supported_from

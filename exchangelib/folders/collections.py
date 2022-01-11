@@ -125,7 +125,8 @@ class FolderCollection(SearchableMixIn):
         return tuple(item_model for folder in self.folders for item_model in folder.supported_item_models)
 
     def validate_item_field(self, field, version):
-        # For each field, check if the field is valid for any of the item models supported by this folder
+        # Takes a fieldname, Field or FieldPath object pointing to an item field, and checks that it is valid
+        # for the item types supported by this folder collection.
         for item_model in self.supported_item_models:
             try:
                 item_model.validate_field(field=field, version=version)

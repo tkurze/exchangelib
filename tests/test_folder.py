@@ -67,6 +67,27 @@ class FolderTest(EWSTest):
         with self.assertRaises(ValueError):
             self.account.root.get_default_folder(Folder)
 
+        with self.assertRaises(ValueError) as e:
+            Folder(root=self.account.public_folders_root, parent=self.account.inbox)
+        self.assertEqual(e.exception.args[0], "'parent.root' must match 'root'")
+        with self.assertRaises(ValueError) as e:
+            Folder(parent=self.account.inbox, parent_folder_id='XXX')
+        self.assertEqual(e.exception.args[0], "'parent_folder_id' must match 'parent' ID")
+        with self.assertRaises(TypeError) as e:
+            Folder(root='XXX').clean()
+        self.assertEqual(
+            e.exception.args[0], "'root' 'XXX' must be of type <class 'exchangelib.folders.roots.RootOfHierarchy'>"
+        )
+        with self.assertRaises(ValueError) as e:
+            Folder().save(update_fields=['name'])
+        self.assertEqual(e.exception.args[0], "'update_fields' is only valid for updates")
+        with self.assertRaises(ValueError) as e:
+            Messages().validate_item_field('XXX', version=self.account.version)
+        self.assertIn("'XXX' is not a valid field on", e.exception.args[0])
+        with self.assertRaises(ValueError) as e:
+            Folder.item_model_from_tag('XXX')
+        self.assertEqual(e.exception.args[0], 'Item type XXX was unexpected in a Folder folder')
+
     def test_public_folders_root(self):
         # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
         self.assertGreaterEqual(
@@ -371,6 +392,9 @@ class FolderTest(EWSTest):
         self.account.calendar.parent = None
         self.account.calendar.parent = parent
 
+        # Test self-referencing folder
+        self.assertIsNone(Folder(id=self.account.inbox.id, parent=self.account.inbox).parent)
+
     def test_children(self):
         self.assertIn(
             'Top of Information Store',
@@ -584,6 +608,12 @@ class FolderTest(EWSTest):
         f.name = get_random_string(16)
         f.save()
         f.delete()
+
+        self.assertEqual(Folder().has_distinguished_name, None)
+        self.assertEqual(Inbox(name='XXX').has_distinguished_name, False)
+        self.assertEqual(Inbox(name='Inbox').has_distinguished_name, True)
+        self.assertEqual(Inbox(is_distinguished=False).is_deletable, True)
+        self.assertEqual(Inbox(is_distinguished=True).is_deletable, False)
 
     def test_non_deletable_folders(self):
         for f in self.account.root.walk():
