@@ -10,11 +10,12 @@ try:
 except ImportError:
     from backports import zoneinfo
 
+from oauthlib.oauth2 import InvalidClientIdError, InvalidGrantError
 import psutil
 import requests_mock
 
 from exchangelib import close_connections
-from exchangelib.credentials import Credentials
+from exchangelib.credentials import Credentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
 from exchangelib.configuration import Configuration
 from exchangelib.items import CalendarItem, SEARCH_SCOPE_CHOICES
 from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
@@ -25,7 +26,7 @@ from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, Fa
 from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
     SetUserOofSettings, ExpandDL
 from exchangelib.settings import OofSettings
-from exchangelib.transport import NOAUTH, NTLM
+from exchangelib.transport import NOAUTH, NTLM, OAUTH2
 from exchangelib.util import DummyResponse
 from exchangelib.version import Build, Version, EXCHANGE_2010_SP1
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
@@ -840,3 +841,29 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                 auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
             ))
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
+
+    def test_noauth_session(self):
+        self.assertEqual(
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/Foo.asmx', credentials=None,
+                auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast()
+            )).create_session().auth,
+            None
+        )
+
+    def test_oauth2_session(self):
+        # Only test failure cases until we have working OAuth2 credentials
+        with self.assertRaises(InvalidClientIdError):
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/Foo.asmx',
+                credentials=OAuth2Credentials('XXX', 'YYY', 'ZZZZ'),
+                auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
+            )).create_session()
+        with self.assertRaises(InvalidGrantError):
+            Protocol(config=Configuration(
+                service_endpoint='https://example.com/Foo.asmx',
+                credentials=OAuth2AuthorizationCodeCredentials(
+                    client_id='WWW', client_secret='XXX', authorization_code='YYY'
+                ),
+                auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
+            )).create_session()
