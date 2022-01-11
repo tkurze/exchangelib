@@ -1,5 +1,8 @@
+from unittest.mock import Mock
+
 from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
-    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists, ErrorFolderNotFound
+    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists, ErrorFolderNotFound, \
+    ErrorCannotEmptyFolder
 from exchangelib.extended_properties import ExtendedProperty
 from exchangelib.items import Message
 from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
@@ -574,6 +577,20 @@ class FolderTest(EWSTest):
 
         with self.assertRaises(ErrorDeleteDistinguishedFolder):
             self.account.inbox.delete()
+
+    def test_wipe_without_empty(self):
+        name = get_random_string(16)
+        f = Messages(parent=self.account.inbox, name=name).save()
+        Messages(parent=f, name=get_random_string(16)).save()
+        self.assertEqual(len(list(f.children)), 1)
+        tmp = f.empty
+        try:
+            f.empty = Mock(side_effect=ErrorCannotEmptyFolder('XXX'))
+            f.wipe()
+        finally:
+            f.empty = tmp
+
+        self.assertEqual(len(list(f.children)), 0)
 
     def test_move(self):
         f1 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
