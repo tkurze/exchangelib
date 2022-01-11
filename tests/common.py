@@ -99,7 +99,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
     @classmethod
     def get_account(cls):
         return Account(primary_smtp_address=cls.settings['account'], access_type=DELEGATE, config=cls.config,
-                              locale='da_DK', default_timezone=cls.tz)
+                       locale='da_DK', default_timezone=cls.tz)
 
     def setUp(self):
         super().setUp()

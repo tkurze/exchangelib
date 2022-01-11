@@ -10,7 +10,7 @@ try:
 except ImportError:
     from backports import zoneinfo
 
-from oauthlib.oauth2 import InvalidClientIdError, InvalidGrantError
+from oauthlib.oauth2 import InvalidClientIdError
 import psutil
 import requests_mock
 

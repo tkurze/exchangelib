@@ -42,7 +42,7 @@ class ServicesTest(EWSTest):
           <m:ResponseCode>ErrorInternalServerError</m:ResponseCode>
           <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
           <m:MessageXml>
-            <t:Value Name="InnerErrorMessageText">Cannot delete message because the destination folder is out of quota.</t:Value>
+            <t:Value Name="InnerErrorMessageText">Cannot delete message because the folder is out of quota.</t:Value>
             <t:Value Name="InnerErrorResponseCode">ErrorQuotaExceededOnDelete</t:Value>
             <t:Value Name="InnerErrorDescriptiveLinkKey">0</t:Value>
           </m:MessageXml>
@@ -57,7 +57,7 @@ class ServicesTest(EWSTest):
         self.assertEqual(
             e.exception.args[0],
             "An internal server error occurred. The operation failed. (inner error: "
-            "ErrorQuotaExceededOnDelete('Cannot delete message because the destination folder is out of quota.'))"
+            "ErrorQuotaExceededOnDelete('Cannot delete message because the folder is out of quota.'))"
         )
 
     def test_invalid_value_extras(self):
@@ -126,10 +126,12 @@ class ServicesTest(EWSTest):
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
         <s:Fault>
-            <faultcode xmlns:a="http://schemas.microsoft.com/exchange/services/2006/types">a:ErrorSchemaValidation</faultcode>
+            <faultcode xmlns:a="http://schemas.microsoft.com/exchange/services/2006/types">a:ErrorSchemaValidation
+            </faultcode>
             <faultstring>XXX</faultstring>
             <detail>
-                <e:ResponseCode xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">ErrorSchemaValidation</e:ResponseCode>
+                <e:ResponseCode xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">
+                ErrorSchemaValidation</e:ResponseCode>
                 <e:Message xmlns:e="http://schemas.microsoft.com/exchange/services/2006/errors">YYY</e:Message>
                 <t:MessageXml xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
                     <t:LineNumber>123</t:LineNumber>
@@ -304,7 +306,6 @@ class ServicesTest(EWSTest):
         # Test server repeatedly returning ErrorExceededConnectionCount
         svc = ResolveNames(self.account.protocol)
         tmp = svc._get_soap_messages
-        orig_policy = self.account.protocol.config.retry_policy
         try:
             # We need to fail fast so we don't end up in an infinite loop
             svc._get_soap_messages = Mock(side_effect=ErrorExceededConnectionCount('XXX'))
