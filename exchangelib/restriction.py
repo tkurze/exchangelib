@@ -534,16 +534,13 @@ class Restriction:
     RESTRICTION_TYPES = (FOLDERS, ITEMS)
 
     def __init__(self, q, folders, applies_to):
-        if not isinstance(q, Q):
-            raise InvalidTypeError('q', q, Q)
+        """
+        :param q: A Q instance
+        :param folders: A list of BaseFolder instances
+        :param applies_to: A member of the RESTRICTION_TYPES eum
+        """
         if q.is_empty():
             raise ValueError("Q object must not be empty")
-        from .folders import BaseFolder
-        for folder in folders:
-            if not isinstance(folder, BaseFolder):
-                raise InvalidTypeError('folder', folder, BaseFolder)
-        if applies_to not in self.RESTRICTION_TYPES:
-            raise InvalidEnumValue('applies_to', applies_to, self.RESTRICTION_TYPES)
         self.q = q
         self.folders = folders
         self.applies_to = applies_to
