@@ -849,8 +849,6 @@ def to_item_id(item, item_cls):
             return item
     if isinstance(item, (tuple, list)):
         return item_cls(*item)
-    if isinstance(item, dict):
-        return item_cls(**item)
     return item_cls(item.id, item.changekey)
 
 
