@@ -311,14 +311,15 @@ def get_random_bytes(length):
     return bytes(get_random_int(max_val=255) for _ in range(length))
 
 
-def get_random_url():
-    path_len = random.randint(1, 16)
+def get_random_hostname():
     domain_len = random.randint(1, 30)
     tld_len = random.randint(2, 4)
-    return 'http://%s.%s/%s.html' % tuple(map(
-        lambda i: get_random_string(i, spaces=False, special=False).lower(),
-        (domain_len, tld_len, path_len)
-    ))
+    return '%s.%s' % tuple(get_random_string(i, spaces=False, special=False).lower() for i in (domain_len, tld_len))
+
+
+def get_random_url():
+    path_len = random.randint(1, 16)
+    return 'http://%s/%s.html' % (get_random_hostname(), get_random_string(path_len, spaces=False, special=False))
 
 
 def get_random_email():

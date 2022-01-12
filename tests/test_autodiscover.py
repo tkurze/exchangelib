@@ -21,7 +21,7 @@ from exchangelib.protocol import FaultTolerance, FailFast
 from exchangelib.transport import NTLM, NOAUTH
 from exchangelib.util import get_domain, ParseError
 from exchangelib.version import Version, EXCHANGE_2013
-from .common import EWSTest, get_random_string
+from .common import EWSTest, get_random_string, get_random_hostname
 
 
 class AutodiscoverTest(EWSTest):
@@ -87,16 +87,20 @@ class AutodiscoverTest(EWSTest):
     </Response>
 </Autodiscover>'''.encode()
 
+    @staticmethod
+    def get_test_protocol(**kwargs):
+        return AutodiscoverProtocol(config=Configuration(
+            service_endpoint=kwargs.get('service_endpoint', 'https://example.com/Autodiscover/Autodiscover.xml'),
+            credentials=kwargs.get('credentials', Credentials(get_random_string(8), get_random_string(8))),
+            auth_type=kwargs.get('auth_type', NTLM),
+            retry_policy=kwargs.get('retry_policy', FailFast()),
+        ))
+
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_magic(self, m):
         # Just test we don't fail when calling repr() and str(). Insert a dummy cache entry for testing
-        c = Credentials(get_random_string(8), get_random_string(8))
-        autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
-            service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
-            credentials=c,
-            auth_type=NTLM,
-            retry_policy=FailFast(),
-        ))
+        p = self.get_test_protocol()
+        autodiscover_cache[(p.config.server, p.config.credentials)] = p
         self.assertEqual(len(autodiscover_cache), 1)
         str(autodiscover_cache)
         repr(autodiscover_cache)
@@ -134,12 +138,11 @@ class AutodiscoverTest(EWSTest):
         # Autodiscovery may take a long time. Prime the cache with the autodiscover server from the config file
         ad_endpoint = f"https://{self.settings['autodiscover_server']}/Autodiscover/Autodiscover.xml"
         cache_key = (self.domain, self.account.protocol.credentials)
-        autodiscover_cache[cache_key] = AutodiscoverProtocol(config=Configuration(
+        autodiscover_cache[cache_key] = self.get_test_protocol(
             service_endpoint=ad_endpoint,
             credentials=self.account.protocol.credentials,
-            auth_type=NTLM,
             retry_policy=self.retry_policy,
-        ))
+        )
         with self.assertRaises(ErrorNonExistentMailbox):
             discover(
                 email='XXX.' + self.account.primary_smtp_address,
@@ -160,28 +163,18 @@ class AutodiscoverTest(EWSTest):
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_close_autodiscover_connections(self, m):
         # A live test that we can close TCP connections
-        c = Credentials(get_random_string(8), get_random_string(8))
-        autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
-            service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
-            credentials=c,
-            auth_type=NTLM,
-            retry_policy=FailFast(),
-        ))
+        p = self.get_test_protocol()
+        autodiscover_cache[(p.config.server, p.config.credentials)] = p
         self.assertEqual(len(autodiscover_cache), 1)
         close_connections()
 
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_autodiscover_direct_gc(self, m):
         # Test garbage collection of the autodiscover cache
-        c = Credentials(get_random_string(8), get_random_string(8))
-        autodiscover_cache[('example.com', c)] = AutodiscoverProtocol(config=Configuration(
-            service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
-            credentials=c,
-            auth_type=NTLM,
-            retry_policy=FailFast(),
-        ))
+        p = self.get_test_protocol()
+        autodiscover_cache[(p.config.server, p.config.credentials)] = p
         self.assertEqual(len(autodiscover_cache), 1)
-        autodiscover_cache.__del__()
+        autodiscover_cache.__del__()  # Don't use del() because that would remove the global object
 
     @requests_mock.mock(real_http=False)
     def test_autodiscover_cache(self, m):
@@ -203,12 +196,8 @@ class AutodiscoverTest(EWSTest):
             True
         ), autodiscover_cache)
         # Poison the cache with a failing autodiscover endpoint. discover() must handle this and rebuild the cache
-        autodiscover_cache[discovery._cache_key] = AutodiscoverProtocol(config=Configuration(
-            service_endpoint='https://example.com/Autodiscover/Autodiscover.xml',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM,
-            retry_policy=FailFast(),
-        ))
+        p = self.get_test_protocol()
+        autodiscover_cache[discovery._cache_key] = p
         m.post('https://example.com/Autodiscover/Autodiscover.xml', status_code=404)
         discovery.discover()
         self.assertIn(discovery._cache_key, autodiscover_cache)
@@ -447,7 +436,7 @@ class AutodiscoverTest(EWSTest):
         m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
 
         tmp = d._get_srv_records
-        d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, f'{get_random_string(8)}.com')])
+        d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, get_random_hostname())])
         try:
             with self.assertRaises(AutoDiscoverFailed):
                 # Fails in step 4 with invalid response
@@ -462,7 +451,7 @@ class AutodiscoverTest(EWSTest):
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
 
         m.post(self.dummy_ad_endpoint, status_code=200,
-               content=self.redirect_url_xml(f'https://{get_random_string(8)}.com/EWS/Exchange.asmx'))
+               content=self.redirect_url_xml(f'https://{get_random_hostname()}/EWS/Exchange.asmx'))
         with self.assertRaises(AutoDiscoverFailed):
             # Fails in step 5 with invalid redirect URL
             ad_response, _ = d.discover()
@@ -740,7 +729,7 @@ class AutodiscoverTest(EWSTest):
         self.assertFalse(a._redirect_url_is_valid('http://example.com'))
 
         # Does not resolve with DNS
-        url = f'https://{get_random_string(8)}.com'
+        url = f'https://{get_random_hostname()}'
         m.head(url, status_code=200)
         self.assertFalse(a._redirect_url_is_valid(url))
 
