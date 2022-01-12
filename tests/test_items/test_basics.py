@@ -13,7 +13,7 @@ from exchangelib.extended_properties import ExternId
 from exchangelib.fields import TextField, BodyField, FieldPath, CultureField, IdField, ChoiceField, AttachmentField,\
     BooleanField
 from exchangelib.indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
-from exchangelib.items import CalendarItem, Contact, Task, DistributionList, BaseItem
+from exchangelib.items import CalendarItem, Contact, Task, DistributionList, BaseItem, Item
 from exchangelib.properties import Mailbox, Attendee
 from exchangelib.queryset import Q
 from exchangelib.util import value_to_xml_text
@@ -340,6 +340,10 @@ class CommonItemTest(BaseItemTest):
                 continue
             if issubclass(f.value_cls, SingleFieldIndexedElement):
                 continue
+            # This test is exceptionally slow. Only test list fields that are not also found on the base Item class
+            if self.ITEM_CLASS != Item:
+                if f.name in Item.FIELDS:
+                    continue
             fields.append(f)
         if not fields:
             self.skipTest('No matching list fields on this model')
