@@ -26,6 +26,12 @@ class AttachmentId(EWSElement):
     root_id = IdField(field_uri=ROOT_ID_ATTR)
     root_changekey = IdField(field_uri=ROOT_CHANGEKEY_ATTR)
 
+    def __init__(self, *args, **kwargs):
+        if not kwargs:
+            # Allow to set attributes without keyword
+            kwargs = dict(zip(self._slots_keys, args))
+        super().__init__(**kwargs)
+
 
 class Attachment(EWSElement, metaclass=EWSMeta):
     """Base class for FileAttachment and ItemAttachment."""

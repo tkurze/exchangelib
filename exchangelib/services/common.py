@@ -843,7 +843,7 @@ class EWSPagingService(EWSAccountService):
 def to_item_id(item, item_cls):
     # Coerce a tuple, dict or object to an 'item_cls' instance. Used to create [Parent][Item|Folder]Id instances from a
     # variety of input.
-    if isinstance(item, BaseItemId):
+    if isinstance(item, (BaseItemId, AttachmentId)):
         # Allow any BaseItemId subclass to pass unaltered
         return item
     if isinstance(item, (BaseFolder, BaseItem)):
@@ -851,7 +851,7 @@ def to_item_id(item, item_cls):
             return item.to_id()
         except ValueError:
             return item
-    if isinstance(item, (tuple, list)):
+    if isinstance(item, (str, tuple, list)):
         return item_cls(*item)
     return item_cls(item.id, item.changekey)
 
@@ -873,26 +873,26 @@ def shape_element(tag, shape, additional_fields, version):
     return shape_elem
 
 
-def folder_ids_element(folders, version, tag='m:FolderIds'):
-    folder_ids = create_element(tag)
-    for folder in folders:
-        set_xml_value(folder_ids, to_item_id(folder, FolderId), version=version)
-    return folder_ids
-
-
-def item_ids_element(items, version, tag='m:ItemIds'):
+def _ids_element(items, item_cls, version, tag):
     item_ids = create_element(tag)
     for item in items:
-        set_xml_value(item_ids, to_item_id(item, ItemId), version=version)
+        if isinstance(item, Exception):
+            # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
+            continue
+        set_xml_value(item_ids, to_item_id(item, item_cls), version=version)
     return item_ids
 
 
+def folder_ids_element(folders, version, tag='m:FolderIds'):
+    return _ids_element(folders, FolderId, version, tag)
+
+
+def item_ids_element(items, version, tag='m:ItemIds'):
+    return _ids_element(items, ItemId, version, tag)
+
+
 def attachment_ids_element(items, version, tag='m:AttachmentIds'):
-    attachment_ids = create_element(tag)
-    for item in items:
-        attachment_id = item if isinstance(item, AttachmentId) else AttachmentId(id=item)
-        set_xml_value(attachment_ids, attachment_id, version=version)
-    return attachment_ids
+    return _ids_element(items, AttachmentId, version, tag)
 
 
 def parse_folder_elem(elem, folder, account):
