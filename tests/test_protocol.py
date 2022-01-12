@@ -35,21 +35,29 @@ from .common import EWSTest, get_random_datetime_range, get_random_string, RANDO
 
 
 class ProtocolTest(EWSTest):
-    def test_magic(self):
-        o = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
+    @staticmethod
+    def get_test_protocol(**kwargs):
+        return Protocol(config=Configuration(
+            server=kwargs.get('server'),
+            service_endpoint=kwargs.get('service_endpoint', f'https://{get_random_string(4)}.example.com/Foo.asmx'),
+            credentials=kwargs.get('credentials', Credentials(get_random_string(8), get_random_string(8))),
+            auth_type=kwargs.get('auth_type', NTLM),
+            version=kwargs.get('version', Version(Build(15, 1))),
+            retry_policy=kwargs.get('retry_policy', FailFast()),
+            max_connections=kwargs.get('max_connections'),
         ))
-        self.assertEqual(str(o), '''\
-EWS url: https://example.com/Foo.asmx
+
+    def test_magic(self):
+        p = self.get_test_protocol()
+        self.assertEqual(str(p), f'''\
+EWS url: {p.service_endpoint}
 Product name: Microsoft Exchange Server 2016
 EWS API version: Exchange2016
 Build number: 15.1.0.0
 EWS auth: NTLM''')
-        o.config.version = None
-        self.assertEqual(str(o), '''\
-EWS url: https://example.com/Foo.asmx
+        p.config.version = None
+        self.assertEqual(str(p), f'''\
+EWS url: {p.service_endpoint}
 Product name: [unknown]
 EWS API version: [unknown]
 Build number: [unknown]
@@ -71,11 +79,7 @@ EWS auth: NTLM''')
 
     def test_pickle(self):
         # Test that we can pickle, repr and str Protocols
-        o = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
-        ))
+        o = self.get_test_protocol()
         pickled_o = pickle.dumps(o)
         unpickled_o = pickle.loads(pickled_o)
         self.assertIsInstance(unpickled_o, type(o))
@@ -84,11 +88,7 @@ EWS auth: NTLM''')
 
     @requests_mock.mock()
     def test_session(self, m):
-        protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
-        ))
+        protocol = self.get_test_protocol()
         session = protocol.create_session()
         new_session = protocol.renew_session(session)
         self.assertNotEqual(id(session), id(new_session))
@@ -96,12 +96,11 @@ EWS auth: NTLM''')
     @requests_mock.mock()
     def test_protocol_instance_caching(self, m):
         # Verify that we get the same Protocol instance for the same combination of (endpoint, credentials)
-        user, password = get_random_string(8), get_random_string(8)
         config = Configuration(
-            service_endpoint='https://example.com/Foo.asmx', credentials=Credentials(user, password),
+            service_endpoint='https://example.com/Foo.asmx',
+            credentials=Credentials(get_random_string(8), get_random_string(8)),
             auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
         )
-
         # Test CachingProtocol.__getitem__
         with self.assertRaises(KeyError):
             _ = Protocol[config]
@@ -138,12 +137,7 @@ EWS auth: NTLM''')
             return len([p for p in proc.connections() if p.raddr[0] in ip_addresses])
 
         self.assertGreater(len(ip_addresses), 0)
-        protocol = Protocol(config=Configuration(
-            service_endpoint='http://httpbin.org',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast(),
-            max_connections=3
-        ))
+        protocol = self.get_test_protocol(service_endpoint='http://httpbin.org', auth_type=NOAUTH, max_connections=3)
         # Merely getting a session should not create connections
         session = protocol.get_session()
         self.assertEqual(conn_count(), 0)
@@ -174,12 +168,7 @@ EWS auth: NTLM''')
     def test_decrease_poolsize(self):
         # Test increasing and decreasing the pool size
         max_connections = 3
-        protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast(),
-            max_connections=max_connections,
-        ))
+        protocol = self.get_test_protocol(max_connections=max_connections)
         self.assertEqual(protocol._session_pool.qsize(), 0)
         self.assertEqual(protocol.session_pool_size, 0)
         protocol.increase_poolsize()
@@ -196,12 +185,7 @@ EWS auth: NTLM''')
         self.assertEqual(protocol._session_pool.qsize(), 1)
 
     def test_max_usage_count(self):
-        protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast(),
-            max_connections=1
-        ))
+        protocol = self.get_test_protocol(max_connections=1)
         session = protocol.get_session()
         protocol.release_session(session)
         self.assertEqual(session.usage_count, 1)
@@ -782,12 +766,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
     def test_del_on_error(self):
         # Test that __del__ can handle exceptions on close()
         tmp = Protocol.close
-        protocol = Protocol(config=Configuration(
-            service_endpoint='http://foo.example.org',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast(),
-            max_connections=3
-        ))
+        protocol = self.get_test_protocol()
         Protocol.close = Mock(side_effect=Exception('XXX'))
         with self.assertRaises(Exception):
             protocol.close()
@@ -796,13 +775,9 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
 
     @requests_mock.mock()
     def test_version_guess(self, m):
-        protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/EWS/Exchange.asmx',
-            credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
-        ))
+        protocol = self.get_test_protocol()
         # Test that we can get the version even on error responses
-        m.post('https://example.com/EWS/Exchange.asmx', status_code=200, content=b'''\
+        m.post(protocol.service_endpoint, status_code=200, content=b'''\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -827,7 +802,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
         self.assertEqual(protocol.version.build, Build(15, 1, 2345, 6789))
 
         # Test exception when there are no version headers
-        m.post('https://example.com/EWS/Exchange.asmx', status_code=200, content=b'''\
+        m.post(protocol.service_endpoint, status_code=200, content=b'''\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -856,46 +831,27 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
     @patch('requests.sessions.Session.post', side_effect=ConnectionResetError('XXX'))
     def test_get_service_authtype(self, m):
         with self.assertRaises(TransportError) as e:
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/EWS/Exchange.asmx',
-                credentials=Credentials(get_random_string(8), get_random_string(8)),
-                auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
-            ))
+            self.get_test_protocol(auth_type=None)
         self.assertEqual(e.exception.args[0], 'XXX')
 
         with self.assertRaises(RateLimitError) as e:
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/EWS/Exchange.asmx',
-                credentials=Credentials(get_random_string(8), get_random_string(8)),
-                auth_type=None, version=Version(Build(15, 1)), retry_policy=FaultTolerance(max_wait=0.5)
-            ))
+            self.get_test_protocol(auth_type=None, retry_policy=FaultTolerance(max_wait=0.5))
         self.assertEqual(e.exception.args[0], 'Max timeout reached')
 
     @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=401))
     def test_get_service_authtype_401(self, m):
         with self.assertRaises(TransportError) as e:
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/EWS/Exchange.asmx',
-                credentials=Credentials(get_random_string(8), get_random_string(8)),
-                auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
-            ))
+            self.get_test_protocol(auth_type=None)
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
 
     @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=501))
     def test_get_service_authtype_501(self, m):
         with self.assertRaises(TransportError) as e:
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/EWS/Exchange.asmx',
-                credentials=Credentials(get_random_string(8), get_random_string(8)),
-                auth_type=None, version=Version(Build(15, 1)), retry_policy=FailFast()
-            ))
+            self.get_test_protocol(auth_type=None)
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
 
     def test_create_session_failure(self):
-        protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx', credentials=None,
-            auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast()
-        ))
+        protocol = self.get_test_protocol(auth_type=NOAUTH, credentials=None)
         with self.assertRaises(ValueError) as e:
             protocol.config.auth_type = None
             protocol.create_session()
@@ -907,29 +863,17 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
         self.assertEqual(e.exception.args[0], "Auth type 'NTLM' requires credentials")
 
     def test_noauth_session(self):
-        self.assertEqual(
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/Foo.asmx', credentials=None,
-                auth_type=NOAUTH, version=Version(Build(15, 1)), retry_policy=FailFast()
-            )).create_session().auth,
-            None
-        )
+        self.assertEqual(self.get_test_protocol(auth_type=NOAUTH, credentials=None).create_session().auth, None)
 
     def test_oauth2_session(self):
         # Only test failure cases until we have working OAuth2 credentials
         with self.assertRaises(InvalidClientIdError):
-            Protocol(config=Configuration(
-                service_endpoint='https://example.com/Foo.asmx',
-                credentials=OAuth2Credentials('XXX', 'YYY', 'ZZZZ'),
-                auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
-            )).create_session()
+            self.get_test_protocol(
+                auth_type=OAUTH2, credentials=OAuth2Credentials('XXX', 'YYY', 'ZZZZ')
+            ).create_session()
 
-        protocol = Protocol(config=Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
-            credentials=OAuth2AuthorizationCodeCredentials(
-                client_id='WWW', client_secret='XXX', authorization_code='YYY', access_token={'access_token': 'ZZZ'}
-            ),
-            auth_type=OAUTH2, version=Version(Build(15, 1)), retry_policy=FailFast()
+        protocol = self.get_test_protocol(auth_type=OAUTH2, credentials=OAuth2AuthorizationCodeCredentials(
+            client_id='WWW', client_secret='XXX', authorization_code='YYY', access_token={'access_token': 'ZZZ'}
         ))
         session = protocol.create_session()
         protocol.refresh_credentials(session)
