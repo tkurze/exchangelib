@@ -3,6 +3,7 @@ import time
 from urllib.parse import urlparse
 
 import dns.resolver
+import dns.name
 from cached_property import threaded_cached_property
 
 from .cache import autodiscover_cache
@@ -344,7 +345,7 @@ class Autodiscovery:
         log.debug('Checking if %s can be looked up in DNS', hostname)
         try:
             self.resolver.resolve(hostname)
-        except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+        except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.name.EmptyLabel):
             return False
         return True
 
