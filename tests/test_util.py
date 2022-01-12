@@ -82,26 +82,28 @@ class UtilTest(EWSTest):
 
     @requests_mock.mock()
     def test_get_redirect_url(self, m):
-        m.get('https://httpbin.org/redirect-to', status_code=302, headers={'location': 'https://example.com/'})
-        r = requests.get('https://httpbin.org/redirect-to?url=https://example.com/', allow_redirects=False)
+        hostname = 'httpbin.org'
+        url = f'https://{hostname}/redirect-to'
+        m.get(url, status_code=302, headers={'location': 'https://example.com/'})
+        r = requests.get(f'{url}?url=https://example.com/', allow_redirects=False)
         self.assertEqual(get_redirect_url(r), 'https://example.com/')
 
-        m.get('https://httpbin.org/redirect-to', status_code=302, headers={'location': 'http://example.com/'})
-        r = requests.get('https://httpbin.org/redirect-to?url=http://example.com/', allow_redirects=False)
+        m.get(url, status_code=302, headers={'location': 'http://example.com/'})
+        r = requests.get(f'{url}?url=http://example.com/', allow_redirects=False)
         self.assertEqual(get_redirect_url(r), 'http://example.com/')
 
-        m.get('https://httpbin.org/redirect-to', status_code=302, headers={'location': '/example'})
-        r = requests.get('https://httpbin.org/redirect-to?url=/example', allow_redirects=False)
-        self.assertEqual(get_redirect_url(r), 'https://httpbin.org/example')
+        m.get(url, status_code=302, headers={'location': '/example'})
+        r = requests.get(f'{url}?url=/example', allow_redirects=False)
+        self.assertEqual(get_redirect_url(r), f'https://{hostname}/example')
 
-        m.get('https://httpbin.org/redirect-to', status_code=302, headers={'location': 'https://example.com'})
+        m.get(url, status_code=302, headers={'location': 'https://example.com'})
         with self.assertRaises(RelativeRedirect):
-            r = requests.get('https://httpbin.org/redirect-to?url=https://example.com', allow_redirects=False)
+            r = requests.get(f'{url}?url=https://example.com', allow_redirects=False)
             get_redirect_url(r, require_relative=True)
 
-        m.get('https://httpbin.org/redirect-to', status_code=302, headers={'location': '/example'})
+        m.get(url, status_code=302, headers={'location': '/example'})
         with self.assertRaises(RelativeRedirect):
-            r = requests.get('https://httpbin.org/redirect-to?url=/example', allow_redirects=False)
+            r = requests.get(f'{url}?url=/example', allow_redirects=False)
             get_redirect_url(r, allow_relative=False)
 
     def test_to_xml(self):

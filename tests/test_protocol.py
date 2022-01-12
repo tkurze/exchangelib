@@ -130,30 +130,32 @@ EWS auth: NTLM''')
     def test_close(self):
         # Don't use example.com here - it does not resolve or answer on all ISPs
         proc = psutil.Process()
+        hostname = 'httpbin.org'
         ip_addresses = {info[4][0] for info in socket.getaddrinfo(
-            'httpbin.org', 80, socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_IP
+            hostname, 80, socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_IP
         )}
 
         def conn_count():
             return len([p for p in proc.connections() if p.raddr[0] in ip_addresses])
 
         self.assertGreater(len(ip_addresses), 0)
-        protocol = self.get_test_protocol(service_endpoint='http://httpbin.org', auth_type=NOAUTH, max_connections=3)
+        url = f'http://{hostname}'
+        protocol = self.get_test_protocol(service_endpoint=url, auth_type=NOAUTH, max_connections=3)
         # Merely getting a session should not create connections
         session = protocol.get_session()
         self.assertEqual(conn_count(), 0)
         # Open one URL - we have 1 connection
-        session.get('http://httpbin.org')
+        session.get(url)
         self.assertEqual(conn_count(), 1)
         # Open the same URL - we should still have 1 connection
-        session.get('http://httpbin.org')
+        session.get(url)
         self.assertEqual(conn_count(), 1)
 
         # Open some more connections
         s2 = protocol.get_session()
-        s2.get('http://httpbin.org')
+        s2.get(url)
         s3 = protocol.get_session()
-        s3.get('http://httpbin.org')
+        s3.get(url)
         self.assertEqual(conn_count(), 3)
 
         # Releasing the sessions does not close the connections
