@@ -831,31 +831,27 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
     @patch('requests.sessions.Session.post', side_effect=ConnectionResetError('XXX'))
     def test_get_service_authtype(self, m):
         with self.assertRaises(TransportError) as e:
-            self.get_test_protocol(auth_type=None)
+            _ = self.get_test_protocol(auth_type=None).auth_type
         self.assertEqual(e.exception.args[0], 'XXX')
 
         with self.assertRaises(RateLimitError) as e:
-            self.get_test_protocol(auth_type=None, retry_policy=FaultTolerance(max_wait=0.5))
+            _ = self.get_test_protocol(auth_type=None, retry_policy=FaultTolerance(max_wait=0.5)).auth_type
         self.assertEqual(e.exception.args[0], 'Max timeout reached')
 
     @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=401))
     def test_get_service_authtype_401(self, m):
         with self.assertRaises(TransportError) as e:
-            self.get_test_protocol(auth_type=None)
+            _ = self.get_test_protocol(auth_type=None).auth_type
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
 
     @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=501))
     def test_get_service_authtype_501(self, m):
         with self.assertRaises(TransportError) as e:
-            self.get_test_protocol(auth_type=None)
+            _ = self.get_test_protocol(auth_type=None).auth_type
         self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
 
     def test_create_session_failure(self):
         protocol = self.get_test_protocol(auth_type=NOAUTH, credentials=None)
-        with self.assertRaises(ValueError) as e:
-            protocol.config.auth_type = None
-            protocol.create_session()
-        self.assertEqual(e.exception.args[0], 'Cannot create session without knowing the auth type')
         with self.assertRaises(ValueError) as e:
             protocol.config.auth_type = NTLM
             protocol.credentials = None

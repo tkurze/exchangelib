@@ -266,6 +266,9 @@ class Version:
                           api_version_from_server, api_version_from_server)
         return cls(build=build, api_version=api_version_from_server)
 
+    def copy(self):
+        return self.__class__(build=self.build, api_version=self.api_version)
+
     def __eq__(self, other):
         if self.api_version != other.api_version:
             return False

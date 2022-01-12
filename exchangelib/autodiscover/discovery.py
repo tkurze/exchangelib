@@ -19,9 +19,12 @@ log = logging.getLogger(__name__)
 
 
 def discover(email, credentials=None, auth_type=None, retry_policy=None):
-    return Autodiscovery(
-        email=email, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
+    ad_response, protocol = Autodiscovery(
+        email=email, credentials=credentials
     ).discover()
+    protocol.config.auth_typ = auth_type
+    protocol.config.retry_policy = retry_policy
+    return ad_response, protocol
 
 
 class SrvRecord:
@@ -74,19 +77,15 @@ class Autodiscovery:
         'timeout': AutodiscoverProtocol.TIMEOUT,
     }
 
-    def __init__(self, email, credentials=None, auth_type=None, retry_policy=None):
+    def __init__(self, email, credentials=None):
         """
 
         :param email: The email address to autodiscover
         :param credentials: Credentials with authorization to make autodiscover lookups for this Account
             (Default value = None)
-        :param auth_type:  (Default value = None)
-        :param retry_policy:  (Default value = None)
         """
         self.email = email
         self.credentials = credentials
-        self.auth_type = auth_type  # The auth type that the resulting protocol instance should have
-        self.retry_policy = retry_policy  # The retry policy that the resulting protocol instance should have
         self._urls_visited = []  # Collects HTTP and Autodiscover redirects
         self._redirect_count = 0
         self._emails_visited = []  # Collects Autodiscover email redirects
@@ -154,24 +153,17 @@ class Autodiscovery:
             # Autodiscover does not always return an email address. In that case, the requesting email should be used
             ad_response.user.autodiscover_smtp_address = self.email
 
-        # We may not want to use the auth_package hints in the AD response. It could be incorrect and we can just guess.
         protocol = Protocol(
             config=Configuration(
                 service_endpoint=ad_response.protocol.ews_url,
                 credentials=self.credentials,
                 version=ad_response.version,
-                auth_type=self.auth_type,
-                retry_policy=self.retry_policy,
+                auth_type=ad_response.protocol.auth_type,
             )
         )
         return ad_response, protocol
 
     def _quick(self, protocol):
-        # Reset auth type and retry policy if we requested non-default values
-        if self.auth_type:
-            protocol.config.auth_type = self.auth_type
-        if self.retry_policy:
-            protocol.config.retry_policy = self.retry_policy
         try:
             r = self._get_authenticated_response(protocol=protocol)
         except TransportError as e:

@@ -144,6 +144,8 @@ class Protocol(SimpleProtocol):
         # Translates 'auth_package' value to our own 'auth_type' enum vals
         if not self.auth_required:
             return NOAUTH
+        if not self.auth_package:
+            return None
         return {
             # Missing in list are DIGEST and OAUTH2
             'basic': BASIC,

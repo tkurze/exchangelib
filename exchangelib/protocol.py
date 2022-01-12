@@ -59,6 +59,8 @@ class BaseProtocol:
 
     def __init__(self, config):
         self.config = config
+        self._api_version_hint = None
+
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
@@ -74,6 +76,9 @@ class BaseProtocol:
 
     @property
     def auth_type(self):
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
         return self.config.auth_type
 
     @property
@@ -95,6 +100,15 @@ class BaseProtocol:
     @property
     def server(self):
         return self.config.server
+
+    def get_auth_type(self):
+        # Autodetect authentication type. We also set version hint here.
+        name = str(self.credentials) if self.credentials and str(self.credentials) else 'DUMMY'
+        auth_type, api_version_hint = get_service_authtype(
+            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
+        )
+        self._api_version_hint = api_version_hint
+        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -238,8 +252,6 @@ class BaseProtocol:
         return self.renew_session(session)
 
     def create_session(self):
-        if self.auth_type is None:
-            raise ValueError('Cannot create session without knowing the auth type')
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
                 raise ValueError(f'Auth type {self.auth_type!r} requires credentials')
@@ -435,20 +447,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._api_version_hint = None
         self._version_lock = Lock()
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else 'DUMMY'
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     @property
     def version(self):
