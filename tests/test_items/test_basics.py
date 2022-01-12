@@ -301,11 +301,11 @@ class CommonItemTest(BaseItemTest):
                     # Complex fields sometimes fail a search using generated data. In production,
                     # they almost always work anyway. Give it one more try after 10 seconds; it seems EWS does
                     # some sort of indexing that needs to catch up.
+                    if isinstance(f, BodyField) and matches != expected:
+                        # The body field is particularly nasty in this area. Give up
+                        continue
                     for _ in range(5):
                         if matches == expected:
-                            break
-                        if isinstance(f, BodyField):
-                            # The body field is particularly nasty in this area. Give up
                             break
                         retries += 1
                         time.sleep(retries*retries)  # Exponential sleep
