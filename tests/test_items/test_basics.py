@@ -300,16 +300,16 @@ class CommonItemTest(BaseItemTest):
                 if f.is_complex:
                     # Complex fields sometimes fail a search using generated data. In practice, they almost always
                     # work anyway. Try a couple of times; it seems EWS has a search index that needs to catch up.
+                    if isinstance(f, (BodyField, SingleFieldIndexedElement, MultiFieldIndexedElement)) \
+                            and matches != expected:
+                        # These fields are particularly flaky when filtering. Give up early without failing.
+                        continue
                     for _ in range(5):
                         if matches == expected:
                             break
                         retries += 1
                         time.sleep(retries*retries)  # Exponential sleep
                         matches = qs.filter(**kw).count()
-                if isinstance(f, (BodyField, SingleFieldIndexedElement, MultiFieldIndexedElement)) \
-                        and matches != expected:
-                    # These fields are particularly flaky when filtering. Give up without failing.
-                    continue
                 self.assertEqual(matches, expected, (f.name, val, kw, retries))
 
     def test_filter_on_simple_fields(self):
