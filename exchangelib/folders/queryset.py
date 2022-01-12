@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 
-from ..errors import InvalidTypeError
+from ..errors import ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, InvalidTypeError
 from ..properties import InvalidField, FolderId
 from ..queryset import DoesNotExist, MultipleObjectsReturned
 from ..restriction import Q
@@ -11,6 +11,8 @@ SHALLOW = 'Shallow'
 SOFT_DELETED = 'SoftDeleted'
 DEEP = 'Deep'
 FOLDER_TRAVERSAL_CHOICES = (SHALLOW, DEEP, SOFT_DELETED)
+
+MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFolderReplicaAvailable)
 
 
 log = logging.getLogger(__name__)
@@ -138,6 +140,9 @@ class FolderQuerySet:
             account=self.folder_collection.account, folders=resolveable_folders
         ).get_folders(additional_fields=complex_fields)
         for f, complex_f in zip(resolveable_folders, complex_folders):
+            if isinstance(f, MISSING_FOLDER_ERRORS):
+                # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
+                continue
             if isinstance(complex_f, Exception):
                 yield complex_f
                 continue

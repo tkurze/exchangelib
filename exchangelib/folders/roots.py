@@ -1,11 +1,11 @@
 import logging
 from threading import Lock
 
-from .base import BaseFolder, MISSING_FOLDER_ERRORS
+from .base import BaseFolder
 from .collections import FolderCollection
 from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
     WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-from .queryset import SingleFolderQuerySet, SHALLOW
+from .queryset import SingleFolderQuerySet, SHALLOW, MISSING_FOLDER_ERRORS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
 from ..properties import EWSMeta
@@ -175,6 +175,9 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             ).all():
                 if isinstance(f, ErrorAccessDenied):
                     # We may not have FindFolder access, or GetFolder access, either to this folder or at all
+                    continue
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                     continue
                 if isinstance(f, Exception):
                     raise f

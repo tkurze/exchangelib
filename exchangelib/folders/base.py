@@ -4,9 +4,9 @@ from fnmatch import fnmatch
 from operator import attrgetter
 
 from .collections import FolderCollection, SyncCompleted, PullSubscription, PushSubscription, StreamingSubscription
-from .queryset import SingleFolderQuerySet, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
+from .queryset import SingleFolderQuerySet, MISSING_FOLDER_ERRORS, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, InvalidTypeError
+    ErrorDeleteDistinguishedFolder, ErrorItemNotFound, InvalidTypeError
 from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
     Field, IdElementField, InvalidField
 from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, HARD_DELETE, SHALLOW as SHALLOW_ITEMS
@@ -17,8 +17,6 @@ from ..util import TNS, require_id, is_iterable
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010
 
 log = logging.getLogger(__name__)
-
-MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFolderReplicaAvailable)
 
 
 class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):

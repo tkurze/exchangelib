@@ -218,6 +218,7 @@ class QuerySet(SearchableMixIn):
             if complex_fields_requested:
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
+                # TODO: There's a race condition from we call FindItem until we call GetItem where items can disappear
                 find_kwargs['additional_fields'] = None
                 items = self.folder_collection.account.fetch(
                     ids=self.folder_collection.find_items(self.q, **find_kwargs),
