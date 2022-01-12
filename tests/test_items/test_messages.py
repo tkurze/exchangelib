@@ -6,7 +6,7 @@ from exchangelib.attachments import FileAttachment
 from exchangelib.folders import Inbox
 from exchangelib.items import Message, ReplyToItem
 from exchangelib.queryset import DoesNotExist
-from exchangelib.version import EXCHANGE_2010_SP2
+from exchangelib.version import Version, EXCHANGE_2010_SP2
 
 from ..common import get_random_string
 from .test_basics import CommonItemTest
@@ -45,7 +45,7 @@ class MessagesTest(CommonItemTest):
         item.account = self.get_account()
         item.folder = item.account.inbox
         item.attach(FileAttachment(name='file_attachment', content=b'file_attachment'))
-        item.account.version.build = EXCHANGE_2010_SP2
+        item.account.version = Version(EXCHANGE_2010_SP2)
         item.send(save_copy=False)
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)

@@ -558,7 +558,7 @@ class CalendarTest(CommonItemTest):
             '_end_timezone',
         )
         account = self.get_account()
-        account.version.build = EXCHANGE_2007
+        account.version = Version(EXCHANGE_2007)
         self.assertEqual(
             CalendarItem(account=account).tz_field_for_field_name('start').name,
             '_meeting_timezone',
