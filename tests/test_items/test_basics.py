@@ -37,16 +37,20 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
         super().setUp()
         if self.TEST_FOLDER:
             self.test_folder = getattr(self.account, self.TEST_FOLDER)
-            self.assertEqual(type(self.test_folder), self.FOLDER_CLASS)
-            self.assertEqual(self.test_folder.DISTINGUISHED_FOLDER_ID, self.TEST_FOLDER)
         else:
-            self.test_folder = None
+            self.test_folder = self.get_test_folder(self.account.inbox).save()
 
     def tearDown(self):
         # Delete all test items and delivery receipts
-        self.test_folder.filter(
-            Q(categories__contains=self.categories) | Q(subject__startswith='Delivered: Subject: ')
-        ).delete()
+        try:
+            self.test_folder.filter(
+                Q(categories__contains=self.categories) | Q(subject__startswith='Delivered: Subject: ')
+            ).delete()
+            if not self.TEST_FOLDER:
+                self.test_folder.delete()
+        except Exception as e:
+            print(f'Exception in tearDown of {self}: {e}')
+            pass
         super().tearDown()
 
     def get_random_insert_kwargs(self):

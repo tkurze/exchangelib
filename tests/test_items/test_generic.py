@@ -25,10 +25,6 @@ class GenericItemTest(CommonItemTest):
     FOLDER_CLASS = Folder
     ITEM_CLASS = Item
 
-    def setUp(self):
-        super().setUp()
-        self.test_folder = self.get_test_folder(self.account.inbox).save()
-
     def test_validation(self):
         item = self.get_test_item()
         item.clean()
