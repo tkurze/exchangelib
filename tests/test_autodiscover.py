@@ -10,10 +10,10 @@ import requests_mock
 
 from exchangelib.account import Account
 from exchangelib.credentials import Credentials, DELEGATE
-import exchangelib.autodiscover.discovery
 from exchangelib.autodiscover import close_connections, clear_cache, autodiscover_cache, AutodiscoverProtocol, \
-    Autodiscovery, AutodiscoverCache
+    Autodiscovery, AutodiscoverCache, discover
 from exchangelib.autodiscover.cache import shelve_filename
+from exchangelib.autodiscover.discovery import SrvRecord, _select_srv_host
 from exchangelib.autodiscover.properties import Autodiscover, Response, Account as ADAccount, ErrorResponse, Error
 from exchangelib.configuration import Configuration
 from exchangelib.errors import ErrorNonExistentMailbox, AutoDiscoverCircularRedirect, AutoDiscoverFailed
@@ -74,6 +74,19 @@ class AutodiscoverTest(EWSTest):
     </Response>
 </Autodiscover>'''.encode()
 
+    @staticmethod
+    def redirect_url_xml(ews_url):
+        return f'''\
+<?xml version="1.0" encoding="utf-8"?>
+<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
+    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
+        <Account>
+            <Action>redirectUrl</Action>
+            <RedirectURL>{ews_url}</RedirectURL>
+        </Account>
+    </Response>
+</Autodiscover>'''.encode()
+
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_magic(self, m):
         # Just test we don't fail when calling repr() and str(). Insert a dummy cache entry for testing
@@ -102,7 +115,7 @@ class AutodiscoverTest(EWSTest):
 
     def test_autodiscover_empty_cache(self):
         # A live test of the entire process with an empty cache
-        ad_response, protocol = exchangelib.autodiscover.discovery.discover(
+        ad_response, protocol = discover(
             email=self.account.primary_smtp_address,
             credentials=self.account.protocol.credentials,
             retry_policy=self.retry_policy,
@@ -128,7 +141,7 @@ class AutodiscoverTest(EWSTest):
             retry_policy=self.retry_policy,
         ))
         with self.assertRaises(ErrorNonExistentMailbox):
-            exchangelib.autodiscover.discovery.discover(
+            discover(
                 email='XXX.' + self.account.primary_smtp_address,
                 credentials=self.account.protocol.credentials,
                 retry_policy=self.retry_policy,
@@ -344,8 +357,146 @@ class AutodiscoverTest(EWSTest):
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@otherpath.httpbin.org')
         self.assertEqual(ad_response.protocol.ews_url, 'https://xxx.httpbin.org/EWS/Exchange.asmx')
 
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_2_5(self, m):
+        # Test steps 1 -> 2 -> 5
+        clear_cache()
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+
+        m.post(self.dummy_ad_endpoint, status_code=501)
+        m.post(f'https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=200,
+               content=self.settings_xml(f'xxxd@{self.domain}', f'https://xxx.{self.domain}/EWS/Exchange.asmx'))
+        ad_response, _ = d.discover()
+        self.assertEqual(ad_response.autodiscover_smtp_address, f'xxxd@{self.domain}')
+        self.assertEqual(ad_response.protocol.ews_url, f'https://xxx.{self.domain}/EWS/Exchange.asmx')
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_2_3_invalid301_4(self, m):
+        # Test steps 1 -> 2 -> 3 -> invalid 301 URL -> 4
+        clear_cache()
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+
+        m.post(self.dummy_ad_endpoint, status_code=501)
+        m.post(f'https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=501)
+        m.get(f'http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=301,
+              headers=dict(location=f'XXX'))
+        with self.assertRaises(AutoDiscoverFailed):
+            # Fails in step 4 with invalid SRV entry
+            ad_response, _ = d.discover()
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_2_3_no301_4(self, m):
+        # Test steps 1 -> 2 -> 3 -> no 301 response -> 4
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+
+        m.post(self.dummy_ad_endpoint, status_code=501)
+        m.post(f'https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=501)
+        m.get(f'http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=200)
+
+        with self.assertRaises(AutoDiscoverFailed):
+            # Fails in step 4 with invalid SRV entry
+            ad_response, _ = d.discover()
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_2_3_4_valid_srv_invalid_response(self, m):
+        # Test steps 1 -> 2 -> 3 -> 4 -> invalid response from SRV URL
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+        m.post(self.dummy_ad_endpoint, status_code=501)
+        m.post(f'https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=501)
+        m.get(f'http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=200)
+        m.head('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
+
+        tmp = d._get_srv_records
+        d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, 'httpbin.org')])
+        try:
+            with self.assertRaises(AutoDiscoverFailed):
+                # Fails in step 4 with invalid response
+                ad_response, _ = d.discover()
+        finally:
+            d._get_srv_records = tmp
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_2_3_4_valid_srv_valid_response(self, m):
+        # Test steps 1 -> 2 -> 3 -> 4 -> 5
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+        m.post(self.dummy_ad_endpoint, status_code=501)
+        m.post(f'https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=501)
+        m.get(f'http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=200)
+        m.head('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200)
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200,
+               content=self.settings_xml('john@redirected.httpbin.org', 'https://httpbin.org/EWS/Exchange.asmx'))
+
+        tmp = d._get_srv_records
+        d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, 'httpbin.org')])
+        try:
+            ad_response, _ = d.discover()
+            self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.httpbin.org')
+            self.assertEqual(ad_response.protocol.ews_url, f'https://httpbin.org/EWS/Exchange.asmx')
+        finally:
+            d._get_srv_records = tmp
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_2_3_4_invalid_srv(self, m):
+        # Test steps 1 -> 2 -> 3 -> 4 -> invalid SRV URL
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+        m.post(self.dummy_ad_endpoint, status_code=501)
+        m.post(f'https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=501)
+        m.get(f'http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml', status_code=200)
+        m.head('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
+
+        tmp = d._get_srv_records
+        d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, f'{get_random_string(8)}.com')])
+        try:
+            with self.assertRaises(AutoDiscoverFailed):
+                # Fails in step 4 with invalid response
+                ad_response, _ = d.discover()
+        finally:
+            d._get_srv_records = tmp
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_5_invalid_redirect_url(self, m):
+        # Test steps 1 -> -> 5 -> Invalid redirect URL
+        clear_cache()
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+
+        m.post(self.dummy_ad_endpoint, status_code=200,
+               content=self.redirect_url_xml(f'https://{get_random_string(8)}.com/EWS/Exchange.asmx'))
+        with self.assertRaises(AutoDiscoverFailed):
+            # Fails in step 5 with invalid redirect URL
+            ad_response, _ = d.discover()
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_5_valid_redirect_url_invalid_response(self, m):
+        # Test steps 1 -> -> 5 -> Invalid response from redirect URL
+        clear_cache()
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+
+        m.post(self.dummy_ad_endpoint, status_code=200,
+               content=self.redirect_url_xml('https://httpbin.org/Autodiscover/Autodiscover.xml'))
+        m.head('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=501)
+        with self.assertRaises(AutoDiscoverFailed):
+            # Fails in step 5 with invalid response
+            ad_response, _ = d.discover()
+
+    @requests_mock.mock(real_http=False)
+    def test_autodiscover_path_1_5_valid_redirect_url_valid_response(self, m):
+        # Test steps 1 -> -> 5 -> Valid response from redirect URL -> 5
+        clear_cache()
+        d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
+
+        m.post(self.dummy_ad_endpoint, status_code=200,
+               content=self.redirect_url_xml('https://httpbin.org/Autodiscover/Autodiscover.xml'))
+        m.head('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200)
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200,
+               content=self.settings_xml('john@redirected.httpbin.org', 'https://httpbin.org/EWS/Exchange.asmx'))
+        ad_response, _ = d.discover()
+        self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.httpbin.org')
+        self.assertEqual(ad_response.protocol.ews_url, f'https://httpbin.org/EWS/Exchange.asmx')
+
     def test_get_srv_records(self):
-        from exchangelib.autodiscover.discovery import SrvRecord
         ad = Autodiscovery('foo@example.com')
         # Unknown domain
         self.assertEqual(ad._get_srv_records('example.XXXXX'), [])
@@ -390,7 +541,6 @@ class AutodiscoverTest(EWSTest):
         del ad.resolver
 
     def test_select_srv_host(self):
-        from exchangelib.autodiscover.discovery import _select_srv_host, SrvRecord
         with self.assertRaises(ValueError):
             # Empty list
             _select_srv_host([])
