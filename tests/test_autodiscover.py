@@ -651,3 +651,34 @@ class AutodiscoverTest(EWSTest):
         # Test that shelve_filename can handle a failing getuser()
         major, minor = sys.version_info[:2]
         self.assertEqual(shelve_filename(), f'exchangelib.2.cache.exchangelib.py{major}{minor}')
+
+    @requests_mock.mock(real_http=False)
+    def test_redirect_url_is_valid(self, m):
+        # This method is private but hard to get to otherwise
+        a = Autodiscovery('john@example.com')
+
+        # Already visited
+        a._urls_visited.append('https://example.com')
+        self.assertFalse(a._redirect_url_is_valid('https://example.com'))
+        a._urls_visited.clear()
+
+        # Max redirects exceeded
+        a._redirect_count = 10
+        self.assertFalse(a._redirect_url_is_valid('https://example.com'))
+        a._redirect_count = 0
+
+        # Must be secure
+        self.assertFalse(a._redirect_url_is_valid('http://example.com'))
+
+        # Bad response from URL
+        m.head('https://example.com', status_code=501)
+        self.assertFalse(a._redirect_url_is_valid(f'https://example.com'))
+
+        # Does not resolve with DNS
+        url = f'https://{get_random_string(8)}.com'
+        m.head(url, status_code=200)
+        self.assertFalse(a._redirect_url_is_valid(url))
+
+        # OK response from URL. We need something that resolves with DNS
+        m.head(self.account.protocol.config.service_endpoint, status_code=200)
+        self.assertTrue(a._redirect_url_is_valid(self.account.protocol.config.service_endpoint))
