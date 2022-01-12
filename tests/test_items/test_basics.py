@@ -291,21 +291,21 @@ class CommonItemTest(BaseItemTest):
             with self.subTest(f=f, kw=kw):
                 retries = 0
                 matches = qs.filter(**kw).count()
+                # __in with an empty list returns an empty result
+                expected = 0 if f.is_list and not val and list(kw)[0].endswith('__in') else 1
                 if f.is_complex:
                     # Complex fields sometimes fail a search using generated data. In production,
                     # they almost always work anyway. Give it one more try after 10 seconds; it seems EWS does
                     # some sort of indexing that needs to catch up.
-                    if not matches and isinstance(f, BodyField):
-                        # The body field is particularly nasty in this area. Give up
-                        continue
                     for _ in range(5):
-                        if matches:
+                        if matches == expected:
+                            break
+                        if isinstance(f, BodyField):
+                            # The body field is particularly nasty in this area. Give up
                             break
                         retries += 1
                         time.sleep(retries*retries)  # Exponential sleep
                         matches = qs.filter(**kw).count()
-                # __in with an empty list returns an empty result
-                expected = 0 if f.is_list and not val and list(kw)[0].endswith('__in') else 1
                 self.assertEqual(matches, expected, (f.name, val, kw, retries))
 
     def test_filter_on_simple_fields(self):
