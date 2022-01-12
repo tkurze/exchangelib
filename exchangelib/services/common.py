@@ -219,7 +219,9 @@ class EWSService(metaclass=abc.ABCMeta):
         :param kwargs: Same as arguments for .call(), except for the 'items' argument
         :return: Same as ._get_elements()
         """
-        for i, chunk in enumerate(chunkify(items, self.chunk_size), start=1):
+        # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
+        filtered_items = filter(lambda i: not isinstance(i, Exception), items)
+        for i, chunk in enumerate(chunkify(filtered_items, self.chunk_size), start=1):
             log.debug('Processing chunk %s containing %s items', i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
 
@@ -876,9 +878,6 @@ def shape_element(tag, shape, additional_fields, version):
 def _ids_element(items, item_cls, version, tag):
     item_ids = create_element(tag)
     for item in items:
-        if isinstance(item, Exception):
-            # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
-            continue
         set_xml_value(item_ids, to_item_id(item, item_cls), version=version)
     return item_ids
 
