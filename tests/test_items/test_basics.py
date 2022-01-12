@@ -11,7 +11,7 @@ from exchangelib.errors import ErrorItemNotFound, ErrorUnsupportedPathForQuery, 
     ErrorPropertyUpdate, ErrorInvalidPropertySet
 from exchangelib.extended_properties import ExternId
 from exchangelib.fields import TextField, BodyField, FieldPath, CultureField, IdField, ChoiceField, AttachmentField,\
-    BooleanField
+    BooleanField, IndexedField
 from exchangelib.indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
 from exchangelib.items import CalendarItem, Contact, Task, DistributionList, BaseItem, Item
 from exchangelib.properties import Mailbox, Attendee
@@ -297,19 +297,18 @@ class CommonItemTest(BaseItemTest):
                 matches = qs.filter(**kw).count()
                 # __in with an empty list returns an empty result
                 expected = 0 if f.is_list and not val and list(kw)[0].endswith('__in') else 1
-                if f.is_complex:
+                if f.is_complex and matches != expected:
                     # Complex fields sometimes fail a search using generated data. In practice, they almost always
                     # work anyway. Try a couple of times; it seems EWS has a search index that needs to catch up.
-                    if isinstance(f, (BodyField, SingleFieldIndexedElement, MultiFieldIndexedElement)) \
-                            and matches != expected:
+                    if isinstance(f, (BodyField, IndexedField)):
                         # These fields are particularly flaky when filtering. Give up early without failing.
                         continue
                     for _ in range(5):
-                        if matches == expected:
-                            break
                         retries += 1
                         time.sleep(retries*retries)  # Exponential sleep
                         matches = qs.filter(**kw).count()
+                        if matches == expected:
+                            break
                 self.assertEqual(matches, expected, (f.name, val, kw, retries))
 
     def test_filter_on_simple_fields(self):
