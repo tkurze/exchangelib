@@ -3,7 +3,7 @@ import logging
 from copy import deepcopy
 from itertools import islice
 
-from .errors import MultipleObjectsReturned, DoesNotExist, InvalidEnumValue, InvalidTypeError
+from .errors import MultipleObjectsReturned, DoesNotExist, InvalidEnumValue, InvalidTypeError, ErrorItemNotFound
 from .fields import FieldPath, FieldOrder
 from .items import CalendarItem, ID_ONLY
 from .properties import InvalidField
@@ -11,6 +11,8 @@ from .restriction import Q
 from .version import EXCHANGE_2010
 
 log = logging.getLogger(__name__)
+
+MISSING_ITEM_ERRORS = (ErrorItemNotFound,)
 
 
 class SearchableMixIn:
@@ -218,13 +220,14 @@ class QuerySet(SearchableMixIn):
             if complex_fields_requested:
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
-                # TODO: There's a race condition from we call FindItem until we call GetItem where items can disappear
                 find_kwargs['additional_fields'] = None
-                items = self.folder_collection.account.fetch(
+                unfiltered_items = self.folder_collection.account.fetch(
                     ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
                     chunk_size=self.chunk_size,
                 )
+                # We may be unlucky that the item disappeared between the FindItem and the GetItem calls
+                items = filter(lambda i: not isinstance(i, MISSING_ITEM_ERRORS), unfiltered_items)
             else:
                 if not additional_fields:
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
