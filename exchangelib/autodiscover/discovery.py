@@ -112,6 +112,7 @@ class Autodiscovery:
                     ad_response = self._step_1(hostname=domain)
             else:
                 # This will cache the result
+                log.debug('Cache miss for key %s', cache_key)
                 ad_response = self._step_1(hostname=domain)
 
         log.debug('Released autodiscover_cache_lock')

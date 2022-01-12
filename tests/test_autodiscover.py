@@ -305,9 +305,6 @@ class AutodiscoverTest(EWSTest):
                     f'redirected@{self.domain}', f'https://redirected.{self.domain}/EWS/Exchange.asmx'
             )),
         ])
-        # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
-        m.post(f'https://redirected.{self.domain}/EWS/Exchange.asmx', status_code=200)
-
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, f'redirected@{self.domain}')
         self.assertEqual(ad_response.protocol.ews_url, f'https://redirected.{self.domain}/EWS/Exchange.asmx')
@@ -334,6 +331,18 @@ class AutodiscoverTest(EWSTest):
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.httpbin.org')
         self.assertEqual(ad_response.protocol.ews_url, 'https://httpbin.org/EWS/Exchange.asmx')
+
+        # Test redirect via HTTP 301
+        clear_cache()
+        discovery.email = self.account.primary_smtp_address
+        m.post(self.dummy_ad_endpoint, status_code=301,
+               headers=dict(location='https://httpbin.org/OtherPath/Autodiscover.xml'))
+        m.post('https://httpbin.org/OtherPath/Autodiscover.xml', status_code=200,
+               content=self.settings_xml('john@otherpath.httpbin.org', 'https://xxx.httpbin.org/EWS/Exchange.asmx'))
+        m.head('https://httpbin.org/OtherPath/Autodiscover.xml', status_code=200)
+        ad_response, _ = discovery.discover()
+        self.assertEqual(ad_response.autodiscover_smtp_address, 'john@otherpath.httpbin.org')
+        self.assertEqual(ad_response.protocol.ews_url, 'https://xxx.httpbin.org/EWS/Exchange.asmx')
 
     def test_get_srv_records(self):
         from exchangelib.autodiscover.discovery import SrvRecord
