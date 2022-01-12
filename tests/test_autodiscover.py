@@ -174,8 +174,6 @@ class AutodiscoverTest(EWSTest):
     def test_autodiscover_cache(self, m):
         # Mock the default endpoint that we test in step 1 of autodiscovery
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.dummy_ad_response)
-        # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
-        m.post(self.dummy_ews_endpoint, status_code=200)
         discovery = Autodiscovery(
             email=self.account.primary_smtp_address,
             credentials=self.account.protocol.credentials,
@@ -287,8 +285,6 @@ class AutodiscoverTest(EWSTest):
         # to send us into the correct code paths.
         # Mock the default endpoint that we test in step 1 of autodiscovery
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.dummy_ad_response)
-        # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
-        m.post(self.dummy_ews_endpoint, status_code=200)
         discovery = Autodiscovery(
             email=self.account.primary_smtp_address,
             credentials=self.account.protocol.credentials,
@@ -298,8 +294,6 @@ class AutodiscoverTest(EWSTest):
         # Make sure we discover a different return address
         m.post(self.dummy_ad_endpoint, status_code=200,
                content=self.settings_xml('john@example.com', 'https://expr.example.com/EWS/Exchange.asmx'))
-        # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
-        m.post('https://expr.example.com/EWS/Exchange.asmx', status_code=200)
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@example.com')
 
@@ -337,8 +331,6 @@ class AutodiscoverTest(EWSTest):
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.redirect_address_xml('john@httpbin.org'))
         m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200,
                content=self.settings_xml('john@redirected.httpbin.org', 'https://httpbin.org/EWS/Exchange.asmx'))
-        # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
-        m.post('https://httpbin.org/EWS/Exchange.asmx', status_code=200)
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, 'john@redirected.httpbin.org')
         self.assertEqual(ad_response.protocol.ews_url, 'https://httpbin.org/EWS/Exchange.asmx')
