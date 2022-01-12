@@ -468,9 +468,13 @@ class EWSService(metaclass=abc.ABCMeta):
                     pass
                 raise ErrorServerBusy(msg, back_off=back_off)
             if code == 'ErrorSchemaValidation' and msg_xml is not None:
+                line_number = get_xml_attr(msg_xml, f'{{{TNS}}}LineNumber')
+                line_position = get_xml_attr(msg_xml, f'{{{TNS}}}LinePosition')
                 violation = get_xml_attr(msg_xml, f'{{{TNS}}}Violation')
-                if violation is not None:
+                if violation:
                     msg = f'{msg} {violation}'
+                if line_number or line_position:
+                    msg = f'{msg} (line: {line_number} position: {line_position})'
             try:
                 raise vars(errors)[code](msg)
             except KeyError:
@@ -700,7 +704,7 @@ class EWSPagingService(EWSAccountService):
         if not isinstance(self.page_size, int):
             raise InvalidTypeError('page_size', self.page_size, int)
         if self.page_size < 1:
-            raise ValueError("'page_size' must be a positive number")
+            raise ValueError(f"'page_size' {self.page_size} must be a positive number")
         super().__init__(*args, **kwargs)
 
     def _paged_call(self, payload_func, max_items, folders, **kwargs):
@@ -849,8 +853,6 @@ def to_item_id(item, item_cls):
             return item
     if isinstance(item, (tuple, list)):
         return item_cls(*item)
-    if isinstance(item, dict):
-        return item_cls(**item)
     return item_cls(item.id, item.changekey)
 
 

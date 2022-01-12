@@ -6,7 +6,7 @@ from exchangelib.attachments import FileAttachment
 from exchangelib.folders import Inbox
 from exchangelib.items import Message, ReplyToItem
 from exchangelib.queryset import DoesNotExist
-from exchangelib.version import EXCHANGE_2010_SP2
+from exchangelib.version import Version, EXCHANGE_2010_SP2
 
 from ..common import get_random_string
 from .test_basics import CommonItemTest
@@ -42,13 +42,11 @@ class MessagesTest(CommonItemTest):
     def test_send_pre_2013(self):
         # Test < Exchange 2013 fallback for attachments and send-only mode
         item = self.get_test_item()
+        item.account = self.get_account()
+        item.folder = item.account.inbox
         item.attach(FileAttachment(name='file_attachment', content=b'file_attachment'))
-        tmp = self.account.version.build
-        try:
-            self.account.version.build = EXCHANGE_2010_SP2
-            item.send(save_copy=False)
-        finally:
-            self.account.version.build = tmp
+        item.account.version = Version(EXCHANGE_2010_SP2)
+        item.send(save_copy=False)
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
 

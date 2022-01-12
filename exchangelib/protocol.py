@@ -8,7 +8,7 @@ import abc
 import datetime
 import logging
 import os
-from queue import LifoQueue, Empty, Full
+from queue import LifoQueue, Empty
 from threading import Lock
 
 import requests.adapters
@@ -58,11 +58,6 @@ class BaseProtocol:
     USERAGENT = None
 
     def __init__(self, config):
-        from .configuration import Configuration
-        if not isinstance(config, Configuration):
-            raise InvalidTypeError('config', config, Configuration)
-        if not config.service_endpoint:
-            raise AttributeError("'config.service_endpoint' must be set")
         self.config = config
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
@@ -206,13 +201,10 @@ class BaseProtocol:
     def release_session(self, session):
         # This should never fail, as we don't have more sessions than the queue contains
         log.debug('Server %s: Releasing session %s', self.server, session.session_id)
-        if self.MAX_SESSION_USAGE_COUNT and session.usage_count > self.MAX_SESSION_USAGE_COUNT:
+        if self.MAX_SESSION_USAGE_COUNT and session.usage_count >= self.MAX_SESSION_USAGE_COUNT:
             log.debug('Server %s: session %s usage exceeded limit. Discarding', self.server, session.session_id)
             session = self.renew_session(session)
-        try:
-            self._session_pool.put(session, block=False)
-        except Full:
-            log.debug('Server %s: Session pool was already full %s', self.server, session.session_id)
+        self._session_pool.put(session, block=False)
 
     @staticmethod
     def close_session(session):
@@ -280,9 +272,6 @@ class BaseProtocol:
         return session
 
     def create_oauth2_session(self):
-        if self.auth_type != OAUTH2:
-            raise ValueError(f'Auth type must be {OAUTH2!r} for credentials type {self.credentials.__class__.__name__}')
-
         has_token = False
         scope = ['https://outlook.office365.com/.default']
         session_params = {}
@@ -369,8 +358,12 @@ class CachingProtocol(type):
         #
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
-
         config = kwargs['config']
+        from .configuration import Configuration
+        if not isinstance(config, Configuration):
+            raise InvalidTypeError('config', config, Configuration)
+        if not config.service_endpoint:
+            raise AttributeError("'config.service_endpoint' must be set")
         _protocol_cache_key = cls._cache_key(config)
 
         try:

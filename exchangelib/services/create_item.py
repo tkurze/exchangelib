@@ -28,7 +28,7 @@ class CreateItem(EWSAccountService):
             if not isinstance(folder, (BaseFolder, FolderId)):
                 raise InvalidTypeError('folder', folder, (BaseFolder, FolderId))
             if folder.account != self.account:
-                raise ValueError('"Folder must belong to this account')
+                raise ValueError('Folder must belong to account')
         if message_disposition == SAVE_ONLY and folder is None:
             raise AttributeError("Folder must be supplied when in save-only mode")
         if message_disposition == SEND_AND_SAVE_COPY and folder is None:
