@@ -150,9 +150,6 @@ class Autodiscovery:
         return resolver
 
     def _build_response(self, ad_response):
-        ews_url = ad_response.protocol.ews_url
-        if not ews_url:
-            raise AutoDiscoverFailed("Response is missing an 'ews_url' value")
         if not ad_response.autodiscover_smtp_address:
             # Autodiscover does not always return an email address. In that case, the requesting email should be used
             ad_response.user.autodiscover_smtp_address = self.email
@@ -160,7 +157,7 @@ class Autodiscovery:
         # We may not want to use the auth_package hints in the AD response. It could be incorrect and we can just guess.
         protocol = Protocol(
             config=Configuration(
-                service_endpoint=ews_url,
+                service_endpoint=ad_response.protocol.ews_url,
                 credentials=self.credentials,
                 version=ad_response.version,
                 auth_type=self.auth_type,
