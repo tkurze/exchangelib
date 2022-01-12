@@ -31,7 +31,8 @@ from exchangelib.util import DummyResponse
 from exchangelib.version import Build, Version, EXCHANGE_2010_SP1
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
-from .common import EWSTest, get_random_datetime_range, get_random_string, RANDOM_DATE_MIN, RANDOM_DATE_MAX
+from .common import EWSTest, get_random_datetime_range, get_random_string, get_random_hostname, RANDOM_DATE_MIN, \
+    RANDOM_DATE_MAX
 
 
 class ProtocolTest(EWSTest):
@@ -39,7 +40,7 @@ class ProtocolTest(EWSTest):
     def get_test_protocol(**kwargs):
         return Protocol(config=Configuration(
             server=kwargs.get('server'),
-            service_endpoint=kwargs.get('service_endpoint', f'https://{get_random_string(4)}.example.com/Foo.asmx'),
+            service_endpoint=kwargs.get('service_endpoint', f'https://{get_random_hostname()}/Foo.asmx'),
             credentials=kwargs.get('credentials', Credentials(get_random_string(8), get_random_string(8))),
             auth_type=kwargs.get('auth_type', NTLM),
             version=kwargs.get('version', Version(Build(15, 1))),
