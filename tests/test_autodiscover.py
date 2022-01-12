@@ -39,20 +39,37 @@ class AutodiscoverTest(EWSTest):
         self.domain = get_domain(self.account.primary_smtp_address)
         self.dummy_ad_endpoint = f'https://{self.domain}/Autodiscover/Autodiscover.xml'
         self.dummy_ews_endpoint = 'https://expr.example.com/EWS/Exchange.asmx'
-        self.dummy_ad_response = f'''\
+        self.dummy_ad_response = self.settings_xml(self.account.primary_smtp_address, self.dummy_ews_endpoint)
+
+    @staticmethod
+    def settings_xml(address, ews_url):
+        return f'''\
 <?xml version="1.0" encoding="utf-8"?>
 <Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
     <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
         <User>
-            <AutoDiscoverSMTPAddress>{self.account.primary_smtp_address}</AutoDiscoverSMTPAddress>
+            <AutoDiscoverSMTPAddress>{address}</AutoDiscoverSMTPAddress>
         </User>
         <Account>
             <AccountType>email</AccountType>
             <Action>settings</Action>
             <Protocol>
                 <Type>EXPR</Type>
-                <EwsUrl>{self.dummy_ews_endpoint}</EwsUrl>
+                <EwsUrl>{ews_url}</EwsUrl>
             </Protocol>
+        </Account>
+    </Response>
+</Autodiscover>'''.encode()
+
+    @staticmethod
+    def redirect_address_xml(address):
+        return f'''\
+<?xml version="1.0" encoding="utf-8"?>
+<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
+    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
+        <Account>
+            <Action>redirectAddr</Action>
+            <RedirectAddr>{address}</RedirectAddr>
         </Account>
     </Response>
 </Autodiscover>'''.encode()
@@ -279,23 +296,8 @@ class AutodiscoverTest(EWSTest):
         discovery.discover()
 
         # Make sure we discover a different return address
-        m.post(self.dummy_ad_endpoint, status_code=200, content=b'''\
-<?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <User>
-            <AutoDiscoverSMTPAddress>john@example.com</AutoDiscoverSMTPAddress>
-        </User>
-        <Account>
-            <AccountType>email</AccountType>
-            <Action>settings</Action>
-            <Protocol>
-                <Type>EXPR</Type>
-                <EwsUrl>https://expr.example.com/EWS/Exchange.asmx</EwsUrl>
-            </Protocol>
-        </Account>
-    </Response>
-</Autodiscover>''')
+        m.post(self.dummy_ad_endpoint, status_code=200,
+               content=self.settings_xml('john@example.com', 'https://expr.example.com/EWS/Exchange.asmx'))
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
         m.post('https://expr.example.com/EWS/Exchange.asmx', status_code=200)
         ad_response, _ = discovery.discover()
@@ -303,40 +305,15 @@ class AutodiscoverTest(EWSTest):
 
         # Make sure we discover an address redirect to the same domain. We have to mock the same URL with two different
         # responses. We do that with a response list.
-        redirect_addr_content = f'''\
-<?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <Account>
-            <Action>redirectAddr</Action>
-            <RedirectAddr>redirect_me@{self.domain}</RedirectAddr>
-        </Account>
-    </Response>
-</Autodiscover>'''.encode()
-        settings_content = f'''\
-<?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <User>
-            <AutoDiscoverSMTPAddress>redirected@{self.domain}</AutoDiscoverSMTPAddress>
-        </User>
-        <Account>
-            <AccountType>email</AccountType>
-            <Action>settings</Action>
-            <Protocol>
-                <Type>EXPR</Type>
-                <EwsUrl>https://redirected.{self.domain}/EWS/Exchange.asmx</EwsUrl>
-            </Protocol>
-        </Account>
-    </Response>
-</Autodiscover>'''.encode()
+        m.post(self.dummy_ad_endpoint, [
+            dict(status_code=200, content=self.redirect_address_xml(f'redirect_me@{self.domain}')),
+            dict(status_code=200, content=self.settings_xml(
+                    f'redirected@{self.domain}', f'https://redirected.{self.domain}/EWS/Exchange.asmx'
+            )),
+        ])
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
         m.post(f'https://redirected.{self.domain}/EWS/Exchange.asmx', status_code=200)
 
-        m.post(self.dummy_ad_endpoint, [
-            dict(status_code=200, content=redirect_addr_content),
-            dict(status_code=200, content=settings_content),
-        ])
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, f'redirected@{self.domain}')
         self.assertEqual(ad_response.protocol.ews_url, f'https://redirected.{self.domain}/EWS/Exchange.asmx')
@@ -344,16 +321,7 @@ class AutodiscoverTest(EWSTest):
         # Test that we catch circular redirects on the same domain with a primed cache. Just mock the endpoint to
         # return the same redirect response on every request.
         self.assertEqual(len(autodiscover_cache), 1)
-        m.post(self.dummy_ad_endpoint, status_code=200, content=f'''\
-<?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <Account>
-            <Action>redirectAddr</Action>
-            <RedirectAddr>foo@{self.domain}</RedirectAddr>
-        </Account>
-    </Response>
-</Autodiscover>'''.encode())
+        m.post(self.dummy_ad_endpoint, status_code=200, content=self.redirect_address_xml(f'foo@{self.domain}'))
         self.assertEqual(len(autodiscover_cache), 1)
         with self.assertRaises(AutoDiscoverCircularRedirect):
             discovery.discover()
@@ -366,33 +334,9 @@ class AutodiscoverTest(EWSTest):
 
         # Test that we can handle being asked to redirect to an address on a different domain
         # Don't use example.com to redirect - it does not resolve or answer on all ISPs
-        m.post(self.dummy_ad_endpoint, status_code=200, content=b'''\
-<?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <Account>
-            <Action>redirectAddr</Action>
-            <RedirectAddr>john@httpbin.org</RedirectAddr>
-        </Account>
-    </Response>
-</Autodiscover>''')
-        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200, content=b'''\
-<?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <User>
-            <AutoDiscoverSMTPAddress>john@redirected.httpbin.org</AutoDiscoverSMTPAddress>
-        </User>
-        <Account>
-            <AccountType>email</AccountType>
-            <Action>settings</Action>
-            <Protocol>
-                <Type>EXPR</Type>
-                <EwsUrl>https://httpbin.org/EWS/Exchange.asmx</EwsUrl>
-            </Protocol>
-        </Account>
-    </Response>
-</Autodiscover>''')
+        m.post(self.dummy_ad_endpoint, status_code=200, content=self.redirect_address_xml('john@httpbin.org'))
+        m.post('https://httpbin.org/Autodiscover/Autodiscover.xml', status_code=200,
+               content=self.settings_xml('john@redirected.httpbin.org', 'https://httpbin.org/EWS/Exchange.asmx'))
         # Also mock the EWS URL. We try to guess its auth method as part of autodiscovery
         m.post('https://httpbin.org/EWS/Exchange.asmx', status_code=200)
         ad_response, _ = discovery.discover()
@@ -589,7 +533,7 @@ class AutodiscoverTest(EWSTest):
     </Response>
 </Autodiscover>'''
         with self.assertRaises(ValueError):
-            Autodiscover.from_bytes(xml).response.protocol.ews_url
+            _ = Autodiscover.from_bytes(xml).response.protocol.ews_url
 
     def test_raise_errors(self):
         with self.assertRaises(AutoDiscoverFailed) as e:
