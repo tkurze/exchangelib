@@ -440,8 +440,11 @@ class Autodiscovery:
                 is_valid_response, ad = self._attempt_response(url=redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
+                log.debug('Got invalid response')
                 return self._step_4(hostname=hostname)
+            log.debug('Got invalid redirect URL')
             return self._step_4(hostname=hostname)
+        log.debug('Got no redirect URL')
         return self._step_4(hostname=hostname)
 
     def _step_4(self, hostname):
@@ -475,7 +478,9 @@ class Autodiscovery:
             is_valid_response, ad = self._attempt_response(url=redirect_url)
             if is_valid_response:
                 return self._step_5(ad=ad)
+            log.debug('Got invalid response')
             return self._step_6()
+        log.debug('Got invalid redirect URL')
         return self._step_6()
 
     def _step_5(self, ad):
@@ -509,8 +514,9 @@ class Autodiscovery:
                 is_valid_response, ad = self._attempt_response(url=ad_response.redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
+                log.debug('Got invalid response')
                 return self._step_6()
-            log.debug('Invalid redirect URL: %s', ad_response.redirect_url)
+            log.debug('Invalid redirect URL')
             return self._step_6()
         # This could be an email redirect. Let outer layer handle this
         return ad_response
