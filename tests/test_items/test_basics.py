@@ -35,9 +35,12 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
 
     def setUp(self):
         super().setUp()
-        self.test_folder = getattr(self.account, self.TEST_FOLDER)
-        self.assertEqual(type(self.test_folder), self.FOLDER_CLASS)
-        self.assertEqual(self.test_folder.DISTINGUISHED_FOLDER_ID, self.TEST_FOLDER)
+        if self.TEST_FOLDER:
+            self.test_folder = getattr(self.account, self.TEST_FOLDER)
+            self.assertEqual(type(self.test_folder), self.FOLDER_CLASS)
+            self.assertEqual(self.test_folder.DISTINGUISHED_FOLDER_ID, self.TEST_FOLDER)
+        else:
+            self.test_folder = None
 
     def tearDown(self):
         # Delete all test items and delivery receipts
@@ -693,7 +696,7 @@ class CommonItemTest(BaseItemTest):
                 self.assertEqual(old, new, (f.name, old, new))
 
         try:
-            self.ITEM_CLASS.register('extern_id', ExternId)
+            item.__class__.register('extern_id', ExternId)
             # Test extern_id = None, which deletes the extended property entirely
             extern_id = None
             item.extern_id = extern_id
@@ -705,4 +708,4 @@ class CommonItemTest(BaseItemTest):
             item = self.get_item_by_id(wipe2_ids[0])
             self.assertEqual(item.extern_id, extern_id)
         finally:
-            self.ITEM_CLASS.deregister('extern_id')
+            item.__class__.deregister('extern_id')

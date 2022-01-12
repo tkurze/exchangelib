@@ -8,8 +8,8 @@ from exchangelib.attachments import ItemAttachment
 from exchangelib.errors import ErrorItemNotFound, ErrorInternalServerError
 from exchangelib.extended_properties import ExtendedProperty, ExternId
 from exchangelib.fields import ExtendedPropertyField, CharField
-from exchangelib.folders import Inbox, FolderCollection, Root
-from exchangelib.items import CalendarItem, Message
+from exchangelib.folders import Folder, FolderCollection, Root
+from exchangelib.items import CalendarItem, Message, Item
 from exchangelib.queryset import QuerySet
 from exchangelib.restriction import Restriction, Q
 from exchangelib.services import CreateItem, UpdateItem, DeleteItem, FindItem, FindPeople
@@ -22,9 +22,12 @@ from .test_basics import CommonItemTest
 class GenericItemTest(CommonItemTest):
     """Tests that don't need to be run for every single folder type"""
 
-    TEST_FOLDER = 'inbox'
-    FOLDER_CLASS = Inbox
-    ITEM_CLASS = Message
+    FOLDER_CLASS = Folder
+    ITEM_CLASS = Item
+
+    def setUp(self):
+        super().setUp()
+        self.test_folder = self.get_test_folder(self.account.inbox).save()
 
     def test_validation(self):
         item = self.get_test_item()
@@ -139,30 +142,6 @@ class GenericItemTest(CommonItemTest):
             item.delete(affected_task_occurrences='XXX')
         with self.assertRaises(ValueError):
             item.delete(suppress_read_receipts='XXX')
-
-    def test_invalid_kwargs_on_send(self):
-        # Only Message class has the send() method
-        item = self.get_test_item()
-        item.account = None
-        with self.assertRaises(ValueError):
-            item.send()  # Must have account on send
-        item = self.get_test_item()
-        item.save()
-        with self.assertRaises(TypeError) as e:
-            item.send(copy_to_folder='XXX', save_copy=True)  # Invalid folder
-        self.assertEqual(
-            e.exception.args[0],
-            "'saved_item_folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
-            "<class 'exchangelib.properties.FolderId'>)"
-        )
-        item_id, changekey = item.id, item.changekey
-        item.delete()
-        item.id, item.changekey = item_id, changekey
-        with self.assertRaises(ErrorItemNotFound):
-            item.send()  # Item disappeared
-        item = self.get_test_item()
-        with self.assertRaises(AttributeError):
-            item.send(copy_to_folder=self.account.trash, save_copy=False)  # Inconsistent args
 
     def test_invalid_createitem_args(self):
         with self.assertRaises(ValueError) as e:
@@ -409,6 +388,9 @@ class GenericItemTest(CommonItemTest):
 
         try:
             self.ITEM_CLASS.register('extern_id', ExternId)
+            if self.ITEM_CLASS == Item:
+                # An Item saved in Inbox becomes a Message
+                Message.register('extern_id', ExternId)
             # Test order_by() on ExtendedProperty
             test_items = []
             for i in range(4):
@@ -429,11 +411,17 @@ class GenericItemTest(CommonItemTest):
             )
         finally:
             self.ITEM_CLASS.deregister('extern_id')
+            if self.ITEM_CLASS == Item:
+                # An Item saved in Inbox becomes a Message
+                Message.deregister('extern_id')
         self.bulk_delete(qs)
 
         # Test sorting on multiple fields
         try:
             self.ITEM_CLASS.register('extern_id', ExternId)
+            if self.ITEM_CLASS == Item:
+                # An Item saved in Inbox becomes a Message
+                Message.register('extern_id', ExternId)
             test_items = []
             for i in range(2):
                 for j in range(2):
@@ -475,6 +463,9 @@ class GenericItemTest(CommonItemTest):
             )
         finally:
             self.ITEM_CLASS.deregister('extern_id')
+            if self.ITEM_CLASS == Item:
+                # An Item saved in Inbox becomes a Message
+                Message.deregister('extern_id')
 
     def test_order_by_with_empty_values(self):
         # Test order_by() when some values are empty

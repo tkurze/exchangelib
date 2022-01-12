@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 import time
 
 from exchangelib.attachments import FileAttachment
+from exchangelib.errors import ErrorItemNotFound
 from exchangelib.folders import Inbox
 from exchangelib.items import Message, ReplyToItem
 from exchangelib.queryset import DoesNotExist
@@ -210,3 +211,27 @@ class MessagesTest(CommonItemTest):
             categories=self.categories,
         ).save()
         self.assertEqual(self.test_folder.get(subject=subject).body, body)
+
+    def test_invalid_kwargs_on_send(self):
+        # Only Message class has the send() method
+        item = self.get_test_item()
+        item.account = None
+        with self.assertRaises(ValueError):
+            item.send()  # Must have account on send
+        item = self.get_test_item()
+        item.save()
+        with self.assertRaises(TypeError) as e:
+            item.send(copy_to_folder='XXX', save_copy=True)  # Invalid folder
+        self.assertEqual(
+            e.exception.args[0],
+            "'saved_item_folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
+            "<class 'exchangelib.properties.FolderId'>)"
+        )
+        item_id, changekey = item.id, item.changekey
+        item.delete()
+        item.id, item.changekey = item_id, changekey
+        with self.assertRaises(ErrorItemNotFound):
+            item.send()  # Item disappeared
+        item = self.get_test_item()
+        with self.assertRaises(AttributeError):
+            item.send(copy_to_folder=self.account.trash, save_copy=False)  # Inconsistent args
