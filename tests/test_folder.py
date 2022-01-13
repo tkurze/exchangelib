@@ -27,11 +27,6 @@ def get_random_str_tuple(tuple_length, str_length):
 
 class FolderTest(EWSTest):
     def test_folders(self):
-        for f in self.account.root.walk():
-            if isinstance(f, System):
-                # No access to system folder, apparently
-                continue
-            f.test_access()
         # Test shortcuts
         for f, cls in (
                 (self.account.trash, DeletedItems),
@@ -336,33 +331,26 @@ class FolderTest(EWSTest):
 
     def test_refresh(self):
         # Test that we can refresh folders
-        for f in self.account.root.walk():
-            with self.subTest(f=f):
-                if isinstance(f, System):
-                    # Can't refresh the 'System' folder for some reason
-                    continue
-                old_values = {}
-                for field in f.FIELDS:
-                    old_values[field.name] = getattr(f, field.name)
-                    if field.name in ('account', 'id', 'changekey', 'parent_folder_id'):
-                        # These are needed for a successful refresh()
-                        continue
-                    if field.is_read_only:
-                        continue
-                    setattr(f, field.name, self.random_val(field))
-                try:
-                    f.refresh()
-                except ErrorItemNotFound:
-                    # Folder disappeared while we were running this test
-                    continue
-                for field in f.FIELDS:
-                    if field.name == 'changekey':
-                        # folders may change while we're testing
-                        continue
-                    if field.is_read_only:
-                        # count values may change during the test
-                        continue
-                    self.assertEqual(getattr(f, field.name), old_values[field.name], (f, field.name))
+        f = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
+        f.refresh()
+        old_values = {}
+        for field in f.FIELDS:
+            old_values[field.name] = getattr(f, field.name)
+            if field.name in ('account', 'id', 'changekey', 'parent_folder_id'):
+                # These are needed for a successful refresh()
+                continue
+            if field.is_read_only:
+                continue
+            setattr(f, field.name, self.random_val(field))
+        f.refresh()
+        for field in f.FIELDS:
+            if field.name == 'changekey':
+                # folders may change while we're testing
+                continue
+            if field.is_read_only:
+                # count values may change during the test
+                continue
+            self.assertEqual(getattr(f, field.name), old_values[field.name], (f, field.name))
 
         # Test refresh of root
         orig_name = self.account.root.name
