@@ -350,7 +350,11 @@ class FolderTest(EWSTest):
                     if field.is_read_only:
                         continue
                     setattr(f, field.name, self.random_val(field))
-                f.refresh()
+                try:
+                    f.refresh()
+                except ErrorItemNotFound:
+                    # Folder disappeared while we were running this test
+                    continue
                 for field in f.FIELDS:
                     if field.name == 'changekey':
                         # folders may change while we're testing
@@ -567,10 +571,6 @@ class FolderTest(EWSTest):
             f.id, f.changekey = item_id, changekey
             # Invalid ID
             f.save()
-
-        # Delete all subfolders of inbox
-        for c in self.account.inbox.children:
-            c.delete()
 
         with self.assertRaises(ErrorDeleteDistinguishedFolder):
             self.account.inbox.delete()
