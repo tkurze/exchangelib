@@ -303,6 +303,9 @@ class PublicFoldersRoot(RootOfHierarchy):
             for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
                     self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
             ).all():
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
+                    continue
                 if isinstance(f, Exception):
                     raise f
                 children_map[f.id] = f
