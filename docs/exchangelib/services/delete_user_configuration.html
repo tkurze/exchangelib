@@ -42,9 +42,9 @@ class DeleteUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration_name=user_configuration_name))
 
     def get_payload(self, user_configuration_name):
-        deleteuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(deleteuserconfiguration, user_configuration_name, version=self.account.version)
-        return deleteuserconfiguration</code></pre>
+        return set_xml_value(
+            create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration_name, version=self.account.version
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -79,9 +79,9 @@ class DeleteUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration_name=user_configuration_name))
 
     def get_payload(self, user_configuration_name):
-        deleteuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(deleteuserconfiguration, user_configuration_name, version=self.account.version)
-        return deleteuserconfiguration</code></pre>
+        return set_xml_value(
+            create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration_name, version=self.account.version
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -124,9 +124,9 @@ class DeleteUserConfiguration(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration_name):
-    deleteuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    set_xml_value(deleteuserconfiguration, user_configuration_name, version=self.account.version)
-    return deleteuserconfiguration</code></pre>
+    return set_xml_value(
+        create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration_name, version=self.account.version
+    )</code></pre>
 </details>
 </dd>
 </dl>

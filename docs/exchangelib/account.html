@@ -26,7 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from locale import getlocale
+<pre><code class="python">import locale as stdlib_locale
 from logging import getLogger
 
 from cached_property import threaded_cached_property
@@ -34,7 +34,7 @@ from cached_property import threaded_cached_property
 from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import DELEGATE, IMPERSONATION, ACCESS_TYPES
-from .errors import UnknownTimeZone
+from .errors import UnknownTimeZone, InvalidEnumValue, InvalidTypeError
 from .ewsdatetime import EWSTimeZone, UTC
 from .fields import FieldPath
 from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, ArchiveMsgFolderRoot, \
@@ -44,7 +44,7 @@ from .folders import Folder, AdminAuditLogs, ArchiveDeletedItems, ArchiveInbox, 
     Notes, Outbox, PeopleConnect, PublicFoldersRoot, QuickContacts, RecipientCache, RecoverableItemsDeletions, \
     RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Root, SearchFolders, SentItems, \
     ServerFailures, SyncIssues, Tasks, ToDoSearch, VoiceMail
-from .items import HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCIES, ID_ONLY
+from .items import HARD_DELETE, AUTO_RESOLVE, SEND_TO_NONE, SAVE_ONLY, ALL_OCCURRENCES, ID_ONLY
 from .properties import Mailbox, SendingAs
 from .protocol import Protocol
 from .queryset import QuerySet
@@ -73,10 +73,7 @@ class Identity:
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__:
-            if getattr(self, k) != getattr(other, k):
-                return False
-        return True
+        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__)
 
     def __hash__(self):
         return hash(repr(self))
@@ -107,25 +104,26 @@ class Account:
         :return:
         &#34;&#34;&#34;
         if &#39;@&#39; not in primary_smtp_address:
-            raise ValueError(&#34;primary_smtp_address %r is not an email address&#34; % primary_smtp_address)
+            raise ValueError(f&#34;primary_smtp_address {primary_smtp_address!r} is not an email address&#34;)
         self.fullname = fullname
         # Assume delegate access if individual credentials are provided. Else, assume service user with impersonation
         self.access_type = access_type or (DELEGATE if credentials else IMPERSONATION)
         if self.access_type not in ACCESS_TYPES:
-            raise ValueError(&#34;&#39;access_type&#39; %r must be one of %s&#34; % (self.access_type, ACCESS_TYPES))
+            raise InvalidEnumValue(&#39;access_type&#39;, self.access_type, ACCESS_TYPES)
         try:
-            self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
+            # get_locale() might not be able to determine the locale
+            self.locale = locale or stdlib_locale.getlocale()[0] or None
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
             log.warning(&#39;Failed to get locale (%s)&#39;, e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
-            raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
+            raise InvalidTypeError(&#39;locale&#39;, self.locale, str)
         if default_timezone:
             try:
                 self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
             except TypeError:
-                raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % default_timezone)
+                raise InvalidTypeError(&#39;default_timezone&#39;, default_timezone, EWSTimeZone)
         else:
             try:
                 self.default_timezone = EWSTimeZone.localzone()
@@ -135,17 +133,22 @@ class Account:
                 log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
                 self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
-            raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
+            raise InvalidTypeError(&#39;config&#39;, config, Configuration)
         if autodiscover:
             if config:
-                retry_policy, auth_type = config.retry_policy, config.auth_type
+                auth_type, retry_policy, version = config.auth_type, config.retry_policy, config.version
                 if not credentials:
                     credentials = config.credentials
             else:
-                retry_policy, auth_type = None, None
+                auth_type, retry_policy, version = None, None, None
             self.ad_response, self.protocol = Autodiscovery(
-                email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
+                email=primary_smtp_address, credentials=credentials
             ).discover()
+            # Let&#39;s not use the auth_package hint from the AD response. It could be incorrect and we can just guess.
+            self.protocol.config.auth_type = auth_type
+            self.protocol.config.retry_policy = retry_policy
+            if not self.protocol.config.version:
+                self.protocol.config.version = version
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:
@@ -160,8 +163,9 @@ class Account:
         self.affinity_cookie = None
 
         # We may need to override the default server version on a per-account basis because Microsoft may report one
-        # server version up-front but delegate account requests to an older backend server.
-        self.version = self.protocol.version
+        # server version up-front but delegate account requests to an older backend server. Create a new instance to
+        # avoid changing the protocol version.
+        self.version = self.protocol.version.copy()
         log.debug(&#39;Added account: %s&#39;, self)
 
     @property
@@ -479,7 +483,7 @@ class Account:
         )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
-                    affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+                    affected_task_occurrences=ALL_OCCURRENCES, suppress_read_receipts=True, chunk_size=None):
         &#34;&#34;&#34;Bulk delete items.
 
         :param ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -488,14 +492,14 @@ class Account:
         :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
             SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
         :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
-            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCES)
         :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
         :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
         :return: a list of either True or exception instances, in the same order as the input
         &#34;&#34;&#34;
         log.debug(
-            &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
+            &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurrences: %s)&#39;,
             self,
             delete_type,
             send_meeting_cancellations,
@@ -633,15 +637,11 @@ class Account:
             # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
             # empty &#39;ids&#39; and return early.
             return
-        # GetPersona only accepts one persona ID per request. Crazy.
-        svc = GetPersona(account=self)
-        for i in ids:
-            yield svc.call(persona=i)
+        yield from GetPersona(account=self).call(personas=ids)
 
     @property
     def mail_tips(self):
         &#34;&#34;&#34;See self.oof_settings about caching considerations.&#34;&#34;&#34;
-        # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
         return GetMailTips(protocol=self.protocol).get(
             sending_as=SendingAs(email_address=self.primary_smtp_address),
             recipients=[Mailbox(email_address=self.primary_smtp_address)],
@@ -651,18 +651,12 @@ class Account:
     @property
     def delegates(self):
         &#34;&#34;&#34;Return a list of DelegateUser objects representing the delegates that are set on this account.&#34;&#34;&#34;
-        delegates = []
-        for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
-            if isinstance(d, Exception):
-                raise d
-            delegates.append(d)
-        return delegates
+        return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))
 
     def __str__(self):
-        txt = &#39;%s&#39; % self.primary_smtp_address
         if self.fullname:
-            txt += &#39; (%s)&#39; % self.fullname
-        return txt</code></pre>
+            return f&#39;{self.primary_smtp_address} ({self.fullname})&#39;
+        return self.primary_smtp_address</code></pre>
 </details>
 </section>
 <section>
@@ -719,25 +713,26 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         :return:
         &#34;&#34;&#34;
         if &#39;@&#39; not in primary_smtp_address:
-            raise ValueError(&#34;primary_smtp_address %r is not an email address&#34; % primary_smtp_address)
+            raise ValueError(f&#34;primary_smtp_address {primary_smtp_address!r} is not an email address&#34;)
         self.fullname = fullname
         # Assume delegate access if individual credentials are provided. Else, assume service user with impersonation
         self.access_type = access_type or (DELEGATE if credentials else IMPERSONATION)
         if self.access_type not in ACCESS_TYPES:
-            raise ValueError(&#34;&#39;access_type&#39; %r must be one of %s&#34; % (self.access_type, ACCESS_TYPES))
+            raise InvalidEnumValue(&#39;access_type&#39;, self.access_type, ACCESS_TYPES)
         try:
-            self.locale = locale or getlocale()[0] or None  # get_locale() might not be able to determine the locale
+            # get_locale() might not be able to determine the locale
+            self.locale = locale or stdlib_locale.getlocale()[0] or None
         except ValueError as e:
             # getlocale() may throw ValueError if it fails to parse the system locale
             log.warning(&#39;Failed to get locale (%s)&#39;, e)
             self.locale = None
         if not isinstance(self.locale, (type(None), str)):
-            raise ValueError(&#34;Expected &#39;locale&#39; to be a string, got %r&#34; % self.locale)
+            raise InvalidTypeError(&#39;locale&#39;, self.locale, str)
         if default_timezone:
             try:
                 self.default_timezone = EWSTimeZone.from_timezone(default_timezone)
             except TypeError:
-                raise ValueError(&#34;Expected &#39;default_timezone&#39; to be an EWSTimeZone, got %r&#34; % default_timezone)
+                raise InvalidTypeError(&#39;default_timezone&#39;, default_timezone, EWSTimeZone)
         else:
             try:
                 self.default_timezone = EWSTimeZone.localzone()
@@ -747,17 +742,22 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                 log.warning(&#39;%s. Fallback to UTC&#39;, e.args[0])
                 self.default_timezone = UTC
         if not isinstance(config, (Configuration, type(None))):
-            raise ValueError(&#34;Expected &#39;config&#39; to be a Configuration, got %r&#34; % config)
+            raise InvalidTypeError(&#39;config&#39;, config, Configuration)
         if autodiscover:
             if config:
-                retry_policy, auth_type = config.retry_policy, config.auth_type
+                auth_type, retry_policy, version = config.auth_type, config.retry_policy, config.version
                 if not credentials:
                     credentials = config.credentials
             else:
-                retry_policy, auth_type = None, None
+                auth_type, retry_policy, version = None, None, None
             self.ad_response, self.protocol = Autodiscovery(
-                email=primary_smtp_address, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
+                email=primary_smtp_address, credentials=credentials
             ).discover()
+            # Let&#39;s not use the auth_package hint from the AD response. It could be incorrect and we can just guess.
+            self.protocol.config.auth_type = auth_type
+            self.protocol.config.retry_policy = retry_policy
+            if not self.protocol.config.version:
+                self.protocol.config.version = version
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:
@@ -772,8 +772,9 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         self.affinity_cookie = None
 
         # We may need to override the default server version on a per-account basis because Microsoft may report one
-        # server version up-front but delegate account requests to an older backend server.
-        self.version = self.protocol.version
+        # server version up-front but delegate account requests to an older backend server. Create a new instance to
+        # avoid changing the protocol version.
+        self.version = self.protocol.version.copy()
         log.debug(&#39;Added account: %s&#39;, self)
 
     @property
@@ -1091,7 +1092,7 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         )))
 
     def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
-                    affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+                    affected_task_occurrences=ALL_OCCURRENCES, suppress_read_receipts=True, chunk_size=None):
         &#34;&#34;&#34;Bulk delete items.
 
         :param ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -1100,14 +1101,14 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
             SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
         :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
-            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+            AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCES)
         :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
         :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
         :return: a list of either True or exception instances, in the same order as the input
         &#34;&#34;&#34;
         log.debug(
-            &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
+            &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurrences: %s)&#39;,
             self,
             delete_type,
             send_meeting_cancellations,
@@ -1245,15 +1246,11 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
             # empty &#39;ids&#39; and return early.
             return
-        # GetPersona only accepts one persona ID per request. Crazy.
-        svc = GetPersona(account=self)
-        for i in ids:
-            yield svc.call(persona=i)
+        yield from GetPersona(account=self).call(personas=ids)
 
     @property
     def mail_tips(self):
         &#34;&#34;&#34;See self.oof_settings about caching considerations.&#34;&#34;&#34;
-        # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
         return GetMailTips(protocol=self.protocol).get(
             sending_as=SendingAs(email_address=self.primary_smtp_address),
             recipients=[Mailbox(email_address=self.primary_smtp_address)],
@@ -1263,18 +1260,12 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
     @property
     def delegates(self):
         &#34;&#34;&#34;Return a list of DelegateUser objects representing the delegates that are set on this account.&#34;&#34;&#34;
-        delegates = []
-        for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
-            if isinstance(d, Exception):
-                raise d
-            delegates.append(d)
-        return delegates
+        return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))
 
     def __str__(self):
-        txt = &#39;%s&#39; % self.primary_smtp_address
         if self.fullname:
-            txt += &#39; (%s)&#39; % self.fullname
-        return txt</code></pre>
+            return f&#39;{self.primary_smtp_address} ({self.fullname})&#39;
+        return self.primary_smtp_address</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -1587,12 +1578,7 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 <pre><code class="python">@property
 def delegates(self):
     &#34;&#34;&#34;Return a list of DelegateUser objects representing the delegates that are set on this account.&#34;&#34;&#34;
-    delegates = []
-    for d in GetDelegate(account=self).call(user_ids=None, include_permissions=True):
-        if isinstance(d, Exception):
-            raise d
-        delegates.append(d)
-    return delegates</code></pre>
+    return list(GetDelegate(account=self).call(user_ids=None, include_permissions=True))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.directory"><code class="name">var <span class="ident">directory</span></code></dt>
@@ -1801,7 +1787,6 @@ def domain(self):
 <pre><code class="python">@property
 def mail_tips(self):
     &#34;&#34;&#34;See self.oof_settings about caching considerations.&#34;&#34;&#34;
-    # mail_tips_requested must be one of properties.MAIL_TIPS_TYPES
     return GetMailTips(protocol=self.protocol).get(
         sending_as=SendingAs(email_address=self.primary_smtp_address),
         recipients=[Mailbox(email_address=self.primary_smtp_address)],
@@ -2445,7 +2430,7 @@ of the created item, and the 'id' of any attachments that were also created.</p>
 :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
 SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
 :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
-AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCES)
 :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
 :param chunk_size: The number of items to send to the server in a single request (Default value = None)</p>
 <p>:return: a list of either True or exception instances, in the same order as the input</p></div>
@@ -2454,7 +2439,7 @@ AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bulk_delete(self, ids, delete_type=HARD_DELETE, send_meeting_cancellations=SEND_TO_NONE,
-                affected_task_occurrences=ALL_OCCURRENCIES, suppress_read_receipts=True, chunk_size=None):
+                affected_task_occurrences=ALL_OCCURRENCES, suppress_read_receipts=True, chunk_size=None):
     &#34;&#34;&#34;Bulk delete items.
 
     :param ids: an iterable of either (id, changekey) tuples or Item objects.
@@ -2463,14 +2448,14 @@ AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
     :param send_meeting_cancellations: only applicable to CalendarItem. Possible values are specified in
         SEND_MEETING_CANCELLATIONS_CHOICES. (Default value = SEND_TO_NONE)
     :param affected_task_occurrences: only applicable for recurring Task items. Possible values are specified in
-        AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCIES)
+        AFFECTED_TASK_OCCURRENCES_CHOICES. (Default value = ALL_OCCURRENCES)
     :param suppress_read_receipts: only supported from Exchange 2013. True or False. (Default value = True)
     :param chunk_size: The number of items to send to the server in a single request (Default value = None)
 
     :return: a list of either True or exception instances, in the same order as the input
     &#34;&#34;&#34;
     log.debug(
-        &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurences: %s)&#39;,
+        &#39;Deleting items for %s (delete_type: %s, send_meeting_invitations: %s, affected_task_occurrences: %s)&#39;,
         self,
         delete_type,
         send_meeting_cancellations,
@@ -2736,10 +2721,7 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
         # We accept generators, so it&#39;s not always convenient for caller to know up-front if &#39;ids&#39; is empty. Allow
         # empty &#39;ids&#39; and return early.
         return
-    # GetPersona only accepts one persona ID per request. Crazy.
-    svc = GetPersona(account=self)
-    for i in ids:
-        yield svc.call(persona=i)</code></pre>
+    yield from GetPersona(account=self).call(personas=ids)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.account.Account.upload"><code class="name flex">
@@ -2824,10 +2806,7 @@ account.upload([
         self.sid = sid
 
     def __eq__(self, other):
-        for k in self.__dict__:
-            if getattr(self, k) != getattr(other, k):
-                return False
-        return True
+        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__)
 
     def __hash__(self):
         return hash(repr(self))

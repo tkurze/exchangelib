@@ -28,7 +28,9 @@
 </summary>
 <pre><code class="python">from itertools import chain
 
-from .common import EWSAccountService, create_attachment_ids_element
+from .common import EWSAccountService, attachment_ids_element
+from ..attachments import FileAttachment, ItemAttachment
+from ..errors import InvalidEnumValue
 from ..util import create_element, add_xml_child, set_xml_value, DummyResponse, StreamingBase64Parser,\
     StreamingContentHandler, ElementNotFound, MNS
 
@@ -40,27 +42,22 @@ class GetAttachment(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetAttachment&#39;
-    element_container_name = &#39;{%s}Attachments&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise ValueError(&#34;&#39;body_type&#39; %s must be one of %s&#34; % (body_type, BODY_TYPE_CHOICES))
+            raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, include_mime_content=include_mime_content,
             body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..attachments import FileAttachment, ItemAttachment
-        cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         shape_elem = create_element(&#39;m:AttachmentShape&#39;)
         if include_mime_content:
             add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
@@ -78,8 +75,7 @@ class GetAttachment(EWSAccountService):
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
-        attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-        payload.append(attachment_ids)
+        payload.append(attachment_ids_element(items=items, version=self.account.version))
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):
@@ -99,7 +95,6 @@ class GetAttachment(EWSAccountService):
         if not parse_opts.get(&#39;stream_file_content&#39;, False):
             return super()._get_soap_messages(body, **parse_opts)
 
-        from ..attachments import FileAttachment
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
         parser = StreamingBase64Parser()
@@ -121,7 +116,7 @@ class GetAttachment(EWSAccountService):
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
             # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
-            response = DummyResponse(url=None, headers=None, request_headers=None, content=enf.data)
+            response = DummyResponse(content=enf.data)
             _, body = super()._get_soap_parts(response=response)
             res = super()._get_soap_messages(body=body)
             for e in self._get_elements_in_response(response=res):
@@ -157,27 +152,22 @@ class GetAttachment(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetAttachment&#39;
-    element_container_name = &#39;{%s}Attachments&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise ValueError(&#34;&#39;body_type&#39; %s must be one of %s&#34; % (body_type, BODY_TYPE_CHOICES))
+            raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
         return self._elems_to_objs(self._chunked_get_elements(
             self.get_payload, items=items, include_mime_content=include_mime_content,
             body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..attachments import FileAttachment, ItemAttachment
-        cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         shape_elem = create_element(&#39;m:AttachmentShape&#39;)
         if include_mime_content:
             add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
@@ -195,8 +185,7 @@ class GetAttachment(EWSAccountService):
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
-        attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-        payload.append(attachment_ids)
+        payload.append(attachment_ids_element(items=items, version=self.account.version))
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):
@@ -216,7 +205,6 @@ class GetAttachment(EWSAccountService):
         if not parse_opts.get(&#39;stream_file_content&#39;, False):
             return super()._get_soap_messages(body, **parse_opts)
 
-        from ..attachments import FileAttachment
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
         parser = StreamingBase64Parser()
@@ -238,7 +226,7 @@ class GetAttachment(EWSAccountService):
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
             # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
-            response = DummyResponse(url=None, headers=None, request_headers=None, content=enf.data)
+            response = DummyResponse(content=enf.data)
             _, body = super()._get_soap_parts(response=response)
             res = super()._get_soap_messages(body=body)
             for e in self._get_elements_in_response(response=res):
@@ -261,6 +249,10 @@ class GetAttachment(EWSAccountService):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.get_attachment.GetAttachment.cls_map"><code class="name">var <span class="ident">cls_map</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.get_attachment.GetAttachment.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -279,7 +271,7 @@ class GetAttachment(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
     if body_type and body_type not in BODY_TYPE_CHOICES:
-        raise ValueError(&#34;&#39;body_type&#39; %s must be one of %s&#34; % (body_type, BODY_TYPE_CHOICES))
+        raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
     return self._elems_to_objs(self._chunked_get_elements(
         self.get_payload, items=items, include_mime_content=include_mime_content,
         body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
@@ -296,7 +288,7 @@ class GetAttachment(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-    payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
     shape_elem = create_element(&#39;m:AttachmentShape&#39;)
     if include_mime_content:
         add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
@@ -314,8 +306,7 @@ class GetAttachment(EWSAccountService):
         shape_elem.append(additional_properties)
     if len(shape_elem):
         payload.append(shape_elem)
-    attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-    payload.append(attachment_ids)
+    payload.append(attachment_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>
 </dd>
@@ -341,7 +332,7 @@ class GetAttachment(EWSAccountService):
         # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
         # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
         # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
-        response = DummyResponse(url=None, headers=None, request_headers=None, content=enf.data)
+        response = DummyResponse(content=enf.data)
         _, body = super()._get_soap_parts(response=response)
         res = super()._get_soap_messages(body=body)
         for e in self._get_elements_in_response(response=res):
@@ -388,6 +379,7 @@ class GetAttachment(EWSAccountService):
 <ul class="">
 <li><code><a title="exchangelib.services.get_attachment.GetAttachment.SERVICE_NAME" href="#exchangelib.services.get_attachment.GetAttachment.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.get_attachment.GetAttachment.call" href="#exchangelib.services.get_attachment.GetAttachment.call">call</a></code></li>
+<li><code><a title="exchangelib.services.get_attachment.GetAttachment.cls_map" href="#exchangelib.services.get_attachment.GetAttachment.cls_map">cls_map</a></code></li>
 <li><code><a title="exchangelib.services.get_attachment.GetAttachment.element_container_name" href="#exchangelib.services.get_attachment.GetAttachment.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.get_attachment.GetAttachment.get_payload" href="#exchangelib.services.get_attachment.GetAttachment.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.get_attachment.GetAttachment.stream_file_content" href="#exchangelib.services.get_attachment.GetAttachment.stream_file_content">stream_file_content</a></code></li>

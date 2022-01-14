@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from .common import EWSAccountService
+from ..errors import InvalidEnumValue
 from ..properties import UserConfiguration
 from ..util import create_element, set_xml_value
 
@@ -35,7 +36,7 @@ DICTIONARY = &#39;Dictionary&#39;
 XML_DATA = &#39;XmlData&#39;
 BINARY_DATA = &#39;BinaryData&#39;
 ALL = &#39;All&#39;
-PROPERTIES_CHOICES = {ID, DICTIONARY, XML_DATA, BINARY_DATA, ALL}
+PROPERTIES_CHOICES = (ID, DICTIONARY, XML_DATA, BINARY_DATA, ALL)
 
 
 class GetUserConfiguration(EWSAccountService):
@@ -47,29 +48,25 @@ class GetUserConfiguration(EWSAccountService):
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
+            raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 user_configuration_name=user_configuration_name, properties=properties
         )))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield UserConfiguration.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return UserConfiguration.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        getuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
-        user_configuration_properties = create_element(&#39;m:UserConfigurationProperties&#39;)
-        set_xml_value(user_configuration_properties, properties, version=self.account.version)
-        getuserconfiguration.append(user_configuration_properties)
-        return getuserconfiguration</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        set_xml_value(payload, user_configuration_name, version=self.account.version)
+        payload.append(
+            set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+        )
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -101,29 +98,25 @@ class GetUserConfiguration(EWSAccountService):
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
+            raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 user_configuration_name=user_configuration_name, properties=properties
         )))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield UserConfiguration.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return UserConfiguration.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        getuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
-        user_configuration_properties = create_element(&#39;m:UserConfigurationProperties&#39;)
-        set_xml_value(user_configuration_properties, properties, version=self.account.version)
-        getuserconfiguration.append(user_configuration_properties)
-        return getuserconfiguration</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        set_xml_value(payload, user_configuration_name, version=self.account.version)
+        payload.append(
+            set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+        )
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -150,7 +143,7 @@ class GetUserConfiguration(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, user_configuration_name, properties):
     if properties not in PROPERTIES_CHOICES:
-        raise ValueError(&#34;&#39;properties&#39; %r must be one of %s&#34; % (properties, PROPERTIES_CHOICES))
+        raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
     return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             user_configuration_name=user_configuration_name, properties=properties
     )))</code></pre>
@@ -166,12 +159,12 @@ class GetUserConfiguration(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration_name, properties):
-    getuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    set_xml_value(getuserconfiguration, user_configuration_name, version=self.account.version)
-    user_configuration_properties = create_element(&#39;m:UserConfigurationProperties&#39;)
-    set_xml_value(user_configuration_properties, properties, version=self.account.version)
-    getuserconfiguration.append(user_configuration_properties)
-    return getuserconfiguration</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    set_xml_value(payload, user_configuration_name, version=self.account.version)
+    payload.append(
+        set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+    )
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

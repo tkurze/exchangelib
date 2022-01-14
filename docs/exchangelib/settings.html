@@ -57,13 +57,13 @@ class OofSettings(EWSElement):
         super().clean(version=version)
         if self.state == self.SCHEDULED:
             if not self.start or not self.end:
-                raise ValueError(&#34;&#39;start&#39; and &#39;end&#39; must be set when state is &#39;%s&#39;&#34; % self.SCHEDULED)
+                raise ValueError(f&#34;&#39;start&#39; and &#39;end&#39; must be set when state is {self.SCHEDULED!r}&#34;)
             if self.start &gt;= self.end:
                 raise ValueError(&#34;&#39;start&#39; must be before &#39;end&#39;&#34;)
             if self.end &lt; datetime.datetime.now(tz=UTC):
                 raise ValueError(&#34;&#39;end&#39; must be in the future&#34;)
         if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
-            raise ValueError(&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not &#39;%s&#39;&#34; % self.DISABLED)
+            raise ValueError(f&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not {self.DISABLED!r}&#34;)
 
     @classmethod
     def from_xml(cls, elem, account):
@@ -77,28 +77,26 @@ class OofSettings(EWSElement):
 
     def to_xml(self, version):
         self.clean(version=version)
-        elem = create_element(&#39;t:%s&#39; % self.REQUEST_ELEMENT_NAME)
+        elem = create_element(f&#39;t:{self.REQUEST_ELEMENT_NAME}&#39;)
         for attr in (&#39;state&#39;, &#39;external_audience&#39;):
             value = getattr(self, attr)
-            if value is None:
-                continue
             f = self.get_field_by_fieldname(attr)
-            set_xml_value(elem, f.to_xml(value, version=version), version=version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         if self.start or self.end:
             duration = create_element(&#39;t:Duration&#39;)
             if self.start:
                 f = self.get_field_by_fieldname(&#39;start&#39;)
-                set_xml_value(duration, f.to_xml(self.start, version=version), version)
+                set_xml_value(duration, f.to_xml(self.start, version=version))
             if self.end:
                 f = self.get_field_by_fieldname(&#39;end&#39;)
-                set_xml_value(duration, f.to_xml(self.end, version=version), version)
+                set_xml_value(duration, f.to_xml(self.end, version=version))
             elem.append(duration)
         for attr in (&#39;internal_reply&#39;, &#39;external_reply&#39;):
             value = getattr(self, attr)
             if value is None:
                 value = &#39;&#39;  # The value can be empty, but the XML element must always be present
             f = self.get_field_by_fieldname(attr)
-            set_xml_value(elem, f.to_xml(value, version=version), version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         return elem
 
     def __hash__(self):
@@ -156,13 +154,13 @@ class OofSettings(EWSElement):
         super().clean(version=version)
         if self.state == self.SCHEDULED:
             if not self.start or not self.end:
-                raise ValueError(&#34;&#39;start&#39; and &#39;end&#39; must be set when state is &#39;%s&#39;&#34; % self.SCHEDULED)
+                raise ValueError(f&#34;&#39;start&#39; and &#39;end&#39; must be set when state is {self.SCHEDULED!r}&#34;)
             if self.start &gt;= self.end:
                 raise ValueError(&#34;&#39;start&#39; must be before &#39;end&#39;&#34;)
             if self.end &lt; datetime.datetime.now(tz=UTC):
                 raise ValueError(&#34;&#39;end&#39; must be in the future&#34;)
         if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
-            raise ValueError(&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not &#39;%s&#39;&#34; % self.DISABLED)
+            raise ValueError(f&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not {self.DISABLED!r}&#34;)
 
     @classmethod
     def from_xml(cls, elem, account):
@@ -176,28 +174,26 @@ class OofSettings(EWSElement):
 
     def to_xml(self, version):
         self.clean(version=version)
-        elem = create_element(&#39;t:%s&#39; % self.REQUEST_ELEMENT_NAME)
+        elem = create_element(f&#39;t:{self.REQUEST_ELEMENT_NAME}&#39;)
         for attr in (&#39;state&#39;, &#39;external_audience&#39;):
             value = getattr(self, attr)
-            if value is None:
-                continue
             f = self.get_field_by_fieldname(attr)
-            set_xml_value(elem, f.to_xml(value, version=version), version=version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         if self.start or self.end:
             duration = create_element(&#39;t:Duration&#39;)
             if self.start:
                 f = self.get_field_by_fieldname(&#39;start&#39;)
-                set_xml_value(duration, f.to_xml(self.start, version=version), version)
+                set_xml_value(duration, f.to_xml(self.start, version=version))
             if self.end:
                 f = self.get_field_by_fieldname(&#39;end&#39;)
-                set_xml_value(duration, f.to_xml(self.end, version=version), version)
+                set_xml_value(duration, f.to_xml(self.end, version=version))
             elem.append(duration)
         for attr in (&#39;internal_reply&#39;, &#39;external_reply&#39;):
             value = getattr(self, attr)
             if value is None:
                 value = &#39;&#39;  # The value can be empty, but the XML element must always be present
             f = self.get_field_by_fieldname(attr)
-            set_xml_value(elem, f.to_xml(value, version=version), version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         return elem
 
     def __hash__(self):
@@ -312,13 +308,13 @@ def from_xml(cls, elem, account):
     super().clean(version=version)
     if self.state == self.SCHEDULED:
         if not self.start or not self.end:
-            raise ValueError(&#34;&#39;start&#39; and &#39;end&#39; must be set when state is &#39;%s&#39;&#34; % self.SCHEDULED)
+            raise ValueError(f&#34;&#39;start&#39; and &#39;end&#39; must be set when state is {self.SCHEDULED!r}&#34;)
         if self.start &gt;= self.end:
             raise ValueError(&#34;&#39;start&#39; must be before &#39;end&#39;&#34;)
         if self.end &lt; datetime.datetime.now(tz=UTC):
             raise ValueError(&#34;&#39;end&#39; must be in the future&#34;)
     if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
-        raise ValueError(&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not &#39;%s&#39;&#34; % self.DISABLED)</code></pre>
+        raise ValueError(f&#34;&#39;internal_reply&#39; and &#39;external_reply&#39; must be set when state is not {self.DISABLED!r}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.settings.OofSettings.to_xml"><code class="name flex">
@@ -332,28 +328,26 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">def to_xml(self, version):
     self.clean(version=version)
-    elem = create_element(&#39;t:%s&#39; % self.REQUEST_ELEMENT_NAME)
+    elem = create_element(f&#39;t:{self.REQUEST_ELEMENT_NAME}&#39;)
     for attr in (&#39;state&#39;, &#39;external_audience&#39;):
         value = getattr(self, attr)
-        if value is None:
-            continue
         f = self.get_field_by_fieldname(attr)
-        set_xml_value(elem, f.to_xml(value, version=version), version=version)
+        set_xml_value(elem, f.to_xml(value, version=version))
     if self.start or self.end:
         duration = create_element(&#39;t:Duration&#39;)
         if self.start:
             f = self.get_field_by_fieldname(&#39;start&#39;)
-            set_xml_value(duration, f.to_xml(self.start, version=version), version)
+            set_xml_value(duration, f.to_xml(self.start, version=version))
         if self.end:
             f = self.get_field_by_fieldname(&#39;end&#39;)
-            set_xml_value(duration, f.to_xml(self.end, version=version), version)
+            set_xml_value(duration, f.to_xml(self.end, version=version))
         elem.append(duration)
     for attr in (&#39;internal_reply&#39;, &#39;external_reply&#39;):
         value = getattr(self, attr)
         if value is None:
             value = &#39;&#39;  # The value can be empty, but the XML element must always be present
         f = self.get_field_by_fieldname(attr)
-        set_xml_value(elem, f.to_xml(value, version=version), version)
+        set_xml_value(elem, f.to_xml(value, version=version))
     return elem</code></pre>
 </details>
 </dd>

@@ -29,11 +29,11 @@
 <pre><code class="python">import logging
 from threading import Lock
 
-from .base import BaseFolder, MISSING_FOLDER_ERRORS
+from .base import BaseFolder
 from .collections import FolderCollection
 from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
     WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-from .queryset import SingleFolderQuerySet, SHALLOW
+from .queryset import SingleFolderQuerySet, SHALLOW, MISSING_FOLDER_ERRORS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
 from ..properties import EWSMeta
@@ -94,7 +94,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     def get_folder(self, folder):
         if not folder.id:
             raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-        return self._folders_map.get(folder.id, None)
+        return self._folders_map.get(folder.id)
 
     def add_folder(self, folder):
         if not folder.id:
@@ -132,21 +132,21 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         :param account:
         &#34;&#34;&#34;
         if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(&#39;Class %s must have a DISTINGUISHED_FOLDER_ID value&#39; % cls)
+            raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
         try:
             return cls.resolve(
                 account=account,
                 folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(&#39;Could not find distinguished folder %s&#39; % cls.DISTINGUISHED_FOLDER_ID)
+            raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)
 
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type &#39;folder_cls&#39;
         &#34;&#34;&#34;
         if not folder_cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(&#34;&#39;folder_cls&#39; %s must have a DISTINGUISHED_FOLDER_ID value&#34; % folder_cls)
+            raise ValueError(f&#34;&#39;folder_cls&#39; {folder_cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         # Use cached distinguished folder instance, but only if cache has already been prepped. This is an optimization
         # for accessing e.g. &#39;account.contacts&#39; without fetching all folders of the account.
         if self._subfolders is not None:
@@ -167,7 +167,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound(&#39;No usable default %s folders&#39; % folder_cls)
+        raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
 
     @property
     def _folders_map(self):
@@ -203,6 +203,9 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             ).all():
                 if isinstance(f, ErrorAccessDenied):
                     # We may not have FindFolder access, or GetFolder access, either to this folder or at all
+                    continue
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                     continue
                 if isinstance(f, Exception):
                     raise f
@@ -259,47 +262,46 @@ class Root(RootOfHierarchy):
         # Try to pick a suitable default folder. we do this by:
         #  1. Searching the full folder list for a folder with the distinguished folder name
         #  2. Searching TOIS for a direct child folder of the same type that is marked as distinguished
-        #  3. Searching TOIS for a direct child folder of the same type that is has a localized name
+        #  3. Searching TOIS for a direct child folder of the same type that has a localized name
         #  4. Searching root for a direct child folder of the same type that is marked as distinguished
-        #  5. Searching root for a direct child folder of the same type that is has a localized name
+        #  5. Searching root for a direct child folder of the same type that has a localized name
         log.debug(&#39;Searching default %s folder in full folder list&#39;, folder_cls)
 
         for f in self._folders_map.values():
-            # Require exact class to not match e.g. RecipientCache instead of Contacts
+            # Require exact type, to avoid matching with subclasses (e.g. RecipientCache and Contacts)
             if f.__class__ == folder_cls and f.has_distinguished_name:
                 log.debug(&#39;Found cached %s folder with default distinguished name&#39;, folder_cls)
                 return f
 
-        # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder. TOIS might not exist.
+        # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
         if folder_cls != MsgFolderRoot:
             try:
                 return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
             except MISSING_FOLDER_ERRORS:
-                # No candidates, or TOIS does not exist, or we don&#39;t have access
+                # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
                 pass
 
-        # No candidates in TOIS. Try direct children of root.
+        # Finally, try direct children of root
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
 
     def _get_candidate(self, folder_cls, folder_coll):
-        # Get a single the folder of the same type in folder_coll
+        # Look for a single useful folder of type folder_cls in folder_coll
         same_type = [f for f in folder_coll if f.__class__ == folder_cls]
         are_distinguished = [f for f in same_type if f.is_distinguished]
         if are_distinguished:
             candidates = are_distinguished
         else:
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
-        if candidates:
-            if len(candidates) &gt; 1:
-                raise ValueError(
-                    &#39;Multiple possible default %s folders: %s&#39; % (folder_cls, [f.name for f in candidates])
-                )
-            if candidates[0].is_distinguished:
-                log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
-            else:
-                log.debug(&#39;Found cached %s folder with localized name&#39;, folder_cls)
-            return candidates[0]
-        raise ErrorFolderNotFound(&#39;No usable default %s folders&#39; % folder_cls)
+        if not candidates:
+            raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+        if len(candidates) &gt; 1:
+            raise ValueError(f&#39;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#39;)
+        candidate = candidates[0]
+        if candidate.is_distinguished:
+            log.debug(&#39;Found distinguished %s folder&#39;, folder_cls)
+        else:
+            log.debug(&#39;Found %s folder with localized name %s&#39;, folder_cls, candidate.name)
+        return candidate
 
 
 class PublicFoldersRoot(RootOfHierarchy):
@@ -329,6 +331,9 @@ class PublicFoldersRoot(RootOfHierarchy):
             for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
                     self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
             ).all():
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
+                    continue
                 if isinstance(f, Exception):
                     raise f
                 children_map[f.id] = f
@@ -407,19 +412,28 @@ class ArchiveRoot(RootOfHierarchy):
 <li><code><b><a title="exchangelib.folders.roots.RootOfHierarchy" href="#exchangelib.folders.roots.RootOfHierarchy">RootOfHierarchy</a></b></code>:
 <ul class="hlist">
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.account" href="base.html#exchangelib.folders.base.BaseFolder.account">account</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.all" href="../queryset.html#exchangelib.queryset.SearchableMixIn.all">all</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.exclude" href="../queryset.html#exchangelib.queryset.SearchableMixIn.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.filter" href="../queryset.html#exchangelib.queryset.SearchableMixIn.filter">filter</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name" href="#exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name">folder_cls_from_folder_name</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.folder_sync_state">folder_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get" href="../queryset.html#exchangelib.queryset.SearchableMixIn.get">get</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_default_folder" href="#exchangelib.folders.roots.RootOfHierarchy.get_default_folder">get_default_folder</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.people" href="../queryset.html#exchangelib.queryset.SearchableMixIn.people">people</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.root" href="base.html#exchangelib.folders.base.BaseFolder.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_pull" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_push" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_streaming" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
@@ -471,6 +485,9 @@ class ArchiveRoot(RootOfHierarchy):
             for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
                     self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
             ).all():
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
+                    continue
                 if isinstance(f, Exception):
                     raise f
                 children_map[f.id] = f
@@ -540,6 +557,9 @@ class ArchiveRoot(RootOfHierarchy):
         for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
                 self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
         ).all():
+            if isinstance(f, MISSING_FOLDER_ERRORS):
+                # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
+                continue
             if isinstance(f, Exception):
                 raise f
             children_map[f.id] = f
@@ -561,19 +581,28 @@ class ArchiveRoot(RootOfHierarchy):
 <li><code><b><a title="exchangelib.folders.roots.RootOfHierarchy" href="#exchangelib.folders.roots.RootOfHierarchy">RootOfHierarchy</a></b></code>:
 <ul class="hlist">
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.account" href="base.html#exchangelib.folders.base.BaseFolder.account">account</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.all" href="../queryset.html#exchangelib.queryset.SearchableMixIn.all">all</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.exclude" href="../queryset.html#exchangelib.queryset.SearchableMixIn.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.filter" href="../queryset.html#exchangelib.queryset.SearchableMixIn.filter">filter</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name" href="#exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name">folder_cls_from_folder_name</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.folder_sync_state">folder_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get" href="../queryset.html#exchangelib.queryset.SearchableMixIn.get">get</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_default_folder" href="#exchangelib.folders.roots.RootOfHierarchy.get_default_folder">get_default_folder</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.people" href="../queryset.html#exchangelib.queryset.SearchableMixIn.people">people</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.root" href="base.html#exchangelib.folders.base.BaseFolder.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_pull" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_push" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_streaming" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
@@ -619,47 +648,46 @@ class ArchiveRoot(RootOfHierarchy):
         # Try to pick a suitable default folder. we do this by:
         #  1. Searching the full folder list for a folder with the distinguished folder name
         #  2. Searching TOIS for a direct child folder of the same type that is marked as distinguished
-        #  3. Searching TOIS for a direct child folder of the same type that is has a localized name
+        #  3. Searching TOIS for a direct child folder of the same type that has a localized name
         #  4. Searching root for a direct child folder of the same type that is marked as distinguished
-        #  5. Searching root for a direct child folder of the same type that is has a localized name
+        #  5. Searching root for a direct child folder of the same type that has a localized name
         log.debug(&#39;Searching default %s folder in full folder list&#39;, folder_cls)
 
         for f in self._folders_map.values():
-            # Require exact class to not match e.g. RecipientCache instead of Contacts
+            # Require exact type, to avoid matching with subclasses (e.g. RecipientCache and Contacts)
             if f.__class__ == folder_cls and f.has_distinguished_name:
                 log.debug(&#39;Found cached %s folder with default distinguished name&#39;, folder_cls)
                 return f
 
-        # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder. TOIS might not exist.
+        # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
         if folder_cls != MsgFolderRoot:
             try:
                 return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
             except MISSING_FOLDER_ERRORS:
-                # No candidates, or TOIS does not exist, or we don&#39;t have access
+                # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
                 pass
 
-        # No candidates in TOIS. Try direct children of root.
+        # Finally, try direct children of root
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
 
     def _get_candidate(self, folder_cls, folder_coll):
-        # Get a single the folder of the same type in folder_coll
+        # Look for a single useful folder of type folder_cls in folder_coll
         same_type = [f for f in folder_coll if f.__class__ == folder_cls]
         are_distinguished = [f for f in same_type if f.is_distinguished]
         if are_distinguished:
             candidates = are_distinguished
         else:
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
-        if candidates:
-            if len(candidates) &gt; 1:
-                raise ValueError(
-                    &#39;Multiple possible default %s folders: %s&#39; % (folder_cls, [f.name for f in candidates])
-                )
-            if candidates[0].is_distinguished:
-                log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
-            else:
-                log.debug(&#39;Found cached %s folder with localized name&#39;, folder_cls)
-            return candidates[0]
-        raise ErrorFolderNotFound(&#39;No usable default %s folders&#39; % folder_cls)</code></pre>
+        if not candidates:
+            raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+        if len(candidates) &gt; 1:
+            raise ValueError(f&#39;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#39;)
+        candidate = candidates[0]
+        if candidate.is_distinguished:
+            log.debug(&#39;Found distinguished %s folder&#39;, folder_cls)
+        else:
+            log.debug(&#39;Found %s folder with localized name %s&#39;, folder_cls, candidate.name)
+        return candidate</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -703,19 +731,28 @@ def tois(self):
 <li><code><b><a title="exchangelib.folders.roots.RootOfHierarchy" href="#exchangelib.folders.roots.RootOfHierarchy">RootOfHierarchy</a></b></code>:
 <ul class="hlist">
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.account" href="base.html#exchangelib.folders.base.BaseFolder.account">account</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.all" href="../queryset.html#exchangelib.queryset.SearchableMixIn.all">all</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.exclude" href="../queryset.html#exchangelib.queryset.SearchableMixIn.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.filter" href="../queryset.html#exchangelib.queryset.SearchableMixIn.filter">filter</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name" href="#exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name">folder_cls_from_folder_name</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.folder_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.folder_sync_state">folder_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get" href="../queryset.html#exchangelib.queryset.SearchableMixIn.get">get</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_default_folder" href="#exchangelib.folders.roots.RootOfHierarchy.get_default_folder">get_default_folder</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.people" href="../queryset.html#exchangelib.queryset.SearchableMixIn.people">people</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.root" href="base.html#exchangelib.folders.base.BaseFolder.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_pull" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_push" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.subscribe_to_streaming" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
@@ -792,7 +829,7 @@ def tois(self):
     def get_folder(self, folder):
         if not folder.id:
             raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-        return self._folders_map.get(folder.id, None)
+        return self._folders_map.get(folder.id)
 
     def add_folder(self, folder):
         if not folder.id:
@@ -830,21 +867,21 @@ def tois(self):
         :param account:
         &#34;&#34;&#34;
         if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(&#39;Class %s must have a DISTINGUISHED_FOLDER_ID value&#39; % cls)
+            raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
         try:
             return cls.resolve(
                 account=account,
                 folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(&#39;Could not find distinguished folder %s&#39; % cls.DISTINGUISHED_FOLDER_ID)
+            raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)
 
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type &#39;folder_cls&#39;
         &#34;&#34;&#34;
         if not folder_cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(&#34;&#39;folder_cls&#39; %s must have a DISTINGUISHED_FOLDER_ID value&#34; % folder_cls)
+            raise ValueError(f&#34;&#39;folder_cls&#39; {folder_cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         # Use cached distinguished folder instance, but only if cache has already been prepped. This is an optimization
         # for accessing e.g. &#39;account.contacts&#39; without fetching all folders of the account.
         if self._subfolders is not None:
@@ -865,7 +902,7 @@ def tois(self):
         except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound(&#39;No usable default %s folders&#39; % folder_cls)
+        raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
 
     @property
     def _folders_map(self):
@@ -901,6 +938,9 @@ def tois(self):
             ).all():
                 if isinstance(f, ErrorAccessDenied):
                     # We may not have FindFolder access, or GetFolder access, either to this folder or at all
+                    continue
+                if isinstance(f, MISSING_FOLDER_ERRORS):
+                    # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                     continue
                 if isinstance(f, Exception):
                     raise f
@@ -1019,58 +1059,22 @@ def get_distinguished(cls, account):
     :param account:
     &#34;&#34;&#34;
     if not cls.DISTINGUISHED_FOLDER_ID:
-        raise ValueError(&#39;Class %s must have a DISTINGUISHED_FOLDER_ID value&#39; % cls)
+        raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
     try:
         return cls.resolve(
             account=account,
             folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
         )
     except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(&#39;Could not find distinguished folder %s&#39; % cls.DISTINGUISHED_FOLDER_ID)</code></pre>
+        raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="exchangelib.folders.roots.RootOfHierarchy.account"><code class="name">var <span class="ident">account</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def account(self):
-    return self._account</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.effective_rights"><code class="name">var <span class="ident">effective_rights</span></code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt id="exchangelib.folders.roots.RootOfHierarchy.parent"><code class="name">var <span class="ident">parent</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def parent(self):
-    return None</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.folders.roots.RootOfHierarchy.root"><code class="name">var <span class="ident">root</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def root(self):
-    return self</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -1136,7 +1140,7 @@ folder was found, try as best we can to return the default folder of type 'folde
     folder was found, try as best we can to return the default folder of type &#39;folder_cls&#39;
     &#34;&#34;&#34;
     if not folder_cls.DISTINGUISHED_FOLDER_ID:
-        raise ValueError(&#34;&#39;folder_cls&#39; %s must have a DISTINGUISHED_FOLDER_ID value&#34; % folder_cls)
+        raise ValueError(f&#34;&#39;folder_cls&#39; {folder_cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
     # Use cached distinguished folder instance, but only if cache has already been prepped. This is an optimization
     # for accessing e.g. &#39;account.contacts&#39; without fetching all folders of the account.
     if self._subfolders is not None:
@@ -1157,7 +1161,7 @@ folder was found, try as best we can to return the default folder of type 'folde
     except MISSING_FOLDER_ERRORS:
         # The Exchange server does not return a distinguished folder of this type
         pass
-    raise ErrorFolderNotFound(&#39;No usable default %s folders&#39; % folder_cls)</code></pre>
+    raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.get_folder"><code class="name flex">
@@ -1172,7 +1176,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <pre><code class="python">def get_folder(self, folder):
     if not folder.id:
         raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-    return self._folders_map.get(folder.id, None)</code></pre>
+    return self._folders_map.get(folder.id)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.remove_folder"><code class="name flex">
@@ -1214,16 +1218,25 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><b><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></b></code>:
 <ul class="hlist">
 <li><code><a title="exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.account" href="base.html#exchangelib.folders.base.BaseFolder.account">account</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.all" href="../queryset.html#exchangelib.queryset.SearchableMixIn.all">all</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.exclude" href="../queryset.html#exchangelib.queryset.SearchableMixIn.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.filter" href="../queryset.html#exchangelib.queryset.SearchableMixIn.filter">filter</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.folder_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.folder_sync_state">folder_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.get" href="../queryset.html#exchangelib.queryset.SearchableMixIn.get">get</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.people" href="../queryset.html#exchangelib.queryset.SearchableMixIn.people">people</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.base.BaseFolder.root" href="base.html#exchangelib.folders.base.BaseFolder.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_pull" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_push" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_streaming" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
@@ -1284,7 +1297,6 @@ folder was found, try as best we can to return the default folder of type 'folde
 <ul class="">
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.FIELDS" href="#exchangelib.folders.roots.RootOfHierarchy.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.WELLKNOWN_FOLDERS" href="#exchangelib.folders.roots.RootOfHierarchy.WELLKNOWN_FOLDERS">WELLKNOWN_FOLDERS</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.account" href="#exchangelib.folders.roots.RootOfHierarchy.account">account</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.add_folder" href="#exchangelib.folders.roots.RootOfHierarchy.add_folder">add_folder</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.clear_cache" href="#exchangelib.folders.roots.RootOfHierarchy.clear_cache">clear_cache</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.effective_rights" href="#exchangelib.folders.roots.RootOfHierarchy.effective_rights">effective_rights</a></code></li>
@@ -1294,9 +1306,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_default_folder" href="#exchangelib.folders.roots.RootOfHierarchy.get_default_folder">get_default_folder</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_folder" href="#exchangelib.folders.roots.RootOfHierarchy.get_folder">get_folder</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="#exchangelib.folders.roots.RootOfHierarchy.parent">parent</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.remove_folder" href="#exchangelib.folders.roots.RootOfHierarchy.remove_folder">remove_folder</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.root" href="#exchangelib.folders.roots.RootOfHierarchy.root">root</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.update_folder" href="#exchangelib.folders.roots.RootOfHierarchy.update_folder">update_folder</a></code></li>
 </ul>
 </li>

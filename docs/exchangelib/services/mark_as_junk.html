@@ -26,7 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_item_ids_element
+<pre><code class="python">from .common import EWSAccountService, item_ids_element
 from ..properties import MovedItemId
 from ..util import create_element
 
@@ -41,12 +41,8 @@ class MarkAsJunk(EWSAccountService):
             self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
         )
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield MovedItemId.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return MovedItemId.id_from_xml(elem)
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -54,13 +50,9 @@ class MarkAsJunk(EWSAccountService):
 
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message
-        mark_as_junk = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=dict(IsJunk=&#39;true&#39; if is_junk else &#39;false&#39;, MoveItem=&#39;true&#39; if move_item else &#39;false&#39;)
-        )
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        mark_as_junk.append(item_ids)
-        return mark_as_junk</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -92,12 +84,8 @@ class MarkAsJunk(EWSAccountService):
             self._chunked_get_elements(self.get_payload, items=items, is_junk=is_junk, move_item=move_item)
         )
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield MovedItemId.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return MovedItemId.id_from_xml(elem)
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -105,13 +93,9 @@ class MarkAsJunk(EWSAccountService):
 
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message
-        mark_as_junk = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=dict(IsJunk=&#39;true&#39; if is_junk else &#39;false&#39;, MoveItem=&#39;true&#39; if move_item else &#39;false&#39;)
-        )
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        mark_as_junk.append(item_ids)
-        return mark_as_junk</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -153,13 +137,9 @@ class MarkAsJunk(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, items, is_junk, move_item):
     # Takes a list of items and returns either success or raises an error message
-    mark_as_junk = create_element(
-        &#39;m:%s&#39; % self.SERVICE_NAME,
-        attrs=dict(IsJunk=&#39;true&#39; if is_junk else &#39;false&#39;, MoveItem=&#39;true&#39; if move_item else &#39;false&#39;)
-    )
-    item_ids = create_item_ids_element(items=items, version=self.account.version)
-    mark_as_junk.append(item_ids)
-    return mark_as_junk</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+    payload.append(item_ids_element(items=items, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

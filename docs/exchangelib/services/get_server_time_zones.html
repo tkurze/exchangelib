@@ -26,13 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import datetime
-
-from .common import EWSService
-from ..errors import NaiveDateTimeNotAllowed
-from ..ewsdatetime import EWSDateTime
-from ..fields import WEEKDAY_NAMES
-from ..util import create_element, set_xml_value, xml_text_to_value, peek, TNS, MNS
+<pre><code class="python">from .common import EWSService
+from ..properties import TimeZoneDefinition
+from ..util import create_element, set_xml_value, peek, MNS
 from ..version import EXCHANGE_2010
 
 
@@ -42,7 +38,7 @@ class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
-    element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}TimeZoneDefinitions&#39;
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
@@ -53,97 +49,21 @@ class GetServerTimeZones(EWSService):
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=dict(ReturnFullTimeZoneData=&#39;true&#39; if return_full_timezone_data else &#39;false&#39;),
+            f&#39;m:{self.SERVICE_NAME}&#39;,
+            attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
         )
         if timezones is not None:
             is_empty, timezones = peek(timezones)
             if not is_empty:
                 tz_ids = create_element(&#39;m:Ids&#39;)
                 for timezone in timezones:
-                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id, version=self.protocol.version)
+                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
                     tz_ids.append(tz_id)
                 payload.append(tz_ids)
         return payload
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            tz_id = elem.get(&#39;Id&#39;)
-            tz_name = elem.get(&#39;Name&#39;)
-            tz_periods = self._get_periods(elem)
-            tz_transitions_groups = self._get_transitions_groups(elem)
-            tz_transitions = self._get_transitions(elem)
-            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
-
-    @staticmethod
-    def _get_periods(timezonedef):
-        tz_periods = {}
-        periods = timezonedef.find(&#39;{%s}Periods&#39; % TNS)
-        for period in periods.findall(&#39;{%s}Period&#39; % TNS):
-            # Convert e.g. &#34;trule:Microsoft/Registry/W. Europe Standard Time/2006-Daylight&#34; to (2006, &#39;Daylight&#39;)
-            p_year, p_type = period.get(&#39;Id&#39;).rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
-            tz_periods[(int(p_year), p_type)] = dict(
-                name=period.get(&#39;Name&#39;),
-                bias=xml_text_to_value(period.get(&#39;Bias&#39;), datetime.timedelta)
-            )
-        return tz_periods
-
-    @staticmethod
-    def _get_transitions_groups(timezonedef):
-        tz_transitions_groups = {}
-        transitiongroups = timezonedef.find(&#39;{%s}TransitionsGroups&#39; % TNS)
-        if transitiongroups is not None:
-            for transitiongroup in transitiongroups.findall(&#39;{%s}TransitionsGroup&#39; % TNS):
-                tg_id = int(transitiongroup.get(&#39;Id&#39;))
-                tz_transitions_groups[tg_id] = []
-                for transition in transitiongroup.findall(&#39;{%s}Transition&#39; % TNS):
-                    # Apply same conversion to To as for period IDs
-                    to_year, to_type = transition.find(&#39;{%s}To&#39; % TNS).text.rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
-                    tz_transitions_groups[tg_id].append(dict(
-                        to=(int(to_year), to_type),
-                    ))
-                for transition in transitiongroup.findall(&#39;{%s}RecurringDayTransition&#39; % TNS):
-                    # Apply same conversion to To as for period IDs
-                    to_year, to_type = transition.find(&#39;{%s}To&#39; % TNS).text.rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
-                    occurrence = xml_text_to_value(transition.find(&#39;{%s}Occurrence&#39; % TNS).text, int)
-                    if occurrence == -1:
-                        # See TimeZoneTransition.from_xml()
-                        occurrence = 5
-                    tz_transitions_groups[tg_id].append(dict(
-                        to=(int(to_year), to_type),
-                        offset=xml_text_to_value(transition.find(&#39;{%s}TimeOffset&#39; % TNS).text, datetime.timedelta),
-                        iso_month=xml_text_to_value(transition.find(&#39;{%s}Month&#39; % TNS).text, int),
-                        iso_weekday=WEEKDAY_NAMES.index(transition.find(&#39;{%s}DayOfWeek&#39; % TNS).text) + 1,
-                        occurrence=occurrence,
-                    ))
-        return tz_transitions_groups
-
-    @staticmethod
-    def _get_transitions(timezonedef):
-        tz_transitions = {}
-        transitions = timezonedef.find(&#39;{%s}Transitions&#39; % TNS)
-        if transitions is not None:
-            for transition in transitions.findall(&#39;{%s}Transition&#39; % TNS):
-                to = transition.find(&#39;{%s}To&#39; % TNS)
-                if to.get(&#39;Kind&#39;) != &#39;Group&#39;:
-                    raise ValueError(&#39;Unexpected &#34;Kind&#34; XML attr: %s&#39; % to.get(&#39;Kind&#39;))
-                tg_id = xml_text_to_value(to.text, int)
-                tz_transitions[tg_id] = None
-            for transition in transitions.findall(&#39;{%s}AbsoluteDateTransition&#39; % TNS):
-                to = transition.find(&#39;{%s}To&#39; % TNS)
-                if to.get(&#39;Kind&#39;) != &#39;Group&#39;:
-                    raise ValueError(&#39;Unexpected &#34;Kind&#34; XML attr: %s&#39; % to.get(&#39;Kind&#39;))
-                tg_id = xml_text_to_value(to.text, int)
-                try:
-                    t_date = xml_text_to_value(transition.find(&#39;{%s}DateTime&#39; % TNS).text, EWSDateTime).date()
-                except NaiveDateTimeNotAllowed as e:
-                    # We encountered a naive datetime. Don&#39;t worry. we just need the date
-                    t_date = e.local_dt.date()
-                tz_transitions[tg_id] = t_date
-        return tz_transitions</code></pre>
+    def _elem_to_obj(self, elem):
+        return TimeZoneDefinition.from_xml(elem=elem, account=None)</code></pre>
 </details>
 </section>
 <section>
@@ -172,7 +92,7 @@ class GetServerTimeZones(EWSService):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetServerTimeZones&#39;
-    element_container_name = &#39;{%s}TimeZoneDefinitions&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}TimeZoneDefinitions&#39;
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
@@ -183,97 +103,21 @@ class GetServerTimeZones(EWSService):
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=dict(ReturnFullTimeZoneData=&#39;true&#39; if return_full_timezone_data else &#39;false&#39;),
+            f&#39;m:{self.SERVICE_NAME}&#39;,
+            attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
         )
         if timezones is not None:
             is_empty, timezones = peek(timezones)
             if not is_empty:
                 tz_ids = create_element(&#39;m:Ids&#39;)
                 for timezone in timezones:
-                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id, version=self.protocol.version)
+                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
                     tz_ids.append(tz_id)
                 payload.append(tz_ids)
         return payload
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            tz_id = elem.get(&#39;Id&#39;)
-            tz_name = elem.get(&#39;Name&#39;)
-            tz_periods = self._get_periods(elem)
-            tz_transitions_groups = self._get_transitions_groups(elem)
-            tz_transitions = self._get_transitions(elem)
-            yield tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups
-
-    @staticmethod
-    def _get_periods(timezonedef):
-        tz_periods = {}
-        periods = timezonedef.find(&#39;{%s}Periods&#39; % TNS)
-        for period in periods.findall(&#39;{%s}Period&#39; % TNS):
-            # Convert e.g. &#34;trule:Microsoft/Registry/W. Europe Standard Time/2006-Daylight&#34; to (2006, &#39;Daylight&#39;)
-            p_year, p_type = period.get(&#39;Id&#39;).rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
-            tz_periods[(int(p_year), p_type)] = dict(
-                name=period.get(&#39;Name&#39;),
-                bias=xml_text_to_value(period.get(&#39;Bias&#39;), datetime.timedelta)
-            )
-        return tz_periods
-
-    @staticmethod
-    def _get_transitions_groups(timezonedef):
-        tz_transitions_groups = {}
-        transitiongroups = timezonedef.find(&#39;{%s}TransitionsGroups&#39; % TNS)
-        if transitiongroups is not None:
-            for transitiongroup in transitiongroups.findall(&#39;{%s}TransitionsGroup&#39; % TNS):
-                tg_id = int(transitiongroup.get(&#39;Id&#39;))
-                tz_transitions_groups[tg_id] = []
-                for transition in transitiongroup.findall(&#39;{%s}Transition&#39; % TNS):
-                    # Apply same conversion to To as for period IDs
-                    to_year, to_type = transition.find(&#39;{%s}To&#39; % TNS).text.rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
-                    tz_transitions_groups[tg_id].append(dict(
-                        to=(int(to_year), to_type),
-                    ))
-                for transition in transitiongroup.findall(&#39;{%s}RecurringDayTransition&#39; % TNS):
-                    # Apply same conversion to To as for period IDs
-                    to_year, to_type = transition.find(&#39;{%s}To&#39; % TNS).text.rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
-                    occurrence = xml_text_to_value(transition.find(&#39;{%s}Occurrence&#39; % TNS).text, int)
-                    if occurrence == -1:
-                        # See TimeZoneTransition.from_xml()
-                        occurrence = 5
-                    tz_transitions_groups[tg_id].append(dict(
-                        to=(int(to_year), to_type),
-                        offset=xml_text_to_value(transition.find(&#39;{%s}TimeOffset&#39; % TNS).text, datetime.timedelta),
-                        iso_month=xml_text_to_value(transition.find(&#39;{%s}Month&#39; % TNS).text, int),
-                        iso_weekday=WEEKDAY_NAMES.index(transition.find(&#39;{%s}DayOfWeek&#39; % TNS).text) + 1,
-                        occurrence=occurrence,
-                    ))
-        return tz_transitions_groups
-
-    @staticmethod
-    def _get_transitions(timezonedef):
-        tz_transitions = {}
-        transitions = timezonedef.find(&#39;{%s}Transitions&#39; % TNS)
-        if transitions is not None:
-            for transition in transitions.findall(&#39;{%s}Transition&#39; % TNS):
-                to = transition.find(&#39;{%s}To&#39; % TNS)
-                if to.get(&#39;Kind&#39;) != &#39;Group&#39;:
-                    raise ValueError(&#39;Unexpected &#34;Kind&#34; XML attr: %s&#39; % to.get(&#39;Kind&#39;))
-                tg_id = xml_text_to_value(to.text, int)
-                tz_transitions[tg_id] = None
-            for transition in transitions.findall(&#39;{%s}AbsoluteDateTransition&#39; % TNS):
-                to = transition.find(&#39;{%s}To&#39; % TNS)
-                if to.get(&#39;Kind&#39;) != &#39;Group&#39;:
-                    raise ValueError(&#39;Unexpected &#34;Kind&#34; XML attr: %s&#39; % to.get(&#39;Kind&#39;))
-                tg_id = xml_text_to_value(to.text, int)
-                try:
-                    t_date = xml_text_to_value(transition.find(&#39;{%s}DateTime&#39; % TNS).text, EWSDateTime).date()
-                except NaiveDateTimeNotAllowed as e:
-                    # We encountered a naive datetime. Don&#39;t worry. we just need the date
-                    t_date = e.local_dt.date()
-                tz_transitions[tg_id] = t_date
-        return tz_transitions</code></pre>
+    def _elem_to_obj(self, elem):
+        return TimeZoneDefinition.from_xml(elem=elem, account=None)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -323,15 +167,15 @@ class GetServerTimeZones(EWSService):
 </summary>
 <pre><code class="python">def get_payload(self, timezones, return_full_timezone_data):
     payload = create_element(
-        &#39;m:%s&#39; % self.SERVICE_NAME,
-        attrs=dict(ReturnFullTimeZoneData=&#39;true&#39; if return_full_timezone_data else &#39;false&#39;),
+        f&#39;m:{self.SERVICE_NAME}&#39;,
+        attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
     )
     if timezones is not None:
         is_empty, timezones = peek(timezones)
         if not is_empty:
             tz_ids = create_element(&#39;m:Ids&#39;)
             for timezone in timezones:
-                tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id, version=self.protocol.version)
+                tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
                 tz_ids.append(tz_id)
             payload.append(tz_ids)
     return payload</code></pre>

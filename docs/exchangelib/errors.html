@@ -40,6 +40,28 @@ class DoesNotExist(Exception):
     pass
 
 
+class InvalidEnumValue(ValueError):
+    def __init__(self, field_name, value, choices):
+        self.field_name = field_name
+        self.value = value
+        self.choices = choices
+        super().__init__(str(self))
+
+    def __str__(self):
+        return f&#39;{self.field_name!r} {self.value!r} must be one of {sorted(self.choices)}&#39;
+
+
+class InvalidTypeError(TypeError):
+    def __init__(self, field_name, value, valid_type):
+        self.field_name = field_name
+        self.value = value
+        self.valid_type = valid_type
+        super().__init__(str(self))
+
+    def __str__(self):
+        return f&#39;{self.field_name!r} {self.value!r} must be of type {self.valid_type}&#39;
+
+
 class EWSError(Exception):
     &#34;&#34;&#34;Global error type within this module.&#34;&#34;&#34;
 
@@ -72,10 +94,8 @@ class RateLimitError(TransportError):
         self.total_wait = total_wait
 
     def __str__(self):
-        return str(
-            &#39;{value} (gave up after {total_wait:.3f} seconds. URL {url} returned status code {status_code})&#39;.format(
-                value=self.value, url=self.url, status_code=self.status_code, total_wait=self.total_wait)
-        )
+        return f&#39;{self.value} (gave up after {self.total_wait:.3f} seconds. &#39; \
+               f&#39;URL {self.url} returned status code {self.status_code})&#39;
 
 
 class SOAPError(TransportError):
@@ -99,7 +119,7 @@ class RedirectError(TransportError):
         super().__init__(str(self))
 
     def __str__(self):
-        return &#39;We were redirected to %s&#39; % self.url
+        return f&#39;We were redirected to {self.url}&#39;
 
 
 class RelativeRedirect(TransportError):
@@ -118,22 +138,10 @@ class AutoDiscoverCircularRedirect(AutoDiscoverError):
     pass
 
 
-class AutoDiscoverRedirect(AutoDiscoverError):
-    def __init__(self, redirect_email):
-        self.redirect_email = redirect_email
-        super().__init__(str(self))
-
-    def __str__(self):
-        return &#39;AutoDiscover redirects to %s&#39; % self.redirect_email
-
-
 class NaiveDateTimeNotAllowed(ValueError):
     def __init__(self, local_dt):
         super().__init__()
-        from .ewsdatetime import EWSDateTime
-        if not isinstance(local_dt, EWSDateTime):
-            raise ValueError(&#34;&#39;local_dt&#39; value %r must be an EWSDateTime&#34; % local_dt)
-        self.local_dt = local_dt
+        self.local_dt = local_dt  # An EWSDateTime instance
 
 
 class UnknownTimeZone(EWSError):
@@ -167,7 +175,7 @@ class CASError(EWSError):
         super().__init__(str(self))
 
     def __str__(self):
-        return &#39;CAS error: %s&#39; % self.cas_error
+        return f&#39;CAS error: {self.cas_error}&#39;
 
 
 # Somewhat-authoritative list of possible response message error types from EWS. See full list at
@@ -641,7 +649,6 @@ ERRORS_REQUIRING_REAUTODISCOVER = (
 <ul class="hlist">
 <li><a title="exchangelib.errors.AutoDiscoverCircularRedirect" href="#exchangelib.errors.AutoDiscoverCircularRedirect">AutoDiscoverCircularRedirect</a></li>
 <li><a title="exchangelib.errors.AutoDiscoverFailed" href="#exchangelib.errors.AutoDiscoverFailed">AutoDiscoverFailed</a></li>
-<li><a title="exchangelib.errors.AutoDiscoverRedirect" href="#exchangelib.errors.AutoDiscoverRedirect">AutoDiscoverRedirect</a></li>
 </ul>
 </dd>
 <dt id="exchangelib.errors.AutoDiscoverFailed"><code class="flex name class">
@@ -656,33 +663,6 @@ ERRORS_REQUIRING_REAUTODISCOVER = (
 </summary>
 <pre><code class="python">class AutoDiscoverFailed(AutoDiscoverError):
     pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="exchangelib.errors.AutoDiscoverError" href="#exchangelib.errors.AutoDiscoverError">AutoDiscoverError</a></li>
-<li><a title="exchangelib.errors.TransportError" href="#exchangelib.errors.TransportError">TransportError</a></li>
-<li><a title="exchangelib.errors.EWSError" href="#exchangelib.errors.EWSError">EWSError</a></li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-</dd>
-<dt id="exchangelib.errors.AutoDiscoverRedirect"><code class="flex name class">
-<span>class <span class="ident">AutoDiscoverRedirect</span></span>
-<span>(</span><span>redirect_email)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Global error type within this module.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class AutoDiscoverRedirect(AutoDiscoverError):
-    def __init__(self, redirect_email):
-        self.redirect_email = redirect_email
-        super().__init__(str(self))
-
-    def __str__(self):
-        return &#39;AutoDiscover redirects to %s&#39; % self.redirect_email</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -715,7 +695,7 @@ This exception is for those cases. The caller may want to do something with the 
         super().__init__(str(self))
 
     def __str__(self):
-        return &#39;CAS error: %s&#39; % self.cas_error</code></pre>
+        return f&#39;CAS error: {self.cas_error}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8870,6 +8850,60 @@ This exception is for those cases. The caller may want to do something with the 
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="exchangelib.errors.InvalidEnumValue"><code class="flex name class">
+<span>class <span class="ident">InvalidEnumValue</span></span>
+<span>(</span><span>field_name, value, choices)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidEnumValue(ValueError):
+    def __init__(self, field_name, value, choices):
+        self.field_name = field_name
+        self.value = value
+        self.choices = choices
+        super().__init__(str(self))
+
+    def __str__(self):
+        return f&#39;{self.field_name!r} {self.value!r} must be one of {sorted(self.choices)}&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="exchangelib.errors.InvalidTypeError"><code class="flex name class">
+<span>class <span class="ident">InvalidTypeError</span></span>
+<span>(</span><span>field_name, value, valid_type)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inappropriate argument type.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidTypeError(TypeError):
+    def __init__(self, field_name, value, valid_type):
+        self.field_name = field_name
+        self.value = value
+        self.valid_type = valid_type
+        super().__init__(str(self))
+
+    def __str__(self):
+        return f&#39;{self.field_name!r} {self.value!r} must be of type {self.valid_type}&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.TypeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="exchangelib.errors.MalformedResponseError"><code class="flex name class">
 <span>class <span class="ident">MalformedResponseError</span></span>
 <span>(</span><span>value)</span>
@@ -8923,10 +8957,7 @@ This exception is for those cases. The caller may want to do something with the 
 <pre><code class="python">class NaiveDateTimeNotAllowed(ValueError):
     def __init__(self, local_dt):
         super().__init__()
-        from .ewsdatetime import EWSDateTime
-        if not isinstance(local_dt, EWSDateTime):
-            raise ValueError(&#34;&#39;local_dt&#39; value %r must be an EWSDateTime&#34; % local_dt)
-        self.local_dt = local_dt</code></pre>
+        self.local_dt = local_dt  # An EWSDateTime instance</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8953,10 +8984,8 @@ This exception is for those cases. The caller may want to do something with the 
         self.total_wait = total_wait
 
     def __str__(self):
-        return str(
-            &#39;{value} (gave up after {total_wait:.3f} seconds. URL {url} returned status code {status_code})&#39;.format(
-                value=self.value, url=self.url, status_code=self.status_code, total_wait=self.total_wait)
-        )</code></pre>
+        return f&#39;{self.value} (gave up after {self.total_wait:.3f} seconds. &#39; \
+               f&#39;URL {self.url} returned status code {self.status_code})&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8985,7 +9014,7 @@ This exception is for those cases. The caller may want to do something with the 
         super().__init__(str(self))
 
     def __str__(self):
-        return &#39;We were redirected to %s&#39; % self.url</code></pre>
+        return f&#39;We were redirected to {self.url}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -9599,9 +9628,6 @@ This exception is for those cases. The caller may want to do something with the 
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.AutoDiscoverFailed" href="#exchangelib.errors.AutoDiscoverFailed">AutoDiscoverFailed</a></code></h4>
-</li>
-<li>
-<h4><code><a title="exchangelib.errors.AutoDiscoverRedirect" href="#exchangelib.errors.AutoDiscoverRedirect">AutoDiscoverRedirect</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.CASError" href="#exchangelib.errors.CASError">CASError</a></code></h4>
@@ -10766,6 +10792,12 @@ This exception is for those cases. The caller may want to do something with the 
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.ErrorWrongServerVersionDelegate" href="#exchangelib.errors.ErrorWrongServerVersionDelegate">ErrorWrongServerVersionDelegate</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.errors.InvalidEnumValue" href="#exchangelib.errors.InvalidEnumValue">InvalidEnumValue</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.errors.InvalidTypeError" href="#exchangelib.errors.InvalidTypeError">InvalidTypeError</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.MalformedResponseError" href="#exchangelib.errors.MalformedResponseError">MalformedResponseError</a></code></h4>

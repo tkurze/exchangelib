@@ -26,8 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import add_xml_child, create_item_ids_element
+<pre><code class="python">from .common import add_xml_child, item_ids_element
 from .sync_folder_hierarchy import SyncFolder
+from ..errors import InvalidEnumValue, InvalidTypeError
+from ..folders import BaseFolder
 from ..properties import ItemId
 from ..util import xml_text_to_value, peek, TNS, MNS
 
@@ -38,29 +40,28 @@ class SyncFolderItems(SyncFolder):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;SyncFolderItems&#39;
-    SYNC_SCOPES = {
+    SYNC_SCOPES = (
         &#39;NormalItems&#39;,
         &#39;NormalAndAssociatedItems&#39;,
-    }
+    )
     # Extra change type
     READ_FLAG_CHANGE = &#39;read_flag_change&#39;
     CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)
     shape_tag = &#39;m:ItemShape&#39;
-    last_in_range_name = &#39;{%s}IncludesLastItemInRange&#39; % MNS
-
-    def _change_types_map(self):
-        res = super()._change_types_map()
-        res[&#39;{%s}ReadFlagChange&#39; % TNS] = self.READ_FLAG_CHANGE
-        return res
+    last_in_range_name = f&#39;{{{MNS}}}IncludesLastItemInRange&#39;
+    change_types_map = SyncFolder.change_types_map
+    change_types_map[f&#39;{{{TNS}}}ReadFlagChange&#39;] = READ_FLAG_CHANGE
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
         if max_changes_returned is None:
-            max_changes_returned = self.chunk_size
+            max_changes_returned = self.page_size
+        if not isinstance(max_changes_returned, int):
+            raise InvalidTypeError(&#39;max_changes_returned&#39;, max_changes_returned, int)
         if max_changes_returned &lt;= 0:
-            raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
+            raise ValueError(f&#34;&#39;max_changes_returned&#39; {max_changes_returned} must be a positive integer&#34;)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-            raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
+            raise InvalidEnumValue(&#39;sync_scope&#39;, sync_scope, self.SYNC_SCOPES)
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
@@ -71,40 +72,33 @@ class SyncFolderItems(SyncFolder):
                 sync_scope=sync_scope,
         )))
 
-    def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
-        change_types = self._change_types_map()
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            change_type = change_types[elem.tag]
-            if change_type == self.READ_FLAG_CHANGE:
-                item = (
-                    ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                    xml_text_to_value(elem.find(&#39;{%s}IsRead&#39; % TNS).text, bool)
-                )
-            elif change_type == self.DELETE:
-                item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
-            else:
-                # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-                # contain multiple item types, each with their own tag.
-                item_elem = elem[0]
-                item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
-            yield change_type, item
+    def _elem_to_obj(self, elem):
+        change_type = self.change_types_map[elem.tag]
+        if change_type == self.READ_FLAG_CHANGE:
+            item = (
+                ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
+                xml_text_to_value(elem.find(f&#39;{{{TNS}}}IsRead&#39;).text, bool)
+            )
+        elif change_type == self.DELETE:
+            item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
+        else:
+            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+            # contain multiple item types, each with their own tag.
+            item_elem = elem[0]
+            item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
+        return change_type, item
 
     def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        syncfolderitems = self._partial_get_payload(
+        sync_folder_items = self._partial_get_payload(
             folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
         )
         is_empty, ignore = (True, None) if ignore is None else peek(ignore)
         if not is_empty:
-            item_ids = create_item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;)
-            syncfolderitems.append(item_ids)
-        add_xml_child(syncfolderitems, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+            sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;))
+        add_xml_child(sync_folder_items, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
         if sync_scope:
-            add_xml_child(syncfolderitems, &#39;m:SyncScope&#39;, sync_scope)
-        return syncfolderitems</code></pre>
+            add_xml_child(sync_folder_items, &#39;m:SyncScope&#39;, sync_scope)
+        return sync_folder_items</code></pre>
 </details>
 </section>
 <section>
@@ -133,29 +127,28 @@ class SyncFolderItems(SyncFolder):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;SyncFolderItems&#39;
-    SYNC_SCOPES = {
+    SYNC_SCOPES = (
         &#39;NormalItems&#39;,
         &#39;NormalAndAssociatedItems&#39;,
-    }
+    )
     # Extra change type
     READ_FLAG_CHANGE = &#39;read_flag_change&#39;
     CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)
     shape_tag = &#39;m:ItemShape&#39;
-    last_in_range_name = &#39;{%s}IncludesLastItemInRange&#39; % MNS
-
-    def _change_types_map(self):
-        res = super()._change_types_map()
-        res[&#39;{%s}ReadFlagChange&#39; % TNS] = self.READ_FLAG_CHANGE
-        return res
+    last_in_range_name = f&#39;{{{MNS}}}IncludesLastItemInRange&#39;
+    change_types_map = SyncFolder.change_types_map
+    change_types_map[f&#39;{{{TNS}}}ReadFlagChange&#39;] = READ_FLAG_CHANGE
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
         if max_changes_returned is None:
-            max_changes_returned = self.chunk_size
+            max_changes_returned = self.page_size
+        if not isinstance(max_changes_returned, int):
+            raise InvalidTypeError(&#39;max_changes_returned&#39;, max_changes_returned, int)
         if max_changes_returned &lt;= 0:
-            raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
+            raise ValueError(f&#34;&#39;max_changes_returned&#39; {max_changes_returned} must be a positive integer&#34;)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-            raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
+            raise InvalidEnumValue(&#39;sync_scope&#39;, sync_scope, self.SYNC_SCOPES)
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
@@ -166,44 +159,38 @@ class SyncFolderItems(SyncFolder):
                 sync_scope=sync_scope,
         )))
 
-    def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
-        change_types = self._change_types_map()
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            change_type = change_types[elem.tag]
-            if change_type == self.READ_FLAG_CHANGE:
-                item = (
-                    ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                    xml_text_to_value(elem.find(&#39;{%s}IsRead&#39; % TNS).text, bool)
-                )
-            elif change_type == self.DELETE:
-                item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
-            else:
-                # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-                # contain multiple item types, each with their own tag.
-                item_elem = elem[0]
-                item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
-            yield change_type, item
+    def _elem_to_obj(self, elem):
+        change_type = self.change_types_map[elem.tag]
+        if change_type == self.READ_FLAG_CHANGE:
+            item = (
+                ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
+                xml_text_to_value(elem.find(f&#39;{{{TNS}}}IsRead&#39;).text, bool)
+            )
+        elif change_type == self.DELETE:
+            item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
+        else:
+            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+            # contain multiple item types, each with their own tag.
+            item_elem = elem[0]
+            item = BaseFolder.item_model_from_tag(item_elem.tag).from_xml(elem=item_elem, account=self.account)
+        return change_type, item
 
     def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-        syncfolderitems = self._partial_get_payload(
+        sync_folder_items = self._partial_get_payload(
             folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
         )
         is_empty, ignore = (True, None) if ignore is None else peek(ignore)
         if not is_empty:
-            item_ids = create_item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;)
-            syncfolderitems.append(item_ids)
-        add_xml_child(syncfolderitems, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+            sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;))
+        add_xml_child(sync_folder_items, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
         if sync_scope:
-            add_xml_child(syncfolderitems, &#39;m:SyncScope&#39;, sync_scope)
-        return syncfolderitems</code></pre>
+            add_xml_child(sync_folder_items, &#39;m:SyncScope&#39;, sync_scope)
+        return sync_folder_items</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
+<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
@@ -222,6 +209,10 @@ class SyncFolderItems(SyncFolder):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.sync_folder_items.SyncFolderItems.SYNC_SCOPES"><code class="name">var <span class="ident">SYNC_SCOPES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.sync_folder_items.SyncFolderItems.change_types_map"><code class="name">var <span class="ident">change_types_map</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -248,11 +239,13 @@ class SyncFolderItems(SyncFolder):
 <pre><code class="python">def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
     self.sync_state = sync_state
     if max_changes_returned is None:
-        max_changes_returned = self.chunk_size
+        max_changes_returned = self.page_size
+    if not isinstance(max_changes_returned, int):
+        raise InvalidTypeError(&#39;max_changes_returned&#39;, max_changes_returned, int)
     if max_changes_returned &lt;= 0:
-        raise ValueError(&#34;&#39;max_changes_returned&#39; %s must be a positive integer&#34; % max_changes_returned)
+        raise ValueError(f&#34;&#39;max_changes_returned&#39; {max_changes_returned} must be a positive integer&#34;)
     if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-        raise ValueError(&#34;&#39;sync_scope&#39; %s must be one of %r&#34; % (sync_scope, self.SYNC_SCOPES))
+        raise InvalidEnumValue(&#39;sync_scope&#39;, sync_scope, self.SYNC_SCOPES)
     return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             folder=folder,
             shape=shape,
@@ -274,17 +267,16 @@ class SyncFolderItems(SyncFolder):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
-    syncfolderitems = self._partial_get_payload(
+    sync_folder_items = self._partial_get_payload(
         folder=folder, shape=shape, additional_fields=additional_fields, sync_state=sync_state
     )
     is_empty, ignore = (True, None) if ignore is None else peek(ignore)
     if not is_empty:
-        item_ids = create_item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;)
-        syncfolderitems.append(item_ids)
-    add_xml_child(syncfolderitems, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+        sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;))
+    add_xml_child(sync_folder_items, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
     if sync_scope:
-        add_xml_child(syncfolderitems, &#39;m:SyncScope&#39;, sync_scope)
-    return syncfolderitems</code></pre>
+        add_xml_child(sync_folder_items, &#39;m:SyncScope&#39;, sync_scope)
+    return sync_folder_items</code></pre>
 </details>
 </dd>
 </dl>
@@ -324,6 +316,7 @@ class SyncFolderItems(SyncFolder):
 <li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.SERVICE_NAME" href="#exchangelib.services.sync_folder_items.SyncFolderItems.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.SYNC_SCOPES" href="#exchangelib.services.sync_folder_items.SyncFolderItems.SYNC_SCOPES">SYNC_SCOPES</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.call" href="#exchangelib.services.sync_folder_items.SyncFolderItems.call">call</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.change_types_map" href="#exchangelib.services.sync_folder_items.SyncFolderItems.change_types_map">change_types_map</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.get_payload" href="#exchangelib.services.sync_folder_items.SyncFolderItems.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.last_in_range_name" href="#exchangelib.services.sync_folder_items.SyncFolderItems.last_in_range_name">last_in_range_name</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_items.SyncFolderItems.shape_tag" href="#exchangelib.services.sync_folder_items.SyncFolderItems.shape_tag">shape_tag</a></code></li>

@@ -26,7 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_item_ids_element
+<pre><code class="python">from .common import EWSAccountService, item_ids_element
 from ..errors import ResponseMessageError
 from ..util import create_element, MNS
 
@@ -36,23 +36,18 @@ class ExportItems(EWSAccountService):
 
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
     SERVICE_NAME = &#39;ExportItems&#39;
-    element_container_name = &#39;{%s}Data&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Data&#39;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
+    def _elem_to_obj(self, elem):
+        return elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
 
     def get_payload(self, items):
-        exportitems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        exportitems.append(item_ids)
-        return exportitems
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload
 
     # We need to override this since ExportItemsResponseMessage is formatted a
     # little bit differently. .
@@ -85,23 +80,18 @@ class ExportItems(EWSAccountService):
 
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
     SERVICE_NAME = &#39;ExportItems&#39;
-    element_container_name = &#39;{%s}Data&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Data&#39;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
+    def _elem_to_obj(self, elem):
+        return elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
 
     def get_payload(self, items):
-        exportitems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        exportitems.append(item_ids)
-        return exportitems
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload
 
     # We need to override this since ExportItemsResponseMessage is formatted a
     # little bit differently. .
@@ -154,10 +144,9 @@ class ExportItems(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items):
-    exportitems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    item_ids = create_item_ids_element(items=items, version=self.account.version)
-    exportitems.append(item_ids)
-    return exportitems</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(item_ids_element(items=items, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

@@ -26,9 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_attachment_ids_element
+<pre><code class="python">from .common import EWSAccountService, attachment_ids_element
 from ..properties import RootItemId
-from ..util import create_element
+from ..util import create_element, set_xml_value
 
 
 class DeleteAttachment(EWSAccountService):
@@ -41,22 +41,19 @@ class DeleteAttachment(EWSAccountService):
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield RootItemId.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return RootItemId.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-        payload.append(attachment_ids)
-        return payload</code></pre>
+        return set_xml_value(
+            create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+            attachment_ids_element(items=items, version=self.account.version),
+            version=self.account.version
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -89,22 +86,19 @@ class DeleteAttachment(EWSAccountService):
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield RootItemId.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return RootItemId.from_xml(elem=elem, account=self.account)
 
     @classmethod
     def _get_elements_in_container(cls, container):
         return container.findall(RootItemId.response_tag())
 
     def get_payload(self, items):
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-        payload.append(attachment_ids)
-        return payload</code></pre>
+        return set_xml_value(
+            create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+            attachment_ids_element(items=items, version=self.account.version),
+            version=self.account.version
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -143,10 +137,11 @@ class DeleteAttachment(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items):
-    payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    attachment_ids = create_attachment_ids_element(items=items, version=self.account.version)
-    payload.append(attachment_ids)
-    return payload</code></pre>
+    return set_xml_value(
+        create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+        attachment_ids_element(items=items, version=self.account.version),
+        version=self.account.version
+    )</code></pre>
 </details>
 </dd>
 </dl>

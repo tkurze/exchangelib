@@ -27,9 +27,9 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import logging
-from collections import OrderedDict
 from copy import copy
 
+from .errors import InvalidEnumValue
 from .fields import InvalidField, FieldPath, DateTimeBackedDateField
 from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
 from .version import EXCHANGE_2010
@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 
 
 class Q:
-    &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic.&#34;&#34;&#34;
+    &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implement advanced filtering logic.&#34;&#34;&#34;
 
     # Connection types
     AND = &#39;AND&#39;
@@ -104,7 +104,7 @@ class Q:
         # Parse args which must now be Q objects
         for q in args:
             if not isinstance(q, self.__class__):
-                raise ValueError(&#34;Non-keyword arg %r must be a Q instance&#34; % q)
+                raise TypeError(f&#34;Non-keyword arg {q!r} must be of type {Q}&#34;)
         self.children.extend(args)
 
         # Parse keyword args and extract the filter
@@ -137,10 +137,10 @@ class Q:
                 # EWS doesn&#39;t have a &#39;range&#39; operator. Emulate &#39;foo__range=(1, 2)&#39; as &#39;foo__gte=1 and foo__lte=2&#39;
                 # (both values inclusive).
                 if len(value) != 2:
-                    raise ValueError(&#34;Value of lookup &#39;%s&#39; must have exactly 2 elements&#34; % key)
+                    raise ValueError(f&#34;Value of lookup {key!r} must have exactly 2 elements&#34;)
                 return (
-                    self.__class__(**{&#39;%s__gte&#39; % field_path: value[0]}),
-                    self.__class__(**{&#39;%s__lte&#39; % field_path: value[1]}),
+                    self.__class__(**{f&#39;{field_path}__gte&#39;: value[0]}),
+                    self.__class__(**{f&#39;{field_path}__lte&#39;: value[1]}),
                 )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
@@ -163,7 +163,7 @@ class Q:
                 # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
                 # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
                 if not is_iterable(value, generators_allowed=True):
-                    raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
+                    raise TypeError(f&#34;Value for lookup {key!r} must be of type {list}&#34;)
                 children = tuple(self.__class__(**{field_path: v}) for v in value)
                 if not children:
                     # This is an &#39;__in&#39; operator with an empty list as the value. We interpret it to mean &#34;is foo
@@ -183,7 +183,7 @@ class Q:
             try:
                 op = self._lookup_to_op(lookup)
             except KeyError:
-                raise ValueError(&#34;Lookup &#39;%s&#39; is not supported (called as &#39;%s=%r&#39;)&#34; % (lookup, key, value))
+                raise ValueError(f&#34;Lookup {lookup!r} is not supported (called as &#39;{key}={value!r}&#39;)&#34;)
         else:
             field_path, op = key, self.EQ
 
@@ -286,7 +286,7 @@ class Q:
             return create_element(xml_tag_map[op])
         valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
         if op not in valid_ops:
-            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (op, valid_ops))
+            raise InvalidEnumValue(&#39;op&#39;, op, valid_ops)
 
         # For description of Contains attribute values, see
         #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
@@ -316,17 +316,14 @@ class Q:
         elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
             match_mode = &#39;Prefixed&#39;
         else:
-            raise ValueError(&#39;Unsupported op: %s&#39; % op)
+            raise ValueError(f&#39;Unsupported op: {op}&#39;)
         if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
             compare_mode = &#39;IgnoreCase&#39;
         else:
             compare_mode = &#39;Exact&#39;
         return create_element(
             &#39;t:Contains&#39;,
-            attrs=OrderedDict([
-                (&#39;ContainmentMode&#39;, match_mode),
-                (&#39;ContainmentComparison&#39;, compare_mode),
-            ])
+            attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode)
         )
 
     def is_leaf(self):
@@ -348,18 +345,18 @@ class Q:
         if self.query_string:
             return self.query_string
         if self.is_leaf():
-            expr = &#39;%s %s %r&#39; % (self.field_path, self.op, self.value)
+            expr = f&#39;{self.field_path} {self.op} {self.value!r}&#39;
         else:
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-            expr = (&#39; %s &#39; % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
-                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else &#39;(%s)&#39; % c.expr())
+            expr = f&#39; {self.AND if self.conn_type == self.NOT else self.conn_type} &#39;.join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#39;({c.expr()})&#39;)
                 for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
             )
         if self.conn_type == self.NOT:
             # Add the NOT operator. Put children in parens if there is more than one child.
             if self.is_leaf() or len(self.children) == 1:
-                return self.conn_type + &#39; %s&#39; % expr
-            return self.conn_type + &#39; (%s)&#39; % expr
+                return self.conn_type + f&#39; {expr}&#39;
+            return self.conn_type + f&#39; ({expr})&#39;
         return expr
 
     def to_xml(self, folders, version, applies_to):
@@ -390,25 +387,23 @@ class Q:
                 raise ValueError(&#39;Query strings cannot be combined with other settings&#39;)
             return
         if self.conn_type not in self.CONN_TYPES:
-            raise ValueError(&#34;&#39;conn_type&#39; %s must be one of %s&#34; % (self.conn_type, self.CONN_TYPES))
+            raise InvalidEnumValue(&#39;conn_type&#39;, self.conn_type, self.CONN_TYPES)
         if not self.is_leaf():
             for q in self.children:
                 if q.query_string and len(self.children) &gt; 1:
-                    raise ValueError(
-                        &#39;A query string cannot be combined with other restrictions&#39;
-                    )
+                    raise ValueError(&#39;A query string cannot be combined with other restrictions&#39;)
             return
         if not self.field_path:
             raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
         if self.op not in self.OP_TYPES:
-            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (self.op, self.OP_TYPES))
+            raise InvalidEnumValue(&#39;op&#39;, self.op, self.OP_TYPES)
         if self.op == self.EXISTS and self.value is not True:
             raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
         if self.value is None:
-            raise ValueError(&#39;Value for filter on field path &#34;%s&#34; cannot be None&#39; % self.field_path)
+            raise ValueError(f&#39;Value for filter on field path {self.field_path!r} cannot be None&#39;)
         if is_iterable(self.value, generators_allowed=True):
             raise ValueError(
-                &#39;Value %r for filter on field path &#34;%s&#34; must be a single value&#39; % (self.value, self.field_path)
+                f&#39;Value {self.value!r} for filter on field path {self.field_path!r} must be a single value&#39;
             )
 
     def _validate_field_path(self, field_path, folder, applies_to, version):
@@ -419,11 +414,11 @@ class Q:
         else:
             folder.validate_item_field(field=field_path.field, version=version)
         if not field_path.field.is_searchable:
-            raise ValueError(&#34;EWS does not support filtering on field &#39;%s&#39;&#34; % field_path.field.name)
+            raise ValueError(f&#34;EWS does not support filtering on field {field_path.field.name!r}&#34;)
         if field_path.subfield and not field_path.subfield.is_searchable:
-            raise ValueError(&#34;EWS does not support filtering on subfield &#39;%s&#39;&#34; % field_path.subfield.name)
+            raise ValueError(f&#34;EWS does not support filtering on subfield {field_path.subfield.name!r}&#34;)
         if issubclass(field_path.field.value_cls, MultiFieldIndexedElement) and not field_path.subfield:
-            raise ValueError(&#34;Field path &#39;%s&#39; must contain a subfield&#34; % self.field_path)
+            raise ValueError(f&#34;Field path {self.field_path!r} must contain a subfield&#34;)
 
     def _get_field_path(self, folders, applies_to, version):
         # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
@@ -440,7 +435,7 @@ class Q:
             self._validate_field_path(field_path=field_path, folder=folder, applies_to=applies_to, version=version)
             break
         else:
-            raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (self.field_path, folders))
+            raise InvalidField(f&#34;Unknown field path {self.field_path!r} on folders {folders}&#34;)
         return field_path
 
     def _get_clean_value(self, field_path, version):
@@ -476,10 +471,8 @@ class Q:
                 # We need to convert to datetime
                 clean_value = field_path.field.date_to_datetime(clean_value)
             elem.append(field_path.to_xml())
-            constant = create_element(&#39;t:Constant&#39;)
             if self.op != self.EXISTS:
-                # Use .set() to not fill up the create_element() cache with unique values
-                constant.set(&#39;Value&#39;, value_to_xml_text(clean_value))
+                constant = create_element(&#39;t:Constant&#39;, attrs=dict(Value=value_to_xml_text(clean_value)))
                 if self.op in self.CONTAINS_OPS:
                     elem.append(constant)
                 else:
@@ -550,10 +543,10 @@ class Q:
     def __repr__(self):
         if self.is_leaf():
             if self.query_string:
-                return self.__class__.__name__ + &#39;(%r)&#39; % self.query_string
+                return self.__class__.__name__ + f&#39;({self.query_string!r})&#39;
             if self.is_never():
-                return self.__class__.__name__ + &#39;(conn_type=%r)&#39; % (self.conn_type)
-            return self.__class__.__name__ + &#39;(%s %s %r)&#39; % (self.field_path, self.op, self.value)
+                return self.__class__.__name__ + f&#39;(conn_type={self.conn_type!r})&#39;
+            return self.__class__.__name__ + f&#39;({self.field_path} {self.op} {self.value!r})&#39;
         sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#39;&#39;))
         if self.conn_type == self.NOT or len(self.children) &gt; 1:
             return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
@@ -569,16 +562,13 @@ class Restriction:
     RESTRICTION_TYPES = (FOLDERS, ITEMS)
 
     def __init__(self, q, folders, applies_to):
-        if not isinstance(q, Q):
-            raise ValueError(&#34;&#39;q&#39; value %r must be a Q instance&#34; % q)
+        &#34;&#34;&#34;
+        :param q: A Q instance
+        :param folders: A list of BaseFolder instances
+        :param applies_to: A member of the RESTRICTION_TYPES eum
+        &#34;&#34;&#34;
         if q.is_empty():
             raise ValueError(&#34;Q object must not be empty&#34;)
-        from .folders import BaseFolder
-        for folder in folders:
-            if not isinstance(folder, BaseFolder):
-                raise ValueError(&#34;&#39;folder&#39; value %r must be a Folder instance&#34; % folder)
-        if applies_to not in self.RESTRICTION_TYPES:
-            raise ValueError(&#34;&#39;applies_to&#39; must be one of %s&#34; % (self.RESTRICTION_TYPES,))
         self.q = q
         self.folders = folders
         self.applies_to = applies_to
@@ -605,13 +595,13 @@ class Restriction:
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic.</p></div>
+<div class="desc"><p>A class with an API similar to Django Q objects. Used to implement advanced filtering logic.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Q:
-    &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implemnt advanced filtering logic.&#34;&#34;&#34;
+    &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implement advanced filtering logic.&#34;&#34;&#34;
 
     # Connection types
     AND = &#39;AND&#39;
@@ -677,7 +667,7 @@ class Restriction:
         # Parse args which must now be Q objects
         for q in args:
             if not isinstance(q, self.__class__):
-                raise ValueError(&#34;Non-keyword arg %r must be a Q instance&#34; % q)
+                raise TypeError(f&#34;Non-keyword arg {q!r} must be of type {Q}&#34;)
         self.children.extend(args)
 
         # Parse keyword args and extract the filter
@@ -710,10 +700,10 @@ class Restriction:
                 # EWS doesn&#39;t have a &#39;range&#39; operator. Emulate &#39;foo__range=(1, 2)&#39; as &#39;foo__gte=1 and foo__lte=2&#39;
                 # (both values inclusive).
                 if len(value) != 2:
-                    raise ValueError(&#34;Value of lookup &#39;%s&#39; must have exactly 2 elements&#34; % key)
+                    raise ValueError(f&#34;Value of lookup {key!r} must have exactly 2 elements&#34;)
                 return (
-                    self.__class__(**{&#39;%s__gte&#39; % field_path: value[0]}),
-                    self.__class__(**{&#39;%s__lte&#39; % field_path: value[1]}),
+                    self.__class__(**{f&#39;{field_path}__gte&#39;: value[0]}),
+                    self.__class__(**{f&#39;{field_path}__lte&#39;: value[1]}),
                 )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
@@ -736,7 +726,7 @@ class Restriction:
                 # EWS doesn&#39;t have an &#39;__in&#39; operator. Allow &#39;__in&#39; lookups on list and non-list field types,
                 # specifying a list value. We&#39;ll emulate it as a set of OR&#39;ed exact matches.
                 if not is_iterable(value, generators_allowed=True):
-                    raise ValueError(&#34;Value for lookup %r must be a list&#34; % key)
+                    raise TypeError(f&#34;Value for lookup {key!r} must be of type {list}&#34;)
                 children = tuple(self.__class__(**{field_path: v}) for v in value)
                 if not children:
                     # This is an &#39;__in&#39; operator with an empty list as the value. We interpret it to mean &#34;is foo
@@ -756,7 +746,7 @@ class Restriction:
             try:
                 op = self._lookup_to_op(lookup)
             except KeyError:
-                raise ValueError(&#34;Lookup &#39;%s&#39; is not supported (called as &#39;%s=%r&#39;)&#34; % (lookup, key, value))
+                raise ValueError(f&#34;Lookup {lookup!r} is not supported (called as &#39;{key}={value!r}&#39;)&#34;)
         else:
             field_path, op = key, self.EQ
 
@@ -859,7 +849,7 @@ class Restriction:
             return create_element(xml_tag_map[op])
         valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
         if op not in valid_ops:
-            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (op, valid_ops))
+            raise InvalidEnumValue(&#39;op&#39;, op, valid_ops)
 
         # For description of Contains attribute values, see
         #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
@@ -889,17 +879,14 @@ class Restriction:
         elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
             match_mode = &#39;Prefixed&#39;
         else:
-            raise ValueError(&#39;Unsupported op: %s&#39; % op)
+            raise ValueError(f&#39;Unsupported op: {op}&#39;)
         if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
             compare_mode = &#39;IgnoreCase&#39;
         else:
             compare_mode = &#39;Exact&#39;
         return create_element(
             &#39;t:Contains&#39;,
-            attrs=OrderedDict([
-                (&#39;ContainmentMode&#39;, match_mode),
-                (&#39;ContainmentComparison&#39;, compare_mode),
-            ])
+            attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode)
         )
 
     def is_leaf(self):
@@ -921,18 +908,18 @@ class Restriction:
         if self.query_string:
             return self.query_string
         if self.is_leaf():
-            expr = &#39;%s %s %r&#39; % (self.field_path, self.op, self.value)
+            expr = f&#39;{self.field_path} {self.op} {self.value!r}&#39;
         else:
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-            expr = (&#39; %s &#39; % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
-                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else &#39;(%s)&#39; % c.expr())
+            expr = f&#39; {self.AND if self.conn_type == self.NOT else self.conn_type} &#39;.join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#39;({c.expr()})&#39;)
                 for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
             )
         if self.conn_type == self.NOT:
             # Add the NOT operator. Put children in parens if there is more than one child.
             if self.is_leaf() or len(self.children) == 1:
-                return self.conn_type + &#39; %s&#39; % expr
-            return self.conn_type + &#39; (%s)&#39; % expr
+                return self.conn_type + f&#39; {expr}&#39;
+            return self.conn_type + f&#39; ({expr})&#39;
         return expr
 
     def to_xml(self, folders, version, applies_to):
@@ -963,25 +950,23 @@ class Restriction:
                 raise ValueError(&#39;Query strings cannot be combined with other settings&#39;)
             return
         if self.conn_type not in self.CONN_TYPES:
-            raise ValueError(&#34;&#39;conn_type&#39; %s must be one of %s&#34; % (self.conn_type, self.CONN_TYPES))
+            raise InvalidEnumValue(&#39;conn_type&#39;, self.conn_type, self.CONN_TYPES)
         if not self.is_leaf():
             for q in self.children:
                 if q.query_string and len(self.children) &gt; 1:
-                    raise ValueError(
-                        &#39;A query string cannot be combined with other restrictions&#39;
-                    )
+                    raise ValueError(&#39;A query string cannot be combined with other restrictions&#39;)
             return
         if not self.field_path:
             raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
         if self.op not in self.OP_TYPES:
-            raise ValueError(&#34;&#39;op&#39; %s must be one of %s&#34; % (self.op, self.OP_TYPES))
+            raise InvalidEnumValue(&#39;op&#39;, self.op, self.OP_TYPES)
         if self.op == self.EXISTS and self.value is not True:
             raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
         if self.value is None:
-            raise ValueError(&#39;Value for filter on field path &#34;%s&#34; cannot be None&#39; % self.field_path)
+            raise ValueError(f&#39;Value for filter on field path {self.field_path!r} cannot be None&#39;)
         if is_iterable(self.value, generators_allowed=True):
             raise ValueError(
-                &#39;Value %r for filter on field path &#34;%s&#34; must be a single value&#39; % (self.value, self.field_path)
+                f&#39;Value {self.value!r} for filter on field path {self.field_path!r} must be a single value&#39;
             )
 
     def _validate_field_path(self, field_path, folder, applies_to, version):
@@ -992,11 +977,11 @@ class Restriction:
         else:
             folder.validate_item_field(field=field_path.field, version=version)
         if not field_path.field.is_searchable:
-            raise ValueError(&#34;EWS does not support filtering on field &#39;%s&#39;&#34; % field_path.field.name)
+            raise ValueError(f&#34;EWS does not support filtering on field {field_path.field.name!r}&#34;)
         if field_path.subfield and not field_path.subfield.is_searchable:
-            raise ValueError(&#34;EWS does not support filtering on subfield &#39;%s&#39;&#34; % field_path.subfield.name)
+            raise ValueError(f&#34;EWS does not support filtering on subfield {field_path.subfield.name!r}&#34;)
         if issubclass(field_path.field.value_cls, MultiFieldIndexedElement) and not field_path.subfield:
-            raise ValueError(&#34;Field path &#39;%s&#39; must contain a subfield&#34; % self.field_path)
+            raise ValueError(f&#34;Field path {self.field_path!r} must contain a subfield&#34;)
 
     def _get_field_path(self, folders, applies_to, version):
         # Convert the string field path to a real FieldPath object. The path is validated using the given folders.
@@ -1013,7 +998,7 @@ class Restriction:
             self._validate_field_path(field_path=field_path, folder=folder, applies_to=applies_to, version=version)
             break
         else:
-            raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (self.field_path, folders))
+            raise InvalidField(f&#34;Unknown field path {self.field_path!r} on folders {folders}&#34;)
         return field_path
 
     def _get_clean_value(self, field_path, version):
@@ -1049,10 +1034,8 @@ class Restriction:
                 # We need to convert to datetime
                 clean_value = field_path.field.date_to_datetime(clean_value)
             elem.append(field_path.to_xml())
-            constant = create_element(&#39;t:Constant&#39;)
             if self.op != self.EXISTS:
-                # Use .set() to not fill up the create_element() cache with unique values
-                constant.set(&#39;Value&#39;, value_to_xml_text(clean_value))
+                constant = create_element(&#39;t:Constant&#39;, attrs=dict(Value=value_to_xml_text(clean_value)))
                 if self.op in self.CONTAINS_OPS:
                     elem.append(constant)
                 else:
@@ -1123,10 +1106,10 @@ class Restriction:
     def __repr__(self):
         if self.is_leaf():
             if self.query_string:
-                return self.__class__.__name__ + &#39;(%r)&#39; % self.query_string
+                return self.__class__.__name__ + f&#39;({self.query_string!r})&#39;
             if self.is_never():
-                return self.__class__.__name__ + &#39;(conn_type=%r)&#39; % (self.conn_type)
-            return self.__class__.__name__ + &#39;(%s %s %r)&#39; % (self.field_path, self.op, self.value)
+                return self.__class__.__name__ + f&#39;(conn_type={self.conn_type!r})&#39;
+            return self.__class__.__name__ + f&#39;({self.field_path} {self.op} {self.value!r})&#39;
         sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#39;&#39;))
         if self.conn_type == self.NOT or len(self.children) &gt; 1:
             return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
@@ -1339,18 +1322,18 @@ validating. There's no reason to replicate much of that here.</p></div>
     if self.query_string:
         return self.query_string
     if self.is_leaf():
-        expr = &#39;%s %s %r&#39; % (self.field_path, self.op, self.value)
+        expr = f&#39;{self.field_path} {self.op} {self.value!r}&#39;
     else:
         # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-        expr = (&#39; %s &#39; % (self.AND if self.conn_type == self.NOT else self.conn_type)).join(
-            (c.expr() if c.is_leaf() or c.conn_type == self.NOT else &#39;(%s)&#39; % c.expr())
+        expr = f&#39; {self.AND if self.conn_type == self.NOT else self.conn_type} &#39;.join(
+            (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#39;({c.expr()})&#39;)
             for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
         )
     if self.conn_type == self.NOT:
         # Add the NOT operator. Put children in parens if there is more than one child.
         if self.is_leaf() or len(self.children) == 1:
-            return self.conn_type + &#39; %s&#39; % expr
-        return self.conn_type + &#39; (%s)&#39; % expr
+            return self.conn_type + f&#39; {expr}&#39;
+        return self.conn_type + f&#39; ({expr})&#39;
     return expr</code></pre>
 </details>
 </dd>
@@ -1468,10 +1451,8 @@ validating. There's no reason to replicate much of that here.</p></div>
             # We need to convert to datetime
             clean_value = field_path.field.date_to_datetime(clean_value)
         elem.append(field_path.to_xml())
-        constant = create_element(&#39;t:Constant&#39;)
         if self.op != self.EXISTS:
-            # Use .set() to not fill up the create_element() cache with unique values
-            constant.set(&#39;Value&#39;, value_to_xml_text(clean_value))
+            constant = create_element(&#39;t:Constant&#39;, attrs=dict(Value=value_to_xml_text(clean_value)))
             if self.op in self.CONTAINS_OPS:
                 elem.append(constant)
             else:
@@ -1504,7 +1485,10 @@ validating. There's no reason to replicate much of that here.</p></div>
 <span>(</span><span>q, folders, applies_to)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Implement an EWS Restriction type.</p></div>
+<div class="desc"><p>Implement an EWS Restriction type.</p>
+<p>:param q: A Q instance
+:param folders: A list of BaseFolder instances
+:param applies_to: A member of the RESTRICTION_TYPES eum</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1518,16 +1502,13 @@ validating. There's no reason to replicate much of that here.</p></div>
     RESTRICTION_TYPES = (FOLDERS, ITEMS)
 
     def __init__(self, q, folders, applies_to):
-        if not isinstance(q, Q):
-            raise ValueError(&#34;&#39;q&#39; value %r must be a Q instance&#34; % q)
+        &#34;&#34;&#34;
+        :param q: A Q instance
+        :param folders: A list of BaseFolder instances
+        :param applies_to: A member of the RESTRICTION_TYPES eum
+        &#34;&#34;&#34;
         if q.is_empty():
             raise ValueError(&#34;Q object must not be empty&#34;)
-        from .folders import BaseFolder
-        for folder in folders:
-            if not isinstance(folder, BaseFolder):
-                raise ValueError(&#34;&#39;folder&#39; value %r must be a Folder instance&#34; % folder)
-        if applies_to not in self.RESTRICTION_TYPES:
-            raise ValueError(&#34;&#39;applies_to&#39; must be one of %s&#34; % (self.RESTRICTION_TYPES,))
         self.q = q
         self.folders = folders
         self.applies_to = applies_to

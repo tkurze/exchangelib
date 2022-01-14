@@ -26,8 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, parse_folder_elem, create_folder_ids_element, \
-    create_shape_element
+<pre><code class="python">from .common import EWSAccountService, parse_folder_elem, folder_ids_element, shape_element
 from ..errors import ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation
 from ..util import create_element, MNS
 
@@ -36,7 +35,7 @@ class GetFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetFolder&#39;
-    element_container_name = &#39;{%s}Folders&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Folders&#39;
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
         ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation,
     )
@@ -72,14 +71,12 @@ class GetFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
-        getfolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        foldershape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(shape_element(
             tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        getfolder.append(foldershape)
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        getfolder.append(folder_ids)
-        return getfolder</code></pre>
+        ))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -105,7 +102,7 @@ class GetFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetFolder&#39;
-    element_container_name = &#39;{%s}Folders&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Folders&#39;
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
         ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation,
     )
@@ -141,14 +138,12 @@ class GetFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
-        getfolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        foldershape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(shape_element(
             tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        getfolder.append(foldershape)
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        getfolder.append(folder_ids)
-        return getfolder</code></pre>
+        ))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -215,14 +210,12 @@ class GetFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, additional_fields, shape):
-    getfolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    foldershape = create_shape_element(
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(shape_element(
         tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    )
-    getfolder.append(foldershape)
-    folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-    getfolder.append(folder_ids)
-    return getfolder</code></pre>
+    ))
+    payload.append(folder_ids_element(folders=folders, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

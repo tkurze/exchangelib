@@ -27,7 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from .common import EWSAccountService
-from ..properties import DLMailbox, DelegateUser  # The service expects a Mailbox element in the MNS namespace
+from ..properties import DLMailbox, DelegateUser, UserId  # The service expects a Mailbox element in the MNS namespace
 from ..util import create_element, set_xml_value, MNS
 from ..version import EXCHANGE_2007_SP1
 
@@ -36,6 +36,7 @@ class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetDelegate&#39;
+    ERRORS_TO_CATCH_IN_RESPONSE = ()
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
@@ -46,21 +47,19 @@ class GetDelegate(EWSAccountService):
             include_permissions=include_permissions,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield DelegateUser.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
-        payload = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=dict(IncludePermissions=&#39;true&#39; if include_permissions else &#39;false&#39;),
-        )
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
-            set_xml_value(payload, user_ids, version=self.protocol.version)
+            user_ids_elem = create_element(&#39;m:UserIds&#39;)
+            for user_id in user_ids:
+                if isinstance(user_id, str):
+                    user_id = UserId(primary_smtp_address=user_id)
+                set_xml_value(user_ids_elem, user_id, version=self.protocol.version)
+            set_xml_value(payload, user_ids_elem, version=self.protocol.version)
         return payload
 
     @classmethod
@@ -69,7 +68,7 @@ class GetDelegate(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return &#39;{%s}DelegateUserResponseMessageType&#39; % MNS</code></pre>
+        return f&#39;{{{MNS}}}DelegateUserResponseMessageType&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -95,6 +94,7 @@ class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetDelegate&#39;
+    ERRORS_TO_CATCH_IN_RESPONSE = ()
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
@@ -105,21 +105,19 @@ class GetDelegate(EWSAccountService):
             include_permissions=include_permissions,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield DelegateUser.from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
-        payload = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=dict(IncludePermissions=&#39;true&#39; if include_permissions else &#39;false&#39;),
-        )
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
-            set_xml_value(payload, user_ids, version=self.protocol.version)
+            user_ids_elem = create_element(&#39;m:UserIds&#39;)
+            for user_id in user_ids:
+                if isinstance(user_id, str):
+                    user_id = UserId(primary_smtp_address=user_id)
+                set_xml_value(user_ids_elem, user_id, version=self.protocol.version)
+            set_xml_value(payload, user_ids_elem, version=self.protocol.version)
         return payload
 
     @classmethod
@@ -128,7 +126,7 @@ class GetDelegate(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return &#39;{%s}DelegateUserResponseMessageType&#39; % MNS</code></pre>
+        return f&#39;{{{MNS}}}DelegateUserResponseMessageType&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -137,6 +135,10 @@ class GetDelegate(EWSAccountService):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.get_delegate.GetDelegate.ERRORS_TO_CATCH_IN_RESPONSE"><code class="name">var <span class="ident">ERRORS_TO_CATCH_IN_RESPONSE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.get_delegate.GetDelegate.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -176,13 +178,15 @@ class GetDelegate(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_ids, mailbox, include_permissions):
-    payload = create_element(
-        &#39;m:%s&#39; % self.SERVICE_NAME,
-        attrs=dict(IncludePermissions=&#39;true&#39; if include_permissions else &#39;false&#39;),
-    )
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
     set_xml_value(payload, mailbox, version=self.protocol.version)
     if user_ids != [None]:
-        set_xml_value(payload, user_ids, version=self.protocol.version)
+        user_ids_elem = create_element(&#39;m:UserIds&#39;)
+        for user_id in user_ids:
+            if isinstance(user_id, str):
+                user_id = UserId(primary_smtp_address=user_id)
+            set_xml_value(user_ids_elem, user_id, version=self.protocol.version)
+        set_xml_value(payload, user_ids_elem, version=self.protocol.version)
     return payload</code></pre>
 </details>
 </dd>
@@ -218,6 +222,7 @@ class GetDelegate(EWSAccountService):
 <li>
 <h4><code><a title="exchangelib.services.get_delegate.GetDelegate" href="#exchangelib.services.get_delegate.GetDelegate">GetDelegate</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.services.get_delegate.GetDelegate.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.get_delegate.GetDelegate.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.get_delegate.GetDelegate.SERVICE_NAME" href="#exchangelib.services.get_delegate.GetDelegate.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.get_delegate.GetDelegate.call" href="#exchangelib.services.get_delegate.GetDelegate.call">call</a></code></li>
 <li><code><a title="exchangelib.services.get_delegate.GetDelegate.get_payload" href="#exchangelib.services.get_delegate.GetDelegate.get_payload">get_payload</a></code></li>

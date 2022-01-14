@@ -36,7 +36,7 @@ class UploadItems(EWSAccountService):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UploadItems&#39;
-    element_container_name = &#39;{%s}ItemId&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}ItemId&#39;
 
     def call(self, items):
         # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
@@ -52,29 +52,24 @@ class UploadItems(EWSAccountService):
 
         :param items:
         &#34;&#34;&#34;
-        uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        itemselement = create_element(&#39;m:Items&#39;)
-        uploaditems.append(itemselement)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        items_elem = create_element(&#39;m:Items&#39;)
+        payload.append(items_elem)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-            item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;))
+            attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
             if is_associated is not None:
-                item.set(&#39;IsAssociated&#39;, &#39;true&#39; if is_associated else &#39;false&#39;)
-            parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
-            set_xml_value(item, parentfolderid, version=self.account.version)
+                attrs[&#39;IsAssociated&#39;] = is_associated
+            item = create_element(&#39;t:Item&#39;, attrs=attrs)
+            set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
-                itemid = to_item_id(item_id, ItemId, version=self.account.version)
-                set_xml_value(item, itemid, version=self.account.version)
+                set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
             add_xml_child(item, &#39;t:Data&#39;, data_str)
-            itemselement.append(item)
-        return uploaditems
+            items_elem.append(item)
+        return payload
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
+    def _elem_to_obj(self, elem):
+        return elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -105,7 +100,7 @@ class UploadItems(EWSAccountService):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UploadItems&#39;
-    element_container_name = &#39;{%s}ItemId&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}ItemId&#39;
 
     def call(self, items):
         # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
@@ -121,29 +116,24 @@ class UploadItems(EWSAccountService):
 
         :param items:
         &#34;&#34;&#34;
-        uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        itemselement = create_element(&#39;m:Items&#39;)
-        uploaditems.append(itemselement)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        items_elem = create_element(&#39;m:Items&#39;)
+        payload.append(items_elem)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-            item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;))
+            attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
             if is_associated is not None:
-                item.set(&#39;IsAssociated&#39;, &#39;true&#39; if is_associated else &#39;false&#39;)
-            parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
-            set_xml_value(item, parentfolderid, version=self.account.version)
+                attrs[&#39;IsAssociated&#39;] = is_associated
+            item = create_element(&#39;t:Item&#39;, attrs=attrs)
+            set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
-                itemid = to_item_id(item_id, ItemId, version=self.account.version)
-                set_xml_value(item, itemid, version=self.account.version)
+                set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
             add_xml_child(item, &#39;t:Data&#39;, data_str)
-            itemselement.append(item)
-        return uploaditems
+            items_elem.append(item)
+        return payload
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
+    def _elem_to_obj(self, elem):
+        return elem.get(ItemId.ID_ATTR), elem.get(ItemId.CHANGEKEY_ATTR)
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -205,22 +195,21 @@ call.</p>
 
     :param items:
     &#34;&#34;&#34;
-    uploaditems = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    itemselement = create_element(&#39;m:Items&#39;)
-    uploaditems.append(itemselement)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    items_elem = create_element(&#39;m:Items&#39;)
+    payload.append(items_elem)
     for parent_folder, (item_id, is_associated, data_str) in items:
         # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-        item = create_element(&#39;t:Item&#39;, attrs=dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;))
+        attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
         if is_associated is not None:
-            item.set(&#39;IsAssociated&#39;, &#39;true&#39; if is_associated else &#39;false&#39;)
-        parentfolderid = ParentFolderId(parent_folder.id, parent_folder.changekey)
-        set_xml_value(item, parentfolderid, version=self.account.version)
+            attrs[&#39;IsAssociated&#39;] = is_associated
+        item = create_element(&#39;t:Item&#39;, attrs=attrs)
+        set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
         if item_id:
-            itemid = to_item_id(item_id, ItemId, version=self.account.version)
-            set_xml_value(item, itemid, version=self.account.version)
+            set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
         add_xml_child(item, &#39;t:Data&#39;, data_str)
-        itemselement.append(item)
-    return uploaditems</code></pre>
+        items_elem.append(item)
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

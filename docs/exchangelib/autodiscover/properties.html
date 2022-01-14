@@ -33,6 +33,7 @@ from ..properties import EWSElement
 from ..transport import DEFAULT_ENCODING, NOAUTH, NTLM, BASIC, GSSAPI, SSPI, CBA
 from ..util import create_element, add_xml_child, to_xml, is_xml, xml_to_str, AUTODISCOVER_REQUEST_NS, \
     AUTODISCOVER_BASE_NS, AUTODISCOVER_RESPONSE_NS as RNS, ParseError
+from ..version import Version
 
 
 class AutodiscoverBase(EWSElement):
@@ -171,6 +172,8 @@ class Protocol(SimpleProtocol):
         # Translates &#39;auth_package&#39; value to our own &#39;auth_type&#39; enum vals
         if not self.auth_required:
             return NOAUTH
+        if not self.auth_package:
+            return None
         return {
             # Missing in list are DIGEST and OAUTH2
             &#39;basic&#39;: BASIC,
@@ -181,7 +184,7 @@ class Protocol(SimpleProtocol):
             &#39;negotiate&#39;: SSPI,  # Unsure about this one
             &#39;nego2&#39;: GSSAPI,
             &#39;anonymous&#39;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
-        }.get(self.auth_package.lower(), NTLM)  # Default to NTLM
+        }.get(self.auth_package.lower())
 
 
 class Error(EWSElement):
@@ -220,7 +223,7 @@ class Account(AutodiscoverBase):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        public_folder_information = elem.find(&#39;{%s}PublicFolderInformation&#39; % cls.NAMESPACE)
+        public_folder_information = elem.find(f&#39;{{{cls.NAMESPACE}}}PublicFolderInformation&#39;)
         for f in cls.FIELDS:
             if f.name == &#39;public_folder_smtp_address&#39;:
                 if public_folder_information is None:
@@ -269,24 +272,35 @@ class Response(AutodiscoverBase):
             return None
 
     @property
-    def ews_url(self):
-        &#34;&#34;&#34;Return the EWS URL contained in the response.
+    def version(self):
+        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+        # other ones that point to the same endpoint.
+        ews_url = self.protocol.ews_url
+        for protocol in self.account.protocols:
+            if not protocol.ews_url or not protocol.server_version:
+                continue
+            if protocol.ews_url.lower() == ews_url.lower():
+                return Version(build=protocol.server_version)
+        return None
+
+    @property
+    def protocol(self):
+        &#34;&#34;&#34;Return the protocol containing an EWS URL.
 
         A response may contain a number of possible protocol types. EXPR is meant for EWS. See
         https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16
 
         We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.
 
-        Additionally, some responses may contain and EXPR with no EWS URL. In that case, return the URL from EXCH, if
-        available.
+        Additionally, some responses may contain an EXPR with no EWS URL. In that case, return EXCH, if available.
         &#34;&#34;&#34;
         protocols = {p.type: p for p in self.account.protocols if p.ews_url}
         if Protocol.EXPR in protocols:
-            return protocols[Protocol.EXPR].ews_url
+            return protocols[Protocol.EXPR]
         if Protocol.EXCH in protocols:
-            return protocols[Protocol.EXCH].ews_url
+            return protocols[Protocol.EXCH]
         raise ValueError(
-            &#39;No EWS URL found in any of the available protocols: %s&#39; % [str(p) for p in self.account.protocols]
+            f&#39;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#39;
         )
 
 
@@ -322,14 +336,11 @@ class Autodiscover(EWSElement):
         :param bytes_content:
         :return:
         &#34;&#34;&#34;
-        if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b&#39;&lt;Autodiscover &#39;):
-            raise ValueError(&#39;Response is not XML: %s&#39; % bytes_content)
-        try:
-            root = to_xml(bytes_content).getroot()
-        except ParseError:
-            raise ValueError(&#39;Error parsing XML: %s&#39; % bytes_content)
+        if not is_xml(bytes_content):
+            raise ParseError(f&#39;Response is not XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+        root = to_xml(bytes_content).getroot()  # May raise ParseError
         if root.tag != cls.response_tag():
-            raise ValueError(&#39;Unknown root element in XML: %s&#39; % bytes_content)
+            raise ParseError(f&#39;Unknown root element in XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
@@ -339,9 +350,9 @@ class Autodiscover(EWSElement):
             message = self.error_response.error.message
             if message in (&#39;The e-mail address cannot be found.&#39;, &#34;The email address can&#39;t be found.&#34;):
                 raise ErrorNonExistentMailbox(&#39;The SMTP address has no mailbox associated with it&#39;)
-            raise AutoDiscoverFailed(&#39;Unknown error %s: %s&#39; % (errorcode, message))
+            raise AutoDiscoverFailed(f&#39;Unknown error {errorcode}: {message}&#39;)
         except AttributeError:
-            raise AutoDiscoverFailed(&#39;Unknown autodiscover error response: %s&#39; % self)
+            raise AutoDiscoverFailed(f&#39;Unknown autodiscover error response: {self.error_response}&#39;)
 
     @staticmethod
     def payload(email):
@@ -396,7 +407,7 @@ class Autodiscover(EWSElement):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        public_folder_information = elem.find(&#39;{%s}PublicFolderInformation&#39; % cls.NAMESPACE)
+        public_folder_information = elem.find(f&#39;{{{cls.NAMESPACE}}}PublicFolderInformation&#39;)
         for f in cls.FIELDS:
             if f.name == &#39;public_folder_smtp_address&#39;:
                 if public_folder_information is None:
@@ -453,7 +464,7 @@ class Autodiscover(EWSElement):
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
     kwargs = {}
-    public_folder_information = elem.find(&#39;{%s}PublicFolderInformation&#39; % cls.NAMESPACE)
+    public_folder_information = elem.find(f&#39;{{{cls.NAMESPACE}}}PublicFolderInformation&#39;)
     for f in cls.FIELDS:
         if f.name == &#39;public_folder_smtp_address&#39;:
             if public_folder_information is None:
@@ -587,14 +598,11 @@ def from_xml(cls, elem, account):
         :param bytes_content:
         :return:
         &#34;&#34;&#34;
-        if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b&#39;&lt;Autodiscover &#39;):
-            raise ValueError(&#39;Response is not XML: %s&#39; % bytes_content)
-        try:
-            root = to_xml(bytes_content).getroot()
-        except ParseError:
-            raise ValueError(&#39;Error parsing XML: %s&#39; % bytes_content)
+        if not is_xml(bytes_content):
+            raise ParseError(f&#39;Response is not XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+        root = to_xml(bytes_content).getroot()  # May raise ParseError
         if root.tag != cls.response_tag():
-            raise ValueError(&#39;Unknown root element in XML: %s&#39; % bytes_content)
+            raise ParseError(f&#39;Unknown root element in XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
@@ -604,9 +612,9 @@ def from_xml(cls, elem, account):
             message = self.error_response.error.message
             if message in (&#39;The e-mail address cannot be found.&#39;, &#34;The email address can&#39;t be found.&#34;):
                 raise ErrorNonExistentMailbox(&#39;The SMTP address has no mailbox associated with it&#39;)
-            raise AutoDiscoverFailed(&#39;Unknown error %s: %s&#39; % (errorcode, message))
+            raise AutoDiscoverFailed(f&#39;Unknown error {errorcode}: {message}&#39;)
         except AttributeError:
-            raise AutoDiscoverFailed(&#39;Unknown autodiscover error response: %s&#39; % self)
+            raise AutoDiscoverFailed(f&#39;Unknown autodiscover error response: {self.error_response}&#39;)
 
     @staticmethod
     def payload(email):
@@ -659,14 +667,11 @@ def from_bytes(cls, bytes_content):
     :param bytes_content:
     :return:
     &#34;&#34;&#34;
-    if not is_xml(bytes_content) and not is_xml(bytes_content, expected_prefix=b&#39;&lt;Autodiscover &#39;):
-        raise ValueError(&#39;Response is not XML: %s&#39; % bytes_content)
-    try:
-        root = to_xml(bytes_content).getroot()
-    except ParseError:
-        raise ValueError(&#39;Error parsing XML: %s&#39; % bytes_content)
+    if not is_xml(bytes_content):
+        raise ParseError(f&#39;Response is not XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+    root = to_xml(bytes_content).getroot()  # May raise ParseError
     if root.tag != cls.response_tag():
-        raise ValueError(&#39;Unknown root element in XML: %s&#39; % bytes_content)
+        raise ParseError(f&#39;Unknown root element in XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
     return cls.from_xml(elem=root, account=None)</code></pre>
 </details>
 </dd>
@@ -720,9 +725,9 @@ def payload(email):
         message = self.error_response.error.message
         if message in (&#39;The e-mail address cannot be found.&#39;, &#34;The email address can&#39;t be found.&#34;):
             raise ErrorNonExistentMailbox(&#39;The SMTP address has no mailbox associated with it&#39;)
-        raise AutoDiscoverFailed(&#39;Unknown error %s: %s&#39; % (errorcode, message))
+        raise AutoDiscoverFailed(f&#39;Unknown error {errorcode}: {message}&#39;)
     except AttributeError:
-        raise AutoDiscoverFailed(&#39;Unknown autodiscover error response: %s&#39; % self)</code></pre>
+        raise AutoDiscoverFailed(f&#39;Unknown autodiscover error response: {self.error_response}&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1284,6 +1289,8 @@ def payload(email):
         # Translates &#39;auth_package&#39; value to our own &#39;auth_type&#39; enum vals
         if not self.auth_required:
             return NOAUTH
+        if not self.auth_package:
+            return None
         return {
             # Missing in list are DIGEST and OAUTH2
             &#39;basic&#39;: BASIC,
@@ -1294,7 +1301,7 @@ def payload(email):
             &#39;negotiate&#39;: SSPI,  # Unsure about this one
             &#39;nego2&#39;: GSSAPI,
             &#39;anonymous&#39;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
-        }.get(self.auth_package.lower(), NTLM)  # Default to NTLM</code></pre>
+        }.get(self.auth_package.lower())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1335,6 +1342,8 @@ def auth_type(self):
     # Translates &#39;auth_package&#39; value to our own &#39;auth_type&#39; enum vals
     if not self.auth_required:
         return NOAUTH
+    if not self.auth_package:
+        return None
     return {
         # Missing in list are DIGEST and OAUTH2
         &#39;basic&#39;: BASIC,
@@ -1345,7 +1354,7 @@ def auth_type(self):
         &#39;negotiate&#39;: SSPI,  # Unsure about this one
         &#39;nego2&#39;: GSSAPI,
         &#39;anonymous&#39;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
-    }.get(self.auth_package.lower(), NTLM)  # Default to NTLM</code></pre>
+    }.get(self.auth_package.lower())</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.autodiscover.properties.Protocol.cert_principal_name"><code class="name">var <span class="ident">cert_principal_name</span></code></dt>
@@ -1576,24 +1585,35 @@ def auth_type(self):
             return None
 
     @property
-    def ews_url(self):
-        &#34;&#34;&#34;Return the EWS URL contained in the response.
+    def version(self):
+        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+        # other ones that point to the same endpoint.
+        ews_url = self.protocol.ews_url
+        for protocol in self.account.protocols:
+            if not protocol.ews_url or not protocol.server_version:
+                continue
+            if protocol.ews_url.lower() == ews_url.lower():
+                return Version(build=protocol.server_version)
+        return None
+
+    @property
+    def protocol(self):
+        &#34;&#34;&#34;Return the protocol containing an EWS URL.
 
         A response may contain a number of possible protocol types. EXPR is meant for EWS. See
         https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16
 
         We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.
 
-        Additionally, some responses may contain and EXPR with no EWS URL. In that case, return the URL from EXCH, if
-        available.
+        Additionally, some responses may contain an EXPR with no EWS URL. In that case, return EXCH, if available.
         &#34;&#34;&#34;
         protocols = {p.type: p for p in self.account.protocols if p.ews_url}
         if Protocol.EXPR in protocols:
-            return protocols[Protocol.EXPR].ews_url
+            return protocols[Protocol.EXPR]
         if Protocol.EXCH in protocols:
-            return protocols[Protocol.EXCH].ews_url
+            return protocols[Protocol.EXCH]
         raise ValueError(
-            &#39;No EWS URL found in any of the available protocols: %s&#39; % [str(p) for p in self.account.protocols]
+            f&#39;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#39;
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1636,37 +1656,35 @@ def autodiscover_smtp_address(self):
         return None</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.autodiscover.properties.Response.ews_url"><code class="name">var <span class="ident">ews_url</span></code></dt>
+<dt id="exchangelib.autodiscover.properties.Response.protocol"><code class="name">var <span class="ident">protocol</span></code></dt>
 <dd>
-<div class="desc"><p>Return the EWS URL contained in the response.</p>
+<div class="desc"><p>Return the protocol containing an EWS URL.</p>
 <p>A response may contain a number of possible protocol types. EXPR is meant for EWS. See
 <a href="https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16">https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16</a></p>
 <p>We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.</p>
-<p>Additionally, some responses may contain and EXPR with no EWS URL. In that case, return the URL from EXCH, if
-available.</p></div>
+<p>Additionally, some responses may contain an EXPR with no EWS URL. In that case, return EXCH, if available.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def ews_url(self):
-    &#34;&#34;&#34;Return the EWS URL contained in the response.
+def protocol(self):
+    &#34;&#34;&#34;Return the protocol containing an EWS URL.
 
     A response may contain a number of possible protocol types. EXPR is meant for EWS. See
     https://techcommunity.microsoft.com/t5/blogs/blogarticleprintpage/blog-id/Exchange/article-id/16
 
     We allow fallback to EXCH if EXPR is not available, to support installations where EXPR is not available.
 
-    Additionally, some responses may contain and EXPR with no EWS URL. In that case, return the URL from EXCH, if
-    available.
+    Additionally, some responses may contain an EXPR with no EWS URL. In that case, return EXCH, if available.
     &#34;&#34;&#34;
     protocols = {p.type: p for p in self.account.protocols if p.ews_url}
     if Protocol.EXPR in protocols:
-        return protocols[Protocol.EXPR].ews_url
+        return protocols[Protocol.EXPR]
     if Protocol.EXCH in protocols:
-        return protocols[Protocol.EXCH].ews_url
+        return protocols[Protocol.EXCH]
     raise ValueError(
-        &#39;No EWS URL found in any of the available protocols: %s&#39; % [str(p) for p in self.account.protocols]
+        f&#39;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#39;
     )</code></pre>
 </details>
 </dd>
@@ -1707,6 +1725,26 @@ def redirect_url(self):
 <dt id="exchangelib.autodiscover.properties.Response.user"><code class="name">var <span class="ident">user</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt id="exchangelib.autodiscover.properties.Response.version"><code class="name">var <span class="ident">version</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def version(self):
+    # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+    # other ones that point to the same endpoint.
+    ews_url = self.protocol.ews_url
+    for protocol in self.account.protocols:
+        if not protocol.ews_url or not protocol.server_version:
+            continue
+        if protocol.ews_url.lower() == ews_url.lower():
+            return Version(build=protocol.server_version)
+    return None</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -2066,10 +2104,11 @@ def redirect_url(self):
 <li><code><a title="exchangelib.autodiscover.properties.Response.FIELDS" href="#exchangelib.autodiscover.properties.Response.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.autodiscover.properties.Response.account" href="#exchangelib.autodiscover.properties.Response.account">account</a></code></li>
 <li><code><a title="exchangelib.autodiscover.properties.Response.autodiscover_smtp_address" href="#exchangelib.autodiscover.properties.Response.autodiscover_smtp_address">autodiscover_smtp_address</a></code></li>
-<li><code><a title="exchangelib.autodiscover.properties.Response.ews_url" href="#exchangelib.autodiscover.properties.Response.ews_url">ews_url</a></code></li>
+<li><code><a title="exchangelib.autodiscover.properties.Response.protocol" href="#exchangelib.autodiscover.properties.Response.protocol">protocol</a></code></li>
 <li><code><a title="exchangelib.autodiscover.properties.Response.redirect_address" href="#exchangelib.autodiscover.properties.Response.redirect_address">redirect_address</a></code></li>
 <li><code><a title="exchangelib.autodiscover.properties.Response.redirect_url" href="#exchangelib.autodiscover.properties.Response.redirect_url">redirect_url</a></code></li>
 <li><code><a title="exchangelib.autodiscover.properties.Response.user" href="#exchangelib.autodiscover.properties.Response.user">user</a></code></li>
+<li><code><a title="exchangelib.autodiscover.properties.Response.version" href="#exchangelib.autodiscover.properties.Response.version">version</a></code></li>
 </ul>
 </li>
 <li>

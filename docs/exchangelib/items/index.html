@@ -29,7 +29,7 @@
 <pre><code class="python">from .base import RegisterMixIn, BulkCreateResult, MESSAGE_DISPOSITION_CHOICES, SAVE_ONLY, SEND_ONLY, \
     ID_ONLY, DEFAULT, ALL_PROPERTIES, SEND_MEETING_INVITATIONS_CHOICES, SEND_TO_NONE, SEND_ONLY_TO_ALL, \
     SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY_TO_CHANGED, SEND_TO_CHANGED_AND_SAVE_COPY, \
-    SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES, ALL_OCCURRENCIES, \
+    SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES, ALL_OCCURRENCES, \
     SPECIFIED_OCCURRENCE_ONLY, CONFLICT_RESOLUTION_CHOICES, NEVER_OVERWRITE, AUTO_RESOLVE, ALWAYS_OVERWRITE, \
     DELETE_TYPE_CHOICES, HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS, SEND_TO_ALL_AND_SAVE_COPY, \
     SEND_AND_SAVE_COPY, SHAPE_CHOICES
@@ -65,7 +65,7 @@ __all__ = [
     &#39;Contact&#39;, &#39;Persona&#39;, &#39;DistributionList&#39;,
     &#39;SEND_MEETING_INVITATIONS_CHOICES&#39;, &#39;SEND_TO_NONE&#39;, &#39;SEND_ONLY_TO_ALL&#39;, &#39;SEND_TO_ALL_AND_SAVE_COPY&#39;,
     &#39;SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES&#39;, &#39;SEND_ONLY_TO_CHANGED&#39;, &#39;SEND_TO_CHANGED_AND_SAVE_COPY&#39;,
-    &#39;SEND_MEETING_CANCELLATIONS_CHOICES&#39;, &#39;AFFECTED_TASK_OCCURRENCES_CHOICES&#39;, &#39;ALL_OCCURRENCIES&#39;,
+    &#39;SEND_MEETING_CANCELLATIONS_CHOICES&#39;, &#39;AFFECTED_TASK_OCCURRENCES_CHOICES&#39;, &#39;ALL_OCCURRENCES&#39;,
     &#39;SPECIFIED_OCCURRENCE_ONLY&#39;, &#39;CONFLICT_RESOLUTION_CHOICES&#39;, &#39;NEVER_OVERWRITE&#39;, &#39;AUTO_RESOLVE&#39;, &#39;ALWAYS_OVERWRITE&#39;,
     &#39;DELETE_TYPE_CHOICES&#39;, &#39;HARD_DELETE&#39;, &#39;SOFT_DELETE&#39;, &#39;MOVE_TO_DELETED_ITEMS&#39;, &#39;BaseItem&#39;, &#39;Item&#39;,
     &#39;BulkCreateResult&#39;,
@@ -206,11 +206,11 @@ we use folder.account.</p></div>
         from ..account import Account
         self.account = kwargs.pop(&#39;account&#39;, None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise ValueError(&#34;&#39;account&#39; %r must be an Account instance&#34; % self.account)
+            raise InvalidTypeError(&#39;account&#39;, self.account, Account)
         self.folder = kwargs.pop(&#39;folder&#39;, None)
         if self.folder is not None:
             if not isinstance(self.folder, BaseFolder):
-                raise ValueError(&#34;&#39;folder&#39; %r must be a Folder instance&#34; % self.folder)
+                raise InvalidTypeError(&#39;folder&#39;, self.folder, BaseFolder)
             if self.folder.account is not None:
                 if self.account is not None:
                     # Make sure the account from kwargs matches the folder account
@@ -498,7 +498,7 @@ we use folder.account.</p></div>
     def clean(self, version=None):
         super().clean(version=version)
         if self.start and self.end and self.end &lt; self.start:
-            raise ValueError(&#34;&#39;end&#39; must be greater than &#39;start&#39; (%s -&gt; %s)&#34; % (self.start, self.end))
+            raise ValueError(f&#34;&#39;end&#39; must be greater than &#39;start&#39; ({self.start} -&gt; {self.end})&#34;)
         if version:
             self.clean_timezone_fields(version=version)
 
@@ -533,7 +533,7 @@ we use folder.account.</p></div>
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
             if field_name == &#39;end&#39;:
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, &#39;_%s_timezone&#39; % field_name)
+            tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
@@ -578,7 +578,7 @@ we use folder.account.</p></div>
                 # We already generated an XML element for this field, but it contains a plain date at this point, which
                 # is invalid. Replace the value.
                 field = self.get_field_by_fieldname(field_name)
-                set_xml_value(elem=elem.find(field.response_tag()), value=value, version=version)
+                set_xml_value(elem.find(field.response_tag()), value)
         return elem</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -627,7 +627,7 @@ def from_xml(cls, elem, account):
         # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
         if field_name == &#39;end&#39;:
             val -= datetime.timedelta(days=1)
-        tz = getattr(item, &#39;_%s_timezone&#39; % field_name)
+        tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
         setattr(item, field_name, val.astimezone(tz).date())
     return item</code></pre>
 </details>
@@ -833,7 +833,7 @@ def timezone_fields(cls):
 <pre><code class="python">def clean(self, version=None):
     super().clean(version=version)
     if self.start and self.end and self.end &lt; self.start:
-        raise ValueError(&#34;&#39;end&#39; must be greater than &#39;start&#39; (%s -&gt; %s)&#34; % (self.start, self.end))
+        raise ValueError(f&#34;&#39;end&#39; must be greater than &#39;start&#39; ({self.start} -&gt; {self.end})&#34;)
     if version:
         self.clean_timezone_fields(version=version)</code></pre>
 </details>
@@ -981,7 +981,7 @@ Call refresh() on the item do do so.</p>
             # We already generated an XML element for this field, but it contains a plain date at this point, which
             # is invalid. Replace the value.
             field = self.get_field_by_fieldname(field_name)
-            set_xml_value(elem=elem.find(field.response_tag()), value=value, version=version)
+            set_xml_value(elem.find(field.response_tag()), value)
     return elem</code></pre>
 </details>
 </dd>
@@ -1631,7 +1631,7 @@ we use folder.account.</p></div>
             for a in self.attachments:
                 if a.parent_item:
                     if a.parent_item is not self:
-                        raise ValueError(&#34;&#39;parent_item&#39; of attachment %s must point to this item&#34; % a)
+                        raise ValueError(f&#34;&#39;parent_item&#39; of attachment {a} must point to this item&#34;)
                 else:
                     a.parent_item = self
                 self.attach(self.attachments)
@@ -1683,6 +1683,7 @@ we use folder.account.</p></div>
     def _create(self, message_disposition, send_meeting_invitations):
         # Return a BulkCreateResult because we want to return the ID of both the main item *and* attachments. In send
         # and send-and-save-copy mode, the server does not return an ID, so we just return True.
+        from ..services import CreateItem
         return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
@@ -1720,8 +1721,9 @@ we use folder.account.</p></div>
 
     @require_account
     def _update(self, update_fieldnames, message_disposition, conflict_resolution, send_meeting_invitations):
+        from ..services import UpdateItem
         if not self.changekey:
-            raise ValueError(&#39;%s must have changekey&#39; % self.__class__.__name__)
+            raise ValueError(f&#39;{self.__class__.__name__} must have changekey&#39;)
         if not update_fieldnames:
             # The fields to update was not specified explicitly. Update all fields where update is possible
             update_fieldnames = self._update_fieldnames()
@@ -1738,6 +1740,7 @@ we use folder.account.</p></div>
     def refresh(self):
         # Updates the item based on fresh data from EWS
         from ..folders import Folder
+        from ..services import GetItem
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
@@ -1755,6 +1758,7 @@ we use folder.account.</p></div>
 
     @require_id
     def copy(self, to_folder):
+        from ..services import CopyItem
         # If &#39;to_folder&#39; is a public folder or a folder in a different mailbox then None is returned
         return CopyItem(account=self.account).get(
             items=[self],
@@ -1764,6 +1768,7 @@ we use folder.account.</p></div>
 
     @require_id
     def move(self, to_folder):
+        from ..services import MoveItem
         res = MoveItem(account=self.account).get(
             items=[self],
             to_folder=to_folder,
@@ -1776,7 +1781,7 @@ we use folder.account.</p></div>
         self._id = self.ID_ELEMENT_CLS(*res)
         self.folder = to_folder
 
-    def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+    def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                       suppress_read_receipts=True):
         # Delete and move to the trash folder.
         self._delete(delete_type=MOVE_TO_DELETED_ITEMS, send_meeting_cancellations=send_meeting_cancellations,
@@ -1784,7 +1789,7 @@ we use folder.account.</p></div>
         self._id = None
         self.folder = self.account.trash
 
-    def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+    def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                     suppress_read_receipts=True):
         # Delete and move to the dumpster, if it is enabled.
         self._delete(delete_type=SOFT_DELETE, send_meeting_cancellations=send_meeting_cancellations,
@@ -1792,7 +1797,7 @@ we use folder.account.</p></div>
         self._id = None
         self.folder = self.account.recoverable_items_deletions
 
-    def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+    def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                suppress_read_receipts=True):
         # Remove the item permanently. No copies are stored anywhere.
         self._delete(delete_type=HARD_DELETE, send_meeting_cancellations=send_meeting_cancellations,
@@ -1801,6 +1806,7 @@ we use folder.account.</p></div>
 
     @require_id
     def _delete(self, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
+        from ..services import DeleteItem
         DeleteItem(account=self.account).get(
             items=[self],
             delete_type=delete_type,
@@ -1811,6 +1817,7 @@ we use folder.account.</p></div>
 
     @require_id
     def archive(self, to_folder):
+        from ..services import ArchiveItem
         return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)
 
     def attach(self, attachments):
@@ -2075,6 +2082,7 @@ we use folder.account.</p></div>
 </summary>
 <pre><code class="python">@require_id
 def archive(self, to_folder):
+    from ..services import ArchiveItem
     return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)</code></pre>
 </details>
 </dd>
@@ -2123,6 +2131,7 @@ be created on the server when the item is saved.</p>
 </summary>
 <pre><code class="python">@require_id
 def copy(self, to_folder):
+    from ..services import CopyItem
     # If &#39;to_folder&#39; is a public folder or a folder in a different mailbox then None is returned
     return CopyItem(account=self.account).get(
         items=[self],
@@ -2163,7 +2172,7 @@ def create_forward(self, subject, body, to_recipients, cc_recipients=None, bcc_r
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+<pre><code class="python">def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
            suppress_read_receipts=True):
     # Remove the item permanently. No copies are stored anywhere.
     self._delete(delete_type=HARD_DELETE, send_meeting_cancellations=send_meeting_cancellations,
@@ -2238,6 +2247,7 @@ simply not be created on the server the item is saved.</p>
 </summary>
 <pre><code class="python">@require_id
 def move(self, to_folder):
+    from ..services import MoveItem
     res = MoveItem(account=self.account).get(
         items=[self],
         to_folder=to_folder,
@@ -2260,7 +2270,7 @@ def move(self, to_folder):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+<pre><code class="python">def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                   suppress_read_receipts=True):
     # Delete and move to the trash folder.
     self._delete(delete_type=MOVE_TO_DELETED_ITEMS, send_meeting_cancellations=send_meeting_cancellations,
@@ -2282,6 +2292,7 @@ def move(self, to_folder):
 def refresh(self):
     # Updates the item based on fresh data from EWS
     from ..folders import Folder
+    from ..services import GetItem
     additional_fields = {
         FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
     }
@@ -2358,7 +2369,7 @@ def refresh(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCIES,
+<pre><code class="python">def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
                 suppress_read_receipts=True):
     # Delete and move to the dumpster, if it is enabled.
     self._delete(delete_type=SOFT_DELETE, send_meeting_cancellations=send_meeting_cancellations,
@@ -2808,6 +2819,7 @@ we use folder.account.</p></div>
     @require_account
     def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
              send_meeting_invitations=SEND_TO_NONE):
+        from ..services import SendItem
         # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
         # not yet exist in EWS.
         if copy_to_folder and not save_copy:
@@ -2857,12 +2869,10 @@ we use folder.account.</p></div>
                 self.send(save_copy=False, conflict_resolution=conflict_resolution,
                           send_meeting_invitations=send_meeting_invitations)
             else:
-                res = self._create(
+                self._create(
                     message_disposition=SEND_AND_SAVE_COPY,
                     send_meeting_invitations=send_meeting_invitations
                 )
-                if res is not True:
-                    raise ValueError(&#39;Unexpected response in send-only mode&#39;)
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
@@ -2915,6 +2925,7 @@ we use folder.account.</p></div>
         :param move_item: If true, the item will be moved to the junk folder.
         :return:
         &#34;&#34;&#34;
+        from ..services import MarkAsJunk
         res = MarkAsJunk(account=self.account).get(
             items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
         )
@@ -3087,6 +3098,7 @@ removed.
     :param move_item: If true, the item will be moved to the junk folder.
     :return:
     &#34;&#34;&#34;
+    from ..services import MarkAsJunk
     res = MarkAsJunk(account=self.account).get(
         items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
     )
@@ -3140,6 +3152,7 @@ removed.
 <pre><code class="python">@require_account
 def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
          send_meeting_invitations=SEND_TO_NONE):
+    from ..services import SendItem
     # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
     # not yet exist in EWS.
     if copy_to_folder and not save_copy:
@@ -3199,12 +3212,10 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
             self.send(save_copy=False, conflict_resolution=conflict_resolution,
                       send_meeting_invitations=send_meeting_invitations)
         else:
-            res = self._create(
+            self._create(
                 message_disposition=SEND_AND_SAVE_COPY,
                 send_meeting_invitations=send_meeting_invitations
-            )
-            if res is not True:
-                raise ValueError(&#39;Unexpected response in send-only mode&#39;)</code></pre>
+            )</code></pre>
 </details>
 </dd>
 </dl>
@@ -3305,7 +3316,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
     callback_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CallbackPhones&#39;)
     car_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CarPhones&#39;)
     home_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomeFaxes&#39;)
-    orgnaization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
+    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
     other_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherFaxes&#39;)
     other_telephones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherTelephones&#39;)
     other_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherPhones2&#39;)
@@ -3622,7 +3633,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.Persona.orgnaization_main_phones"><code class="name">var <span class="ident">orgnaization_main_phones</span></code></dt>
+<dt id="exchangelib.items.Persona.organization_main_phones"><code class="name">var <span class="ident">organization_main_phones</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4035,15 +4046,15 @@ we use folder.account.</p></div>
         :return:
         &#34;&#34;&#34;
         if not cls.INSERT_AFTER_FIELD:
-            raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
+            raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
         try:
             cls.get_field_by_fieldname(attr_name)
         except InvalidField:
             pass
         else:
-            raise ValueError(&#34;&#39;%s&#39; is already registered&#34; % attr_name)
+            raise ValueError(f&#34;&#39;attr_name&#39; {attr_name!r} is already registered&#34;)
         if not issubclass(attr_cls, ExtendedProperty):
-            raise ValueError(&#34;%r must be a subclass of ExtendedProperty&#34; % attr_cls)
+            raise TypeError(f&#34;&#39;attr_cls&#39; {attr_cls!r} must be a subclass of type {ExtendedProperty}&#34;)
         # Check if class attributes are properly defined
         attr_cls.validate_cls()
         # ExtendedProperty is not a real field, but a placeholder in the fields list. See
@@ -4066,9 +4077,9 @@ we use folder.account.</p></div>
         try:
             field = cls.get_field_by_fieldname(attr_name)
         except InvalidField:
-            raise ValueError(&#34;&#39;%s&#39; is not registered&#34; % attr_name)
+            raise ValueError(f&#34;{attr_name!r} is not registered&#34;)
         if not isinstance(field, ExtendedPropertyField):
-            raise ValueError(&#34;&#39;%s&#39; is not registered as an ExtendedProperty&#34; % attr_name)
+            raise ValueError(f&#34;{attr_name} is not registered as an ExtendedProperty&#34;)
         cls.remove_field(field)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4111,9 +4122,9 @@ def deregister(cls, attr_name):
     try:
         field = cls.get_field_by_fieldname(attr_name)
     except InvalidField:
-        raise ValueError(&#34;&#39;%s&#39; is not registered&#34; % attr_name)
+        raise ValueError(f&#34;{attr_name!r} is not registered&#34;)
     if not isinstance(field, ExtendedPropertyField):
-        raise ValueError(&#34;&#39;%s&#39; is not registered as an ExtendedProperty&#34; % attr_name)
+        raise ValueError(f&#34;{attr_name} is not registered as an ExtendedProperty&#34;)
     cls.remove_field(field)</code></pre>
 </details>
 </dd>
@@ -4138,15 +4149,15 @@ def register(cls, attr_name, attr_cls):
     :return:
     &#34;&#34;&#34;
     if not cls.INSERT_AFTER_FIELD:
-        raise ValueError(&#39;Class %s is missing INSERT_AFTER_FIELD value&#39; % cls)
+        raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
     try:
         cls.get_field_by_fieldname(attr_name)
     except InvalidField:
         pass
     else:
-        raise ValueError(&#34;&#39;%s&#39; is already registered&#34; % attr_name)
+        raise ValueError(f&#34;&#39;attr_name&#39; {attr_name!r} is already registered&#34;)
     if not issubclass(attr_cls, ExtendedProperty):
-        raise ValueError(&#34;%r must be a subclass of ExtendedProperty&#34; % attr_cls)
+        raise TypeError(f&#34;&#39;attr_cls&#39; {attr_cls!r} must be a subclass of type {ExtendedProperty}&#34;)
     # Check if class attributes are properly defined
     attr_cls.validate_cls()
     # ExtendedProperty is not a real field, but a placeholder in the fields list. See
@@ -5003,7 +5014,7 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.Persona.nickname" href="#exchangelib.items.Persona.nickname">nickname</a></code></li>
 <li><code><a title="exchangelib.items.Persona.nicknames" href="#exchangelib.items.Persona.nicknames">nicknames</a></code></li>
 <li><code><a title="exchangelib.items.Persona.office_locations" href="#exchangelib.items.Persona.office_locations">office_locations</a></code></li>
-<li><code><a title="exchangelib.items.Persona.orgnaization_main_phones" href="#exchangelib.items.Persona.orgnaization_main_phones">orgnaization_main_phones</a></code></li>
+<li><code><a title="exchangelib.items.Persona.organization_main_phones" href="#exchangelib.items.Persona.organization_main_phones">organization_main_phones</a></code></li>
 <li><code><a title="exchangelib.items.Persona.other_addresses" href="#exchangelib.items.Persona.other_addresses">other_addresses</a></code></li>
 <li><code><a title="exchangelib.items.Persona.other_faxes" href="#exchangelib.items.Persona.other_faxes">other_faxes</a></code></li>
 <li><code><a title="exchangelib.items.Persona.other_phones2" href="#exchangelib.items.Persona.other_phones2">other_phones2</a></code></li>

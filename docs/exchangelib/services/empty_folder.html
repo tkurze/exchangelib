@@ -26,9 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import OrderedDict
-
-from .common import EWSAccountService, create_folder_ids_element
+<pre><code class="python">from .common import EWSAccountService, folder_ids_element
+from ..errors import InvalidEnumValue
+from ..items import DELETE_TYPE_CHOICES
 from ..util import create_element
 
 
@@ -39,21 +39,19 @@ class EmptyFolder(EWSAccountService):
     returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
+        if delete_type not in DELETE_TYPE_CHOICES:
+            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
         return self._chunked_get_elements(
             self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
-        emptyfolder = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                (&#39;DeleteType&#39;, delete_type),
-                (&#39;DeleteSubFolders&#39;, &#39;true&#39; if delete_sub_folders else &#39;false&#39;),
-            ])
+        payload = create_element(
+            f&#39;m:{self.SERVICE_NAME}&#39;,
+            attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        emptyfolder.append(folder_ids)
-        return emptyfolder</code></pre>
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -82,21 +80,19 @@ class EmptyFolder(EWSAccountService):
     returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
+        if delete_type not in DELETE_TYPE_CHOICES:
+            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
         return self._chunked_get_elements(
             self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
-        emptyfolder = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                (&#39;DeleteType&#39;, delete_type),
-                (&#39;DeleteSubFolders&#39;, &#39;true&#39; if delete_sub_folders else &#39;false&#39;),
-            ])
+        payload = create_element(
+            f&#39;m:{self.SERVICE_NAME}&#39;,
+            attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        emptyfolder.append(folder_ids)
-        return emptyfolder</code></pre>
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -126,6 +122,8 @@ class EmptyFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, delete_type, delete_sub_folders):
+    if delete_type not in DELETE_TYPE_CHOICES:
+        raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
     return self._chunked_get_elements(
         self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
     )</code></pre>
@@ -141,16 +139,12 @@ class EmptyFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, delete_type, delete_sub_folders):
-    emptyfolder = create_element(
-        &#39;m:%s&#39; % self.SERVICE_NAME,
-        attrs=OrderedDict([
-            (&#39;DeleteType&#39;, delete_type),
-            (&#39;DeleteSubFolders&#39;, &#39;true&#39; if delete_sub_folders else &#39;false&#39;),
-        ])
+    payload = create_element(
+        f&#39;m:{self.SERVICE_NAME}&#39;,
+        attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
     )
-    folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-    emptyfolder.append(folder_ids)
-    return emptyfolder</code></pre>
+    payload.append(folder_ids_element(folders=folders, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

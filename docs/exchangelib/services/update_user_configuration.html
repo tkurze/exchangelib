@@ -42,9 +42,7 @@ class UpdateUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
     def get_payload(self, user_configuration):
-        updateuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
-        return updateuserconfiguration</code></pre>
+        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.account.version)</code></pre>
 </details>
 </section>
 <section>
@@ -79,9 +77,7 @@ class UpdateUserConfiguration(EWSAccountService):
         return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
     def get_payload(self, user_configuration):
-        updateuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
-        return updateuserconfiguration</code></pre>
+        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.account.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -124,9 +120,7 @@ class UpdateUserConfiguration(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration):
-    updateuserconfiguration = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    set_xml_value(updateuserconfiguration, user_configuration, version=self.account.version)
-    return updateuserconfiguration</code></pre>
+    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.account.version)</code></pre>
 </details>
 </dd>
 </dl>

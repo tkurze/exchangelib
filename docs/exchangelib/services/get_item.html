@@ -26,7 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_item_ids_element, create_shape_element
+<pre><code class="python">from .common import EWSAccountService, item_ids_element, shape_element
+from ..folders.base import BaseFolder
 from ..util import create_element, MNS
 
 
@@ -34,7 +35,7 @@ class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Items&#39;
 
     def call(self, items, additional_fields, shape):
         &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
@@ -49,23 +50,16 @@ class GetItem(EWSAccountService):
             self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
-        getitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        itemshape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(shape_element(
             tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        getitem.append(itemshape)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        getitem.append(item_ids)
-        return getitem</code></pre>
+        ))
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -91,7 +85,7 @@ class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Items&#39;
 
     def call(self, items, additional_fields, shape):
         &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
@@ -106,23 +100,16 @@ class GetItem(EWSAccountService):
             self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
-        getitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        itemshape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(shape_element(
             tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        getitem.append(itemshape)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        getitem.append(item_ids)
-        return getitem</code></pre>
+        ))
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -179,14 +166,12 @@ class GetItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, additional_fields, shape):
-    getitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    itemshape = create_shape_element(
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(shape_element(
         tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    )
-    getitem.append(itemshape)
-    item_ids = create_item_ids_element(items=items, version=self.account.version)
-    getitem.append(item_ids)
-    return getitem</code></pre>
+    ))
+    payload.append(item_ids_element(items=items, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

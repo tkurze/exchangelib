@@ -26,37 +26,50 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
+<pre><code class="python">from .common import EWSService, add_xml_child
+from ..errors import InvalidEnumValue
 from ..properties import Notification
-from ..util import MNS
+from ..transport import wrap
+from ..util import create_element, MNS
 
 
 class SendNotification(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification
 
-    This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.
+    This service is implemented backwards compared to other services. We use it to parse the XML body of push
+    notifications we receive on the callback URL defined in a push subscription, and to create responses to these
+    push notifications.
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;SendNotification&#39;
+    OK = &#39;OK&#39;
+    UNSUBSCRIBE = &#39;Unsubscribe&#39;
+    STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
-    def call(self):
-        raise NotImplementedError()
+    def ok_payload(self):
+        return wrap(content=self.get_payload(status=self.OK))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Notification.from_xml(elem=elem, account=None)
+    def unsubscribe_payload(self):
+        return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
+
+    def _elem_to_obj(self, elem):
+        return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
     def _response_tag(cls):
         &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
-        return &#39;{%s}%s&#39; % (MNS, cls.SERVICE_NAME)
+        return f&#39;{{{MNS}}}{cls.SERVICE_NAME}&#39;
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return container.findall(Notification.response_tag())</code></pre>
+        return container.findall(Notification.response_tag())
+
+    def get_payload(self, status):
+        if status not in self.STATUS_CHOICES:
+            raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
+        add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -74,7 +87,9 @@ class SendNotification(EWSService):
 </code></dt>
 <dd>
 <div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification</a></p>
-<p>This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.</p></div>
+<p>This service is implemented backwards compared to other services. We use it to parse the XML body of push
+notifications we receive on the callback URL defined in a push subscription, and to create responses to these
+push notifications.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -82,29 +97,40 @@ class SendNotification(EWSService):
 <pre><code class="python">class SendNotification(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/sendnotification
 
-    This is not an actual EWS service you can call. We only use it to parse the XML body of push notifications.
+    This service is implemented backwards compared to other services. We use it to parse the XML body of push
+    notifications we receive on the callback URL defined in a push subscription, and to create responses to these
+    push notifications.
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;SendNotification&#39;
+    OK = &#39;OK&#39;
+    UNSUBSCRIBE = &#39;Unsubscribe&#39;
+    STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
-    def call(self):
-        raise NotImplementedError()
+    def ok_payload(self):
+        return wrap(content=self.get_payload(status=self.OK))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Notification.from_xml(elem=elem, account=None)
+    def unsubscribe_payload(self):
+        return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
+
+    def _elem_to_obj(self, elem):
+        return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
     def _response_tag(cls):
         &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
-        return &#39;{%s}%s&#39; % (MNS, cls.SERVICE_NAME)
+        return f&#39;{{{MNS}}}{cls.SERVICE_NAME}&#39;
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return container.findall(Notification.response_tag())</code></pre>
+        return container.findall(Notification.response_tag())
+
+    def get_payload(self, status):
+        if status not in self.STATUS_CHOICES:
+            raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
+        add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -112,15 +138,27 @@ class SendNotification(EWSService):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.send_notification.SendNotification.OK"><code class="name">var <span class="ident">OK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.send_notification.SendNotification.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.send_notification.SendNotification.STATUS_CHOICES"><code class="name">var <span class="ident">STATUS_CHOICES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.send_notification.SendNotification.UNSUBSCRIBE"><code class="name">var <span class="ident">UNSUBSCRIBE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.services.send_notification.SendNotification.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self)</span>
+<dt id="exchangelib.services.send_notification.SendNotification.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, status)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -128,8 +166,38 @@ class SendNotification(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self):
-    raise NotImplementedError()</code></pre>
+<pre><code class="python">def get_payload(self, status):
+    if status not in self.STATUS_CHOICES:
+        raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
+    add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+    return payload</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.send_notification.SendNotification.ok_payload"><code class="name flex">
+<span>def <span class="ident">ok_payload</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ok_payload(self):
+    return wrap(content=self.get_payload(status=self.OK))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.send_notification.SendNotification.unsubscribe_payload"><code class="name flex">
+<span>def <span class="ident">unsubscribe_payload</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unsubscribe_payload(self):
+    return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))</code></pre>
 </details>
 </dd>
 </dl>
@@ -163,9 +231,14 @@ class SendNotification(EWSService):
 <ul>
 <li>
 <h4><code><a title="exchangelib.services.send_notification.SendNotification" href="#exchangelib.services.send_notification.SendNotification">SendNotification</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="exchangelib.services.send_notification.SendNotification.OK" href="#exchangelib.services.send_notification.SendNotification.OK">OK</a></code></li>
 <li><code><a title="exchangelib.services.send_notification.SendNotification.SERVICE_NAME" href="#exchangelib.services.send_notification.SendNotification.SERVICE_NAME">SERVICE_NAME</a></code></li>
-<li><code><a title="exchangelib.services.send_notification.SendNotification.call" href="#exchangelib.services.send_notification.SendNotification.call">call</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.STATUS_CHOICES" href="#exchangelib.services.send_notification.SendNotification.STATUS_CHOICES">STATUS_CHOICES</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.UNSUBSCRIBE" href="#exchangelib.services.send_notification.SendNotification.UNSUBSCRIBE">UNSUBSCRIBE</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.get_payload" href="#exchangelib.services.send_notification.SendNotification.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.ok_payload" href="#exchangelib.services.send_notification.SendNotification.ok_payload">ok_payload</a></code></li>
+<li><code><a title="exchangelib.services.send_notification.SendNotification.unsubscribe_payload" href="#exchangelib.services.send_notification.SendNotification.unsubscribe_payload">unsubscribe_payload</a></code></li>
 </ul>
 </li>
 </ul>

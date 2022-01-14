@@ -35,7 +35,7 @@ import requests_oauthlib
 
 from .errors import UnauthorizedError, TransportError
 from .util import create_element, add_xml_child, xml_to_str, ns_translation, _back_off_if_needed, \
-    _retry_after, DummyResponse, CONNECTION_ERRORS
+    _retry_after, DummyResponse, CONNECTION_ERRORS, RETRY_WAIT
 
 log = logging.getLogger(__name__)
 
@@ -74,10 +74,10 @@ except ImportError:
     pass
 
 DEFAULT_ENCODING = &#39;utf-8&#39;
-DEFAULT_HEADERS = {&#39;Content-Type&#39;: &#39;text/xml; charset=%s&#39; % DEFAULT_ENCODING, &#39;Accept-Encoding&#39;: &#39;gzip, deflate&#39;}
+DEFAULT_HEADERS = {&#39;Content-Type&#39;: f&#39;text/xml; charset={DEFAULT_ENCODING}&#39;, &#39;Accept-Encoding&#39;: &#39;gzip, deflate&#39;}
 
 
-def wrap(content, api_version, account_to_impersonate=None, timezone=None):
+def wrap(content, api_version=None, account_to_impersonate=None, timezone=None):
     &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
     ExchangeImpersonation allows to act as the user we want to impersonate.
 
@@ -97,11 +97,12 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
     &#34;&#34;&#34;
     envelope = create_element(&#39;s:Envelope&#39;, nsmap=ns_translation)
     header = create_element(&#39;s:Header&#39;)
-    requestserverversion = create_element(&#39;t:RequestServerVersion&#39;, attrs=dict(Version=api_version))
-    header.append(requestserverversion)
+    if api_version:
+        request_server_version = create_element(&#39;t:RequestServerVersion&#39;, attrs=dict(Version=api_version))
+        header.append(request_server_version)
     if account_to_impersonate:
-        exchangeimpersonation = create_element(&#39;t:ExchangeImpersonation&#39;)
-        connectingsid = create_element(&#39;t:ConnectingSID&#39;)
+        exchange_impersonation = create_element(&#39;t:ExchangeImpersonation&#39;)
+        connecting_sid = create_element(&#39;t:ConnectingSID&#39;)
         # We have multiple options for uniquely identifying the user. Here&#39;s a prioritized list in accordance with
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
         for attr, tag in (
@@ -112,16 +113,17 @@ def wrap(content, api_version, account_to_impersonate=None, timezone=None):
         ):
             val = getattr(account_to_impersonate, attr)
             if val:
-                add_xml_child(connectingsid, &#39;t:%s&#39; % tag, val)
+                add_xml_child(connecting_sid, f&#39;t:{tag}&#39;, val)
                 break
-        exchangeimpersonation.append(connectingsid)
-        header.append(exchangeimpersonation)
+        exchange_impersonation.append(connecting_sid)
+        header.append(exchange_impersonation)
     if timezone:
-        timezonecontext = create_element(&#39;t:TimeZoneContext&#39;)
-        timezonedefinition = create_element(&#39;t:TimeZoneDefinition&#39;, attrs=dict(Id=timezone.ms_id))
-        timezonecontext.append(timezonedefinition)
-        header.append(timezonecontext)
-    envelope.append(header)
+        timezone_context = create_element(&#39;t:TimeZoneContext&#39;)
+        timezone_definition = create_element(&#39;t:TimeZoneDefinition&#39;, attrs=dict(Id=timezone.ms_id))
+        timezone_context.append(timezone_definition)
+        header.append(timezone_context)
+    if len(header):
+        envelope.append(header)
     body = create_element(&#39;s:Body&#39;)
     body.append(content)
     envelope.append(body)
@@ -154,7 +156,6 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
     # respond when given a valid request. Try all known versions. Gross.
     from .protocol import BaseProtocol
     retry = 0
-    wait = 10  # seconds
     t_start = time.monotonic()
     headers = DEFAULT_HEADERS.copy()
     for api_version in api_versions:
@@ -172,9 +173,9 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
                 except CONNECTION_ERRORS as e:
                     # Don&#39;t retry on TLS errors. They will most likely be persistent.
                     total_wait = time.monotonic() - t_start
-                    r = DummyResponse(url=service_endpoint, headers={}, request_headers=headers)
+                    r = DummyResponse(url=service_endpoint, request_headers=headers)
                     if retry_policy.may_retry_on_error(response=r, wait=total_wait):
-                        wait = _retry_after(r, wait)
+                        wait = _retry_after(r, RETRY_WAIT)
                         log.info(&#34;Connection error on URL %s (retry %s, error: %s). Cool down %s secs&#34;,
                                  service_endpoint, retry, e, wait)
                         retry_policy.back_off(wait)
@@ -364,7 +365,6 @@ def dummy_xml(api_version, name):
     # respond when given a valid request. Try all known versions. Gross.
     from .protocol import BaseProtocol
     retry = 0
-    wait = 10  # seconds
     t_start = time.monotonic()
     headers = DEFAULT_HEADERS.copy()
     for api_version in api_versions:
@@ -382,9 +382,9 @@ def dummy_xml(api_version, name):
                 except CONNECTION_ERRORS as e:
                     # Don&#39;t retry on TLS errors. They will most likely be persistent.
                     total_wait = time.monotonic() - t_start
-                    r = DummyResponse(url=service_endpoint, headers={}, request_headers=headers)
+                    r = DummyResponse(url=service_endpoint, request_headers=headers)
                     if retry_policy.may_retry_on_error(response=r, wait=total_wait):
-                        wait = _retry_after(r, wait)
+                        wait = _retry_after(r, RETRY_WAIT)
                         log.info(&#34;Connection error on URL %s (retry %s, error: %s). Cool down %s secs&#34;,
                                  service_endpoint, retry, e, wait)
                         retry_policy.back_off(wait)
@@ -404,7 +404,7 @@ def dummy_xml(api_version, name):
 </details>
 </dd>
 <dt id="exchangelib.transport.wrap"><code class="name flex">
-<span>def <span class="ident">wrap</span></span>(<span>content, api_version, account_to_impersonate=None, timezone=None)</span>
+<span>def <span class="ident">wrap</span></span>(<span>content, api_version=None, account_to_impersonate=None, timezone=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
@@ -425,7 +425,7 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def wrap(content, api_version, account_to_impersonate=None, timezone=None):
+<pre><code class="python">def wrap(content, api_version=None, account_to_impersonate=None, timezone=None):
     &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
     ExchangeImpersonation allows to act as the user we want to impersonate.
 
@@ -445,11 +445,12 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
     &#34;&#34;&#34;
     envelope = create_element(&#39;s:Envelope&#39;, nsmap=ns_translation)
     header = create_element(&#39;s:Header&#39;)
-    requestserverversion = create_element(&#39;t:RequestServerVersion&#39;, attrs=dict(Version=api_version))
-    header.append(requestserverversion)
+    if api_version:
+        request_server_version = create_element(&#39;t:RequestServerVersion&#39;, attrs=dict(Version=api_version))
+        header.append(request_server_version)
     if account_to_impersonate:
-        exchangeimpersonation = create_element(&#39;t:ExchangeImpersonation&#39;)
-        connectingsid = create_element(&#39;t:ConnectingSID&#39;)
+        exchange_impersonation = create_element(&#39;t:ExchangeImpersonation&#39;)
+        connecting_sid = create_element(&#39;t:ConnectingSID&#39;)
         # We have multiple options for uniquely identifying the user. Here&#39;s a prioritized list in accordance with
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
         for attr, tag in (
@@ -460,16 +461,17 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
         ):
             val = getattr(account_to_impersonate, attr)
             if val:
-                add_xml_child(connectingsid, &#39;t:%s&#39; % tag, val)
+                add_xml_child(connecting_sid, f&#39;t:{tag}&#39;, val)
                 break
-        exchangeimpersonation.append(connectingsid)
-        header.append(exchangeimpersonation)
+        exchange_impersonation.append(connecting_sid)
+        header.append(exchange_impersonation)
     if timezone:
-        timezonecontext = create_element(&#39;t:TimeZoneContext&#39;)
-        timezonedefinition = create_element(&#39;t:TimeZoneDefinition&#39;, attrs=dict(Id=timezone.ms_id))
-        timezonecontext.append(timezonedefinition)
-        header.append(timezonecontext)
-    envelope.append(header)
+        timezone_context = create_element(&#39;t:TimeZoneContext&#39;)
+        timezone_definition = create_element(&#39;t:TimeZoneDefinition&#39;, attrs=dict(Id=timezone.ms_id))
+        timezone_context.append(timezone_definition)
+        header.append(timezone_context)
+    if len(header):
+        envelope.append(header)
     body = create_element(&#39;s:Body&#39;)
     body.append(content)
     envelope.append(body)

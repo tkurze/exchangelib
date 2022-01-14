@@ -36,21 +36,17 @@ class GetRoomLists(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetRoomLists&#39;
-    element_container_name = &#39;{%s}RoomLists&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}RoomLists&#39;
     supported_from = EXCHANGE_2010
 
     def call(self):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload()))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield RoomList.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
-        return create_element(&#39;m:%s&#39; % self.SERVICE_NAME)</code></pre>
+        return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -76,21 +72,17 @@ class GetRoomLists(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetRoomLists&#39;
-    element_container_name = &#39;{%s}RoomLists&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}RoomLists&#39;
     supported_from = EXCHANGE_2010
 
     def call(self):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload()))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield RoomList.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
-        return create_element(&#39;m:%s&#39; % self.SERVICE_NAME)</code></pre>
+        return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -136,7 +128,7 @@ class GetRoomLists(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self):
-    return create_element(&#39;m:%s&#39; % self.SERVICE_NAME)</code></pre>
+    return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -34,7 +34,7 @@ classes.
 &#34;&#34;&#34;
 import abc
 
-from .common import EWSAccountService, create_folder_ids_element, add_xml_child
+from .common import EWSAccountService, folder_ids_element, add_xml_child
 from ..util import create_element, MNS
 
 
@@ -55,32 +55,28 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
 
     def _partial_call(self, payload_func, folders, event_types, **kwargs):
         if set(event_types) - set(self.EVENT_TYPES):
-            raise ValueError(&#34;&#39;event_types&#39; values must consist of values in %s&#34; % str(self.EVENT_TYPES))
+            raise ValueError(f&#34;&#39;event_types&#39; values must consist of values in {self.EVENT_TYPES}&#34;)
         return self._elems_to_objs(self._get_elements(
             payload=payload_func(folders=folders, event_types=event_types, **kwargs)
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            subscription_elem, watermark_elem = elem
-            yield subscription_elem.text, watermark_elem.text
+    def _elem_to_obj(self, elem):
+        subscription_elem, watermark_elem = elem
+        return subscription_elem.text, watermark_elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [(container.find(&#39;{%s}SubscriptionId&#39; % MNS), container.find(&#39;{%s}Watermark&#39; % MNS))]
+        return [(container.find(f&#39;{{{MNS}}}SubscriptionId&#39;), container.find(f&#39;{{{MNS}}}Watermark&#39;))]
 
     def _partial_payload(self, folders, event_types):
         request_elem = create_element(self.subscription_request_elem_tag)
-        folder_ids = create_folder_ids_element(tag=&#39;t:FolderIds&#39;, folders=folders, version=self.account.version)
+        folder_ids = folder_ids_element(folders=folders, version=self.account.version, tag=&#39;t:FolderIds&#39;)
         request_elem.append(folder_ids)
         event_types_elem = create_element(&#39;t:EventTypes&#39;)
         for event_type in event_types:
             add_xml_child(event_types_elem, &#39;t:EventType&#39;, event_type)
         if not len(event_types_elem):
-            raise ValueError(&#39;&#34;event_types&#34; must not be empty&#39;)
+            raise ValueError(&#34;&#39;event_types&#39; must not be empty&#34;)
         request_elem.append(event_types_elem)
         return request_elem
 
@@ -96,13 +92,13 @@ class SubscribeToPull(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, timeout):
-        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
         add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
-        subscribe.append(request_elem)
-        return subscribe
+        payload.append(request_elem)
+        return payload
 
 
 class SubscribeToPush(Subscribe):
@@ -115,14 +111,14 @@ class SubscribeToPush(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, status_frequency, url):
-        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
         add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
         add_xml_child(request_elem, &#39;t:URL&#39;, url)
-        subscribe.append(request_elem)
-        return subscribe
+        payload.append(request_elem)
+        return payload
 
 
 class SubscribeToStreaming(Subscribe):
@@ -132,22 +128,17 @@ class SubscribeToStreaming(Subscribe):
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.text
+    def _elem_to_obj(self, elem):
+        return elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find(&#39;{%s}SubscriptionId&#39; % MNS)]
+        return [container.find(f&#39;{{{MNS}}}SubscriptionId&#39;)]
 
     def get_payload(self, folders, event_types):
-        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        request_elem = self._partial_payload(folders=folders, event_types=event_types)
-        subscribe.append(request_elem)
-        return subscribe</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(self._partial_payload(folders=folders, event_types=event_types))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -186,32 +177,28 @@ class SubscribeToStreaming(Subscribe):
 
     def _partial_call(self, payload_func, folders, event_types, **kwargs):
         if set(event_types) - set(self.EVENT_TYPES):
-            raise ValueError(&#34;&#39;event_types&#39; values must consist of values in %s&#34; % str(self.EVENT_TYPES))
+            raise ValueError(f&#34;&#39;event_types&#39; values must consist of values in {self.EVENT_TYPES}&#34;)
         return self._elems_to_objs(self._get_elements(
             payload=payload_func(folders=folders, event_types=event_types, **kwargs)
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            subscription_elem, watermark_elem = elem
-            yield subscription_elem.text, watermark_elem.text
+    def _elem_to_obj(self, elem):
+        subscription_elem, watermark_elem = elem
+        return subscription_elem.text, watermark_elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [(container.find(&#39;{%s}SubscriptionId&#39; % MNS), container.find(&#39;{%s}Watermark&#39; % MNS))]
+        return [(container.find(f&#39;{{{MNS}}}SubscriptionId&#39;), container.find(f&#39;{{{MNS}}}Watermark&#39;))]
 
     def _partial_payload(self, folders, event_types):
         request_elem = create_element(self.subscription_request_elem_tag)
-        folder_ids = create_folder_ids_element(tag=&#39;t:FolderIds&#39;, folders=folders, version=self.account.version)
+        folder_ids = folder_ids_element(folders=folders, version=self.account.version, tag=&#39;t:FolderIds&#39;)
         request_elem.append(folder_ids)
         event_types_elem = create_element(&#39;t:EventTypes&#39;)
         for event_type in event_types:
             add_xml_child(event_types_elem, &#39;t:EventType&#39;, event_type)
         if not len(event_types_elem):
-            raise ValueError(&#39;&#34;event_types&#34; must not be empty&#39;)
+            raise ValueError(&#34;&#39;event_types&#39; must not be empty&#34;)
         request_elem.append(event_types_elem)
         return request_elem</code></pre>
 </details>
@@ -274,13 +261,13 @@ class SubscribeToStreaming(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, timeout):
-        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
         add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
-        subscribe.append(request_elem)
-        return subscribe</code></pre>
+        payload.append(request_elem)
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -327,13 +314,13 @@ class SubscribeToStreaming(Subscribe):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, event_types, watermark, timeout):
-    subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
     request_elem = self._partial_payload(folders=folders, event_types=event_types)
     if watermark:
         add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
     add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
-    subscribe.append(request_elem)
-    return subscribe</code></pre>
+    payload.append(request_elem)
+    return payload</code></pre>
 </details>
 </dd>
 </dl>
@@ -369,14 +356,14 @@ class SubscribeToStreaming(Subscribe):
         )
 
     def get_payload(self, folders, event_types, watermark, status_frequency, url):
-        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
             add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
         add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
         add_xml_child(request_elem, &#39;t:URL&#39;, url)
-        subscribe.append(request_elem)
-        return subscribe</code></pre>
+        payload.append(request_elem)
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -419,14 +406,14 @@ class SubscribeToStreaming(Subscribe):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, event_types, watermark, status_frequency, url):
-    subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
     request_elem = self._partial_payload(folders=folders, event_types=event_types)
     if watermark:
         add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
     add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
     add_xml_child(request_elem, &#39;t:URL&#39;, url)
-    subscribe.append(request_elem)
-    return subscribe</code></pre>
+    payload.append(request_elem)
+    return payload</code></pre>
 </details>
 </dd>
 </dl>
@@ -459,22 +446,17 @@ class SubscribeToStreaming(Subscribe):
     def call(self, folders, event_types):
         yield from self._partial_call(payload_func=self.get_payload, folders=folders, event_types=event_types)
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield elem.text
+    def _elem_to_obj(self, elem):
+        return elem.text
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find(&#39;{%s}SubscriptionId&#39; % MNS)]
+        return [container.find(f&#39;{{{MNS}}}SubscriptionId&#39;)]
 
     def get_payload(self, folders, event_types):
-        subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        request_elem = self._partial_payload(folders=folders, event_types=event_types)
-        subscribe.append(request_elem)
-        return subscribe</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(self._partial_payload(folders=folders, event_types=event_types))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -518,10 +500,9 @@ class SubscribeToStreaming(Subscribe):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, event_types):
-    subscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    request_elem = self._partial_payload(folders=folders, event_types=event_types)
-    subscribe.append(request_elem)
-    return subscribe</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(self._partial_payload(folders=folders, event_types=event_types))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

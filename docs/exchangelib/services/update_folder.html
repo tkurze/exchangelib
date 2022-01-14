@@ -26,16 +26,133 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, parse_folder_elem, to_item_id
-from ..fields import FieldPath
+<pre><code class="python">import abc
+
+from .common import EWSAccountService, parse_folder_elem, to_item_id
+from ..fields import FieldPath, IndexedField
+from ..properties import FolderId
 from ..util import create_element, set_xml_value, MNS
 
 
-class UpdateFolder(EWSAccountService):
+class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
+    &#34;&#34;&#34;Base class for UpdateFolder and UpdateItem&#34;&#34;&#34;
+    SET_FIELD_ELEMENT_NAME = None
+    DELETE_FIELD_ELEMENT_NAME = None
+    CHANGE_ELEMENT_NAME = None
+    CHANGES_ELEMENT_NAME = None
+
+    @staticmethod
+    def _sorted_fields(target_model, fieldnames):
+        # Take a list of fieldnames and return the fields in the order they are mentioned in target_model.FIELDS.
+        # Checks that all fieldnames are valid.
+        fieldnames_copy = list(fieldnames)
+        # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
+        for f in target_model.FIELDS:
+            if f.name in fieldnames_copy:
+                fieldnames_copy.remove(f.name)
+                yield f
+        if fieldnames_copy:
+            raise ValueError(f&#34;Field name(s) {fieldnames_copy} are not valid {target_model.__name__!r} fields&#34;)
+
+    def _get_value(self, target, field):
+        return field.clean(getattr(target, field.name), version=self.account.version)  # Make sure the value is OK
+
+    def _set_field_elems(self, target_model, field, value):
+        if isinstance(field, IndexedField):
+            # Generate either set or delete elements for all combinations of labels and subfields
+            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
+                .supported_choices(version=self.account.version)
+            seen_labels = set()
+            subfields = field.value_cls.supported_fields(version=self.account.version)
+            for v in value:
+                seen_labels.add(v.label)
+                for subfield in subfields:
+                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                    subfield_value = getattr(v, subfield.name)
+                    if not subfield_value:
+                        # Generate delete elements for blank subfield values
+                        yield self._delete_field_elem(field_path=field_path)
+                    else:
+                        # Generate set elements for non-null subfield values
+                        yield self._set_field_elem(
+                            target_model=target_model,
+                            field_path=field_path,
+                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
+                        )
+                # Generate delete elements for all subfields of all labels not mentioned in the list of values
+                for label in (label for label in supported_labels if label not in seen_labels):
+                    for subfield in subfields:
+                        yield self._delete_field_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
+        else:
+            yield self._set_field_elem(target_model=target_model, field_path=FieldPath(field=field), value=value)
+
+    def _set_field_elem(self, target_model, field_path, value):
+        set_field = create_element(self.SET_FIELD_ELEMENT_NAME)
+        set_xml_value(set_field, field_path, version=self.account.version)
+        folder = create_element(target_model.request_tag())
+        field_elem = field_path.field.to_xml(value, version=self.account.version)
+        set_xml_value(folder, field_elem, version=self.account.version)
+        set_field.append(folder)
+        return set_field
+
+    def _delete_field_elems(self, field):
+        for field_path in FieldPath(field=field).expand(version=self.account.version):
+            yield self._delete_field_elem(field_path=field_path)
+
+    def _delete_field_elem(self, field_path):
+        delete_folder_field = create_element(self.DELETE_FIELD_ELEMENT_NAME)
+        return set_xml_value(delete_folder_field, field_path, version=self.account.version)
+
+    def _update_elems(self, target, fieldnames):
+        target_model = target.__class__
+
+        for field in self._sorted_fields(target_model=target_model, fieldnames=fieldnames):
+            if field.is_read_only:
+                raise ValueError(f&#39;{field.name!r} is a read-only field&#39;)
+            value = self._get_value(target, field)
+
+            if value is None or (field.is_list and not value):
+                # A value of None or [] means we want to remove this field from the item
+                if field.is_required or field.is_required_after_save:
+                    raise ValueError(f&#39;{field.name!r} is a required field and may not be deleted&#39;)
+                yield from self._delete_field_elems(field)
+                continue
+
+            yield from self._set_field_elems(target_model=target_model, field=field, value=value)
+
+    def _change_elem(self, target, fieldnames):
+        if not fieldnames:
+            raise ValueError(&#34;&#39;fieldnames&#39; must not be empty&#34;)
+        change = create_element(self.CHANGE_ELEMENT_NAME)
+        set_xml_value(change, self._target_elem(target), version=self.account.version)
+        updates = create_element(&#39;t:Updates&#39;)
+        for elem in self._update_elems(target=target, fieldnames=fieldnames):
+            updates.append(elem)
+        change.append(updates)
+        return change
+
+    @abc.abstractmethod
+    def _target_elem(self, target):
+        &#34;&#34;&#34;Convert the object to update to an XML element&#34;&#34;&#34;
+
+    def _changes_elem(self, target_changes):
+        changes = create_element(self.CHANGES_ELEMENT_NAME)
+        for target, fieldnames in target_changes:
+            if not target.account:
+                target.account = self.account
+            changes.append(self._change_elem(target=target, fieldnames=fieldnames))
+        return changes
+
+
+class UpdateFolder(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UpdateFolder&#39;
-    element_container_name = &#39;{%s}Folders&#39; % MNS
+    SET_FIELD_ELEMENT_NAME = &#39;t:SetFolderField&#39;
+    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteFolderField&#39;
+    CHANGE_ELEMENT_NAME = &#39;t:FolderChange&#39;
+    CHANGES_ELEMENT_NAME = &#39;m:FolderChanges&#39;
+    element_container_name = f&#39;{{{MNS}}}Folders&#39;
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,66 +171,15 @@ class UpdateFolder(EWSAccountService):
                 continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
-    @staticmethod
-    def _sort_fieldnames(folder_model, fieldnames):
-        # Take a list of fieldnames and return the fields in the order they are mentioned in folder_model.FIELDS.
-        # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
-        for f in folder_model.FIELDS:
-            if f.name in fieldnames:
-                yield f.name
-
-    def _set_folder_elem(self, folder_model, field_path, value):
-        setfolderfield = create_element(&#39;t:SetFolderField&#39;)
-        set_xml_value(setfolderfield, field_path, version=self.account.version)
-        folder = create_element(folder_model.request_tag())
-        field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(folder, field_elem, version=self.account.version)
-        setfolderfield.append(folder)
-        return setfolderfield
-
-    def _delete_folder_elem(self, field_path):
-        deletefolderfield = create_element(&#39;t:DeleteFolderField&#39;)
-        return set_xml_value(deletefolderfield, field_path, version=self.account.version)
-
-    def _get_folder_update_elems(self, folder, fieldnames):
-        folder_model = folder.__class__
-        fieldnames_set = set(fieldnames)
-
-        for fieldname in self._sort_fieldnames(folder_model=folder_model, fieldnames=fieldnames_set):
-            field = folder_model.get_field_by_fieldname(fieldname)
-            if field.is_read_only:
-                raise ValueError(&#39;%s is a read-only field&#39; % field.name)
-            value = field.clean(getattr(folder, field.name), version=self.account.version)  # Make sure the value is OK
-
-            if value is None or (field.is_list and not value):
-                # A value of None or [] means we want to remove this field from the item
-                if field.is_required or field.is_required_after_save:
-                    raise ValueError(&#39;%s is a required field and may not be deleted&#39; % field.name)
-                for field_path in FieldPath(field=field).expand(version=self.account.version):
-                    yield self._delete_folder_elem(field_path=field_path)
-                continue
-
-            yield self._set_folder_elem(folder_model=folder_model, field_path=FieldPath(field=field), value=value)
+    def _target_elem(self, target):
+        return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
-        from ..folders import BaseFolder, FolderId
-        updatefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        folderchanges = create_element(&#39;m:FolderChanges&#39;)
-        version = self.account.version
-        for folder, fieldnames in folders:
-            folderchange = create_element(&#39;t:FolderChange&#39;)
-            if not isinstance(folder, (BaseFolder, FolderId)):
-                folder = to_item_id(folder, FolderId, version=version)
-            set_xml_value(folderchange, folder, version=version)
-            updates = create_element(&#39;t:Updates&#39;)
-            for elem in self._get_folder_update_elems(folder=folder, fieldnames=fieldnames):
-                updates.append(elem)
-            folderchange.append(updates)
-            folderchanges.append(folderchange)
-        if not len(folderchanges):
-            raise ValueError(&#39;&#34;folders&#34; must not be empty&#39;)
-        updatefolder.append(folderchanges)
-        return updatefolder</code></pre>
+        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+        # &#39;fieldnames&#39; are the attribute names that were updated.
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(self._changes_elem(target_changes=folders))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -125,6 +191,166 @@ class UpdateFolder(EWSAccountService):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="exchangelib.services.update_folder.BaseUpdateService"><code class="flex name class">
+<span>class <span class="ident">BaseUpdateService</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for UpdateFolder and UpdateItem</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
+    &#34;&#34;&#34;Base class for UpdateFolder and UpdateItem&#34;&#34;&#34;
+    SET_FIELD_ELEMENT_NAME = None
+    DELETE_FIELD_ELEMENT_NAME = None
+    CHANGE_ELEMENT_NAME = None
+    CHANGES_ELEMENT_NAME = None
+
+    @staticmethod
+    def _sorted_fields(target_model, fieldnames):
+        # Take a list of fieldnames and return the fields in the order they are mentioned in target_model.FIELDS.
+        # Checks that all fieldnames are valid.
+        fieldnames_copy = list(fieldnames)
+        # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
+        for f in target_model.FIELDS:
+            if f.name in fieldnames_copy:
+                fieldnames_copy.remove(f.name)
+                yield f
+        if fieldnames_copy:
+            raise ValueError(f&#34;Field name(s) {fieldnames_copy} are not valid {target_model.__name__!r} fields&#34;)
+
+    def _get_value(self, target, field):
+        return field.clean(getattr(target, field.name), version=self.account.version)  # Make sure the value is OK
+
+    def _set_field_elems(self, target_model, field, value):
+        if isinstance(field, IndexedField):
+            # Generate either set or delete elements for all combinations of labels and subfields
+            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
+                .supported_choices(version=self.account.version)
+            seen_labels = set()
+            subfields = field.value_cls.supported_fields(version=self.account.version)
+            for v in value:
+                seen_labels.add(v.label)
+                for subfield in subfields:
+                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
+                    subfield_value = getattr(v, subfield.name)
+                    if not subfield_value:
+                        # Generate delete elements for blank subfield values
+                        yield self._delete_field_elem(field_path=field_path)
+                    else:
+                        # Generate set elements for non-null subfield values
+                        yield self._set_field_elem(
+                            target_model=target_model,
+                            field_path=field_path,
+                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
+                        )
+                # Generate delete elements for all subfields of all labels not mentioned in the list of values
+                for label in (label for label in supported_labels if label not in seen_labels):
+                    for subfield in subfields:
+                        yield self._delete_field_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
+        else:
+            yield self._set_field_elem(target_model=target_model, field_path=FieldPath(field=field), value=value)
+
+    def _set_field_elem(self, target_model, field_path, value):
+        set_field = create_element(self.SET_FIELD_ELEMENT_NAME)
+        set_xml_value(set_field, field_path, version=self.account.version)
+        folder = create_element(target_model.request_tag())
+        field_elem = field_path.field.to_xml(value, version=self.account.version)
+        set_xml_value(folder, field_elem, version=self.account.version)
+        set_field.append(folder)
+        return set_field
+
+    def _delete_field_elems(self, field):
+        for field_path in FieldPath(field=field).expand(version=self.account.version):
+            yield self._delete_field_elem(field_path=field_path)
+
+    def _delete_field_elem(self, field_path):
+        delete_folder_field = create_element(self.DELETE_FIELD_ELEMENT_NAME)
+        return set_xml_value(delete_folder_field, field_path, version=self.account.version)
+
+    def _update_elems(self, target, fieldnames):
+        target_model = target.__class__
+
+        for field in self._sorted_fields(target_model=target_model, fieldnames=fieldnames):
+            if field.is_read_only:
+                raise ValueError(f&#39;{field.name!r} is a read-only field&#39;)
+            value = self._get_value(target, field)
+
+            if value is None or (field.is_list and not value):
+                # A value of None or [] means we want to remove this field from the item
+                if field.is_required or field.is_required_after_save:
+                    raise ValueError(f&#39;{field.name!r} is a required field and may not be deleted&#39;)
+                yield from self._delete_field_elems(field)
+                continue
+
+            yield from self._set_field_elems(target_model=target_model, field=field, value=value)
+
+    def _change_elem(self, target, fieldnames):
+        if not fieldnames:
+            raise ValueError(&#34;&#39;fieldnames&#39; must not be empty&#34;)
+        change = create_element(self.CHANGE_ELEMENT_NAME)
+        set_xml_value(change, self._target_elem(target), version=self.account.version)
+        updates = create_element(&#39;t:Updates&#39;)
+        for elem in self._update_elems(target=target, fieldnames=fieldnames):
+            updates.append(elem)
+        change.append(updates)
+        return change
+
+    @abc.abstractmethod
+    def _target_elem(self, target):
+        &#34;&#34;&#34;Convert the object to update to an XML element&#34;&#34;&#34;
+
+    def _changes_elem(self, target_changes):
+        changes = create_element(self.CHANGES_ELEMENT_NAME)
+        for target, fieldnames in target_changes:
+            if not target.account:
+                target.account = self.account
+            changes.append(self._change_elem(target=target, fieldnames=fieldnames))
+        return changes</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.update_folder.UpdateFolder" href="#exchangelib.services.update_folder.UpdateFolder">UpdateFolder</a></li>
+<li><a title="exchangelib.services.update_item.UpdateItem" href="update_item.html#exchangelib.services.update_item.UpdateItem">UpdateItem</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.update_folder.BaseUpdateService.CHANGES_ELEMENT_NAME"><code class="name">var <span class="ident">CHANGES_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_folder.BaseUpdateService.CHANGE_ELEMENT_NAME"><code class="name">var <span class="ident">CHANGE_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_folder.BaseUpdateService.DELETE_FIELD_ELEMENT_NAME"><code class="name">var <span class="ident">DELETE_FIELD_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_folder.BaseUpdateService.SET_FIELD_ELEMENT_NAME"><code class="name">var <span class="ident">SET_FIELD_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.services.update_folder.UpdateFolder"><code class="flex name class">
 <span>class <span class="ident">UpdateFolder</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -135,11 +361,15 @@ class UpdateFolder(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UpdateFolder(EWSAccountService):
+<pre><code class="python">class UpdateFolder(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UpdateFolder&#39;
-    element_container_name = &#39;{%s}Folders&#39; % MNS
+    SET_FIELD_ELEMENT_NAME = &#39;t:SetFolderField&#39;
+    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteFolderField&#39;
+    CHANGE_ELEMENT_NAME = &#39;t:FolderChange&#39;
+    CHANGES_ELEMENT_NAME = &#39;m:FolderChanges&#39;
+    element_container_name = f&#39;{{{MNS}}}Folders&#39;
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -158,75 +388,41 @@ class UpdateFolder(EWSAccountService):
                 continue
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
-    @staticmethod
-    def _sort_fieldnames(folder_model, fieldnames):
-        # Take a list of fieldnames and return the fields in the order they are mentioned in folder_model.FIELDS.
-        # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
-        for f in folder_model.FIELDS:
-            if f.name in fieldnames:
-                yield f.name
-
-    def _set_folder_elem(self, folder_model, field_path, value):
-        setfolderfield = create_element(&#39;t:SetFolderField&#39;)
-        set_xml_value(setfolderfield, field_path, version=self.account.version)
-        folder = create_element(folder_model.request_tag())
-        field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(folder, field_elem, version=self.account.version)
-        setfolderfield.append(folder)
-        return setfolderfield
-
-    def _delete_folder_elem(self, field_path):
-        deletefolderfield = create_element(&#39;t:DeleteFolderField&#39;)
-        return set_xml_value(deletefolderfield, field_path, version=self.account.version)
-
-    def _get_folder_update_elems(self, folder, fieldnames):
-        folder_model = folder.__class__
-        fieldnames_set = set(fieldnames)
-
-        for fieldname in self._sort_fieldnames(folder_model=folder_model, fieldnames=fieldnames_set):
-            field = folder_model.get_field_by_fieldname(fieldname)
-            if field.is_read_only:
-                raise ValueError(&#39;%s is a read-only field&#39; % field.name)
-            value = field.clean(getattr(folder, field.name), version=self.account.version)  # Make sure the value is OK
-
-            if value is None or (field.is_list and not value):
-                # A value of None or [] means we want to remove this field from the item
-                if field.is_required or field.is_required_after_save:
-                    raise ValueError(&#39;%s is a required field and may not be deleted&#39; % field.name)
-                for field_path in FieldPath(field=field).expand(version=self.account.version):
-                    yield self._delete_folder_elem(field_path=field_path)
-                continue
-
-            yield self._set_folder_elem(folder_model=folder_model, field_path=FieldPath(field=field), value=value)
+    def _target_elem(self, target):
+        return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
-        from ..folders import BaseFolder, FolderId
-        updatefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        folderchanges = create_element(&#39;m:FolderChanges&#39;)
-        version = self.account.version
-        for folder, fieldnames in folders:
-            folderchange = create_element(&#39;t:FolderChange&#39;)
-            if not isinstance(folder, (BaseFolder, FolderId)):
-                folder = to_item_id(folder, FolderId, version=version)
-            set_xml_value(folderchange, folder, version=version)
-            updates = create_element(&#39;t:Updates&#39;)
-            for elem in self._get_folder_update_elems(folder=folder, fieldnames=fieldnames):
-                updates.append(elem)
-            folderchange.append(updates)
-            folderchanges.append(folderchange)
-        if not len(folderchanges):
-            raise ValueError(&#39;&#34;folders&#34; must not be empty&#39;)
-        updatefolder.append(folderchanges)
-        return updatefolder</code></pre>
+        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+        # &#39;fieldnames&#39; are the attribute names that were updated.
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(self._changes_elem(target_changes=folders))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.services.update_folder.BaseUpdateService" href="#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.update_folder.UpdateFolder.CHANGES_ELEMENT_NAME"><code class="name">var <span class="ident">CHANGES_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_folder.UpdateFolder.CHANGE_ELEMENT_NAME"><code class="name">var <span class="ident">CHANGE_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_folder.UpdateFolder.DELETE_FIELD_ELEMENT_NAME"><code class="name">var <span class="ident">DELETE_FIELD_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.update_folder.UpdateFolder.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_folder.UpdateFolder.SET_FIELD_ELEMENT_NAME"><code class="name">var <span class="ident">SET_FIELD_ELEMENT_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -263,35 +459,22 @@ class UpdateFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders):
-    from ..folders import BaseFolder, FolderId
-    updatefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    folderchanges = create_element(&#39;m:FolderChanges&#39;)
-    version = self.account.version
-    for folder, fieldnames in folders:
-        folderchange = create_element(&#39;t:FolderChange&#39;)
-        if not isinstance(folder, (BaseFolder, FolderId)):
-            folder = to_item_id(folder, FolderId, version=version)
-        set_xml_value(folderchange, folder, version=version)
-        updates = create_element(&#39;t:Updates&#39;)
-        for elem in self._get_folder_update_elems(folder=folder, fieldnames=fieldnames):
-            updates.append(elem)
-        folderchange.append(updates)
-        folderchanges.append(folderchange)
-    if not len(folderchanges):
-        raise ValueError(&#39;&#34;folders&#34; must not be empty&#39;)
-    updatefolder.append(folderchanges)
-    return updatefolder</code></pre>
+    # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+    # &#39;fieldnames&#39; are the attribute names that were updated.
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(self._changes_elem(target_changes=folders))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<li><code><b><a title="exchangelib.services.update_folder.BaseUpdateService" href="#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -313,9 +496,22 @@ class UpdateFolder(EWSAccountService):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="exchangelib.services.update_folder.BaseUpdateService" href="#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.CHANGES_ELEMENT_NAME" href="#exchangelib.services.update_folder.BaseUpdateService.CHANGES_ELEMENT_NAME">CHANGES_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.CHANGE_ELEMENT_NAME" href="#exchangelib.services.update_folder.BaseUpdateService.CHANGE_ELEMENT_NAME">CHANGE_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.DELETE_FIELD_ELEMENT_NAME" href="#exchangelib.services.update_folder.BaseUpdateService.DELETE_FIELD_ELEMENT_NAME">DELETE_FIELD_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.SET_FIELD_ELEMENT_NAME" href="#exchangelib.services.update_folder.BaseUpdateService.SET_FIELD_ELEMENT_NAME">SET_FIELD_ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.services.update_folder.UpdateFolder" href="#exchangelib.services.update_folder.UpdateFolder">UpdateFolder</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.services.update_folder.UpdateFolder.CHANGES_ELEMENT_NAME" href="#exchangelib.services.update_folder.UpdateFolder.CHANGES_ELEMENT_NAME">CHANGES_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.UpdateFolder.CHANGE_ELEMENT_NAME" href="#exchangelib.services.update_folder.UpdateFolder.CHANGE_ELEMENT_NAME">CHANGE_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.UpdateFolder.DELETE_FIELD_ELEMENT_NAME" href="#exchangelib.services.update_folder.UpdateFolder.DELETE_FIELD_ELEMENT_NAME">DELETE_FIELD_ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.UpdateFolder.SERVICE_NAME" href="#exchangelib.services.update_folder.UpdateFolder.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.UpdateFolder.SET_FIELD_ELEMENT_NAME" href="#exchangelib.services.update_folder.UpdateFolder.SET_FIELD_ELEMENT_NAME">SET_FIELD_ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.UpdateFolder.call" href="#exchangelib.services.update_folder.UpdateFolder.call">call</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.UpdateFolder.element_container_name" href="#exchangelib.services.update_folder.UpdateFolder.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.UpdateFolder.get_payload" href="#exchangelib.services.update_folder.UpdateFolder.get_payload">get_payload</a></code></li>

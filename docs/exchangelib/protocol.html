@@ -39,18 +39,17 @@ import abc
 import datetime
 import logging
 import os
-from queue import LifoQueue, Empty, Full
+from queue import LifoQueue, Empty
 from threading import Lock
 
 import requests.adapters
 import requests.sessions
-import requests.utils
 from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient
 from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached, RateLimitError, CASError, \
-    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError
+    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError, InvalidTypeError
 from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
 from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
     GetSearchableMailboxes, ExpandDL, ConvertId
@@ -70,7 +69,7 @@ class BaseProtocol:
     # The maximum number of sessions (== TCP connections, see below) we will open to this service endpoint. Keep this
     # low unless you have an agreement with the Exchange admin on the receiving end to hammer the server and
     # rate-limiting policies have been disabled for the connecting user. Changing this setting only makes sense if
-    # you are using a thread pool to run multiple concurrent workers in this process.
+    # you are using threads to run multiple concurrent workers in this process.
     SESSION_POOLSIZE = 1
     # We want only 1 TCP connection per Session object. We may have lots of different credentials hitting the server and
     # each credential needs its own session (NTLM auth will only send credentials once and then secure the connection,
@@ -90,12 +89,9 @@ class BaseProtocol:
     USERAGENT = None
 
     def __init__(self, config):
-        from .configuration import Configuration
-        if not isinstance(config, Configuration):
-            raise ValueError(&#34;&#39;config&#39; %r must be a Configuration instance&#34; % config)
-        if not config.service_endpoint:
-            raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         self.config = config
+        self._api_version_hint = None
+
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
@@ -111,6 +107,9 @@ class BaseProtocol:
 
     @property
     def auth_type(self):
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
         return self.config.auth_type
 
     @property
@@ -132,6 +131,15 @@ class BaseProtocol:
     @property
     def server(self):
         return self.config.server
+
+    def get_auth_type(self):
+        # Autodetect authentication type. We also set version hint here.
+        name = str(self.credentials) if self.credentials and str(self.credentials) else &#39;DUMMY&#39;
+        auth_type, api_version_hint = get_service_authtype(
+            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
+        )
+        self._api_version_hint = api_version_hint
+        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -182,7 +190,7 @@ class BaseProtocol:
         &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.&#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
-        if self._session_pool_size == self._session_pool_maxsize:
+        if self._session_pool_size &gt;= self._session_pool_maxsize:
             raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
         with self._session_pool_lock:
             if self._session_pool_size &gt;= self._session_pool_maxsize:
@@ -238,13 +246,10 @@ class BaseProtocol:
     def release_session(self, session):
         # This should never fail, as we don&#39;t have more sessions than the queue contains
         log.debug(&#39;Server %s: Releasing session %s&#39;, self.server, session.session_id)
-        if self.MAX_SESSION_USAGE_COUNT and session.usage_count &gt; self.MAX_SESSION_USAGE_COUNT:
+        if self.MAX_SESSION_USAGE_COUNT and session.usage_count &gt;= self.MAX_SESSION_USAGE_COUNT:
             log.debug(&#39;Server %s: session %s usage exceeded limit. Discarding&#39;, self.server, session.session_id)
             session = self.renew_session(session)
-        try:
-            self._session_pool.put(session, block=False)
-        except Full:
-            log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
+        self._session_pool.put(session, block=False)
 
     @staticmethod
     def close_session(session):
@@ -278,11 +283,9 @@ class BaseProtocol:
         return self.renew_session(session)
 
     def create_session(self):
-        if self.auth_type is None:
-            raise ValueError(&#39;Cannot create session without knowing the auth type&#39;)
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
-                raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
+                raise ValueError(f&#39;Auth type {self.auth_type!r} requires credentials&#39;)
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
@@ -312,11 +315,6 @@ class BaseProtocol:
         return session
 
     def create_oauth2_session(self):
-        if self.auth_type != OAUTH2:
-            raise ValueError(
-                &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
-            )
-
         has_token = False
         scope = [&#39;https://outlook.office365.com/.default&#39;]
         session_params = {}
@@ -359,7 +357,7 @@ class BaseProtocol:
                 })
             client = WebApplicationClient(self.credentials.client_id, **client_params)
         else:
-            token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
+            token_url = f&#39;https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token&#39;
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
@@ -403,8 +401,12 @@ class CachingProtocol(type):
         #
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
-
         config = kwargs[&#39;config&#39;]
+        from .configuration import Configuration
+        if not isinstance(config, Configuration):
+            raise InvalidTypeError(&#39;config&#39;, config, Configuration)
+        if not config.service_endpoint:
+            raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         _protocol_cache_key = cls._cache_key(config)
 
         try:
@@ -476,20 +478,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._api_version_hint = None
         self._version_lock = Lock()
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else &#39;DUMMY&#39;
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     @property
     def version(self):
@@ -508,7 +497,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
           (Default value = None)
         :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-        :return: A list of (tz_id, name, periods, transitions) tuples
+        :return: A generator of TimeZoneDefinition objects
         &#34;&#34;&#34;
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -529,31 +518,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: A generator of FreeBusyView objects
         &#34;&#34;&#34;
         from .account import Account
-        for account, attendee_type, exclude_conflicts in accounts:
-            if not isinstance(account, (Account, str)):
-                raise ValueError(&#34;&#39;accounts&#39; item %r must be an &#39;Account&#39; or &#39;str&#39; instance&#34; % account)
-            if attendee_type not in MailboxData.ATTENDEE_TYPES:
-                raise ValueError(&#34;&#39;accounts&#39; item %r must be one of %s&#34; % (attendee_type, MailboxData.ATTENDEE_TYPES))
-            if not isinstance(exclude_conflicts, bool):
-                raise ValueError(&#34;&#39;accounts&#39; item %r must be a &#39;bool&#39; instance&#34; % exclude_conflicts)
-        if start &gt;= end:
-            raise ValueError(&#34;&#39;start&#39; must be less than &#39;end&#39; (%s -&gt; %s)&#34; % (start, end))
-        if not isinstance(merged_free_busy_interval, int):
-            raise ValueError(&#34;&#39;merged_free_busy_interval&#39; value %r must be an &#39;int&#39;&#34; % merged_free_busy_interval)
-        if requested_view not in FreeBusyViewOptions.REQUESTED_VIEWS:
-            raise ValueError(
-                &#34;&#39;requested_view&#39; value %r must be one of %s&#34; % (requested_view, FreeBusyViewOptions.REQUESTED_VIEWS))
-        _, _, periods, transitions, transitions_groups = list(self.get_timezones(
+        tz_definition = list(self.get_timezones(
             timezones=[start.tzinfo],
             return_full_timezone_data=True
         ))[0]
         return GetUserAvailability(self).call(
-                timezone=TimeZone.from_server_timezone(
-                    periods=periods,
-                    transitions=transitions,
-                    transitionsgroups=transitions_groups,
-                    for_year=start.year
-                ),
+                timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
                 mailbox_data=[MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
                     attendee_type=attendee_type,
@@ -570,12 +540,14 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return GetRoomLists(protocol=self).call()
 
     def get_rooms(self, roomlist):
-        return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
+        return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))
 
-    def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
+    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None,
+                      shape=None):
         &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
         :param names: A list of identifiers to query
+        :param parent_folders: A list of contact folders to search in
         :param return_full_contact_data: If True, returns full contact data (Default value = False)
         :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
         :param shape: (Default value = None)
@@ -583,8 +555,8 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         &#34;&#34;&#34;
         return list(ResolveNames(protocol=self).call(
-            unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
-            contact_data_shape=shape,
+            unresolved_entries=names, parent_folders=parent_folders, return_full_contact_data=return_full_contact_data,
+            search_scope=search_scope, contact_data_shape=shape,
         ))
 
     def expand_dl(self, distribution_list):
@@ -604,7 +576,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-        :param search_filter: Is set, must be a single email alias (Default value = None)
+        :param search_filter: If set, must be a single email alias (Default value = None)
         :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
         :return: a list of SearchableMailbox, FailedMailbox or Exception instances
@@ -625,19 +597,14 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
     def __getstate__(self):
-        # The lock and thread pool cannot be pickled
+        # The lock cannot be pickled
         state = super().__getstate__()
         del state[&#39;_version_lock&#39;]
-        try:
-            del state[&#39;thread_pool&#39;]
-        except KeyError:
-            # thread_pool is a cached property and may not exist
-            pass
         return state
 
     def __setstate__(self, state):
-        # Restore the lock. The thread pool is a cached property and will be recreated automatically.
-        self.__dict__.update(state)
+        # Restore the lock
+        super().__setstate__(state)
         self._version_lock = Lock()
 
     def __str__(self):
@@ -647,12 +614,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         else:
             fullname, api_version, build = &#39;[unknown]&#39;, &#39;[unknown]&#39;, &#39;[unknown]&#39;
 
-        return &#39;&#39;&#39;\
-EWS url: %s
-Product name: %s
-EWS API version: %s
-Build number: %s
-EWS auth: %s&#39;&#39;&#39; % (self.service_endpoint, fullname, api_version, build, self.auth_type)
+        return f&#39;&#39;&#39;\
+EWS url: {self.service_endpoint}
+Product name: {fullname}
+EWS API version: {api_version}
+Build number: {build}
+EWS auth: {self.auth_type}&#39;&#39;&#39;
 
 
 class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
@@ -680,27 +647,26 @@ class RetryPolicy(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def fail_fast(self):
-        # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
-        # policy is used.
-        pass
+        &#34;&#34;&#34;Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
+        policy is used.&#34;&#34;&#34;
 
     @property
     @abc.abstractmethod
     def back_off_until(self):
-        pass
+        &#34;&#34;&#34;Return a datetime to back off until&#34;&#34;&#34;
 
     @back_off_until.setter
     @abc.abstractmethod
     def back_off_until(self, value):
-        pass
+        &#34;&#34;&#34;Setter for back off values&#34;&#34;&#34;
 
     @abc.abstractmethod
     def back_off(self, seconds):
-        pass
+        &#34;&#34;&#34;Set a new back off until value&#34;&#34;&#34;
 
     @abc.abstractmethod
     def may_retry_on_error(self, response, wait):
-        pass
+        &#34;&#34;&#34;Return whether retries should still be attempted&#34;&#34;&#34;
 
     def raise_response_errors(self, response):
         cas_error = response.headers.get(&#39;X-CasErrorCode&#39;)
@@ -717,14 +683,14 @@ class RetryPolicy(metaclass=abc.ABCMeta):
             raise UnauthorizedError(&#39;The referenced account is currently locked out&#39;)
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
-            raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
+            raise UnauthorizedError(f&#39;Invalid credentials for {response.url}&#39;)
         if &#39;TimeoutException&#39; in response.headers:
             # A header set by us on CONNECTION_ERRORS
             raise response.headers[&#39;TimeoutException&#39;]
         # This could be anything. Let higher layers handle this
         raise MalformedResponseError(
-            &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
-            % (response.status_code, response.headers, response.text)
+            f&#39;Unknown failure in response. Code: {response.status_code} headers: {response.headers} &#39;
+            f&#39;content: {response.text}&#39;
         )
 
 
@@ -873,7 +839,7 @@ class FaultTolerance(RetryPolicy):
     # The maximum number of sessions (== TCP connections, see below) we will open to this service endpoint. Keep this
     # low unless you have an agreement with the Exchange admin on the receiving end to hammer the server and
     # rate-limiting policies have been disabled for the connecting user. Changing this setting only makes sense if
-    # you are using a thread pool to run multiple concurrent workers in this process.
+    # you are using threads to run multiple concurrent workers in this process.
     SESSION_POOLSIZE = 1
     # We want only 1 TCP connection per Session object. We may have lots of different credentials hitting the server and
     # each credential needs its own session (NTLM auth will only send credentials once and then secure the connection,
@@ -893,12 +859,9 @@ class FaultTolerance(RetryPolicy):
     USERAGENT = None
 
     def __init__(self, config):
-        from .configuration import Configuration
-        if not isinstance(config, Configuration):
-            raise ValueError(&#34;&#39;config&#39; %r must be a Configuration instance&#34; % config)
-        if not config.service_endpoint:
-            raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         self.config = config
+        self._api_version_hint = None
+
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
 
@@ -914,6 +877,9 @@ class FaultTolerance(RetryPolicy):
 
     @property
     def auth_type(self):
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
         return self.config.auth_type
 
     @property
@@ -935,6 +901,15 @@ class FaultTolerance(RetryPolicy):
     @property
     def server(self):
         return self.config.server
+
+    def get_auth_type(self):
+        # Autodetect authentication type. We also set version hint here.
+        name = str(self.credentials) if self.credentials and str(self.credentials) else &#39;DUMMY&#39;
+        auth_type, api_version_hint = get_service_authtype(
+            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
+        )
+        self._api_version_hint = api_version_hint
+        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -985,7 +960,7 @@ class FaultTolerance(RetryPolicy):
         &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.&#34;&#34;&#34;
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
-        if self._session_pool_size == self._session_pool_maxsize:
+        if self._session_pool_size &gt;= self._session_pool_maxsize:
             raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
         with self._session_pool_lock:
             if self._session_pool_size &gt;= self._session_pool_maxsize:
@@ -1041,13 +1016,10 @@ class FaultTolerance(RetryPolicy):
     def release_session(self, session):
         # This should never fail, as we don&#39;t have more sessions than the queue contains
         log.debug(&#39;Server %s: Releasing session %s&#39;, self.server, session.session_id)
-        if self.MAX_SESSION_USAGE_COUNT and session.usage_count &gt; self.MAX_SESSION_USAGE_COUNT:
+        if self.MAX_SESSION_USAGE_COUNT and session.usage_count &gt;= self.MAX_SESSION_USAGE_COUNT:
             log.debug(&#39;Server %s: session %s usage exceeded limit. Discarding&#39;, self.server, session.session_id)
             session = self.renew_session(session)
-        try:
-            self._session_pool.put(session, block=False)
-        except Full:
-            log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)
+        self._session_pool.put(session, block=False)
 
     @staticmethod
     def close_session(session):
@@ -1081,11 +1053,9 @@ class FaultTolerance(RetryPolicy):
         return self.renew_session(session)
 
     def create_session(self):
-        if self.auth_type is None:
-            raise ValueError(&#39;Cannot create session without knowing the auth type&#39;)
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
-                raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
+                raise ValueError(f&#39;Auth type {self.auth_type!r} requires credentials&#39;)
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
@@ -1115,11 +1085,6 @@ class FaultTolerance(RetryPolicy):
         return session
 
     def create_oauth2_session(self):
-        if self.auth_type != OAUTH2:
-            raise ValueError(
-                &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
-            )
-
         has_token = False
         scope = [&#39;https://outlook.office365.com/.default&#39;]
         session_params = {}
@@ -1162,7 +1127,7 @@ class FaultTolerance(RetryPolicy):
                 })
             client = WebApplicationClient(self.credentials.client_id, **client_params)
         else:
-            token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
+            token_url = f&#39;https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token&#39;
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
@@ -1319,6 +1284,9 @@ def raw_session(cls, prefix, oauth2_client=None, oauth2_session_params=None):
 </summary>
 <pre><code class="python">@property
 def auth_type(self):
+    # Autodetect authentication type if necessary
+    if self.config.auth_type is None:
+        self.config.auth_type = self.get_auth_type()
     return self.config.auth_type</code></pre>
 </details>
 </dd>
@@ -1415,11 +1383,6 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
-    if self.auth_type != OAUTH2:
-        raise ValueError(
-            &#39;Auth type must be %r for credentials type %s&#39; % (OAUTH2, self.credentials.__class__.__name__)
-        )
-
     has_token = False
     scope = [&#39;https://outlook.office365.com/.default&#39;]
     session_params = {}
@@ -1462,7 +1425,7 @@ def session_pool_size(self):
             })
         client = WebApplicationClient(self.credentials.client_id, **client_params)
     else:
-        token_url = &#39;https://login.microsoftonline.com/%s/oauth2/v2.0/token&#39; % self.credentials.tenant_id
+        token_url = f&#39;https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token&#39;
         client = BackendApplicationClient(client_id=self.credentials.client_id)
 
     session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
@@ -1489,11 +1452,9 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_session(self):
-    if self.auth_type is None:
-        raise ValueError(&#39;Cannot create session without knowing the auth type&#39;)
     if self.credentials is None:
         if self.auth_type in CREDENTIALS_REQUIRED:
-            raise ValueError(&#39;Auth type %r requires credentials&#39; % self.auth_type)
+            raise ValueError(f&#39;Auth type {self.auth_type!r} requires credentials&#39;)
         session = self.raw_session(self.service_endpoint)
         session.auth = get_auth_instance(auth_type=self.auth_type)
     else:
@@ -1552,6 +1513,25 @@ requests. We decrease by one session per call.</p></div>
         self._session_pool_size -= 1</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.protocol.BaseProtocol.get_auth_type"><code class="name flex">
+<span>def <span class="ident">get_auth_type</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_auth_type(self):
+    # Autodetect authentication type. We also set version hint here.
+    name = str(self.credentials) if self.credentials and str(self.credentials) else &#39;DUMMY&#39;
+    auth_type, api_version_hint = get_service_authtype(
+        service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
+    )
+    self._api_version_hint = api_version_hint
+    return auth_type</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.protocol.BaseProtocol.get_session"><code class="name flex">
 <span>def <span class="ident">get_session</span></span>(<span>self)</span>
 </code></dt>
@@ -1599,7 +1579,7 @@ requests. We decrease by one session per call.</p></div>
     &#34;&#34;&#34;Increases the session pool size. We increase by one session per call.&#34;&#34;&#34;
     # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
     # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
-    if self._session_pool_size == self._session_pool_maxsize:
+    if self._session_pool_size &gt;= self._session_pool_maxsize:
         raise SessionPoolMaxSizeReached(&#39;Session pool size cannot be increased further&#39;)
     with self._session_pool_lock:
         if self._session_pool_size &gt;= self._session_pool_maxsize:
@@ -1647,13 +1627,10 @@ requests. We decrease by one session per call.</p></div>
 <pre><code class="python">def release_session(self, session):
     # This should never fail, as we don&#39;t have more sessions than the queue contains
     log.debug(&#39;Server %s: Releasing session %s&#39;, self.server, session.session_id)
-    if self.MAX_SESSION_USAGE_COUNT and session.usage_count &gt; self.MAX_SESSION_USAGE_COUNT:
+    if self.MAX_SESSION_USAGE_COUNT and session.usage_count &gt;= self.MAX_SESSION_USAGE_COUNT:
         log.debug(&#39;Server %s: session %s usage exceeded limit. Discarding&#39;, self.server, session.session_id)
         session = self.renew_session(session)
-    try:
-        self._session_pool.put(session, block=False)
-    except Full:
-        log.debug(&#39;Server %s: Session pool was already full %s&#39;, self.server, session.session_id)</code></pre>
+    self._session_pool.put(session, block=False)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.renew_session"><code class="name flex">
@@ -1713,8 +1690,12 @@ requests. We decrease by one session per call.</p></div>
         #
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
-
         config = kwargs[&#39;config&#39;]
+        from .configuration import Configuration
+        if not isinstance(config, Configuration):
+            raise InvalidTypeError(&#39;config&#39;, config, Configuration)
+        if not config.service_endpoint:
+            raise AttributeError(&#34;&#39;config.service_endpoint&#39; must be set&#34;)
         _protocol_cache_key = cls._cache_key(config)
 
         try:
@@ -1838,63 +1819,17 @@ def clear_cache(mcs):
 <ul class="hlist">
 <li><a title="exchangelib.protocol.RetryPolicy" href="#exchangelib.protocol.RetryPolicy">RetryPolicy</a></li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="exchangelib.protocol.FailFast.back_off_until"><code class="name">var <span class="ident">back_off_until</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def back_off_until(self):
-    return None</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.protocol.FailFast.fail_fast"><code class="name">var <span class="ident">fail_fast</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def fail_fast(self):
-    return True</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.protocol.FailFast.back_off"><code class="name flex">
-<span>def <span class="ident">back_off</span></span>(<span>self, seconds)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def back_off(self, seconds):
-    raise ValueError(&#39;Cannot back off with fail-fast policy&#39;)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.protocol.FailFast.may_retry_on_error"><code class="name flex">
-<span>def <span class="ident">may_retry_on_error</span></span>(<span>self, response, wait)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def may_retry_on_error(self, response, wait):
-    log.debug(&#39;No retry: no fail-fast policy&#39;)
-    return False</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.protocol.RetryPolicy" href="#exchangelib.protocol.RetryPolicy">RetryPolicy</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.protocol.RetryPolicy.back_off" href="#exchangelib.protocol.RetryPolicy.back_off">back_off</a></code></li>
+<li><code><a title="exchangelib.protocol.RetryPolicy.back_off_until" href="#exchangelib.protocol.RetryPolicy.back_off_until">back_off_until</a></code></li>
+<li><code><a title="exchangelib.protocol.RetryPolicy.fail_fast" href="#exchangelib.protocol.RetryPolicy.fail_fast">fail_fast</a></code></li>
+<li><code><a title="exchangelib.protocol.RetryPolicy.may_retry_on_error" href="#exchangelib.protocol.RetryPolicy.may_retry_on_error">may_retry_on_error</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="exchangelib.protocol.FaultTolerance"><code class="flex name class">
 <span>class <span class="ident">FaultTolerance</span></span>
@@ -2025,80 +1960,17 @@ def back_off_until(self):
         return self._back_off_until</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.protocol.FaultTolerance.fail_fast"><code class="name">var <span class="ident">fail_fast</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def fail_fast(self):
-    return False</code></pre>
-</details>
-</dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.protocol.FaultTolerance.back_off"><code class="name flex">
-<span>def <span class="ident">back_off</span></span>(<span>self, seconds)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def back_off(self, seconds):
-    if seconds is None:
-        seconds = self.DEFAULT_BACKOFF
-    value = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
-    with self._back_off_lock:
-        self._back_off_until = value</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.protocol.FaultTolerance.may_retry_on_error"><code class="name flex">
-<span>def <span class="ident">may_retry_on_error</span></span>(<span>self, response, wait)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def may_retry_on_error(self, response, wait):
-    if response.status_code not in (301, 302, 401, 500, 503):
-        # Don&#39;t retry if we didn&#39;t get a status code that we can hope to recover from
-        log.debug(&#39;No retry: wrong status code %s&#39;, response.status_code)
-        return False
-    if wait &gt; self.max_wait:
-        # We lost patience. Session is cleaned up in outer loop
-        raise RateLimitError(
-            &#39;Max timeout reached&#39;, url=response.url, status_code=response.status_code, total_wait=wait)
-    if response.status_code == 401:
-        # EWS sometimes throws 401&#39;s when it wants us to throttle connections. OK to retry.
-        return True
-    if response.headers.get(&#39;connection&#39;) == &#39;close&#39;:
-        # Connection closed. OK to retry.
-        return True
-    if response.status_code == 302 and response.headers.get(&#39;location&#39;, &#39;&#39;).lower() \
-            == &#39;/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx&#39;:
-        # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
-        #
-        # Redirect to &#39;/internalsite/internalerror.asp&#39; or &#39;/internalsite/initparams.aspx&#39; is caused by e.g. TLS
-        # certificate f*ckups on the Exchange server. We should not retry those.
-        return True
-    if response.status_code == 503:
-        # Internal server error. OK to retry.
-        return True
-    if response.status_code == 500 and b&#34;Server Error in &#39;/EWS&#39; Application&#34; in response.content:
-        # &#34;Server Error in &#39;/EWS&#39; Application&#34; has been seen in highly concurrent settings. OK to retry.
-        log.debug(&#39;Retry allowed: conditions met&#39;)
-        return True
-    return False</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.protocol.RetryPolicy" href="#exchangelib.protocol.RetryPolicy">RetryPolicy</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.protocol.RetryPolicy.back_off" href="#exchangelib.protocol.RetryPolicy.back_off">back_off</a></code></li>
+<li><code><a title="exchangelib.protocol.RetryPolicy.fail_fast" href="#exchangelib.protocol.RetryPolicy.fail_fast">fail_fast</a></code></li>
+<li><code><a title="exchangelib.protocol.RetryPolicy.may_retry_on_error" href="#exchangelib.protocol.RetryPolicy.may_retry_on_error">may_retry_on_error</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="exchangelib.protocol.NoVerifyHTTPAdapter"><code class="flex name class">
 <span>class <span class="ident">NoVerifyHTTPAdapter</span></span>
@@ -2170,20 +2042,7 @@ services that are not tied to an account.</p></div>
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._api_version_hint = None
         self._version_lock = Lock()
-        # Autodetect authentication type if necessary
-        if self.config.auth_type is None:
-            self.config.auth_type = self.get_auth_type()
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else &#39;DUMMY&#39;
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     @property
     def version(self):
@@ -2202,7 +2061,7 @@ services that are not tied to an account.</p></div>
           (Default value = None)
         :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-        :return: A list of (tz_id, name, periods, transitions) tuples
+        :return: A generator of TimeZoneDefinition objects
         &#34;&#34;&#34;
         return GetServerTimeZones(protocol=self).call(
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -2223,31 +2082,12 @@ services that are not tied to an account.</p></div>
         :return: A generator of FreeBusyView objects
         &#34;&#34;&#34;
         from .account import Account
-        for account, attendee_type, exclude_conflicts in accounts:
-            if not isinstance(account, (Account, str)):
-                raise ValueError(&#34;&#39;accounts&#39; item %r must be an &#39;Account&#39; or &#39;str&#39; instance&#34; % account)
-            if attendee_type not in MailboxData.ATTENDEE_TYPES:
-                raise ValueError(&#34;&#39;accounts&#39; item %r must be one of %s&#34; % (attendee_type, MailboxData.ATTENDEE_TYPES))
-            if not isinstance(exclude_conflicts, bool):
-                raise ValueError(&#34;&#39;accounts&#39; item %r must be a &#39;bool&#39; instance&#34; % exclude_conflicts)
-        if start &gt;= end:
-            raise ValueError(&#34;&#39;start&#39; must be less than &#39;end&#39; (%s -&gt; %s)&#34; % (start, end))
-        if not isinstance(merged_free_busy_interval, int):
-            raise ValueError(&#34;&#39;merged_free_busy_interval&#39; value %r must be an &#39;int&#39;&#34; % merged_free_busy_interval)
-        if requested_view not in FreeBusyViewOptions.REQUESTED_VIEWS:
-            raise ValueError(
-                &#34;&#39;requested_view&#39; value %r must be one of %s&#34; % (requested_view, FreeBusyViewOptions.REQUESTED_VIEWS))
-        _, _, periods, transitions, transitions_groups = list(self.get_timezones(
+        tz_definition = list(self.get_timezones(
             timezones=[start.tzinfo],
             return_full_timezone_data=True
         ))[0]
         return GetUserAvailability(self).call(
-                timezone=TimeZone.from_server_timezone(
-                    periods=periods,
-                    transitions=transitions,
-                    transitionsgroups=transitions_groups,
-                    for_year=start.year
-                ),
+                timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
                 mailbox_data=[MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
                     attendee_type=attendee_type,
@@ -2264,12 +2104,14 @@ services that are not tied to an account.</p></div>
         return GetRoomLists(protocol=self).call()
 
     def get_rooms(self, roomlist):
-        return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))
+        return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))
 
-    def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
+    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None,
+                      shape=None):
         &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
         :param names: A list of identifiers to query
+        :param parent_folders: A list of contact folders to search in
         :param return_full_contact_data: If True, returns full contact data (Default value = False)
         :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
         :param shape: (Default value = None)
@@ -2277,8 +2119,8 @@ services that are not tied to an account.</p></div>
         :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         &#34;&#34;&#34;
         return list(ResolveNames(protocol=self).call(
-            unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
-            contact_data_shape=shape,
+            unresolved_entries=names, parent_folders=parent_folders, return_full_contact_data=return_full_contact_data,
+            search_scope=search_scope, contact_data_shape=shape,
         ))
 
     def expand_dl(self, distribution_list):
@@ -2298,7 +2140,7 @@ services that are not tied to an account.</p></div>
         This method is only available to users who have been assigned the Discovery Management RBAC role. See
         https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-        :param search_filter: Is set, must be a single email alias (Default value = None)
+        :param search_filter: If set, must be a single email alias (Default value = None)
         :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
         :return: a list of SearchableMailbox, FailedMailbox or Exception instances
@@ -2319,19 +2161,14 @@ services that are not tied to an account.</p></div>
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
     def __getstate__(self):
-        # The lock and thread pool cannot be pickled
+        # The lock cannot be pickled
         state = super().__getstate__()
         del state[&#39;_version_lock&#39;]
-        try:
-            del state[&#39;thread_pool&#39;]
-        except KeyError:
-            # thread_pool is a cached property and may not exist
-            pass
         return state
 
     def __setstate__(self, state):
-        # Restore the lock. The thread pool is a cached property and will be recreated automatically.
-        self.__dict__.update(state)
+        # Restore the lock
+        super().__setstate__(state)
         self._version_lock = Lock()
 
     def __str__(self):
@@ -2341,12 +2178,12 @@ services that are not tied to an account.</p></div>
         else:
             fullname, api_version, build = &#39;[unknown]&#39;, &#39;[unknown]&#39;, &#39;[unknown]&#39;
 
-        return &#39;&#39;&#39;\
-EWS url: %s
-Product name: %s
-EWS API version: %s
-Build number: %s
-EWS auth: %s&#39;&#39;&#39; % (self.service_endpoint, fullname, api_version, build, self.auth_type)</code></pre>
+        return f&#39;&#39;&#39;\
+EWS url: {self.service_endpoint}
+Product name: {fullname}
+EWS API version: {api_version}
+Build number: {build}
+EWS auth: {self.auth_type}&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2421,25 +2258,6 @@ def version(self):
     return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.protocol.Protocol.get_auth_type"><code class="name flex">
-<span>def <span class="ident">get_auth_type</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_auth_type(self):
-    # Autodetect authentication type. We also set version hint here.
-    name = str(self.credentials) if self.credentials and str(self.credentials) else &#39;DUMMY&#39;
-    auth_type, api_version_hint = get_service_authtype(
-        service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-    )
-    self._api_version_hint = api_version_hint
-    return auth_type</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.protocol.Protocol.get_free_busy_info"><code class="name flex">
 <span>def <span class="ident">get_free_busy_info</span></span>(<span>self, accounts, start, end, merged_free_busy_interval=30, requested_view='DetailedMerged')</span>
 </code></dt>
@@ -2473,31 +2291,12 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
     :return: A generator of FreeBusyView objects
     &#34;&#34;&#34;
     from .account import Account
-    for account, attendee_type, exclude_conflicts in accounts:
-        if not isinstance(account, (Account, str)):
-            raise ValueError(&#34;&#39;accounts&#39; item %r must be an &#39;Account&#39; or &#39;str&#39; instance&#34; % account)
-        if attendee_type not in MailboxData.ATTENDEE_TYPES:
-            raise ValueError(&#34;&#39;accounts&#39; item %r must be one of %s&#34; % (attendee_type, MailboxData.ATTENDEE_TYPES))
-        if not isinstance(exclude_conflicts, bool):
-            raise ValueError(&#34;&#39;accounts&#39; item %r must be a &#39;bool&#39; instance&#34; % exclude_conflicts)
-    if start &gt;= end:
-        raise ValueError(&#34;&#39;start&#39; must be less than &#39;end&#39; (%s -&gt; %s)&#34; % (start, end))
-    if not isinstance(merged_free_busy_interval, int):
-        raise ValueError(&#34;&#39;merged_free_busy_interval&#39; value %r must be an &#39;int&#39;&#34; % merged_free_busy_interval)
-    if requested_view not in FreeBusyViewOptions.REQUESTED_VIEWS:
-        raise ValueError(
-            &#34;&#39;requested_view&#39; value %r must be one of %s&#34; % (requested_view, FreeBusyViewOptions.REQUESTED_VIEWS))
-    _, _, periods, transitions, transitions_groups = list(self.get_timezones(
+    tz_definition = list(self.get_timezones(
         timezones=[start.tzinfo],
         return_full_timezone_data=True
     ))[0]
     return GetUserAvailability(self).call(
-            timezone=TimeZone.from_server_timezone(
-                periods=periods,
-                transitions=transitions,
-                transitionsgroups=transitions_groups,
-                for_year=start.year
-            ),
+            timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
             mailbox_data=[MailboxData(
                 email=account.primary_smtp_address if isinstance(account, Account) else account,
                 attendee_type=attendee_type,
@@ -2534,7 +2333,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_rooms(self, roomlist):
-    return GetRooms(protocol=self).call(roomlist=RoomList(email_address=roomlist))</code></pre>
+    return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.Protocol.get_searchable_mailboxes"><code class="name flex">
@@ -2544,7 +2343,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <div class="desc"><p>Call the GetSearchableMailboxes service to get mailboxes that can be searched.</p>
 <p>This method is only available to users who have been assigned the Discovery Management RBAC role. See
 <a href="https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo">https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo</a></p>
-<p>:param search_filter: Is set, must be a single email alias (Default value = None)
+<p>:param search_filter: If set, must be a single email alias (Default value = None)
 :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)</p>
 <p>:return: a list of SearchableMailbox, FailedMailbox or Exception instances</p></div>
 <details class="source">
@@ -2557,7 +2356,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
     This method is only available to users who have been assigned the Discovery Management RBAC role. See
     https://docs.microsoft.com/en-us/exchange/permissions-exo/permissions-exo
 
-    :param search_filter: Is set, must be a single email alias (Default value = None)
+    :param search_filter: If set, must be a single email alias (Default value = None)
     :param expand_group_membership: If True, returned distribution lists are expanded (Default value = False)
 
     :return: a list of SearchableMailbox, FailedMailbox or Exception instances
@@ -2576,7 +2375,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <p>:param timezones: A list of EWSDateTime instances. If None, fetches all timezones from server
 (Default value = None)
 :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)</p>
-<p>:return: A list of (tz_id, name, periods, transitions) tuples</p></div>
+<p>:return: A generator of TimeZoneDefinition objects</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2588,7 +2387,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
       (Default value = None)
     :param return_full_timezone_data: If true, also returns periods and transitions (Default value = False)
 
-    :return: A list of (tz_id, name, periods, transitions) tuples
+    :return: A generator of TimeZoneDefinition objects
     &#34;&#34;&#34;
     return GetServerTimeZones(protocol=self).call(
         timezones=timezones, return_full_timezone_data=return_full_timezone_data
@@ -2596,11 +2395,12 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 </details>
 </dd>
 <dt id="exchangelib.protocol.Protocol.resolve_names"><code class="name flex">
-<span>def <span class="ident">resolve_names</span></span>(<span>self, names, return_full_contact_data=False, search_scope=None, shape=None)</span>
+<span>def <span class="ident">resolve_names</span></span>(<span>self, names, parent_folders=None, return_full_contact_data=False, search_scope=None, shape=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve accounts on the server using partial account data, e.g. an email address or initials.</p>
 <p>:param names: A list of identifiers to query
+:param parent_folders: A list of contact folders to search in
 :param return_full_contact_data: If True, returns full contact data (Default value = False)
 :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
 :param shape: (Default value = None)</p>
@@ -2609,10 +2409,12 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def resolve_names(self, names, return_full_contact_data=False, search_scope=None, shape=None):
+<pre><code class="python">def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None,
+                  shape=None):
     &#34;&#34;&#34;Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
     :param names: A list of identifiers to query
+    :param parent_folders: A list of contact folders to search in
     :param return_full_contact_data: If True, returns full contact data (Default value = False)
     :param search_scope: The scope to perform the search. Must be one of SEARCH_SCOPE_CHOICES (Default value = None)
     :param shape: (Default value = None)
@@ -2620,8 +2422,8 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
     :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
     &#34;&#34;&#34;
     return list(ResolveNames(protocol=self).call(
-        unresolved_entries=names, return_full_contact_data=return_full_contact_data, search_scope=search_scope,
-        contact_data_shape=shape,
+        unresolved_entries=names, parent_folders=parent_folders, return_full_contact_data=return_full_contact_data,
+        search_scope=search_scope, contact_data_shape=shape,
     ))</code></pre>
 </details>
 </dd>
@@ -2652,27 +2454,26 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
     @property
     @abc.abstractmethod
     def fail_fast(self):
-        # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
-        # policy is used.
-        pass
+        &#34;&#34;&#34;Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
+        policy is used.&#34;&#34;&#34;
 
     @property
     @abc.abstractmethod
     def back_off_until(self):
-        pass
+        &#34;&#34;&#34;Return a datetime to back off until&#34;&#34;&#34;
 
     @back_off_until.setter
     @abc.abstractmethod
     def back_off_until(self, value):
-        pass
+        &#34;&#34;&#34;Setter for back off values&#34;&#34;&#34;
 
     @abc.abstractmethod
     def back_off(self, seconds):
-        pass
+        &#34;&#34;&#34;Set a new back off until value&#34;&#34;&#34;
 
     @abc.abstractmethod
     def may_retry_on_error(self, response, wait):
-        pass
+        &#34;&#34;&#34;Return whether retries should still be attempted&#34;&#34;&#34;
 
     def raise_response_errors(self, response):
         cas_error = response.headers.get(&#39;X-CasErrorCode&#39;)
@@ -2689,14 +2490,14 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
             raise UnauthorizedError(&#39;The referenced account is currently locked out&#39;)
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
-            raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
+            raise UnauthorizedError(f&#39;Invalid credentials for {response.url}&#39;)
         if &#39;TimeoutException&#39; in response.headers:
             # A header set by us on CONNECTION_ERRORS
             raise response.headers[&#39;TimeoutException&#39;]
         # This could be anything. Let higher layers handle this
         raise MalformedResponseError(
-            &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
-            % (response.status_code, response.headers, response.text)
+            f&#39;Unknown failure in response. Code: {response.status_code} headers: {response.headers} &#39;
+            f&#39;content: {response.text}&#39;
         )</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -2708,7 +2509,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <dl>
 <dt id="exchangelib.protocol.RetryPolicy.back_off_until"><code class="name">var <span class="ident">back_off_until</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return a datetime to back off until</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2716,12 +2517,13 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <pre><code class="python">@property
 @abc.abstractmethod
 def back_off_until(self):
-    pass</code></pre>
+    &#34;&#34;&#34;Return a datetime to back off until&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.RetryPolicy.fail_fast"><code class="name">var <span class="ident">fail_fast</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
+policy is used.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2729,9 +2531,8 @@ def back_off_until(self):
 <pre><code class="python">@property
 @abc.abstractmethod
 def fail_fast(self):
-    # Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
-    # policy is used.
-    pass</code></pre>
+    &#34;&#34;&#34;Used to choose the error handling policy. When True, a fault-tolerant policy is used. False, a fail-fast
+    policy is used.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -2741,28 +2542,28 @@ def fail_fast(self):
 <span>def <span class="ident">back_off</span></span>(<span>self, seconds)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Set a new back off until value</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def back_off(self, seconds):
-    pass</code></pre>
+    &#34;&#34;&#34;Set a new back off until value&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.RetryPolicy.may_retry_on_error"><code class="name flex">
 <span>def <span class="ident">may_retry_on_error</span></span>(<span>self, response, wait)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return whether retries should still be attempted</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def may_retry_on_error(self, response, wait):
-    pass</code></pre>
+    &#34;&#34;&#34;Return whether retries should still be attempted&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.RetryPolicy.raise_response_errors"><code class="name flex">
@@ -2789,14 +2590,14 @@ def may_retry_on_error(self, response, wait):
         raise UnauthorizedError(&#39;The referenced account is currently locked out&#39;)
     if response.status_code == 401 and self.fail_fast:
         # This is a login failure
-        raise UnauthorizedError(&#39;Invalid credentials for %s&#39; % response.url)
+        raise UnauthorizedError(f&#39;Invalid credentials for {response.url}&#39;)
     if &#39;TimeoutException&#39; in response.headers:
         # A header set by us on CONNECTION_ERRORS
         raise response.headers[&#39;TimeoutException&#39;]
     # This could be anything. Let higher layers handle this
     raise MalformedResponseError(
-        &#39;Unknown failure in response. Code: %s headers: %s content: %s&#39;
-        % (response.status_code, response.headers, response.text)
+        f&#39;Unknown failure in response. Code: {response.status_code} headers: {response.headers} &#39;
+        f&#39;content: {response.text}&#39;
     )</code></pre>
 </details>
 </dd>
@@ -2896,6 +2697,7 @@ exposed for use when subclassing the
 <li><code><a title="exchangelib.protocol.BaseProtocol.credentials" href="#exchangelib.protocol.BaseProtocol.credentials">credentials</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.decrease_poolsize" href="#exchangelib.protocol.BaseProtocol.decrease_poolsize">decrease_poolsize</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.get_adapter" href="#exchangelib.protocol.BaseProtocol.get_adapter">get_adapter</a></code></li>
+<li><code><a title="exchangelib.protocol.BaseProtocol.get_auth_type" href="#exchangelib.protocol.BaseProtocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.get_session" href="#exchangelib.protocol.BaseProtocol.get_session">get_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.increase_poolsize" href="#exchangelib.protocol.BaseProtocol.increase_poolsize">increase_poolsize</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.raw_session" href="#exchangelib.protocol.BaseProtocol.raw_session">raw_session</a></code></li>
@@ -2917,21 +2719,12 @@ exposed for use when subclassing the
 </li>
 <li>
 <h4><code><a title="exchangelib.protocol.FailFast" href="#exchangelib.protocol.FailFast">FailFast</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.protocol.FailFast.back_off" href="#exchangelib.protocol.FailFast.back_off">back_off</a></code></li>
-<li><code><a title="exchangelib.protocol.FailFast.back_off_until" href="#exchangelib.protocol.FailFast.back_off_until">back_off_until</a></code></li>
-<li><code><a title="exchangelib.protocol.FailFast.fail_fast" href="#exchangelib.protocol.FailFast.fail_fast">fail_fast</a></code></li>
-<li><code><a title="exchangelib.protocol.FailFast.may_retry_on_error" href="#exchangelib.protocol.FailFast.may_retry_on_error">may_retry_on_error</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.protocol.FaultTolerance" href="#exchangelib.protocol.FaultTolerance">FaultTolerance</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.protocol.FaultTolerance.DEFAULT_BACKOFF" href="#exchangelib.protocol.FaultTolerance.DEFAULT_BACKOFF">DEFAULT_BACKOFF</a></code></li>
-<li><code><a title="exchangelib.protocol.FaultTolerance.back_off" href="#exchangelib.protocol.FaultTolerance.back_off">back_off</a></code></li>
 <li><code><a title="exchangelib.protocol.FaultTolerance.back_off_until" href="#exchangelib.protocol.FaultTolerance.back_off_until">back_off_until</a></code></li>
-<li><code><a title="exchangelib.protocol.FaultTolerance.fail_fast" href="#exchangelib.protocol.FaultTolerance.fail_fast">fail_fast</a></code></li>
-<li><code><a title="exchangelib.protocol.FaultTolerance.may_retry_on_error" href="#exchangelib.protocol.FaultTolerance.may_retry_on_error">may_retry_on_error</a></code></li>
 </ul>
 </li>
 <li>
@@ -2945,7 +2738,6 @@ exposed for use when subclassing the
 <ul class="">
 <li><code><a title="exchangelib.protocol.Protocol.convert_ids" href="#exchangelib.protocol.Protocol.convert_ids">convert_ids</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.expand_dl" href="#exchangelib.protocol.Protocol.expand_dl">expand_dl</a></code></li>
-<li><code><a title="exchangelib.protocol.Protocol.get_auth_type" href="#exchangelib.protocol.Protocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.get_free_busy_info" href="#exchangelib.protocol.Protocol.get_free_busy_info">get_free_busy_info</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.get_roomlists" href="#exchangelib.protocol.Protocol.get_roomlists">get_roomlists</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.get_rooms" href="#exchangelib.protocol.Protocol.get_rooms">get_rooms</a></code></li>

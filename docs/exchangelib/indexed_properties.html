@@ -44,10 +44,10 @@ class SingleFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement an indexed element with a single field.&#34;&#34;&#34;
 
     @classmethod
-    def value_field(cls, version=None):
+    def value_field(cls, version):
         fields = cls.supported_fields(version=version)
         if len(fields) != 1:
-            raise ValueError(&#39;This class must have only one field (found %s)&#39; % (fields,))
+            raise ValueError(f&#39;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#39;)
         return fields[0]
 
 
@@ -434,10 +434,10 @@ class PhysicalAddress(MultiFieldIndexedElement):
     &#34;&#34;&#34;Base class for all classes that implement an indexed element with a single field.&#34;&#34;&#34;
 
     @classmethod
-    def value_field(cls, version=None):
+    def value_field(cls, version):
         fields = cls.supported_fields(version=version)
         if len(fields) != 1:
-            raise ValueError(&#39;This class must have only one field (found %s)&#39; % (fields,))
+            raise ValueError(f&#39;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#39;)
         return fields[0]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -453,7 +453,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <h3>Static methods</h3>
 <dl>
 <dt id="exchangelib.indexed_properties.SingleFieldIndexedElement.value_field"><code class="name flex">
-<span>def <span class="ident">value_field</span></span>(<span>version=None)</span>
+<span>def <span class="ident">value_field</span></span>(<span>version)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -462,10 +462,10 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def value_field(cls, version=None):
+def value_field(cls, version):
     fields = cls.supported_fields(version=version)
     if len(fields) != 1:
-        raise ValueError(&#39;This class must have only one field (found %s)&#39; % (fields,))
+        raise ValueError(f&#39;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#39;)
     return fields[0]</code></pre>
 </details>
 </dd>

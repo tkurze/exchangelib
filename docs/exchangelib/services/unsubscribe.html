@@ -44,9 +44,9 @@ class Unsubscribe(EWSAccountService):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
 
     def get_payload(self, subscription_id):
-        unsubscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        add_xml_child(unsubscribe, &#39;m:SubscriptionId&#39;, subscription_id)
-        return unsubscribe</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -83,9 +83,9 @@ class Unsubscribe(EWSAccountService):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
 
     def get_payload(self, subscription_id):
-        unsubscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        add_xml_child(unsubscribe, &#39;m:SubscriptionId&#39;, subscription_id)
-        return unsubscribe</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -132,9 +132,9 @@ class Unsubscribe(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, subscription_id):
-    unsubscribe = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    add_xml_child(unsubscribe, &#39;m:SubscriptionId&#39;, subscription_id)
-    return unsubscribe</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from .common import EWSService
+from ..errors import InvalidEnumValue, InvalidTypeError
 from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
 from ..util import create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
@@ -41,36 +42,30 @@ class ConvertId(EWSService):
 
     SERVICE_NAME = &#39;ConvertId&#39;
     supported_from = EXCHANGE_2007_SP1
+    cls_map = {cls.response_tag(): cls for cls in (
+        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+    )}
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
+            raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
 
-    def _elems_to_objs(self, elems):
-        cls_map = {cls.response_tag(): cls for cls in (
-            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        )}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem, account=None)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        convertid = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element(&#39;m:SourceIds&#39;)
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise ValueError(&#34;&#39;item&#39; value %r must be an instance of %r&#34; % (item, supported_item_classes))
+                raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
             set_xml_value(item_ids, item, version=self.protocol.version)
-        if not len(item_ids):
-            raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
-        convertid.append(item_ids)
-        return convertid
+        payload.append(item_ids)
+        return payload
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -110,36 +105,30 @@ input list.</p>
 
     SERVICE_NAME = &#39;ConvertId&#39;
     supported_from = EXCHANGE_2007_SP1
+    cls_map = {cls.response_tag(): cls for cls in (
+        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
+    )}
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
+            raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
 
-    def _elems_to_objs(self, elems):
-        cls_map = {cls.response_tag(): cls for cls in (
-            AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        )}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem, account=None)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem, account=None)
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        convertid = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
         item_ids = create_element(&#39;m:SourceIds&#39;)
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise ValueError(&#34;&#39;item&#39; value %r must be an instance of %r&#34; % (item, supported_item_classes))
+                raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
             set_xml_value(item_ids, item, version=self.protocol.version)
-        if not len(item_ids):
-            raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
-        convertid.append(item_ids)
-        return convertid
+        payload.append(item_ids)
+        return payload
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -155,6 +144,10 @@ input list.</p>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.convert_id.ConvertId.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.convert_id.ConvertId.cls_map"><code class="name">var <span class="ident">cls_map</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -176,7 +169,7 @@ input list.</p>
 </summary>
 <pre><code class="python">def call(self, items, destination_format):
     if destination_format not in ID_FORMATS:
-        raise ValueError(&#34;&#39;destination_format&#39; %r must be one of %s&#34; % (destination_format, ID_FORMATS))
+        raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
     return self._elems_to_objs(
         self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
     )</code></pre>
@@ -193,16 +186,14 @@ input list.</p>
 </summary>
 <pre><code class="python">def get_payload(self, items, destination_format):
     supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    convertid = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(DestinationFormat=destination_format))
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
     item_ids = create_element(&#39;m:SourceIds&#39;)
     for item in items:
         if not isinstance(item, supported_item_classes):
-            raise ValueError(&#34;&#39;item&#39; value %r must be an instance of %r&#34; % (item, supported_item_classes))
+            raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
         set_xml_value(item_ids, item, version=self.protocol.version)
-    if not len(item_ids):
-        raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
-    convertid.append(item_ids)
-    return convertid</code></pre>
+    payload.append(item_ids)
+    return payload</code></pre>
 </details>
 </dd>
 </dl>
@@ -239,6 +230,7 @@ input list.</p>
 <ul class="">
 <li><code><a title="exchangelib.services.convert_id.ConvertId.SERVICE_NAME" href="#exchangelib.services.convert_id.ConvertId.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.convert_id.ConvertId.call" href="#exchangelib.services.convert_id.ConvertId.call">call</a></code></li>
+<li><code><a title="exchangelib.services.convert_id.ConvertId.cls_map" href="#exchangelib.services.convert_id.ConvertId.cls_map">cls_map</a></code></li>
 <li><code><a title="exchangelib.services.convert_id.ConvertId.get_payload" href="#exchangelib.services.convert_id.ConvertId.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.convert_id.ConvertId.supported_from" href="#exchangelib.services.convert_id.ConvertId.supported_from">supported_from</a></code></li>
 </ul>

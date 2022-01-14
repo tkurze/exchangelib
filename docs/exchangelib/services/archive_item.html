@@ -26,7 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_folder_ids_element, create_item_ids_element
+<pre><code class="python">from .common import EWSAccountService, folder_ids_element, item_ids_element
+from ..items import Item
 from ..util import create_element, MNS
 from ..version import EXCHANGE_2013
 
@@ -35,7 +36,7 @@ class ArchiveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;ArchiveItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Items&#39;
     supported_from = EXCHANGE_2013
 
     def call(self, items, to_folder):
@@ -48,22 +49,16 @@ class ArchiveItem(EWSAccountService):
         &#34;&#34;&#34;
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
-    def _elems_to_objs(self, elems):
-        from ..items import Item
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Item.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
-        archiveitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        folder_id = create_folder_ids_element(tag=&#39;m:ArchiveSourceFolderId&#39;, folders=[to_folder],
-                                              version=self.account.version)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        archiveitem.append(folder_id)
-        archiveitem.append(item_ids)
-        return archiveitem</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(
+            folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ArchiveSourceFolderId&#39;)
+        )
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -89,7 +84,7 @@ class ArchiveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;ArchiveItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Items&#39;
     supported_from = EXCHANGE_2013
 
     def call(self, items, to_folder):
@@ -102,22 +97,16 @@ class ArchiveItem(EWSAccountService):
         &#34;&#34;&#34;
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
-    def _elems_to_objs(self, elems):
-        from ..items import Item
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Item.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
-        archiveitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        folder_id = create_folder_ids_element(tag=&#39;m:ArchiveSourceFolderId&#39;, folders=[to_folder],
-                                              version=self.account.version)
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        archiveitem.append(folder_id)
-        archiveitem.append(item_ids)
-        return archiveitem</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(
+            folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ArchiveSourceFolderId&#39;)
+        )
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -174,13 +163,12 @@ class ArchiveItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, to_folder):
-    archiveitem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    folder_id = create_folder_ids_element(tag=&#39;m:ArchiveSourceFolderId&#39;, folders=[to_folder],
-                                          version=self.account.version)
-    item_ids = create_item_ids_element(items=items, version=self.account.version)
-    archiveitem.append(folder_id)
-    archiveitem.append(item_ids)
-    return archiveitem</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(
+        folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ArchiveSourceFolderId&#39;)
+    )
+    payload.append(item_ids_element(items=items, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

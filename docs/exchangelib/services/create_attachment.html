@@ -27,6 +27,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from .common import EWSAccountService, to_item_id
+from ..attachments import FileAttachment, ItemAttachment
+from ..items import BaseItem
 from ..properties import ParentItemId
 from ..util import create_element, set_xml_value, MNS
 
@@ -37,33 +39,25 @@ class CreateAttachment(EWSAccountService):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;CreateAttachment&#39;
-    element_container_name = &#39;{%s}Attachments&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, parent_item, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
 
-    def _elems_to_objs(self, elems):
-        from ..attachments import FileAttachment, ItemAttachment
-        cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, parent_item):
-        from ..items import BaseItem
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         version = self.account.version
         if isinstance(parent_item, BaseItem):
             # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId
             parent_item = ParentItemId(parent_item.id, parent_item.changekey)
-        set_xml_value(payload, to_item_id(parent_item, ParentItemId, version=version), version=version)
+        set_xml_value(payload, to_item_id(parent_item, ParentItemId), version=self.account.version)
         attachments = create_element(&#39;m:Attachments&#39;)
         for item in items:
-            set_xml_value(attachments, item, version=self.account.version)
-        if not len(attachments):
-            raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
+            set_xml_value(attachments, item, version=version)
         payload.append(attachments)
         return payload</code></pre>
 </details>
@@ -94,33 +88,25 @@ class CreateAttachment(EWSAccountService):
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#39;CreateAttachment&#39;
-    element_container_name = &#39;{%s}Attachments&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, parent_item, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, parent_item=parent_item))
 
-    def _elems_to_objs(self, elems):
-        from ..attachments import FileAttachment, ItemAttachment
-        cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield cls_map[elem.tag].from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, parent_item):
-        from ..items import BaseItem
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         version = self.account.version
         if isinstance(parent_item, BaseItem):
             # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId
             parent_item = ParentItemId(parent_item.id, parent_item.changekey)
-        set_xml_value(payload, to_item_id(parent_item, ParentItemId, version=version), version=version)
+        set_xml_value(payload, to_item_id(parent_item, ParentItemId), version=self.account.version)
         attachments = create_element(&#39;m:Attachments&#39;)
         for item in items:
-            set_xml_value(attachments, item, version=self.account.version)
-        if not len(attachments):
-            raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
+            set_xml_value(attachments, item, version=version)
         payload.append(attachments)
         return payload</code></pre>
 </details>
@@ -132,6 +118,10 @@ class CreateAttachment(EWSAccountService):
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.services.create_attachment.CreateAttachment.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.create_attachment.CreateAttachment.cls_map"><code class="name">var <span class="ident">cls_map</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -165,18 +155,15 @@ class CreateAttachment(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, parent_item):
-    from ..items import BaseItem
-    payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
     version = self.account.version
     if isinstance(parent_item, BaseItem):
         # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId
         parent_item = ParentItemId(parent_item.id, parent_item.changekey)
-    set_xml_value(payload, to_item_id(parent_item, ParentItemId, version=version), version=version)
+    set_xml_value(payload, to_item_id(parent_item, ParentItemId), version=self.account.version)
     attachments = create_element(&#39;m:Attachments&#39;)
     for item in items:
-        set_xml_value(attachments, item, version=self.account.version)
-    if not len(attachments):
-        raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
+        set_xml_value(attachments, item, version=version)
     payload.append(attachments)
     return payload</code></pre>
 </details>
@@ -215,6 +202,7 @@ class CreateAttachment(EWSAccountService):
 <ul class="">
 <li><code><a title="exchangelib.services.create_attachment.CreateAttachment.SERVICE_NAME" href="#exchangelib.services.create_attachment.CreateAttachment.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.create_attachment.CreateAttachment.call" href="#exchangelib.services.create_attachment.CreateAttachment.call">call</a></code></li>
+<li><code><a title="exchangelib.services.create_attachment.CreateAttachment.cls_map" href="#exchangelib.services.create_attachment.CreateAttachment.cls_map">cls_map</a></code></li>
 <li><code><a title="exchangelib.services.create_attachment.CreateAttachment.element_container_name" href="#exchangelib.services.create_attachment.CreateAttachment.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.create_attachment.CreateAttachment.get_payload" href="#exchangelib.services.create_attachment.CreateAttachment.get_payload">get_payload</a></code></li>
 </ul>

@@ -30,13 +30,20 @@
 
 from cached_property import threaded_cached_property
 
-from .credentials import BaseCredentials, OAuth2Credentials
+from .errors import InvalidEnumValue, InvalidTypeError
+from .credentials import BaseCredentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
 from .protocol import RetryPolicy, FailFast
-from .transport import AUTH_TYPE_MAP, OAUTH2
+from .transport import AUTH_TYPE_MAP, OAUTH2, CREDENTIALS_REQUIRED
 from .util import split_url
 from .version import Version
 
 log = logging.getLogger(__name__)
+
+DEFAULT_AUTH_TYPE = {
+    # This type of credentials *must* use the OAuth auth type
+    OAuth2Credentials: OAUTH2,
+    OAuth2AuthorizationCodeCredentials: OAUTH2,
+}
 
 
 class Configuration:
@@ -70,26 +77,27 @@ class Configuration:
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
-            raise ValueError(&#34;&#39;credentials&#39; %r must be a Credentials instance&#34; % credentials)
-        if isinstance(credentials, OAuth2Credentials) and auth_type is None:
-            # This type of credentials *must* use the OAuth auth type
-            auth_type = OAUTH2
+            raise InvalidTypeError(&#39;credentials&#39;, credentials, BaseCredentials)
+        if auth_type is None:
+            # Set a default auth type for the credentials where this makes sense
+            auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
+        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+            raise ValueError(f&#39;Auth type {auth_type!r} was detected but no credentials were provided&#39;)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise ValueError(&#34;&#39;auth_type&#39; %r must be one of %s&#34;
-                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP))))
+            raise InvalidEnumValue(&#39;auth_type&#39;, auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
-            raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
+            raise InvalidTypeError(&#39;version&#39;, version, Version)
         if not isinstance(retry_policy, RetryPolicy):
-            raise ValueError(&#34;&#39;retry_policy&#39; %r must be a RetryPolicy instance&#34; % retry_policy)
+            raise InvalidTypeError(&#39;retry_policy&#39;, retry_policy, RetryPolicy)
         if not isinstance(max_connections, (int, type(None))):
-            raise ValueError(&#34;&#39;max_connections&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;max_connections&#39;, max_connections, int)
         self._credentials = credentials
         if server:
-            self.service_endpoint = &#39;https://%s/EWS/Exchange.asmx&#39; % server
+            self.service_endpoint = f&#39;https://{server}/EWS/Exchange.asmx&#39;
         else:
             self.service_endpoint = service_endpoint
         self.auth_type = auth_type
@@ -109,9 +117,10 @@ class Configuration:
         return split_url(self.service_endpoint)[1]
 
     def __repr__(self):
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%r&#39; % (k, getattr(self, k)) for k in (
+        args_str = &#39;, &#39;.join(f&#39;{k}={getattr(self, k)!r}&#39; for k in (
             &#39;credentials&#39;, &#39;service_endpoint&#39;, &#39;auth_type&#39;, &#39;version&#39;, &#39;retry_policy&#39;
-        ))</code></pre>
+        ))
+        return f&#39;{self.__class__.__name__}({args_str})&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -182,26 +191,27 @@ policies on the Exchange server.</p></div>
     def __init__(self, credentials=None, server=None, service_endpoint=None, auth_type=None, version=None,
                  retry_policy=None, max_connections=None):
         if not isinstance(credentials, (BaseCredentials, type(None))):
-            raise ValueError(&#34;&#39;credentials&#39; %r must be a Credentials instance&#34; % credentials)
-        if isinstance(credentials, OAuth2Credentials) and auth_type is None:
-            # This type of credentials *must* use the OAuth auth type
-            auth_type = OAUTH2
+            raise InvalidTypeError(&#39;credentials&#39;, credentials, BaseCredentials)
+        if auth_type is None:
+            # Set a default auth type for the credentials where this makes sense
+            auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
+        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+            raise ValueError(f&#39;Auth type {auth_type!r} was detected but no credentials were provided&#39;)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise ValueError(&#34;&#39;auth_type&#39; %r must be one of %s&#34;
-                             % (auth_type, &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in sorted(AUTH_TYPE_MAP))))
+            raise InvalidEnumValue(&#39;auth_type&#39;, auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
-            raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
+            raise InvalidTypeError(&#39;version&#39;, version, Version)
         if not isinstance(retry_policy, RetryPolicy):
-            raise ValueError(&#34;&#39;retry_policy&#39; %r must be a RetryPolicy instance&#34; % retry_policy)
+            raise InvalidTypeError(&#39;retry_policy&#39;, retry_policy, RetryPolicy)
         if not isinstance(max_connections, (int, type(None))):
-            raise ValueError(&#34;&#39;max_connections&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;max_connections&#39;, max_connections, int)
         self._credentials = credentials
         if server:
-            self.service_endpoint = &#39;https://%s/EWS/Exchange.asmx&#39; % server
+            self.service_endpoint = f&#39;https://{server}/EWS/Exchange.asmx&#39;
         else:
             self.service_endpoint = service_endpoint
         self.auth_type = auth_type
@@ -221,9 +231,10 @@ policies on the Exchange server.</p></div>
         return split_url(self.service_endpoint)[1]
 
     def __repr__(self):
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%r&#39; % (k, getattr(self, k)) for k in (
+        args_str = &#39;, &#39;.join(f&#39;{k}={getattr(self, k)!r}&#39; for k in (
             &#39;credentials&#39;, &#39;service_endpoint&#39;, &#39;auth_type&#39;, &#39;version&#39;, &#39;retry_policy&#39;
-        ))</code></pre>
+        ))
+        return f&#39;{self.__class__.__name__}({args_str})&#39;</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>

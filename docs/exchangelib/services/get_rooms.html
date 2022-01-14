@@ -36,23 +36,17 @@ class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = &#39;{%s}Rooms&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Rooms&#39;
     supported_from = EXCHANGE_2010
 
-    def call(self, roomlist):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(roomlist=roomlist)))
+    def call(self, room_list):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(room_list=room_list)))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Room.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return Room.from_xml(elem=elem, account=None)
 
-    def get_payload(self, roomlist):
-        getrooms = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(getrooms, roomlist, version=self.protocol.version)
-        return getrooms</code></pre>
+    def get_payload(self, room_list):
+        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
 </details>
 </section>
 <section>
@@ -78,23 +72,17 @@ class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = &#39;{%s}Rooms&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Rooms&#39;
     supported_from = EXCHANGE_2010
 
-    def call(self, roomlist):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(roomlist=roomlist)))
+    def call(self, room_list):
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(room_list=room_list)))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield Room.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return Room.from_xml(elem=elem, account=None)
 
-    def get_payload(self, roomlist):
-        getrooms = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        set_xml_value(getrooms, roomlist, version=self.protocol.version)
-        return getrooms</code></pre>
+    def get_payload(self, room_list):
+        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -118,7 +106,7 @@ class GetRooms(EWSService):
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.services.get_rooms.GetRooms.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, roomlist)</span>
+<span>def <span class="ident">call</span></span>(<span>self, room_list)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -126,12 +114,12 @@ class GetRooms(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, roomlist):
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(roomlist=roomlist)))</code></pre>
+<pre><code class="python">def call(self, room_list):
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(room_list=room_list)))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_rooms.GetRooms.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, roomlist)</span>
+<span>def <span class="ident">get_payload</span></span>(<span>self, room_list)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -139,10 +127,8 @@ class GetRooms(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, roomlist):
-    getrooms = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    set_xml_value(getrooms, roomlist, version=self.protocol.version)
-    return getrooms</code></pre>
+<pre><code class="python">def get_payload(self, room_list):
+    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
 </details>
 </dd>
 </dl>

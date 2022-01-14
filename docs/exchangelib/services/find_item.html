@@ -26,18 +26,19 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import OrderedDict
-
-from .common import EWSAccountService, create_shape_element
+<pre><code class="python">from .common import EWSPagingService, shape_element, folder_ids_element
+from ..errors import InvalidEnumValue
+from ..folders.base import BaseFolder
+from ..items import Item, ID_ONLY, SHAPE_CHOICES, ITEM_TRAVERSAL_CHOICES
 from ..util import create_element, set_xml_value, TNS, MNS
 
 
-class FindItem(EWSAccountService):
+class FindItem(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;FindItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % TNS
-    paging_container_name = &#39;{%s}RootFolder&#39; % MNS
+    element_container_name = f&#39;{{{TNS}}}Items&#39;
+    paging_container_name = f&#39;{{{MNS}}}RootFolder&#39;
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -63,6 +64,10 @@ class FindItem(EWSAccountService):
 
         :return: XML elements for the matching items
         &#34;&#34;&#34;
+        if shape not in SHAPE_CHOICES:
+            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
         self.additional_fields = additional_fields
         self.shape = shape
         return self._elems_to_objs(self._paged_call(
@@ -77,58 +82,42 @@ class FindItem(EWSAccountService):
                 shape=shape,
                 depth=depth,
                 calendar_view=calendar_view,
-                page_size=self.chunk_size,
+                page_size=self.page_size,
                 offset=offset,
             )
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
-        from ..items import Item, ID_ONLY
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            if self.shape == ID_ONLY and self.additional_fields is None:
-                yield Item.id_from_xml(elem)
-                continue
-            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        if self.shape == ID_ONLY and self.additional_fields is None:
+            return Item.id_from_xml(elem)
+        return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                     calendar_view, page_size, offset=0):
-        finditem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(Traversal=depth))
-        itemshape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
+        payload.append(shape_element(
             tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        finditem.append(itemshape)
+        ))
         if calendar_view is None:
             view_type = create_element(
                 &#39;m:IndexedPageItemView&#39;,
-                attrs=OrderedDict([
-                    (&#39;MaxEntriesReturned&#39;, str(page_size)),
-                    (&#39;Offset&#39;, str(offset)),
-                    (&#39;BasePoint&#39;, &#39;Beginning&#39;),
-                ])
+                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
             )
         else:
             view_type = calendar_view.to_xml(version=self.account.version)
-        finditem.append(view_type)
+        payload.append(view_type)
         if restriction:
-            finditem.append(restriction.to_xml(version=self.account.version))
+            payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            finditem.append(set_xml_value(
+            payload.append(set_xml_value(
                 create_element(&#39;m:SortOrder&#39;),
                 order_fields,
                 version=self.account.version
             ))
-        finditem.append(set_xml_value(
-            create_element(&#39;m:ParentFolderIds&#39;),
-            folders,
-            version=self.account.version
-        ))
+        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
         if query_string:
-            finditem.append(query_string.to_xml(version=self.account.version))
-        return finditem</code></pre>
+            payload.append(query_string.to_xml(version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -150,12 +139,12 @@ class FindItem(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FindItem(EWSAccountService):
+<pre><code class="python">class FindItem(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;FindItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % TNS
-    paging_container_name = &#39;{%s}RootFolder&#39; % MNS
+    element_container_name = f&#39;{{{TNS}}}Items&#39;
+    paging_container_name = f&#39;{{{MNS}}}RootFolder&#39;
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -181,6 +170,10 @@ class FindItem(EWSAccountService):
 
         :return: XML elements for the matching items
         &#34;&#34;&#34;
+        if shape not in SHAPE_CHOICES:
+            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+        if depth not in ITEM_TRAVERSAL_CHOICES:
+            raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
         self.additional_fields = additional_fields
         self.shape = shape
         return self._elems_to_objs(self._paged_call(
@@ -195,61 +188,46 @@ class FindItem(EWSAccountService):
                 shape=shape,
                 depth=depth,
                 calendar_view=calendar_view,
-                page_size=self.chunk_size,
+                page_size=self.page_size,
                 offset=offset,
             )
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..folders.base import BaseFolder
-        from ..items import Item, ID_ONLY
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            if self.shape == ID_ONLY and self.additional_fields is None:
-                yield Item.id_from_xml(elem)
-                continue
-            yield BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
+    def _elem_to_obj(self, elem):
+        if self.shape == ID_ONLY and self.additional_fields is None:
+            return Item.id_from_xml(elem)
+        return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                     calendar_view, page_size, offset=0):
-        finditem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(Traversal=depth))
-        itemshape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
+        payload.append(shape_element(
             tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        finditem.append(itemshape)
+        ))
         if calendar_view is None:
             view_type = create_element(
                 &#39;m:IndexedPageItemView&#39;,
-                attrs=OrderedDict([
-                    (&#39;MaxEntriesReturned&#39;, str(page_size)),
-                    (&#39;Offset&#39;, str(offset)),
-                    (&#39;BasePoint&#39;, &#39;Beginning&#39;),
-                ])
+                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
             )
         else:
             view_type = calendar_view.to_xml(version=self.account.version)
-        finditem.append(view_type)
+        payload.append(view_type)
         if restriction:
-            finditem.append(restriction.to_xml(version=self.account.version))
+            payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            finditem.append(set_xml_value(
+            payload.append(set_xml_value(
                 create_element(&#39;m:SortOrder&#39;),
                 order_fields,
                 version=self.account.version
             ))
-        finditem.append(set_xml_value(
-            create_element(&#39;m:ParentFolderIds&#39;),
-            folders,
-            version=self.account.version
-        ))
+        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
         if query_string:
-            finditem.append(query_string.to_xml(version=self.account.version))
-        return finditem</code></pre>
+            payload.append(query_string.to_xml(version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
@@ -311,6 +289,10 @@ class FindItem(EWSAccountService):
 
     :return: XML elements for the matching items
     &#34;&#34;&#34;
+    if shape not in SHAPE_CHOICES:
+        raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+    if depth not in ITEM_TRAVERSAL_CHOICES:
+        raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
     self.additional_fields = additional_fields
     self.shape = shape
     return self._elems_to_objs(self._paged_call(
@@ -325,7 +307,7 @@ class FindItem(EWSAccountService):
             shape=shape,
             depth=depth,
             calendar_view=calendar_view,
-            page_size=self.chunk_size,
+            page_size=self.page_size,
             offset=offset,
         )
     ))</code></pre>
@@ -342,50 +324,41 @@ class FindItem(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
                 calendar_view, page_size, offset=0):
-    finditem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME, attrs=dict(Traversal=depth))
-    itemshape = create_shape_element(
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
+    payload.append(shape_element(
         tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    )
-    finditem.append(itemshape)
+    ))
     if calendar_view is None:
         view_type = create_element(
             &#39;m:IndexedPageItemView&#39;,
-            attrs=OrderedDict([
-                (&#39;MaxEntriesReturned&#39;, str(page_size)),
-                (&#39;Offset&#39;, str(offset)),
-                (&#39;BasePoint&#39;, &#39;Beginning&#39;),
-            ])
+            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
         )
     else:
         view_type = calendar_view.to_xml(version=self.account.version)
-    finditem.append(view_type)
+    payload.append(view_type)
     if restriction:
-        finditem.append(restriction.to_xml(version=self.account.version))
+        payload.append(restriction.to_xml(version=self.account.version))
     if order_fields:
-        finditem.append(set_xml_value(
+        payload.append(set_xml_value(
             create_element(&#39;m:SortOrder&#39;),
             order_fields,
             version=self.account.version
         ))
-    finditem.append(set_xml_value(
-        create_element(&#39;m:ParentFolderIds&#39;),
-        folders,
-        version=self.account.version
-    ))
+    payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
     if query_string:
-        finditem.append(query_string.to_xml(version=self.account.version))
-    return finditem</code></pre>
+        payload.append(query_string.to_xml(version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<li><code><b><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>

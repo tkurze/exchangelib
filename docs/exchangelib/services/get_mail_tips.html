@@ -44,22 +44,16 @@ class GetMailTips(EWSService):
             mail_tips_requested=mail_tips_requested,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield MailTips.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
         recipients_elem = create_element(&#39;m:Recipients&#39;)
         for recipient in recipients:
             set_xml_value(recipients_elem, recipient, version=self.protocol.version)
-        if not len(recipients_elem):
-            raise ValueError(&#39;&#34;recipients&#34; must not be empty&#39;)
         payload.append(recipients_elem)
 
         if mail_tips_requested:
@@ -72,7 +66,7 @@ class GetMailTips(EWSService):
 
     @classmethod
     def _response_message_tag(cls):
-        return &#39;{%s}MailTipsResponseMessageType&#39; % MNS</code></pre>
+        return f&#39;{{{MNS}}}MailTipsResponseMessageType&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -107,22 +101,16 @@ class GetMailTips(EWSService):
             mail_tips_requested=mail_tips_requested,
         ))
 
-    def _elems_to_objs(self, elems):
-        for elem in elems:
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            yield MailTips.from_xml(elem=elem, account=None)
+    def _elem_to_obj(self, elem):
+        return MailTips.from_xml(elem=elem, account=None)
 
     def get_payload(self, recipients, sending_as,  mail_tips_requested):
-        payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
         recipients_elem = create_element(&#39;m:Recipients&#39;)
         for recipient in recipients:
             set_xml_value(recipients_elem, recipient, version=self.protocol.version)
-        if not len(recipients_elem):
-            raise ValueError(&#39;&#34;recipients&#34; must not be empty&#39;)
         payload.append(recipients_elem)
 
         if mail_tips_requested:
@@ -135,7 +123,7 @@ class GetMailTips(EWSService):
 
     @classmethod
     def _response_message_tag(cls):
-        return &#39;{%s}MailTipsResponseMessageType&#39; % MNS</code></pre>
+        return f&#39;{{{MNS}}}MailTipsResponseMessageType&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -178,14 +166,12 @@ class GetMailTips(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, recipients, sending_as,  mail_tips_requested):
-    payload = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
     set_xml_value(payload, sending_as, version=self.protocol.version)
 
     recipients_elem = create_element(&#39;m:Recipients&#39;)
     for recipient in recipients:
         set_xml_value(recipients_elem, recipient, version=self.protocol.version)
-    if not len(recipients_elem):
-        raise ValueError(&#39;&#34;recipients&#34; must not be empty&#39;)
     payload.append(recipients_elem)
 
     if mail_tips_requested:

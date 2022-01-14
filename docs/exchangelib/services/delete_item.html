@@ -26,9 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import OrderedDict
-
-from .common import EWSAccountService, create_item_ids_element
+<pre><code class="python">from .common import EWSAccountService, item_ids_element
+from ..errors import InvalidEnumValue
+from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
 from ..util import create_element
 from ..version import EXCHANGE_2013_SP1
 
@@ -44,21 +44,16 @@ class DeleteItem(EWSAccountService):
     returns_elements = False
 
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
-        from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError(&#34;&#39;delete_type&#39; %s must be one of %s&#34; % (
-                delete_type, DELETE_TYPE_CHOICES
-            ))
+            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
         if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
-            raise ValueError(&#34;&#39;send_meeting_cancellations&#39; %s must be one of %s&#34; % (
-                send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
-            ))
+            raise InvalidEnumValue(
+                &#39;send_meeting_cancellations&#39;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
+            )
         if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
-            raise ValueError(&#34;&#39;affected_task_occurrences&#39; %s must be one of %s&#34; % (
-                affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
-            ))
-        if suppress_read_receipts not in (True, False):
-            raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
+            raise InvalidEnumValue(
+                &#39;affected_task_occurrences&#39;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
+            )
         return self._chunked_get_elements(
             self.get_payload,
             items=items,
@@ -71,29 +66,16 @@ class DeleteItem(EWSAccountService):
     def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
                     suppress_read_receipts):
         # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
+        attrs = dict(
+            DeleteType=delete_type,
+            SendMeetingCancellations=send_meeting_cancellations,
+            AffectedTaskOccurrences=affected_task_occurrences,
+        )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            deleteitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;DeleteType&#39;, delete_type),
-                    (&#39;SendMeetingCancellations&#39;, send_meeting_cancellations),
-                    (&#39;AffectedTaskOccurrences&#39;, affected_task_occurrences),
-                    (&#39;SuppressReadReceipts&#39;, &#39;true&#39; if suppress_read_receipts else &#39;false&#39;),
-                ])
-            )
-        else:
-            deleteitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;DeleteType&#39;, delete_type),
-                    (&#39;SendMeetingCancellations&#39;, send_meeting_cancellations),
-                    (&#39;AffectedTaskOccurrences&#39;, affected_task_occurrences),
-                 ])
-            )
-
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        deleteitem.append(item_ids)
-        return deleteitem</code></pre>
+            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -128,21 +110,16 @@ class DeleteItem(EWSAccountService):
     returns_elements = False
 
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
-        from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise ValueError(&#34;&#39;delete_type&#39; %s must be one of %s&#34; % (
-                delete_type, DELETE_TYPE_CHOICES
-            ))
+            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
         if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
-            raise ValueError(&#34;&#39;send_meeting_cancellations&#39; %s must be one of %s&#34; % (
-                send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
-            ))
+            raise InvalidEnumValue(
+                &#39;send_meeting_cancellations&#39;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
+            )
         if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
-            raise ValueError(&#34;&#39;affected_task_occurrences&#39; %s must be one of %s&#34; % (
-                affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
-            ))
-        if suppress_read_receipts not in (True, False):
-            raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
+            raise InvalidEnumValue(
+                &#39;affected_task_occurrences&#39;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
+            )
         return self._chunked_get_elements(
             self.get_payload,
             items=items,
@@ -155,29 +132,16 @@ class DeleteItem(EWSAccountService):
     def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
                     suppress_read_receipts):
         # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
+        attrs = dict(
+            DeleteType=delete_type,
+            SendMeetingCancellations=send_meeting_cancellations,
+            AffectedTaskOccurrences=affected_task_occurrences,
+        )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            deleteitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;DeleteType&#39;, delete_type),
-                    (&#39;SendMeetingCancellations&#39;, send_meeting_cancellations),
-                    (&#39;AffectedTaskOccurrences&#39;, affected_task_occurrences),
-                    (&#39;SuppressReadReceipts&#39;, &#39;true&#39; if suppress_read_receipts else &#39;false&#39;),
-                ])
-            )
-        else:
-            deleteitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;DeleteType&#39;, delete_type),
-                    (&#39;SendMeetingCancellations&#39;, send_meeting_cancellations),
-                    (&#39;AffectedTaskOccurrences&#39;, affected_task_occurrences),
-                 ])
-            )
-
-        item_ids = create_item_ids_element(items=items, version=self.account.version)
-        deleteitem.append(item_ids)
-        return deleteitem</code></pre>
+            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        payload.append(item_ids_element(items=items, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -207,21 +171,16 @@ class DeleteItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
-    from ..items import DELETE_TYPE_CHOICES, SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES
     if delete_type not in DELETE_TYPE_CHOICES:
-        raise ValueError(&#34;&#39;delete_type&#39; %s must be one of %s&#34; % (
-            delete_type, DELETE_TYPE_CHOICES
-        ))
+        raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
     if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
-        raise ValueError(&#34;&#39;send_meeting_cancellations&#39; %s must be one of %s&#34; % (
-            send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
-        ))
+        raise InvalidEnumValue(
+            &#39;send_meeting_cancellations&#39;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
+        )
     if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
-        raise ValueError(&#34;&#39;affected_task_occurrences&#39; %s must be one of %s&#34; % (
-            affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
-        ))
-    if suppress_read_receipts not in (True, False):
-        raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
+        raise InvalidEnumValue(
+            &#39;affected_task_occurrences&#39;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
+        )
     return self._chunked_get_elements(
         self.get_payload,
         items=items,
@@ -244,29 +203,16 @@ class DeleteItem(EWSAccountService):
 <pre><code class="python">def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
                 suppress_read_receipts):
     # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
+    attrs = dict(
+        DeleteType=delete_type,
+        SendMeetingCancellations=send_meeting_cancellations,
+        AffectedTaskOccurrences=affected_task_occurrences,
+    )
     if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-        deleteitem = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                (&#39;DeleteType&#39;, delete_type),
-                (&#39;SendMeetingCancellations&#39;, send_meeting_cancellations),
-                (&#39;AffectedTaskOccurrences&#39;, affected_task_occurrences),
-                (&#39;SuppressReadReceipts&#39;, &#39;true&#39; if suppress_read_receipts else &#39;false&#39;),
-            ])
-        )
-    else:
-        deleteitem = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                (&#39;DeleteType&#39;, delete_type),
-                (&#39;SendMeetingCancellations&#39;, send_meeting_cancellations),
-                (&#39;AffectedTaskOccurrences&#39;, affected_task_occurrences),
-             ])
-        )
-
-    item_ids = create_item_ids_element(items=items, version=self.account.version)
-    deleteitem.append(item_ids)
-    return deleteitem</code></pre>
+        attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+    payload.append(item_ids_element(items=items, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

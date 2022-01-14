@@ -29,7 +29,7 @@
 <pre><code class="python">import logging
 import re
 
-from .errors import TransportError, ResponseMessageError
+from .errors import TransportError, ResponseMessageError, InvalidTypeError
 from .util import xml_to_str, TNS
 
 log = logging.getLogger(__name__)
@@ -94,19 +94,19 @@ class Build:
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
-            raise ValueError(&#34;&#39;major_version&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;major_version&#39;, major_version, int)
         if not isinstance(minor_version, int):
-            raise ValueError(&#34;&#39;minor_version&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;minor_version&#39;, minor_version, int)
         if not isinstance(major_build, int):
-            raise ValueError(&#34;&#39;major_build&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;major_build&#39;, major_build, int)
         if not isinstance(minor_build, int):
-            raise ValueError(&#34;&#39;minor_build&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;minor_build&#39;, minor_build, int)
         self.major_version = major_version
         self.minor_version = minor_version
         self.major_build = major_build
         self.minor_build = minor_build
         if major_version &lt; 8:
-            raise ValueError(&#34;Exchange major versions below 8 don&#39;t support EWS (%s)&#34; % self)
+            raise ValueError(f&#34;Exchange major versions below 8 don&#39;t support EWS ({self})&#34;)
 
     @classmethod
     def from_xml(cls, elem):
@@ -138,7 +138,7 @@ class Build:
 
         :param s:
         &#34;&#34;&#34;
-        bin_s = &#39;{:032b}&#39;.format(int(s, 16))  # Convert string to 32-bit binary string
+        bin_s = f&#39;{int(s, 16):032b}&#39;  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
         minor_version = int(bin_s[10:16], 2)
         build_number = int(bin_s[17:32], 2)
@@ -150,7 +150,7 @@ class Build:
         try:
             return self.API_VERSION_MAP[self.major_version][self.minor_version]
         except KeyError:
-            raise ValueError(&#39;API version for build %s is unknown&#39; % self)
+            raise ValueError(f&#39;API version for build {self} is unknown&#39;)
 
     def fullname(self):
         return VERSIONS[self.api_version()][1]
@@ -190,7 +190,7 @@ class Build:
         return self.__cmp__(other) &gt;= 0
 
     def __str__(self):
-        return &#39;%s.%s.%s.%s&#39; % (self.major_version, self.minor_version, self.major_build, self.minor_build)
+        return f&#39;{self.major_version}.{self.minor_version}.{self.major_build}.{self.minor_build}&#39;
 
     def __repr__(self):
         return self.__class__.__name__ \
@@ -216,15 +216,17 @@ class Version:
     __slots__ = &#39;build&#39;, &#39;api_version&#39;
 
     def __init__(self, build, api_version=None):
-        if not isinstance(build, (Build, type(None))):
-            raise ValueError(&#34;&#39;build&#39; must be a Build instance&#34;)
-        self.build = build
         if api_version is None:
+            if not isinstance(build, Build):
+                raise InvalidTypeError(&#39;build&#39;, build, Build)
             self.api_version = build.api_version()
         else:
+            if not isinstance(build, (Build, type(None))):
+                raise InvalidTypeError(&#39;build&#39;, build, Build)
             if not isinstance(api_version, str):
-                raise ValueError(&#34;&#39;api_version&#39; must be a string&#34;)
+                raise InvalidTypeError(&#39;api_version&#39;, api_version, str)
             self.api_version = api_version
+        self.build = build
 
     @property
     def fullname(self):
@@ -258,10 +260,10 @@ class Version:
         except ResponseMessageError as e:
             # We may have survived long enough to get a new version
             if not protocol.config.version.build:
-                raise TransportError(&#39;No valid version headers found in response (%r)&#39; % e)
+                raise TransportError(f&#39;No valid version headers found in response ({e!r})&#39;)
         if not protocol.config.version.build:
             raise TransportError(&#39;No valid version headers found in response&#39;)
-        return protocol.version
+        return protocol.config.version
 
     @staticmethod
     def _is_invalid_version_string(version):
@@ -270,13 +272,13 @@ class Version:
 
     @classmethod
     def from_soap_header(cls, requested_api_version, header):
-        info = header.find(&#39;{%s}ServerVersionInfo&#39; % TNS)
+        info = header.find(f&#39;{{{TNS}}}ServerVersionInfo&#39;)
         if info is None:
-            raise TransportError(&#39;No ServerVersionInfo in header: %r&#39; % xml_to_str(header))
+            raise TransportError(f&#39;No ServerVersionInfo in header: {xml_to_str(header)!r}&#39;)
         try:
             build = Build.from_xml(elem=info)
         except ValueError:
-            raise TransportError(&#39;Bad ServerVersionInfo in response: %r&#39; % xml_to_str(header))
+            raise TransportError(f&#39;Bad ServerVersionInfo in response: {xml_to_str(header)!r}&#39;)
         # Not all Exchange servers send the Version element
         api_version_from_server = info.get(&#39;Version&#39;) or build.api_version()
         if api_version_from_server != requested_api_version:
@@ -292,6 +294,9 @@ class Version:
                           api_version_from_server, api_version_from_server)
         return cls(build=build, api_version=api_version_from_server)
 
+    def copy(self):
+        return self.__class__(build=self.build, api_version=self.api_version)
+
     def __eq__(self, other):
         if self.api_version != other.api_version:
             return False
@@ -305,7 +310,7 @@ class Version:
         return self.__class__.__name__ + repr((self.build, self.api_version))
 
     def __str__(self):
-        return &#39;Build=%s, API=%s, Fullname=%s&#39; % (self.build, self.api_version, self.fullname)</code></pre>
+        return f&#39;Build={self.build}, API={self.api_version}, Fullname={self.fullname}&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -356,19 +361,19 @@ class Version:
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
-            raise ValueError(&#34;&#39;major_version&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;major_version&#39;, major_version, int)
         if not isinstance(minor_version, int):
-            raise ValueError(&#34;&#39;minor_version&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;minor_version&#39;, minor_version, int)
         if not isinstance(major_build, int):
-            raise ValueError(&#34;&#39;major_build&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;major_build&#39;, major_build, int)
         if not isinstance(minor_build, int):
-            raise ValueError(&#34;&#39;minor_build&#39; must be an integer&#34;)
+            raise InvalidTypeError(&#39;minor_build&#39;, minor_build, int)
         self.major_version = major_version
         self.minor_version = minor_version
         self.major_build = major_build
         self.minor_build = minor_build
         if major_version &lt; 8:
-            raise ValueError(&#34;Exchange major versions below 8 don&#39;t support EWS (%s)&#34; % self)
+            raise ValueError(f&#34;Exchange major versions below 8 don&#39;t support EWS ({self})&#34;)
 
     @classmethod
     def from_xml(cls, elem):
@@ -400,7 +405,7 @@ class Version:
 
         :param s:
         &#34;&#34;&#34;
-        bin_s = &#39;{:032b}&#39;.format(int(s, 16))  # Convert string to 32-bit binary string
+        bin_s = f&#39;{int(s, 16):032b}&#39;  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
         minor_version = int(bin_s[10:16], 2)
         build_number = int(bin_s[17:32], 2)
@@ -412,7 +417,7 @@ class Version:
         try:
             return self.API_VERSION_MAP[self.major_version][self.minor_version]
         except KeyError:
-            raise ValueError(&#39;API version for build %s is unknown&#39; % self)
+            raise ValueError(f&#39;API version for build {self} is unknown&#39;)
 
     def fullname(self):
         return VERSIONS[self.api_version()][1]
@@ -452,7 +457,7 @@ class Version:
         return self.__cmp__(other) &gt;= 0
 
     def __str__(self):
-        return &#39;%s.%s.%s.%s&#39; % (self.major_version, self.minor_version, self.major_build, self.minor_build)
+        return f&#39;{self.major_version}.{self.minor_version}.{self.major_build}.{self.minor_build}&#39;
 
     def __repr__(self):
         return self.__class__.__name__ \
@@ -498,7 +503,7 @@ def from_hex_string(cls, s):
 
     :param s:
     &#34;&#34;&#34;
-    bin_s = &#39;{:032b}&#39;.format(int(s, 16))  # Convert string to 32-bit binary string
+    bin_s = f&#39;{int(s, 16):032b}&#39;  # Convert string to 32-bit binary string
     major_version = int(bin_s[4:10], 2)
     minor_version = int(bin_s[10:16], 2)
     build_number = int(bin_s[17:32], 2)
@@ -568,7 +573,7 @@ def from_xml(cls, elem):
     try:
         return self.API_VERSION_MAP[self.major_version][self.minor_version]
     except KeyError:
-        raise ValueError(&#39;API version for build %s is unknown&#39; % self)</code></pre>
+        raise ValueError(f&#39;API version for build {self} is unknown&#39;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.version.Build.fullname"><code class="name flex">
@@ -602,15 +607,17 @@ def from_xml(cls, elem):
     __slots__ = &#39;build&#39;, &#39;api_version&#39;
 
     def __init__(self, build, api_version=None):
-        if not isinstance(build, (Build, type(None))):
-            raise ValueError(&#34;&#39;build&#39; must be a Build instance&#34;)
-        self.build = build
         if api_version is None:
+            if not isinstance(build, Build):
+                raise InvalidTypeError(&#39;build&#39;, build, Build)
             self.api_version = build.api_version()
         else:
+            if not isinstance(build, (Build, type(None))):
+                raise InvalidTypeError(&#39;build&#39;, build, Build)
             if not isinstance(api_version, str):
-                raise ValueError(&#34;&#39;api_version&#39; must be a string&#34;)
+                raise InvalidTypeError(&#39;api_version&#39;, api_version, str)
             self.api_version = api_version
+        self.build = build
 
     @property
     def fullname(self):
@@ -644,10 +651,10 @@ def from_xml(cls, elem):
         except ResponseMessageError as e:
             # We may have survived long enough to get a new version
             if not protocol.config.version.build:
-                raise TransportError(&#39;No valid version headers found in response (%r)&#39; % e)
+                raise TransportError(f&#39;No valid version headers found in response ({e!r})&#39;)
         if not protocol.config.version.build:
             raise TransportError(&#39;No valid version headers found in response&#39;)
-        return protocol.version
+        return protocol.config.version
 
     @staticmethod
     def _is_invalid_version_string(version):
@@ -656,13 +663,13 @@ def from_xml(cls, elem):
 
     @classmethod
     def from_soap_header(cls, requested_api_version, header):
-        info = header.find(&#39;{%s}ServerVersionInfo&#39; % TNS)
+        info = header.find(f&#39;{{{TNS}}}ServerVersionInfo&#39;)
         if info is None:
-            raise TransportError(&#39;No ServerVersionInfo in header: %r&#39; % xml_to_str(header))
+            raise TransportError(f&#39;No ServerVersionInfo in header: {xml_to_str(header)!r}&#39;)
         try:
             build = Build.from_xml(elem=info)
         except ValueError:
-            raise TransportError(&#39;Bad ServerVersionInfo in response: %r&#39; % xml_to_str(header))
+            raise TransportError(f&#39;Bad ServerVersionInfo in response: {xml_to_str(header)!r}&#39;)
         # Not all Exchange servers send the Version element
         api_version_from_server = info.get(&#39;Version&#39;) or build.api_version()
         if api_version_from_server != requested_api_version:
@@ -678,6 +685,9 @@ def from_xml(cls, elem):
                           api_version_from_server, api_version_from_server)
         return cls(build=build, api_version=api_version_from_server)
 
+    def copy(self):
+        return self.__class__(build=self.build, api_version=self.api_version)
+
     def __eq__(self, other):
         if self.api_version != other.api_version:
             return False
@@ -691,7 +701,7 @@ def from_xml(cls, elem):
         return self.__class__.__name__ + repr((self.build, self.api_version))
 
     def __str__(self):
-        return &#39;Build=%s, API=%s, Fullname=%s&#39; % (self.build, self.api_version, self.fullname)</code></pre>
+        return f&#39;Build={self.build}, API={self.api_version}, Fullname={self.fullname}&#39;</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -706,13 +716,13 @@ def from_xml(cls, elem):
 </summary>
 <pre><code class="python">@classmethod
 def from_soap_header(cls, requested_api_version, header):
-    info = header.find(&#39;{%s}ServerVersionInfo&#39; % TNS)
+    info = header.find(f&#39;{{{TNS}}}ServerVersionInfo&#39;)
     if info is None:
-        raise TransportError(&#39;No ServerVersionInfo in header: %r&#39; % xml_to_str(header))
+        raise TransportError(f&#39;No ServerVersionInfo in header: {xml_to_str(header)!r}&#39;)
     try:
         build = Build.from_xml(elem=info)
     except ValueError:
-        raise TransportError(&#39;Bad ServerVersionInfo in response: %r&#39; % xml_to_str(header))
+        raise TransportError(f&#39;Bad ServerVersionInfo in response: {xml_to_str(header)!r}&#39;)
     # Not all Exchange servers send the Version element
     api_version_from_server = info.get(&#39;Version&#39;) or build.api_version()
     if api_version_from_server != requested_api_version:
@@ -773,10 +783,10 @@ def guess(cls, protocol, api_version_hint=None):
     except ResponseMessageError as e:
         # We may have survived long enough to get a new version
         if not protocol.config.version.build:
-            raise TransportError(&#39;No valid version headers found in response (%r)&#39; % e)
+            raise TransportError(f&#39;No valid version headers found in response ({e!r})&#39;)
     if not protocol.config.version.build:
         raise TransportError(&#39;No valid version headers found in response&#39;)
-    return protocol.version</code></pre>
+    return protocol.config.version</code></pre>
 </details>
 </dd>
 </dl>
@@ -800,6 +810,22 @@ def guess(cls, protocol, api_version_hint=None):
 <pre><code class="python">@property
 def fullname(self):
     return VERSIONS[self.api_version][1]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.version.Version.copy"><code class="name flex">
+<span>def <span class="ident">copy</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def copy(self):
+    return self.__class__(build=self.build, api_version=self.api_version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -836,9 +862,10 @@ def fullname(self):
 </li>
 <li>
 <h4><code><a title="exchangelib.version.Version" href="#exchangelib.version.Version">Version</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="exchangelib.version.Version.api_version" href="#exchangelib.version.Version.api_version">api_version</a></code></li>
 <li><code><a title="exchangelib.version.Version.build" href="#exchangelib.version.Version.build">build</a></code></li>
+<li><code><a title="exchangelib.version.Version.copy" href="#exchangelib.version.Version.copy">copy</a></code></li>
 <li><code><a title="exchangelib.version.Version.from_soap_header" href="#exchangelib.version.Version.from_soap_header">from_soap_header</a></code></li>
 <li><code><a title="exchangelib.version.Version.fullname" href="#exchangelib.version.Version.fullname">fullname</a></code></li>
 <li><code><a title="exchangelib.version.Version.guess" href="#exchangelib.version.Version.guess">guess</a></code></li>

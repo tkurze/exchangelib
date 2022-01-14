@@ -39,7 +39,6 @@ from ..fields import BooleanField, IntegerField, TextField, ChoiceField, URIFiel
     AssociatedCalendarItemIdField, DateOrDateTimeField, EWSElementListField, AppointmentStateField
 from ..properties import Attendee, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId, EWSMeta
 from ..recurrence import FirstOccurrence, LastOccurrence, Occurrence, DeletedOccurrence
-from ..services import CreateItem
 from ..util import set_xml_value, require_account
 from ..version import EXCHANGE_2010, EXCHANGE_2013
 
@@ -209,7 +208,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
     def clean(self, version=None):
         super().clean(version=version)
         if self.start and self.end and self.end &lt; self.start:
-            raise ValueError(&#34;&#39;end&#39; must be greater than &#39;start&#39; (%s -&gt; %s)&#34; % (self.start, self.end))
+            raise ValueError(f&#34;&#39;end&#39; must be greater than &#39;start&#39; ({self.start} -&gt; {self.end})&#34;)
         if version:
             self.clean_timezone_fields(version=version)
 
@@ -244,7 +243,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
             if field_name == &#39;end&#39;:
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, &#39;_%s_timezone&#39; % field_name)
+            tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
@@ -289,12 +288,12 @@ class CalendarItem(Item, AcceptDeclineMixIn):
                 # We already generated an XML element for this field, but it contains a plain date at this point, which
                 # is invalid. Replace the value.
                 field = self.get_field_by_fieldname(field_name)
-                set_xml_value(elem=elem.find(field.response_tag()), value=value, version=version)
+                set_xml_value(elem.find(field.response_tag()), value)
         return elem
 
 
-class BaseMeetingItem(Item):
-    &#34;&#34;&#34;A base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)
+class BaseMeetingItem(Item, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
         Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
@@ -392,18 +391,13 @@ class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
         # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
         # the list of IDs.
-        res = list(CreateItem(account=self.account).call(
+        from ..services import CreateItem
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
-        ))
-        for r in res:
-            if isinstance(r, Exception):
-                raise r
-        if len(res) == 1:
-            return res[0]
-        return res
+        )
 
 
 class AcceptItem(BaseMeetingReplyItem):
@@ -591,7 +585,7 @@ we use folder.account.</p></div>
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)</p>
+<div class="desc"><p>Base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)</p>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode</a>
 Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
 when you send a calendar item to attendees; they are not explicitly created.</p>
@@ -606,8 +600,8 @@ we use folder.account.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseMeetingItem(Item):
-    &#34;&#34;&#34;A base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)
+<pre><code class="python">class BaseMeetingItem(Item, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for meeting requests that share the same fields (Message, Request, Response, Cancellation)
 
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
         Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
@@ -807,18 +801,13 @@ we use folder.account.</p></div>
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
         # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
         # the list of IDs.
-        res = list(CreateItem(account=self.account).call(
+        from ..services import CreateItem
+        return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
             message_disposition=message_disposition,
             send_meeting_invitations=SEND_TO_NONE,
-        ))
-        for r in res:
-            if isinstance(r, Exception):
-                raise r
-        if len(res) == 1:
-            return res[0]
-        return res</code></pre>
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -922,18 +911,13 @@ we use folder.account.</p></div>
 def send(self, message_disposition=SEND_AND_SAVE_COPY):
     # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
     # the list of IDs.
-    res = list(CreateItem(account=self.account).call(
+    from ..services import CreateItem
+    return CreateItem(account=self.account).get(
         items=[self],
         folder=self.folder,
         message_disposition=message_disposition,
         send_meeting_invitations=SEND_TO_NONE,
-    ))
-    for r in res:
-        if isinstance(r, Exception):
-            raise r
-    if len(res) == 1:
-        return res[0]
-    return res</code></pre>
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -1096,7 +1080,7 @@ we use folder.account.</p></div>
     def clean(self, version=None):
         super().clean(version=version)
         if self.start and self.end and self.end &lt; self.start:
-            raise ValueError(&#34;&#39;end&#39; must be greater than &#39;start&#39; (%s -&gt; %s)&#34; % (self.start, self.end))
+            raise ValueError(f&#34;&#39;end&#39; must be greater than &#39;start&#39; ({self.start} -&gt; {self.end})&#34;)
         if version:
             self.clean_timezone_fields(version=version)
 
@@ -1131,7 +1115,7 @@ we use folder.account.</p></div>
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
             if field_name == &#39;end&#39;:
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, &#39;_%s_timezone&#39; % field_name)
+            tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
@@ -1176,7 +1160,7 @@ we use folder.account.</p></div>
                 # We already generated an XML element for this field, but it contains a plain date at this point, which
                 # is invalid. Replace the value.
                 field = self.get_field_by_fieldname(field_name)
-                set_xml_value(elem=elem.find(field.response_tag()), value=value, version=version)
+                set_xml_value(elem.find(field.response_tag()), value)
         return elem</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1225,7 +1209,7 @@ def from_xml(cls, elem, account):
         # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
         if field_name == &#39;end&#39;:
             val -= datetime.timedelta(days=1)
-        tz = getattr(item, &#39;_%s_timezone&#39; % field_name)
+        tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
         setattr(item, field_name, val.astimezone(tz).date())
     return item</code></pre>
 </details>
@@ -1431,7 +1415,7 @@ def timezone_fields(cls):
 <pre><code class="python">def clean(self, version=None):
     super().clean(version=version)
     if self.start and self.end and self.end &lt; self.start:
-        raise ValueError(&#34;&#39;end&#39; must be greater than &#39;start&#39; (%s -&gt; %s)&#34; % (self.start, self.end))
+        raise ValueError(f&#34;&#39;end&#39; must be greater than &#39;start&#39; ({self.start} -&gt; {self.end})&#34;)
     if version:
         self.clean_timezone_fields(version=version)</code></pre>
 </details>
@@ -1579,7 +1563,7 @@ Call refresh() on the item do do so.</p>
             # We already generated an XML element for this field, but it contains a plain date at this point, which
             # is invalid. Replace the value.
             field = self.get_field_by_fieldname(field_name)
-            set_xml_value(elem=elem.find(field.response_tag()), value=value, version=version)
+            set_xml_value(elem.find(field.response_tag()), value)
     return elem</code></pre>
 </details>
 </dd>

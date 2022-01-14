@@ -28,19 +28,19 @@
 </summary>
 <pre><code class="python">import abc
 import logging
-import warnings
 from copy import deepcopy
 from itertools import islice
 
-from .errors import MultipleObjectsReturned, DoesNotExist
+from .errors import MultipleObjectsReturned, DoesNotExist, InvalidEnumValue, InvalidTypeError, ErrorItemNotFound
 from .fields import FieldPath, FieldOrder
 from .items import CalendarItem, ID_ONLY
 from .properties import InvalidField
 from .restriction import Q
-from .services import CHUNK_SIZE
 from .version import EXCHANGE_2010
 
 log = logging.getLogger(__name__)
+
+MISSING_ITEM_ERRORS = (ErrorItemNotFound,)
 
 
 class SearchableMixIn:
@@ -48,32 +48,32 @@ class SearchableMixIn:
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):
-        pass
+        &#34;&#34;&#34;Return a single object&#34;&#34;&#34;
 
     @abc.abstractmethod
     def all(self):
-        pass
+        &#34;&#34;&#34;Return all objects, unfiltered&#34;&#34;&#34;
 
     @abc.abstractmethod
     def none(self):
-        pass
+        &#34;&#34;&#34;Return an empty result&#34;&#34;&#34;
 
     @abc.abstractmethod
     def filter(self, *args, **kwargs):
-        pass
+        &#34;&#34;&#34;Apply filters to a query&#34;&#34;&#34;
 
     @abc.abstractmethod
     def exclude(self, *args, **kwargs):
-        pass
+        &#34;&#34;&#34;Apply filters to a query&#34;&#34;&#34;
 
     @abc.abstractmethod
     def people(self):
-        pass
+        &#34;&#34;&#34;Search for personas&#34;&#34;&#34;
 
 
 class QuerySet(SearchableMixIn):
-    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports chaining to
-    build up complex queries.
+    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+    chaining to build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
     &#34;&#34;&#34;
@@ -91,10 +91,10 @@ class QuerySet(SearchableMixIn):
     def __init__(self, folder_collection, request_type=ITEM):
         from .folders import FolderCollection
         if not isinstance(folder_collection, FolderCollection):
-            raise ValueError(&#34;folder_collection value &#39;%s&#39; must be a FolderCollection instance&#34; % folder_collection)
+            raise InvalidTypeError(&#39;folder_collection&#39;, folder_collection, FolderCollection)
         self.folder_collection = folder_collection  # A FolderCollection instance
         if request_type not in self.REQUEST_TYPES:
-            raise ValueError(&#34;&#39;request_type&#39; %r must be one of %s&#34; % (request_type, self.REQUEST_TYPES))
+            raise InvalidEnumValue(&#39;request_type&#39;, request_type, self.REQUEST_TYPES)
         self.request_type = request_type
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -102,6 +102,7 @@ class QuerySet(SearchableMixIn):
         self.return_format = self.NONE
         self.calendar_view = None
         self.page_size = None
+        self.chunk_size = None
         self.max_items = None
         self.offset = 0
         self._depth = None
@@ -116,14 +117,6 @@ class QuerySet(SearchableMixIn):
         # items = list(qs)
         # new_qs = qs.exclude(bar=&#39;baz&#39;)  # This should work, and should fetch from the server
         #
-        if not isinstance(self.q, Q):
-            raise ValueError(&#34;self.q value &#39;%s&#39; must be None or a Q instance&#34; % self.q)
-        if not isinstance(self.only_fields, (type(None), tuple)):
-            raise ValueError(&#34;self.only_fields value &#39;%s&#39; must be None or a tuple&#34; % self.only_fields)
-        if not isinstance(self.order_fields, (type(None), tuple)):
-            raise ValueError(&#34;self.order_fields value &#39;%s&#39; must be None or a tuple&#34; % self.order_fields)
-        if self.return_format not in self.RETURN_TYPES:
-            raise ValueError(&#34;self.return_value &#39;%s&#39; must be one of %s&#34; % (self.return_format, self.RETURN_TYPES))
         # Only mutable objects need to be deepcopied. Folder should be the same object
         new_qs = self.__class__(self.folder_collection, request_type=self.request_type)
         new_qs.q = deepcopy(self.q)
@@ -132,6 +125,7 @@ class QuerySet(SearchableMixIn):
         new_qs.return_format = self.return_format
         new_qs.calendar_view = self.calendar_view
         new_qs.page_size = self.page_size
+        new_qs.chunk_size = self.chunk_size
         new_qs.max_items = self.max_items
         new_qs.offset = self.offset
         new_qs._depth = self._depth
@@ -146,7 +140,7 @@ class QuerySet(SearchableMixIn):
                 return FieldPath.from_string(field_path=field_path, folder=folder)
             except InvalidField:
                 pass
-        raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (field_path, self.folder_collection.folders))
+        raise InvalidField(f&#34;Unknown field path {field_path!r} on folders {self.folder_collection.folders}&#34;)
 
     def _get_field_order(self, field_path):
         from .items import Persona
@@ -160,7 +154,7 @@ class QuerySet(SearchableMixIn):
                 return FieldOrder.from_string(field_path=field_path, folder=folder)
             except InvalidField:
                 pass
-        raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (field_path, self.folder_collection.folders))
+        raise InvalidField(f&#34;Unknown field path {field_path!r} on folders {self.folder_collection.folders}&#34;)
 
     @property
     def _id_field(self):
@@ -172,7 +166,7 @@ class QuerySet(SearchableMixIn):
 
     def _additional_fields(self):
         if not isinstance(self.only_fields, tuple):
-            raise ValueError(&#34;&#39;only_fields&#39; value %r must be a tuple&#34; % self.only_fields)
+            raise InvalidTypeError(&#39;only_fields&#39;, self.only_fields, tuple)
         # Remove ItemId and ChangeKey. We get them unconditionally
         additional_fields = {f for f in self.only_fields if not f.field.is_attribute}
         if self.request_type != self.ITEM:
@@ -255,11 +249,13 @@ class QuerySet(SearchableMixIn):
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
                 find_kwargs[&#39;additional_fields&#39;] = None
-                items = self.folder_collection.account.fetch(
+                unfiltered_items = self.folder_collection.account.fetch(
                     ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
-                    chunk_size=self.page_size,
+                    chunk_size=self.chunk_size,
                 )
+                # We may be unlucky that the item disappeared between the FindItem and the GetItem calls
+                items = filter(lambda i: not isinstance(i, MISSING_ITEM_ERRORS), unfiltered_items)
             else:
                 if not additional_fields:
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
@@ -280,10 +276,10 @@ class QuerySet(SearchableMixIn):
             except TypeError as e:
                 if &#39;unorderable types&#39; not in e.args[0]:
                     raise
-                raise ValueError((
-                    &#34;Cannot sort on field &#39;%s&#39;. The field has no default value defined, and there are either items &#34;
-                    &#34;with None values for this field, or the query contains exception instances (original error: %s).&#34;)
-                                 % (f.field_path, e))
+                raise ValueError(
+                    f&#34;Cannot sort on field {f.field_path!r}. The field has no default value defined, and there are &#34;
+                    f&#34;either items with None values for this field, or the query contains exception instances &#34;
+                    f&#34;(original error: {e}).&#34;)
         if not extra_order_fields:
             return items
 
@@ -335,6 +331,7 @@ class QuerySet(SearchableMixIn):
         raise IndexError()
 
     def _getitem_slice(self, s):
+        from .services import PAGE_SIZE
         if ((s.start or 0) &lt; 0) or ((s.stop or 0) &lt; 0) or ((s.step or 0) &lt; 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
@@ -348,7 +345,7 @@ class QuerySet(SearchableMixIn):
             new_qs.offset = s.start
         elif s.stop is not None:
             new_qs.max_items = s.stop
-        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items &lt; CHUNK_SIZE:
+        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items &lt; PAGE_SIZE:
             new_qs.page_size = new_qs.max_items
         return islice(new_qs.__iter__(), None, None, s.step)
 
@@ -467,7 +464,7 @@ class QuerySet(SearchableMixIn):
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in only()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in only()&#34;)
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         return new_qs
@@ -481,7 +478,7 @@ class QuerySet(SearchableMixIn):
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in order_by()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in order_by()&#34;)
         new_qs = self._copy_self()
         new_qs.order_fields = order_fields
         return new_qs
@@ -499,7 +496,7 @@ class QuerySet(SearchableMixIn):
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in values()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in values()&#34;)
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         new_qs.return_format = self.VALUES
@@ -511,13 +508,13 @@ class QuerySet(SearchableMixIn):
         &#34;&#34;&#34;
         flat = kwargs.pop(&#39;flat&#39;, False)
         if kwargs:
-            raise AttributeError(&#39;Unknown kwargs: %s&#39; % kwargs)
+            raise AttributeError(f&#39;Unknown kwargs: {kwargs}&#39;)
         if flat and len(args) != 1:
             raise ValueError(&#39;flat=True requires exactly one field name&#39;)
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in values_list()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in values_list()&#34;)
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         new_qs.return_format = self.FLAT if flat else self.VALUES_LIST
@@ -531,11 +528,6 @@ class QuerySet(SearchableMixIn):
         new_qs = self._copy_self()
         new_qs._depth = depth
         return new_qs
-
-    def iterator(self):
-        # Return an iterator over the results
-        warnings.warn(&#39;QuerySet no longer caches results. .iterator() is a no-op.&#39;, DeprecationWarning, stacklevel=2)
-        return self.__iter__()
 
     ###########################
     #
@@ -562,16 +554,17 @@ class QuerySet(SearchableMixIn):
         return items[0]
 
     def count(self, page_size=1000):
-        &#34;&#34;&#34;Get the query count, with as little effort as possible &#39;page_size&#39; is the number of items to
-        fetch from the server per request. We&#39;re only fetching the IDs, so keep it high
+        &#34;&#34;&#34;Get the query count, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         new_qs.page_size = page_size
+        # &#39;chunk_size&#39; not needed since we never need to call GetItem
         return len(list(new_qs.__iter__()))
 
     def exists(self):
@@ -587,42 +580,45 @@ class QuerySet(SearchableMixIn):
         new_qs.return_format = self.NONE
         return new_qs
 
-    def delete(self, page_size=1000, **delete_kwargs):
-        &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high.
+    def delete(self, page_size=1000, chunk_size=100, **delete_kwargs):
+        &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to delete per request. (Default value = 100)
         :param delete_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_delete(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **delete_kwargs
         )
 
-    def send(self, page_size=1000, **send_kwargs):
-        &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and send per request. We&#39;re only fetching the IDs, so keep it high.
+    def send(self, page_size=1000, chunk_size=100, **send_kwargs):
+        &#34;&#34;&#34;Send the items matching the query, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to send per request. (Default value = 100)
         :param send_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_send(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **send_kwargs
         )
 
-    def copy(self, to_folder, page_size=1000, **copy_kwargs):
-        &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high.
+    def copy(self, to_folder, page_size=1000, chunk_size=100, **copy_kwargs):
+        &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible
 
         :param to_folder:
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to copy per request. (Default value = 100)
         :param copy_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
@@ -630,58 +626,65 @@ class QuerySet(SearchableMixIn):
         return self.folder_collection.account.bulk_copy(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **copy_kwargs
         )
 
-    def move(self, to_folder, page_size=1000):
+    def move(self, to_folder, page_size=1000, chunk_size=100):
         &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
         to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
         :param to_folder:
-        :param page_size: (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to move per request. (Default value = 100)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_move(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
         )
 
-    def archive(self, to_folder, page_size=1000):
+    def archive(self, to_folder, page_size=1000, chunk_size=100):
         &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
         to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
         :param to_folder:
-        :param page_size: (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to archive per request. (Default value = 100)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_archive(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
         )
 
-    def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+    def mark_as_junk(self, page_size=1000, chunk_size=1000, **mark_as_junk_kwargs):
         &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
         items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high.
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to mark as junk per request. (Default value = 100)
         :param mark_as_junk_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_mark_as_junk(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **mark_as_junk_kwargs
         )
 
     def __str__(self):
-        fmt_args = [(&#39;q&#39;, str(self.q)), (&#39;folders&#39;, &#39;[%s]&#39; % &#39;, &#39;.join(str(f) for f in self.folder_collection.folders))]
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%s&#39; % (k, v) for k, v in fmt_args)
+        fmt_args = [(&#39;q&#39;, str(self.q)), (&#39;folders&#39;, f&#34;[{&#39;, &#39;.join(str(f) for f in self.folder_collection.folders)}]&#34;)]
+        args_str = &#39;, &#39;.join(f&#39;{k}={v}&#39; for k, v in fmt_args)
+        return f&#39;{self.__class__.__name__}({args_str})&#39;
 
 
 def _get_value_or_default(field, item):
@@ -736,16 +739,16 @@ def _rinse_item(i, fields_to_nullify):
 <span>(</span><span>folder_collection, request_type='item')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports chaining to
-build up complex queries.</p>
+<div class="desc"><p>A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+chaining to build up complex queries.</p>
 <p>Django QuerySet documentation: <a href="https://docs.djangoproject.com/en/dev/ref/models/querysets/">https://docs.djangoproject.com/en/dev/ref/models/querysets/</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class QuerySet(SearchableMixIn):
-    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports chaining to
-    build up complex queries.
+    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+    chaining to build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
     &#34;&#34;&#34;
@@ -763,10 +766,10 @@ build up complex queries.</p>
     def __init__(self, folder_collection, request_type=ITEM):
         from .folders import FolderCollection
         if not isinstance(folder_collection, FolderCollection):
-            raise ValueError(&#34;folder_collection value &#39;%s&#39; must be a FolderCollection instance&#34; % folder_collection)
+            raise InvalidTypeError(&#39;folder_collection&#39;, folder_collection, FolderCollection)
         self.folder_collection = folder_collection  # A FolderCollection instance
         if request_type not in self.REQUEST_TYPES:
-            raise ValueError(&#34;&#39;request_type&#39; %r must be one of %s&#34; % (request_type, self.REQUEST_TYPES))
+            raise InvalidEnumValue(&#39;request_type&#39;, request_type, self.REQUEST_TYPES)
         self.request_type = request_type
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -774,6 +777,7 @@ build up complex queries.</p>
         self.return_format = self.NONE
         self.calendar_view = None
         self.page_size = None
+        self.chunk_size = None
         self.max_items = None
         self.offset = 0
         self._depth = None
@@ -788,14 +792,6 @@ build up complex queries.</p>
         # items = list(qs)
         # new_qs = qs.exclude(bar=&#39;baz&#39;)  # This should work, and should fetch from the server
         #
-        if not isinstance(self.q, Q):
-            raise ValueError(&#34;self.q value &#39;%s&#39; must be None or a Q instance&#34; % self.q)
-        if not isinstance(self.only_fields, (type(None), tuple)):
-            raise ValueError(&#34;self.only_fields value &#39;%s&#39; must be None or a tuple&#34; % self.only_fields)
-        if not isinstance(self.order_fields, (type(None), tuple)):
-            raise ValueError(&#34;self.order_fields value &#39;%s&#39; must be None or a tuple&#34; % self.order_fields)
-        if self.return_format not in self.RETURN_TYPES:
-            raise ValueError(&#34;self.return_value &#39;%s&#39; must be one of %s&#34; % (self.return_format, self.RETURN_TYPES))
         # Only mutable objects need to be deepcopied. Folder should be the same object
         new_qs = self.__class__(self.folder_collection, request_type=self.request_type)
         new_qs.q = deepcopy(self.q)
@@ -804,6 +800,7 @@ build up complex queries.</p>
         new_qs.return_format = self.return_format
         new_qs.calendar_view = self.calendar_view
         new_qs.page_size = self.page_size
+        new_qs.chunk_size = self.chunk_size
         new_qs.max_items = self.max_items
         new_qs.offset = self.offset
         new_qs._depth = self._depth
@@ -818,7 +815,7 @@ build up complex queries.</p>
                 return FieldPath.from_string(field_path=field_path, folder=folder)
             except InvalidField:
                 pass
-        raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (field_path, self.folder_collection.folders))
+        raise InvalidField(f&#34;Unknown field path {field_path!r} on folders {self.folder_collection.folders}&#34;)
 
     def _get_field_order(self, field_path):
         from .items import Persona
@@ -832,7 +829,7 @@ build up complex queries.</p>
                 return FieldOrder.from_string(field_path=field_path, folder=folder)
             except InvalidField:
                 pass
-        raise InvalidField(&#34;Unknown field path %r on folders %s&#34; % (field_path, self.folder_collection.folders))
+        raise InvalidField(f&#34;Unknown field path {field_path!r} on folders {self.folder_collection.folders}&#34;)
 
     @property
     def _id_field(self):
@@ -844,7 +841,7 @@ build up complex queries.</p>
 
     def _additional_fields(self):
         if not isinstance(self.only_fields, tuple):
-            raise ValueError(&#34;&#39;only_fields&#39; value %r must be a tuple&#34; % self.only_fields)
+            raise InvalidTypeError(&#39;only_fields&#39;, self.only_fields, tuple)
         # Remove ItemId and ChangeKey. We get them unconditionally
         additional_fields = {f for f in self.only_fields if not f.field.is_attribute}
         if self.request_type != self.ITEM:
@@ -927,11 +924,13 @@ build up complex queries.</p>
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
                 find_kwargs[&#39;additional_fields&#39;] = None
-                items = self.folder_collection.account.fetch(
+                unfiltered_items = self.folder_collection.account.fetch(
                     ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
-                    chunk_size=self.page_size,
+                    chunk_size=self.chunk_size,
                 )
+                # We may be unlucky that the item disappeared between the FindItem and the GetItem calls
+                items = filter(lambda i: not isinstance(i, MISSING_ITEM_ERRORS), unfiltered_items)
             else:
                 if not additional_fields:
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
@@ -952,10 +951,10 @@ build up complex queries.</p>
             except TypeError as e:
                 if &#39;unorderable types&#39; not in e.args[0]:
                     raise
-                raise ValueError((
-                    &#34;Cannot sort on field &#39;%s&#39;. The field has no default value defined, and there are either items &#34;
-                    &#34;with None values for this field, or the query contains exception instances (original error: %s).&#34;)
-                                 % (f.field_path, e))
+                raise ValueError(
+                    f&#34;Cannot sort on field {f.field_path!r}. The field has no default value defined, and there are &#34;
+                    f&#34;either items with None values for this field, or the query contains exception instances &#34;
+                    f&#34;(original error: {e}).&#34;)
         if not extra_order_fields:
             return items
 
@@ -1007,6 +1006,7 @@ build up complex queries.</p>
         raise IndexError()
 
     def _getitem_slice(self, s):
+        from .services import PAGE_SIZE
         if ((s.start or 0) &lt; 0) or ((s.stop or 0) &lt; 0) or ((s.step or 0) &lt; 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
@@ -1020,7 +1020,7 @@ build up complex queries.</p>
             new_qs.offset = s.start
         elif s.stop is not None:
             new_qs.max_items = s.stop
-        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items &lt; CHUNK_SIZE:
+        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items &lt; PAGE_SIZE:
             new_qs.page_size = new_qs.max_items
         return islice(new_qs.__iter__(), None, None, s.step)
 
@@ -1139,7 +1139,7 @@ build up complex queries.</p>
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in only()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in only()&#34;)
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         return new_qs
@@ -1153,7 +1153,7 @@ build up complex queries.</p>
         try:
             order_fields = tuple(self._get_field_order(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in order_by()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in order_by()&#34;)
         new_qs = self._copy_self()
         new_qs.order_fields = order_fields
         return new_qs
@@ -1171,7 +1171,7 @@ build up complex queries.</p>
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in values()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in values()&#34;)
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         new_qs.return_format = self.VALUES
@@ -1183,13 +1183,13 @@ build up complex queries.</p>
         &#34;&#34;&#34;
         flat = kwargs.pop(&#39;flat&#39;, False)
         if kwargs:
-            raise AttributeError(&#39;Unknown kwargs: %s&#39; % kwargs)
+            raise AttributeError(f&#39;Unknown kwargs: {kwargs}&#39;)
         if flat and len(args) != 1:
             raise ValueError(&#39;flat=True requires exactly one field name&#39;)
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
-            raise ValueError(&#34;%s in values_list()&#34; % e.args[0])
+            raise ValueError(f&#34;{e.args[0]} in values_list()&#34;)
         new_qs = self._copy_self()
         new_qs.only_fields = only_fields
         new_qs.return_format = self.FLAT if flat else self.VALUES_LIST
@@ -1203,11 +1203,6 @@ build up complex queries.</p>
         new_qs = self._copy_self()
         new_qs._depth = depth
         return new_qs
-
-    def iterator(self):
-        # Return an iterator over the results
-        warnings.warn(&#39;QuerySet no longer caches results. .iterator() is a no-op.&#39;, DeprecationWarning, stacklevel=2)
-        return self.__iter__()
 
     ###########################
     #
@@ -1234,16 +1229,17 @@ build up complex queries.</p>
         return items[0]
 
     def count(self, page_size=1000):
-        &#34;&#34;&#34;Get the query count, with as little effort as possible &#39;page_size&#39; is the number of items to
-        fetch from the server per request. We&#39;re only fetching the IDs, so keep it high
+        &#34;&#34;&#34;Get the query count, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
         &#34;&#34;&#34;
         new_qs = self._copy_self()
         new_qs.only_fields = ()
         new_qs.order_fields = None
         new_qs.return_format = self.NONE
         new_qs.page_size = page_size
+        # &#39;chunk_size&#39; not needed since we never need to call GetItem
         return len(list(new_qs.__iter__()))
 
     def exists(self):
@@ -1259,42 +1255,45 @@ build up complex queries.</p>
         new_qs.return_format = self.NONE
         return new_qs
 
-    def delete(self, page_size=1000, **delete_kwargs):
-        &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high.
+    def delete(self, page_size=1000, chunk_size=100, **delete_kwargs):
+        &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to delete per request. (Default value = 100)
         :param delete_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_delete(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **delete_kwargs
         )
 
-    def send(self, page_size=1000, **send_kwargs):
-        &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and send per request. We&#39;re only fetching the IDs, so keep it high.
+    def send(self, page_size=1000, chunk_size=100, **send_kwargs):
+        &#34;&#34;&#34;Send the items matching the query, with as little effort as possible
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to send per request. (Default value = 100)
         :param send_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_send(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **send_kwargs
         )
 
-    def copy(self, to_folder, page_size=1000, **copy_kwargs):
-        &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-        to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high.
+    def copy(self, to_folder, page_size=1000, chunk_size=100, **copy_kwargs):
+        &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible
 
         :param to_folder:
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to copy per request. (Default value = 100)
         :param copy_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
@@ -1302,58 +1301,65 @@ build up complex queries.</p>
         return self.folder_collection.account.bulk_copy(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **copy_kwargs
         )
 
-    def move(self, to_folder, page_size=1000):
+    def move(self, to_folder, page_size=1000, chunk_size=100):
         &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
         to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
         :param to_folder:
-        :param page_size: (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to move per request. (Default value = 100)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_move(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
         )
 
-    def archive(self, to_folder, page_size=1000):
+    def archive(self, to_folder, page_size=1000, chunk_size=100):
         &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
         to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
         :param to_folder:
-        :param page_size: (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to archive per request. (Default value = 100)
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_archive(
             ids=ids,
             to_folder=to_folder,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
         )
 
-    def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+    def mark_as_junk(self, page_size=1000, chunk_size=1000, **mark_as_junk_kwargs):
         &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
         items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high.
 
-        :param page_size:  (Default value = 1000)
+        :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+        (Default value = 1000)
+        :param chunk_size: The number of items to mark as junk per request. (Default value = 100)
         :param mark_as_junk_kwargs:
         &#34;&#34;&#34;
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_mark_as_junk(
             ids=ids,
-            chunk_size=page_size,
+            chunk_size=chunk_size,
             **mark_as_junk_kwargs
         )
 
     def __str__(self):
-        fmt_args = [(&#39;q&#39;, str(self.q)), (&#39;folders&#39;, &#39;[%s]&#39; % &#39;, &#39;.join(str(f) for f in self.folder_collection.folders))]
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(&#39;%s=%s&#39; % (k, v) for k, v in fmt_args)</code></pre>
+        fmt_args = [(&#39;q&#39;, str(self.q)), (&#39;folders&#39;, f&#34;[{&#39;, &#39;.join(str(f) for f in self.folder_collection.folders)}]&#34;)]
+        args_str = &#39;, &#39;.join(f&#39;{k}={v}&#39; for k, v in fmt_args)
+        return f&#39;{self.__class__.__name__}({args_str})&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1396,69 +1402,59 @@ build up complex queries.</p>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.queryset.QuerySet.all"><code class="name flex">
-<span>def <span class="ident">all</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def all(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
-    new_qs = self._copy_self()
-    return new_qs</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.queryset.QuerySet.archive"><code class="name flex">
-<span>def <span class="ident">archive</span></span>(<span>self, to_folder, page_size=1000)</span>
+<span>def <span class="ident">archive</span></span>(<span>self, to_folder, page_size=1000, chunk_size=100)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Archive the items matching the query, with as little effort as possible. 'page_size' is the number of items
 to fetch and move per request. We're only fetching the IDs, so keep it high.</p>
 <p>:param to_folder:
-:param page_size: (Default value = 1000)</p></div>
+:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+(Default value = 1000)
+:param chunk_size: The number of items to archive per request. (Default value = 100)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def archive(self, to_folder, page_size=1000):
+<pre><code class="python">def archive(self, to_folder, page_size=1000, chunk_size=100):
     &#34;&#34;&#34;Archive the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
     to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
     :param to_folder:
-    :param page_size: (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
+    :param chunk_size: The number of items to archive per request. (Default value = 100)
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
     return self.folder_collection.account.bulk_archive(
         ids=ids,
         to_folder=to_folder,
-        chunk_size=page_size,
+        chunk_size=chunk_size,
     )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.copy"><code class="name flex">
-<span>def <span class="ident">copy</span></span>(<span>self, to_folder, page_size=1000, **copy_kwargs)</span>
+<span>def <span class="ident">copy</span></span>(<span>self, to_folder, page_size=1000, chunk_size=100, **copy_kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Copy the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and copy per request. We're only fetching the IDs, so keep it high.</p>
+<div class="desc"><p>Copy the items matching the query, with as little effort as possible</p>
 <p>:param to_folder:
-:param page_size:
+:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
 (Default value = 1000)
+:param chunk_size: The number of items to copy per request. (Default value = 100)
 :param copy_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def copy(self, to_folder, page_size=1000, **copy_kwargs):
-    &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and copy per request. We&#39;re only fetching the IDs, so keep it high.
+<pre><code class="python">def copy(self, to_folder, page_size=1000, chunk_size=100, **copy_kwargs):
+    &#34;&#34;&#34;Copy the items matching the query, with as little effort as possible
 
     :param to_folder:
-    :param page_size:  (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
+    :param chunk_size: The number of items to copy per request. (Default value = 100)
     :param copy_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
@@ -1466,7 +1462,7 @@ to fetch and copy per request. We're only fetching the IDs, so keep it high.</p>
     return self.folder_collection.account.bulk_copy(
         ids=ids,
         to_folder=to_folder,
-        chunk_size=page_size,
+        chunk_size=chunk_size,
         **copy_kwargs
     )</code></pre>
 </details>
@@ -1475,53 +1471,54 @@ to fetch and copy per request. We're only fetching the IDs, so keep it high.</p>
 <span>def <span class="ident">count</span></span>(<span>self, page_size=1000)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get the query count, with as little effort as possible 'page_size' is the number of items to
-fetch from the server per request. We're only fetching the IDs, so keep it high</p>
-<p>:param page_size:
+<div class="desc"><p>Get the query count, with as little effort as possible</p>
+<p>:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
 (Default value = 1000)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def count(self, page_size=1000):
-    &#34;&#34;&#34;Get the query count, with as little effort as possible &#39;page_size&#39; is the number of items to
-    fetch from the server per request. We&#39;re only fetching the IDs, so keep it high
+    &#34;&#34;&#34;Get the query count, with as little effort as possible
 
-    :param page_size:  (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
     &#34;&#34;&#34;
     new_qs = self._copy_self()
     new_qs.only_fields = ()
     new_qs.order_fields = None
     new_qs.return_format = self.NONE
     new_qs.page_size = page_size
+    # &#39;chunk_size&#39; not needed since we never need to call GetItem
     return len(list(new_qs.__iter__()))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.delete"><code class="name flex">
-<span>def <span class="ident">delete</span></span>(<span>self, page_size=1000, **delete_kwargs)</span>
+<span>def <span class="ident">delete</span></span>(<span>self, page_size=1000, chunk_size=100, **delete_kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Delete the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and delete per request. We're only fetching the IDs, so keep it high.</p>
-<p>:param page_size:
+<div class="desc"><p>Delete the items matching the query, with as little effort as possible</p>
+<p>:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
 (Default value = 1000)
+:param chunk_size: The number of items to delete per request. (Default value = 100)
 :param delete_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def delete(self, page_size=1000, **delete_kwargs):
-    &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and delete per request. We&#39;re only fetching the IDs, so keep it high.
+<pre><code class="python">def delete(self, page_size=1000, chunk_size=100, **delete_kwargs):
+    &#34;&#34;&#34;Delete the items matching the query, with as little effort as possible
 
-    :param page_size:  (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
+    :param chunk_size: The number of items to delete per request. (Default value = 100)
     :param delete_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
     return self.folder_collection.account.bulk_delete(
         ids=ids,
-        chunk_size=page_size,
+        chunk_size=chunk_size,
         **delete_kwargs
     )</code></pre>
 </details>
@@ -1546,22 +1543,6 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high.</
     return new_qs</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.queryset.QuerySet.exclude"><code class="name flex">
-<span>def <span class="ident">exclude</span></span>(<span>self, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def exclude(self, *args, **kwargs):
-    new_qs = self._copy_self()
-    q = ~Q(*args, **kwargs)
-    new_qs.q = new_qs.q &amp; q
-    return new_qs</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.queryset.QuerySet.exists"><code class="name flex">
 <span>def <span class="ident">exists</span></span>(<span>self)</span>
 </code></dt>
@@ -1576,22 +1557,6 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high.</
     new_qs = self._copy_self()
     new_qs.max_items = 1
     return new_qs.count(page_size=1) &gt; 0</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.queryset.QuerySet.filter"><code class="name flex">
-<span>def <span class="ident">filter</span></span>(<span>self, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def filter(self, *args, **kwargs):
-    new_qs = self._copy_self()
-    q = Q(*args, **kwargs)
-    new_qs.q = new_qs.q &amp; q
-    return new_qs</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.get"><code class="name flex">
@@ -1622,92 +1587,68 @@ to fetch and delete per request. We're only fetching the IDs, so keep it high.</
     return items[0]</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.queryset.QuerySet.iterator"><code class="name flex">
-<span>def <span class="ident">iterator</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def iterator(self):
-    # Return an iterator over the results
-    warnings.warn(&#39;QuerySet no longer caches results. .iterator() is a no-op.&#39;, DeprecationWarning, stacklevel=2)
-    return self.__iter__()</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.queryset.QuerySet.mark_as_junk"><code class="name flex">
-<span>def <span class="ident">mark_as_junk</span></span>(<span>self, page_size=1000, **mark_as_junk_kwargs)</span>
+<span>def <span class="ident">mark_as_junk</span></span>(<span>self, page_size=1000, chunk_size=1000, **mark_as_junk_kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mark the items matching the query as junk, with as little effort as possible. 'page_size' is the number of
 items to fetch and mark per request. We're only fetching the IDs, so keep it high.</p>
-<p>:param page_size:
+<p>:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
 (Default value = 1000)
+:param chunk_size: The number of items to mark as junk per request. (Default value = 100)
 :param mark_as_junk_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def mark_as_junk(self, page_size=1000, **mark_as_junk_kwargs):
+<pre><code class="python">def mark_as_junk(self, page_size=1000, chunk_size=1000, **mark_as_junk_kwargs):
     &#34;&#34;&#34;Mark the items matching the query as junk, with as little effort as possible. &#39;page_size&#39; is the number of
     items to fetch and mark per request. We&#39;re only fetching the IDs, so keep it high.
 
-    :param page_size:  (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
+    :param chunk_size: The number of items to mark as junk per request. (Default value = 100)
     :param mark_as_junk_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
     return self.folder_collection.account.bulk_mark_as_junk(
         ids=ids,
-        chunk_size=page_size,
+        chunk_size=chunk_size,
         **mark_as_junk_kwargs
     )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.move"><code class="name flex">
-<span>def <span class="ident">move</span></span>(<span>self, to_folder, page_size=1000)</span>
+<span>def <span class="ident">move</span></span>(<span>self, to_folder, page_size=1000, chunk_size=100)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Move the items matching the query, with as little effort as possible. 'page_size' is the number of items
 to fetch and move per request. We're only fetching the IDs, so keep it high.</p>
 <p>:param to_folder:
-:param page_size: (Default value = 1000)</p></div>
+:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
+(Default value = 1000)
+:param chunk_size: The number of items to move per request. (Default value = 100)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def move(self, to_folder, page_size=1000):
+<pre><code class="python">def move(self, to_folder, page_size=1000, chunk_size=100):
     &#34;&#34;&#34;Move the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
     to fetch and move per request. We&#39;re only fetching the IDs, so keep it high.
 
     :param to_folder:
-    :param page_size: (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
+    :param chunk_size: The number of items to move per request. (Default value = 100)
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
     return self.folder_collection.account.bulk_move(
         ids=ids,
         to_folder=to_folder,
-        chunk_size=page_size,
+        chunk_size=chunk_size,
     )</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.queryset.QuerySet.none"><code class="name flex">
-<span>def <span class="ident">none</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def none(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
-    new_qs = self._copy_self()
-    new_qs.q = Q(conn_type=Q.NEVER)
-    return new_qs</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.only"><code class="name flex">
@@ -1724,7 +1665,7 @@ to fetch and move per request. We're only fetching the IDs, so keep it high.</p>
     try:
         only_fields = tuple(self._get_field_path(arg) for arg in args)
     except ValueError as e:
-        raise ValueError(&#34;%s in only()&#34; % e.args[0])
+        raise ValueError(f&#34;{e.args[0]} in only()&#34;)
     new_qs = self._copy_self()
     new_qs.only_fields = only_fields
     return new_qs</code></pre>
@@ -1749,7 +1690,7 @@ multiple fields is implemented client-side and will therefore make the query gre
     try:
         order_fields = tuple(self._get_field_order(arg) for arg in args)
     except ValueError as e:
-        raise ValueError(&#34;%s in order_by()&#34; % e.args[0])
+        raise ValueError(f&#34;{e.args[0]} in order_by()&#34;)
     new_qs = self._copy_self()
     new_qs.order_fields = order_fields
     return new_qs</code></pre>
@@ -1791,30 +1732,31 @@ multiple fields is implemented client-side and will therefore make the query gre
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.send"><code class="name flex">
-<span>def <span class="ident">send</span></span>(<span>self, page_size=1000, **send_kwargs)</span>
+<span>def <span class="ident">send</span></span>(<span>self, page_size=1000, chunk_size=100, **send_kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Send the items matching the query, with as little effort as possible. 'page_size' is the number of items
-to fetch and send per request. We're only fetching the IDs, so keep it high.</p>
-<p>:param page_size:
+<div class="desc"><p>Send the items matching the query, with as little effort as possible</p>
+<p>:param page_size: The number of items to fetch per request. We're only fetching the IDs, so keep it high.
 (Default value = 1000)
+:param chunk_size: The number of items to send per request. (Default value = 100)
 :param send_kwargs:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send(self, page_size=1000, **send_kwargs):
-    &#34;&#34;&#34;Send the items matching the query, with as little effort as possible. &#39;page_size&#39; is the number of items
-    to fetch and send per request. We&#39;re only fetching the IDs, so keep it high.
+<pre><code class="python">def send(self, page_size=1000, chunk_size=100, **send_kwargs):
+    &#34;&#34;&#34;Send the items matching the query, with as little effort as possible
 
-    :param page_size:  (Default value = 1000)
+    :param page_size: The number of items to fetch per request. We&#39;re only fetching the IDs, so keep it high.
+    (Default value = 1000)
+    :param chunk_size: The number of items to send per request. (Default value = 100)
     :param send_kwargs:
     &#34;&#34;&#34;
     ids = self._id_only_copy_self()
     ids.page_size = page_size
     return self.folder_collection.account.bulk_send(
         ids=ids,
-        chunk_size=page_size,
+        chunk_size=chunk_size,
         **send_kwargs
     )</code></pre>
 </details>
@@ -1832,7 +1774,7 @@ to fetch and send per request. We're only fetching the IDs, so keep it high.</p>
     try:
         only_fields = tuple(self._get_field_path(arg) for arg in args)
     except ValueError as e:
-        raise ValueError(&#34;%s in values()&#34; % e.args[0])
+        raise ValueError(f&#34;{e.args[0]} in values()&#34;)
     new_qs = self._copy_self()
     new_qs.only_fields = only_fields
     new_qs.return_format = self.VALUES
@@ -1855,13 +1797,13 @@ field name, returns a list of values.</p></div>
     &#34;&#34;&#34;
     flat = kwargs.pop(&#39;flat&#39;, False)
     if kwargs:
-        raise AttributeError(&#39;Unknown kwargs: %s&#39; % kwargs)
+        raise AttributeError(f&#39;Unknown kwargs: {kwargs}&#39;)
     if flat and len(args) != 1:
         raise ValueError(&#39;flat=True requires exactly one field name&#39;)
     try:
         only_fields = tuple(self._get_field_path(arg) for arg in args)
     except ValueError as e:
-        raise ValueError(&#34;%s in values_list()&#34; % e.args[0])
+        raise ValueError(f&#34;{e.args[0]} in values_list()&#34;)
     new_qs = self._copy_self()
     new_qs.only_fields = only_fields
     new_qs.return_format = self.FLAT if flat else self.VALUES_LIST
@@ -1869,6 +1811,17 @@ field name, returns a list of values.</p></div>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.queryset.SearchableMixIn" href="#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.queryset.SearchableMixIn.all" href="#exchangelib.queryset.SearchableMixIn.all">all</a></code></li>
+<li><code><a title="exchangelib.queryset.SearchableMixIn.exclude" href="#exchangelib.queryset.SearchableMixIn.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.queryset.SearchableMixIn.filter" href="#exchangelib.queryset.SearchableMixIn.filter">filter</a></code></li>
+<li><code><a title="exchangelib.queryset.SearchableMixIn.none" href="#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn"><code class="flex name class">
 <span>class <span class="ident">SearchableMixIn</span></span>
@@ -1884,27 +1837,27 @@ field name, returns a list of values.</p></div>
 
     @abc.abstractmethod
     def get(self, *args, **kwargs):
-        pass
+        &#34;&#34;&#34;Return a single object&#34;&#34;&#34;
 
     @abc.abstractmethod
     def all(self):
-        pass
+        &#34;&#34;&#34;Return all objects, unfiltered&#34;&#34;&#34;
 
     @abc.abstractmethod
     def none(self):
-        pass
+        &#34;&#34;&#34;Return an empty result&#34;&#34;&#34;
 
     @abc.abstractmethod
     def filter(self, *args, **kwargs):
-        pass
+        &#34;&#34;&#34;Apply filters to a query&#34;&#34;&#34;
 
     @abc.abstractmethod
     def exclude(self, *args, **kwargs):
-        pass
+        &#34;&#34;&#34;Apply filters to a query&#34;&#34;&#34;
 
     @abc.abstractmethod
     def people(self):
-        pass</code></pre>
+        &#34;&#34;&#34;Search for personas&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1918,84 +1871,84 @@ field name, returns a list of values.</p></div>
 <span>def <span class="ident">all</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return all objects, unfiltered</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def all(self):
-    pass</code></pre>
+    &#34;&#34;&#34;Return all objects, unfiltered&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.exclude"><code class="name flex">
 <span>def <span class="ident">exclude</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Apply filters to a query</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def exclude(self, *args, **kwargs):
-    pass</code></pre>
+    &#34;&#34;&#34;Apply filters to a query&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.filter"><code class="name flex">
 <span>def <span class="ident">filter</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Apply filters to a query</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def filter(self, *args, **kwargs):
-    pass</code></pre>
+    &#34;&#34;&#34;Apply filters to a query&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.get"><code class="name flex">
 <span>def <span class="ident">get</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return a single object</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def get(self, *args, **kwargs):
-    pass</code></pre>
+    &#34;&#34;&#34;Return a single object&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.none"><code class="name flex">
 <span>def <span class="ident">none</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return an empty result</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def none(self):
-    pass</code></pre>
+    &#34;&#34;&#34;Return an empty result&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.SearchableMixIn.people"><code class="name flex">
 <span>def <span class="ident">people</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Search for personas</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def people(self):
-    pass</code></pre>
+    &#34;&#34;&#34;Search for personas&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -2027,20 +1980,15 @@ def people(self):
 <li><code><a title="exchangelib.queryset.QuerySet.RETURN_TYPES" href="#exchangelib.queryset.QuerySet.RETURN_TYPES">RETURN_TYPES</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.VALUES" href="#exchangelib.queryset.QuerySet.VALUES">VALUES</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.VALUES_LIST" href="#exchangelib.queryset.QuerySet.VALUES_LIST">VALUES_LIST</a></code></li>
-<li><code><a title="exchangelib.queryset.QuerySet.all" href="#exchangelib.queryset.QuerySet.all">all</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.archive" href="#exchangelib.queryset.QuerySet.archive">archive</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.copy" href="#exchangelib.queryset.QuerySet.copy">copy</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.count" href="#exchangelib.queryset.QuerySet.count">count</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.delete" href="#exchangelib.queryset.QuerySet.delete">delete</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.depth" href="#exchangelib.queryset.QuerySet.depth">depth</a></code></li>
-<li><code><a title="exchangelib.queryset.QuerySet.exclude" href="#exchangelib.queryset.QuerySet.exclude">exclude</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.exists" href="#exchangelib.queryset.QuerySet.exists">exists</a></code></li>
-<li><code><a title="exchangelib.queryset.QuerySet.filter" href="#exchangelib.queryset.QuerySet.filter">filter</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.get" href="#exchangelib.queryset.QuerySet.get">get</a></code></li>
-<li><code><a title="exchangelib.queryset.QuerySet.iterator" href="#exchangelib.queryset.QuerySet.iterator">iterator</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.mark_as_junk" href="#exchangelib.queryset.QuerySet.mark_as_junk">mark_as_junk</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.move" href="#exchangelib.queryset.QuerySet.move">move</a></code></li>
-<li><code><a title="exchangelib.queryset.QuerySet.none" href="#exchangelib.queryset.QuerySet.none">none</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.only" href="#exchangelib.queryset.QuerySet.only">only</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.order_by" href="#exchangelib.queryset.QuerySet.order_by">order_by</a></code></li>
 <li><code><a title="exchangelib.queryset.QuerySet.people" href="#exchangelib.queryset.QuerySet.people">people</a></code></li>

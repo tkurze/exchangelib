@@ -29,17 +29,17 @@
 <pre><code class="python">import abc
 import logging
 
-from .common import EWSAccountService, add_xml_child, create_folder_ids_element, create_shape_element, parse_folder_elem
+from .common import EWSPagingService, add_xml_child, folder_ids_element, shape_element, parse_folder_elem
 from ..properties import FolderId
 from ..util import create_element, xml_text_to_value, MNS, TNS
 
 log = logging.getLogger(__name__)
 
 
-class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
+class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for SyncFolderHierarchy and SyncFolderItems.&#34;&#34;&#34;
 
-    element_container_name = &#39;{%s}Changes&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Changes&#39;
     # Change types
     CREATE = &#39;create&#39;
     UPDATE = &#39;update&#39;
@@ -47,6 +47,11 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
     CHANGE_TYPES = (CREATE, UPDATE, DELETE)
     shape_tag = None
     last_in_range_name = None
+    change_types_map = {
+        f&#39;{{{TNS}}}Create&#39;: CREATE,
+        f&#39;{{{TNS}}}Update&#39;: UPDATE,
+        f&#39;{{{TNS}}}Delete&#39;: DELETE,
+    }
 
     def __init__(self, *args, **kwargs):
         # These values are reset and set each time call() is consumed
@@ -54,15 +59,8 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
         self.includes_last_item_in_range = None
         super().__init__(*args, **kwargs)
 
-    def _change_types_map(self):
-        return {
-            &#39;{%s}Create&#39; % TNS: self.CREATE,
-            &#39;{%s}Update&#39; % TNS: self.UPDATE,
-            &#39;{%s}Delete&#39; % TNS: self.DELETE,
-        }
-
     def _get_element_container(self, message, name=None):
-        self.sync_state = message.find(&#39;{%s}SyncState&#39; % MNS).text
+        self.sync_state = message.find(f&#39;{{{MNS}}}SyncState&#39;).text
         log.debug(&#39;Sync state is: %s&#39;, self.sync_state)
         self.includes_last_item_in_range = xml_text_to_value(
             message.find(self.last_in_range_name).text, bool
@@ -71,16 +69,14 @@ class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
         return super()._get_element_container(message=message, name=name)
 
     def _partial_get_payload(self, folder, shape, additional_fields, sync_state):
-        svc_elem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        foldershape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(shape_element(
             tag=self.shape_tag, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        svc_elem.append(foldershape)
-        folder_id = create_folder_ids_element(tag=&#39;m:SyncFolderId&#39;, folders=[folder], version=self.account.version)
-        svc_elem.append(folder_id)
+        ))
+        payload.append(folder_ids_element(folders=[folder], version=self.account.version, tag=&#39;m:SyncFolderId&#39;))
         if sync_state:
-            add_xml_child(svc_elem, &#39;m:SyncState&#39;, sync_state)
-        return svc_elem
+            add_xml_child(payload, &#39;m:SyncState&#39;, sync_state)
+        return payload
 
 
 class SyncFolderHierarchy(SyncFolder):
@@ -90,29 +86,32 @@ class SyncFolderHierarchy(SyncFolder):
 
     SERVICE_NAME = &#39;SyncFolderHierarchy&#39;
     shape_tag = &#39;m:FolderShape&#39;
-    last_in_range_name = &#39;{%s}IncludesLastFolderInRange&#39; % MNS
+    last_in_range_name = f&#39;{{{MNS}}}IncludesLastFolderInRange&#39;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folder = None  # A hack to communicate parsing args to _elems_to_objs()
 
     def call(self, folder, shape, additional_fields, sync_state):
         self.sync_state = sync_state
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        self.folder = folder
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
                 sync_state=sync_state,
-        )):
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            change_type = change_types[elem.tag]
-            if change_type == self.DELETE:
-                folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
-            else:
-                # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-                # contain multiple folder types, each with their own tag.
-                folder_elem = elem[0]
-                folder = parse_folder_elem(elem=folder_elem, folder=folder, account=self.account)
-            yield change_type, folder
+        )))
+
+    def _elem_to_obj(self, elem):
+        change_type = self.change_types_map[elem.tag]
+        if change_type == self.DELETE:
+            folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+        else:
+            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+            # contain multiple folder types, each with their own tag.
+            folder_elem = elem[0]
+            folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
+        return change_type, folder
 
     def get_payload(self, folder, shape, additional_fields, sync_state):
         return self._partial_get_payload(
@@ -139,10 +138,10 @@ class SyncFolderHierarchy(SyncFolder):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
+<pre><code class="python">class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for SyncFolderHierarchy and SyncFolderItems.&#34;&#34;&#34;
 
-    element_container_name = &#39;{%s}Changes&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Changes&#39;
     # Change types
     CREATE = &#39;create&#39;
     UPDATE = &#39;update&#39;
@@ -150,6 +149,11 @@ class SyncFolderHierarchy(SyncFolder):
     CHANGE_TYPES = (CREATE, UPDATE, DELETE)
     shape_tag = None
     last_in_range_name = None
+    change_types_map = {
+        f&#39;{{{TNS}}}Create&#39;: CREATE,
+        f&#39;{{{TNS}}}Update&#39;: UPDATE,
+        f&#39;{{{TNS}}}Delete&#39;: DELETE,
+    }
 
     def __init__(self, *args, **kwargs):
         # These values are reset and set each time call() is consumed
@@ -157,15 +161,8 @@ class SyncFolderHierarchy(SyncFolder):
         self.includes_last_item_in_range = None
         super().__init__(*args, **kwargs)
 
-    def _change_types_map(self):
-        return {
-            &#39;{%s}Create&#39; % TNS: self.CREATE,
-            &#39;{%s}Update&#39; % TNS: self.UPDATE,
-            &#39;{%s}Delete&#39; % TNS: self.DELETE,
-        }
-
     def _get_element_container(self, message, name=None):
-        self.sync_state = message.find(&#39;{%s}SyncState&#39; % MNS).text
+        self.sync_state = message.find(f&#39;{{{MNS}}}SyncState&#39;).text
         log.debug(&#39;Sync state is: %s&#39;, self.sync_state)
         self.includes_last_item_in_range = xml_text_to_value(
             message.find(self.last_in_range_name).text, bool
@@ -174,19 +171,18 @@ class SyncFolderHierarchy(SyncFolder):
         return super()._get_element_container(message=message, name=name)
 
     def _partial_get_payload(self, folder, shape, additional_fields, sync_state):
-        svc_elem = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        foldershape = create_shape_element(
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(shape_element(
             tag=self.shape_tag, shape=shape, additional_fields=additional_fields, version=self.account.version
-        )
-        svc_elem.append(foldershape)
-        folder_id = create_folder_ids_element(tag=&#39;m:SyncFolderId&#39;, folders=[folder], version=self.account.version)
-        svc_elem.append(folder_id)
+        ))
+        payload.append(folder_ids_element(folders=[folder], version=self.account.version, tag=&#39;m:SyncFolderId&#39;))
         if sync_state:
-            add_xml_child(svc_elem, &#39;m:SyncState&#39;, sync_state)
-        return svc_elem</code></pre>
+            add_xml_child(payload, &#39;m:SyncState&#39;, sync_state)
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
@@ -213,6 +209,10 @@ class SyncFolderHierarchy(SyncFolder):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.services.sync_folder_hierarchy.SyncFolder.change_types_map"><code class="name">var <span class="ident">change_types_map</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.sync_folder_hierarchy.SyncFolder.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -228,12 +228,12 @@ class SyncFolderHierarchy(SyncFolder):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<li><code><b><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -256,29 +256,32 @@ class SyncFolderHierarchy(SyncFolder):
 
     SERVICE_NAME = &#39;SyncFolderHierarchy&#39;
     shape_tag = &#39;m:FolderShape&#39;
-    last_in_range_name = &#39;{%s}IncludesLastFolderInRange&#39; % MNS
+    last_in_range_name = f&#39;{{{MNS}}}IncludesLastFolderInRange&#39;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.folder = None  # A hack to communicate parsing args to _elems_to_objs()
 
     def call(self, folder, shape, additional_fields, sync_state):
         self.sync_state = sync_state
-        change_types = self._change_types_map()
-        for elem in self._get_elements(payload=self.get_payload(
+        self.folder = folder
+        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
                 folder=folder,
                 shape=shape,
                 additional_fields=additional_fields,
                 sync_state=sync_state,
-        )):
-            if isinstance(elem, Exception):
-                yield elem
-                continue
-            change_type = change_types[elem.tag]
-            if change_type == self.DELETE:
-                folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
-            else:
-                # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-                # contain multiple folder types, each with their own tag.
-                folder_elem = elem[0]
-                folder = parse_folder_elem(elem=folder_elem, folder=folder, account=self.account)
-            yield change_type, folder
+        )))
+
+    def _elem_to_obj(self, elem):
+        change_type = self.change_types_map[elem.tag]
+        if change_type == self.DELETE:
+            folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+        else:
+            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
+            # contain multiple folder types, each with their own tag.
+            folder_elem = elem[0]
+            folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
+        return change_type, folder
 
     def get_payload(self, folder, shape, additional_fields, sync_state):
         return self._partial_get_payload(
@@ -288,6 +291,7 @@ class SyncFolderHierarchy(SyncFolder):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
+<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
@@ -319,25 +323,13 @@ class SyncFolderHierarchy(SyncFolder):
 </summary>
 <pre><code class="python">def call(self, folder, shape, additional_fields, sync_state):
     self.sync_state = sync_state
-    change_types = self._change_types_map()
-    for elem in self._get_elements(payload=self.get_payload(
+    self.folder = folder
+    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
             folder=folder,
             shape=shape,
             additional_fields=additional_fields,
             sync_state=sync_state,
-    )):
-        if isinstance(elem, Exception):
-            yield elem
-            continue
-        change_type = change_types[elem.tag]
-        if change_type == self.DELETE:
-            folder = FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
-        else:
-            # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
-            # contain multiple folder types, each with their own tag.
-            folder_elem = elem[0]
-            folder = parse_folder_elem(elem=folder_elem, folder=folder, account=self.account)
-        yield change_type, folder</code></pre>
+    )))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.sync_folder_hierarchy.SyncFolderHierarchy.get_payload"><code class="name flex">
@@ -391,6 +383,7 @@ class SyncFolderHierarchy(SyncFolder):
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.CREATE" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.CREATE">CREATE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.DELETE" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.DELETE">DELETE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.UPDATE" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.UPDATE">UPDATE</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.change_types_map" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.change_types_map">change_types_map</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.element_container_name" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.last_in_range_name" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.last_in_range_name">last_in_range_name</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.shape_tag" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder.shape_tag">shape_tag</a></code></li>

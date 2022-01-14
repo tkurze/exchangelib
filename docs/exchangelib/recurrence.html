@@ -28,8 +28,8 @@
 </summary>
 <pre><code class="python">import logging
 
-from .fields import IntegerField, EnumField, EnumListField, DateOrDateTimeField, DateTimeField, EWSElementField, \
-    IdElementField, MONTHS, WEEK_NUMBERS, WEEKDAYS
+from .fields import IntegerField, EnumField, WeekdaysField, DateOrDateTimeField, DateTimeField, EWSElementField, \
+    IdElementField, MONTHS, WEEK_NUMBERS, WEEKDAYS, WEEKDAY_NAMES
 from .properties import EWSElement, IdChangeKeyMixIn, ItemId, EWSMeta
 
 log = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class AbsoluteYearlyPattern(Pattern):
     month = EnumField(field_uri=&#39;Month&#39;, enum=MONTHS, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on day %s of %s&#39; % (self.day_of_month, _month_to_str(self.month))
+        return f&#39;Occurs on day {self.day_of_month} of {_month_to_str(self.month)}&#39;
 
 
 class RelativeYearlyPattern(Pattern):
@@ -79,9 +79,9 @@ class RelativeYearlyPattern(Pattern):
 
     ELEMENT_NAME = &#39;RelativeYearlyRecurrence&#39;
 
-    # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -&gt; 7 (1 being Monday).
-    # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
-    # is interpreted as the first day, weekday, or weekend day in the month, respectively.
+    # Valid ISO 8601 weekday, as a number in range 1 -&gt; 7 (1 being Monday). The value can also be one of the DAY
+    # (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which is interpreted as the first day, weekday, or weekend
+    # day of the year. Despite the field name in EWS, this is not a list.
     weekday = EnumField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAYS, is_required=True)
     # Week number of the month, in range 1 -&gt; 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks
@@ -90,11 +90,8 @@ class RelativeYearlyPattern(Pattern):
     month = EnumField(field_uri=&#39;Month&#39;, enum=MONTHS, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on weekday %s in the %s week of %s&#39; % (
-            _weekday_to_str(self.weekday),
-            _week_number_to_str(self.week_number),
-            _month_to_str(self.month)
-        )
+        return f&#39;Occurs on weekday {_weekday_to_str(self.weekday)} in the {_week_number_to_str(self.week_number)} &#39; \
+               f&#39;week of {_month_to_str(self.month)}&#39;
 
 
 class AbsoluteMonthlyPattern(Pattern):
@@ -111,7 +108,7 @@ class AbsoluteMonthlyPattern(Pattern):
     day_of_month = IntegerField(field_uri=&#39;DayOfMonth&#39;, min=1, max=31, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on day %s of every %s month(s)&#39; % (self.day_of_month, self.interval)
+        return f&#39;Occurs on day {self.day_of_month} of every {self.interval} month(s)&#39;
 
 
 class RelativeMonthlyPattern(Pattern):
@@ -123,20 +120,17 @@ class RelativeMonthlyPattern(Pattern):
 
     # Interval, in months, in range 1 -&gt; 99
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, max=99, is_required=True)
-    # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -&gt; 7 (1 being Monday).
-    # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
-    # is interpreted as the first day, weekday, or weekend day in the month, respectively.
+    # Valid ISO 8601 weekday, as a number in range 1 -&gt; 7 (1 being Monday). The value can also be one of the DAY
+    # (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which is interpreted as the first day, weekday, or weekend
+    # day of the month. Despite the field name in EWS, this is not a list.
     weekday = EnumField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAYS, is_required=True)
     # Week number of the month, in range 1 -&gt; 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks.
     week_number = EnumField(field_uri=&#39;DayOfWeekIndex&#39;, enum=WEEK_NUMBERS, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on weekday %s in the %s week of every %s month(s)&#39; % (
-            _weekday_to_str(self.weekday),
-            _week_number_to_str(self.week_number),
-            self.interval
-        )
+        return f&#39;Occurs on weekday {_weekday_to_str(self.weekday)} in the {_week_number_to_str(self.week_number)} &#39; \
+               f&#39;week of every {self.interval} month(s)&#39;
 
 
 class WeeklyPattern(Pattern):
@@ -147,20 +141,14 @@ class WeeklyPattern(Pattern):
     # Interval, in weeks, in range 1 -&gt; 99
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, max=99, is_required=True)
     # List of valid ISO 8601 weekdays, as list of numbers in range 1 -&gt; 7 (1 being Monday)
-    weekdays = EnumListField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAYS, is_required=True)
+    weekdays = WeekdaysField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAY_NAMES, is_required=True)
     # The first day of the week. Defaults to Monday
-    first_day_of_week = EnumField(field_uri=&#39;FirstDayOfWeek&#39;, enum=WEEKDAYS, default=1, is_required=True)
+    first_day_of_week = EnumField(field_uri=&#39;FirstDayOfWeek&#39;, enum=WEEKDAY_NAMES, default=1, is_required=True)
 
     def __str__(self):
-        if isinstance(self.weekdays, str):
-            weekdays = [self.weekdays]
-        elif isinstance(self.weekdays, int):
-            weekdays = [_weekday_to_str(self.weekdays)]
-        else:
-            weekdays = [_weekday_to_str(i) for i in self.weekdays]
-        return &#39;Occurs on weekdays %s of every %s week(s) where the first day of the week is %s&#39; % (
-            &#39;, &#39;.join(weekdays), self.interval, _weekday_to_str(self.first_day_of_week)
-        )
+        weekdays = [_weekday_to_str(i) for i in self.get_field_by_fieldname(&#39;weekdays&#39;).clean(self.weekdays)]
+        return f&#39;Occurs on weekdays {&#34;, &#34;.join(weekdays)} of every {self.interval} week(s) where the first day of &#39; \
+               f&#39;the week is {_weekday_to_str(self.first_day_of_week)}&#39;
 
 
 class DailyPattern(Pattern):
@@ -172,7 +160,7 @@ class DailyPattern(Pattern):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, max=999, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs every %s day(s)&#39; % self.interval
+        return f&#39;Occurs every {self.interval} day(s)&#39;
 
 
 class YearlyRegeneration(Regeneration):
@@ -184,7 +172,7 @@ class YearlyRegeneration(Regeneration):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s year(s)&#39; % self.interval
+        return f&#39;Regenerates every {self.interval} year(s)&#39;
 
 
 class MonthlyRegeneration(Regeneration):
@@ -196,7 +184,7 @@ class MonthlyRegeneration(Regeneration):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s month(s)&#39; % self.interval
+        return f&#39;Regenerates every {self.interval} month(s)&#39;
 
 
 class WeeklyRegeneration(Regeneration):
@@ -208,7 +196,7 @@ class WeeklyRegeneration(Regeneration):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s week(s)&#39; % self.interval
+        return f&#39;Regenerates every {self.interval} week(s)&#39;
 
 
 class DailyRegeneration(Regeneration):
@@ -220,7 +208,7 @@ class DailyRegeneration(Regeneration):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s day(s)&#39; % self.interval
+        return f&#39;Regenerates every {self.interval} day(s)&#39;
 
 
 class Boundary(EWSElement, metaclass=EWSMeta):
@@ -236,7 +224,7 @@ class NoEndPattern(Boundary):
     start = DateOrDateTimeField(field_uri=&#39;StartDate&#39;, is_required=True)
 
     def __str__(self):
-        return &#39;Starts on %s&#39; % self.start
+        return f&#39;Starts on {self.start}&#39;
 
 
 class EndDatePattern(Boundary):
@@ -250,7 +238,7 @@ class EndDatePattern(Boundary):
     end = DateOrDateTimeField(field_uri=&#39;EndDate&#39;, is_required=True)
 
     def __str__(self):
-        return &#39;Starts on %s, ends on %s&#39; % (self.start, self.end)
+        return f&#39;Starts on {self.start}, ends on {self.end}&#39;
 
 
 class NumberedPattern(Boundary):
@@ -264,7 +252,7 @@ class NumberedPattern(Boundary):
     number = IntegerField(field_uri=&#39;NumberOfOccurrences&#39;, min=1, max=999, is_required=True)
 
     def __str__(self):
-        return &#39;Starts on %s and occurs %s times&#39; % (self.start, self.number)
+        return f&#39;Starts on {self.start} and occurs {self.number} time(s)&#39;
 
 
 class Occurrence(IdChangeKeyMixIn):
@@ -320,7 +308,8 @@ class Recurrence(EWSElement):
     &#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;Recurrence&#39;
-    PATTERN_CLASSES = PATTERN_CLASSES
+    PATTERN_CLASS_MAP = {cls.response_tag(): cls for cls in PATTERN_CLASSES}
+    BOUNDARY_CLASS_MAP = {cls.response_tag(): cls for cls in BOUNDARY_CLASSES}
 
     pattern = EWSElementField(value_cls=Pattern)
     boundary = EWSElementField(value_cls=Boundary)
@@ -345,26 +334,16 @@ class Recurrence(EWSElement):
 
     @classmethod
     def from_xml(cls, elem, account):
-        for pattern_cls in cls.PATTERN_CLASSES:
-            pattern_elem = elem.find(pattern_cls.response_tag())
-            if pattern_elem is None:
-                continue
-            pattern = pattern_cls.from_xml(elem=pattern_elem, account=account)
-            break
-        else:
-            pattern = None
-        for boundary_cls in BOUNDARY_CLASSES:
-            boundary_elem = elem.find(boundary_cls.response_tag())
-            if boundary_elem is None:
-                continue
-            boundary = boundary_cls.from_xml(elem=boundary_elem, account=account)
-            break
-        else:
-            boundary = None
+        pattern, boundary = None, None
+        for child_elem in elem:
+            if child_elem.tag in cls.PATTERN_CLASS_MAP:
+                pattern = cls.PATTERN_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
+            elif child_elem.tag in cls.BOUNDARY_CLASS_MAP:
+                boundary = cls.BOUNDARY_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
         return cls(pattern=pattern, boundary=boundary)
 
     def __str__(self):
-        return &#39;Pattern: %s, Boundary: %s&#39; % (self.pattern, self.boundary)
+        return f&#39;Pattern: {self.pattern}, Boundary: {self.boundary}&#39;
 
 
 class TaskRecurrence(Recurrence):
@@ -372,7 +351,7 @@ class TaskRecurrence(Recurrence):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-taskrecurrencetype
     &#34;&#34;&#34;
 
-    PATTERN_CLASSES = PATTERN_CLASSES + REGENERATION_CLASSES</code></pre>
+    PATTERN_CLASS_MAP = {cls.response_tag(): cls for cls in PATTERN_CLASSES + REGENERATION_CLASSES}</code></pre>
 </details>
 </section>
 <section>
@@ -409,7 +388,7 @@ class TaskRecurrence(Recurrence):
     day_of_month = IntegerField(field_uri=&#39;DayOfMonth&#39;, min=1, max=31, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on day %s of every %s month(s)&#39; % (self.day_of_month, self.interval)</code></pre>
+        return f&#39;Occurs on day {self.day_of_month} of every {self.interval} month(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -475,7 +454,7 @@ class TaskRecurrence(Recurrence):
     month = EnumField(field_uri=&#39;Month&#39;, enum=MONTHS, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on day %s of %s&#39; % (self.day_of_month, _month_to_str(self.month))</code></pre>
+        return f&#39;Occurs on day {self.day_of_month} of {_month_to_str(self.month)}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -570,7 +549,7 @@ class TaskRecurrence(Recurrence):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, max=999, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs every %s day(s)&#39; % self.interval</code></pre>
+        return f&#39;Occurs every {self.interval} day(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -626,7 +605,7 @@ class TaskRecurrence(Recurrence):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s day(s)&#39; % self.interval</code></pre>
+        return f&#39;Regenerates every {self.interval} day(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -737,7 +716,7 @@ class TaskRecurrence(Recurrence):
     end = DateOrDateTimeField(field_uri=&#39;EndDate&#39;, is_required=True)
 
     def __str__(self):
-        return &#39;Starts on %s, ends on %s&#39; % (self.start, self.end)</code></pre>
+        return f&#39;Starts on {self.start}, ends on {self.end}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -879,7 +858,7 @@ class TaskRecurrence(Recurrence):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s month(s)&#39; % self.interval</code></pre>
+        return f&#39;Regenerates every {self.interval} month(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -936,7 +915,7 @@ class TaskRecurrence(Recurrence):
     start = DateOrDateTimeField(field_uri=&#39;StartDate&#39;, is_required=True)
 
     def __str__(self):
-        return &#39;Starts on %s&#39; % self.start</code></pre>
+        return f&#39;Starts on {self.start}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -994,7 +973,7 @@ class TaskRecurrence(Recurrence):
     number = IntegerField(field_uri=&#39;NumberOfOccurrences&#39;, min=1, max=999, is_required=True)
 
     def __str__(self):
-        return &#39;Starts on %s and occurs %s times&#39; % (self.start, self.number)</code></pre>
+        return f&#39;Starts on {self.start} and occurs {self.number} time(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1168,7 +1147,8 @@ class TaskRecurrence(Recurrence):
     &#34;&#34;&#34;
 
     ELEMENT_NAME = &#39;Recurrence&#39;
-    PATTERN_CLASSES = PATTERN_CLASSES
+    PATTERN_CLASS_MAP = {cls.response_tag(): cls for cls in PATTERN_CLASSES}
+    BOUNDARY_CLASS_MAP = {cls.response_tag(): cls for cls in BOUNDARY_CLASSES}
 
     pattern = EWSElementField(value_cls=Pattern)
     boundary = EWSElementField(value_cls=Boundary)
@@ -1193,26 +1173,16 @@ class TaskRecurrence(Recurrence):
 
     @classmethod
     def from_xml(cls, elem, account):
-        for pattern_cls in cls.PATTERN_CLASSES:
-            pattern_elem = elem.find(pattern_cls.response_tag())
-            if pattern_elem is None:
-                continue
-            pattern = pattern_cls.from_xml(elem=pattern_elem, account=account)
-            break
-        else:
-            pattern = None
-        for boundary_cls in BOUNDARY_CLASSES:
-            boundary_elem = elem.find(boundary_cls.response_tag())
-            if boundary_elem is None:
-                continue
-            boundary = boundary_cls.from_xml(elem=boundary_elem, account=account)
-            break
-        else:
-            boundary = None
+        pattern, boundary = None, None
+        for child_elem in elem:
+            if child_elem.tag in cls.PATTERN_CLASS_MAP:
+                pattern = cls.PATTERN_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
+            elif child_elem.tag in cls.BOUNDARY_CLASS_MAP:
+                boundary = cls.BOUNDARY_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
         return cls(pattern=pattern, boundary=boundary)
 
     def __str__(self):
-        return &#39;Pattern: %s, Boundary: %s&#39; % (self.pattern, self.boundary)</code></pre>
+        return f&#39;Pattern: {self.pattern}, Boundary: {self.boundary}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1224,6 +1194,10 @@ class TaskRecurrence(Recurrence):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.recurrence.Recurrence.BOUNDARY_CLASS_MAP"><code class="name">var <span class="ident">BOUNDARY_CLASS_MAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.recurrence.Recurrence.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1232,7 +1206,7 @@ class TaskRecurrence(Recurrence):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.recurrence.Recurrence.PATTERN_CLASSES"><code class="name">var <span class="ident">PATTERN_CLASSES</span></code></dt>
+<dt id="exchangelib.recurrence.Recurrence.PATTERN_CLASS_MAP"><code class="name">var <span class="ident">PATTERN_CLASS_MAP</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1250,22 +1224,12 @@ class TaskRecurrence(Recurrence):
 </summary>
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
-    for pattern_cls in cls.PATTERN_CLASSES:
-        pattern_elem = elem.find(pattern_cls.response_tag())
-        if pattern_elem is None:
-            continue
-        pattern = pattern_cls.from_xml(elem=pattern_elem, account=account)
-        break
-    else:
-        pattern = None
-    for boundary_cls in BOUNDARY_CLASSES:
-        boundary_elem = elem.find(boundary_cls.response_tag())
-        if boundary_elem is None:
-            continue
-        boundary = boundary_cls.from_xml(elem=boundary_elem, account=account)
-        break
-    else:
-        boundary = None
+    pattern, boundary = None, None
+    for child_elem in elem:
+        if child_elem.tag in cls.PATTERN_CLASS_MAP:
+            pattern = cls.PATTERN_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
+        elif child_elem.tag in cls.BOUNDARY_CLASS_MAP:
+            boundary = cls.BOUNDARY_CLASS_MAP[child_elem.tag].from_xml(elem=child_elem, account=account)
     return cls(pattern=pattern, boundary=boundary)</code></pre>
 </details>
 </dd>
@@ -1350,20 +1314,17 @@ def from_xml(cls, elem, account):
 
     # Interval, in months, in range 1 -&gt; 99
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, max=99, is_required=True)
-    # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -&gt; 7 (1 being Monday).
-    # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
-    # is interpreted as the first day, weekday, or weekend day in the month, respectively.
+    # Valid ISO 8601 weekday, as a number in range 1 -&gt; 7 (1 being Monday). The value can also be one of the DAY
+    # (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which is interpreted as the first day, weekday, or weekend
+    # day of the month. Despite the field name in EWS, this is not a list.
     weekday = EnumField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAYS, is_required=True)
     # Week number of the month, in range 1 -&gt; 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks.
     week_number = EnumField(field_uri=&#39;DayOfWeekIndex&#39;, enum=WEEK_NUMBERS, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on weekday %s in the %s week of every %s month(s)&#39; % (
-            _weekday_to_str(self.weekday),
-            _week_number_to_str(self.week_number),
-            self.interval
-        )</code></pre>
+        return f&#39;Occurs on weekday {_weekday_to_str(self.weekday)} in the {_week_number_to_str(self.week_number)} &#39; \
+               f&#39;week of every {self.interval} month(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1426,9 +1387,9 @@ def from_xml(cls, elem, account):
 
     ELEMENT_NAME = &#39;RelativeYearlyRecurrence&#39;
 
-    # The weekday of the occurrence, as a valid ISO 8601 weekday number in range 1 -&gt; 7 (1 being Monday).
-    # Alternatively, the weekday can be one of the DAY (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which
-    # is interpreted as the first day, weekday, or weekend day in the month, respectively.
+    # Valid ISO 8601 weekday, as a number in range 1 -&gt; 7 (1 being Monday). The value can also be one of the DAY
+    # (or 8), WEEK_DAY (or 9) or WEEKEND_DAY (or 10) consts which is interpreted as the first day, weekday, or weekend
+    # day of the year. Despite the field name in EWS, this is not a list.
     weekday = EnumField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAYS, is_required=True)
     # Week number of the month, in range 1 -&gt; 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks
@@ -1437,11 +1398,8 @@ def from_xml(cls, elem, account):
     month = EnumField(field_uri=&#39;Month&#39;, enum=MONTHS, is_required=True)
 
     def __str__(self):
-        return &#39;Occurs on weekday %s in the %s week of %s&#39; % (
-            _weekday_to_str(self.weekday),
-            _week_number_to_str(self.week_number),
-            _month_to_str(self.month)
-        )</code></pre>
+        return f&#39;Occurs on weekday {_weekday_to_str(self.weekday)} in the {_week_number_to_str(self.week_number)} &#39; \
+               f&#39;week of {_month_to_str(self.month)}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1502,7 +1460,7 @@ def from_xml(cls, elem, account):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurrence-taskrecurrencetype
     &#34;&#34;&#34;
 
-    PATTERN_CLASSES = PATTERN_CLASSES + REGENERATION_CLASSES</code></pre>
+    PATTERN_CLASS_MAP = {cls.response_tag(): cls for cls in PATTERN_CLASSES + REGENERATION_CLASSES}</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1511,7 +1469,7 @@ def from_xml(cls, elem, account):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.recurrence.TaskRecurrence.PATTERN_CLASSES"><code class="name">var <span class="ident">PATTERN_CLASSES</span></code></dt>
+<dt id="exchangelib.recurrence.TaskRecurrence.PATTERN_CLASS_MAP"><code class="name">var <span class="ident">PATTERN_CLASS_MAP</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1546,20 +1504,14 @@ def from_xml(cls, elem, account):
     # Interval, in weeks, in range 1 -&gt; 99
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, max=99, is_required=True)
     # List of valid ISO 8601 weekdays, as list of numbers in range 1 -&gt; 7 (1 being Monday)
-    weekdays = EnumListField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAYS, is_required=True)
+    weekdays = WeekdaysField(field_uri=&#39;DaysOfWeek&#39;, enum=WEEKDAY_NAMES, is_required=True)
     # The first day of the week. Defaults to Monday
-    first_day_of_week = EnumField(field_uri=&#39;FirstDayOfWeek&#39;, enum=WEEKDAYS, default=1, is_required=True)
+    first_day_of_week = EnumField(field_uri=&#39;FirstDayOfWeek&#39;, enum=WEEKDAY_NAMES, default=1, is_required=True)
 
     def __str__(self):
-        if isinstance(self.weekdays, str):
-            weekdays = [self.weekdays]
-        elif isinstance(self.weekdays, int):
-            weekdays = [_weekday_to_str(self.weekdays)]
-        else:
-            weekdays = [_weekday_to_str(i) for i in self.weekdays]
-        return &#39;Occurs on weekdays %s of every %s week(s) where the first day of the week is %s&#39; % (
-            &#39;, &#39;.join(weekdays), self.interval, _weekday_to_str(self.first_day_of_week)
-        )</code></pre>
+        weekdays = [_weekday_to_str(i) for i in self.get_field_by_fieldname(&#39;weekdays&#39;).clean(self.weekdays)]
+        return f&#39;Occurs on weekdays {&#34;, &#34;.join(weekdays)} of every {self.interval} week(s) where the first day of &#39; \
+               f&#39;the week is {_weekday_to_str(self.first_day_of_week)}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1623,7 +1575,7 @@ def from_xml(cls, elem, account):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s week(s)&#39; % self.interval</code></pre>
+        return f&#39;Regenerates every {self.interval} week(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1680,7 +1632,7 @@ def from_xml(cls, elem, account):
     interval = IntegerField(field_uri=&#39;Interval&#39;, min=1, is_required=True)
 
     def __str__(self):
-        return &#39;Regenerates every %s year(s)&#39; % self.interval</code></pre>
+        return f&#39;Regenerates every {self.interval} year(s)&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1842,9 +1794,10 @@ def from_xml(cls, elem, account):
 <li>
 <h4><code><a title="exchangelib.recurrence.Recurrence" href="#exchangelib.recurrence.Recurrence">Recurrence</a></code></h4>
 <ul class="two-column">
+<li><code><a title="exchangelib.recurrence.Recurrence.BOUNDARY_CLASS_MAP" href="#exchangelib.recurrence.Recurrence.BOUNDARY_CLASS_MAP">BOUNDARY_CLASS_MAP</a></code></li>
 <li><code><a title="exchangelib.recurrence.Recurrence.ELEMENT_NAME" href="#exchangelib.recurrence.Recurrence.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.recurrence.Recurrence.FIELDS" href="#exchangelib.recurrence.Recurrence.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.recurrence.Recurrence.PATTERN_CLASSES" href="#exchangelib.recurrence.Recurrence.PATTERN_CLASSES">PATTERN_CLASSES</a></code></li>
+<li><code><a title="exchangelib.recurrence.Recurrence.PATTERN_CLASS_MAP" href="#exchangelib.recurrence.Recurrence.PATTERN_CLASS_MAP">PATTERN_CLASS_MAP</a></code></li>
 <li><code><a title="exchangelib.recurrence.Recurrence.boundary" href="#exchangelib.recurrence.Recurrence.boundary">boundary</a></code></li>
 <li><code><a title="exchangelib.recurrence.Recurrence.from_xml" href="#exchangelib.recurrence.Recurrence.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.recurrence.Recurrence.pattern" href="#exchangelib.recurrence.Recurrence.pattern">pattern</a></code></li>
@@ -1876,7 +1829,7 @@ def from_xml(cls, elem, account):
 <li>
 <h4><code><a title="exchangelib.recurrence.TaskRecurrence" href="#exchangelib.recurrence.TaskRecurrence">TaskRecurrence</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.recurrence.TaskRecurrence.PATTERN_CLASSES" href="#exchangelib.recurrence.TaskRecurrence.PATTERN_CLASSES">PATTERN_CLASSES</a></code></li>
+<li><code><a title="exchangelib.recurrence.TaskRecurrence.PATTERN_CLASS_MAP" href="#exchangelib.recurrence.TaskRecurrence.PATTERN_CLASS_MAP">PATTERN_CLASS_MAP</a></code></li>
 </ul>
 </li>
 <li>

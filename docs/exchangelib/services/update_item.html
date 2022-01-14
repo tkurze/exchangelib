@@ -26,40 +26,38 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import OrderedDict
-
-from .common import EWSAccountService, to_item_id
+<pre><code class="python">from .common import to_item_id
+from ..errors import InvalidEnumValue
 from ..ewsdatetime import EWSDate
-from ..fields import FieldPath, IndexedField
+from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
+    SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY, Item, CalendarItem
 from ..properties import ItemId
-from ..util import create_element, set_xml_value, MNS
+from ..util import create_element, MNS
 from ..version import EXCHANGE_2013_SP1
+from .update_folder import BaseUpdateService
 
 
-class UpdateItem(EWSAccountService):
+class UpdateItem(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UpdateItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % MNS
+    SET_FIELD_ELEMENT_NAME = &#39;t:SetItemField&#39;
+    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteItemField&#39;
+    CHANGE_ELEMENT_NAME = &#39;t:ItemChange&#39;
+    CHANGES_ELEMENT_NAME = &#39;m:ItemChanges&#39;
+    element_container_name = f&#39;{{{MNS}}}Items&#39;
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
-            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
-                conflict_resolution, CONFLICT_RESOLUTION_CHOICES
-            ))
+            raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
-                message_disposition, MESSAGE_DISPOSITION_CHOICES
-            ))
+            raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
-            raise ValueError(&#34;&#39;send_meeting_invitations_or_cancellations&#39; %s must be one of %s&#34; % (
-                send_meeting_invitations_or_cancellations, SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
-            ))
-        if suppress_read_receipts not in (True, False):
-            raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
+            raise InvalidEnumValue(
+                &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
+                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+            )
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
         return self._elems_to_objs(self._chunked_get_elements(
@@ -71,154 +69,54 @@ class UpdateItem(EWSAccountService):
             suppress_read_receipts=suppress_read_receipts,
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..items import Item
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield Item.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return Item.id_from_xml(elem)
 
-    def _delete_item_elem(self, field_path):
-        deleteitemfield = create_element(&#39;t:DeleteItemField&#39;)
-        return set_xml_value(deleteitemfield, field_path, version=self.account.version)
-
-    def _set_item_elem(self, item_model, field_path, value):
-        setitemfield = create_element(&#39;t:SetItemField&#39;)
-        set_xml_value(setitemfield, field_path, version=self.account.version)
-        item_elem = create_element(item_model.request_tag())
-        field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(item_elem, field_elem, version=self.account.version)
-        setitemfield.append(item_elem)
-        return setitemfield
-
-    @staticmethod
-    def _sorted_fields(item_model, fieldnames):
-        # Take a list of fieldnames and return the (unique) fields in the order they are mentioned in item_class.FIELDS.
-        # Checks that all fieldnames are valid.
-        unique_fieldnames = list(OrderedDict.fromkeys(fieldnames))  # Make field names unique ,but keep ordering
-        # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
-        for f in item_model.FIELDS:
-            if f.name in unique_fieldnames:
-                unique_fieldnames.remove(f.name)
-                yield f
-        if unique_fieldnames:
-            raise ValueError(&#34;Field name(s) %s are not valid for a &#39;%s&#39; item&#34; % (
-                &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % f for f in unique_fieldnames), item_model.__name__))
-
-    def _get_item_update_elems(self, item, fieldnames):
-        from ..items import CalendarItem
+    def _update_elems(self, target, fieldnames):
         fieldnames_copy = list(fieldnames)
 
-        if item.__class__ == CalendarItem:
+        if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to update internal timezone fields
-            item.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
+            target.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
             for field_name in (&#39;start&#39;, &#39;end&#39;):
                 if field_name in fieldnames_copy:
-                    tz_field_name = item.tz_field_for_field_name(field_name).name
+                    tz_field_name = target.tz_field_for_field_name(field_name).name
                     if tz_field_name not in fieldnames_copy:
                         fieldnames_copy.append(tz_field_name)
 
-        for field in self._sorted_fields(item_model=item.__class__, fieldnames=fieldnames_copy):
-            if field.is_read_only:
-                raise ValueError(&#39;%s is a read-only field&#39; % field.name)
-            value = self._get_item_value(item, field)
-            if value is None or (field.is_list and not value):
-                # A value of None or [] means we want to remove this field from the item
-                yield from self._get_delete_item_elems(field=field)
-            else:
-                yield from self._get_set_item_elems(item_model=item.__class__, field=field, value=value)
+        yield from super()._update_elems(target=target, fieldnames=fieldnames_copy)
 
-    def _get_item_value(self, item, field):
-        from ..items import CalendarItem
-        value = field.clean(getattr(item, field.name), version=self.account.version)  # Make sure the value is OK
-        if item.__class__ == CalendarItem:
+    def _get_value(self, target, field):
+        value = super()._get_value(target, field)
+
+        if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
             if field.name in (&#39;start&#39;, &#39;end&#39;):
                 if type(value) is EWSDate:
                     # EWS always expects a datetime
-                    return item.date_to_datetime(field_name=field.name)
-                tz_field_name = item.tz_field_for_field_name(field.name).name
-                return value.astimezone(getattr(item, tz_field_name))
+                    return target.date_to_datetime(field_name=field.name)
+                tz_field_name = target.tz_field_for_field_name(field.name).name
+                return value.astimezone(getattr(target, tz_field_name))
+
         return value
 
-    def _get_delete_item_elems(self, field):
-        if field.is_required or field.is_required_after_save:
-            raise ValueError(&#39;%s is a required field and may not be deleted&#39; % field.name)
-        for field_path in FieldPath(field=field).expand(version=self.account.version):
-            yield self._delete_item_elem(field_path=field_path)
-
-    def _get_set_item_elems(self, item_model, field, value):
-        if isinstance(field, IndexedField):
-            # Generate either set or delete elements for all combinations of labels and subfields
-            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
-                .supported_choices(version=self.account.version)
-            seen_labels = set()
-            subfields = field.value_cls.supported_fields(version=self.account.version)
-            for v in value:
-                seen_labels.add(v.label)
-                for subfield in subfields:
-                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
-                    subfield_value = getattr(v, subfield.name)
-                    if not subfield_value:
-                        # Generate delete elements for blank subfield values
-                        yield self._delete_item_elem(field_path=field_path)
-                    else:
-                        # Generate set elements for non-null subfield values
-                        yield self._set_item_elem(
-                            item_model=item_model,
-                            field_path=field_path,
-                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
-                        )
-                # Generate delete elements for all subfields of all labels not mentioned in the list of values
-                for label in (label for label in supported_labels if label not in seen_labels):
-                    for subfield in subfields:
-                        yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
-        else:
-            yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
+    def _target_elem(self, target):
+        return to_item_id(target, ItemId)
 
     def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
                     suppress_read_receipts):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
-        # are the attribute names that were updated. Returns the XML for an UpdateItem call.
-        # an UpdateItem request.
+        # are the attribute names that were updated.
+        attrs = dict(
+            ConflictResolution=conflict_resolution,
+            MessageDisposition=message_disposition,
+            SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
+        )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            updateitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;ConflictResolution&#39;, conflict_resolution),
-                    (&#39;MessageDisposition&#39;, message_disposition),
-                    (&#39;SendMeetingInvitationsOrCancellations&#39;, send_meeting_invitations_or_cancellations),
-                    (&#39;SuppressReadReceipts&#39;, &#39;true&#39; if suppress_read_receipts else &#39;false&#39;),
-                ])
-            )
-        else:
-            updateitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;ConflictResolution&#39;, conflict_resolution),
-                    (&#39;MessageDisposition&#39;, message_disposition),
-                    (&#39;SendMeetingInvitationsOrCancellations&#39;, send_meeting_invitations_or_cancellations),
-                ])
-            )
-        itemchanges = create_element(&#39;m:ItemChanges&#39;)
-        version = self.account.version
-        for item, fieldnames in items:
-            if not item.account:
-                item.account = self.account
-            if not fieldnames:
-                raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
-            itemchange = create_element(&#39;t:ItemChange&#39;)
-            set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
-            updates = create_element(&#39;t:Updates&#39;)
-            for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):
-                updates.append(elem)
-            itemchange.append(updates)
-            itemchanges.append(itemchange)
-        if not len(itemchanges):
-            raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
-        updateitem.append(itemchanges)
-        return updateitem</code></pre>
+            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        payload.append(self._changes_elem(target_changes=items))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -240,30 +138,27 @@ class UpdateItem(EWSAccountService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UpdateItem(EWSAccountService):
+<pre><code class="python">class UpdateItem(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#39;UpdateItem&#39;
-    element_container_name = &#39;{%s}Items&#39; % MNS
+    SET_FIELD_ELEMENT_NAME = &#39;t:SetItemField&#39;
+    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteItemField&#39;
+    CHANGE_ELEMENT_NAME = &#39;t:ItemChange&#39;
+    CHANGES_ELEMENT_NAME = &#39;m:ItemChanges&#39;
+    element_container_name = f&#39;{{{MNS}}}Items&#39;
 
     def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
              suppress_read_receipts):
-        from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
-            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
-                conflict_resolution, CONFLICT_RESOLUTION_CHOICES
-            ))
+            raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
-                message_disposition, MESSAGE_DISPOSITION_CHOICES
-            ))
+            raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
-            raise ValueError(&#34;&#39;send_meeting_invitations_or_cancellations&#39; %s must be one of %s&#34; % (
-                send_meeting_invitations_or_cancellations, SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
-            ))
-        if suppress_read_receipts not in (True, False):
-            raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
+            raise InvalidEnumValue(
+                &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
+                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+            )
         if message_disposition == SEND_ONLY:
             raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
         return self._elems_to_objs(self._chunked_get_elements(
@@ -275,163 +170,80 @@ class UpdateItem(EWSAccountService):
             suppress_read_receipts=suppress_read_receipts,
         ))
 
-    def _elems_to_objs(self, elems):
-        from ..items import Item
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield Item.id_from_xml(elem)
+    def _elem_to_obj(self, elem):
+        return Item.id_from_xml(elem)
 
-    def _delete_item_elem(self, field_path):
-        deleteitemfield = create_element(&#39;t:DeleteItemField&#39;)
-        return set_xml_value(deleteitemfield, field_path, version=self.account.version)
-
-    def _set_item_elem(self, item_model, field_path, value):
-        setitemfield = create_element(&#39;t:SetItemField&#39;)
-        set_xml_value(setitemfield, field_path, version=self.account.version)
-        item_elem = create_element(item_model.request_tag())
-        field_elem = field_path.field.to_xml(value, version=self.account.version)
-        set_xml_value(item_elem, field_elem, version=self.account.version)
-        setitemfield.append(item_elem)
-        return setitemfield
-
-    @staticmethod
-    def _sorted_fields(item_model, fieldnames):
-        # Take a list of fieldnames and return the (unique) fields in the order they are mentioned in item_class.FIELDS.
-        # Checks that all fieldnames are valid.
-        unique_fieldnames = list(OrderedDict.fromkeys(fieldnames))  # Make field names unique ,but keep ordering
-        # Loop over FIELDS and not supported_fields(). Upstream should make sure not to update a non-supported field.
-        for f in item_model.FIELDS:
-            if f.name in unique_fieldnames:
-                unique_fieldnames.remove(f.name)
-                yield f
-        if unique_fieldnames:
-            raise ValueError(&#34;Field name(s) %s are not valid for a &#39;%s&#39; item&#34; % (
-                &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % f for f in unique_fieldnames), item_model.__name__))
-
-    def _get_item_update_elems(self, item, fieldnames):
-        from ..items import CalendarItem
+    def _update_elems(self, target, fieldnames):
         fieldnames_copy = list(fieldnames)
 
-        if item.__class__ == CalendarItem:
+        if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to update internal timezone fields
-            item.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
+            target.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
             for field_name in (&#39;start&#39;, &#39;end&#39;):
                 if field_name in fieldnames_copy:
-                    tz_field_name = item.tz_field_for_field_name(field_name).name
+                    tz_field_name = target.tz_field_for_field_name(field_name).name
                     if tz_field_name not in fieldnames_copy:
                         fieldnames_copy.append(tz_field_name)
 
-        for field in self._sorted_fields(item_model=item.__class__, fieldnames=fieldnames_copy):
-            if field.is_read_only:
-                raise ValueError(&#39;%s is a read-only field&#39; % field.name)
-            value = self._get_item_value(item, field)
-            if value is None or (field.is_list and not value):
-                # A value of None or [] means we want to remove this field from the item
-                yield from self._get_delete_item_elems(field=field)
-            else:
-                yield from self._get_set_item_elems(item_model=item.__class__, field=field, value=value)
+        yield from super()._update_elems(target=target, fieldnames=fieldnames_copy)
 
-    def _get_item_value(self, item, field):
-        from ..items import CalendarItem
-        value = field.clean(getattr(item, field.name), version=self.account.version)  # Make sure the value is OK
-        if item.__class__ == CalendarItem:
+    def _get_value(self, target, field):
+        value = super()._get_value(target, field)
+
+        if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
             if field.name in (&#39;start&#39;, &#39;end&#39;):
                 if type(value) is EWSDate:
                     # EWS always expects a datetime
-                    return item.date_to_datetime(field_name=field.name)
-                tz_field_name = item.tz_field_for_field_name(field.name).name
-                return value.astimezone(getattr(item, tz_field_name))
+                    return target.date_to_datetime(field_name=field.name)
+                tz_field_name = target.tz_field_for_field_name(field.name).name
+                return value.astimezone(getattr(target, tz_field_name))
+
         return value
 
-    def _get_delete_item_elems(self, field):
-        if field.is_required or field.is_required_after_save:
-            raise ValueError(&#39;%s is a required field and may not be deleted&#39; % field.name)
-        for field_path in FieldPath(field=field).expand(version=self.account.version):
-            yield self._delete_item_elem(field_path=field_path)
-
-    def _get_set_item_elems(self, item_model, field, value):
-        if isinstance(field, IndexedField):
-            # Generate either set or delete elements for all combinations of labels and subfields
-            supported_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;)\
-                .supported_choices(version=self.account.version)
-            seen_labels = set()
-            subfields = field.value_cls.supported_fields(version=self.account.version)
-            for v in value:
-                seen_labels.add(v.label)
-                for subfield in subfields:
-                    field_path = FieldPath(field=field, label=v.label, subfield=subfield)
-                    subfield_value = getattr(v, subfield.name)
-                    if not subfield_value:
-                        # Generate delete elements for blank subfield values
-                        yield self._delete_item_elem(field_path=field_path)
-                    else:
-                        # Generate set elements for non-null subfield values
-                        yield self._set_item_elem(
-                            item_model=item_model,
-                            field_path=field_path,
-                            value=field.value_cls(**{&#39;label&#39;: v.label, subfield.name: subfield_value}),
-                        )
-                # Generate delete elements for all subfields of all labels not mentioned in the list of values
-                for label in (label for label in supported_labels if label not in seen_labels):
-                    for subfield in subfields:
-                        yield self._delete_item_elem(field_path=FieldPath(field=field, label=label, subfield=subfield))
-        else:
-            yield self._set_item_elem(item_model=item_model, field_path=FieldPath(field=field), value=value)
+    def _target_elem(self, target):
+        return to_item_id(target, ItemId)
 
     def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
                     suppress_read_receipts):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
-        # are the attribute names that were updated. Returns the XML for an UpdateItem call.
-        # an UpdateItem request.
+        # are the attribute names that were updated.
+        attrs = dict(
+            ConflictResolution=conflict_resolution,
+            MessageDisposition=message_disposition,
+            SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
+        )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            updateitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;ConflictResolution&#39;, conflict_resolution),
-                    (&#39;MessageDisposition&#39;, message_disposition),
-                    (&#39;SendMeetingInvitationsOrCancellations&#39;, send_meeting_invitations_or_cancellations),
-                    (&#39;SuppressReadReceipts&#39;, &#39;true&#39; if suppress_read_receipts else &#39;false&#39;),
-                ])
-            )
-        else:
-            updateitem = create_element(
-                &#39;m:%s&#39; % self.SERVICE_NAME,
-                attrs=OrderedDict([
-                    (&#39;ConflictResolution&#39;, conflict_resolution),
-                    (&#39;MessageDisposition&#39;, message_disposition),
-                    (&#39;SendMeetingInvitationsOrCancellations&#39;, send_meeting_invitations_or_cancellations),
-                ])
-            )
-        itemchanges = create_element(&#39;m:ItemChanges&#39;)
-        version = self.account.version
-        for item, fieldnames in items:
-            if not item.account:
-                item.account = self.account
-            if not fieldnames:
-                raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
-            itemchange = create_element(&#39;t:ItemChange&#39;)
-            set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
-            updates = create_element(&#39;t:Updates&#39;)
-            for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):
-                updates.append(elem)
-            itemchange.append(updates)
-            itemchanges.append(itemchange)
-        if not len(itemchanges):
-            raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
-        updateitem.append(itemchanges)
-        return updateitem</code></pre>
+            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        payload.append(self._changes_elem(target_changes=items))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.services.update_folder.BaseUpdateService" href="update_folder.html#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.update_item.UpdateItem.CHANGES_ELEMENT_NAME"><code class="name">var <span class="ident">CHANGES_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_item.UpdateItem.CHANGE_ELEMENT_NAME"><code class="name">var <span class="ident">CHANGE_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_item.UpdateItem.DELETE_FIELD_ELEMENT_NAME"><code class="name">var <span class="ident">DELETE_FIELD_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.update_item.UpdateItem.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.update_item.UpdateItem.SET_FIELD_ELEMENT_NAME"><code class="name">var <span class="ident">SET_FIELD_ELEMENT_NAME</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -453,22 +265,15 @@ class UpdateItem(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
          suppress_read_receipts):
-    from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
-        SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY
     if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-        raise ValueError(&#34;&#39;conflict_resolution&#39; %s must be one of %s&#34; % (
-            conflict_resolution, CONFLICT_RESOLUTION_CHOICES
-        ))
+        raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
     if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-        raise ValueError(&#34;&#39;message_disposition&#39; %s must be one of %s&#34; % (
-            message_disposition, MESSAGE_DISPOSITION_CHOICES
-        ))
+        raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
     if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
-        raise ValueError(&#34;&#39;send_meeting_invitations_or_cancellations&#39; %s must be one of %s&#34; % (
-            send_meeting_invitations_or_cancellations, SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
-        ))
-    if suppress_read_receipts not in (True, False):
-        raise ValueError(&#34;&#39;suppress_read_receipts&#39; %s must be True or False&#34; % suppress_read_receipts)
+        raise InvalidEnumValue(
+            &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
+            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+        )
     if message_disposition == SEND_ONLY:
         raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
     return self._elems_to_objs(self._chunked_get_elements(
@@ -493,56 +298,28 @@ class UpdateItem(EWSAccountService):
 <pre><code class="python">def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
                 suppress_read_receipts):
     # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
-    # are the attribute names that were updated. Returns the XML for an UpdateItem call.
-    # an UpdateItem request.
+    # are the attribute names that were updated.
+    attrs = dict(
+        ConflictResolution=conflict_resolution,
+        MessageDisposition=message_disposition,
+        SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
+    )
     if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-        updateitem = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                (&#39;ConflictResolution&#39;, conflict_resolution),
-                (&#39;MessageDisposition&#39;, message_disposition),
-                (&#39;SendMeetingInvitationsOrCancellations&#39;, send_meeting_invitations_or_cancellations),
-                (&#39;SuppressReadReceipts&#39;, &#39;true&#39; if suppress_read_receipts else &#39;false&#39;),
-            ])
-        )
-    else:
-        updateitem = create_element(
-            &#39;m:%s&#39; % self.SERVICE_NAME,
-            attrs=OrderedDict([
-                (&#39;ConflictResolution&#39;, conflict_resolution),
-                (&#39;MessageDisposition&#39;, message_disposition),
-                (&#39;SendMeetingInvitationsOrCancellations&#39;, send_meeting_invitations_or_cancellations),
-            ])
-        )
-    itemchanges = create_element(&#39;m:ItemChanges&#39;)
-    version = self.account.version
-    for item, fieldnames in items:
-        if not item.account:
-            item.account = self.account
-        if not fieldnames:
-            raise ValueError(&#39;&#34;fieldnames&#34; must not be empty&#39;)
-        itemchange = create_element(&#39;t:ItemChange&#39;)
-        set_xml_value(itemchange, to_item_id(item, ItemId, version=version), version=version)
-        updates = create_element(&#39;t:Updates&#39;)
-        for elem in self._get_item_update_elems(item=item, fieldnames=fieldnames):
-            updates.append(elem)
-        itemchange.append(updates)
-        itemchanges.append(itemchange)
-    if not len(itemchanges):
-        raise ValueError(&#39;&#34;items&#34; must not be empty&#39;)
-    updateitem.append(itemchanges)
-    return updateitem</code></pre>
+        attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+    payload.append(self._changes_elem(target_changes=items))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
+<li><code><b><a title="exchangelib.services.update_folder.BaseUpdateService" href="update_folder.html#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 </ul>
 </li>
 </ul>
@@ -566,7 +343,11 @@ class UpdateItem(EWSAccountService):
 <li>
 <h4><code><a title="exchangelib.services.update_item.UpdateItem" href="#exchangelib.services.update_item.UpdateItem">UpdateItem</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.services.update_item.UpdateItem.CHANGES_ELEMENT_NAME" href="#exchangelib.services.update_item.UpdateItem.CHANGES_ELEMENT_NAME">CHANGES_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_item.UpdateItem.CHANGE_ELEMENT_NAME" href="#exchangelib.services.update_item.UpdateItem.CHANGE_ELEMENT_NAME">CHANGE_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_item.UpdateItem.DELETE_FIELD_ELEMENT_NAME" href="#exchangelib.services.update_item.UpdateItem.DELETE_FIELD_ELEMENT_NAME">DELETE_FIELD_ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.services.update_item.UpdateItem.SERVICE_NAME" href="#exchangelib.services.update_item.UpdateItem.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.update_item.UpdateItem.SET_FIELD_ELEMENT_NAME" href="#exchangelib.services.update_item.UpdateItem.SET_FIELD_ELEMENT_NAME">SET_FIELD_ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.services.update_item.UpdateItem.call" href="#exchangelib.services.update_item.UpdateItem.call">call</a></code></li>
 <li><code><a title="exchangelib.services.update_item.UpdateItem.element_container_name" href="#exchangelib.services.update_item.UpdateItem.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.update_item.UpdateItem.get_payload" href="#exchangelib.services.update_item.UpdateItem.get_payload">get_payload</a></code></li>

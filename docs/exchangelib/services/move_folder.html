@@ -26,39 +26,33 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, create_folder_ids_element
-from ..util import create_element, set_xml_value, MNS
+<pre><code class="python">from .common import EWSAccountService, folder_ids_element
+from ..errors import InvalidTypeError
+from ..folders import BaseFolder
+from ..properties import FolderId
+from ..util import create_element, MNS
 
 
 class MoveFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/movefolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#34;MoveFolder&#34;
-    element_container_name = &#39;{%s}Folders&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Folders&#39;
 
     def call(self, folders, to_folder):
-        from ..folders import BaseFolder, FolderId
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
+            raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
 
-    def _elems_to_objs(self, elems):
-        from ..folders import FolderId
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+    def _elem_to_obj(self, elem):
+        return FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
 
     def get_payload(self, folders, to_folder):
         # Takes a list of folders and returns their new folder IDs
-        movefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        tofolderid = create_element(&#39;m:ToFolderId&#39;)
-        set_xml_value(tofolderid, to_folder, version=self.account.version)
-        movefolder.append(tofolderid)
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        movefolder.append(folder_ids)
-        return movefolder</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
+        return payload</code></pre>
 </details>
 </section>
 <section>
@@ -84,31 +78,22 @@ class MoveFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/movefolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#34;MoveFolder&#34;
-    element_container_name = &#39;{%s}Folders&#39; % MNS
+    element_container_name = f&#39;{{{MNS}}}Folders&#39;
 
     def call(self, folders, to_folder):
-        from ..folders import BaseFolder, FolderId
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
+            raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
 
-    def _elems_to_objs(self, elems):
-        from ..folders import FolderId
-        for elem in elems:
-            if isinstance(elem, (Exception, type(None))):
-                yield elem
-                continue
-            yield FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
+    def _elem_to_obj(self, elem):
+        return FolderId.from_xml(elem=elem.find(FolderId.response_tag()), account=self.account)
 
     def get_payload(self, folders, to_folder):
         # Takes a list of folders and returns their new folder IDs
-        movefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-        tofolderid = create_element(&#39;m:ToFolderId&#39;)
-        set_xml_value(tofolderid, to_folder, version=self.account.version)
-        movefolder.append(tofolderid)
-        folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-        movefolder.append(folder_ids)
-        return movefolder</code></pre>
+        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version))
+        return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -138,9 +123,8 @@ class MoveFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, to_folder):
-    from ..folders import BaseFolder, FolderId
     if not isinstance(to_folder, (BaseFolder, FolderId)):
-        raise ValueError(&#34;&#39;to_folder&#39; %r must be a Folder or FolderId instance&#34; % to_folder)
+        raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
     return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))</code></pre>
 </details>
 </dd>
@@ -155,13 +139,10 @@ class MoveFolder(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, folders, to_folder):
     # Takes a list of folders and returns their new folder IDs
-    movefolder = create_element(&#39;m:%s&#39; % self.SERVICE_NAME)
-    tofolderid = create_element(&#39;m:ToFolderId&#39;)
-    set_xml_value(tofolderid, to_folder, version=self.account.version)
-    movefolder.append(tofolderid)
-    folder_ids = create_folder_ids_element(tag=&#39;m:FolderIds&#39;, folders=folders, version=self.account.version)
-    movefolder.append(folder_ids)
-    return movefolder</code></pre>
+    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+    payload.append(folder_ids_element(folders=folders, version=self.account.version))
+    return payload</code></pre>
 </details>
 </dd>
 </dl>

@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>exchangelib.winzone API documentation</title>
-<meta name="description" content="A dict to translate from IANA location name to Windows timezone name. Translations taken from
-…" />
+<meta name="description" content="A dict to translate from IANA location name to Windows timezone name. Translations taken from CLDR_WINZONE_URL" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,14 +22,12 @@
 <h1 class="title">Module <code>exchangelib.winzone</code></h1>
 </header>
 <section id="section-intro">
-<p>A dict to translate from IANA location name to Windows timezone name. Translations taken from
-<a href="http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml">http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml</a></p>
+<p>A dict to translate from IANA location name to Windows timezone name. Translations taken from CLDR_WINZONE_URL</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;A dict to translate from IANA location name to Windows timezone name. Translations taken from
-http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
+<pre><code class="python">&#34;&#34;&#34;A dict to translate from IANA location name to Windows timezone name. Translations taken from CLDR_WINZONE_URL
 &#34;&#34;&#34;
 import re
 
@@ -52,7 +49,7 @@ def generate_map(timeout=10):
     &#34;&#34;&#34;
     r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
     if r.status_code != 200:
-        raise ValueError(&#39;Unexpected response: %s&#39; % r)
+        raise ValueError(f&#39;Unexpected response: {r}&#39;)
     tz_map = {}
     timezones_elem = to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;)
     type_version = timezones_elem.get(&#39;typeVersion&#39;)
@@ -62,8 +59,6 @@ def generate_map(timeout=10):
             if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
                 # &#34;preferred&#34; region/location timezone name.
-                if not location:
-                    raise ValueError(&#39;Expected location&#39;)
                 tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
     return type_version, other_version, tz_map
 
@@ -716,7 +711,7 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
     &#34;&#34;&#34;
     r = requests.get(CLDR_WINZONE_URL, timeout=timeout)
     if r.status_code != 200:
-        raise ValueError(&#39;Unexpected response: %s&#39; % r)
+        raise ValueError(f&#39;Unexpected response: {r}&#39;)
     tz_map = {}
     timezones_elem = to_xml(r.content).find(&#39;windowsZones&#39;).find(&#39;mapTimezones&#39;)
     type_version = timezones_elem.get(&#39;typeVersion&#39;)
@@ -726,8 +721,6 @@ MS_TIMEZONE_TO_IANA_MAP = dict(
             if e.get(&#39;territory&#39;) == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
                 # &#34;preferred&#34; region/location timezone name.
-                if not location:
-                    raise ValueError(&#39;Expected location&#39;)
                 tz_map[location] = e.get(&#39;other&#39;), e.get(&#39;territory&#39;)
     return type_version, other_version, tz_map</code></pre>
 </details>

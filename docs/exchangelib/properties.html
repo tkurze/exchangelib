@@ -35,15 +35,15 @@ import struct
 from inspect import getmro
 from threading import Lock
 
-from .errors import TimezoneDefinitionInvalidForYear
+from .errors import TimezoneDefinitionInvalidForYear, InvalidTypeError
 from .fields import SubField, TextField, EmailAddressField, ChoiceField, DateTimeField, EWSElementField, MailboxField, \
     Choice, BooleanField, IdField, ExtendedPropertyField, IntegerField, TimeField, EnumField, CharField, EmailField, \
     EWSElementListField, EnumListField, FreeBusyStatusField, UnknownEntriesField, MessageField, RecipientAddressField, \
     RoutingTypeField, WEEKDAY_NAMES, FieldPath, Field, AssociatedCalendarItemIdField, ReferenceItemIdField, \
     Base64Field, TypeValueField, DictionaryField, IdElementField, CharListField, GenericEventListField, \
-    InvalidField, InvalidFieldForVersion
+    DateTimeBackedDateField, TimeDeltaField, TransitionListField, InvalidField, InvalidFieldForVersion
 from .util import get_xml_attr, create_element, set_xml_value, value_to_xml_text, MNS, TNS
-from .version import Version, EXCHANGE_2013, Build
+from .version import EXCHANGE_2013, Build
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class Fields(list):
         for f in fields:
             # Check for duplicate field names
             if f.name in self._dict:
-                raise ValueError(&#39;Field %r is a duplicate&#39; % f)
+                raise ValueError(f&#39;Field {f!r} is a duplicate&#39;)
             self._dict[f.name] = f
 
     def __getitem__(self, idx_or_slice):
@@ -80,9 +80,7 @@ class Fields(list):
         return self
 
     def __contains__(self, item):
-        if isinstance(item, str):
-            return item in self._dict
-        return super().__contains__(item)
+        return item in self._dict
 
     def copy(self):
         return self.__class__(*self)
@@ -91,11 +89,11 @@ class Fields(list):
         for i, f in enumerate(self):
             if f.name == field_name:
                 return i
-        raise ValueError(&#39;Unknown field name %r&#39; % field_name)
+        raise ValueError(f&#39;Unknown field name {field_name!r}&#39;)
 
     def insert(self, index, field):
         if field.name in self._dict:
-            raise ValueError(&#39;Field %r is a duplicate&#39; % field)
+            raise ValueError(f&#39;Field {field!r} is a duplicate&#39;)
         super().insert(index, field)
         self._dict[field.name] = field
 
@@ -173,7 +171,7 @@ class UID(bytes):
     # https://stackoverflow.com/questions/33757805
 
     def __new__(cls, uid):
-        payload = binascii.hexlify(bytearray(&#39;vCal-Uid\x01\x00\x00\x00{}\x00&#39;.format(uid).encode(&#39;ascii&#39;)))
+        payload = binascii.hexlify(bytearray(f&#39;vCal-Uid\x01\x00\x00\x00{uid}\x00&#39;.encode(&#39;ascii&#39;)))
         length = binascii.hexlify(bytearray(struct.pack(&#39;&lt;I&#39;, int(len(payload)/2))))
         encoding = b&#39;&#39;.join([
             cls._HEADER, cls._EXCEPTION_REPLACEMENT_TIME, cls._CREATION_TIME, cls._RESERVED, length, payload
@@ -187,7 +185,7 @@ class UID(bytes):
 
 
 def _mangle(field_name):
-    return &#39;__%s&#39; % field_name
+    return f&#39;__{field_name}&#39;
 
 
 class EWSMeta(type, metaclass=abc.ABCMeta):
@@ -262,7 +260,7 @@ class EWSElement(metaclass=EWSMeta):
         for f in self.FIELDS:
             setattr(self, f.name, kwargs.pop(f.name, None))
         if kwargs:
-            raise AttributeError(&#34;%s are invalid kwargs for this class&#34; % &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in kwargs))
+            raise AttributeError(f&#34;{sorted(kwargs.keys())!r} are invalid kwargs for this class&#34;)
 
     def __setattr__(self, key, value):
         # Avoid silently accepting spelling errors to field names that are not set via __init__. We need to be able to
@@ -275,8 +273,9 @@ class EWSElement(metaclass=EWSMeta):
         if hasattr(self, key):
             # Property setters
             return super().__setattr__(key, value)
-        raise AttributeError(&#39;%r is not a valid attribute. See %s.FIELDS for valid field names&#39; % (
-            key, self.__class__.__name__))
+        raise AttributeError(
+            f&#39;{key!r} is not a valid attribute. See {self.__class__.__name__}.FIELDS for valid field names&#39;
+        )
 
     def clean(self, version=None):
         # Validate attribute values using the field validator
@@ -311,17 +310,18 @@ class EWSElement(metaclass=EWSMeta):
         # WARNING: The order of addition of XML elements is VERY important. Exchange expects XML elements in a
         # specific, non-documented order and will fail with meaningless errors if the order is wrong.
 
-        # Call create_element() without args, to not fill up the cache with unique attribute values.
-        elem = create_element(self.request_tag())
-
-        # Add attributes
+        # Collect attributes
+        attrs = {}
         for f in self.attribute_fields():
             if f.is_read_only:
                 continue
             value = getattr(self, f.name)
             if value is None or (f.is_list and not value):
                 continue
-            elem.set(f.field_uri, value_to_xml_text(getattr(self, f.name)))
+            attrs[f.field_uri] = value_to_xml_text(getattr(self, f.name))
+
+        # Create element with attributes
+        elem = create_element(self.request_tag(), attrs=attrs)
 
         # Add elements and values
         for f in self.supported_fields(version=version):
@@ -330,25 +330,25 @@ class EWSElement(metaclass=EWSMeta):
             value = getattr(self, f.name)
             if value is None or (f.is_list and not value):
                 continue
-            set_xml_value(elem, f.to_xml(value, version=version), version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         return elem
 
     @classmethod
     def request_tag(cls):
         if not cls.ELEMENT_NAME:
-            raise ValueError(&#39;Class %s is missing the ELEMENT_NAME attribute&#39; % cls)
+            raise ValueError(f&#39;Class {cls} is missing the ELEMENT_NAME attribute&#39;)
         return {
-            TNS: &#39;t:%s&#39; % cls.ELEMENT_NAME,
-            MNS: &#39;m:%s&#39; % cls.ELEMENT_NAME,
+            TNS: f&#39;t:{cls.ELEMENT_NAME}&#39;,
+            MNS: f&#39;m:{cls.ELEMENT_NAME}&#39;,
         }[cls.NAMESPACE]
 
     @classmethod
     def response_tag(cls):
         if not cls.NAMESPACE:
-            raise ValueError(&#39;Class %s is missing the NAMESPACE attribute&#39; % cls)
+            raise ValueError(f&#39;Class {cls} is missing the NAMESPACE attribute&#39;)
         if not cls.ELEMENT_NAME:
-            raise ValueError(&#39;Class %s is missing the ELEMENT_NAME attribute&#39; % cls)
-        return &#39;{%s}%s&#39; % (cls.NAMESPACE, cls.ELEMENT_NAME)
+            raise ValueError(f&#39;Class {cls} is missing the ELEMENT_NAME attribute&#39;)
+        return f&#39;{{{cls.NAMESPACE}}}{cls.ELEMENT_NAME}&#39;
 
     @classmethod
     def attribute_fields(cls):
@@ -365,7 +365,7 @@ class EWSElement(metaclass=EWSMeta):
         try:
             return cls.FIELDS[fieldname]
         except KeyError:
-            raise InvalidField(&#34;&#39;%s&#39; is not a valid field name on &#39;%s&#39;&#34; % (fieldname, cls.__name__))
+            raise InvalidField(f&#34;{fieldname!r} is not a valid field name on {cls.__name__}&#34;)
 
     @classmethod
     def validate_field(cls, field, version):
@@ -375,21 +375,18 @@ class EWSElement(metaclass=EWSMeta):
         :param field:
         :param version:
         &#34;&#34;&#34;
-        if not isinstance(version, Version):
-            raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
         # Allow both Field and FieldPath instances and string field paths as input
         if isinstance(field, str):
             field = cls.get_field_by_fieldname(fieldname=field)
         elif isinstance(field, FieldPath):
             field = field.field
-        if not isinstance(field, Field):
-            raise ValueError(&#34;Field %r must be a string, Field or FieldPath instance&#34; % field)
         cls.get_field_by_fieldname(fieldname=field.name)  # Will raise if field name is invalid
         if not field.supports_version(version):
             # The field exists but is not valid for this version
             raise InvalidFieldForVersion(
-                &#34;Field &#39;%s&#39; is not supported on server version %s (supported from: %s, deprecated from: %s)&#34;
-                % (field.name, version, field.supported_from, field.deprecated_from))
+                f&#34;Field {field.name!r} is not supported on server version {version} &#34;
+                f&#34;(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})&#34;
+            )
 
     @classmethod
     def add_field(cls, field, insert_after):
@@ -435,14 +432,14 @@ class EWSElement(metaclass=EWSMeta):
         return field_vals
 
     def __str__(self):
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(
-            &#39;%s=%r&#39; % (name, val) for name, val in self._field_vals() if val is not None
+        args_str = &#39;, &#39;.join(
+            f&#39;{name}={val!r}&#39; for name, val in self._field_vals() if val is not None
         )
+        return f&#39;{self.__class__.__name__}({args_str})&#39;
 
     def __repr__(self):
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(
-            &#39;%s=%r&#39; % (name, val) for name, val in self._field_vals()
-        )
+        args_str = &#39;, &#39;.join(f&#39;{name}={val!r}&#39; for name, val in self._field_vals())
+        return f&#39;{self.__class__.__name__}({args_str})&#39;
 
 
 class MessageHeader(EWSElement):
@@ -454,7 +451,7 @@ class MessageHeader(EWSElement):
     value = SubField()
 
 
-class BaseItemId(EWSElement):
+class BaseItemId(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for ItemId elements.&#34;&#34;&#34;
 
     ID_ATTR = None
@@ -537,7 +534,7 @@ class PersonaId(ItemId):
     @classmethod
     def response_tag(cls):
         # This element is in MNS in the request and TNS in the response...
-        return &#39;{%s}%s&#39; % (TNS, cls.ELEMENT_NAME)
+        return f&#39;{{{TNS}}}{cls.ELEMENT_NAME}&#39;
 
 
 class SourceId(ItemId):
@@ -613,7 +610,7 @@ class Mailbox(EWSElement):
             # A OneOff Mailbox (a one-off member of a personal distribution list) may lack these fields, but other
             # Mailboxes require at least one. See also &#34;Remarks&#34; section of
             # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox
-            raise ValueError(&#34;Mailbox type %r must have either &#39;email_address&#39; or &#39;item_id&#39; set&#34; % self.mailbox_type)
+            raise ValueError(f&#34;Mailbox type {self.mailbox_type!r} must have either &#39;email_address&#39; or &#39;item_id&#39; set&#34;)
 
     def __hash__(self):
         # Exchange may add &#39;mailbox_type&#39; and &#39;name&#39; on insert. We&#39;re satisfied if the item_id or email address matches.
@@ -690,7 +687,7 @@ class AvailabilityMailbox(EWSElement):
     @classmethod
     def from_mailbox(cls, mailbox):
         if not isinstance(mailbox, Mailbox):
-            raise ValueError(&#34;&#39;mailbox&#39; %r must be a Mailbox instance&#34; % mailbox)
+            raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
         return cls(name=mailbox.name, email_address=mailbox.email_address, routing_type=mailbox.routing_type)
 
 
@@ -735,6 +732,11 @@ class TimeWindow(EWSElement):
 
     start = DateTimeField(field_uri=&#39;StartTime&#39;, is_required=True)
     end = DateTimeField(field_uri=&#39;EndTime&#39;, is_required=True)
+
+    def clean(self, version=None):
+        if self.start &gt;= self.end:
+            raise ValueError(f&#34;&#39;start&#39; must be less than &#39;end&#39; ({self.start} -&gt; {self.end})&#34;)
+        super().clean(version=version)
 
 
 class FreeBusyViewOptions(EWSElement):
@@ -824,12 +826,15 @@ class TimeZone(EWSElement):
         :return: A Microsoft timezone ID, as a string
         &#34;&#34;&#34;
         candidates = set()
-        for tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups in timezones:
-            candidate = self.from_server_timezone(tz_periods, tz_transitions, tz_transitions_groups, for_year)
+        for tz_definition in timezones:
+            candidate = self.from_server_timezone(
+                tz_definition=tz_definition,
+                for_year=for_year,
+            )
             if candidate == self:
-                log.debug(&#39;Found exact candidate: %s (%s)&#39;, tz_id, tz_name)
+                log.debug(&#39;Found exact candidate: %s (%s)&#39;, tz_definition.id, tz_definition.name)
                 # We prefer this timezone over anything else. Return immediately.
-                return tz_id
+                return tz_definition.id
             # Reduce list based on base bias and standard / daylight bias values
             if candidate.bias != self.bias:
                 continue
@@ -849,8 +854,8 @@ class TimeZone(EWSElement):
                     continue
                 if candidate.daylight_time.bias != self.daylight_time.bias:
                     continue
-            log.debug(&#39;Found candidate with matching biases: %s (%s)&#39;, tz_id, tz_name)
-            candidates.add(tz_id)
+            log.debug(&#39;Found candidate with matching biases: %s (%s)&#39;, tz_definition.id, tz_definition.name)
+            candidates.add(tz_definition.id)
         if not candidates:
             raise ValueError(&#39;No server timezones match this timezone definition&#39;)
         if len(candidates) == 1:
@@ -860,81 +865,10 @@ class TimeZone(EWSElement):
         return candidates.pop()
 
     @classmethod
-    def from_server_timezone(cls, periods, transitions, transitionsgroups, for_year):
+    def from_server_timezone(cls, tz_definition, for_year):
         # Creates a TimeZone object from the result of a GetServerTimeZones call with full timezone data
-
-        # Get the default bias
-        bias = cls._get_bias(periods=periods, for_year=for_year)
-
-        # Get a relevant transition ID
-        valid_tg_id = cls._get_valid_transition_id(transitions=transitions, for_year=for_year)
-        transitiongroup = transitionsgroups[valid_tg_id]
-        if not 0 &lt;= len(transitiongroup) &lt;= 2:
-            raise ValueError(&#39;Expected 0-2 transitions in transitionsgroup %s&#39; % transitiongroup)
-
-        standard_time, daylight_time = cls._get_std_and_dst(transitiongroup=transitiongroup, periods=periods, bias=bias)
-        return cls(bias=bias, standard_time=standard_time, daylight_time=daylight_time)
-
-    @staticmethod
-    def _get_bias(periods, for_year):
-        # Set a default bias
-        valid_period = None
-        for (year, period_type), period in sorted(periods.items()):
-            if year &gt; for_year:
-                break
-            if period_type != &#39;Standard&#39;:
-                continue
-            valid_period = period
-        if valid_period is None:
-            raise TimezoneDefinitionInvalidForYear(&#39;Year %s not included in periods %s&#39; % (for_year, periods))
-        return int(valid_period[&#39;bias&#39;].total_seconds()) // 60  # Convert to minutes
-
-    @staticmethod
-    def _get_valid_transition_id(transitions, for_year):
-        # Look through the transitions, and pick the relevant one according to the &#39;for_year&#39; value
-        valid_tg_id = None
-        for tg_id, from_date in sorted(transitions.items()):
-            if from_date and from_date.year &gt; for_year:
-                break
-            valid_tg_id = tg_id
-        if valid_tg_id is None:
-            raise ValueError(&#39;No valid transition for year %s: %s&#39; % (for_year, transitions))
-        return valid_tg_id
-
-    @staticmethod
-    def _get_std_and_dst(transitiongroup, periods, bias):
-        # Return &#39;standard_time&#39; and &#39;daylight_time&#39; objects. We do unnecessary work here, but it keeps code simple.
-        standard_time, daylight_time = None, None
-        for transition in transitiongroup:
-            period = periods[transition[&#39;to&#39;]]
-            if len(transition) == 1:
-                # This is a simple transition representing a timezone with no DST. Some servers don&#39;t accept TimeZone
-                # elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime objects
-                # with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break the
-                # well-behaving servers.
-                standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
-                daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
-                continue
-            # &#39;offset&#39; is the time of day to transition, as timedelta since midnight. Must be a reasonable value
-            if not datetime.timedelta(0) &lt;= transition[&#39;offset&#39;] &lt; datetime.timedelta(days=1):
-                raise ValueError(&#34;&#39;offset&#39; value %s must be be between 0 and 24 hours&#34; % transition[&#39;offset&#39;])
-            transition_kwargs = dict(
-                time=(datetime.datetime(2000, 1, 1) + transition[&#39;offset&#39;]).time(),
-                occurrence=transition[&#39;occurrence&#39;],
-                iso_month=transition[&#39;iso_month&#39;],
-                weekday=transition[&#39;iso_weekday&#39;],
-            )
-            if period[&#39;name&#39;] == &#39;Standard&#39;:
-                transition_kwargs[&#39;bias&#39;] = 0
-                standard_time = StandardTime(**transition_kwargs)
-                continue
-            if period[&#39;name&#39;] == &#39;Daylight&#39;:
-                dst_bias = int(period[&#39;bias&#39;].total_seconds()) // 60  # Convert to minutes
-                transition_kwargs[&#39;bias&#39;] = dst_bias - bias
-                daylight_time = DaylightTime(**transition_kwargs)
-                continue
-            raise ValueError(&#39;Unknown transition: %s&#39; % transition)
-        return standard_time, daylight_time
+        std_time, daylight_time, period = tz_definition.get_std_and_dst(for_year=for_year)
+        return cls(bias=period.bias_in_minutes, standard_time=std_time, daylight_time=daylight_time)
 
 
 class CalendarView(EWSElement):
@@ -1010,7 +944,7 @@ class FreeBusyView(EWSElement):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        working_hours_elem = elem.find(&#39;{%s}WorkingHours&#39; % TNS)
+        working_hours_elem = elem.find(f&#39;{{{TNS}}}WorkingHours&#39;)
         for f in cls.FIELDS:
             if f.name in [&#39;working_hours&#39;, &#39;working_hours_timezone&#39;]:
                 if working_hours_elem is None:
@@ -1032,7 +966,7 @@ class RoomList(Mailbox):
     def response_tag(cls):
         # In a GetRoomLists response, room lists are delivered as Address elements. See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/address-emailaddresstype
-        return &#39;{%s}Address&#39; % TNS
+        return f&#39;{{{TNS}}}Address&#39;
 
 
 class Room(Mailbox):
@@ -1042,12 +976,12 @@ class Room(Mailbox):
 
     @classmethod
     def from_xml(cls, elem, account):
-        id_elem = elem.find(&#39;{%s}Id&#39; % TNS)
+        id_elem = elem.find(f&#39;{{{TNS}}}Id&#39;)
         item_id_elem = id_elem.find(ItemId.response_tag())
         kwargs = dict(
-            name=get_xml_attr(id_elem, &#39;{%s}Name&#39; % TNS),
-            email_address=get_xml_attr(id_elem, &#39;{%s}EmailAddress&#39; % TNS),
-            mailbox_type=get_xml_attr(id_elem, &#39;{%s}MailboxType&#39; % TNS),
+            name=get_xml_attr(id_elem, f&#39;{{{TNS}}}Name&#39;),
+            email_address=get_xml_attr(id_elem, f&#39;{{{TNS}}}EmailAddress&#39;),
+            mailbox_type=get_xml_attr(id_elem, f&#39;{{{TNS}}}MailboxType&#39;),
             item_id=ItemId.from_xml(elem=item_id_elem, account=account) if item_id_elem else None,
         )
         cls._clear(elem)
@@ -1246,7 +1180,7 @@ class OutOfOffice(EWSElement):
     @classmethod
     def duration_to_start_end(cls, elem, account):
         kwargs = {}
-        duration = elem.find(&#39;{%s}Duration&#39; % TNS)
+        duration = elem.find(f&#39;{{{TNS}}}Duration&#39;)
         if duration is not None:
             for attr in (&#39;start&#39;, &#39;end&#39;):
                 f = cls.get_field_by_fieldname(attr)
@@ -1307,7 +1241,7 @@ class AlternateId(EWSElement):
     @classmethod
     def response_tag(cls):
         # This element is in TNS in the request and MNS in the response...
-        return &#39;{%s}%s&#39; % (MNS, cls.ELEMENT_NAME)
+        return f&#39;{{{MNS}}}{cls.ELEMENT_NAME}&#39;
 
 
 class AlternatePublicFolderId(EWSElement):
@@ -1465,9 +1399,9 @@ class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
     ID_ELEMENT_CLS = None
 
     def __init__(self, **kwargs):
-        _id = self.ID_ELEMENT_CLS(kwargs.pop(&#39;id&#39;, None), kwargs.pop(&#39;changekey&#39;, None))
-        if _id.id or _id.changekey:
-            kwargs[&#39;_id&#39;] = _id
+        _id, _changekey = kwargs.pop(&#39;id&#39;, None), kwargs.pop(&#39;changekey&#39;, None)
+        if _id or _changekey:
+            kwargs[&#39;_id&#39;] = self.ID_ELEMENT_CLS(_id, _changekey)
         super().__init__(**kwargs)
 
     @classmethod
@@ -1508,8 +1442,10 @@ class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
             return None, None
         return id_elem.get(cls.ID_ELEMENT_CLS.ID_ATTR), id_elem.get(cls.ID_ELEMENT_CLS.CHANGEKEY_ATTR)
 
-    def to_id_xml(self, version):
-        return self._id.to_xml(version=version)
+    def to_id(self):
+        if self._id is None:
+            raise ValueError(&#39;Must have an ID&#39;)
+        return self._id
 
     def __eq__(self, other):
         if isinstance(other, tuple):
@@ -1544,7 +1480,7 @@ class UserConfigurationName(EWSElement):
     def clean(self, version=None):
         from .folders import BaseFolder
         if isinstance(self.folder, BaseFolder):
-            self.folder = self.folder.to_folder_id()
+            self.folder = self.folder.to_id()
         super().clean(version=version)
 
     @classmethod
@@ -1802,7 +1738,188 @@ class Notification(EWSElement):
     subscription_id = CharField(field_uri=&#39;SubscriptionId&#39;)
     previous_watermark = CharField(field_uri=&#39;PreviousWatermark&#39;)
     more_events = BooleanField(field_uri=&#39;MoreEvents&#39;)
-    events = GenericEventListField(&#39;&#39;)</code></pre>
+    events = GenericEventListField(&#39;&#39;)
+
+
+class BaseTransition(EWSElement, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for all other transition classes&#34;&#34;&#34;
+
+    to = CharField(field_uri=&#39;To&#39;)
+    kind = CharField(field_uri=&#39;Kind&#39;, is_attribute=True)  # An attribute on the &#39;To&#39; element
+
+    @staticmethod
+    def transition_model_from_tag(tag):
+        return {cls.response_tag(): cls for cls in (
+            Transition, AbsoluteDateTransition, RecurringDateTransition, RecurringDayTransition
+        )}[tag]
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kind = elem.find(cls.get_field_by_fieldname(&#39;to&#39;).response_tag()).get(&#39;Kind&#39;)
+        res = super().from_xml(elem=elem, account=account)
+        res.kind = kind
+        return res
+
+
+class Transition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;Transition&#39;
+
+
+class AbsoluteDateTransition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutedatetransition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;AbsoluteDateTransition&#39;
+
+    date = DateTimeBackedDateField(field_uri=&#39;DateTime&#39;)
+
+
+class RecurringDayTransition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdaytransition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;RecurringDayTransition&#39;
+
+    offset = TimeDeltaField(field_uri=&#39;TimeOffset&#39;)
+    month = IntegerField(field_uri=&#39;Month&#39;)
+    # Valid ISO 8601 weekday, as a number in range 1 -&gt; 7 (1 being Monday)
+    day_of_week = EnumField(field_uri=&#39;DayOfWeek&#39;, enum=WEEKDAY_NAMES)
+    occurrence = IntegerField(field_uri=&#39;Occurrence&#39;)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = super().from_xml(elem, account)
+        # See TimeZoneTransition.from_xml()
+        if res.occurrence == -1:
+            res.occurrence = 5
+        return res
+
+
+class RecurringDateTransition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdatetransition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;RecurringDateTransition&#39;
+
+    offset = TimeDeltaField(field_uri=&#39;TimeOffset&#39;)
+    month = IntegerField(field_uri=&#39;Month&#39;)
+    day = IntegerField(field_uri=&#39;Day&#39;)  # Day of month
+
+
+class Period(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/period&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;Period&#39;
+
+    id = CharField(field_uri=&#39;Id&#39;, is_attribute=True)
+    name = CharField(field_uri=&#39;Name&#39;, is_attribute=True)
+    bias = TimeDeltaField(field_uri=&#39;Bias&#39;, is_attribute=True)
+
+    def _split_id(self):
+        to_year, to_type = self.id.rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
+        return int(to_year), to_type
+
+    @property
+    def year(self):
+        return self._split_id()[0]
+
+    @property
+    def type(self):
+        return self._split_id()[1]
+
+    @property
+    def bias_in_minutes(self):
+        return int(self.bias.total_seconds()) // 60  # Convert to minutes
+
+
+class TransitionsGroup(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transitionsgroup&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;TransitionsGroup&#39;
+
+    id = CharField(field_uri=&#39;Id&#39;, is_attribute=True)
+    transitions = TransitionListField(value_cls=BaseTransition)
+
+
+class TimeZoneDefinition(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonedefinition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;TimeZoneDefinition&#39;
+
+    id = CharField(field_uri=&#39;Id&#39;, is_attribute=True)
+    name = CharField(field_uri=&#39;Name&#39;, is_attribute=True)
+
+    periods = EWSElementListField(field_uri=&#39;Periods&#39;, value_cls=Period)
+    transitions_groups = EWSElementListField(field_uri=&#39;TransitionsGroups&#39;, value_cls=TransitionsGroup)
+    transitions = TransitionListField(field_uri=&#39;Transitions&#39;, value_cls=BaseTransition)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        return super().from_xml(elem, account)
+
+    def _get_standard_period(self, for_year):
+        # Look through periods and pick a relevant period according to the &#39;for_year&#39; value
+        valid_period = None
+        for period in sorted(self.periods, key=lambda p: (p.year, p.type)):
+            if period.year &gt; for_year:
+                break
+            if period.type != &#39;Standard&#39;:
+                continue
+            valid_period = period
+        if valid_period is None:
+            raise TimezoneDefinitionInvalidForYear(f&#39;Year {for_year} not included in periods {self.periods}&#39;)
+        return valid_period
+
+    def _get_transitions_group(self, for_year):
+        # Look through the transitions, and pick the relevant transition group according to the &#39;for_year&#39; value
+        transitions_group = None
+        transitions_groups_map = {tg.id: tg for tg in self.transitions_groups}
+        for transition in sorted(self.transitions, key=lambda t: t.to):
+            if transition.kind != &#39;Group&#39;:
+                continue
+            if isinstance(transition, AbsoluteDateTransition) and transition.date.year &gt; for_year:
+                break
+            transitions_group = transitions_groups_map[transition.to]
+        if transitions_group is None:
+            raise ValueError(f&#39;No valid transition group for year {for_year}: {self.transitions}&#39;)
+        return transitions_group
+
+    def get_std_and_dst(self, for_year):
+        # Return &#39;standard_time&#39; and &#39;daylight_time&#39; objects. We do unnecessary work here, but it keeps code simple.
+        transitions_group = self._get_transitions_group(for_year)
+        if not 0 &lt;= len(transitions_group.transitions) &lt;= 2:
+            raise ValueError(f&#39;Expected 0-2 transitions in transitions group {transitions_group}&#39;)
+
+        standard_period = self._get_standard_period(for_year)
+        periods_map = {p.id: p for p in self.periods}
+        standard_time, daylight_time = None, None
+        if len(transitions_group.transitions) == 1:
+            # This is a simple transition group representing a timezone with no DST. Some servers don&#39;t accept
+            # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+            # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break
+            # the well-behaving servers.
+            standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
+            daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
+            return standard_time, daylight_time, standard_period
+        for transition in transitions_group.transitions:
+            # &#39;offset&#39; is the time of day to transition, as timedelta since midnight. Check that it&#39;s a reasonable value
+            transition.clean(version=None)
+            transition_kwargs = dict(
+                time=(datetime.datetime(2000, 1, 1) + transition.offset).time(),
+                occurrence=transition.occurrence,
+                iso_month=transition.month,
+                weekday=transition.day_of_week,
+            )
+            period = periods_map[transition.to]
+            if period.name == &#39;Standard&#39;:
+                transition_kwargs[&#39;bias&#39;] = 0
+                standard_time = StandardTime(**transition_kwargs)
+                continue
+            if period.name == &#39;Daylight&#39;:
+                transition_kwargs[&#39;bias&#39;] = period.bias_in_minutes - standard_period.bias_in_minutes
+                daylight_time = DaylightTime(**transition_kwargs)
+                continue
+            raise ValueError(f&#39;Unknown transition: {transition}&#39;)
+        return standard_time, daylight_time, standard_period</code></pre>
 </details>
 </section>
 <section>
@@ -1814,6 +1931,58 @@ class Notification(EWSElement):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="exchangelib.properties.AbsoluteDateTransition"><code class="flex name class">
+<span>class <span class="ident">AbsoluteDateTransition</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutedatetransition">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutedatetransition</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AbsoluteDateTransition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/absolutedatetransition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;AbsoluteDateTransition&#39;
+
+    date = DateTimeBackedDateField(field_uri=&#39;DateTime&#39;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.AbsoluteDateTransition.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.AbsoluteDateTransition.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.AbsoluteDateTransition.date"><code class="name">var <span class="ident">date</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.BaseTransition.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.AcceptSharingInvitation"><code class="flex name class">
 <span>class <span class="ident">AcceptSharingInvitation</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -1932,7 +2101,7 @@ class Notification(EWSElement):
     @classmethod
     def response_tag(cls):
         # This element is in TNS in the request and MNS in the response...
-        return &#39;{%s}%s&#39; % (MNS, cls.ELEMENT_NAME)</code></pre>
+        return f&#39;{{{MNS}}}{cls.ELEMENT_NAME}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1963,7 +2132,7 @@ class Notification(EWSElement):
 <pre><code class="python">@classmethod
 def response_tag(cls):
     # This element is in TNS in the request and MNS in the response...
-    return &#39;{%s}%s&#39; % (MNS, cls.ELEMENT_NAME)</code></pre>
+    return f&#39;{{{MNS}}}{cls.ELEMENT_NAME}&#39;</code></pre>
 </details>
 </dd>
 </dl>
@@ -2350,7 +2519,7 @@ def response_tag(cls):
     @classmethod
     def from_mailbox(cls, mailbox):
         if not isinstance(mailbox, Mailbox):
-            raise ValueError(&#34;&#39;mailbox&#39; %r must be a Mailbox instance&#34; % mailbox)
+            raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
         return cls(name=mailbox.name, email_address=mailbox.email_address, routing_type=mailbox.routing_type)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2386,7 +2555,7 @@ def response_tag(cls):
 <pre><code class="python">@classmethod
 def from_mailbox(cls, mailbox):
     if not isinstance(mailbox, Mailbox):
-        raise ValueError(&#34;&#39;mailbox&#39; %r must be a Mailbox instance&#34; % mailbox)
+        raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
     return cls(name=mailbox.name, email_address=mailbox.email_address, routing_type=mailbox.routing_type)</code></pre>
 </details>
 </dd>
@@ -2428,7 +2597,7 @@ def from_mailbox(cls, mailbox):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseItemId(EWSElement):
+<pre><code class="python">class BaseItemId(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for ItemId elements.&#34;&#34;&#34;
 
     ID_ATTR = None
@@ -2554,6 +2723,112 @@ def from_mailbox(cls, mailbox):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.BasePermission.user_id"><code class="name">var <span class="ident">user_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.BaseTransition"><code class="flex name class">
+<span>class <span class="ident">BaseTransition</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all other transition classes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseTransition(EWSElement, metaclass=EWSMeta):
+    &#34;&#34;&#34;Base class for all other transition classes&#34;&#34;&#34;
+
+    to = CharField(field_uri=&#39;To&#39;)
+    kind = CharField(field_uri=&#39;Kind&#39;, is_attribute=True)  # An attribute on the &#39;To&#39; element
+
+    @staticmethod
+    def transition_model_from_tag(tag):
+        return {cls.response_tag(): cls for cls in (
+            Transition, AbsoluteDateTransition, RecurringDateTransition, RecurringDayTransition
+        )}[tag]
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        kind = elem.find(cls.get_field_by_fieldname(&#39;to&#39;).response_tag()).get(&#39;Kind&#39;)
+        res = super().from_xml(elem=elem, account=account)
+        res.kind = kind
+        return res</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.AbsoluteDateTransition" href="#exchangelib.properties.AbsoluteDateTransition">AbsoluteDateTransition</a></li>
+<li><a title="exchangelib.properties.RecurringDateTransition" href="#exchangelib.properties.RecurringDateTransition">RecurringDateTransition</a></li>
+<li><a title="exchangelib.properties.RecurringDayTransition" href="#exchangelib.properties.RecurringDayTransition">RecurringDayTransition</a></li>
+<li><a title="exchangelib.properties.Transition" href="#exchangelib.properties.Transition">Transition</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.BaseTransition.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.properties.BaseTransition.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    kind = elem.find(cls.get_field_by_fieldname(&#39;to&#39;).response_tag()).get(&#39;Kind&#39;)
+    res = super().from_xml(elem=elem, account=account)
+    res.kind = kind
+    return res</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.BaseTransition.transition_model_from_tag"><code class="name flex">
+<span>def <span class="ident">transition_model_from_tag</span></span>(<span>tag)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def transition_model_from_tag(tag):
+    return {cls.response_tag(): cls for cls in (
+        Transition, AbsoluteDateTransition, RecurringDateTransition, RecurringDayTransition
+    )}[tag]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.BaseTransition.kind"><code class="name">var <span class="ident">kind</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.BaseTransition.to"><code class="name">var <span class="ident">to</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3712,7 +3987,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         for f in self.FIELDS:
             setattr(self, f.name, kwargs.pop(f.name, None))
         if kwargs:
-            raise AttributeError(&#34;%s are invalid kwargs for this class&#34; % &#39;, &#39;.join(&#34;&#39;%s&#39;&#34; % k for k in kwargs))
+            raise AttributeError(f&#34;{sorted(kwargs.keys())!r} are invalid kwargs for this class&#34;)
 
     def __setattr__(self, key, value):
         # Avoid silently accepting spelling errors to field names that are not set via __init__. We need to be able to
@@ -3725,8 +4000,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         if hasattr(self, key):
             # Property setters
             return super().__setattr__(key, value)
-        raise AttributeError(&#39;%r is not a valid attribute. See %s.FIELDS for valid field names&#39; % (
-            key, self.__class__.__name__))
+        raise AttributeError(
+            f&#39;{key!r} is not a valid attribute. See {self.__class__.__name__}.FIELDS for valid field names&#39;
+        )
 
     def clean(self, version=None):
         # Validate attribute values using the field validator
@@ -3761,17 +4037,18 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         # WARNING: The order of addition of XML elements is VERY important. Exchange expects XML elements in a
         # specific, non-documented order and will fail with meaningless errors if the order is wrong.
 
-        # Call create_element() without args, to not fill up the cache with unique attribute values.
-        elem = create_element(self.request_tag())
-
-        # Add attributes
+        # Collect attributes
+        attrs = {}
         for f in self.attribute_fields():
             if f.is_read_only:
                 continue
             value = getattr(self, f.name)
             if value is None or (f.is_list and not value):
                 continue
-            elem.set(f.field_uri, value_to_xml_text(getattr(self, f.name)))
+            attrs[f.field_uri] = value_to_xml_text(getattr(self, f.name))
+
+        # Create element with attributes
+        elem = create_element(self.request_tag(), attrs=attrs)
 
         # Add elements and values
         for f in self.supported_fields(version=version):
@@ -3780,25 +4057,25 @@ The substitutions are identified by braces ('{' and '}').</p></div>
             value = getattr(self, f.name)
             if value is None or (f.is_list and not value):
                 continue
-            set_xml_value(elem, f.to_xml(value, version=version), version)
+            set_xml_value(elem, f.to_xml(value, version=version))
         return elem
 
     @classmethod
     def request_tag(cls):
         if not cls.ELEMENT_NAME:
-            raise ValueError(&#39;Class %s is missing the ELEMENT_NAME attribute&#39; % cls)
+            raise ValueError(f&#39;Class {cls} is missing the ELEMENT_NAME attribute&#39;)
         return {
-            TNS: &#39;t:%s&#39; % cls.ELEMENT_NAME,
-            MNS: &#39;m:%s&#39; % cls.ELEMENT_NAME,
+            TNS: f&#39;t:{cls.ELEMENT_NAME}&#39;,
+            MNS: f&#39;m:{cls.ELEMENT_NAME}&#39;,
         }[cls.NAMESPACE]
 
     @classmethod
     def response_tag(cls):
         if not cls.NAMESPACE:
-            raise ValueError(&#39;Class %s is missing the NAMESPACE attribute&#39; % cls)
+            raise ValueError(f&#39;Class {cls} is missing the NAMESPACE attribute&#39;)
         if not cls.ELEMENT_NAME:
-            raise ValueError(&#39;Class %s is missing the ELEMENT_NAME attribute&#39; % cls)
-        return &#39;{%s}%s&#39; % (cls.NAMESPACE, cls.ELEMENT_NAME)
+            raise ValueError(f&#39;Class {cls} is missing the ELEMENT_NAME attribute&#39;)
+        return f&#39;{{{cls.NAMESPACE}}}{cls.ELEMENT_NAME}&#39;
 
     @classmethod
     def attribute_fields(cls):
@@ -3815,7 +4092,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         try:
             return cls.FIELDS[fieldname]
         except KeyError:
-            raise InvalidField(&#34;&#39;%s&#39; is not a valid field name on &#39;%s&#39;&#34; % (fieldname, cls.__name__))
+            raise InvalidField(f&#34;{fieldname!r} is not a valid field name on {cls.__name__}&#34;)
 
     @classmethod
     def validate_field(cls, field, version):
@@ -3825,21 +4102,18 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         :param field:
         :param version:
         &#34;&#34;&#34;
-        if not isinstance(version, Version):
-            raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
         # Allow both Field and FieldPath instances and string field paths as input
         if isinstance(field, str):
             field = cls.get_field_by_fieldname(fieldname=field)
         elif isinstance(field, FieldPath):
             field = field.field
-        if not isinstance(field, Field):
-            raise ValueError(&#34;Field %r must be a string, Field or FieldPath instance&#34; % field)
         cls.get_field_by_fieldname(fieldname=field.name)  # Will raise if field name is invalid
         if not field.supports_version(version):
             # The field exists but is not valid for this version
             raise InvalidFieldForVersion(
-                &#34;Field &#39;%s&#39; is not supported on server version %s (supported from: %s, deprecated from: %s)&#34;
-                % (field.name, version, field.supported_from, field.deprecated_from))
+                f&#34;Field {field.name!r} is not supported on server version {version} &#34;
+                f&#34;(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})&#34;
+            )
 
     @classmethod
     def add_field(cls, field, insert_after):
@@ -3885,14 +4159,14 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         return field_vals
 
     def __str__(self):
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(
-            &#39;%s=%r&#39; % (name, val) for name, val in self._field_vals() if val is not None
+        args_str = &#39;, &#39;.join(
+            f&#39;{name}={val!r}&#39; for name, val in self._field_vals() if val is not None
         )
+        return f&#39;{self.__class__.__name__}({args_str})&#39;
 
     def __repr__(self):
-        return self.__class__.__name__ + &#39;(%s)&#39; % &#39;, &#39;.join(
-            &#39;%s=%r&#39; % (name, val) for name, val in self._field_vals()
-        )</code></pre>
+        args_str = &#39;, &#39;.join(f&#39;{name}={val!r}&#39; for name, val in self._field_vals())
+        return f&#39;{self.__class__.__name__}({args_str})&#39;</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3913,6 +4187,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.properties.AvailabilityMailbox" href="#exchangelib.properties.AvailabilityMailbox">AvailabilityMailbox</a></li>
 <li><a title="exchangelib.properties.BaseItemId" href="#exchangelib.properties.BaseItemId">BaseItemId</a></li>
 <li><a title="exchangelib.properties.BasePermission" href="#exchangelib.properties.BasePermission">BasePermission</a></li>
+<li><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></li>
 <li><a title="exchangelib.properties.BodyContentAttributedValue" href="#exchangelib.properties.BodyContentAttributedValue">BodyContentAttributedValue</a></li>
 <li><a title="exchangelib.properties.BodyContentValue" href="#exchangelib.properties.BodyContentValue">BodyContentValue</a></li>
 <li><a title="exchangelib.properties.CalendarEvent" href="#exchangelib.properties.CalendarEvent">CalendarEvent</a></li>
@@ -3940,6 +4215,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.properties.MessageHeader" href="#exchangelib.properties.MessageHeader">MessageHeader</a></li>
 <li><a title="exchangelib.properties.Notification" href="#exchangelib.properties.Notification">Notification</a></li>
 <li><a title="exchangelib.properties.OutOfOffice" href="#exchangelib.properties.OutOfOffice">OutOfOffice</a></li>
+<li><a title="exchangelib.properties.Period" href="#exchangelib.properties.Period">Period</a></li>
 <li><a title="exchangelib.properties.PermissionSet" href="#exchangelib.properties.PermissionSet">PermissionSet</a></li>
 <li><a title="exchangelib.properties.PersonaPhoneNumberTypeValue" href="#exchangelib.properties.PersonaPhoneNumberTypeValue">PersonaPhoneNumberTypeValue</a></li>
 <li><a title="exchangelib.properties.PhoneNumber" href="#exchangelib.properties.PhoneNumber">PhoneNumber</a></li>
@@ -3953,7 +4229,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.properties.SuppressReadReceipt" href="#exchangelib.properties.SuppressReadReceipt">SuppressReadReceipt</a></li>
 <li><a title="exchangelib.properties.TimeWindow" href="#exchangelib.properties.TimeWindow">TimeWindow</a></li>
 <li><a title="exchangelib.properties.TimeZone" href="#exchangelib.properties.TimeZone">TimeZone</a></li>
+<li><a title="exchangelib.properties.TimeZoneDefinition" href="#exchangelib.properties.TimeZoneDefinition">TimeZoneDefinition</a></li>
 <li><a title="exchangelib.properties.TimeZoneTransition" href="#exchangelib.properties.TimeZoneTransition">TimeZoneTransition</a></li>
+<li><a title="exchangelib.properties.TransitionsGroup" href="#exchangelib.properties.TransitionsGroup">TransitionsGroup</a></li>
 <li><a title="exchangelib.properties.UserConfigurationName" href="#exchangelib.properties.UserConfigurationName">UserConfigurationName</a></li>
 <li><a title="exchangelib.properties.UserId" href="#exchangelib.properties.UserId">UserId</a></li>
 <li><a title="exchangelib.properties.WorkingPeriod" href="#exchangelib.properties.WorkingPeriod">WorkingPeriod</a></li>
@@ -4050,7 +4328,7 @@ def get_field_by_fieldname(cls, fieldname):
     try:
         return cls.FIELDS[fieldname]
     except KeyError:
-        raise InvalidField(&#34;&#39;%s&#39; is not a valid field name on &#39;%s&#39;&#34; % (fieldname, cls.__name__))</code></pre>
+        raise InvalidField(f&#34;{fieldname!r} is not a valid field name on {cls.__name__}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.properties.EWSElement.remove_field"><code class="name flex">
@@ -4088,10 +4366,10 @@ def remove_field(cls, field):
 <pre><code class="python">@classmethod
 def request_tag(cls):
     if not cls.ELEMENT_NAME:
-        raise ValueError(&#39;Class %s is missing the ELEMENT_NAME attribute&#39; % cls)
+        raise ValueError(f&#39;Class {cls} is missing the ELEMENT_NAME attribute&#39;)
     return {
-        TNS: &#39;t:%s&#39; % cls.ELEMENT_NAME,
-        MNS: &#39;m:%s&#39; % cls.ELEMENT_NAME,
+        TNS: f&#39;t:{cls.ELEMENT_NAME}&#39;,
+        MNS: f&#39;m:{cls.ELEMENT_NAME}&#39;,
     }[cls.NAMESPACE]</code></pre>
 </details>
 </dd>
@@ -4107,10 +4385,10 @@ def request_tag(cls):
 <pre><code class="python">@classmethod
 def response_tag(cls):
     if not cls.NAMESPACE:
-        raise ValueError(&#39;Class %s is missing the NAMESPACE attribute&#39; % cls)
+        raise ValueError(f&#39;Class {cls} is missing the NAMESPACE attribute&#39;)
     if not cls.ELEMENT_NAME:
-        raise ValueError(&#39;Class %s is missing the ELEMENT_NAME attribute&#39; % cls)
-    return &#39;{%s}%s&#39; % (cls.NAMESPACE, cls.ELEMENT_NAME)</code></pre>
+        raise ValueError(f&#39;Class {cls} is missing the ELEMENT_NAME attribute&#39;)
+    return f&#39;{{{cls.NAMESPACE}}}{cls.ELEMENT_NAME}&#39;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.properties.EWSElement.supported_fields"><code class="name flex">
@@ -4149,21 +4427,18 @@ def validate_field(cls, field, version):
     :param field:
     :param version:
     &#34;&#34;&#34;
-    if not isinstance(version, Version):
-        raise ValueError(&#34;&#39;version&#39; %r must be a Version instance&#34; % version)
     # Allow both Field and FieldPath instances and string field paths as input
     if isinstance(field, str):
         field = cls.get_field_by_fieldname(fieldname=field)
     elif isinstance(field, FieldPath):
         field = field.field
-    if not isinstance(field, Field):
-        raise ValueError(&#34;Field %r must be a string, Field or FieldPath instance&#34; % field)
     cls.get_field_by_fieldname(fieldname=field.name)  # Will raise if field name is invalid
     if not field.supports_version(version):
         # The field exists but is not valid for this version
         raise InvalidFieldForVersion(
-            &#34;Field &#39;%s&#39; is not supported on server version %s (supported from: %s, deprecated from: %s)&#34;
-            % (field.name, version, field.supported_from, field.deprecated_from))</code></pre>
+            f&#34;Field {field.name!r} is not supported on server version {version} &#34;
+            f&#34;(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})&#34;
+        )</code></pre>
 </details>
 </dd>
 </dl>
@@ -4205,17 +4480,18 @@ def validate_field(cls, field, version):
     # WARNING: The order of addition of XML elements is VERY important. Exchange expects XML elements in a
     # specific, non-documented order and will fail with meaningless errors if the order is wrong.
 
-    # Call create_element() without args, to not fill up the cache with unique attribute values.
-    elem = create_element(self.request_tag())
-
-    # Add attributes
+    # Collect attributes
+    attrs = {}
     for f in self.attribute_fields():
         if f.is_read_only:
             continue
         value = getattr(self, f.name)
         if value is None or (f.is_list and not value):
             continue
-        elem.set(f.field_uri, value_to_xml_text(getattr(self, f.name)))
+        attrs[f.field_uri] = value_to_xml_text(getattr(self, f.name))
+
+    # Create element with attributes
+    elem = create_element(self.request_tag(), attrs=attrs)
 
     # Add elements and values
     for f in self.supported_fields(version=version):
@@ -4224,7 +4500,7 @@ def validate_field(cls, field, version):
         value = getattr(self, f.name)
         if value is None or (f.is_list and not value):
             continue
-        set_xml_value(elem, f.to_xml(value, version=version), version)
+        set_xml_value(elem, f.to_xml(value, version=version))
     return elem</code></pre>
 </details>
 </dd>
@@ -4901,7 +5177,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         for f in fields:
             # Check for duplicate field names
             if f.name in self._dict:
-                raise ValueError(&#39;Field %r is a duplicate&#39; % f)
+                raise ValueError(f&#39;Field {f!r} is a duplicate&#39;)
             self._dict[f.name] = f
 
     def __getitem__(self, idx_or_slice):
@@ -4924,9 +5200,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         return self
 
     def __contains__(self, item):
-        if isinstance(item, str):
-            return item in self._dict
-        return super().__contains__(item)
+        return item in self._dict
 
     def copy(self):
         return self.__class__(*self)
@@ -4935,11 +5209,11 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         for i, f in enumerate(self):
             if f.name == field_name:
                 return i
-        raise ValueError(&#39;Unknown field name %r&#39; % field_name)
+        raise ValueError(f&#39;Unknown field name {field_name!r}&#39;)
 
     def insert(self, index, field):
         if field.name in self._dict:
-            raise ValueError(&#39;Field %r is a duplicate&#39; % field)
+            raise ValueError(f&#39;Field {field!r} is a duplicate&#39;)
         super().insert(index, field)
         self._dict[field.name] = field
 
@@ -4997,7 +5271,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     for i, f in enumerate(self):
         if f.name == field_name:
             return i
-    raise ValueError(&#39;Unknown field name %r&#39; % field_name)</code></pre>
+    raise ValueError(f&#39;Unknown field name {field_name!r}&#39;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.properties.Fields.insert"><code class="name flex">
@@ -5011,7 +5285,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def insert(self, index, field):
     if field.name in self._dict:
-        raise ValueError(&#39;Field %r is a duplicate&#39; % field)
+        raise ValueError(f&#39;Field {field!r} is a duplicate&#39;)
     super().insert(index, field)
     self._dict[field.name] = field</code></pre>
 </details>
@@ -5148,7 +5422,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        working_hours_elem = elem.find(&#39;{%s}WorkingHours&#39; % TNS)
+        working_hours_elem = elem.find(f&#39;{{{TNS}}}WorkingHours&#39;)
         for f in cls.FIELDS:
             if f.name in [&#39;working_hours&#39;, &#39;working_hours_timezone&#39;]:
                 if working_hours_elem is None:
@@ -5192,7 +5466,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
     kwargs = {}
-    working_hours_elem = elem.find(&#39;{%s}WorkingHours&#39; % TNS)
+    working_hours_elem = elem.find(f&#39;{{{TNS}}}WorkingHours&#39;)
     for f in cls.FIELDS:
         if f.name in [&#39;working_hours&#39;, &#39;working_hours_timezone&#39;]:
             if working_hours_elem is None:
@@ -5368,9 +5642,9 @@ a separate element but we add convenience methods to hide that fact.</p></div>
     ID_ELEMENT_CLS = None
 
     def __init__(self, **kwargs):
-        _id = self.ID_ELEMENT_CLS(kwargs.pop(&#39;id&#39;, None), kwargs.pop(&#39;changekey&#39;, None))
-        if _id.id or _id.changekey:
-            kwargs[&#39;_id&#39;] = _id
+        _id, _changekey = kwargs.pop(&#39;id&#39;, None), kwargs.pop(&#39;changekey&#39;, None)
+        if _id or _changekey:
+            kwargs[&#39;_id&#39;] = self.ID_ELEMENT_CLS(_id, _changekey)
         super().__init__(**kwargs)
 
     @classmethod
@@ -5411,8 +5685,10 @@ a separate element but we add convenience methods to hide that fact.</p></div>
             return None, None
         return id_elem.get(cls.ID_ELEMENT_CLS.ID_ATTR), id_elem.get(cls.ID_ELEMENT_CLS.CHANGEKEY_ATTR)
 
-    def to_id_xml(self, version):
-        return self._id.to_xml(version=version)
+    def to_id(self):
+        if self._id is None:
+            raise ValueError(&#39;Must have an ID&#39;)
+        return self._id
 
     def __eq__(self, other):
         if isinstance(other, tuple):
@@ -5514,8 +5790,8 @@ def id(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="exchangelib.properties.IdChangeKeyMixIn.to_id_xml"><code class="name flex">
-<span>def <span class="ident">to_id_xml</span></span>(<span>self, version)</span>
+<dt id="exchangelib.properties.IdChangeKeyMixIn.to_id"><code class="name flex">
+<span>def <span class="ident">to_id</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5523,8 +5799,10 @@ def id(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def to_id_xml(self, version):
-    return self._id.to_xml(version=version)</code></pre>
+<pre><code class="python">def to_id(self):
+    if self._id is None:
+        raise ValueError(&#39;Must have an ID&#39;)
+    return self._id</code></pre>
 </details>
 </dd>
 </dl>
@@ -5821,7 +6099,7 @@ def id(self):
             # A OneOff Mailbox (a one-off member of a personal distribution list) may lack these fields, but other
             # Mailboxes require at least one. See also &#34;Remarks&#34; section of
             # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox
-            raise ValueError(&#34;Mailbox type %r must have either &#39;email_address&#39; or &#39;item_id&#39; set&#34; % self.mailbox_type)
+            raise ValueError(f&#34;Mailbox type {self.mailbox_type!r} must have either &#39;email_address&#39; or &#39;item_id&#39; set&#34;)
 
     def __hash__(self):
         # Exchange may add &#39;mailbox_type&#39; and &#39;name&#39; on insert. We&#39;re satisfied if the item_id or email address matches.
@@ -5911,7 +6189,7 @@ def id(self):
         # A OneOff Mailbox (a one-off member of a personal distribution list) may lack these fields, but other
         # Mailboxes require at least one. See also &#34;Remarks&#34; section of
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox
-        raise ValueError(&#34;Mailbox type %r must have either &#39;email_address&#39; or &#39;item_id&#39; set&#34; % self.mailbox_type)</code></pre>
+        raise ValueError(f&#34;Mailbox type {self.mailbox_type!r} must have either &#39;email_address&#39; or &#39;item_id&#39; set&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -6545,7 +6823,7 @@ def id_from_xml(cls, elem):
     @classmethod
     def duration_to_start_end(cls, elem, account):
         kwargs = {}
-        duration = elem.find(&#39;{%s}Duration&#39; % TNS)
+        duration = elem.find(f&#39;{{{TNS}}}Duration&#39;)
         if duration is not None:
             for attr in (&#39;start&#39;, &#39;end&#39;):
                 f = cls.get_field_by_fieldname(attr)
@@ -6591,7 +6869,7 @@ def id_from_xml(cls, elem):
 <pre><code class="python">@classmethod
 def duration_to_start_end(cls, elem, account):
     kwargs = {}
-    duration = elem.find(&#39;{%s}Duration&#39; % TNS)
+    duration = elem.find(f&#39;{{{TNS}}}Duration&#39;)
     if duration is not None:
         for attr in (&#39;start&#39;, &#39;end&#39;):
             f = cls.get_field_by_fieldname(attr)
@@ -6728,6 +7006,119 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.ItemId.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
 <li><code><a title="exchangelib.properties.ItemId.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
 <li><code><a title="exchangelib.properties.ItemId.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.Period"><code class="flex name class">
+<span>class <span class="ident">Period</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/period">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/period</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Period(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/period&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;Period&#39;
+
+    id = CharField(field_uri=&#39;Id&#39;, is_attribute=True)
+    name = CharField(field_uri=&#39;Name&#39;, is_attribute=True)
+    bias = TimeDeltaField(field_uri=&#39;Bias&#39;, is_attribute=True)
+
+    def _split_id(self):
+        to_year, to_type = self.id.rsplit(&#39;/&#39;, 1)[1].split(&#39;-&#39;)
+        return int(to_year), to_type
+
+    @property
+    def year(self):
+        return self._split_id()[0]
+
+    @property
+    def type(self):
+        return self._split_id()[1]
+
+    @property
+    def bias_in_minutes(self):
+        return int(self.bias.total_seconds()) // 60  # Convert to minutes</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.Period.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.Period.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.Period.bias"><code class="name">var <span class="ident">bias</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.Period.bias_in_minutes"><code class="name">var <span class="ident">bias_in_minutes</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def bias_in_minutes(self):
+    return int(self.bias.total_seconds()) // 60  # Convert to minutes</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.Period.id"><code class="name">var <span class="ident">id</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.Period.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.Period.type"><code class="name">var <span class="ident">type</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def type(self):
+    return self._split_id()[1]</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.Period.year"><code class="name">var <span class="ident">year</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def year(self):
+    return self._split_id()[0]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6882,7 +7273,7 @@ and
     @classmethod
     def response_tag(cls):
         # This element is in MNS in the request and TNS in the response...
-        return &#39;{%s}%s&#39; % (TNS, cls.ELEMENT_NAME)</code></pre>
+        return f&#39;{{{TNS}}}{cls.ELEMENT_NAME}&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6915,7 +7306,7 @@ and
 <pre><code class="python">@classmethod
 def response_tag(cls):
     # This element is in MNS in the request and TNS in the response...
-    return &#39;{%s}%s&#39; % (TNS, cls.ELEMENT_NAME)</code></pre>
+    return f&#39;{{{TNS}}}{cls.ELEMENT_NAME}&#39;</code></pre>
 </details>
 </dd>
 </dl>
@@ -7332,6 +7723,165 @@ def response_tag(cls):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.properties.RecurringDateTransition"><code class="flex name class">
+<span>class <span class="ident">RecurringDateTransition</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdatetransition">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdatetransition</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RecurringDateTransition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdatetransition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;RecurringDateTransition&#39;
+
+    offset = TimeDeltaField(field_uri=&#39;TimeOffset&#39;)
+    month = IntegerField(field_uri=&#39;Month&#39;)
+    day = IntegerField(field_uri=&#39;Day&#39;)  # Day of month</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.RecurringDateTransition.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDateTransition.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.RecurringDateTransition.day"><code class="name">var <span class="ident">day</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDateTransition.month"><code class="name">var <span class="ident">month</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDateTransition.offset"><code class="name">var <span class="ident">offset</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.BaseTransition.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.RecurringDayTransition"><code class="flex name class">
+<span>class <span class="ident">RecurringDayTransition</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdaytransition">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdaytransition</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RecurringDayTransition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/recurringdaytransition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;RecurringDayTransition&#39;
+
+    offset = TimeDeltaField(field_uri=&#39;TimeOffset&#39;)
+    month = IntegerField(field_uri=&#39;Month&#39;)
+    # Valid ISO 8601 weekday, as a number in range 1 -&gt; 7 (1 being Monday)
+    day_of_week = EnumField(field_uri=&#39;DayOfWeek&#39;, enum=WEEKDAY_NAMES)
+    occurrence = IntegerField(field_uri=&#39;Occurrence&#39;)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = super().from_xml(elem, account)
+        # See TimeZoneTransition.from_xml()
+        if res.occurrence == -1:
+            res.occurrence = 5
+        return res</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.RecurringDayTransition.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDayTransition.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.properties.RecurringDayTransition.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    res = super().from_xml(elem, account)
+    # See TimeZoneTransition.from_xml()
+    if res.occurrence == -1:
+        res.occurrence = 5
+    return res</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.RecurringDayTransition.day_of_week"><code class="name">var <span class="ident">day_of_week</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDayTransition.month"><code class="name">var <span class="ident">month</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDayTransition.occurrence"><code class="name">var <span class="ident">occurrence</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.RecurringDayTransition.offset"><code class="name">var <span class="ident">offset</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.BaseTransition.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.RecurringMasterItemId"><code class="flex name class">
 <span>class <span class="ident">RecurringMasterItemId</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -7689,12 +8239,12 @@ def response_tag(cls):
 
     @classmethod
     def from_xml(cls, elem, account):
-        id_elem = elem.find(&#39;{%s}Id&#39; % TNS)
+        id_elem = elem.find(f&#39;{{{TNS}}}Id&#39;)
         item_id_elem = id_elem.find(ItemId.response_tag())
         kwargs = dict(
-            name=get_xml_attr(id_elem, &#39;{%s}Name&#39; % TNS),
-            email_address=get_xml_attr(id_elem, &#39;{%s}EmailAddress&#39; % TNS),
-            mailbox_type=get_xml_attr(id_elem, &#39;{%s}MailboxType&#39; % TNS),
+            name=get_xml_attr(id_elem, f&#39;{{{TNS}}}Name&#39;),
+            email_address=get_xml_attr(id_elem, f&#39;{{{TNS}}}EmailAddress&#39;),
+            mailbox_type=get_xml_attr(id_elem, f&#39;{{{TNS}}}MailboxType&#39;),
             item_id=ItemId.from_xml(elem=item_id_elem, account=account) if item_id_elem else None,
         )
         cls._clear(elem)
@@ -7725,12 +8275,12 @@ def response_tag(cls):
 </summary>
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
-    id_elem = elem.find(&#39;{%s}Id&#39; % TNS)
+    id_elem = elem.find(f&#39;{{{TNS}}}Id&#39;)
     item_id_elem = id_elem.find(ItemId.response_tag())
     kwargs = dict(
-        name=get_xml_attr(id_elem, &#39;{%s}Name&#39; % TNS),
-        email_address=get_xml_attr(id_elem, &#39;{%s}EmailAddress&#39; % TNS),
-        mailbox_type=get_xml_attr(id_elem, &#39;{%s}MailboxType&#39; % TNS),
+        name=get_xml_attr(id_elem, f&#39;{{{TNS}}}Name&#39;),
+        email_address=get_xml_attr(id_elem, f&#39;{{{TNS}}}EmailAddress&#39;),
+        mailbox_type=get_xml_attr(id_elem, f&#39;{{{TNS}}}MailboxType&#39;),
         item_id=ItemId.from_xml(elem=item_id_elem, account=account) if item_id_elem else None,
     )
     cls._clear(elem)
@@ -7770,7 +8320,7 @@ def from_xml(cls, elem, account):
     def response_tag(cls):
         # In a GetRoomLists response, room lists are delivered as Address elements. See
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/address-emailaddresstype
-        return &#39;{%s}Address&#39; % TNS</code></pre>
+        return f&#39;{{{TNS}}}Address&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7803,7 +8353,7 @@ def from_xml(cls, elem, account):
 def response_tag(cls):
     # In a GetRoomLists response, room lists are delivered as Address elements. See
     # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/address-emailaddresstype
-    return &#39;{%s}Address&#39; % TNS</code></pre>
+    return f&#39;{{{TNS}}}Address&#39;</code></pre>
 </details>
 </dd>
 </dl>
@@ -8264,7 +8814,12 @@ def response_tag(cls):
     ELEMENT_NAME = &#39;TimeWindow&#39;
 
     start = DateTimeField(field_uri=&#39;StartTime&#39;, is_required=True)
-    end = DateTimeField(field_uri=&#39;EndTime&#39;, is_required=True)</code></pre>
+    end = DateTimeField(field_uri=&#39;EndTime&#39;, is_required=True)
+
+    def clean(self, version=None):
+        if self.start &gt;= self.end:
+            raise ValueError(f&#34;&#39;start&#39; must be less than &#39;end&#39; ({self.start} -&gt; {self.end})&#34;)
+        super().clean(version=version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8290,6 +8845,24 @@ def response_tag(cls):
 <dt id="exchangelib.properties.TimeWindow.start"><code class="name">var <span class="ident">start</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.properties.TimeWindow.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, version=None):
+    if self.start &gt;= self.end:
+        raise ValueError(f&#34;&#39;start&#39; must be less than &#39;end&#39; ({self.start} -&gt; {self.end})&#34;)
+    super().clean(version=version)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -8334,12 +8907,15 @@ def response_tag(cls):
         :return: A Microsoft timezone ID, as a string
         &#34;&#34;&#34;
         candidates = set()
-        for tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups in timezones:
-            candidate = self.from_server_timezone(tz_periods, tz_transitions, tz_transitions_groups, for_year)
+        for tz_definition in timezones:
+            candidate = self.from_server_timezone(
+                tz_definition=tz_definition,
+                for_year=for_year,
+            )
             if candidate == self:
-                log.debug(&#39;Found exact candidate: %s (%s)&#39;, tz_id, tz_name)
+                log.debug(&#39;Found exact candidate: %s (%s)&#39;, tz_definition.id, tz_definition.name)
                 # We prefer this timezone over anything else. Return immediately.
-                return tz_id
+                return tz_definition.id
             # Reduce list based on base bias and standard / daylight bias values
             if candidate.bias != self.bias:
                 continue
@@ -8359,8 +8935,8 @@ def response_tag(cls):
                     continue
                 if candidate.daylight_time.bias != self.daylight_time.bias:
                     continue
-            log.debug(&#39;Found candidate with matching biases: %s (%s)&#39;, tz_id, tz_name)
-            candidates.add(tz_id)
+            log.debug(&#39;Found candidate with matching biases: %s (%s)&#39;, tz_definition.id, tz_definition.name)
+            candidates.add(tz_definition.id)
         if not candidates:
             raise ValueError(&#39;No server timezones match this timezone definition&#39;)
         if len(candidates) == 1:
@@ -8370,81 +8946,10 @@ def response_tag(cls):
         return candidates.pop()
 
     @classmethod
-    def from_server_timezone(cls, periods, transitions, transitionsgroups, for_year):
+    def from_server_timezone(cls, tz_definition, for_year):
         # Creates a TimeZone object from the result of a GetServerTimeZones call with full timezone data
-
-        # Get the default bias
-        bias = cls._get_bias(periods=periods, for_year=for_year)
-
-        # Get a relevant transition ID
-        valid_tg_id = cls._get_valid_transition_id(transitions=transitions, for_year=for_year)
-        transitiongroup = transitionsgroups[valid_tg_id]
-        if not 0 &lt;= len(transitiongroup) &lt;= 2:
-            raise ValueError(&#39;Expected 0-2 transitions in transitionsgroup %s&#39; % transitiongroup)
-
-        standard_time, daylight_time = cls._get_std_and_dst(transitiongroup=transitiongroup, periods=periods, bias=bias)
-        return cls(bias=bias, standard_time=standard_time, daylight_time=daylight_time)
-
-    @staticmethod
-    def _get_bias(periods, for_year):
-        # Set a default bias
-        valid_period = None
-        for (year, period_type), period in sorted(periods.items()):
-            if year &gt; for_year:
-                break
-            if period_type != &#39;Standard&#39;:
-                continue
-            valid_period = period
-        if valid_period is None:
-            raise TimezoneDefinitionInvalidForYear(&#39;Year %s not included in periods %s&#39; % (for_year, periods))
-        return int(valid_period[&#39;bias&#39;].total_seconds()) // 60  # Convert to minutes
-
-    @staticmethod
-    def _get_valid_transition_id(transitions, for_year):
-        # Look through the transitions, and pick the relevant one according to the &#39;for_year&#39; value
-        valid_tg_id = None
-        for tg_id, from_date in sorted(transitions.items()):
-            if from_date and from_date.year &gt; for_year:
-                break
-            valid_tg_id = tg_id
-        if valid_tg_id is None:
-            raise ValueError(&#39;No valid transition for year %s: %s&#39; % (for_year, transitions))
-        return valid_tg_id
-
-    @staticmethod
-    def _get_std_and_dst(transitiongroup, periods, bias):
-        # Return &#39;standard_time&#39; and &#39;daylight_time&#39; objects. We do unnecessary work here, but it keeps code simple.
-        standard_time, daylight_time = None, None
-        for transition in transitiongroup:
-            period = periods[transition[&#39;to&#39;]]
-            if len(transition) == 1:
-                # This is a simple transition representing a timezone with no DST. Some servers don&#39;t accept TimeZone
-                # elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime objects
-                # with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break the
-                # well-behaving servers.
-                standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
-                daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
-                continue
-            # &#39;offset&#39; is the time of day to transition, as timedelta since midnight. Must be a reasonable value
-            if not datetime.timedelta(0) &lt;= transition[&#39;offset&#39;] &lt; datetime.timedelta(days=1):
-                raise ValueError(&#34;&#39;offset&#39; value %s must be be between 0 and 24 hours&#34; % transition[&#39;offset&#39;])
-            transition_kwargs = dict(
-                time=(datetime.datetime(2000, 1, 1) + transition[&#39;offset&#39;]).time(),
-                occurrence=transition[&#39;occurrence&#39;],
-                iso_month=transition[&#39;iso_month&#39;],
-                weekday=transition[&#39;iso_weekday&#39;],
-            )
-            if period[&#39;name&#39;] == &#39;Standard&#39;:
-                transition_kwargs[&#39;bias&#39;] = 0
-                standard_time = StandardTime(**transition_kwargs)
-                continue
-            if period[&#39;name&#39;] == &#39;Daylight&#39;:
-                dst_bias = int(period[&#39;bias&#39;].total_seconds()) // 60  # Convert to minutes
-                transition_kwargs[&#39;bias&#39;] = dst_bias - bias
-                daylight_time = DaylightTime(**transition_kwargs)
-                continue
-            raise ValueError(&#39;Unknown transition: %s&#39; % transition)
-        return standard_time, daylight_time</code></pre>
+        std_time, daylight_time, period = tz_definition.get_std_and_dst(for_year=for_year)
+        return cls(bias=period.bias_in_minutes, standard_time=std_time, daylight_time=daylight_time)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8464,7 +8969,7 @@ def response_tag(cls):
 <h3>Static methods</h3>
 <dl>
 <dt id="exchangelib.properties.TimeZone.from_server_timezone"><code class="name flex">
-<span>def <span class="ident">from_server_timezone</span></span>(<span>periods, transitions, transitionsgroups, for_year)</span>
+<span>def <span class="ident">from_server_timezone</span></span>(<span>tz_definition, for_year)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -8473,20 +8978,10 @@ def response_tag(cls):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def from_server_timezone(cls, periods, transitions, transitionsgroups, for_year):
+def from_server_timezone(cls, tz_definition, for_year):
     # Creates a TimeZone object from the result of a GetServerTimeZones call with full timezone data
-
-    # Get the default bias
-    bias = cls._get_bias(periods=periods, for_year=for_year)
-
-    # Get a relevant transition ID
-    valid_tg_id = cls._get_valid_transition_id(transitions=transitions, for_year=for_year)
-    transitiongroup = transitionsgroups[valid_tg_id]
-    if not 0 &lt;= len(transitiongroup) &lt;= 2:
-        raise ValueError(&#39;Expected 0-2 transitions in transitionsgroup %s&#39; % transitiongroup)
-
-    standard_time, daylight_time = cls._get_std_and_dst(transitiongroup=transitiongroup, periods=periods, bias=bias)
-    return cls(bias=bias, standard_time=standard_time, daylight_time=daylight_time)</code></pre>
+    std_time, daylight_time, period = tz_definition.get_std_and_dst(for_year=for_year)
+    return cls(bias=period.bias_in_minutes, standard_time=std_time, daylight_time=daylight_time)</code></pre>
 </details>
 </dd>
 </dl>
@@ -8532,12 +9027,15 @@ Protocol.get_timezones(return_full_timezone_data=True)
     :return: A Microsoft timezone ID, as a string
     &#34;&#34;&#34;
     candidates = set()
-    for tz_id, tz_name, tz_periods, tz_transitions, tz_transitions_groups in timezones:
-        candidate = self.from_server_timezone(tz_periods, tz_transitions, tz_transitions_groups, for_year)
+    for tz_definition in timezones:
+        candidate = self.from_server_timezone(
+            tz_definition=tz_definition,
+            for_year=for_year,
+        )
         if candidate == self:
-            log.debug(&#39;Found exact candidate: %s (%s)&#39;, tz_id, tz_name)
+            log.debug(&#39;Found exact candidate: %s (%s)&#39;, tz_definition.id, tz_definition.name)
             # We prefer this timezone over anything else. Return immediately.
-            return tz_id
+            return tz_definition.id
         # Reduce list based on base bias and standard / daylight bias values
         if candidate.bias != self.bias:
             continue
@@ -8557,8 +9055,8 @@ Protocol.get_timezones(return_full_timezone_data=True)
                 continue
             if candidate.daylight_time.bias != self.daylight_time.bias:
                 continue
-        log.debug(&#39;Found candidate with matching biases: %s (%s)&#39;, tz_id, tz_name)
-        candidates.add(tz_id)
+        log.debug(&#39;Found candidate with matching biases: %s (%s)&#39;, tz_definition.id, tz_definition.name)
+        candidates.add(tz_definition.id)
     if not candidates:
         raise ValueError(&#39;No server timezones match this timezone definition&#39;)
     if len(candidates) == 1:
@@ -8566,6 +9064,215 @@ Protocol.get_timezones(return_full_timezone_data=True)
     else:
         log.warning(&#39;Could not find an exact timezone match for %s. Selecting a random candidate&#39;, self)
     return candidates.pop()</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.TimeZoneDefinition"><code class="flex name class">
+<span>class <span class="ident">TimeZoneDefinition</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonedefinition">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonedefinition</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TimeZoneDefinition(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonedefinition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;TimeZoneDefinition&#39;
+
+    id = CharField(field_uri=&#39;Id&#39;, is_attribute=True)
+    name = CharField(field_uri=&#39;Name&#39;, is_attribute=True)
+
+    periods = EWSElementListField(field_uri=&#39;Periods&#39;, value_cls=Period)
+    transitions_groups = EWSElementListField(field_uri=&#39;TransitionsGroups&#39;, value_cls=TransitionsGroup)
+    transitions = TransitionListField(field_uri=&#39;Transitions&#39;, value_cls=BaseTransition)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        return super().from_xml(elem, account)
+
+    def _get_standard_period(self, for_year):
+        # Look through periods and pick a relevant period according to the &#39;for_year&#39; value
+        valid_period = None
+        for period in sorted(self.periods, key=lambda p: (p.year, p.type)):
+            if period.year &gt; for_year:
+                break
+            if period.type != &#39;Standard&#39;:
+                continue
+            valid_period = period
+        if valid_period is None:
+            raise TimezoneDefinitionInvalidForYear(f&#39;Year {for_year} not included in periods {self.periods}&#39;)
+        return valid_period
+
+    def _get_transitions_group(self, for_year):
+        # Look through the transitions, and pick the relevant transition group according to the &#39;for_year&#39; value
+        transitions_group = None
+        transitions_groups_map = {tg.id: tg for tg in self.transitions_groups}
+        for transition in sorted(self.transitions, key=lambda t: t.to):
+            if transition.kind != &#39;Group&#39;:
+                continue
+            if isinstance(transition, AbsoluteDateTransition) and transition.date.year &gt; for_year:
+                break
+            transitions_group = transitions_groups_map[transition.to]
+        if transitions_group is None:
+            raise ValueError(f&#39;No valid transition group for year {for_year}: {self.transitions}&#39;)
+        return transitions_group
+
+    def get_std_and_dst(self, for_year):
+        # Return &#39;standard_time&#39; and &#39;daylight_time&#39; objects. We do unnecessary work here, but it keeps code simple.
+        transitions_group = self._get_transitions_group(for_year)
+        if not 0 &lt;= len(transitions_group.transitions) &lt;= 2:
+            raise ValueError(f&#39;Expected 0-2 transitions in transitions group {transitions_group}&#39;)
+
+        standard_period = self._get_standard_period(for_year)
+        periods_map = {p.id: p for p in self.periods}
+        standard_time, daylight_time = None, None
+        if len(transitions_group.transitions) == 1:
+            # This is a simple transition group representing a timezone with no DST. Some servers don&#39;t accept
+            # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+            # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break
+            # the well-behaving servers.
+            standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
+            daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
+            return standard_time, daylight_time, standard_period
+        for transition in transitions_group.transitions:
+            # &#39;offset&#39; is the time of day to transition, as timedelta since midnight. Check that it&#39;s a reasonable value
+            transition.clean(version=None)
+            transition_kwargs = dict(
+                time=(datetime.datetime(2000, 1, 1) + transition.offset).time(),
+                occurrence=transition.occurrence,
+                iso_month=transition.month,
+                weekday=transition.day_of_week,
+            )
+            period = periods_map[transition.to]
+            if period.name == &#39;Standard&#39;:
+                transition_kwargs[&#39;bias&#39;] = 0
+                standard_time = StandardTime(**transition_kwargs)
+                continue
+            if period.name == &#39;Daylight&#39;:
+                transition_kwargs[&#39;bias&#39;] = period.bias_in_minutes - standard_period.bias_in_minutes
+                daylight_time = DaylightTime(**transition_kwargs)
+                continue
+            raise ValueError(f&#39;Unknown transition: {transition}&#39;)
+        return standard_time, daylight_time, standard_period</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.TimeZoneDefinition.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TimeZoneDefinition.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.properties.TimeZoneDefinition.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    return super().from_xml(elem, account)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.TimeZoneDefinition.id"><code class="name">var <span class="ident">id</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TimeZoneDefinition.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TimeZoneDefinition.periods"><code class="name">var <span class="ident">periods</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TimeZoneDefinition.transitions"><code class="name">var <span class="ident">transitions</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TimeZoneDefinition.transitions_groups"><code class="name">var <span class="ident">transitions_groups</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.properties.TimeZoneDefinition.get_std_and_dst"><code class="name flex">
+<span>def <span class="ident">get_std_and_dst</span></span>(<span>self, for_year)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_std_and_dst(self, for_year):
+    # Return &#39;standard_time&#39; and &#39;daylight_time&#39; objects. We do unnecessary work here, but it keeps code simple.
+    transitions_group = self._get_transitions_group(for_year)
+    if not 0 &lt;= len(transitions_group.transitions) &lt;= 2:
+        raise ValueError(f&#39;Expected 0-2 transitions in transitions group {transitions_group}&#39;)
+
+    standard_period = self._get_standard_period(for_year)
+    periods_map = {p.id: p for p in self.periods}
+    standard_time, daylight_time = None, None
+    if len(transitions_group.transitions) == 1:
+        # This is a simple transition group representing a timezone with no DST. Some servers don&#39;t accept
+        # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+        # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break
+        # the well-behaving servers.
+        standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
+        daylight_time = DaylightTime(bias=0, time=datetime.time(0), occurrence=5, iso_month=12, weekday=7)
+        return standard_time, daylight_time, standard_period
+    for transition in transitions_group.transitions:
+        # &#39;offset&#39; is the time of day to transition, as timedelta since midnight. Check that it&#39;s a reasonable value
+        transition.clean(version=None)
+        transition_kwargs = dict(
+            time=(datetime.datetime(2000, 1, 1) + transition.offset).time(),
+            occurrence=transition.occurrence,
+            iso_month=transition.month,
+            weekday=transition.day_of_week,
+        )
+        period = periods_map[transition.to]
+        if period.name == &#39;Standard&#39;:
+            transition_kwargs[&#39;bias&#39;] = 0
+            standard_time = StandardTime(**transition_kwargs)
+            continue
+        if period.name == &#39;Daylight&#39;:
+            transition_kwargs[&#39;bias&#39;] = period.bias_in_minutes - standard_period.bias_in_minutes
+            daylight_time = DaylightTime(**transition_kwargs)
+            continue
+        raise ValueError(f&#39;Unknown transition: {transition}&#39;)
+    return standard_time, daylight_time, standard_period</code></pre>
 </details>
 </dd>
 </dl>
@@ -8813,6 +9520,101 @@ def event_type(self):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.properties.Transition"><code class="flex name class">
+<span>class <span class="ident">Transition</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transition">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transition</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Transition(BaseTransition):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transition&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;Transition&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.Transition.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.BaseTransition.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.TransitionsGroup"><code class="flex name class">
+<span>class <span class="ident">TransitionsGroup</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transitionsgroup">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transitionsgroup</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TransitionsGroup(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/transitionsgroup&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#39;TransitionsGroup&#39;
+
+    id = CharField(field_uri=&#39;Id&#39;, is_attribute=True)
+    transitions = TransitionListField(value_cls=BaseTransition)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.TransitionsGroup.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TransitionsGroup.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.TransitionsGroup.id"><code class="name">var <span class="ident">id</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.TransitionsGroup.transitions"><code class="name">var <span class="ident">transitions</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.UID"><code class="flex name class">
 <span>class <span class="ident">UID</span></span>
 <span>(</span><span>uid)</span>
@@ -8864,7 +9666,7 @@ account.calendar.filter(global_object_id=UID('261cbc18-1f65-5a0a-bd11-23b1e224cc
     # https://stackoverflow.com/questions/33757805
 
     def __new__(cls, uid):
-        payload = binascii.hexlify(bytearray(&#39;vCal-Uid\x01\x00\x00\x00{}\x00&#39;.format(uid).encode(&#39;ascii&#39;)))
+        payload = binascii.hexlify(bytearray(f&#39;vCal-Uid\x01\x00\x00\x00{uid}\x00&#39;.encode(&#39;ascii&#39;)))
         length = binascii.hexlify(bytearray(struct.pack(&#39;&lt;I&#39;, int(len(payload)/2))))
         encoding = b&#39;&#39;.join([
             cls._HEADER, cls._EXCEPTION_REPLACEMENT_TIME, cls._CREATION_TIME, cls._RESERVED, length, payload
@@ -9000,7 +9802,7 @@ def to_global_object_id(cls, uid):
     def clean(self, version=None):
         from .folders import BaseFolder
         if isinstance(self.folder, BaseFolder):
-            self.folder = self.folder.to_folder_id()
+            self.folder = self.folder.to_id()
         super().clean(version=version)
 
     @classmethod
@@ -9084,7 +9886,7 @@ def from_xml(cls, elem, account):
 <pre><code class="python">def clean(self, version=None):
     from .folders import BaseFolder
     if isinstance(self.folder, BaseFolder):
-        self.folder = self.folder.to_folder_id()
+        self.folder = self.folder.to_id()
     super().clean(version=version)</code></pre>
 </details>
 </dd>
@@ -9295,6 +10097,14 @@ def from_xml(cls, elem, account):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="exchangelib.properties.AbsoluteDateTransition" href="#exchangelib.properties.AbsoluteDateTransition">AbsoluteDateTransition</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.AbsoluteDateTransition.ELEMENT_NAME" href="#exchangelib.properties.AbsoluteDateTransition.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.AbsoluteDateTransition.FIELDS" href="#exchangelib.properties.AbsoluteDateTransition.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.AbsoluteDateTransition.date" href="#exchangelib.properties.AbsoluteDateTransition.date">date</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.properties.AcceptSharingInvitation" href="#exchangelib.properties.AcceptSharingInvitation">AcceptSharingInvitation</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.properties.AcceptSharingInvitation.ELEMENT_NAME" href="#exchangelib.properties.AcceptSharingInvitation.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
@@ -9402,6 +10212,16 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.BasePermission.is_folder_visible" href="#exchangelib.properties.BasePermission.is_folder_visible">is_folder_visible</a></code></li>
 <li><code><a title="exchangelib.properties.BasePermission.read_items" href="#exchangelib.properties.BasePermission.read_items">read_items</a></code></li>
 <li><code><a title="exchangelib.properties.BasePermission.user_id" href="#exchangelib.properties.BasePermission.user_id">user_id</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.BaseTransition" href="#exchangelib.properties.BaseTransition">BaseTransition</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.BaseTransition.FIELDS" href="#exchangelib.properties.BaseTransition.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.from_xml" href="#exchangelib.properties.BaseTransition.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.kind" href="#exchangelib.properties.BaseTransition.kind">kind</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.to" href="#exchangelib.properties.BaseTransition.to">to</a></code></li>
+<li><code><a title="exchangelib.properties.BaseTransition.transition_model_from_tag" href="#exchangelib.properties.BaseTransition.transition_model_from_tag">transition_model_from_tag</a></code></li>
 </ul>
 </li>
 <li>
@@ -9746,7 +10566,7 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.IdChangeKeyMixIn.get_field_by_fieldname" href="#exchangelib.properties.IdChangeKeyMixIn.get_field_by_fieldname">get_field_by_fieldname</a></code></li>
 <li><code><a title="exchangelib.properties.IdChangeKeyMixIn.id" href="#exchangelib.properties.IdChangeKeyMixIn.id">id</a></code></li>
 <li><code><a title="exchangelib.properties.IdChangeKeyMixIn.id_from_xml" href="#exchangelib.properties.IdChangeKeyMixIn.id_from_xml">id_from_xml</a></code></li>
-<li><code><a title="exchangelib.properties.IdChangeKeyMixIn.to_id_xml" href="#exchangelib.properties.IdChangeKeyMixIn.to_id_xml">to_id_xml</a></code></li>
+<li><code><a title="exchangelib.properties.IdChangeKeyMixIn.to_id" href="#exchangelib.properties.IdChangeKeyMixIn.to_id">to_id</a></code></li>
 </ul>
 </li>
 <li>
@@ -9920,6 +10740,19 @@ def from_xml(cls, elem, account):
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.properties.Period" href="#exchangelib.properties.Period">Period</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.properties.Period.ELEMENT_NAME" href="#exchangelib.properties.Period.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.Period.FIELDS" href="#exchangelib.properties.Period.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.Period.bias" href="#exchangelib.properties.Period.bias">bias</a></code></li>
+<li><code><a title="exchangelib.properties.Period.bias_in_minutes" href="#exchangelib.properties.Period.bias_in_minutes">bias_in_minutes</a></code></li>
+<li><code><a title="exchangelib.properties.Period.id" href="#exchangelib.properties.Period.id">id</a></code></li>
+<li><code><a title="exchangelib.properties.Period.name" href="#exchangelib.properties.Period.name">name</a></code></li>
+<li><code><a title="exchangelib.properties.Period.type" href="#exchangelib.properties.Period.type">type</a></code></li>
+<li><code><a title="exchangelib.properties.Period.year" href="#exchangelib.properties.Period.year">year</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.properties.Permission" href="#exchangelib.properties.Permission">Permission</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.properties.Permission.ELEMENT_NAME" href="#exchangelib.properties.Permission.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
@@ -10008,6 +10841,28 @@ def from_xml(cls, elem, account):
 <h4><code><a title="exchangelib.properties.RecipientAddress" href="#exchangelib.properties.RecipientAddress">RecipientAddress</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.properties.RecipientAddress.ELEMENT_NAME" href="#exchangelib.properties.RecipientAddress.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.RecurringDateTransition" href="#exchangelib.properties.RecurringDateTransition">RecurringDateTransition</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.RecurringDateTransition.ELEMENT_NAME" href="#exchangelib.properties.RecurringDateTransition.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDateTransition.FIELDS" href="#exchangelib.properties.RecurringDateTransition.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDateTransition.day" href="#exchangelib.properties.RecurringDateTransition.day">day</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDateTransition.month" href="#exchangelib.properties.RecurringDateTransition.month">month</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDateTransition.offset" href="#exchangelib.properties.RecurringDateTransition.offset">offset</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.RecurringDayTransition" href="#exchangelib.properties.RecurringDayTransition">RecurringDayTransition</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.properties.RecurringDayTransition.ELEMENT_NAME" href="#exchangelib.properties.RecurringDayTransition.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDayTransition.FIELDS" href="#exchangelib.properties.RecurringDayTransition.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDayTransition.day_of_week" href="#exchangelib.properties.RecurringDayTransition.day_of_week">day_of_week</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDayTransition.from_xml" href="#exchangelib.properties.RecurringDayTransition.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDayTransition.month" href="#exchangelib.properties.RecurringDayTransition.month">month</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDayTransition.occurrence" href="#exchangelib.properties.RecurringDayTransition.occurrence">occurrence</a></code></li>
+<li><code><a title="exchangelib.properties.RecurringDayTransition.offset" href="#exchangelib.properties.RecurringDayTransition.offset">offset</a></code></li>
 </ul>
 </li>
 <li>
@@ -10154,6 +11009,7 @@ def from_xml(cls, elem, account):
 <ul class="">
 <li><code><a title="exchangelib.properties.TimeWindow.ELEMENT_NAME" href="#exchangelib.properties.TimeWindow.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.TimeWindow.FIELDS" href="#exchangelib.properties.TimeWindow.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.TimeWindow.clean" href="#exchangelib.properties.TimeWindow.clean">clean</a></code></li>
 <li><code><a title="exchangelib.properties.TimeWindow.end" href="#exchangelib.properties.TimeWindow.end">end</a></code></li>
 <li><code><a title="exchangelib.properties.TimeWindow.start" href="#exchangelib.properties.TimeWindow.start">start</a></code></li>
 </ul>
@@ -10168,6 +11024,20 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.TimeZone.from_server_timezone" href="#exchangelib.properties.TimeZone.from_server_timezone">from_server_timezone</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZone.standard_time" href="#exchangelib.properties.TimeZone.standard_time">standard_time</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZone.to_server_timezone" href="#exchangelib.properties.TimeZone.to_server_timezone">to_server_timezone</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.TimeZoneDefinition" href="#exchangelib.properties.TimeZoneDefinition">TimeZoneDefinition</a></code></h4>
+<ul class="two-column">
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.ELEMENT_NAME" href="#exchangelib.properties.TimeZoneDefinition.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.FIELDS" href="#exchangelib.properties.TimeZoneDefinition.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.from_xml" href="#exchangelib.properties.TimeZoneDefinition.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.get_std_and_dst" href="#exchangelib.properties.TimeZoneDefinition.get_std_and_dst">get_std_and_dst</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.id" href="#exchangelib.properties.TimeZoneDefinition.id">id</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.name" href="#exchangelib.properties.TimeZoneDefinition.name">name</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.periods" href="#exchangelib.properties.TimeZoneDefinition.periods">periods</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.transitions" href="#exchangelib.properties.TimeZoneDefinition.transitions">transitions</a></code></li>
+<li><code><a title="exchangelib.properties.TimeZoneDefinition.transitions_groups" href="#exchangelib.properties.TimeZoneDefinition.transitions_groups">transitions_groups</a></code></li>
 </ul>
 </li>
 <li>
@@ -10194,6 +11064,21 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.TimestampEvent.item_id" href="#exchangelib.properties.TimestampEvent.item_id">item_id</a></code></li>
 <li><code><a title="exchangelib.properties.TimestampEvent.parent_folder_id" href="#exchangelib.properties.TimestampEvent.parent_folder_id">parent_folder_id</a></code></li>
 <li><code><a title="exchangelib.properties.TimestampEvent.timestamp" href="#exchangelib.properties.TimestampEvent.timestamp">timestamp</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.Transition" href="#exchangelib.properties.Transition">Transition</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.Transition.ELEMENT_NAME" href="#exchangelib.properties.Transition.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.TransitionsGroup" href="#exchangelib.properties.TransitionsGroup">TransitionsGroup</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.TransitionsGroup.ELEMENT_NAME" href="#exchangelib.properties.TransitionsGroup.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.TransitionsGroup.FIELDS" href="#exchangelib.properties.TransitionsGroup.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.TransitionsGroup.id" href="#exchangelib.properties.TransitionsGroup.id">id</a></code></li>
+<li><code><a title="exchangelib.properties.TransitionsGroup.transitions" href="#exchangelib.properties.TransitionsGroup.transitions">transitions</a></code></li>
 </ul>
 </li>
 <li>

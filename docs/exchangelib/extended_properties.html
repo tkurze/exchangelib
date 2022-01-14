@@ -29,6 +29,7 @@
 <pre><code class="python">import logging
 from decimal import Decimal
 
+from .errors import InvalidEnumValue
 from .ewsdatetime import EWSDateTime
 from .properties import EWSElement, ExtendedFieldURI
 from .util import create_element, add_xml_child, get_xml_attrs, get_xml_attr, set_xml_value, value_to_xml_text, \
@@ -147,9 +148,8 @@ class ExtendedProperty(EWSElement):
                     &#34;When &#39;distinguished_property_set_id&#39; is set, &#39;property_id&#39; or &#39;property_name&#39; must also be set&#34;
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
-                raise ValueError(
-                    &#34;&#39;distinguished_property_set_id&#39; %r must be one of %s&#34;
-                    % (cls.distinguished_property_set_id, sorted(cls.DISTINGUISHED_SETS))
+                raise InvalidEnumValue(
+                    &#39;distinguished_property_set_id&#39;, cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
                 )
 
     @classmethod
@@ -173,7 +173,7 @@ class ExtendedProperty(EWSElement):
                 raise ValueError(&#34;When &#39;property_tag&#39; is set, only &#39;property_type&#39; must be set&#34;)
             if 0x8000 &lt;= cls.property_tag_as_int() &lt;= 0xFFFE:
                 raise ValueError(
-                    &#34;&#39;property_tag&#39; value &#39;%s&#39; is reserved for custom properties&#34; % cls.property_tag_as_hex()
+                    f&#34;&#39;property_tag&#39; value {cls.property_tag_as_hex()!r} is reserved for custom properties&#34;
                 )
 
     @classmethod
@@ -199,24 +199,20 @@ class ExtendedProperty(EWSElement):
     @classmethod
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
-            raise ValueError(
-                &#34;&#39;property_type&#39; %r must be one of %s&#34; % (cls.property_type, sorted(cls.PROPERTY_TYPES))
-            )
+            raise InvalidEnumValue(&#39;property_type&#39;, cls.property_type, cls.PROPERTY_TYPES)
 
     def clean(self, version=None):
         self.validate_cls()
         python_type = self.python_type()
         if self.is_array_type():
             if not is_iterable(self.value):
-                raise ValueError(&#34;&#39;%s&#39; value %r must be a list&#34; % (self.__class__.__name__, self.value))
+                raise TypeError(f&#34;Field {self.__class__.__name__!r} value {self.value!r} must be of type {list}&#34;)
             for v in self.value:
                 if not isinstance(v, python_type):
-                    raise TypeError(
-                        &#34;&#39;%s&#39; value element %r must be an instance of %s&#34; % (self.__class__.__name__, v, python_type))
+                    raise TypeError(f&#34;Field {self.__class__.__name__!r} list value {v!r} must be of type {python_type}&#34;)
         else:
             if not isinstance(self.value, python_type):
-                raise TypeError(
-                    &#34;&#39;%s&#39; value %r must be an instance of %s&#34; % (self.__class__.__name__, self.value, python_type))
+                raise TypeError(f&#34;Field {self.__class__.__name__!r} value {self.value!r} must be of type {python_type}&#34;)
 
     @classmethod
     def _normalize_obj(cls, obj):
@@ -251,12 +247,12 @@ class ExtendedProperty(EWSElement):
         # Gets value of this specific ExtendedProperty from a list of &#39;ExtendedProperty&#39; XML elements
         python_type = cls.python_type()
         if cls.is_array_type():
-            values = elem.find(&#39;{%s}Values&#39; % TNS)
+            values = elem.find(f&#39;{{{TNS}}}Values&#39;)
             return [
                 xml_text_to_value(value=val, value_type=python_type)
-                for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
+                for val in get_xml_attrs(values, f&#39;{{{TNS}}}Value&#39;)
             ]
-        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
+        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#39;{{{TNS}}}Value&#39;), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
             # actually found, but there was no XML value. For other types, it would be more problematic
@@ -468,9 +464,8 @@ class Flag(ExtendedProperty):
                     &#34;When &#39;distinguished_property_set_id&#39; is set, &#39;property_id&#39; or &#39;property_name&#39; must also be set&#34;
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
-                raise ValueError(
-                    &#34;&#39;distinguished_property_set_id&#39; %r must be one of %s&#34;
-                    % (cls.distinguished_property_set_id, sorted(cls.DISTINGUISHED_SETS))
+                raise InvalidEnumValue(
+                    &#39;distinguished_property_set_id&#39;, cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
                 )
 
     @classmethod
@@ -494,7 +489,7 @@ class Flag(ExtendedProperty):
                 raise ValueError(&#34;When &#39;property_tag&#39; is set, only &#39;property_type&#39; must be set&#34;)
             if 0x8000 &lt;= cls.property_tag_as_int() &lt;= 0xFFFE:
                 raise ValueError(
-                    &#34;&#39;property_tag&#39; value &#39;%s&#39; is reserved for custom properties&#34; % cls.property_tag_as_hex()
+                    f&#34;&#39;property_tag&#39; value {cls.property_tag_as_hex()!r} is reserved for custom properties&#34;
                 )
 
     @classmethod
@@ -520,24 +515,20 @@ class Flag(ExtendedProperty):
     @classmethod
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
-            raise ValueError(
-                &#34;&#39;property_type&#39; %r must be one of %s&#34; % (cls.property_type, sorted(cls.PROPERTY_TYPES))
-            )
+            raise InvalidEnumValue(&#39;property_type&#39;, cls.property_type, cls.PROPERTY_TYPES)
 
     def clean(self, version=None):
         self.validate_cls()
         python_type = self.python_type()
         if self.is_array_type():
             if not is_iterable(self.value):
-                raise ValueError(&#34;&#39;%s&#39; value %r must be a list&#34; % (self.__class__.__name__, self.value))
+                raise TypeError(f&#34;Field {self.__class__.__name__!r} value {self.value!r} must be of type {list}&#34;)
             for v in self.value:
                 if not isinstance(v, python_type):
-                    raise TypeError(
-                        &#34;&#39;%s&#39; value element %r must be an instance of %s&#34; % (self.__class__.__name__, v, python_type))
+                    raise TypeError(f&#34;Field {self.__class__.__name__!r} list value {v!r} must be of type {python_type}&#34;)
         else:
             if not isinstance(self.value, python_type):
-                raise TypeError(
-                    &#34;&#39;%s&#39; value %r must be an instance of %s&#34; % (self.__class__.__name__, self.value, python_type))
+                raise TypeError(f&#34;Field {self.__class__.__name__!r} value {self.value!r} must be of type {python_type}&#34;)
 
     @classmethod
     def _normalize_obj(cls, obj):
@@ -572,12 +563,12 @@ class Flag(ExtendedProperty):
         # Gets value of this specific ExtendedProperty from a list of &#39;ExtendedProperty&#39; XML elements
         python_type = cls.python_type()
         if cls.is_array_type():
-            values = elem.find(&#39;{%s}Values&#39; % TNS)
+            values = elem.find(f&#39;{{{TNS}}}Values&#39;)
             return [
                 xml_text_to_value(value=val, value_type=python_type)
-                for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
+                for val in get_xml_attrs(values, f&#39;{{{TNS}}}Value&#39;)
             ]
-        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
+        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#39;{{{TNS}}}Value&#39;), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
             # actually found, but there was no XML value. For other types, it would be more problematic
@@ -732,12 +723,12 @@ def from_xml(cls, elem, account):
     # Gets value of this specific ExtendedProperty from a list of &#39;ExtendedProperty&#39; XML elements
     python_type = cls.python_type()
     if cls.is_array_type():
-        values = elem.find(&#39;{%s}Values&#39; % TNS)
+        values = elem.find(f&#39;{{{TNS}}}Values&#39;)
         return [
             xml_text_to_value(value=val, value_type=python_type)
-            for val in get_xml_attrs(values, &#39;{%s}Value&#39; % TNS)
+            for val in get_xml_attrs(values, f&#39;{{{TNS}}}Value&#39;)
         ]
-    extended_field_value = xml_text_to_value(value=get_xml_attr(elem, &#39;{%s}Value&#39; % TNS), value_type=python_type)
+    extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#39;{{{TNS}}}Value&#39;), value_type=python_type)
     if python_type == str and not extended_field_value:
         # For string types, we want to return the empty string instead of None if the element was
         # actually found, but there was no XML value. For other types, it would be more problematic
@@ -890,15 +881,13 @@ def validate_cls(cls):
     python_type = self.python_type()
     if self.is_array_type():
         if not is_iterable(self.value):
-            raise ValueError(&#34;&#39;%s&#39; value %r must be a list&#34; % (self.__class__.__name__, self.value))
+            raise TypeError(f&#34;Field {self.__class__.__name__!r} value {self.value!r} must be of type {list}&#34;)
         for v in self.value:
             if not isinstance(v, python_type):
-                raise TypeError(
-                    &#34;&#39;%s&#39; value element %r must be an instance of %s&#34; % (self.__class__.__name__, v, python_type))
+                raise TypeError(f&#34;Field {self.__class__.__name__!r} list value {v!r} must be of type {python_type}&#34;)
     else:
         if not isinstance(self.value, python_type):
-            raise TypeError(
-                &#34;&#39;%s&#39; value %r must be an instance of %s&#34; % (self.__class__.__name__, self.value, python_type))</code></pre>
+            raise TypeError(f&#34;Field {self.__class__.__name__!r} value {self.value!r} must be of type {python_type}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.extended_properties.ExtendedProperty.to_xml"><code class="name flex">
