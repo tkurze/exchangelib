@@ -118,8 +118,9 @@ class Account:
             ).discover()
             # Let's not use the auth_package hint from the AD response. It could be incorrect and we can just guess.
             self.protocol.config.auth_type = auth_type
-            self.protocol.config.retry_policy = retry_policy
-            if not self.protocol.config.version:
+            if retry_policy:
+                self.protocol.config.retry_policy = retry_policy
+            if version:
                 self.protocol.config.version = version
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:

@@ -307,3 +307,24 @@ class AccountTest(EWSTest):
         # Should succeed after credentials update
         account.protocol.credentials = self.account.protocol.credentials
         account.root.refresh()
+
+    def test_protocol_default_values(self):
+        # Test that retry_policy and auth_type always get a value regardless of how we create an Account
+        c = Credentials(self.settings['username'], self.settings['password'])
+        a = Account(self.account.primary_smtp_address, autodiscover=False, config=Configuration(
+            server=self.settings['server'],
+            credentials=c,
+        ))
+        self.assertIsNotNone(a.protocol.auth_type)
+        self.assertIsNotNone(a.protocol.retry_policy)
+
+        a = Account(self.account.primary_smtp_address, autodiscover=True, config=Configuration(
+            server=self.settings['server'],
+            credentials=c,
+        ))
+        self.assertIsNotNone(a.protocol.auth_type)
+        self.assertIsNotNone(a.protocol.retry_policy)
+
+        a = Account(self.account.primary_smtp_address, autodiscover=True, credentials=c)
+        self.assertIsNotNone(a.protocol.auth_type)
+        self.assertIsNotNone(a.protocol.retry_policy)
