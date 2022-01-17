@@ -5,6 +5,12 @@ HEAD
 ----
 
 
+4.7.1
+-----
+- Fixed issue where creating an Account with autodiscover and no config would
+  never set a default retry policy.
+
+
 4.7.0
 -----
 - Fixed some spelling mistakes:
