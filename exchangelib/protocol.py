@@ -7,7 +7,7 @@ when creating an Account.
 import abc
 import datetime
 import logging
-import os
+import random
 from queue import LifoQueue, Empty
 from threading import Lock
 
@@ -277,9 +277,8 @@ class BaseProtocol:
                                                      password=self.credentials.password)
 
         # Add some extra info
-        session.session_id = sum(map(ord, str(os.urandom(100))))  # Used for debugging messages in services
+        session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
         session.usage_count = 0
-        session.protocol = self
         log.debug('Server %s: Created session %s', self.server, session.session_id)
         return session
 
