@@ -281,18 +281,44 @@ class SyncTest(BaseItemTest):
 
         # Test calling GetItem while the streaming connection is still open. We need to bump the
         # connection count because the default count is 1 but we need 2 connections.
+        q_size = self.account.protocol._session_pool.qsize()
         self.account.protocol._session_pool_maxsize += 1
         self.account.protocol.increase_poolsize()
+        self.assertEqual(self.account.protocol._session_pool.qsize(), q_size + 1)
         try:
             with test_folder.streaming_subscription() as subscription_id:
                 i1 = self.get_test_item(folder=test_folder).save()
                 for notification in test_folder.get_streaming_events(
                     subscription_id, connection_timeout=1, max_notifications_returned=1
                 ):
+                    # We're using one session for streaming, and have one in reserve for the following service call.
+                    self.assertEqual(self.account.protocol._session_pool.qsize(), q_size)
                     for e in notification.events:
                         if isinstance(e, CreatedEvent) and e.event_type == CreatedEvent.ITEM \
                                 and e.item_id.id == i1.id:
                             test_folder.all().only('id').get(id=e.item_id.id)
+        finally:
+            self.account.protocol.decrease_poolsize()
+            self.account.protocol._session_pool_maxsize -= 1
+        self.assertEqual(self.account.protocol._session_pool.qsize(), q_size)
+
+    def test_streaming_incomplete_generator_consumption(self):
+        # Test that sessions are properly returned to the pool even when get_streaming_events() is not fully consumed.
+        # The generator needs to be garbage collected to release its session.
+        test_folder = self.account.drafts
+        q_size = self.account.protocol._session_pool.qsize()
+        self.account.protocol._session_pool_maxsize += 1
+        self.account.protocol.increase_poolsize()
+        self.assertEqual(self.account.protocol._session_pool.qsize(), q_size + 1)
+        try:
+            with test_folder.streaming_subscription() as subscription_id:
+                # Generate an event and incompletely consume the generator
+                self.get_test_item(folder=test_folder).save()
+                it = test_folder.get_streaming_events(subscription_id, connection_timeout=1)
+                _ = next(it)
+                self.assertEqual(self.account.protocol._session_pool.qsize(), q_size)
+                del it
+                self.assertEqual(self.account.protocol._session_pool.qsize(), q_size + 1)
         finally:
             self.account.protocol.decrease_poolsize()
             self.account.protocol._session_pool_maxsize -= 1

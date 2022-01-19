@@ -116,6 +116,16 @@ class EWSService(metaclass=abc.ABCMeta):
         self._streaming_session = None
         self._streaming_response = None
 
+    def __del__(self):
+        # pylint: disable=bare-except
+        try:
+            if self.streaming:
+                # Make sure to clean up lingering resources
+                self.stop_streaming()
+        except Exception:  # nosec
+            # __del__ should never fail
+            pass
+
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.
 
@@ -279,10 +289,10 @@ class EWSService(metaclass=abc.ABCMeta):
 
     def _get_response(self, payload, api_version):
         """Send the actual HTTP request and get the response."""
-        session = self.protocol.get_session()
         if self.streaming:
             # Make sure to clean up lingering resources
             self.stop_streaming()
+        session = self.protocol.get_session()
         r, session = post_ratelimited(
             protocol=self.protocol,
             session=session,
