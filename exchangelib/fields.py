@@ -543,7 +543,7 @@ class AppointmentStateField(IntegerField):
     NONE = 'None'
     MEETING = 'Meeting'
     RECEIVED = 'Received'
-    CANCELLED = 'Cancelled'
+    CANCELLED = 'Canceled'
     STATES = {
         NONE: 0x0000,
         MEETING: 0x0001,
