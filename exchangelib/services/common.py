@@ -19,7 +19,7 @@ from ..errors import EWSWarning, TransportError, SOAPError, ErrorTimeoutExpired,
     SessionPoolMinSizeReached, ErrorIncorrectSchemaVersion, ErrorInvalidRequest, ErrorCorruptData, \
     ErrorCannotEmptyFolder, ErrorDeleteDistinguishedFolder, ErrorInvalidSubscription, ErrorInvalidWatermark, \
     ErrorInvalidSyncStateData, ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, \
-    ErrorConnectionFailedTransientError, ErrorDelegateNoUser, ErrorNotDelegate, InvalidTypeError
+    ErrorConnectionFailedTransientError, ErrorDelegateNoUser, ErrorNotDelegate, InvalidTypeError, ErrorItemCorrupt
 from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
 from ..properties import FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI, ItemId, FolderId, \
@@ -56,6 +56,7 @@ KNOWN_EXCEPTIONS = (
     ErrorInvalidSubscription,
     ErrorInvalidSyncStateData,
     ErrorInvalidWatermark,
+    ErrorItemCorrupt,
     ErrorItemNotFound,
     ErrorMailboxMoveInProgress,
     ErrorMailboxStoreUnavailable,
@@ -83,7 +84,7 @@ class EWSService(metaclass=abc.ABCMeta):
     ERRORS_TO_CATCH_IN_RESPONSE = (
         EWSWarning, ErrorCannotDeleteObject, ErrorInvalidChangeKey, ErrorItemNotFound, ErrorItemSave,
         ErrorInvalidIdMalformed, ErrorMessageSizeExceeded, ErrorCannotDeleteTaskOccurrence,
-        ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence, ErrorCorruptData
+        ErrorMimeContentConversionFailed, ErrorRecurrenceHasNoOccurrence, ErrorCorruptData, ErrorItemCorrupt
     )
     # Similarly, define the warnings we want to return unraised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
