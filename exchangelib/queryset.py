@@ -272,17 +272,15 @@ class QuerySet(SearchableMixIn):
         log.debug("Initializing cache")
         yield from self._format_items(items=self._query(), return_format=self.return_format)
 
-    """Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
-    given sequence, before calling __iter__. If we implemented __len__, we would end up calling FindItems twice, once
-    to get the result of self.count(), an once to return the actual result.
-
-    Also, according to https://stackoverflow.com/questions/37189968/how-to-have-list-consume-iter-without-calling-len,
-    a __len__ implementation should be cheap. That does not hold for self.count().
-
-    def __len__(self):
-        # This queryset has no cache yet. Call the optimized counting implementation
-        return self.count()
-    """
+    # Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
+    # given sequence, before calling __iter__. If we implemented __len__, we would end up calling FindItems twice, once
+    # to get the result of self.count(), and once to return the actual result.
+    #
+    # Also, according to https://stackoverflow.com/questions/37189968/how-to-have-list-consume-iter-without-calling-len,
+    # a __len__ implementation should be cheap. That does not hold for self.count().
+    #
+    # def __len__(self):
+    #     return self.count()
 
     def __getitem__(self, idx_or_slice):
         # Support indexing and slicing. This is non-greedy when possible (slicing start, stop and step are not negative,

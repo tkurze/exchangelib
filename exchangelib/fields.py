@@ -986,9 +986,7 @@ class BodyField(TextField):
         val = None if field_elem is None else field_elem.text or None
         if val is not None:
             body_type = field_elem.get("BodyType")
-            return {Body.body_type: Body, HTMLBody.body_type: HTMLBody,}[
-                body_type
-            ](val)
+            return {Body.body_type: Body, HTMLBody.body_type: HTMLBody}[body_type](val)
         return self.default
 
     def to_xml(self, value, version):

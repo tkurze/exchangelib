@@ -38,6 +38,11 @@ class ExtendedProperty(EWSElement):
         "UnifiedMessaging",
     }
     # Enum values: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/extendedfielduri
+    # The following types cannot be used for setting or getting (see docs) and are thus not very useful here:
+    # 'Error'
+    # 'Null'
+    # 'Object'
+    # 'ObjectArray'
     PROPERTY_TYPES = {
         "ApplicationTime",
         "Binary",
@@ -49,23 +54,19 @@ class ExtendedProperty(EWSElement):
         "CurrencyArray",
         "Double",
         "DoubleArray",
-        # 'Error',
         "Float",
         "FloatArray",
         "Integer",
         "IntegerArray",
         "Long",
         "LongArray",
-        # 'Null',
-        # 'Object',
-        # 'ObjectArray',
         "Short",
         "ShortArray",
         "SystemTime",
         "SystemTimeArray",
         "String",
         "StringArray",
-    }  # The commented-out types cannot be used for setting or getting (see docs) and are thus not very useful here
+    }
 
     # Translation table between common distinguished_property_set_id and property_set_id values. See
     # https://docs.microsoft.com/en-us/office/client-developer/outlook/mapi/commonly-used-property-sets

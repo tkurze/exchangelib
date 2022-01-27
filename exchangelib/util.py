@@ -918,8 +918,6 @@ Response XML: %(xml_response)s"""
         except MalformedResponseError as e:
             log.error("%s: %s\n%s\n%s", e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
             raise
-        except Exception:
-            raise
     log.debug("Session %s thread %s: Useful response from %s", session.session_id, thread_id, url)
     return r, session
 

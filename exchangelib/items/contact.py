@@ -238,7 +238,8 @@ class Persona(IdChangeKeyMixIn):
     wedding_anniversaries = StringAttributedValueField(field_uri="persona:WeddingAnniversaries")
     birthdays = StringAttributedValueField(field_uri="persona:Birthdays")
     locations = StringAttributedValueField(field_uri="persona:Locations")
-    # ExtendedPropertyAttributedValueField('extended_properties', field_uri='persona:ExtendedProperties')
+    # This class has an additional field of type "ExtendedPropertyAttributedValueField" and
+    # field_uri 'persona:ExtendedProperties'
 
 
 class DistributionList(Item):
