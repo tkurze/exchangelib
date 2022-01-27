@@ -1,22 +1,35 @@
-from collections import namedtuple
 import pickle
-
+from collections import namedtuple
 from unittest.mock import patch
 
 from exchangelib.account import Account
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import Credentials, DELEGATE
-from exchangelib.errors import ErrorAccessDenied, ErrorFolderNotFound, UnauthorizedError, ErrorNotDelegate, \
-    ErrorDelegateNoUser, UnknownTimeZone, ErrorInvalidUserSid
+from exchangelib.credentials import DELEGATE, Credentials
+from exchangelib.errors import (
+    ErrorAccessDenied,
+    ErrorDelegateNoUser,
+    ErrorFolderNotFound,
+    ErrorInvalidUserSid,
+    ErrorNotDelegate,
+    UnauthorizedError,
+    UnknownTimeZone,
+)
 from exchangelib.ewsdatetime import UTC
 from exchangelib.folders import Calendar
 from exchangelib.items import Message
-from exchangelib.properties import DelegateUser, UserId, DelegatePermissions, SendingAs, MailTips, RecipientAddress, \
-    OutOfOffice
-from exchangelib.protocol import Protocol, FaultTolerance
+from exchangelib.properties import (
+    DelegatePermissions,
+    DelegateUser,
+    MailTips,
+    OutOfOffice,
+    RecipientAddress,
+    SendingAs,
+    UserId,
+)
+from exchangelib.protocol import FaultTolerance, Protocol
 from exchangelib.services import GetDelegate, GetMailTips
-from exchangelib.version import Version, EXCHANGE_2007_SP1
+from exchangelib.version import EXCHANGE_2007_SP1, Version
 
 from .common import EWSTest
 
@@ -25,47 +38,47 @@ class AccountTest(EWSTest):
     """Test features of the Account object."""
 
     def test_magic(self):
-        self.account.fullname = 'John Doe'
+        self.account.fullname = "John Doe"
         self.assertIn(self.account.primary_smtp_address, str(self.account))
         self.assertIn(self.account.fullname, str(self.account))
 
     def test_validation(self):
         with self.assertRaises(ValueError) as e:
             # Must have valid email address
-            Account(primary_smtp_address='blah')
+            Account(primary_smtp_address="blah")
         self.assertEqual(str(e.exception), "primary_smtp_address 'blah' is not an email address")
         with self.assertRaises(AttributeError) as e:
             # Non-autodiscover requires a config
-            Account(primary_smtp_address='blah@example.com', autodiscover=False)
-        self.assertEqual(str(e.exception), 'non-autodiscover requires a config')
+            Account(primary_smtp_address="blah@example.com", autodiscover=False)
+        self.assertEqual(str(e.exception), "non-autodiscover requires a config")
         with self.assertRaises(ValueError) as e:
-            Account(primary_smtp_address='blah@example.com', access_type=123)
+            Account(primary_smtp_address="blah@example.com", access_type=123)
         self.assertEqual(str(e.exception), "'access_type' 123 must be one of ['delegate', 'impersonation']")
         with self.assertRaises(TypeError) as e:
             # locale must be a string
-            Account(primary_smtp_address='blah@example.com', locale=123)
+            Account(primary_smtp_address="blah@example.com", locale=123)
         self.assertEqual(str(e.exception), "'locale' 123 must be of type <class 'str'>")
         with self.assertRaises(TypeError) as e:
             # default timezone must be an EWSTimeZone
-            Account(primary_smtp_address='blah@example.com', default_timezone=123)
+            Account(primary_smtp_address="blah@example.com", default_timezone=123)
         self.assertEqual(
             str(e.exception), "'default_timezone' 123 must be of type <class 'exchangelib.ewsdatetime.EWSTimeZone'>"
         )
         with self.assertRaises(TypeError) as e:
             # config must be a Configuration
-            Account(primary_smtp_address='blah@example.com', config=123)
+            Account(primary_smtp_address="blah@example.com", config=123)
         self.assertEqual(
             str(e.exception), "'config' 123 must be of type <class 'exchangelib.configuration.Configuration'>"
         )
 
-    @patch('locale.getlocale', side_effect=ValueError())
+    @patch("locale.getlocale", side_effect=ValueError())
     def test_getlocale_failure(self, m):
         a = Account(
             primary_smtp_address=self.account.primary_smtp_address,
             access_type=DELEGATE,
             config=Configuration(
                 service_endpoint=self.account.protocol.service_endpoint,
-                credentials=Credentials(self.account.protocol.credentials.username, 'WRONG_PASSWORD'),
+                credentials=Credentials(self.account.protocol.credentials.username, "WRONG_PASSWORD"),
                 version=self.account.version,
                 auth_type=self.account.protocol.auth_type,
                 retry_policy=self.retry_policy,
@@ -74,14 +87,14 @@ class AccountTest(EWSTest):
         )
         self.assertEqual(a.locale, None)
 
-    @patch('tzlocal.get_localzone', side_effect=UnknownTimeZone(''))
+    @patch("tzlocal.get_localzone", side_effect=UnknownTimeZone(""))
     def test_tzlocal_failure(self, m):
         a = Account(
             primary_smtp_address=self.account.primary_smtp_address,
             access_type=DELEGATE,
             config=Configuration(
                 service_endpoint=self.account.protocol.service_endpoint,
-                credentials=Credentials(self.account.protocol.credentials.username, 'WRONG_PASSWORD'),
+                credentials=Credentials(self.account.protocol.credentials.username, "WRONG_PASSWORD"),
                 version=self.account.version,
                 auth_type=self.account.protocol.auth_type,
                 retry_policy=self.retry_policy,
@@ -100,7 +113,7 @@ class AccountTest(EWSTest):
         class MockCalendar1(Calendar):
             @classmethod
             def get_distinguished(cls, root):
-                raise ErrorAccessDenied('foo')
+                raise ErrorAccessDenied("foo")
 
         # Test an indirect folder lookup with FindItems
         folder = self.account.root.get_default_folder(MockCalendar1)
@@ -111,7 +124,7 @@ class AccountTest(EWSTest):
         class MockCalendar2(Calendar):
             @classmethod
             def get_distinguished(cls, root):
-                raise ErrorFolderNotFound('foo')
+                raise ErrorFolderNotFound("foo")
 
         # Test using the one folder of this folder type
         with self.assertRaises(ErrorFolderNotFound):
@@ -130,8 +143,8 @@ class AccountTest(EWSTest):
 
     def test_pickle(self):
         # Test that we can pickle various objects
-        item = Message(folder=self.account.inbox, subject='XXX', categories=self.categories).save()
-        attachment = FileAttachment(name='pickle_me.txt', content=b'')
+        item = Message(folder=self.account.inbox, subject="XXX", categories=self.categories).save()
+        attachment = FileAttachment(name="pickle_me.txt", content=b"")
         for o in (
             FaultTolerance(max_wait=3600),
             self.account.protocol,
@@ -153,12 +166,14 @@ class AccountTest(EWSTest):
         # Test that mail tips work
         self.assertEqual(self.account.mail_tips.recipient_address, self.account.primary_smtp_address)
         # recipients must not be empty
-        list(GetMailTips(protocol=self.account.protocol).call(
-            sending_as=SendingAs(email_address=self.account.primary_smtp_address),
-            recipients=[],
-            mail_tips_requested='All',
-        ))
-        xml = b'''\
+        list(
+            GetMailTips(protocol=self.account.protocol).call(
+                sending_as=SendingAs(email_address=self.account.primary_smtp_address),
+                recipients=[],
+                mail_tips_requested="All",
+            )
+        )
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
@@ -185,14 +200,16 @@ class AccountTest(EWSTest):
             </m:ResponseMessages>
         </m:GetMailTipsResponse>
     </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         self.assertEqual(
             list(GetMailTips(protocol=None).parse(xml)),
-            [MailTips(
-                recipient_address=RecipientAddress(email_address='user2@contoso.com'),
-                out_of_office=OutOfOffice(),
-                custom_mail_tip='Hello World Mailtips',
-            )]
+            [
+                MailTips(
+                    recipient_address=RecipientAddress(email_address="user2@contoso.com"),
+                    out_of_office=OutOfOffice(),
+                    custom_mail_tip="Hello World Mailtips",
+                )
+            ],
         )
 
     def test_delegate(self):
@@ -200,15 +217,17 @@ class AccountTest(EWSTest):
         # of a non-empty response.
         self.assertGreaterEqual(len(self.account.delegates), 0)
         with self.assertRaises(ErrorInvalidUserSid):
-            list(GetDelegate(account=self.account).call(user_ids=[UserId(sid='XXX')], include_permissions=True))
+            list(GetDelegate(account=self.account).call(user_ids=[UserId(sid="XXX")], include_permissions=True))
         with self.assertRaises(ErrorDelegateNoUser):
-            list(GetDelegate(account=self.account).call(user_ids=['foo@example.com'], include_permissions=True))
+            list(GetDelegate(account=self.account).call(user_ids=["foo@example.com"], include_permissions=True))
         with self.assertRaises(ErrorNotDelegate):
-            list(GetDelegate(account=self.account).call(
-                user_ids=[self.account.primary_smtp_address], include_permissions=True
-            ))
+            list(
+                GetDelegate(account=self.account).call(
+                    user_ids=[self.account.primary_smtp_address], include_permissions=True
+                )
+            )
 
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -237,13 +256,13 @@ class AccountTest(EWSTest):
       <m:DeliverMeetingRequests>DelegatesAndMe</m:DeliverMeetingRequests>
       </m:GetDelegateResponse>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
 
-        MockTZ = namedtuple('EWSTimeZone', ['ms_id'])
-        MockAccount = namedtuple('Account', ['access_type', 'primary_smtp_address', 'default_timezone', 'protocol'])
-        MockProtocol = namedtuple('Protocol', ['version'])
+        MockTZ = namedtuple("EWSTimeZone", ["ms_id"])
+        MockAccount = namedtuple("Account", ["access_type", "primary_smtp_address", "default_timezone", "protocol"])
+        MockProtocol = namedtuple("Protocol", ["version"])
         p = MockProtocol(version=Version(build=EXCHANGE_2007_SP1))
-        a = MockAccount(DELEGATE, 'foo@example.com', MockTZ('XXX'), protocol=p)
+        a = MockAccount(DELEGATE, "foo@example.com", MockTZ("XXX"), protocol=p)
 
         ws = GetDelegate(account=a)
         delegates = list(ws.parse(xml))
@@ -251,19 +270,19 @@ class AccountTest(EWSTest):
             delegates,
             [
                 DelegateUser(
-                    user_id=UserId(sid='SOME_SID', primary_smtp_address='foo@example.com', display_name='Foo Bar'),
+                    user_id=UserId(sid="SOME_SID", primary_smtp_address="foo@example.com", display_name="Foo Bar"),
                     delegate_permissions=DelegatePermissions(
-                        calendar_folder_permission_level='Author',
-                        inbox_folder_permission_level='Reviewer',
-                        contacts_folder_permission_level='None',
-                        notes_folder_permission_level='None',
-                        journal_folder_permission_level='None',
-                        tasks_folder_permission_level='None',
+                        calendar_folder_permission_level="Author",
+                        inbox_folder_permission_level="Reviewer",
+                        contacts_folder_permission_level="None",
+                        notes_folder_permission_level="None",
+                        journal_folder_permission_level="None",
+                        tasks_folder_permission_level="None",
                     ),
                     receive_copies_of_meeting_messages=False,
                     view_private_items=True,
                 )
-            ]
+            ],
         )
 
     def test_login_failure_and_credentials_update(self):
@@ -273,13 +292,13 @@ class AccountTest(EWSTest):
             access_type=DELEGATE,
             config=Configuration(
                 service_endpoint=self.account.protocol.service_endpoint,
-                credentials=Credentials(self.account.protocol.credentials.username, 'WRONG_PASSWORD'),
+                credentials=Credentials(self.account.protocol.credentials.username, "WRONG_PASSWORD"),
                 version=self.account.version,
                 auth_type=self.account.protocol.auth_type,
                 retry_policy=self.retry_policy,
             ),
             autodiscover=False,
-            locale='da_DK',
+            locale="da_DK",
         )
 
         # Should fail when credentials are wrong, but UnauthorizedError is caught and retried. Mock the needed methods
@@ -291,7 +310,7 @@ class AccountTest(EWSTest):
 
             def raise_response_errors(self, response):
                 if response.status_code == 401:
-                    raise UnauthorizedError(f'Invalid credentials for {response.url}')
+                    raise UnauthorizedError(f"Invalid credentials for {response.url}")
                 return super().raise_response_errors(response)
 
         try:
@@ -310,18 +329,26 @@ class AccountTest(EWSTest):
 
     def test_protocol_default_values(self):
         # Test that retry_policy and auth_type always get a value regardless of how we create an Account
-        c = Credentials(self.settings['username'], self.settings['password'])
-        a = Account(self.account.primary_smtp_address, autodiscover=False, config=Configuration(
-            server=self.settings['server'],
-            credentials=c,
-        ))
+        c = Credentials(self.settings["username"], self.settings["password"])
+        a = Account(
+            self.account.primary_smtp_address,
+            autodiscover=False,
+            config=Configuration(
+                server=self.settings["server"],
+                credentials=c,
+            ),
+        )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
 
-        a = Account(self.account.primary_smtp_address, autodiscover=True, config=Configuration(
-            server=self.settings['server'],
-            credentials=c,
-        ))
+        a = Account(
+            self.account.primary_smtp_address,
+            autodiscover=True,
+            config=Configuration(
+                server=self.settings["server"],
+                credentials=c,
+            ),
+        )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
 

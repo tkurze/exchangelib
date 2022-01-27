@@ -1,14 +1,14 @@
-from .common import EWSService
 from ..errors import ErrorNameResolutionMultipleResults
 from ..properties import Mailbox
-from ..util import create_element, set_xml_value, MNS
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSService
 
 
 class ExpandDL(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation"""
 
-    SERVICE_NAME = 'ExpandDL'
-    element_container_name = f'{{{MNS}}}DLExpansion'
+    SERVICE_NAME = "ExpandDL"
+    element_container_name = f"{{{MNS}}}DLExpansion"
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -18,4 +18,4 @@ class ExpandDL(EWSService):
         return Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
-        return set_xml_value(create_element(f'm:{self.SERVICE_NAME}'), distribution_list, version=self.protocol.version)
+        return set_xml_value(create_element(f"m:{self.SERVICE_NAME}"), distribution_list, version=self.protocol.version)

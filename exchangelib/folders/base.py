@@ -3,18 +3,47 @@ import logging
 from fnmatch import fnmatch
 from operator import attrgetter
 
-from .collections import FolderCollection, SyncCompleted, PullSubscription, PushSubscription, StreamingSubscription
-from .queryset import SingleFolderQuerySet, MISSING_FOLDER_ERRORS, SHALLOW as SHALLOW_FOLDERS, DEEP as DEEP_FOLDERS
-from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorCannotEmptyFolder, ErrorCannotDeleteObject, \
-    ErrorDeleteDistinguishedFolder, ErrorItemNotFound, InvalidTypeError
-from ..fields import IntegerField, CharField, FieldPath, EffectiveRightsField, PermissionSetField, EWSElementField, \
-    Field, IdElementField, InvalidField
-from ..items import CalendarItem, RegisterMixIn, ITEM_CLASSES, HARD_DELETE, SHALLOW as SHALLOW_ITEMS
-from ..properties import Mailbox, FolderId, ParentFolderId, DistinguishedFolderId, UserConfiguration, \
-    UserConfigurationName, UserConfigurationNameMNS, EWSMeta
-from ..queryset import SearchableMixIn, DoesNotExist
-from ..util import TNS, require_id, is_iterable
+from ..errors import (
+    ErrorAccessDenied,
+    ErrorCannotDeleteObject,
+    ErrorCannotEmptyFolder,
+    ErrorDeleteDistinguishedFolder,
+    ErrorFolderNotFound,
+    ErrorItemNotFound,
+    InvalidTypeError,
+)
+from ..fields import (
+    CharField,
+    EffectiveRightsField,
+    EWSElementField,
+    Field,
+    FieldPath,
+    IdElementField,
+    IntegerField,
+    InvalidField,
+    PermissionSetField,
+)
+from ..items import HARD_DELETE, ITEM_CLASSES
+from ..items import SHALLOW as SHALLOW_ITEMS
+from ..items import CalendarItem, RegisterMixIn
+from ..properties import (
+    DistinguishedFolderId,
+    EWSMeta,
+    FolderId,
+    Mailbox,
+    ParentFolderId,
+    UserConfiguration,
+    UserConfigurationName,
+    UserConfigurationNameMNS,
+)
+from ..queryset import DoesNotExist, SearchableMixIn
+from ..util import TNS, is_iterable, require_id
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010
+from .collections import FolderCollection, PullSubscription, PushSubscription, StreamingSubscription, SyncCompleted
+from .queryset import DEEP as DEEP_FOLDERS
+from .queryset import MISSING_FOLDER_ERRORS
+from .queryset import SHALLOW as SHALLOW_FOLDERS
+from .queryset import SingleFolderQuerySet
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +51,7 @@ log = logging.getLogger(__name__)
 class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     """Base class for all classes that implement a folder."""
 
-    ELEMENT_NAME = 'Folder'
+    ELEMENT_NAME = "Folder"
     NAMESPACE = TNS
     # See https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid
     DISTINGUISHED_FOLDER_ID = None
@@ -41,24 +70,23 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     ITEM_MODEL_MAP = {cls.response_tag(): cls for cls in ITEM_CLASSES}
     ID_ELEMENT_CLS = FolderId
 
-    _id = IdElementField(field_uri='folder:FolderId', value_cls=ID_ELEMENT_CLS)
-    parent_folder_id = EWSElementField(field_uri='folder:ParentFolderId', value_cls=ParentFolderId,
-                                       is_read_only=True)
-    folder_class = CharField(field_uri='folder:FolderClass', is_required_after_save=True)
-    name = CharField(field_uri='folder:DisplayName')
-    total_count = IntegerField(field_uri='folder:TotalCount', is_read_only=True)
-    child_folder_count = IntegerField(field_uri='folder:ChildFolderCount', is_read_only=True)
-    unread_count = IntegerField(field_uri='folder:UnreadCount', is_read_only=True)
+    _id = IdElementField(field_uri="folder:FolderId", value_cls=ID_ELEMENT_CLS)
+    parent_folder_id = EWSElementField(field_uri="folder:ParentFolderId", value_cls=ParentFolderId, is_read_only=True)
+    folder_class = CharField(field_uri="folder:FolderClass", is_required_after_save=True)
+    name = CharField(field_uri="folder:DisplayName")
+    total_count = IntegerField(field_uri="folder:TotalCount", is_read_only=True)
+    child_folder_count = IntegerField(field_uri="folder:ChildFolderCount", is_read_only=True)
+    unread_count = IntegerField(field_uri="folder:UnreadCount", is_read_only=True)
 
-    __slots__ = 'is_distinguished', 'item_sync_state', 'folder_sync_state'
+    __slots__ = "is_distinguished", "item_sync_state", "folder_sync_state"
 
     # Used to register extended properties
-    INSERT_AFTER_FIELD = 'child_folder_count'
+    INSERT_AFTER_FIELD = "child_folder_count"
 
     def __init__(self, **kwargs):
-        self.is_distinguished = kwargs.pop('is_distinguished', False)
-        self.item_sync_state = kwargs.pop('item_sync_state', None)
-        self.folder_sync_state = kwargs.pop('folder_sync_state', None)
+        self.is_distinguished = kwargs.pop("is_distinguished", False)
+        self.item_sync_state = kwargs.pop("item_sync_state", None)
+        self.folder_sync_state = kwargs.pop("folder_sync_state", None)
         super().__init__(**kwargs)
 
     @property
@@ -103,7 +131,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @property
     def absolute(self):
-        return ''.join(f'/{p.name}' for p in self.parts)
+        return "".join(f"/{p.name}" for p in self.parts)
 
     def _walk(self):
         for c in self.children:
@@ -114,23 +142,23 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         return FolderCollection(account=self.account, folders=self._walk())
 
     def _glob(self, pattern):
-        split_pattern = pattern.rsplit('/', 1)
+        split_pattern = pattern.rsplit("/", 1)
         head, tail = (split_pattern[0], None) if len(split_pattern) == 1 else split_pattern
-        if head == '':
+        if head == "":
             # We got an absolute path. Restart globbing at root
-            yield from self.root.glob(tail or '*')
-        elif head == '..':
+            yield from self.root.glob(tail or "*")
+        elif head == "..":
             # Relative path with reference to parent. Restart globbing at parent
             if not self.parent:
-                raise ValueError('Already at top')
-            yield from self.parent.glob(tail or '*')
-        elif head == '**':
+                raise ValueError("Already at top")
+            yield from self.parent.glob(tail or "*")
+        elif head == "**":
             # Match anything here or in any subfolder at arbitrary depth
             for c in self.walk():
                 # fnmatch() may be case-sensitive depending on operating system:
                 # force a case-insensitive match since case appears not to
                 # matter for folders in Exchange
-                if fnmatch(c.name.lower(), (tail or '*').lower()):
+                if fnmatch(c.name.lower(), (tail or "*").lower()):
                     yield c
         else:
             # Regular pattern
@@ -157,22 +185,22 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             ├── exchangelib issues
             └── Mom
         """
-        tree = f'{self.name}\n'
+        tree = f"{self.name}\n"
         children = list(self.children)
-        for i, c in enumerate(sorted(children, key=attrgetter('name')), start=1):
-            nodes = c.tree().split('\n')
+        for i, c in enumerate(sorted(children, key=attrgetter("name")), start=1):
+            nodes = c.tree().split("\n")
             for j, node in enumerate(nodes, start=1):
                 if i != len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
-                    tree += f'├── {node}\n'
+                    tree += f"├── {node}\n"
                 elif i != len(children) and j > 1:
                     # Not the last child, and not name of child
-                    tree += f'│   {node}\n'
+                    tree += f"│   {node}\n"
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
-                    tree += f'└── {node}\n'
+                    tree += f"└── {node}\n"
                 else:  # Last child, and not name of child
-                    tree += f'    {node}\n'
+                    tree += f"    {node}\n"
         return tree.strip()
 
     @classmethod
@@ -200,11 +228,29 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :param container_class:
         :return:
         """
-        from .known_folders import Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, \
-            RecipientCache, RSSFeeds
+        from .known_folders import (
+            Calendar,
+            Contacts,
+            ConversationSettings,
+            GALContacts,
+            Messages,
+            RecipientCache,
+            Reminders,
+            RSSFeeds,
+            Tasks,
+        )
+
         for folder_cls in (
-                Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, RecipientCache,
-                RSSFeeds):
+            Messages,
+            Tasks,
+            Calendar,
+            ConversationSettings,
+            Contacts,
+            GALContacts,
+            Reminders,
+            RecipientCache,
+            RSSFeeds,
+        ):
             if folder_cls.CONTAINER_CLASS == container_class:
                 return folder_cls
         raise KeyError()
@@ -214,7 +260,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         try:
             return cls.ITEM_MODEL_MAP[tag]
         except KeyError:
-            raise ValueError(f'Item type {tag} was unexpected in a {cls.__name__} folder')
+            raise ValueError(f"Item type {tag} was unexpected in a {cls.__name__} folder")
 
     @classmethod
     def allowed_item_fields(cls, version):
@@ -240,9 +286,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             elif isinstance(field_path, Field):
                 field_path = FieldPath(field=field_path)
                 fields[i] = field_path
-            if field_path.field.name == 'start':
+            if field_path.field.name == "start":
                 has_start = True
-            elif field_path.field.name == 'end':
+            elif field_path.field.name == "end":
                 has_end = True
 
         # For CalendarItem items, we want to inject internal timezone fields. See also CalendarItem.clean()
@@ -291,6 +337,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     def save(self, update_fields=None):
         from ..services import CreateFolder, UpdateFolder
+
         if self.id is None:
             # New folder
             if update_fields:
@@ -309,7 +356,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                     # These cannot be changed
                     continue
                 if (f.is_required or f.is_required_after_save) and (
-                        getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
                 ):
                     # These are required and cannot be deleted
                     continue
@@ -317,7 +364,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         res = UpdateFolder(account=self.account).get(folders=[(self, update_fields)])
         folder_id, changekey = res.id, res.changekey
         if self.id != folder_id:
-            raise ValueError('ID mismatch')
+            raise ValueError("ID mismatch")
         # Don't check changekey value. It may not change on no-op updates
         self.changekey = changekey
         self.root.update_folder(self)  # Update the folder in the cache
@@ -325,10 +372,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     def move(self, to_folder):
         from ..services import MoveFolder
+
         res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
         folder_id, changekey = res.id, res.changekey
         if self.id != folder_id:
-            raise ValueError('ID mismatch')
+            raise ValueError("ID mismatch")
         # Don't check changekey value. It may not change on no-op moves
         self.changekey = changekey
         self.parent_folder_id = ParentFolderId(id=to_folder.id, changekey=to_folder.changekey)
@@ -336,12 +384,14 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     def delete(self, delete_type=HARD_DELETE):
         from ..services import DeleteFolder
+
         DeleteFolder(account=self.account).get(folders=[self], delete_type=delete_type)
         self.root.remove_folder(self)  # Remove the updated folder from the cache
         self._id = None
 
     def empty(self, delete_type=HARD_DELETE, delete_sub_folders=False):
         from ..services import EmptyFolder
+
         EmptyFolder(account=self.account).get(
             folders=[self], delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
@@ -354,11 +404,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # distinguished folders from being deleted. Use with caution!
         _seen = _seen or set()
         if self.id in _seen:
-            raise RecursionError(f'We already tried to wipe {self}')
+            raise RecursionError(f"We already tried to wipe {self}")
         if _level > 16:
-            raise RecursionError(f'Max recursion level reached: {_level}')
+            raise RecursionError(f"Max recursion level reached: {_level}")
         _seen.add(self.id)
-        log.warning('Wiping %s', self)
+        log.warning("Wiping %s", self)
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
         try:
             if has_distinguished_subfolders:
@@ -371,26 +421,26 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                     raise  # We already tried this
                 self.empty(delete_sub_folders=False)
             except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
-                log.warning('Not allowed to empty %s. Trying to delete items instead', self)
+                log.warning("Not allowed to empty %s. Trying to delete items instead", self)
                 kwargs = {}
                 if page_size is not None:
-                    kwargs['page_size'] = page_size
+                    kwargs["page_size"] = page_size
                 if chunk_size is not None:
-                    kwargs['chunk_size'] = chunk_size
+                    kwargs["chunk_size"] = chunk_size
                 try:
                     self.all().delete(**kwargs)
                 except (ErrorAccessDenied, ErrorCannotDeleteObject, ErrorItemNotFound):
-                    log.warning('Not allowed to delete items in %s', self)
+                    log.warning("Not allowed to delete items in %s", self)
         _level += 1
         for f in self.children:
             f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
             # Remove non-distinguished children that are empty and have no subfolders
             if f.is_deletable and not f.children:
-                log.warning('Deleting folder %s', f)
+                log.warning("Deleting folder %s", f)
                 try:
                     f.delete()
                 except ErrorDeleteDistinguishedFolder:
-                    log.warning('Tried to delete a distinguished folder (%s)', f)
+                    log.warning("Tried to delete a distinguished folder (%s)", f)
 
     def test_access(self):
         """Does a simple FindItem to test (read) access to the folder. Maybe the account doesn't exist, maybe the
@@ -402,12 +452,12 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     @classmethod
     def _kwargs_from_elem(cls, elem, account):
         # Check for 'DisplayName' element before collecting kwargs because because that clears the elements
-        has_name_elem = elem.find(cls.get_field_by_fieldname('name').response_tag()) is not None
+        has_name_elem = elem.find(cls.get_field_by_fieldname("name").response_tag()) is not None
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-        if has_name_elem and not kwargs['name']:
+        if has_name_elem and not kwargs["name"]:
             # When we request the 'DisplayName' property, some folders may still be returned with an empty value.
             # Assign a default name to these folders.
-            kwargs['name'] = cls.DISTINGUISHED_FOLDER_ID
+            kwargs["name"] = cls.DISTINGUISHED_FOLDER_ID
         return kwargs
 
     def to_id(self):
@@ -416,22 +466,21 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             # the folder content since we fetched the changekey.
             if self.account:
                 return DistinguishedFolderId(
-                    id=self.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=self.account.primary_smtp_address)
+                    id=self.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
                 )
             return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
         if self.id:
             return FolderId(id=self.id, changekey=self.changekey)
-        raise ValueError('Must be a distinguished folder or have an ID')
+        raise ValueError("Must be a distinguished folder or have an ID")
 
     @classmethod
     def resolve(cls, account, folder):
         # Resolve a single folder
         folders = list(FolderCollection(account=account, folders=[folder]).resolve())
         if not folders:
-            raise ErrorFolderNotFound(f'Could not find folder {folder!r}')
+            raise ErrorFolderNotFound(f"Could not find folder {folder!r}")
         if len(folders) != 1:
-            raise ValueError(f'Expected result length 1, but got {folders}')
+            raise ValueError(f"Expected result length 1, but got {folders}")
         f = folders[0]
         if isinstance(f, Exception):
             raise f
@@ -443,7 +492,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     def refresh(self):
         fresh_folder = self.resolve(account=self.account, folder=self)
         if self.id != fresh_folder.id:
-            raise ValueError('ID mismatch')
+            raise ValueError("ID mismatch")
         # Apparently, the changekey may get updated
         for f in self.FIELDS:
             setattr(self, f.name, getattr(fresh_folder, f.name))
@@ -453,6 +502,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     def get_user_configuration(self, name, properties=None):
         from ..services import GetUserConfiguration
         from ..services.get_user_configuration import ALL
+
         if properties is None:
             properties = ALL
         return GetUserConfiguration(account=self.account).get(
@@ -463,6 +513,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     @require_id
     def create_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
         from ..services import CreateUserConfiguration
+
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -474,6 +525,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     @require_id
     def update_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
         from ..services import UpdateUserConfiguration
+
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -485,6 +537,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     @require_id
     def delete_user_configuration(self, name):
         from ..services import DeleteUserConfiguration
+
         return DeleteUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
         )
@@ -500,10 +553,13 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :return: The subscription ID and a watermark
         """
         from ..services import SubscribeToPull
+
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
         return FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
-            event_types=event_types, watermark=watermark, timeout=timeout,
+            event_types=event_types,
+            watermark=watermark,
+            timeout=timeout,
         )
 
     @require_id
@@ -517,10 +573,14 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :return: The subscription ID and a watermark
         """
         from ..services import SubscribeToPush
+
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
         return FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
-            event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
+            event_types=event_types,
+            watermark=watermark,
+            status_frequency=status_frequency,
+            callback_url=callback_url,
         )
 
     @require_id
@@ -531,6 +591,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :return: The subscription ID
         """
         from ..services import SubscribeToStreaming
+
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
         return FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(event_types=event_types)
@@ -557,6 +618,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         sync methods.
         """
         from ..services import Unsubscribe
+
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
@@ -616,6 +678,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         sync methods.
         """
         from ..services import GetEvents
+
         svc = GetEvents(account=self.account)
         while True:
             notification = svc.get(subscription_id=subscription_id, watermark=watermark)
@@ -637,12 +700,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         sync methods.
         """
         from ..services import GetStreamingEvents
+
         svc = GetStreamingEvents(account=self.account)
-        subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+        subscription_ids = (
+            subscription_id_or_ids
+            if is_iterable(subscription_id_or_ids, generators_allowed=True)
             else [subscription_id_or_ids]
+        )
         for i, notification in enumerate(
-                svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
-                start=1
+            svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout), start=1
         ):
             yield notification
             if max_notifications_returned and i >= max_notifications_returned:
@@ -659,10 +725,10 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :param other:
         :return:
         """
-        if other == '..':
-            raise ValueError('Cannot get parent without a folder cache')
+        if other == "..":
+            raise ValueError("Cannot get parent without a folder cache")
 
-        if other == '.':
+        if other == ".":
             return self
 
         # Assume an exact match on the folder name in a shallow search will only return at most one folder
@@ -673,11 +739,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     def __truediv__(self, other):
         """Support the some_folder / 'child_folder' / 'child_of_child_folder' navigation syntax."""
-        if other == '..':
+        if other == "..":
             if not self.parent:
-                raise ValueError('Already at top')
+                raise ValueError("Already at top")
             return self.parent
-        if other == '.':
+        if other == ".":
             return self
         for c in self.children:
             if c.name == other:
@@ -685,35 +751,45 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         raise ErrorFolderNotFound(f"No subfolder with name {other!r}")
 
     def __repr__(self):
-        return self.__class__.__name__ + \
-               repr((self.root, self.name, self.total_count, self.unread_count, self.child_folder_count,
-                     self.folder_class, self.id, self.changekey))
+        return self.__class__.__name__ + repr(
+            (
+                self.root,
+                self.name,
+                self.total_count,
+                self.unread_count,
+                self.child_folder_count,
+                self.folder_class,
+                self.id,
+                self.changekey,
+            )
+        )
 
     def __str__(self):
-        return f'{self.__class__.__name__} ({self.name})'
+        return f"{self.__class__.__name__} ({self.name})"
 
 
 class Folder(BaseFolder):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder"""
 
-    permission_set = PermissionSetField(field_uri='folder:PermissionSet', supported_from=EXCHANGE_2007_SP1)
-    effective_rights = EffectiveRightsField(field_uri='folder:EffectiveRights', is_read_only=True,
-                                            supported_from=EXCHANGE_2007_SP1)
+    permission_set = PermissionSetField(field_uri="folder:PermissionSet", supported_from=EXCHANGE_2007_SP1)
+    effective_rights = EffectiveRightsField(
+        field_uri="folder:EffectiveRights", is_read_only=True, supported_from=EXCHANGE_2007_SP1
+    )
 
-    __slots__ = '_root',
+    __slots__ = ("_root",)
 
     def __init__(self, **kwargs):
-        self._root = kwargs.pop('root', None)  # This is a pointer to the root of the folder hierarchy
-        parent = kwargs.pop('parent', None)
+        self._root = kwargs.pop("root", None)  # This is a pointer to the root of the folder hierarchy
+        parent = kwargs.pop("parent", None)
         if parent:
             if self.root:
                 if parent.root != self.root:
                     raise ValueError("'parent.root' must match 'root'")
             else:
                 self.root = parent.root
-            if 'parent_folder_id' in kwargs and parent.id != kwargs['parent_folder_id']:
+            if "parent_folder_id" in kwargs and parent.id != kwargs["parent_folder_id"]:
                 raise ValueError("'parent_folder_id' must match 'parent' ID")
-            kwargs['parent_folder_id'] = ParentFolderId(id=parent.id, changekey=parent.changekey)
+            kwargs["parent_folder_id"] = ParentFolderId(id=parent.id, changekey=parent.changekey)
         super().__init__(**kwargs)
 
     @property
@@ -733,13 +809,13 @@ class Folder(BaseFolder):
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not Folder:
-            raise TypeError('For folders, custom fields must be registered on the Folder class')
+            raise TypeError("For folders, custom fields must be registered on the Folder class")
         return super().register(*args, **kwargs)
 
     @classmethod
     def deregister(cls, *args, **kwargs):
         if cls is not Folder:
-            raise TypeError('For folders, custom fields must be registered on the Folder class')
+            raise TypeError("For folders, custom fields must be registered on the Folder class")
         return super().deregister(*args, **kwargs)
 
     @classmethod
@@ -751,11 +827,10 @@ class Folder(BaseFolder):
         """
         try:
             return cls.resolve(
-                account=root.account,
-                folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                account=root.account, folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f'Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}')
+            raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}")
 
     @property
     def parent(self):
@@ -772,15 +847,16 @@ class Folder(BaseFolder):
             self.parent_folder_id = None
         else:
             if not isinstance(value, BaseFolder):
-                raise InvalidTypeError('value', value, BaseFolder)
+                raise InvalidTypeError("value", value, BaseFolder)
             self.root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
         from .roots import RootOfHierarchy
+
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
-            raise InvalidTypeError('root', self.root, RootOfHierarchy)
+            raise InvalidTypeError("root", self.root, RootOfHierarchy)
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
@@ -806,18 +882,18 @@ class Folder(BaseFolder):
             if folder.name:
                 try:
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name,
-                                                                  locale=root.account.locale)
-                    log.debug('Folder class %s matches localized folder name %s', folder_cls, folder.name)
+                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
+                    log.debug("Folder class %s matches localized folder name %s", folder_cls, folder.name)
                 except KeyError:
                     pass
             if folder.folder_class and folder_cls == Folder:
                 try:
                     folder_cls = cls.folder_cls_from_container_class(container_class=folder.folder_class)
-                    log.debug('Folder class %s matches container class %s (%s)', folder_cls, folder.folder_class,
-                              folder.name)
+                    log.debug(
+                        "Folder class %s matches container class %s (%s)", folder_cls, folder.folder_class, folder.name
+                    )
                 except KeyError:
                     pass
             if folder_cls == Folder:
-                log.debug('Fallback to class Folder (folder_class %s, name %s)', folder.folder_class, folder.name)
+                log.debug("Fallback to class Folder (folder_class %s, name %s)", folder.folder_class, folder.name)
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})

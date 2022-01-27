@@ -1,33 +1,44 @@
-import requests_mock
 from unittest.mock import Mock
 
-from exchangelib.errors import ErrorServerBusy, ErrorNonExistentMailbox, TransportError, MalformedResponseError, \
-    ErrorInvalidServerVersion, ErrorTooManyObjectsOpened, SOAPError, ErrorExceededConnectionCount, \
-    ErrorInternalServerError, ErrorInvalidValueForProperty, ErrorSchemaValidation
+import requests_mock
+
+from exchangelib.errors import (
+    ErrorExceededConnectionCount,
+    ErrorInternalServerError,
+    ErrorInvalidServerVersion,
+    ErrorInvalidValueForProperty,
+    ErrorNonExistentMailbox,
+    ErrorSchemaValidation,
+    ErrorServerBusy,
+    ErrorTooManyObjectsOpened,
+    MalformedResponseError,
+    SOAPError,
+    TransportError,
+)
 from exchangelib.folders import FolderCollection
-from exchangelib.protocol import FaultTolerance, FailFast
-from exchangelib.services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, FindFolder, DeleteItem
+from exchangelib.protocol import FailFast, FaultTolerance
+from exchangelib.services import DeleteItem, FindFolder, GetRoomLists, GetRooms, GetServerTimeZones, ResolveNames
 from exchangelib.util import create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
 
-from .common import EWSTest, mock_protocol, mock_version, mock_account, get_random_string
+from .common import EWSTest, get_random_string, mock_account, mock_protocol, mock_version
 
 
 class ServicesTest(EWSTest):
     def test_invalid_server_version(self):
         # Test that we get a client-side error if we call a service that was only implemented in a later version
         version = mock_version(build=EXCHANGE_2007)
-        account = mock_account(version=version, protocol=mock_protocol(version=version, service_endpoint='example.com'))
+        account = mock_account(version=version, protocol=mock_protocol(version=version, service_endpoint="example.com"))
         with self.assertRaises(NotImplementedError):
             list(GetServerTimeZones(protocol=account.protocol).call())
         with self.assertRaises(NotImplementedError):
             list(GetRoomLists(protocol=account.protocol).call())
         with self.assertRaises(NotImplementedError):
-            list(GetRooms(protocol=account.protocol).call('XXX'))
+            list(GetRooms(protocol=account.protocol).call("XXX"))
 
     def test_inner_error_parsing(self):
         # Test that we can parse an exception response via SOAP body
-        xml = b'''\
+        xml = b"""\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -50,19 +61,19 @@ class ServicesTest(EWSTest):
       </m:ResponseMessages>
     </m:DeleteItemResponse>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = DeleteItem(account=self.account)
         with self.assertRaises(ErrorInternalServerError) as e:
             list(ws.parse(xml))
         self.assertEqual(
             e.exception.args[0],
             "An internal server error occurred. The operation failed. (inner error: "
-            "ErrorQuotaExceededOnDelete('Cannot delete message because the folder is out of quota.'))"
+            "ErrorQuotaExceededOnDelete('Cannot delete message because the folder is out of quota.'))",
         )
 
     def test_invalid_value_extras(self):
         # Test that we can parse an exception response via SOAP body
-        xml = b'''\
+        xml = b"""\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -84,7 +95,7 @@ class ServicesTest(EWSTest):
       </m:ResponseMessages>
     </m:DeleteItemResponse>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = DeleteItem(account=self.account)
         with self.assertRaises(ErrorInvalidValueForProperty) as e:
             list(ws.parse(xml))
@@ -92,7 +103,7 @@ class ServicesTest(EWSTest):
 
     def test_error_server_busy(self):
         # Test that we can parse an exception response via SOAP body
-        xml = b'''\
+        xml = b"""\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -112,16 +123,16 @@ class ServicesTest(EWSTest):
       </detail>
     </s:Fault>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         version = mock_version(build=EXCHANGE_2010)
-        ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
+        ws = GetRoomLists(mock_protocol(version=version, service_endpoint="example.com"))
         with self.assertRaises(ErrorServerBusy) as e:
             ws.parse(xml)
         self.assertEqual(e.exception.back_off, 297.749)  # Test that we correctly parse the BackOffMilliseconds value
 
     def test_error_schema_validation(self):
         # Test that we can parse extra info with ErrorSchemaValidation
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
@@ -141,21 +152,21 @@ class ServicesTest(EWSTest):
             </detail>
         </s:Fault>
     </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         version = mock_version(build=EXCHANGE_2010)
-        ws = GetRoomLists(mock_protocol(version=version, service_endpoint='example.com'))
+        ws = GetRoomLists(mock_protocol(version=version, service_endpoint="example.com"))
         with self.assertRaises(ErrorSchemaValidation) as e:
             ws.parse(xml)
-        self.assertEqual(e.exception.args[0], 'YYY ZZZ (line: 123 position: 456)')
+        self.assertEqual(e.exception.args[0], "YYY ZZZ (line: 123 position: 456)")
 
     @requests_mock.mock(real_http=True)
     def test_error_too_many_objects_opened(self, m):
         # Test that we can parse ErrorTooManyObjectsOpened via ResponseMessage and return
         version = mock_version(build=EXCHANGE_2010)
-        protocol = mock_protocol(version=version, service_endpoint='example.com')
+        protocol = mock_protocol(version=version, service_endpoint="example.com")
         account = mock_account(version=version, protocol=protocol)
         ws = FindFolder(account=account)
-        xml = b'''\
+        xml = b"""\
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
         <m:FindFolderResponse
@@ -170,7 +181,7 @@ class ServicesTest(EWSTest):
             </m:ResponseMessages>
         </m:FindFolderResponse>
     </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         # Just test that we can parse the error
         with self.assertRaises(ErrorTooManyObjectsOpened):
             list(ws.parse(xml))
@@ -189,7 +200,7 @@ class ServicesTest(EWSTest):
             self.account.protocol.config.retry_policy = orig_policy
 
     def test_soap_error(self):
-        xml_template = '''\
+        xml_template = """\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -203,33 +214,31 @@ class ServicesTest(EWSTest):
       </detail>
     </s:Fault>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         version = mock_version(build=EXCHANGE_2010)
-        protocol = mock_protocol(version=version, service_endpoint='example.com')
+        protocol = mock_protocol(version=version, service_endpoint="example.com")
         ws = GetRoomLists(protocol=protocol)
-        xml = xml_template.format(
-                faultcode='YYY', faultstring='AAA', responsecode='XXX', message='ZZZ'
-            ).encode('utf-8')
+        xml = xml_template.format(faultcode="YYY", faultstring="AAA", responsecode="XXX", message="ZZZ").encode("utf-8")
         with self.assertRaises(SOAPError) as e:
             ws.parse(xml)
-        self.assertIn('AAA', e.exception.args[0])
-        self.assertIn('YYY', e.exception.args[0])
-        self.assertIn('ZZZ', e.exception.args[0])
+        self.assertIn("AAA", e.exception.args[0])
+        self.assertIn("YYY", e.exception.args[0])
+        self.assertIn("ZZZ", e.exception.args[0])
         xml = xml_template.format(
-                faultcode='ErrorNonExistentMailbox', faultstring='AAA', responsecode='XXX', message='ZZZ'
-            ).encode('utf-8')
+            faultcode="ErrorNonExistentMailbox", faultstring="AAA", responsecode="XXX", message="ZZZ"
+        ).encode("utf-8")
         with self.assertRaises(ErrorNonExistentMailbox) as e:
             ws.parse(xml)
-        self.assertIn('AAA', e.exception.args[0])
+        self.assertIn("AAA", e.exception.args[0])
         xml = xml_template.format(
-                faultcode='XXX', faultstring='AAA', responsecode='ErrorNonExistentMailbox', message='YYY'
-            ).encode('utf-8')
+            faultcode="XXX", faultstring="AAA", responsecode="ErrorNonExistentMailbox", message="YYY"
+        ).encode("utf-8")
         with self.assertRaises(ErrorNonExistentMailbox) as e:
             ws.parse(xml)
-        self.assertIn('YYY', e.exception.args[0])
+        self.assertIn("YYY", e.exception.args[0])
 
         # Test bad XML (no body)
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -237,12 +246,12 @@ class ServicesTest(EWSTest):
                          xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" />
   </s:Header>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         with self.assertRaises(MalformedResponseError):
             ws.parse(xml)
 
         # Test bad XML (no fault)
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -253,14 +262,14 @@ class ServicesTest(EWSTest):
     <s:Fault>
     </s:Fault>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         with self.assertRaises(SOAPError) as e:
             ws.parse(xml)
-        self.assertEqual(e.exception.args[0], 'SOAP error code: None string: None actor: None detail: None')
+        self.assertEqual(e.exception.args[0], "SOAP error code: None string: None actor: None detail: None")
 
     def test_element_container(self):
         ws = ResolveNames(self.account.protocol)
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -272,11 +281,11 @@ class ServicesTest(EWSTest):
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         with self.assertRaises(TransportError) as e:
             # Missing ResolutionSet elements
             list(ws.parse(xml))
-        self.assertIn('ResolutionSet elements in ResponseMessage', e.exception.args[0])
+        self.assertIn("ResolutionSet elements in ResponseMessage", e.exception.args[0])
 
     def test_get_elements(self):
         # Test that we can handle SOAP-level error messages
@@ -284,7 +293,7 @@ class ServicesTest(EWSTest):
         #  end up throwing ErrorInvalidServerVersion. We should make a more direct test.
         svc = ResolveNames(self.account.protocol)
         with self.assertRaises(ErrorInvalidServerVersion):
-            list(svc._get_elements(create_element('XXX')))
+            list(svc._get_elements(create_element("XXX")))
 
     def test_handle_backoff(self):
         # Test that we can handle backoff messages
@@ -294,10 +303,10 @@ class ServicesTest(EWSTest):
         try:
             # We need to fail fast so we don't end up in an infinite loop
             self.account.protocol.config.retry_policy = FailFast()
-            svc._response_generator = Mock(side_effect=ErrorServerBusy('XXX', back_off=1))
+            svc._response_generator = Mock(side_effect=ErrorServerBusy("XXX", back_off=1))
             with self.assertRaises(ErrorServerBusy) as e:
-                list(svc._get_elements(create_element('XXX')))
-            self.assertEqual(e.exception.args[0], 'XXX')
+                list(svc._get_elements(create_element("XXX")))
+            self.assertEqual(e.exception.args[0], "XXX")
         finally:
             svc._response_generator = tmp
             self.account.protocol.config.retry_policy = orig_policy
@@ -308,16 +317,16 @@ class ServicesTest(EWSTest):
         tmp = svc._get_soap_messages
         try:
             # We need to fail fast so we don't end up in an infinite loop
-            svc._get_soap_messages = Mock(side_effect=ErrorExceededConnectionCount('XXX'))
+            svc._get_soap_messages = Mock(side_effect=ErrorExceededConnectionCount("XXX"))
             with self.assertRaises(ErrorExceededConnectionCount) as e:
-                list(svc.call(unresolved_entries=['XXX']))
-            self.assertEqual(e.exception.args[0], 'XXX')
+                list(svc.call(unresolved_entries=["XXX"]))
+            self.assertEqual(e.exception.args[0], "XXX")
         finally:
             svc._get_soap_messages = tmp
 
     @requests_mock.mock()
     def test_invalid_soap_response(self, m):
-        m.post(self.account.protocol.service_endpoint, text='XXX')
+        m.post(self.account.protocol.service_endpoint, text="XXX")
         with self.assertRaises(SOAPError):
             self.account.inbox.all().count()
 
@@ -326,7 +335,7 @@ class ServicesTest(EWSTest):
         # autodiscover response returns a wrong server version for the account
         old_version = self.account.version.api_version
         try:
-            self.account.version.api_version = 'Exchange2016'  # Newer EWS versions require a valid value
+            self.account.version.api_version = "Exchange2016"  # Newer EWS versions require a valid value
             list(self.account.inbox.filter(subject=get_random_string(16)))
             self.assertEqual(old_version, self.account.version.api_version)
         finally:

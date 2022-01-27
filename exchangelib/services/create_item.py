@@ -1,10 +1,16 @@
-from .common import EWSAccountService, folder_ids_element
 from ..errors import InvalidEnumValue, InvalidTypeError
 from ..folders import BaseFolder
-from ..items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, \
-    SEND_MEETING_INVITATIONS_CHOICES, MESSAGE_DISPOSITION_CHOICES, BulkCreateResult
+from ..items import (
+    MESSAGE_DISPOSITION_CHOICES,
+    SAVE_ONLY,
+    SEND_AND_SAVE_COPY,
+    SEND_MEETING_INVITATIONS_CHOICES,
+    SEND_ONLY,
+    BulkCreateResult,
+)
 from ..properties import FolderId
-from ..util import create_element, set_xml_value, MNS
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSAccountService, folder_ids_element
 
 
 class CreateItem(EWSAccountService):
@@ -14,34 +20,36 @@ class CreateItem(EWSAccountService):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-operation
     """
 
-    SERVICE_NAME = 'CreateItem'
-    element_container_name = f'{{{MNS}}}Items'
+    SERVICE_NAME = "CreateItem"
+    element_container_name = f"{{{MNS}}}Items"
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise InvalidEnumValue('message_disposition', message_disposition, MESSAGE_DISPOSITION_CHOICES)
+            raise InvalidEnumValue("message_disposition", message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations not in SEND_MEETING_INVITATIONS_CHOICES:
             raise InvalidEnumValue(
-                'send_meeting_invitations', send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
+                "send_meeting_invitations", send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
             )
         if folder is not None:
             if not isinstance(folder, (BaseFolder, FolderId)):
-                raise InvalidTypeError('folder', folder, (BaseFolder, FolderId))
+                raise InvalidTypeError("folder", folder, (BaseFolder, FolderId))
             if folder.account != self.account:
-                raise ValueError('Folder must belong to account')
+                raise ValueError("Folder must belong to account")
         if message_disposition == SAVE_ONLY and folder is None:
             raise AttributeError("Folder must be supplied when in save-only mode")
         if message_disposition == SEND_AND_SAVE_COPY and folder is None:
             folder = self.account.sent  # 'Sent' is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError("Folder must be None in send-ony mode")
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=items,
-            folder=folder,
-            message_disposition=message_disposition,
-            send_meeting_invitations=send_meeting_invitations,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                folder=folder,
+                message_disposition=message_disposition,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         if isinstance(elem, bool):
@@ -73,14 +81,14 @@ class CreateItem(EWSAccountService):
         :param send_meeting_invitations:
         """
         payload = create_element(
-            f'm:{self.SERVICE_NAME}',
-            attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
+            f"m:{self.SERVICE_NAME}",
+            attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations),
         )
         if folder:
-            payload.append(folder_ids_element(
-                folders=[folder], version=self.account.version, tag='m:SavedItemFolderId'
-            ))
-        item_elems = create_element('m:Items')
+            payload.append(
+                folder_ids_element(folders=[folder], version=self.account.version, tag="m:SavedItemFolderId")
+            )
+        item_elems = create_element("m:Items")
         for item in items:
             if not item.account:
                 item.account = self.account

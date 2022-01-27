@@ -5,9 +5,10 @@ try:
     import zoneinfo
 except ImportError:
     from backports import zoneinfo
+
 import tzlocal
 
-from .errors import NaiveDateTimeNotAllowed, UnknownTimeZone, InvalidTypeError
+from .errors import InvalidTypeError, NaiveDateTimeNotAllowed, UnknownTimeZone
 from .winzone import IANA_TO_MS_TIMEZONE_MAP, MS_TIMEZONE_TO_IANA_MAP
 
 log = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ log = logging.getLogger(__name__)
 class EWSDate(datetime.date):
     """Extends the normal date implementation to satisfy EWS."""
 
-    __slots__ = '_year', '_month', '_day', '_hashcode'
+    __slots__ = "_year", "_month", "_day", "_hashcode"
 
     def ewsformat(self):
         """ISO 8601 format to satisfy xs:date as interpreted by EWS. Example: 2009-01-15."""
@@ -52,21 +53,21 @@ class EWSDate(datetime.date):
     @classmethod
     def from_date(cls, d):
         if type(d) is not datetime.date:
-            raise InvalidTypeError('d', d, datetime.date)
+            raise InvalidTypeError("d", d, datetime.date)
         return cls(d.year, d.month, d.day)
 
     @classmethod
     def from_string(cls, date_string):
         # Sometimes, we'll receive a date string with timezone information. Not very useful.
-        if date_string.endswith('Z'):
-            date_fmt = '%Y-%m-%dZ'
-        elif ':' in date_string:
-            if '+' in date_string:
-                date_fmt = '%Y-%m-%d+%H:%M'
+        if date_string.endswith("Z"):
+            date_fmt = "%Y-%m-%dZ"
+        elif ":" in date_string:
+            if "+" in date_string:
+                date_fmt = "%Y-%m-%d+%H:%M"
             else:
-                date_fmt = '%Y-%m-%d-%H:%M'
+                date_fmt = "%Y-%m-%d-%H:%M"
         else:
-            date_fmt = '%Y-%m-%d'
+            date_fmt = "%Y-%m-%d"
         d = datetime.datetime.strptime(date_string, date_fmt).date()
         if isinstance(d, cls):
             return d
@@ -76,7 +77,7 @@ class EWSDate(datetime.date):
 class EWSDateTime(datetime.datetime):
     """Extends the normal datetime implementation to satisfy EWS."""
 
-    __slots__ = '_year', '_month', '_day', '_hour', '_minute', '_second', '_microsecond', '_tzinfo', '_hashcode'
+    __slots__ = "_year", "_month", "_day", "_hour", "_minute", "_second", "_microsecond", "_tzinfo", "_hashcode"
 
     def __new__(cls, *args, **kwargs):
         # pylint: disable=arguments-differ
@@ -84,16 +85,16 @@ class EWSDateTime(datetime.datetime):
         if len(args) == 8:
             tzinfo = args[7]
         else:
-            tzinfo = kwargs.get('tzinfo')
+            tzinfo = kwargs.get("tzinfo")
         if isinstance(tzinfo, zoneinfo.ZoneInfo):
             # Don't allow pytz or dateutil timezones here. They are not safe to use as direct input for datetime()
             tzinfo = EWSTimeZone.from_timezone(tzinfo)
         if not isinstance(tzinfo, (EWSTimeZone, type(None))):
-            raise InvalidTypeError('tzinfo', tzinfo, EWSTimeZone)
+            raise InvalidTypeError("tzinfo", tzinfo, EWSTimeZone)
         if len(args) == 8:
             args = args[:7] + (tzinfo,)
         else:
-            kwargs['tzinfo'] = tzinfo
+            kwargs["tzinfo"] = tzinfo
         return super().__new__(cls, *args, **kwargs)
 
     def ewsformat(self):
@@ -102,17 +103,17 @@ class EWSDateTime(datetime.datetime):
         * 2009-01-15T13:45:56+01:00
         """
         if not self.tzinfo:
-            raise ValueError(f'{self!r} must be timezone-aware')
-        if self.tzinfo.key == 'UTC':
+            raise ValueError(f"{self!r} must be timezone-aware")
+        if self.tzinfo.key == "UTC":
             if self.microsecond:
-                return self.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            return self.strftime('%Y-%m-%dT%H:%M:%SZ')
+                return self.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            return self.strftime("%Y-%m-%dT%H:%M:%SZ")
         return self.isoformat()
 
     @classmethod
     def from_datetime(cls, d):
         if type(d) is not datetime.datetime:
-            raise InvalidTypeError('d', d, datetime.datetime)
+            raise InvalidTypeError("d", d, datetime.datetime)
         if d.tzinfo is None:
             tz = None
         elif isinstance(d.tzinfo, EWSTimeZone):
@@ -152,12 +153,12 @@ class EWSDateTime(datetime.datetime):
     @classmethod
     def from_string(cls, date_string):
         # Parses several common datetime formats and returns timezone-aware EWSDateTime objects
-        if date_string.endswith('Z'):
+        if date_string.endswith("Z"):
             # UTC datetime
-            return super().strptime(date_string, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=UTC)
+            return super().strptime(date_string, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
         if len(date_string) == 19:
             # This is probably a naive datetime. Don't allow this, but signal caller with an appropriate error
-            local_dt = super().strptime(date_string, '%Y-%m-%dT%H:%M:%S')
+            local_dt = super().strptime(date_string, "%Y-%m-%dT%H:%M:%S")
             raise NaiveDateTimeNotAllowed(local_dt)
         # This is probably a datetime value with timezone information. This comes in the form '+/-HH:MM'.
         aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
@@ -216,12 +217,12 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         try:
             instance.ms_id = cls.IANA_TO_MS_MAP[instance.key][0]
         except KeyError:
-            raise UnknownTimeZone(f'No Windows timezone name found for timezone {instance.key!r}')
+            raise UnknownTimeZone(f"No Windows timezone name found for timezone {instance.key!r}")
 
         # We don't need the Windows long-format timezone name in long format. It's used in timezone XML elements, but
         # EWS happily accepts empty strings. For a full list of timezones supported by the target server, including
         # long-format names, see output of services.GetServerTimeZones(account.protocol).call()
-        instance.ms_name = ''
+        instance.ms_name = ""
         return instance
 
     def __eq__(self, other):
@@ -239,11 +240,11 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         try:
             return cls(cls.MS_TO_IANA_MAP[ms_id])
         except KeyError:
-            if '/' in ms_id:
+            if "/" in ms_id:
                 # EWS sometimes returns an ID that has a region/location format, e.g. 'Europe/Copenhagen'. Try the
                 # string unaltered.
                 return cls(ms_id)
-            raise UnknownTimeZone(f'Windows timezone ID {ms_id!r} is unknown by CLDR')
+            raise UnknownTimeZone(f"Windows timezone ID {ms_id!r} is unknown by CLDR")
 
     @classmethod
     def from_pytz(cls, tz):
@@ -258,8 +259,8 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
     def from_dateutil(cls, tz):
         # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
         # don't contain enough information to reliably match them with a CLDR timezone.
-        if hasattr(tz, '_filename'):
-            key = '/'.join(tz._filename.split('/')[-2:])
+        if hasattr(tz, "_filename"):
+            key = "/".join(tz._filename.split("/")[-2:])
             return cls(key)
         return cls(tz.tzname(datetime.datetime.now()))
 
@@ -271,19 +272,19 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
     def from_timezone(cls, tz):
         # Support multiple tzinfo implementations. We could use isinstance(), but then we'd have to have pytz
         # and dateutil as dependencies for this package.
-        tz_module = tz.__class__.__module__.split('.')[0]
+        tz_module = tz.__class__.__module__.split(".")[0]
         try:
             return {
-                cls.__module__.split('.')[0]: lambda z: z,
-                'backports': cls.from_zoneinfo,
-                'datetime': cls.from_datetime,
-                'dateutil': cls.from_dateutil,
-                'pytz': cls.from_pytz,
-                'zoneinfo': cls.from_zoneinfo,
-                'pytz_deprecation_shim': lambda z: cls.from_timezone(z.unwrap_shim())
+                cls.__module__.split(".")[0]: lambda z: z,
+                "backports": cls.from_zoneinfo,
+                "datetime": cls.from_datetime,
+                "dateutil": cls.from_dateutil,
+                "pytz": cls.from_pytz,
+                "zoneinfo": cls.from_zoneinfo,
+                "pytz_deprecation_shim": lambda z: cls.from_timezone(z.unwrap_shim()),
             }[tz_module](tz)
         except KeyError:
-            raise TypeError(f'Unsupported tzinfo type: {tz!r}')
+            raise TypeError(f"Unsupported tzinfo type: {tz!r}")
 
     @classmethod
     def localzone(cls):
@@ -302,5 +303,5 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         return EWSDateTime.from_datetime(t)  # We want to return EWSDateTime objects
 
 
-UTC = EWSTimeZone('UTC')
+UTC = EWSTimeZone("UTC")
 UTC_NOW = lambda: EWSDateTime.now(tz=UTC)  # noqa: E731

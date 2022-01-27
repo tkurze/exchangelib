@@ -1,8 +1,8 @@
 import logging
-import random
 import os
-from unittest import TestLoader, TestSuite
+import random
 import unittest.util
+from unittest import TestLoader, TestSuite
 
 from exchangelib.util import PrettyXmlHandler
 
@@ -24,7 +24,7 @@ random.seed()
 # Always show full repr() output for object instances in unittest error messages
 unittest.util._MAX_LENGTH = 2000
 
-if os.environ.get('DEBUG', '').lower() in ('1', 'yes', 'true'):
+if os.environ.get("DEBUG", "").lower() in ("1", "yes", "true"):
     logging.basicConfig(level=logging.DEBUG, handlers=[PrettyXmlHandler()])
 else:
     logging.basicConfig(level=logging.CRITICAL)

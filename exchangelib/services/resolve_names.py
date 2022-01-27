@@ -1,11 +1,11 @@
 import logging
 
-from .common import EWSService, folder_ids_element
-from ..errors import ErrorNameResolutionNoResults, ErrorNameResolutionMultipleResults, InvalidEnumValue
-from ..items import SHAPE_CHOICES, SEARCH_SCOPE_CHOICES, Contact
+from ..errors import ErrorNameResolutionMultipleResults, ErrorNameResolutionNoResults, InvalidEnumValue
+from ..items import SEARCH_SCOPE_CHOICES, SHAPE_CHOICES, Contact
 from ..properties import Mailbox
-from ..util import create_element, add_xml_child, MNS
+from ..util import MNS, add_xml_child, create_element
 from ..version import EXCHANGE_2010_SP2
+from .common import EWSService, folder_ids_element
 
 log = logging.getLogger(__name__)
 
@@ -13,8 +13,8 @@ log = logging.getLogger(__name__)
 class ResolveNames(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation"""
 
-    SERVICE_NAME = 'ResolveNames'
-    element_container_name = f'{{{MNS}}}ResolutionSet'
+    SERVICE_NAME = "ResolveNames"
+    element_container_name = f"{{{MNS}}}ResolutionSet"
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
     # Note: paging information is returned as attrs on the 'ResolutionSet' element, but this service does not
@@ -26,26 +26,34 @@ class ResolveNames(EWSService):
         super().__init__(*args, **kwargs)
         self.return_full_contact_data = False  # A hack to communicate parsing args to _elems_to_objs()
 
-    def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
-             contact_data_shape=None):
+    def call(
+        self,
+        unresolved_entries,
+        parent_folders=None,
+        return_full_contact_data=False,
+        search_scope=None,
+        contact_data_shape=None,
+    ):
         if self.chunk_size > 100:
             raise ValueError(
-                f'Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 '
-                f'candidates for a lookup',
+                f"Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 "
+                f"candidates for a lookup",
             )
         if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
-            raise InvalidEnumValue('search_scope', search_scope, SEARCH_SCOPE_CHOICES)
+            raise InvalidEnumValue("search_scope", search_scope, SEARCH_SCOPE_CHOICES)
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue('contact_data_shape', contact_data_shape, SHAPE_CHOICES)
+            raise InvalidEnumValue("contact_data_shape", contact_data_shape, SHAPE_CHOICES)
         self.return_full_contact_data = return_full_contact_data
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=unresolved_entries,
-            parent_folders=parent_folders,
-            return_full_contact_data=return_full_contact_data,
-            search_scope=search_scope,
-            contact_data_shape=contact_data_shape,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=unresolved_entries,
+                parent_folders=parent_folders,
+                return_full_contact_data=return_full_contact_data,
+                search_scope=search_scope,
+                contact_data_shape=contact_data_shape,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         if self.return_full_contact_data:
@@ -57,21 +65,23 @@ class ResolveNames(EWSService):
             )
         return Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None)
 
-    def get_payload(self, unresolved_entries, parent_folders, return_full_contact_data, search_scope,
-                    contact_data_shape):
+    def get_payload(
+        self, unresolved_entries, parent_folders, return_full_contact_data, search_scope, contact_data_shape
+    ):
         attrs = dict(ReturnFullContactData=return_full_contact_data)
         if search_scope:
-            attrs['SearchScope'] = search_scope
+            attrs["SearchScope"] = search_scope
         if contact_data_shape:
             if self.protocol.version.build < EXCHANGE_2010_SP2:
                 raise NotImplementedError(
-                    "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later")
-            attrs['ContactDataShape'] = contact_data_shape
-        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=attrs)
+                    "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
+                )
+            attrs["ContactDataShape"] = contact_data_shape
+        payload = create_element(f"m:{self.SERVICE_NAME}", attrs=attrs)
         if parent_folders:
-            payload.append(folder_ids_element(
-                folders=parent_folders, version=self.protocol.version, tag='m:ParentFolderIds'
-            ))
+            payload.append(
+                folder_ids_element(folders=parent_folders, version=self.protocol.version, tag="m:ParentFolderIds")
+            )
         for entry in unresolved_entries:
-            add_xml_child(payload, 'm:UnresolvedEntry', entry)
+            add_xml_child(payload, "m:UnresolvedEntry", entry)
         return payload

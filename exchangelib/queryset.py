@@ -3,9 +3,9 @@ import logging
 from copy import deepcopy
 from itertools import islice
 
-from .errors import MultipleObjectsReturned, DoesNotExist, InvalidEnumValue, InvalidTypeError, ErrorItemNotFound
-from .fields import FieldPath, FieldOrder
-from .items import CalendarItem, ID_ONLY
+from .errors import DoesNotExist, ErrorItemNotFound, InvalidEnumValue, InvalidTypeError, MultipleObjectsReturned
+from .fields import FieldOrder, FieldPath
+from .items import ID_ONLY, CalendarItem
 from .properties import InvalidField
 from .restriction import Q
 from .version import EXCHANGE_2010
@@ -50,23 +50,24 @@ class QuerySet(SearchableMixIn):
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
     """
 
-    VALUES = 'values'
-    VALUES_LIST = 'values_list'
-    FLAT = 'flat'
-    NONE = 'none'
+    VALUES = "values"
+    VALUES_LIST = "values_list"
+    FLAT = "flat"
+    NONE = "none"
     RETURN_TYPES = (VALUES, VALUES_LIST, FLAT, NONE)
 
-    ITEM = 'item'
-    PERSONA = 'persona'
+    ITEM = "item"
+    PERSONA = "persona"
     REQUEST_TYPES = (ITEM, PERSONA)
 
     def __init__(self, folder_collection, request_type=ITEM):
         from .folders import FolderCollection
+
         if not isinstance(folder_collection, FolderCollection):
-            raise InvalidTypeError('folder_collection', folder_collection, FolderCollection)
+            raise InvalidTypeError("folder_collection", folder_collection, FolderCollection)
         self.folder_collection = folder_collection  # A FolderCollection instance
         if request_type not in self.REQUEST_TYPES:
-            raise InvalidEnumValue('request_type', request_type, self.REQUEST_TYPES)
+            raise InvalidEnumValue("request_type", request_type, self.REQUEST_TYPES)
         self.request_type = request_type
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -105,6 +106,7 @@ class QuerySet(SearchableMixIn):
 
     def _get_field_path(self, field_path):
         from .items import Persona
+
         if self.request_type == self.PERSONA:
             return FieldPath(field=Persona.get_field_by_fieldname(field_path))
         for folder in self.folder_collection:
@@ -116,10 +118,11 @@ class QuerySet(SearchableMixIn):
 
     def _get_field_order(self, field_path):
         from .items import Persona
+
         if self.request_type == self.PERSONA:
             return FieldOrder(
-                field_path=FieldPath(field=Persona.get_field_by_fieldname(field_path.lstrip('-'))),
-                reverse=field_path.startswith('-'),
+                field_path=FieldPath(field=Persona.get_field_by_fieldname(field_path.lstrip("-"))),
+                reverse=field_path.startswith("-"),
             )
         for folder in self.folder_collection:
             try:
@@ -130,23 +133,23 @@ class QuerySet(SearchableMixIn):
 
     @property
     def _id_field(self):
-        return self._get_field_path('id')
+        return self._get_field_path("id")
 
     @property
     def _changekey_field(self):
-        return self._get_field_path('changekey')
+        return self._get_field_path("changekey")
 
     def _additional_fields(self):
         if not isinstance(self.only_fields, tuple):
-            raise InvalidTypeError('only_fields', self.only_fields, tuple)
+            raise InvalidTypeError("only_fields", self.only_fields, tuple)
         # Remove ItemId and ChangeKey. We get them unconditionally
         additional_fields = {f for f in self.only_fields if not f.field.is_attribute}
         if self.request_type != self.ITEM:
             return additional_fields
 
         # For CalendarItem items, we want to inject internal timezone fields into the requested fields.
-        has_start = 'start' in {f.field.name for f in additional_fields}
-        has_end = 'end' in {f.field.name for f in additional_fields}
+        has_start = "start" in {f.field.name for f in additional_fields}
+        has_end = "end" in {f.field.name for f in additional_fields}
         meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
         if self.folder_collection.account.version.build < EXCHANGE_2010:
             if has_start or has_end:
@@ -207,20 +210,20 @@ class QuerySet(SearchableMixIn):
         )
         if self.request_type == self.PERSONA:
             if complex_fields_requested:
-                find_kwargs['additional_fields'] = None
+                find_kwargs["additional_fields"] = None
                 items = self.folder_collection.account.fetch_personas(
                     ids=self.folder_collection.find_people(self.q, **find_kwargs)
                 )
             else:
                 if not additional_fields:
-                    find_kwargs['additional_fields'] = None
+                    find_kwargs["additional_fields"] = None
                 items = self.folder_collection.find_people(self.q, **find_kwargs)
         else:
-            find_kwargs['calendar_view'] = self.calendar_view
+            find_kwargs["calendar_view"] = self.calendar_view
             if complex_fields_requested:
                 # The FindItem service does not support complex field types. Tell find_items() to return
                 # (id, changekey) tuples, and pass that to fetch().
-                find_kwargs['additional_fields'] = None
+                find_kwargs["additional_fields"] = None
                 unfiltered_items = self.folder_collection.account.fetch(
                     ids=self.folder_collection.find_items(self.q, **find_kwargs),
                     only_fields=additional_fields,
@@ -233,7 +236,7 @@ class QuerySet(SearchableMixIn):
                     # If additional_fields is the empty set, we only requested ID and changekey fields. We can then
                     # take a shortcut by using (shape=ID_ONLY, additional_fields=None) to tell find_items() to return
                     # (id, changekey) tuples. We'll post-process those later.
-                    find_kwargs['additional_fields'] = None
+                    find_kwargs["additional_fields"] = None
                 items = self.folder_collection.find_items(self.q, **find_kwargs)
 
         if not must_sort_clientside:
@@ -246,12 +249,13 @@ class QuerySet(SearchableMixIn):
             try:
                 items = sorted(items, key=lambda i: _get_sort_value_or_default(i, f), reverse=f.reverse)
             except TypeError as e:
-                if 'unorderable types' not in e.args[0]:
+                if "unorderable types" not in e.args[0]:
                     raise
                 raise ValueError(
                     f"Cannot sort on field {f.field_path!r}. The field has no default value defined, and there are "
                     f"either items with None values for this field, or the query contains exception instances "
-                    f"(original error: {e}).")
+                    f"(original error: {e})."
+                )
         if not extra_order_fields:
             return items
 
@@ -265,7 +269,7 @@ class QuerySet(SearchableMixIn):
         if self.q.is_never():
             return
 
-        log.debug('Initializing cache')
+        log.debug("Initializing cache")
         yield from self._format_items(items=self._query(), return_format=self.return_format)
 
     """Do not implement __len__. The implementation of list() tries to preallocate memory by calling __len__ on the
@@ -290,7 +294,7 @@ class QuerySet(SearchableMixIn):
     def _getitem_idx(self, idx):
         if idx < 0:
             # Support negative indexes by reversing the queryset and negating the index value
-            reverse_idx = -(idx+1)
+            reverse_idx = -(idx + 1)
             return self.reverse()[reverse_idx]
         # Optimize by setting an exact offset and fetching only 1 item
         new_qs = self._copy_self()
@@ -304,6 +308,7 @@ class QuerySet(SearchableMixIn):
 
     def _getitem_slice(self, s):
         from .services import PAGE_SIZE
+
         if ((s.start or 0) < 0) or ((s.stop or 0) < 0) or ((s.step or 0) < 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
             # query result, and then slice on the cache.
@@ -350,6 +355,7 @@ class QuerySet(SearchableMixIn):
 
     def _as_items(self, iterable):
         from .items import Item
+
         return self._item_yielder(
             iterable=iterable,
             item_func=lambda i: i,
@@ -360,18 +366,18 @@ class QuerySet(SearchableMixIn):
 
     def _as_values(self, iterable):
         if not self.only_fields:
-            raise ValueError('values() requires at least one field name')
+            raise ValueError("values() requires at least one field name")
         return self._item_yielder(
             iterable=iterable,
             item_func=lambda i: {f.path: _get_value_or_default(f, i) for f in self.only_fields},
-            id_only_func=lambda item_id, changekey: {'id': item_id},
-            changekey_only_func=lambda item_id, changekey: {'changekey': changekey},
-            id_and_changekey_func=lambda item_id, changekey: {'id': item_id, 'changekey': changekey},
+            id_only_func=lambda item_id, changekey: {"id": item_id},
+            changekey_only_func=lambda item_id, changekey: {"changekey": changekey},
+            id_and_changekey_func=lambda item_id, changekey: {"id": item_id, "changekey": changekey},
         )
 
     def _as_values_list(self, iterable):
         if not self.only_fields:
-            raise ValueError('values_list() requires at least one field name')
+            raise ValueError("values_list() requires at least one field name")
         return self._item_yielder(
             iterable=iterable,
             item_func=lambda i: tuple(_get_value_or_default(f, i) for f in self.only_fields),
@@ -382,7 +388,7 @@ class QuerySet(SearchableMixIn):
 
     def _as_flat_values_list(self, iterable):
         if not self.only_fields or len(self.only_fields) != 1:
-            raise ValueError('flat=True requires exactly one field name')
+            raise ValueError("flat=True requires exactly one field name")
         return self._item_yielder(
             iterable=iterable,
             item_func=lambda i: _get_value_or_default(self.only_fields[0], i),
@@ -458,7 +464,7 @@ class QuerySet(SearchableMixIn):
     def reverse(self):
         """Reverses the ordering of the queryset."""
         if not self.order_fields:
-            raise ValueError('Reversing only makes sense if there are order_by fields')
+            raise ValueError("Reversing only makes sense if there are order_by fields")
         new_qs = self._copy_self()
         for f in new_qs.order_fields:
             f.reverse = not f.reverse
@@ -478,11 +484,11 @@ class QuerySet(SearchableMixIn):
         """Return the values of the specified field names as a list of lists. If called with flat=True and only one
         field name, returns a list of values.
         """
-        flat = kwargs.pop('flat', False)
+        flat = kwargs.pop("flat", False)
         if kwargs:
-            raise AttributeError(f'Unknown kwargs: {kwargs}')
+            raise AttributeError(f"Unknown kwargs: {kwargs}")
         if flat and len(args) != 1:
-            raise ValueError('flat=True requires exactly one field name')
+            raise ValueError("flat=True requires exactly one field name")
         try:
             only_fields = tuple(self._get_field_path(arg) for arg in args)
         except ValueError as e:
@@ -509,12 +515,12 @@ class QuerySet(SearchableMixIn):
 
     def get(self, *args, **kwargs):
         """Assume the query will return exactly one item. Return that item."""
-        if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
+        if not args and set(kwargs) in ({"id"}, {"id", "changekey"}):
             # We allow calling get(id=..., changekey=...) to get a single item, but only if exactly these two
             # kwargs are present.
             account = self.folder_collection.account
-            item_id = self._id_field.field.clean(kwargs['id'], version=account.version)
-            changekey = self._changekey_field.field.clean(kwargs.get('changekey'), version=account.version)
+            item_id = self._id_field.field.clean(kwargs["id"], version=account.version)
+            changekey = self._changekey_field.field.clean(kwargs.get("changekey"), version=account.version)
             items = list(account.fetch(ids=[(item_id, changekey)], only_fields=self.only_fields))
         else:
             new_qs = self.filter(*args, **kwargs)
@@ -562,11 +568,7 @@ class QuerySet(SearchableMixIn):
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
-        return self.folder_collection.account.bulk_delete(
-            ids=ids,
-            chunk_size=chunk_size,
-            **delete_kwargs
-        )
+        return self.folder_collection.account.bulk_delete(ids=ids, chunk_size=chunk_size, **delete_kwargs)
 
     def send(self, page_size=1000, chunk_size=100, **send_kwargs):
         """Send the items matching the query, with as little effort as possible
@@ -578,11 +580,7 @@ class QuerySet(SearchableMixIn):
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
-        return self.folder_collection.account.bulk_send(
-            ids=ids,
-            chunk_size=chunk_size,
-            **send_kwargs
-        )
+        return self.folder_collection.account.bulk_send(ids=ids, chunk_size=chunk_size, **send_kwargs)
 
     def copy(self, to_folder, page_size=1000, chunk_size=100, **copy_kwargs):
         """Copy the items matching the query, with as little effort as possible
@@ -596,10 +594,7 @@ class QuerySet(SearchableMixIn):
         ids = self._id_only_copy_self()
         ids.page_size = page_size
         return self.folder_collection.account.bulk_copy(
-            ids=ids,
-            to_folder=to_folder,
-            chunk_size=chunk_size,
-            **copy_kwargs
+            ids=ids, to_folder=to_folder, chunk_size=chunk_size, **copy_kwargs
         )
 
     def move(self, to_folder, page_size=1000, chunk_size=100):
@@ -647,16 +642,12 @@ class QuerySet(SearchableMixIn):
         """
         ids = self._id_only_copy_self()
         ids.page_size = page_size
-        return self.folder_collection.account.bulk_mark_as_junk(
-            ids=ids,
-            chunk_size=chunk_size,
-            **mark_as_junk_kwargs
-        )
+        return self.folder_collection.account.bulk_mark_as_junk(ids=ids, chunk_size=chunk_size, **mark_as_junk_kwargs)
 
     def __str__(self):
-        fmt_args = [('q', str(self.q)), ('folders', f"[{', '.join(str(f) for f in self.folder_collection.folders)}]")]
-        args_str = ', '.join(f'{k}={v}' for k, v in fmt_args)
-        return f'{self.__class__.__name__}({args_str})'
+        fmt_args = [("q", str(self.q)), ("folders", f"[{', '.join(str(f) for f in self.folder_collection.folders)}]")]
+        args_str = ", ".join(f"{k}={v}" for k, v in fmt_args)
+        return f"{self.__class__.__name__}({args_str})"
 
 
 def _get_value_or_default(field, item):

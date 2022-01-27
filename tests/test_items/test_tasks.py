@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from exchangelib.folders import Tasks
 from exchangelib.items import Task
-from exchangelib.recurrence import TaskRecurrence, DailyPattern, DailyRegeneration
+from exchangelib.recurrence import DailyPattern, DailyRegeneration, TaskRecurrence
 
 from .test_basics import CommonItemTest
 
@@ -11,7 +11,7 @@ from .test_basics import CommonItemTest
 class TasksTest(CommonItemTest):
     """Test Task instances and the Tasks folder."""
 
-    TEST_FOLDER = 'tasks'
+    TEST_FOLDER = "tasks"
     FOLDER_CLASS = Tasks
     ITEM_CLASS = Task
 
@@ -35,12 +35,12 @@ class TasksTest(CommonItemTest):
         # We also reset complete date to start_date if it's before start_date
         self.assertEqual(task.complete_date.date(), task.start_date)
 
-        task = Task(percent_complete=Decimal('50.0'), status=Task.COMPLETED)
+        task = Task(percent_complete=Decimal("50.0"), status=Task.COMPLETED)
         task.clean()
         # We reset percent_complete to 100.0 if state is completed
         self.assertEqual(task.percent_complete, Decimal(100))
 
-        task = Task(percent_complete=Decimal('50.0'), status=Task.NOT_STARTED)
+        task = Task(percent_complete=Decimal("50.0"), status=Task.NOT_STARTED)
         task.clean()
         # We reset percent_complete to 0.0 if state is not_started
         self.assertEqual(task.percent_complete, Decimal(0))

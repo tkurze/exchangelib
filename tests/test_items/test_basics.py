@@ -1,25 +1,48 @@
 import abc
 import datetime
-from decimal import Decimal
-from keyword import kwlist
 import time
 import unittest
 import unittest.util
+from decimal import Decimal
+from keyword import kwlist
 
 from dateutil.relativedelta import relativedelta
-from exchangelib.errors import ErrorItemNotFound, ErrorUnsupportedPathForQuery, ErrorInvalidValueForProperty, \
-    ErrorPropertyUpdate, ErrorInvalidPropertySet
+
+from exchangelib.errors import (
+    ErrorInvalidPropertySet,
+    ErrorInvalidValueForProperty,
+    ErrorItemNotFound,
+    ErrorPropertyUpdate,
+    ErrorUnsupportedPathForQuery,
+)
 from exchangelib.extended_properties import ExternId
-from exchangelib.fields import TextField, BodyField, FieldPath, CultureField, IdField, ChoiceField, AttachmentField,\
-    BooleanField, IndexedField
-from exchangelib.indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
-from exchangelib.items import CalendarItem, Contact, Task, DistributionList, BaseItem, Item
-from exchangelib.properties import Mailbox, Attendee
+from exchangelib.fields import (
+    AttachmentField,
+    BodyField,
+    BooleanField,
+    ChoiceField,
+    CultureField,
+    FieldPath,
+    IdField,
+    IndexedField,
+    TextField,
+)
+from exchangelib.indexed_properties import MultiFieldIndexedElement, SingleFieldIndexedElement
+from exchangelib.items import BaseItem, CalendarItem, Contact, DistributionList, Item, Task
+from exchangelib.properties import Attendee, Mailbox
 from exchangelib.queryset import Q
 from exchangelib.util import value_to_xml_text
 
-from ..common import EWSTest, get_random_string, get_random_datetime_range, get_random_date, \
-    get_random_decimal, get_random_choice, get_random_substring, get_random_datetime
+from ..common import (
+    EWSTest,
+    get_random_choice,
+    get_random_date,
+    get_random_datetime,
+    get_random_datetime_range,
+    get_random_decimal,
+    get_random_string,
+    get_random_substring,
+)
 
 
 class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
@@ -44,12 +67,12 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
         # Delete all test items and delivery receipts
         try:
             self.test_folder.filter(
-                Q(categories__contains=self.categories) | Q(subject__startswith='Delivered: Subject: ')
+                Q(categories__contains=self.categories) | Q(subject__startswith="Delivered: Subject: ")
             ).delete()
             if not self.TEST_FOLDER:
                 self.test_folder.delete()
         except Exception as e:
-            print(f'Exception in tearDown of {self}: {e}')
+            print(f"Exception in tearDown of {self}: {e}")
             pass
         super().tearDown()
 
@@ -65,64 +88,67 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
             if f.is_read_only:
                 # These cannot be created
                 continue
-            if f.name == 'mime_content':
+            if f.name == "mime_content":
                 # This needs special formatting. See separate test_mime_content() test
                 continue
-            if f.name == 'attachments':
+            if f.name == "attachments":
                 # Testing attachments is heavy. Leave this to specific tests
                 insert_kwargs[f.name] = []
                 continue
-            if f.name == 'resources':
+            if f.name == "resources":
                 # The test server doesn't have any resources
                 insert_kwargs[f.name] = []
                 continue
-            if f.name == 'optional_attendees':
+            if f.name == "optional_attendees":
                 # 'optional_attendees' and 'required_attendees' are mutually exclusive
                 insert_kwargs[f.name] = None
                 continue
-            if f.name == 'start':
+            if f.name == "start":
                 start = get_random_date()
-                insert_kwargs[f.name], insert_kwargs['end'] = \
-                    get_random_datetime_range(start_date=start, end_date=start, tz=self.account.default_timezone)
-                insert_kwargs['recurrence'] = self.random_val(self.ITEM_CLASS.get_field_by_fieldname('recurrence'))
-                insert_kwargs['recurrence'].boundary.start = insert_kwargs[f.name].date()
+                insert_kwargs[f.name], insert_kwargs["end"] = get_random_datetime_range(
+                    start_date=start, end_date=start, tz=self.account.default_timezone
+                )
+                insert_kwargs["recurrence"] = self.random_val(self.ITEM_CLASS.get_field_by_fieldname("recurrence"))
+                insert_kwargs["recurrence"].boundary.start = insert_kwargs[f.name].date()
                 continue
-            if f.name == 'start_date':
+            if f.name == "start_date":
                 insert_kwargs[f.name] = get_random_datetime().date()
-                insert_kwargs['due_date'] = insert_kwargs[f.name]
+                insert_kwargs["due_date"] = insert_kwargs[f.name]
                 # Don't set 'recurrence' here. It's difficult to test updates so we'll test task recurrence separately
-                insert_kwargs['recurrence'] = None
+                insert_kwargs["recurrence"] = None
                 continue
-            if f.name == 'end':
+            if f.name == "end":
                 continue
-            if f.name == 'is_all_day':
+            if f.name == "is_all_day":
                 # For CalendarItem instances, the 'is_all_day' attribute affects the 'start' and 'end' values. Changing
                 # from 'false' to 'true' removes the time part of these datetimes.
-                insert_kwargs['is_all_day'] = False
+                insert_kwargs["is_all_day"] = False
                 continue
-            if f.name == 'recurrence':
+            if f.name == "recurrence":
                 continue
-            if f.name == 'due_date':
+            if f.name == "due_date":
                 continue
-            if f.name == 'start_date':
+            if f.name == "start_date":
                 continue
-            if f.name == 'status':
+            if f.name == "status":
                 # Start with an incomplete task
                 status = get_random_choice(set(f.supported_choices(version=self.account.version)) - {Task.COMPLETED})
                 insert_kwargs[f.name] = status
                 if status == Task.NOT_STARTED:
-                    insert_kwargs['percent_complete'] = Decimal(0)
+                    insert_kwargs["percent_complete"] = Decimal(0)
                 else:
-                    insert_kwargs['percent_complete'] = get_random_decimal(1, 99)
+                    insert_kwargs["percent_complete"] = get_random_decimal(1, 99)
                 continue
-            if f.name == 'percent_complete':
+            if f.name == "percent_complete":
                 continue
             insert_kwargs[f.name] = self.random_val(f)
         return insert_kwargs
 
     def get_item_fields(self):
-        return (self.ITEM_CLASS.get_field_by_fieldname('id'), self.ITEM_CLASS.get_field_by_fieldname('changekey')) \
-               + tuple(f for f in self.ITEM_CLASS.FIELDS if f.name != '_id')
+        return (
+            self.ITEM_CLASS.get_field_by_fieldname("id"),
+            self.ITEM_CLASS.get_field_by_fieldname("changekey"),
+        ) + tuple(f for f in self.ITEM_CLASS.FIELDS if f.name != "_id")
 
     def get_random_update_kwargs(self, item, insert_kwargs):
         update_kwargs = {}
@@ -139,49 +165,50 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
             if not item.is_draft and f.is_read_only_after_send:
                 # These cannot be changed when the item is no longer a draft
                 continue
-            if f.name == 'message_id' and f.is_read_only_after_send:
+            if f.name == "message_id" and f.is_read_only_after_send:
                 # Cannot be updated, regardless of draft status
                 continue
-            if f.name == 'attachments':
+            if f.name == "attachments":
                 # Testing attachments is heavy. Leave this to specific tests
                 update_kwargs[f.name] = []
                 continue
-            if f.name == 'resources':
+            if f.name == "resources":
                 # The test server doesn't have any resources
                 update_kwargs[f.name] = []
                 continue
             if isinstance(f, AttachmentField):
                 # Attachments are handled separately
                 continue
-            if f.name == 'start':
-                start = get_random_date(start_date=insert_kwargs['end'].date())
-                update_kwargs[f.name], update_kwargs['end'] = \
-                    get_random_datetime_range(start_date=start, end_date=start, tz=self.account.default_timezone)
-                update_kwargs['recurrence'] = self.random_val(self.ITEM_CLASS.get_field_by_fieldname('recurrence'))
-                update_kwargs['recurrence'].boundary.start = update_kwargs[f.name].date()
+            if f.name == "start":
+                start = get_random_date(start_date=insert_kwargs["end"].date())
+                update_kwargs[f.name], update_kwargs["end"] = get_random_datetime_range(
+                    start_date=start, end_date=start, tz=self.account.default_timezone
+                )
+                update_kwargs["recurrence"] = self.random_val(self.ITEM_CLASS.get_field_by_fieldname("recurrence"))
+                update_kwargs["recurrence"].boundary.start = update_kwargs[f.name].date()
                 continue
-            if f.name == 'start_date':
+            if f.name == "start_date":
                 update_kwargs[f.name] = get_random_datetime().date()
-                update_kwargs['due_date'] = update_kwargs[f.name]
+                update_kwargs["due_date"] = update_kwargs[f.name]
                 # Don't set 'recurrence' here. It's difficult to test updates so we'll test task recurrence separately
-                update_kwargs['recurrence'] = None
+                update_kwargs["recurrence"] = None
                 continue
-            if f.name == 'end':
+            if f.name == "end":
                 continue
-            if f.name == 'recurrence':
+            if f.name == "recurrence":
                 continue
-            if f.name == 'due_date':
+            if f.name == "due_date":
                 continue
-            if f.name == 'start_date':
+            if f.name == "start_date":
                 continue
-            if f.name == 'status':
+            if f.name == "status":
                 # Update task to a completed state
                 update_kwargs[f.name] = Task.COMPLETED
-                update_kwargs['percent_complete'] = Decimal(100)
+                update_kwargs["percent_complete"] = Decimal(100)
                 continue
-            if f.name == 'percent_complete':
+            if f.name == "percent_complete":
                 continue
-            if f.name == 'reminder_is_set':
+            if f.name == "reminder_is_set":
                 if self.ITEM_CLASS == Task:
                     # Task type doesn't allow updating 'reminder_is_set' to True
                     update_kwargs[f.name] = False
@@ -200,16 +227,16 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
             update_kwargs[f.name] = self.random_val(f)
         if self.ITEM_CLASS == CalendarItem:
             # EWS always sets due date to 'start'
-            update_kwargs['reminder_due_by'] = update_kwargs['start']
-        if update_kwargs.get('is_all_day', False):
+            update_kwargs["reminder_due_by"] = update_kwargs["start"]
+        if update_kwargs.get("is_all_day", False):
             # For is_all_day items, EWS will remove the time part of start and end values
-            update_kwargs['start'] = update_kwargs['start'].date()
-            update_kwargs['end'] = (update_kwargs['end'] + datetime.timedelta(days=1)).date()
+            update_kwargs["start"] = update_kwargs["start"].date()
+            update_kwargs["end"] = (update_kwargs["end"] + datetime.timedelta(days=1)).date()
         return update_kwargs
 
     def get_test_item(self, folder=None, categories=None):
         item_kwargs = self.get_random_insert_kwargs()
-        item_kwargs['categories'] = categories or self.categories
+        item_kwargs["categories"] = categories or self.categories
         return self.ITEM_CLASS(folder=folder or self.test_folder, **item_kwargs)
 
     def get_test_folder(self, folder=None):
@@ -234,7 +261,7 @@ class CommonItemTest(BaseItemTest):
 
     def test_magic(self):
         item = self.get_test_item()
-        self.assertIn('subject=', str(item))
+        self.assertIn("subject=", str(item))
         self.assertIn(item.__class__.__name__, repr(item))
 
     def test_queryset_nonsearchable_fields(self):
@@ -242,12 +269,12 @@ class CommonItemTest(BaseItemTest):
             with self.subTest(f=f):
                 if f.is_searchable or isinstance(f, IdField) or not f.supports_version(self.account.version):
                     continue
-                if f.name in ('percent_complete', 'allow_new_time_proposal'):
+                if f.name in ("percent_complete", "allow_new_time_proposal"):
                     # These fields don't raise an error when used in a filter, but also don't match anything in a filter
                     continue
                 try:
                     filter_val = f.clean(self.random_val(f))
-                    filter_kwargs = {f'{f.name}__in': filter_val} if f.is_list else {f.name: filter_val}
+                    filter_kwargs = {f"{f.name}__in": filter_val} if f.is_list else {f.name: filter_val}
 
                     # We raise ValueError when searching on an is_searchable=False field
                     with self.assertRaises(ValueError):
@@ -262,12 +289,9 @@ class CommonItemTest(BaseItemTest):
                         continue
 
                     f.is_searchable = True
-                    if f.name in ('reminder_due_by', 'conversation_index'):
+                    if f.name in ("reminder_due_by", "conversation_index"):
                         # Filtering is accepted but doesn't work
-                        self.assertEqual(
-                            self.test_folder.filter(**filter_kwargs).count(),
-                            0
-                        )
+                        self.assertEqual(self.test_folder.filter(**filter_kwargs).count(), 0)
                     else:
                         with self.assertRaises((ErrorUnsupportedPathForQuery, ErrorInvalidValueForProperty)):
                             list(self.test_folder.filter(**filter_kwargs))
@@ -285,7 +309,7 @@ class CommonItemTest(BaseItemTest):
             if getattr(item, f.name) is None:
                 # We cannot filter on None values
                 continue
-            if self.ITEM_CLASS == Contact and f.name in ('body', 'display_name'):
+            if self.ITEM_CLASS == Contact and f.name in ("body", "display_name"):
                 # filtering 'body' or 'display_name' on Contact items doesn't work at all. Error in EWS?
                 continue
             yield f
@@ -296,7 +320,7 @@ class CommonItemTest(BaseItemTest):
                 retries = 0
                 matches = qs.filter(**kw).count()
                 # __in with an empty list returns an empty result
-                expected = 0 if f.is_list and not val and list(kw)[0].endswith('__in') else 1
+                expected = 0 if f.is_list and not val and list(kw)[0].endswith("__in") else 1
                 if f.is_complex and matches != expected:
                     # Complex fields sometimes fail a search using generated data. In practice, they almost always
                     # work anyway. Try a couple of times; it seems EWS has a search index that needs to catch up.
@@ -305,7 +329,7 @@ class CommonItemTest(BaseItemTest):
                         continue
                     for _ in range(5):
                         retries += 1
-                        time.sleep(retries*retries)  # Exponential sleep
+                        time.sleep(retries * retries)  # Exponential sleep
                         matches = qs.filter(**kw).count()
                         if matches == expected:
                             break
@@ -320,16 +344,16 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching simple fields on this model')
+            self.skipTest("No matching simple fields on this model")
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
             val = getattr(item, f.name)
             # Filter with =, __in and __contains. We could have more filters here, but these should always match.
-            filter_kwargs = [{f.name: val}, {f'{f.name}__in': [val]}]
+            filter_kwargs = [{f.name: val}, {f"{f.name}__in": [val]}]
             if isinstance(f, TextField) and not isinstance(f, ChoiceField):
                 # Choice fields cannot be filtered using __contains. Sort of makes sense.
-                filter_kwargs.append({f'{f.name}__contains': get_random_substring(val)})
+                filter_kwargs.append({f"{f.name}__contains": get_random_substring(val)})
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_list_fields(self):
@@ -349,13 +373,13 @@ class CommonItemTest(BaseItemTest):
                     continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching list fields on this model')
+            self.skipTest("No matching list fields on this model")
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
             val = getattr(item, f.name)
             # Filter multi-value fields with =, __in and __contains
-            filter_kwargs = [{f'{f.name}__in': val}, {f'{f.name}__contains': val}]
+            filter_kwargs = [{f"{f.name}__in": val}, {f"{f.name}__contains": val}]
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_single_field_index_fields(self):
@@ -367,7 +391,7 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching single index fields on this model')
+            self.skipTest("No matching single index fields on this model")
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
@@ -380,10 +404,14 @@ class CommonItemTest(BaseItemTest):
                     path, subval = field_path.path, field_path.get_value(item)
                     if subval is None:
                         continue
-                    filter_kwargs.extend([
-                        {f.name: v}, {path: subval},
-                        {f'{path}__in': [subval]}, {f'{path}__contains': get_random_substring(subval)}
-                    ])
+                    filter_kwargs.extend(
+                        [
+                            {f.name: v},
+                            {path: subval},
+                            {f"{path}__in": [subval]},
+                            {f"{path}__contains": get_random_substring(subval)},
+                        ]
+                    )
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_multi_field_index_fields(self):
@@ -395,7 +423,7 @@ class CommonItemTest(BaseItemTest):
                 continue
             fields.append(f)
         if not fields:
-            self.skipTest('No matching multi index fields on this model')
+            self.skipTest("No matching multi index fields on this model")
         item.save()
         common_qs = self.test_folder.filter(categories__contains=self.categories)
         for f in fields:
@@ -409,9 +437,9 @@ class CommonItemTest(BaseItemTest):
                     path, subval = field_path.path, field_path.get_value(item)
                     if subval is None:
                         continue
-                    filter_kwargs.extend([
-                        {path: subval}, {f'{path}__in': [subval]}, {f'{path}__contains': get_random_substring(subval)}
-                    ])
+                    filter_kwargs.extend(
+                        [{path: subval}, {f"{path}__in": [subval]}, {f"{path}__contains": get_random_substring(subval)}]
+                    )
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_text_field_settings(self):
@@ -432,10 +460,10 @@ class CommonItemTest(BaseItemTest):
                     continue
                 if f.is_read_only:
                     continue
-                if f.name == 'categories':
+                if f.name == "categories":
                     # We're filtering on this one, so leave it alone
                     continue
-                old_max_length = getattr(f, 'max_length', None)
+                old_max_length = getattr(f, "max_length", None)
                 old_is_complex = f.is_complex
                 try:
                     # Set a string long enough to not be handled by FindItems
@@ -450,7 +478,7 @@ class CommonItemTest(BaseItemTest):
                         item.save(update_fields=[f.name])
                     except ErrorPropertyUpdate:
                         # Some fields throw this error when updated to a huge value
-                        self.assertIn(f.name, ['given_name', 'middle_name', 'surname'])
+                        self.assertIn(f.name, ["given_name", "middle_name", "surname"])
                         continue
                     except ErrorInvalidPropertySet:
                         # Some fields can not be updated after save
@@ -478,13 +506,13 @@ class CommonItemTest(BaseItemTest):
                     if old_max_length:
                         f.max_length = old_max_length
                     else:
-                        delattr(f, 'max_length')
+                        delattr(f, "max_length")
                     f.is_complex = old_is_complex
 
     def test_save_and_delete(self):
         # Test that we can create, update and delete single items using methods directly on the item.
         insert_kwargs = self.get_random_insert_kwargs()
-        insert_kwargs['categories'] = self.categories
+        insert_kwargs["categories"] = self.categories
         item = self.ITEM_CLASS(folder=self.test_folder, **insert_kwargs)
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
@@ -503,10 +531,10 @@ class CommonItemTest(BaseItemTest):
                 if f.is_read_only and old is None:
                     # Some fields are automatically set server-side
                     continue
-                if f.name == 'reminder_due_by':
+                if f.name == "reminder_due_by":
                     # EWS sets a default value if it is not set on insert. Ignore
                     continue
-                if f.name == 'mime_content':
+                if f.name == "mime_content":
                     # This will change depending on other contents fields
                     continue
                 if f.is_list:
@@ -528,10 +556,10 @@ class CommonItemTest(BaseItemTest):
                 if f.is_read_only and old is None:
                     # Some fields are automatically updated server-side
                     continue
-                if f.name == 'mime_content':
+                if f.name == "mime_content":
                     # This will change depending on other contents fields
                     continue
-                if f.name == 'reminder_due_by':
+                if f.name == "reminder_due_by":
                     if new is None:
                         # EWS does not always return a value if reminder_is_set is False.
                         continue
@@ -540,7 +568,7 @@ class CommonItemTest(BaseItemTest):
                         # wanted it, and sometimes 30 days before or after. But only sometimes...
                         old_date = old.astimezone(self.account.default_timezone).date()
                         new_date = new.astimezone(self.account.default_timezone).date()
-                        if getattr(item, 'is_all_day', False) and old_date == new_date:
+                        if getattr(item, "is_all_day", False) and old_date == new_date:
                             # There is some weirdness with the time part of the reminder_due_by value for all-day events
                             item.reminder_due_by = new
                             continue
@@ -570,13 +598,13 @@ class CommonItemTest(BaseItemTest):
     def test_item(self):
         # Test insert
         insert_kwargs = self.get_random_insert_kwargs()
-        insert_kwargs['categories'] = self.categories
+        insert_kwargs["categories"] = self.categories
         item = self.ITEM_CLASS(folder=self.test_folder, **insert_kwargs)
         # Test with generator as argument
         insert_ids = self.test_folder.bulk_create(items=(i for i in [item]))
         self.assertEqual(len(insert_ids), 1)
         self.assertIsInstance(insert_ids[0], BaseItem)
-        find_ids = list(self.test_folder.filter(categories__contains=item.categories).values_list('id', 'changekey'))
+        find_ids = list(self.test_folder.filter(categories__contains=item.categories).values_list("id", "changekey"))
         self.assertEqual(len(find_ids), 1)
         self.assertEqual(len(find_ids[0]), 2, find_ids[0])
         self.assertEqual(insert_ids, find_ids)
@@ -592,10 +620,10 @@ class CommonItemTest(BaseItemTest):
                     continue
                 if f.is_read_only:
                     continue
-                if f.name == 'reminder_due_by':
+                if f.name == "reminder_due_by":
                     # EWS sets a default value if it is not set on insert. Ignore
                     continue
-                if f.name == 'mime_content':
+                if f.name == "mime_content":
                     # This will change depending on other contents fields
                     continue
                 old, new = getattr(item, f.name), insert_kwargs[f.name]
@@ -607,8 +635,8 @@ class CommonItemTest(BaseItemTest):
         update_kwargs = self.get_random_update_kwargs(item=item, insert_kwargs=insert_kwargs)
         if self.ITEM_CLASS in (Contact, DistributionList):
             # Contact and DistributionList don't support mime_type updates at all
-            update_kwargs.pop('mime_content', None)
-        update_fieldnames = [f for f in update_kwargs if f != 'attachments']
+            update_kwargs.pop("mime_content", None)
+        update_fieldnames = [f for f in update_kwargs if f != "attachments"]
         for k, v in update_kwargs.items():
             setattr(item, k, v)
         # Test with generator as argument
@@ -629,11 +657,11 @@ class CommonItemTest(BaseItemTest):
                 if f.is_read_only or f.is_read_only_after_send:
                     # These cannot be changed
                     continue
-                if f.name == 'mime_content':
+                if f.name == "mime_content":
                     # This will change depending on other contents fields
                     continue
                 old, new = getattr(item, f.name), update_kwargs[f.name]
-                if f.name == 'reminder_due_by':
+                if f.name == "reminder_due_by":
                     if old is None:
                         # EWS does not always return a value if reminder_is_set is False. Set one now
                         item.reminder_due_by = new
@@ -643,7 +671,7 @@ class CommonItemTest(BaseItemTest):
                         # wanted it, and sometimes 30 days before or after. But only sometimes...
                         old_date = old.astimezone(self.account.default_timezone).date()
                         new_date = new.astimezone(self.account.default_timezone).date()
-                        if getattr(item, 'is_all_day', False) and old_date == new_date:
+                        if getattr(item, "is_all_day", False) and old_date == new_date:
                             # There is some weirdness with the time part of the reminder_due_by value for all-day events
                             item.reminder_due_by = new
                             continue
@@ -682,8 +710,9 @@ class CommonItemTest(BaseItemTest):
         self.assertEqual(len(wipe_ids), 1)
         self.assertEqual(len(wipe_ids[0]), 2, wipe_ids)
         self.assertEqual(insert_ids[0].id, wipe_ids[0][0])  # ID should be the same
-        self.assertNotEqual(insert_ids[0].changekey,
-                            wipe_ids[0][1])  # Changekey should not be the same when item is updated
+        self.assertNotEqual(
+            insert_ids[0].changekey, wipe_ids[0][1]
+        )  # Changekey should not be the same when item is updated
         item = self.get_item_by_id(wipe_ids[0])
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
@@ -703,11 +732,11 @@ class CommonItemTest(BaseItemTest):
                 self.assertEqual(old, new, (f.name, old, new))
 
         try:
-            item.__class__.register('extern_id', ExternId)
+            item.__class__.register("extern_id", ExternId)
             # Test extern_id = None, which deletes the extended property entirely
             extern_id = None
             item.extern_id = extern_id
-            wipe2_ids = self.account.bulk_update([(item, ['extern_id'])])
+            wipe2_ids = self.account.bulk_update([(item, ["extern_id"])])
             self.assertEqual(len(wipe2_ids), 1)
             self.assertEqual(len(wipe2_ids[0]), 2, wipe2_ids)
             self.assertEqual(insert_ids[0].id, wipe2_ids[0][0])  # ID must be the same
@@ -715,4 +744,4 @@ class CommonItemTest(BaseItemTest):
             item = self.get_item_by_id(wipe2_ids[0])
             self.assertEqual(item.extern_id, extern_id)
         finally:
-            item.__class__.deregister('extern_id')
+            item.__class__.deregister("extern_id")

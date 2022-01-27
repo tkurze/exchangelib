@@ -1,13 +1,13 @@
-from .common import EWSAccountService, to_item_id
 from ..items import Persona
 from ..properties import PersonaId
-from ..util import create_element, set_xml_value, MNS
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSAccountService, to_item_id
 
 
 class GetPersona(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation"""
 
-    SERVICE_NAME = 'GetPersona'
+    SERVICE_NAME = "GetPersona"
 
     def call(self, personas):
         # GetPersona only accepts one persona ID per request. Crazy.
@@ -19,15 +19,13 @@ class GetPersona(EWSAccountService):
 
     def get_payload(self, persona):
         return set_xml_value(
-            create_element(f'm:{self.SERVICE_NAME}'),
-            to_item_id(persona, PersonaId),
-            version=self.protocol.version
+            create_element(f"m:{self.SERVICE_NAME}"), to_item_id(persona, PersonaId), version=self.protocol.version
         )
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return container.findall(f'{{{MNS}}}{Persona.ELEMENT_NAME}')
+        return container.findall(f"{{{MNS}}}{Persona.ELEMENT_NAME}")
 
     @classmethod
     def _response_tag(cls):
-        return f'{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage'
+        return f"{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage"

@@ -14,8 +14,8 @@ from .errors import InvalidTypeError
 
 log = logging.getLogger(__name__)
 
-IMPERSONATION = 'impersonation'
-DELEGATE = 'delegate'
+IMPERSONATION = "impersonation"
+DELEGATE = "delegate"
 ACCESS_TYPES = (IMPERSONATION, DELEGATE)
 
 
@@ -44,10 +44,10 @@ class BaseCredentials(metaclass=abc.ABCMeta):
         """
 
     def _get_hash_values(self):
-        return (getattr(self, k) for k in self.__dict__ if k != '_lock')
+        return (getattr(self, k) for k in self.__dict__ if k != "_lock")
 
     def __eq__(self, other):
-        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__ if k != '_lock')
+        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__ if k != "_lock")
 
     def __hash__(self):
         return hash(tuple(self._get_hash_values()))
@@ -55,7 +55,7 @@ class BaseCredentials(metaclass=abc.ABCMeta):
     def __getstate__(self):
         # The lock cannot be pickled
         state = self.__dict__.copy()
-        del state['_lock']
+        del state["_lock"]
         return state
 
     def __setstate__(self, state):
@@ -74,15 +74,15 @@ class Credentials(BaseCredentials):
       password: Clear-text password
     """
 
-    EMAIL = 'email'
-    DOMAIN = 'domain'
-    UPN = 'upn'
+    EMAIL = "email"
+    DOMAIN = "domain"
+    UPN = "upn"
 
     def __init__(self, username, password):
         super().__init__()
-        if username.count('@') == 1:
+        if username.count("@") == 1:
             self.type = self.EMAIL
-        elif username.count('\\') == 1:
+        elif username.count("\\") == 1:
             self.type = self.DOMAIN
         else:
             self.type = self.UPN
@@ -93,7 +93,7 @@ class Credentials(BaseCredentials):
         pass
 
     def __repr__(self):
-        return self.__class__.__name__ + repr((self.username, '********'))
+        return self.__class__.__name__ + repr((self.username, "********"))
 
     def __str__(self):
         return self.username
@@ -139,31 +139,31 @@ class OAuth2Credentials(BaseCredentials):
         """
         # Ensure we don't update the object in the middle of a new session being created, which could cause a race.
         if not isinstance(access_token, dict):
-            raise InvalidTypeError('access_token', access_token, OAuth2Token)
+            raise InvalidTypeError("access_token", access_token, OAuth2Token)
         with self.lock:
-            log.debug('%s auth token for %s', 'Refreshing' if self.access_token else 'Setting', self.client_id)
+            log.debug("%s auth token for %s", "Refreshing" if self.access_token else "Setting", self.client_id)
             self.access_token = access_token
 
     def _get_hash_values(self):
         # 'access_token' may be refreshed once in a while. This should not affect the hash signature.
         # 'identity' is just informational and should also not affect the hash signature.
-        return (getattr(self, k) for k in self.__dict__ if k not in ('_lock', 'identity', 'access_token'))
+        return (getattr(self, k) for k in self.__dict__ if k not in ("_lock", "identity", "access_token"))
 
     def sig(self):
         # Like hash(self), but pulls in the access token. Protocol.refresh_credentials() uses this to find out
         # if the access_token needs to be refreshed.
         res = []
         for k in self.__dict__:
-            if k in ('_lock', 'identity'):
+            if k in ("_lock", "identity"):
                 continue
-            if k == 'access_token':
-                res.append(self.access_token['access_token'] if self.access_token else None)
+            if k == "access_token":
+                res.append(self.access_token["access_token"] if self.access_token else None)
                 continue
             res.append(getattr(self, k))
         return hash(tuple(res))
 
     def __repr__(self):
-        return self.__class__.__name__ + repr((self.client_id, '********'))
+        return self.__class__.__name__ + repr((self.client_id, "********"))
 
     def __str__(self):
         return self.client_id
@@ -199,17 +199,20 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
         super().__init__(**kwargs)
         self.authorization_code = authorization_code
         if access_token is not None and not isinstance(access_token, dict):
-            raise InvalidTypeError('access_token', access_token, OAuth2Token)
+            raise InvalidTypeError("access_token", access_token, OAuth2Token)
         self.access_token = access_token
 
     def __repr__(self):
         return self.__class__.__name__ + repr(
-            (self.client_id, '[client_secret]', '[authorization_code]', '[access_token]')
+            (self.client_id, "[client_secret]", "[authorization_code]", "[access_token]")
         )
 
     def __str__(self):
         client_id = self.client_id
-        credential = '[access_token]' if self.access_token is not None else \
-            ('[authorization_code]' if self.authorization_code is not None else None)
-        description = ' '.join(filter(None, [client_id, credential]))
-        return description or '[underspecified credentials]'
+        credential = (
+            "[access_token]"
+            if self.access_token is not None
+            else ("[authorization_code]" if self.authorization_code is not None else None)
+        )
+        description = " ".join(filter(None, [client_id, credential]))
+        return description or "[underspecified credentials]"

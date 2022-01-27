@@ -7,6 +7,6 @@ class AutodiscoverProtocol(BaseProtocol):
     TIMEOUT = 10  # Seconds
 
     def __str__(self):
-        return f'''\
+        return f"""\
 Autodiscover endpoint: {self.service_endpoint}
-Auth type: {self.auth_type}'''
+Auth type: {self.auth_type}"""

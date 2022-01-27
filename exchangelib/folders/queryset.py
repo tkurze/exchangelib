@@ -1,15 +1,15 @@
 import logging
 from copy import deepcopy
 
-from ..errors import ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorItemNotFound, InvalidTypeError
-from ..properties import InvalidField, FolderId
+from ..errors import ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFolderReplicaAvailable, InvalidTypeError
+from ..properties import FolderId, InvalidField
 from ..queryset import DoesNotExist, MultipleObjectsReturned
 from ..restriction import Q
 
 # Traversal enums
-SHALLOW = 'Shallow'
-SOFT_DELETED = 'SoftDeleted'
-DEEP = 'Deep'
+SHALLOW = "Shallow"
+SOFT_DELETED = "SoftDeleted"
+DEEP = "Deep"
 FOLDER_TRAVERSAL_CHOICES = (SHALLOW, DEEP, SOFT_DELETED)
 
 MISSING_FOLDER_ERRORS = (ErrorFolderNotFound, ErrorItemNotFound, ErrorNoPublicFolderReplicaAvailable)
@@ -23,8 +23,9 @@ class FolderQuerySet:
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
+
         if not isinstance(folder_collection, FolderCollection):
-            raise InvalidTypeError('folder_collection', folder_collection, FolderCollection)
+            raise InvalidTypeError("folder_collection", folder_collection, FolderCollection)
         self.folder_collection = folder_collection
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -44,6 +45,7 @@ class FolderQuerySet:
     def only(self, *args):
         """Restrict the fields returned. 'name' and 'folder_class' are always returned."""
         from .base import Folder
+
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
         all_fields.update(Folder.attribute_fields())
@@ -73,18 +75,19 @@ class FolderQuerySet:
         MultipleObjectsReturned if there are multiple results.
         """
         from .collections import FolderCollection
-        if not args and set(kwargs) in ({'id'}, {'id', 'changekey'}):
-            folders = list(FolderCollection(
-                account=self.folder_collection.account, folders=[FolderId(**kwargs)]
-            ).resolve())
+
+        if not args and set(kwargs) in ({"id"}, {"id", "changekey"}):
+            folders = list(
+                FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+            )
         elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
         else:
             folders = list(self.all())
         if not folders:
-            raise DoesNotExist('Could not find a child folder matching the query')
+            raise DoesNotExist("Could not find a child folder matching the query")
         if len(folders) != 1:
-            raise MultipleObjectsReturned(f'Expected result length 1, but got {folders}')
+            raise MultipleObjectsReturned(f"Expected result length 1, but got {folders}")
         f = folders[0]
         if isinstance(f, Exception):
             raise f
@@ -108,6 +111,7 @@ class FolderQuerySet:
     def _query(self):
         from .base import Folder
         from .collections import FolderCollection
+
         if self.only_fields is None:
             # Subfolders will always be of class Folder
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
@@ -130,7 +134,7 @@ class FolderQuerySet:
                 yield f
                 continue
             if not f.get_folder_allowed:
-                log.debug('GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder', f)
+                log.debug("GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder", f)
                 yield f
             else:
                 resolveable_folders.append(f)
@@ -148,7 +152,7 @@ class FolderQuerySet:
                 continue
             # Add the extra field values to the folders we fetched with find_folders()
             if f.__class__ != complex_f.__class__:
-                raise ValueError(f'Type mismatch: {f} vs {complex_f}')
+                raise ValueError(f"Type mismatch: {f} vs {complex_f}")
             for complex_field in complex_fields:
                 field_name = complex_field.field.name
                 setattr(f, field_name, getattr(complex_f, field_name))
@@ -160,6 +164,7 @@ class SingleFolderQuerySet(FolderQuerySet):
 
     def __init__(self, account, folder):
         from .collections import FolderCollection
+
         folder_collection = FolderCollection(account=account, folders=[folder])
         super().__init__(folder_collection=folder_collection)
 

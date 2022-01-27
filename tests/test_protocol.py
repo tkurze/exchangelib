@@ -3,66 +3,107 @@ import os
 import pickle
 import socket
 import tempfile
-from unittest.mock import Mock, patch
 import warnings
+from unittest.mock import Mock, patch
+
 try:
     import zoneinfo
 except ImportError:
     from backports import zoneinfo
 
-from oauthlib.oauth2 import InvalidClientIdError
 import psutil
 import requests_mock
+from oauthlib.oauth2 import InvalidClientIdError
 
 from exchangelib import close_connections
-from exchangelib.credentials import Credentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
 from exchangelib.configuration import Configuration
-from exchangelib.items import CalendarItem, SEARCH_SCOPE_CHOICES
-from exchangelib.errors import SessionPoolMinSizeReached, ErrorNameResolutionNoResults, ErrorAccessDenied, \
-    TransportError, SessionPoolMaxSizeReached, TimezoneDefinitionInvalidForYear, RateLimitError
-from exchangelib.properties import TimeZone, RoomList, FreeBusyView, AlternateId, ID_FORMATS, EWS_ID, \
-    SearchableMailbox, FailedMailbox, Mailbox, DLMailbox, ItemId, MailboxData, FreeBusyViewOptions
-from exchangelib.protocol import Protocol, BaseProtocol, NoVerifyHTTPAdapter, FailFast, FaultTolerance
-from exchangelib.services import GetRoomLists, GetRooms, ResolveNames, GetSearchableMailboxes, \
-    SetUserOofSettings, ExpandDL
+from exchangelib.credentials import Credentials, OAuth2AuthorizationCodeCredentials, OAuth2Credentials
+from exchangelib.errors import (
+    ErrorAccessDenied,
+    ErrorNameResolutionNoResults,
+    RateLimitError,
+    SessionPoolMaxSizeReached,
+    SessionPoolMinSizeReached,
+    TimezoneDefinitionInvalidForYear,
+    TransportError,
+)
+from exchangelib.items import SEARCH_SCOPE_CHOICES, CalendarItem
+from exchangelib.properties import (
+    EWS_ID,
+    ID_FORMATS,
+    AlternateId,
+    DLMailbox,
+    FailedMailbox,
+    FreeBusyView,
+    FreeBusyViewOptions,
+    ItemId,
+    Mailbox,
+    MailboxData,
+    RoomList,
+    SearchableMailbox,
+    TimeZone,
+)
+from exchangelib.protocol import BaseProtocol, FailFast, FaultTolerance, NoVerifyHTTPAdapter, Protocol
+from exchangelib.services import (
+    ExpandDL,
+    GetRoomLists,
+    GetRooms,
+    GetSearchableMailboxes,
+    ResolveNames,
+    SetUserOofSettings,
+)
 from exchangelib.settings import OofSettings
 from exchangelib.transport import NOAUTH, NTLM, OAUTH2
 from exchangelib.util import DummyResponse
-from exchangelib.version import Build, Version, EXCHANGE_2010_SP1
+from exchangelib.version import EXCHANGE_2010_SP1, Build, Version
 from exchangelib.winzone import CLDR_TO_MS_TIMEZONE_MAP
 
-from .common import EWSTest, get_random_datetime_range, get_random_string, get_random_hostname, RANDOM_DATE_MIN, \
-    RANDOM_DATE_MAX
+from .common import (
+    RANDOM_DATE_MAX,
+    RANDOM_DATE_MIN,
+    EWSTest,
+    get_random_datetime_range,
+    get_random_hostname,
+    get_random_string,
+)
 
 
 class ProtocolTest(EWSTest):
     @staticmethod
     def get_test_protocol(**kwargs):
-        return Protocol(config=Configuration(
-            server=kwargs.get('server'),
-            service_endpoint=kwargs.get('service_endpoint', f'https://{get_random_hostname()}/Foo.asmx'),
-            credentials=kwargs.get('credentials', Credentials(get_random_string(8), get_random_string(8))),
-            auth_type=kwargs.get('auth_type', NTLM),
-            version=kwargs.get('version', Version(Build(15, 1))),
-            retry_policy=kwargs.get('retry_policy', FailFast()),
-            max_connections=kwargs.get('max_connections'),
-        ))
+        return Protocol(
+            config=Configuration(
+                server=kwargs.get("server"),
+                service_endpoint=kwargs.get("service_endpoint", f"https://{get_random_hostname()}/Foo.asmx"),
+                credentials=kwargs.get("credentials", Credentials(get_random_string(8), get_random_string(8))),
+                auth_type=kwargs.get("auth_type", NTLM),
+                version=kwargs.get("version", Version(Build(15, 1))),
+                retry_policy=kwargs.get("retry_policy", FailFast()),
+                max_connections=kwargs.get("max_connections"),
+            )
+        )
 
     def test_magic(self):
         p = self.get_test_protocol()
-        self.assertEqual(str(p), f'''\
+        self.assertEqual(
+            str(p),
+            f"""\
 EWS url: {p.service_endpoint}
 Product name: Microsoft Exchange Server 2016
 EWS API version: Exchange2016
 Build number: 15.1.0.0
-EWS auth: NTLM''')
+EWS auth: NTLM""",
+        )
         p.config.version = None
-        self.assertEqual(str(p), f'''\
+        self.assertEqual(
+            str(p),
+            f"""\
 EWS url: {p.service_endpoint}
 Product name: [unknown]
 EWS API version: [unknown]
 Build number: [unknown]
-EWS auth: NTLM''')
+EWS auth: NTLM""",
+        )
 
     def test_close_connections_helper(self):
         # Just test that it doesn't break
@@ -70,7 +111,7 @@ EWS auth: NTLM''')
 
     def test_init(self):
         with self.assertRaises(TypeError) as e:
-            Protocol(config='XXX')
+            Protocol(config="XXX")
         self.assertEqual(
             e.exception.args[0], "'config' 'XXX' must be of type <class 'exchangelib.configuration.Configuration'>"
         )
@@ -98,9 +139,11 @@ EWS auth: NTLM''')
     def test_protocol_instance_caching(self, m):
         # Verify that we get the same Protocol instance for the same combination of (endpoint, credentials)
         config = Configuration(
-            service_endpoint='https://example.com/Foo.asmx',
+            service_endpoint="https://example.com/Foo.asmx",
             credentials=Credentials(get_random_string(8), get_random_string(8)),
-            auth_type=NTLM, version=Version(Build(15, 1)), retry_policy=FailFast()
+            auth_type=NTLM,
+            version=Version(Build(15, 1)),
+            retry_policy=FailFast(),
         )
         # Test CachingProtocol.__getitem__
         with self.assertRaises(KeyError):
@@ -130,16 +173,17 @@ EWS auth: NTLM''')
     def test_close(self):
         # Don't use example.com here - it does not resolve or answer on all ISPs
         proc = psutil.Process()
-        hostname = 'httpbin.org'
-        ip_addresses = {info[4][0] for info in socket.getaddrinfo(
-            hostname, 80, socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_IP
-        )}
+        hostname = "httpbin.org"
+        ip_addresses = {
+            info[4][0]
+            for info in socket.getaddrinfo(hostname, 80, socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_IP)
+        }
 
         def conn_count():
             return len([p for p in proc.connections() if p.raddr[0] in ip_addresses])
 
         self.assertGreater(len(ip_addresses), 0)
-        url = f'http://{hostname}'
+        url = f"http://{hostname}"
         protocol = self.get_test_protocol(service_endpoint=url, auth_type=NOAUTH, max_connections=3)
         # Merely getting a session should not create connections
         session = protocol.get_session()
@@ -211,8 +255,7 @@ EWS auth: NTLM''')
         data = list(self.account.protocol.get_timezones())
         self.assertAlmostEqual(len(list(self.account.protocol.get_timezones())), 130, delta=30, msg=data)
         # Test translation to TimeZone objects
-        for tz_definition in self.account.protocol.get_timezones(
-                return_full_timezone_data=True):
+        for tz_definition in self.account.protocol.get_timezones(return_full_timezone_data=True):
             try:
                 tz = TimeZone.from_server_timezone(
                     tz_definition=tz_definition,
@@ -227,39 +270,38 @@ EWS auth: NTLM''')
         server_timezones = list(self.account.protocol.get_timezones(return_full_timezone_data=True))
         start = datetime.datetime.now(tz=tz)
         end = datetime.datetime.now(tz=tz) + datetime.timedelta(hours=6)
-        accounts = [(self.account, 'Organizer', False)]
+        accounts = [(self.account, "Organizer", False)]
 
         with self.assertRaises(TypeError) as e:
-            self.account.protocol.get_free_busy_info(accounts=[(123, 'XXX', 'XXX')], start=start, end=end)
+            self.account.protocol.get_free_busy_info(accounts=[(123, "XXX", "XXX")], start=start, end=end)
         self.assertEqual(
-            e.exception.args[0],
-            "Field 'email' value 123 must be of type <class 'exchangelib.properties.Email'>"
+            e.exception.args[0], "Field 'email' value 123 must be of type <class 'exchangelib.properties.Email'>"
         )
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.get_free_busy_info(accounts=[(self.account, 'XXX', 'XXX')], start=start, end=end)
+            self.account.protocol.get_free_busy_info(accounts=[(self.account, "XXX", "XXX")], start=start, end=end)
         self.assertEqual(
             e.exception.args[0],
-            f"Invalid choice 'XXX' for field 'attendee_type'. Valid choices are {sorted(MailboxData.ATTENDEE_TYPES)}"
+            f"Invalid choice 'XXX' for field 'attendee_type'. Valid choices are {sorted(MailboxData.ATTENDEE_TYPES)}",
         )
         with self.assertRaises(TypeError) as e:
-            self.account.protocol.get_free_busy_info(accounts=[(self.account, 'Organizer', 'X')], start=start, end=end)
+            self.account.protocol.get_free_busy_info(accounts=[(self.account, "Organizer", "X")], start=start, end=end)
         self.assertEqual(e.exception.args[0], "Field 'exclude_conflicts' value 'X' must be of type <class 'bool'>")
         with self.assertRaises(ValueError) as e:
             self.account.protocol.get_free_busy_info(accounts=accounts, start=end, end=start)
         self.assertIn("'start' must be less than 'end'", e.exception.args[0])
         with self.assertRaises(TypeError) as e:
-            self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end,
-                                                     merged_free_busy_interval='XXX')
+            self.account.protocol.get_free_busy_info(
+                accounts=accounts, start=start, end=end, merged_free_busy_interval="XXX"
+            )
         self.assertEqual(
-            e.exception.args[0],
-            "Field 'merged_free_busy_interval' value 'XXX' must be of type <class 'int'>"
+            e.exception.args[0], "Field 'merged_free_busy_interval' value 'XXX' must be of type <class 'int'>"
         )
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end, requested_view='XXX')
+            self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end, requested_view="XXX")
         self.assertEqual(
             e.exception.args[0],
             f"Invalid choice 'XXX' for field 'requested_view'. Valid choices are "
-            f"{sorted(FreeBusyViewOptions.REQUESTED_VIEWS)}"
+            f"{sorted(FreeBusyViewOptions.REQUESTED_VIEWS)}",
         )
 
         for view_info in self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end):
@@ -270,7 +312,7 @@ EWS auth: NTLM''')
 
         # Test account as simple email
         for view_info in self.account.protocol.get_free_busy_info(
-                accounts=[(self.account.primary_smtp_address, 'Organizer', False)], start=start, end=end
+            accounts=[(self.account.primary_smtp_address, "Organizer", False)], start=start, end=end
         ):
             self.assertIsInstance(view_info, FreeBusyView)
 
@@ -284,7 +326,7 @@ EWS auth: NTLM''')
 
     def test_get_roomlists_parsing(self):
         # Test static XML since server has no roomlists
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
@@ -308,26 +350,25 @@ EWS auth: NTLM''')
             </m:RoomLists>
         </m:GetRoomListsResponse>
     </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = GetRoomLists(self.account.protocol)
         self.assertSetEqual(
-            {rl.email_address for rl in ws.parse(xml)},
-            {'roomlist1@example.com', 'roomlist2@example.com'}
+            {rl.email_address for rl in ws.parse(xml)}, {"roomlist1@example.com", "roomlist2@example.com"}
         )
 
     def test_get_rooms(self):
         # The test server is not guaranteed to have any rooms or room lists which makes this test less useful
-        roomlist = RoomList(email_address='my.roomlist@example.com')
+        roomlist = RoomList(email_address="my.roomlist@example.com")
         ws = GetRooms(self.account.protocol)
         with self.assertRaises(ErrorNameResolutionNoResults):
             list(ws.call(room_list=roomlist))
         # Test shortcut
         with self.assertRaises(ErrorNameResolutionNoResults):
-            list(self.account.protocol.get_rooms('my.roomlist@example.com'))
+            list(self.account.protocol.get_rooms("my.roomlist@example.com"))
 
     def test_get_rooms_parsing(self):
         # Test static XML since server has no rooms
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
@@ -355,22 +396,16 @@ EWS auth: NTLM''')
             </m:Rooms>
         </m:GetRoomsResponse>
     </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = GetRooms(self.account.protocol)
-        self.assertSetEqual(
-            {r.email_address for r in ws.parse(xml)},
-            {'room1@example.com', 'room2@example.com'}
-        )
+        self.assertSetEqual({r.email_address for r in ws.parse(xml)}, {"room1@example.com", "room2@example.com"})
 
     def test_resolvenames(self):
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.resolve_names(names=[], search_scope='XXX')
-        self.assertEqual(
-            e.exception.args[0],
-            f"'search_scope' 'XXX' must be one of {sorted(SEARCH_SCOPE_CHOICES)}"
-        )
+            self.account.protocol.resolve_names(names=[], search_scope="XXX")
+        self.assertEqual(e.exception.args[0], f"'search_scope' 'XXX' must be one of {sorted(SEARCH_SCOPE_CHOICES)}")
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.resolve_names(names=[], shape='XXX')
+            self.account.protocol.resolve_names(names=[], shape="XXX")
         self.assertEqual(
             e.exception.args[0], "'contact_data_shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']"
         )
@@ -378,59 +413,48 @@ EWS auth: NTLM''')
             ResolveNames(protocol=self.account.protocol, chunk_size=500).call(unresolved_entries=None)
         self.assertEqual(
             e.exception.args[0],
-            "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup"
+            "Chunk size 500 is too high. ResolveNames supports returning at most 100 candidates for a lookup",
         )
         tmp = self.account.protocol.version
         self.account.protocol.config.version = Version(EXCHANGE_2010_SP1)
         with self.assertRaises(NotImplementedError) as e:
-            self.account.protocol.resolve_names(names=['xxx@example.com'], shape='IdOnly')
+            self.account.protocol.resolve_names(names=["xxx@example.com"], shape="IdOnly")
         self.account.protocol.config.version = tmp
         self.assertEqual(
-            e.exception.args[0],
-            "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
+            e.exception.args[0], "'contact_data_shape' is only supported for Exchange 2010 SP2 servers and later"
+        )
+        self.assertGreaterEqual(self.account.protocol.resolve_names(names=["xxx@example.com"]), [])
+        self.assertGreaterEqual(
+            self.account.protocol.resolve_names(names=["xxx@example.com"], search_scope="ActiveDirectoryContacts"), []
         )
         self.assertGreaterEqual(
-            self.account.protocol.resolve_names(names=['xxx@example.com']),
-            []
+            self.account.protocol.resolve_names(names=["xxx@example.com"], shape="AllProperties"), []
         )
         self.assertGreaterEqual(
-            self.account.protocol.resolve_names(names=['xxx@example.com'], search_scope='ActiveDirectoryContacts'),
-            []
-        )
-        self.assertGreaterEqual(
-            self.account.protocol.resolve_names(names=['xxx@example.com'], shape='AllProperties'),
-            []
-        )
-        self.assertGreaterEqual(
-            self.account.protocol.resolve_names(names=['xxx@example.com'], parent_folders=[self.account.contacts]),
-            []
+            self.account.protocol.resolve_names(names=["xxx@example.com"], parent_folders=[self.account.contacts]), []
         )
         self.assertEqual(
             self.account.protocol.resolve_names(names=[self.account.primary_smtp_address]),
-            [Mailbox(email_address=self.account.primary_smtp_address)]
+            [Mailbox(email_address=self.account.primary_smtp_address)],
         )
         # Test something that's not an email
         self.assertEqual(
-            self.account.protocol.resolve_names(names=['foo\\bar']),
-            [ErrorNameResolutionNoResults('No results were found.')]
+            self.account.protocol.resolve_names(names=["foo\\bar"]),
+            [ErrorNameResolutionNoResults("No results were found.")],
         )
         # Test return_full_contact_data
         mailbox, contact = self.account.protocol.resolve_names(
-            names=[self.account.primary_smtp_address],
-            return_full_contact_data=True
+            names=[self.account.primary_smtp_address], return_full_contact_data=True
         )[0]
-        self.assertEqual(
-            mailbox,
-            Mailbox(email_address=self.account.primary_smtp_address)
-        )
+        self.assertEqual(mailbox, Mailbox(email_address=self.account.primary_smtp_address))
         self.assertListEqual(
-            [e.email.replace('SMTP:', '') for e in contact.email_addresses if e.label == 'EmailAddress1'],
-            [self.account.primary_smtp_address]
+            [e.email.replace("SMTP:", "") for e in contact.email_addresses if e.label == "EmailAddress1"],
+            [self.account.primary_smtp_address],
         )
 
     def test_resolvenames_parsing(self):
         # Test static XML since server has no roomlists
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -464,22 +488,19 @@ EWS auth: NTLM''')
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = ResolveNames(self.account.protocol)
         ws.return_full_contact_data = False
-        self.assertSetEqual(
-            {m.email_address for m in ws.parse(xml)},
-            {'anne@example.com', 'john@example.com'}
-        )
+        self.assertSetEqual({m.email_address for m in ws.parse(xml)}, {"anne@example.com", "john@example.com"})
 
     def test_get_searchable_mailboxes(self):
         # Insufficient privileges for the test account, so let's just test the exception
         with self.assertRaises(ErrorAccessDenied):
-            self.account.protocol.get_searchable_mailboxes(search_filter='non_existent_distro@example.com')
+            self.account.protocol.get_searchable_mailboxes(search_filter="non_existent_distro@example.com")
         with self.assertRaises(ErrorAccessDenied):
             self.account.protocol.get_searchable_mailboxes(expand_group_membership=True)
 
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
    <s:Body xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
@@ -505,34 +526,37 @@ EWS auth: NTLM''')
          </m:SearchableMailboxes>
       </m:GetSearchableMailboxesResponse>
    </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = GetSearchableMailboxes(protocol=self.account.protocol)
-        self.assertListEqual(list(ws.parse(xml)), [
-            SearchableMailbox(
-                guid='33a408fe-2574-4e3b-49f5-5e1e000a3035',
-                primary_smtp_address='LOLgroup@example.com',
-                is_external=False,
-                external_email=None,
-                display_name='LOLgroup',
-                is_membership_group=True,
-                reference_id='/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup',
-            ),
-            FailedMailbox(
-                mailbox='FAILgroup@example.com',
-                error_code=123,
-                error_message='Catastrophic Failure',
-                is_archive=True,
-            ),
-        ])
+        self.assertListEqual(
+            list(ws.parse(xml)),
+            [
+                SearchableMailbox(
+                    guid="33a408fe-2574-4e3b-49f5-5e1e000a3035",
+                    primary_smtp_address="LOLgroup@example.com",
+                    is_external=False,
+                    external_email=None,
+                    display_name="LOLgroup",
+                    is_membership_group=True,
+                    reference_id="/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup",
+                ),
+                FailedMailbox(
+                    mailbox="FAILgroup@example.com",
+                    error_code=123,
+                    error_message="Catastrophic Failure",
+                    is_archive=True,
+                ),
+            ],
+        )
 
     def test_expanddl(self):
         with self.assertRaises(ErrorNameResolutionNoResults):
-            self.account.protocol.expand_dl('non_existent_distro@example.com')
+            self.account.protocol.expand_dl("non_existent_distro@example.com")
         with self.assertRaises(ErrorNameResolutionNoResults):
             self.account.protocol.expand_dl(
-                DLMailbox(email_address='non_existent_distro@example.com', mailbox_type='PublicDL')
+                DLMailbox(email_address="non_existent_distro@example.com", mailbox_type="PublicDL")
             )
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Body>
@@ -560,18 +584,18 @@ EWS auth: NTLM''')
       </m:ResponseMessages>
     </ExpandDLResponse>
   </soap:Body>
-</soap:Envelope>'''
+</soap:Envelope>"""
         self.assertListEqual(
             list(ExpandDL(protocol=self.account.protocol).parse(xml)),
             [
-                Mailbox(name='Foo Smith', email_address='foo@example.com'),
-                Mailbox(name='Bar Smith', email_address='bar@example.com'),
-            ]
+                Mailbox(name="Foo Smith", email_address="foo@example.com"),
+                Mailbox(name="Bar Smith", email_address="bar@example.com"),
+            ],
         )
 
     def test_oof_settings(self):
         # First, ensure a common starting point
-        utc = zoneinfo.ZoneInfo('UTC')
+        utc = zoneinfo.ZoneInfo("UTC")
         self.account.oof_settings = OofSettings(
             state=OofSettings.DISABLED,
             start=datetime.datetime.combine(RANDOM_DATE_MIN, datetime.time.min, tzinfo=utc),
@@ -580,18 +604,18 @@ EWS auth: NTLM''')
 
         oof = OofSettings(
             state=OofSettings.ENABLED,
-            external_audience='None',
+            external_audience="None",
             internal_reply="I'm on holidays. See ya guys!",
-            external_reply='Dear Sir, your email has now been deleted.',
+            external_reply="Dear Sir, your email has now been deleted.",
         )
         self.account.oof_settings = oof
         self.assertEqual(self.account.oof_settings, oof)
 
         oof = OofSettings(
             state=OofSettings.ENABLED,
-            external_audience='Known',
-            internal_reply='XXX',
-            external_reply='YYY',
+            external_audience="Known",
+            internal_reply="XXX",
+            external_reply="YYY",
         )
         self.account.oof_settings = oof
         self.assertEqual(self.account.oof_settings, oof)
@@ -601,7 +625,7 @@ EWS auth: NTLM''')
         start, end = get_random_datetime_range(start_date=datetime.datetime.now(tz).date())
         oof = OofSettings(
             state=OofSettings.SCHEDULED,
-            external_audience='Known',
+            external_audience="Known",
             internal_reply="I'm in the pub. See ya guys!",
             external_reply="I'm having a business dinner in town",
             start=start,
@@ -616,19 +640,19 @@ EWS auth: NTLM''')
             end=end,
         )
         with self.assertRaises(TypeError):
-            self.account.oof_settings = 'XXX'
+            self.account.oof_settings = "XXX"
         with self.assertRaises(TypeError):
             SetUserOofSettings(account=self.account).get(
                 oof_settings=oof,
-                mailbox='XXX',
+                mailbox="XXX",
             )
         self.account.oof_settings = oof
         # TODO: For some reason, disabling OOF does not always work. Don't assert because we want a stable test suite
         if self.account.oof_settings != oof:
-            self.skipTest('Disabling OOF did not work')
+            self.skipTest("Disabling OOF did not work")
 
     def test_oof_settings_validation(self):
-        utc = zoneinfo.ZoneInfo('UTC')
+        utc = zoneinfo.ZoneInfo("UTC")
         with self.assertRaises(ValueError):
             # Needs a start and end
             OofSettings(
@@ -657,24 +681,29 @@ EWS auth: NTLM''')
             ).clean(version=None)
 
     def test_convert_id(self):
-        i = 'AAMkADQyYzZmYmUxLTJiYjItNDg2Ny1iMzNjLTIzYWE1NDgxNmZhNABGAAAAAADUebQDarW2Q7G2Ji8hKofPBwAl9iKCsfCfSa9cmjh' \
-            '+JCrCAAPJcuhjAAB0l+JSKvzBRYP+FXGewReXAABj6DrMAAA='
+        i = (
+            "AAMkADQyYzZmYmUxLTJiYjItNDg2Ny1iMzNjLTIzYWE1NDgxNmZhNABGAAAAAADUebQDarW2Q7G2Ji8hKofPBwAl9iKCsfCfSa9cmjh"
+            "+JCrCAAPJcuhjAAB0l+JSKvzBRYP+FXGewReXAABj6DrMAAA="
+        )
         for fmt in ID_FORMATS:
-            res = list(self.account.protocol.convert_ids(
+            res = list(
+                self.account.protocol.convert_ids(
                     [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
-                    destination_format=fmt))
+                    destination_format=fmt,
+                )
+            )
             self.assertEqual(len(res), 1)
             self.assertEqual(res[0].format, fmt)
         # Test bad format
         with self.assertRaises(ValueError) as e:
             self.account.protocol.convert_ids(
-                [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
-                destination_format='XXX')
+                [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)], destination_format="XXX"
+            )
         self.assertEqual(e.exception.args[0], f"'destination_format' 'XXX' must be one of {sorted(ID_FORMATS)}")
         # Test bad item type
         with self.assertRaises(TypeError) as e:
-            list(self.account.protocol.convert_ids([ItemId(id=1)], destination_format='EwsId'))
-        self.assertIn('must be of type', e.exception.args[0])
+            list(self.account.protocol.convert_ids([ItemId(id=1)], destination_format="EwsId"))
+        self.assertIn("must be of type", e.exception.args[0])
 
     def test_sessionpool(self):
         # First, empty the calendar
@@ -683,7 +712,7 @@ EWS auth: NTLM''')
         self.account.calendar.filter(start__lt=end, end__gt=start, categories__contains=self.categories).delete()
         items = []
         for i in range(75):
-            subject = f'Test Subject {i}'
+            subject = f"Test Subject {i}"
             item = CalendarItem(
                 start=start,
                 end=end,
@@ -693,15 +722,16 @@ EWS auth: NTLM''')
             items.append(item)
         return_ids = self.account.calendar.bulk_create(items=items)
         self.assertEqual(len(return_ids), len(items))
-        ids = self.account.calendar.filter(start__lt=end, end__gt=start, categories__contains=self.categories) \
-            .values_list('id', 'changekey')
+        ids = self.account.calendar.filter(
+            start__lt=end, end__gt=start, categories__contains=self.categories
+        ).values_list("id", "changekey")
         self.assertEqual(ids.count(), len(items))
 
     def test_disable_ssl_verification(self):
         # Test that we can make requests when SSL verification is turned off. I don't know how to mock TLS responses
         if not self.verify_ssl:
             # We can only run this test if we haven't already disabled TLS
-            self.skipTest('TLS verification already disabled')
+            self.skipTest("TLS verification already disabled")
 
         default_adapter_cls = BaseProtocol.HTTP_ADAPTER_CLS
 
@@ -710,7 +740,8 @@ EWS auth: NTLM''')
 
         # Smash TLS verification using an untrusted certificate
         with tempfile.NamedTemporaryFile() as f:
-            f.write(b'''\
+            f.write(
+                b"""\
  -----BEGIN CERTIFICATE-----
 MIIENzCCAx+gAwIBAgIJAOYfYfw7NCOcMA0GCSqGSIb3DQEBBQUAMIGxMQswCQYD
 VQQGEwJVUzERMA8GA1UECAwITWFyeWxhbmQxFDASBgNVBAcMC0ZvcmVzdCBIaWxs
@@ -735,9 +766,10 @@ T9vsI3C+Nzn84DINgI9mx6yktIt3QOKZRDpzyPkUzxsyJ8J427DaimDrjTR+fTwD
 1Dh09xeeMnSa5zeV1HEDyJTqCXutLetwQ/IyfmMBhIx+nvB5f67pz/m+Dv6V0r3I
 p4HCcdnDUDGJbfqtoqsAATQQWO+WWuswB6mOhDbvPTxhRpZq6AkgWqv4S+u3M2GO
 r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
------END CERTIFICATE-----''')
+-----END CERTIFICATE-----"""
+            )
             try:
-                os.environ['REQUESTS_CA_BUNDLE'] = f.name
+                os.environ["REQUESTS_CA_BUNDLE"] = f.name
                 # Setting the credentials is just an easy way of resetting the session pool. This will let requests
                 # pick up the new environment variable. Now the request should fail
                 self.account.protocol.credentials = self.account.protocol.credentials
@@ -746,7 +778,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                     # Ignore ResourceWarning for unclosed socket. It does get closed.
                     with self.assertRaises(TransportError) as e:
                         self.account.root.all().exists()
-                    self.assertIn('SSLError', e.exception.args[0])
+                    self.assertIn("SSLError", e.exception.args[0])
 
                 # Disable insecure TLS warnings
                 with warnings.catch_warnings():
@@ -757,12 +789,12 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
                     self.account.root.all().exists()
 
                     # Test that the custom adapter also works when validation is OK again
-                    del os.environ['REQUESTS_CA_BUNDLE']
+                    del os.environ["REQUESTS_CA_BUNDLE"]
                     self.account.protocol.credentials = self.account.protocol.credentials
                     self.account.root.all().exists()
             finally:
                 # Reset environment and connections
-                os.environ.pop('REQUESTS_CA_BUNDLE', None)  # May already have been deleted
+                os.environ.pop("REQUESTS_CA_BUNDLE", None)  # May already have been deleted
                 BaseProtocol.HTTP_ADAPTER_CLS = default_adapter_cls
                 self.account.protocol.credentials = self.account.protocol.credentials
 
@@ -770,7 +802,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
         # Test that __del__ can handle exceptions on close()
         tmp = Protocol.close
         protocol = self.get_test_protocol()
-        Protocol.close = Mock(side_effect=Exception('XXX'))
+        Protocol.close = Mock(side_effect=Exception("XXX"))
         with self.assertRaises(Exception):
             protocol.close()
         del protocol
@@ -780,7 +812,10 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
     def test_version_guess(self, m):
         protocol = self.get_test_protocol()
         # Test that we can get the version even on error responses
-        m.post(protocol.service_endpoint, status_code=200, content=b'''\
+        m.post(
+            protocol.service_endpoint,
+            status_code=200,
+            content=b"""\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -800,12 +835,16 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
   </s:Body>
-</s:Envelope>''')
+</s:Envelope>""",
+        )
         Version.guess(protocol)
         self.assertEqual(protocol.version.build, Build(15, 1, 2345, 6789))
 
         # Test exception when there are no version headers
-        m.post(protocol.service_endpoint, status_code=200, content=b'''\
+        m.post(
+            protocol.service_endpoint,
+            status_code=200,
+            content=b"""\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
   <s:Header>
@@ -823,35 +862,35 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
       </m:ResponseMessages>
     </m:ResolveNamesResponse>
   </s:Body>
-</s:Envelope>''')
+</s:Envelope>""",
+        )
         with self.assertRaises(TransportError) as e:
             Version.guess(protocol)
         self.assertEqual(
-            e.exception.args[0],
-            "No valid version headers found in response (ErrorNameResolutionMultipleResults('.'))"
+            e.exception.args[0], "No valid version headers found in response (ErrorNameResolutionMultipleResults('.'))"
         )
 
-    @patch('requests.sessions.Session.post', side_effect=ConnectionResetError('XXX'))
+    @patch("requests.sessions.Session.post", side_effect=ConnectionResetError("XXX"))
     def test_get_service_authtype(self, m):
         with self.assertRaises(TransportError) as e:
             _ = self.get_test_protocol(auth_type=None).auth_type
-        self.assertEqual(e.exception.args[0], 'XXX')
+        self.assertEqual(e.exception.args[0], "XXX")
 
         with self.assertRaises(RateLimitError) as e:
             _ = self.get_test_protocol(auth_type=None, retry_policy=FaultTolerance(max_wait=0.5)).auth_type
-        self.assertEqual(e.exception.args[0], 'Max timeout reached')
+        self.assertEqual(e.exception.args[0], "Max timeout reached")
 
-    @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=401))
+    @patch("requests.sessions.Session.post", return_value=DummyResponse(status_code=401))
     def test_get_service_authtype_401(self, m):
         with self.assertRaises(TransportError) as e:
             _ = self.get_test_protocol(auth_type=None).auth_type
-        self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
+        self.assertEqual(e.exception.args[0], "Failed to get auth type from service")
 
-    @patch('requests.sessions.Session.post', return_value=DummyResponse(status_code=501))
+    @patch("requests.sessions.Session.post", return_value=DummyResponse(status_code=501))
     def test_get_service_authtype_501(self, m):
         with self.assertRaises(TransportError) as e:
             _ = self.get_test_protocol(auth_type=None).auth_type
-        self.assertEqual(e.exception.args[0], 'Failed to get auth type from service')
+        self.assertEqual(e.exception.args[0], "Failed to get auth type from service")
 
     def test_create_session_failure(self):
         protocol = self.get_test_protocol(auth_type=NOAUTH, credentials=None)
@@ -868,11 +907,14 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
         # Only test failure cases until we have working OAuth2 credentials
         with self.assertRaises(InvalidClientIdError):
             self.get_test_protocol(
-                auth_type=OAUTH2, credentials=OAuth2Credentials('XXX', 'YYY', 'ZZZZ')
+                auth_type=OAUTH2, credentials=OAuth2Credentials("XXX", "YYY", "ZZZZ")
             ).create_session()
 
-        protocol = self.get_test_protocol(auth_type=OAUTH2, credentials=OAuth2AuthorizationCodeCredentials(
-            client_id='WWW', client_secret='XXX', authorization_code='YYY', access_token={'access_token': 'ZZZ'}
-        ))
+        protocol = self.get_test_protocol(
+            auth_type=OAUTH2,
+            credentials=OAuth2AuthorizationCodeCredentials(
+                client_id="WWW", client_secret="XXX", authorization_code="YYY", access_token={"access_token": "ZZZ"}
+            ),
+        )
         session = protocol.create_session()
         protocol.refresh_credentials(session)

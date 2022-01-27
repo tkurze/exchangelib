@@ -1,13 +1,14 @@
 import abc
 
-from .common import EWSAccountService, parse_folder_elem, to_item_id
 from ..fields import FieldPath, IndexedField
 from ..properties import FolderId
-from ..util import create_element, set_xml_value, MNS
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSAccountService, parse_folder_elem, to_item_id
 
 
 class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
     """Base class for UpdateFolder and UpdateItem"""
+
     SET_FIELD_ELEMENT_NAME = None
     DELETE_FIELD_ELEMENT_NAME = None
     CHANGE_ELEMENT_NAME = None
@@ -32,8 +33,9 @@ class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
     def _set_field_elems(self, target_model, field, value):
         if isinstance(field, IndexedField):
             # Generate either set or delete elements for all combinations of labels and subfields
-            supported_labels = field.value_cls.get_field_by_fieldname('label')\
-                .supported_choices(version=self.account.version)
+            supported_labels = field.value_cls.get_field_by_fieldname("label").supported_choices(
+                version=self.account.version
+            )
             seen_labels = set()
             subfields = field.value_cls.supported_fields(version=self.account.version)
             for v in value:
@@ -49,7 +51,7 @@ class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
                         yield self._set_field_elem(
                             target_model=target_model,
                             field_path=field_path,
-                            value=field.value_cls(**{'label': v.label, subfield.name: subfield_value}),
+                            value=field.value_cls(**{"label": v.label, subfield.name: subfield_value}),
                         )
                 # Generate delete elements for all subfields of all labels not mentioned in the list of values
                 for label in (label for label in supported_labels if label not in seen_labels):
@@ -80,13 +82,13 @@ class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
 
         for field in self._sorted_fields(target_model=target_model, fieldnames=fieldnames):
             if field.is_read_only:
-                raise ValueError(f'{field.name!r} is a read-only field')
+                raise ValueError(f"{field.name!r} is a read-only field")
             value = self._get_value(target, field)
 
             if value is None or (field.is_list and not value):
                 # A value of None or [] means we want to remove this field from the item
                 if field.is_required or field.is_required_after_save:
-                    raise ValueError(f'{field.name!r} is a required field and may not be deleted')
+                    raise ValueError(f"{field.name!r} is a required field and may not be deleted")
                 yield from self._delete_field_elems(field)
                 continue
 
@@ -97,7 +99,7 @@ class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
             raise ValueError("'fieldnames' must not be empty")
         change = create_element(self.CHANGE_ELEMENT_NAME)
         set_xml_value(change, self._target_elem(target), version=self.account.version)
-        updates = create_element('t:Updates')
+        updates = create_element("t:Updates")
         for elem in self._update_elems(target=target, fieldnames=fieldnames):
             updates.append(elem)
         change.append(updates)
@@ -119,12 +121,12 @@ class BaseUpdateService(EWSAccountService, metaclass=abc.ABCMeta):
 class UpdateFolder(BaseUpdateService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation"""
 
-    SERVICE_NAME = 'UpdateFolder'
-    SET_FIELD_ELEMENT_NAME = 't:SetFolderField'
-    DELETE_FIELD_ELEMENT_NAME = 't:DeleteFolderField'
-    CHANGE_ELEMENT_NAME = 't:FolderChange'
-    CHANGES_ELEMENT_NAME = 'm:FolderChanges'
-    element_container_name = f'{{{MNS}}}Folders'
+    SERVICE_NAME = "UpdateFolder"
+    SET_FIELD_ELEMENT_NAME = "t:SetFolderField"
+    DELETE_FIELD_ELEMENT_NAME = "t:DeleteFolderField"
+    CHANGE_ELEMENT_NAME = "t:FolderChange"
+    CHANGES_ELEMENT_NAME = "m:FolderChanges"
+    element_container_name = f"{{{MNS}}}Folders"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -149,6 +151,6 @@ class UpdateFolder(BaseUpdateService):
     def get_payload(self, folders):
         # Takes a list of (Folder, fieldnames) tuples where 'Folder' is a instance of a subclass of Folder and
         # 'fieldnames' are the attribute names that were updated.
-        payload = create_element(f'm:{self.SERVICE_NAME}')
+        payload = create_element(f"m:{self.SERVICE_NAME}")
         payload.append(self._changes_elem(target_changes=folders))
         return payload

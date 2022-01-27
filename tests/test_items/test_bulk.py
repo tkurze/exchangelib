@@ -1,15 +1,16 @@
 import datetime
-from exchangelib.errors import ErrorItemNotFound, ErrorInvalidChangeKey, ErrorInvalidIdMalformed
+
+from exchangelib.errors import ErrorInvalidChangeKey, ErrorInvalidIdMalformed, ErrorItemNotFound
 from exchangelib.fields import FieldPath
-from exchangelib.folders import Inbox, Folder, Calendar
-from exchangelib.items import Item, Message, SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY, CalendarItem, BulkCreateResult
+from exchangelib.folders import Calendar, Folder, Inbox
+from exchangelib.items import SAVE_ONLY, SEND_AND_SAVE_COPY, SEND_ONLY, BulkCreateResult, CalendarItem, Item, Message
 from exchangelib.services import CreateItem
 
 from .test_basics import BaseItemTest
 
 
 class BulkMethodTest(BaseItemTest):
-    TEST_FOLDER = 'inbox'
+    TEST_FOLDER = "inbox"
     FOLDER_CLASS = Inbox
     ITEM_CLASS = Message
 
@@ -22,13 +23,13 @@ class BulkMethodTest(BaseItemTest):
             self.assertIsInstance(item, self.ITEM_CLASS)
         self.assertEqual(len(items), 2)
 
-        items = list(self.account.fetch(ids=ids, only_fields=['subject']))
+        items = list(self.account.fetch(ids=ids, only_fields=["subject"]))
         self.assertEqual(len(items), 2)
 
-        items = list(self.account.fetch(ids=ids, only_fields=[FieldPath.from_string('subject', self.test_folder)]))
+        items = list(self.account.fetch(ids=ids, only_fields=[FieldPath.from_string("subject", self.test_folder)]))
         self.assertEqual(len(items), 2)
 
-        items = list(self.account.fetch(ids=ids, only_fields=['id', 'changekey']))
+        items = list(self.account.fetch(ids=ids, only_fields=["id", "changekey"]))
         self.assertEqual(len(items), 2)
 
     def test_bulk_create(self):
@@ -47,7 +48,7 @@ class BulkMethodTest(BaseItemTest):
         item.account = None
         self.assertEqual(list(self.account.fetch(ids=[item]))[0].id, item.id)
         item.account = None
-        res = self.account.bulk_update(items=[(item, ('subject',))])[0]
+        res = self.account.bulk_update(items=[(item, ("subject",))])[0]
         item.id, item.changekey = res
         item.account = None
         res = self.account.bulk_copy(ids=[item], to_folder=self.account.trash)[0]
@@ -125,14 +126,14 @@ class BulkMethodTest(BaseItemTest):
     def test_bulk_failure(self):
         # Test that bulk_* can handle EWS errors and return the errors in order without losing non-failure results
         items1 = [self.get_test_item().save() for _ in range(3)]
-        items1[1].changekey = 'XXX'
+        items1[1].changekey = "XXX"
         for i, res in enumerate(self.account.bulk_delete(items1)):
             if i == 1:
                 self.assertIsInstance(res, ErrorInvalidChangeKey)
             else:
                 self.assertEqual(res, True)
         items2 = [self.get_test_item().save() for _ in range(3)]
-        items2[1].id = 'AAAA=='
+        items2[1].id = "AAAA=="
         for i, res in enumerate(self.account.bulk_delete(items2)):
             if i == 1:
                 self.assertIsInstance(res, ErrorInvalidIdMalformed)
@@ -148,7 +149,7 @@ class BulkMethodTest(BaseItemTest):
 
     def test_bulk_create_with_no_result(self):
         # Some CreateItem responses do not contain the ID of the created items. See issue#984
-        xml = b'''\
+        xml = b"""\
 <?xml version='1.0' encoding='utf-8'?>
 <s:Envelope
     xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -177,16 +178,13 @@ class BulkMethodTest(BaseItemTest):
       </m:ResponseMessages>
     </m:CreateItemResponse>
   </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = CreateItem(account=self.account)
-        self.assertListEqual(
-            list(ws.parse(xml)),
-            [True, True]
-        )
+        self.assertListEqual(list(ws.parse(xml)), [True, True])
 
 
 class CalendarBulkMethodTest(BaseItemTest):
-    TEST_FOLDER = 'calendar'
+    TEST_FOLDER = "calendar"
     FOLDER_CLASS = Calendar
     ITEM_CLASS = CalendarItem
 
@@ -200,4 +198,4 @@ class CalendarBulkMethodTest(BaseItemTest):
         res = self.test_folder.bulk_create(items=[item])[0]
         item.id, item.changekey = res.id, res.changekey
         item.account = None
-        self.account.bulk_update(items=[(item, ('start',))])
+        self.account.bulk_update(items=[(item, ("start",))])

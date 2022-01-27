@@ -1,24 +1,83 @@
 from unittest.mock import Mock
 
-from exchangelib.errors import ErrorDeleteDistinguishedFolder, ErrorObjectTypeChanged, DoesNotExist, \
-    MultipleObjectsReturned, ErrorItemSave, ErrorItemNotFound, ErrorFolderExists, ErrorFolderNotFound, \
-    ErrorCannotEmptyFolder
+from exchangelib.errors import (
+    DoesNotExist,
+    ErrorCannotEmptyFolder,
+    ErrorDeleteDistinguishedFolder,
+    ErrorFolderExists,
+    ErrorFolderNotFound,
+    ErrorItemNotFound,
+    ErrorItemSave,
+    ErrorObjectTypeChanged,
+    MultipleObjectsReturned,
+)
 from exchangelib.extended_properties import ExtendedProperty
+from exchangelib.folders import (
+    NON_DELETABLE_FOLDERS,
+    SHALLOW,
+    AllContacts,
+    AllItems,
+    Calendar,
+    Companies,
+    Contacts,
+    ConversationSettings,
+    DefaultFoldersChangeHistory,
+    DeletedItems,
+    DistinguishedFolderId,
+    Drafts,
+    Favorites,
+    Files,
+    Folder,
+    FolderCollection,
+    FolderQuerySet,
+    Friends,
+    GALContacts,
+    GraphAnalytics,
+    IMContactList,
+    Inbox,
+    Journal,
+    JunkEmail,
+    Messages,
+    MyContacts,
+    MyContactsExtended,
+    Notes,
+    OrganizationalContacts,
+    Outbox,
+    PassThroughSearchResults,
+    PdpProfileV2Secured,
+    PeopleCentricConversationBuddies,
+    PublicFoldersRoot,
+    QuickContacts,
+    RecipientCache,
+    Reminders,
+    RootOfHierarchy,
+    RSSFeeds,
+    SentItems,
+    Sharing,
+    Signal,
+    SingleFolderQuerySet,
+    SmsAndChatsSync,
+    SyncIssues,
+    System,
+    Tasks,
+    ToDoSearch,
+    VoiceMail,
+)
 from exchangelib.items import Message
-from exchangelib.folders import Calendar, DeletedItems, Drafts, Inbox, Outbox, SentItems, JunkEmail, Messages, Tasks, \
-    Contacts, Folder, RecipientCache, GALContacts, System, AllContacts, MyContactsExtended, Reminders, Favorites, \
-    AllItems, ConversationSettings, Friends, RSSFeeds, Sharing, IMContactList, QuickContacts, Journal, Notes, \
-    SyncIssues, MyContacts, ToDoSearch, FolderCollection, DistinguishedFolderId, Files, \
-    DefaultFoldersChangeHistory, PassThroughSearchResults, SmsAndChatsSync, GraphAnalytics, Signal, \
-    PdpProfileV2Secured, VoiceMail, FolderQuerySet, SingleFolderQuerySet, SHALLOW, RootOfHierarchy, Companies, \
-    OrganizationalContacts, PeopleCentricConversationBuddies, PublicFoldersRoot, NON_DELETABLE_FOLDERS
-from exchangelib.properties import Mailbox, InvalidField, EffectiveRights, PermissionSet, CalendarPermission, UserId
+from exchangelib.properties import CalendarPermission, EffectiveRights, InvalidField, Mailbox, PermissionSet, UserId
 from exchangelib.queryset import Q
-from exchangelib.services import GetFolder, DeleteFolder, FindFolder, EmptyFolder
-from exchangelib.version import Version, EXCHANGE_2007
+from exchangelib.services import DeleteFolder, EmptyFolder, FindFolder, GetFolder
+from exchangelib.version import EXCHANGE_2007, Version
 
-from .common import EWSTest, get_random_string, get_random_int, get_random_bool, get_random_datetime, get_random_bytes,\
-    get_random_byte
+from .common import (
+    EWSTest,
+    get_random_bool,
+    get_random_byte,
+    get_random_bytes,
+    get_random_datetime,
+    get_random_int,
+    get_random_string,
+)
 
 
 def get_random_str_tuple(tuple_length, str_length):
@@ -29,23 +88,23 @@ class FolderTest(EWSTest):
     def test_folders(self):
         # Test shortcuts
         for f, cls in (
-                (self.account.trash, DeletedItems),
-                (self.account.drafts, Drafts),
-                (self.account.inbox, Inbox),
-                (self.account.outbox, Outbox),
-                (self.account.sent, SentItems),
-                (self.account.junk, JunkEmail),
-                (self.account.contacts, Contacts),
-                (self.account.tasks, Tasks),
-                (self.account.calendar, Calendar),
+            (self.account.trash, DeletedItems),
+            (self.account.drafts, Drafts),
+            (self.account.inbox, Inbox),
+            (self.account.outbox, Outbox),
+            (self.account.sent, SentItems),
+            (self.account.junk, JunkEmail),
+            (self.account.contacts, Contacts),
+            (self.account.tasks, Tasks),
+            (self.account.calendar, Calendar),
         ):
             with self.subTest(f=f, cls=cls):
                 self.assertIsInstance(f, cls)
                 f.test_access()
                 # Test item field lookup
-                self.assertEqual(f.get_item_field_by_fieldname('subject').name, 'subject')
+                self.assertEqual(f.get_item_field_by_fieldname("subject").name, "subject")
                 with self.assertRaises(ValueError):
-                    f.get_item_field_by_fieldname('XXX')
+                    f.get_item_field_by_fieldname("XXX")
 
     def test_folder_failure(self):
         # Folders must have an ID
@@ -58,7 +117,7 @@ class FolderTest(EWSTest):
         with self.assertRaises(ValueError):
             self.account.root.remove_folder(Folder())
         # Removing a non-existent folder is allowed
-        self.account.root.remove_folder(Folder(id='XXX'))
+        self.account.root.remove_folder(Folder(id="XXX"))
         # Must be called on a distinguished folder class
         with self.assertRaises(ValueError):
             RootOfHierarchy.get_distinguished(self.account)
@@ -69,22 +128,22 @@ class FolderTest(EWSTest):
             Folder(root=self.account.public_folders_root, parent=self.account.inbox)
         self.assertEqual(e.exception.args[0], "'parent.root' must match 'root'")
         with self.assertRaises(ValueError) as e:
-            Folder(parent=self.account.inbox, parent_folder_id='XXX')
+            Folder(parent=self.account.inbox, parent_folder_id="XXX")
         self.assertEqual(e.exception.args[0], "'parent_folder_id' must match 'parent' ID")
         with self.assertRaises(TypeError) as e:
-            Folder(root='XXX').clean()
+            Folder(root="XXX").clean()
         self.assertEqual(
             e.exception.args[0], "'root' 'XXX' must be of type <class 'exchangelib.folders.roots.RootOfHierarchy'>"
         )
         with self.assertRaises(ValueError) as e:
-            Folder().save(update_fields=['name'])
+            Folder().save(update_fields=["name"])
         self.assertEqual(e.exception.args[0], "'update_fields' is only valid for updates")
         with self.assertRaises(ValueError) as e:
-            Messages().validate_item_field('XXX', version=self.account.version)
+            Messages().validate_item_field("XXX", version=self.account.version)
         self.assertIn("'XXX' is not a valid field on", e.exception.args[0])
         with self.assertRaises(ValueError) as e:
-            Folder.item_model_from_tag('XXX')
-        self.assertEqual(e.exception.args[0], 'Item type XXX was unexpected in a Folder folder')
+            Folder.item_model_from_tag("XXX")
+        self.assertEqual(e.exception.args[0], "Item type XXX was unexpected in a Folder folder")
 
     def test_public_folders_root(self):
         # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
@@ -97,54 +156,46 @@ class FolderTest(EWSTest):
         with self.assertRaises(ValueError) as e:
             DeleteFolder(account=self.account).call(
                 folders=[],
-                delete_type='XXX',
+                delete_type="XXX",
             )
         self.assertEqual(
-            e.exception.args[0],
-            "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
+            e.exception.args[0], "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
         )
 
     def test_invalid_emptyfolder_args(self):
         with self.assertRaises(ValueError) as e:
             EmptyFolder(account=self.account).call(
                 folders=[],
-                delete_type='XXX',
+                delete_type="XXX",
                 delete_sub_folders=False,
             )
         self.assertEqual(
-            e.exception.args[0],
-            "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
+            e.exception.args[0], "'delete_type' 'XXX' must be one of ['HardDelete', 'MoveToDeletedItems', 'SoftDelete']"
         )
 
     def test_invalid_findfolder_args(self):
         with self.assertRaises(ValueError) as e:
             FindFolder(account=self.account).call(
-                folders=['XXX'],
+                folders=["XXX"],
                 additional_fields=None,
                 restriction=None,
-                shape='XXX',
-                depth='Shallow',
+                shape="XXX",
+                depth="Shallow",
                 max_items=None,
                 offset=None,
             )
-        self.assertEqual(
-            e.exception.args[0],
-            "'shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']"
-        )
+        self.assertEqual(e.exception.args[0], "'shape' 'XXX' must be one of ['AllProperties', 'Default', 'IdOnly']")
         with self.assertRaises(ValueError) as e:
             FindFolder(account=self.account).call(
-                folders=['XXX'],
+                folders=["XXX"],
                 additional_fields=None,
                 restriction=None,
-                shape='IdOnly',
-                depth='XXX',
+                shape="IdOnly",
+                depth="XXX",
                 max_items=None,
                 offset=None,
             )
-        self.assertEqual(
-            e.exception.args[0],
-            "'depth' 'XXX' must be one of ['Deep', 'Shallow', 'SoftDeleted']"
-        )
+        self.assertEqual(e.exception.args[0], "'depth' 'XXX' must be one of ['Deep', 'Shallow', 'SoftDeleted']")
 
     def test_find_folders(self):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
@@ -153,7 +204,7 @@ class FolderTest(EWSTest):
     def test_find_folders_multiple_roots(self):
         coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])
         with self.assertRaises(ValueError) as e:
-            list(coll.find_folders(depth='Shallow'))
+            list(coll.find_folders(depth="Shallow"))
         self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
 
     def test_find_folders_compat(self):
@@ -162,27 +213,36 @@ class FolderTest(EWSTest):
         account.version = Version(EXCHANGE_2007)  # Need to set it after the last auto-config of version
         with self.assertRaises(NotImplementedError) as e:
             list(coll.find_folders(offset=1))
-        self.assertEqual(
-            e.exception.args[0],
-            "'offset' is only supported for Exchange 2010 servers and later"
-        )
+        self.assertEqual(e.exception.args[0], "'offset' is only supported for Exchange 2010 servers and later")
 
     def test_find_folders_with_restriction(self):
         # Exact match
-        folders = list(FolderCollection(account=self.account, folders=[self.account.root])
-                       .find_folders(q=Q(name='Top of Information Store')))
+        folders = list(
+            FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
+                q=Q(name="Top of Information Store")
+            )
+        )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
         # Startswith
-        folders = list(FolderCollection(account=self.account, folders=[self.account.root])
-                       .find_folders(q=Q(name__startswith='Top of ')))
+        folders = list(
+            FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
+                q=Q(name__startswith="Top of ")
+            )
+        )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
         # Wrong case
-        folders = list(FolderCollection(account=self.account, folders=[self.account.root])
-                       .find_folders(q=Q(name__startswith='top of ')))
+        folders = list(
+            FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
+                q=Q(name__startswith="top of ")
+            )
+        )
         self.assertEqual(len(folders), 0, sorted(f.name for f in folders))
         # Case insensitive
-        folders = list(FolderCollection(account=self.account, folders=[self.account.root])
-                       .find_folders(q=Q(name__istartswith='top of ')))
+        folders = list(
+            FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
+                q=Q(name__istartswith="top of ")
+            )
+        )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
 
     def test_get_folders(self):
@@ -190,24 +250,32 @@ class FolderTest(EWSTest):
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
 
         # Test that GetFolder can handle FolderId instances
-        folders = list(FolderCollection(account=self.account, folders=[DistinguishedFolderId(
-            id=Inbox.DISTINGUISHED_FOLDER_ID,
-            mailbox=Mailbox(email_address=self.account.primary_smtp_address)
-        )]).get_folders())
+        folders = list(
+            FolderCollection(
+                account=self.account,
+                folders=[
+                    DistinguishedFolderId(
+                        id=Inbox.DISTINGUISHED_FOLDER_ID,
+                        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                    )
+                ],
+            ).get_folders()
+        )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
 
     def test_get_folders_with_distinguished_id(self):
         # Test that we return an Inbox instance and not a generic Messages or Folder instance when we call GetFolder
         # with a DistinguishedFolderId instance with an ID of Inbox.DISTINGUISHED_FOLDER_ID.
         inbox_folder_id = DistinguishedFolderId(
-            id=Inbox.DISTINGUISHED_FOLDER_ID,
-            mailbox=Mailbox(email_address=self.account.primary_smtp_address)
+            id=Inbox.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
         )
-        inbox = list(GetFolder(account=self.account).call(
-            folders=[inbox_folder_id],
-            shape='IdOnly',
-            additional_fields=[],
-        ))[0]
+        inbox = list(
+            GetFolder(account=self.account).call(
+                folders=[inbox_folder_id],
+                shape="IdOnly",
+                additional_fields=[],
+            )
+        )[0]
         self.assertIsInstance(inbox, Inbox)
 
         # Test via SingleFolderQuerySet
@@ -218,63 +286,72 @@ class FolderTest(EWSTest):
         # If you get errors here, you probably need to fill out [folder class].LOCALIZED_NAMES for your locale.
         for f in self.account.root.walk():
             with self.subTest(f=f):
-                if isinstance(f, (
-                        Messages, DeletedItems, AllContacts, MyContactsExtended, Sharing, Favorites, SyncIssues,
-                        MyContacts
-                )):
-                    self.assertEqual(f.folder_class, 'IPF.Note')
+                if isinstance(
+                    f,
+                    (
+                        Messages,
+                        DeletedItems,
+                        AllContacts,
+                        MyContactsExtended,
+                        Sharing,
+                        Favorites,
+                        SyncIssues,
+                        MyContacts,
+                    ),
+                ):
+                    self.assertEqual(f.folder_class, "IPF.Note")
                 elif isinstance(f, Companies):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.Company')
+                    self.assertEqual(f.folder_class, "IPF.Contact.Company")
                 elif isinstance(f, OrganizationalContacts):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.OrganizationalContacts')
+                    self.assertEqual(f.folder_class, "IPF.Contact.OrganizationalContacts")
                 elif isinstance(f, PeopleCentricConversationBuddies):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.PeopleCentricConversationBuddies')
+                    self.assertEqual(f.folder_class, "IPF.Contact.PeopleCentricConversationBuddies")
                 elif isinstance(f, GALContacts):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.GalContacts')
+                    self.assertEqual(f.folder_class, "IPF.Contact.GalContacts")
                 elif isinstance(f, RecipientCache):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.RecipientCache')
+                    self.assertEqual(f.folder_class, "IPF.Contact.RecipientCache")
                 elif isinstance(f, Contacts):
-                    self.assertEqual(f.folder_class, 'IPF.Contact')
+                    self.assertEqual(f.folder_class, "IPF.Contact")
                 elif isinstance(f, Calendar):
-                    self.assertEqual(f.folder_class, 'IPF.Appointment')
+                    self.assertEqual(f.folder_class, "IPF.Appointment")
                 elif isinstance(f, (Tasks, ToDoSearch)):
-                    self.assertEqual(f.folder_class, 'IPF.Task')
+                    self.assertEqual(f.folder_class, "IPF.Task")
                 elif isinstance(f, Reminders):
-                    self.assertEqual(f.folder_class, 'Outlook.Reminder')
+                    self.assertEqual(f.folder_class, "Outlook.Reminder")
                 elif isinstance(f, AllItems):
-                    self.assertEqual(f.folder_class, 'IPF')
+                    self.assertEqual(f.folder_class, "IPF")
                 elif isinstance(f, ConversationSettings):
-                    self.assertEqual(f.folder_class, 'IPF.Configuration')
+                    self.assertEqual(f.folder_class, "IPF.Configuration")
                 elif isinstance(f, Files):
-                    self.assertEqual(f.folder_class, 'IPF.Files')
+                    self.assertEqual(f.folder_class, "IPF.Files")
                 elif isinstance(f, Friends):
-                    self.assertEqual(f.folder_class, 'IPF.Note')
+                    self.assertEqual(f.folder_class, "IPF.Note")
                 elif isinstance(f, RSSFeeds):
-                    self.assertEqual(f.folder_class, 'IPF.Note.OutlookHomepage')
+                    self.assertEqual(f.folder_class, "IPF.Note.OutlookHomepage")
                 elif isinstance(f, IMContactList):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.MOC.ImContactList')
+                    self.assertEqual(f.folder_class, "IPF.Contact.MOC.ImContactList")
                 elif isinstance(f, QuickContacts):
-                    self.assertEqual(f.folder_class, 'IPF.Contact.MOC.QuickContacts')
+                    self.assertEqual(f.folder_class, "IPF.Contact.MOC.QuickContacts")
                 elif isinstance(f, Journal):
-                    self.assertEqual(f.folder_class, 'IPF.Journal')
+                    self.assertEqual(f.folder_class, "IPF.Journal")
                 elif isinstance(f, Notes):
-                    self.assertEqual(f.folder_class, 'IPF.StickyNote')
+                    self.assertEqual(f.folder_class, "IPF.StickyNote")
                 elif isinstance(f, DefaultFoldersChangeHistory):
-                    self.assertEqual(f.folder_class, 'IPM.DefaultFolderHistoryItem')
+                    self.assertEqual(f.folder_class, "IPM.DefaultFolderHistoryItem")
                 elif isinstance(f, PassThroughSearchResults):
-                    self.assertEqual(f.folder_class, 'IPF.StoreItem.PassThroughSearchResults')
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.PassThroughSearchResults")
                 elif isinstance(f, SmsAndChatsSync):
-                    self.assertEqual(f.folder_class, 'IPF.SmsAndChatsSync')
+                    self.assertEqual(f.folder_class, "IPF.SmsAndChatsSync")
                 elif isinstance(f, GraphAnalytics):
-                    self.assertEqual(f.folder_class, 'IPF.StoreItem.GraphAnalytics')
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.GraphAnalytics")
                 elif isinstance(f, Signal):
-                    self.assertEqual(f.folder_class, 'IPF.StoreItem.Signal')
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.Signal")
                 elif isinstance(f, PdpProfileV2Secured):
-                    self.assertEqual(f.folder_class, 'IPF.StoreItem.PdpProfileSecured')
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.PdpProfileSecured")
                 elif isinstance(f, VoiceMail):
-                    self.assertEqual(f.folder_class, 'IPF.Note.Microsoft.Voicemail')
+                    self.assertEqual(f.folder_class, "IPF.Note.Microsoft.Voicemail")
                 else:
-                    self.assertIn(f.folder_class, (None, 'IPF'), (f.name, f.__class__.__name__, f.folder_class))
+                    self.assertIn(f.folder_class, (None, "IPF"), (f.name, f.__class__.__name__, f.folder_class))
                     self.assertIsInstance(f, Folder)
 
     def test_counts(self):
@@ -288,7 +365,7 @@ class FolderTest(EWSTest):
         # Create some items
         items = []
         for i in range(3):
-            subject = f'Test Subject {i}'
+            subject = f"Test Subject {i}"
             item = Message(account=self.account, folder=f, is_read=False, subject=subject, categories=self.categories)
             item.save()
             items.append(item)
@@ -336,7 +413,7 @@ class FolderTest(EWSTest):
         old_values = {}
         for field in f.FIELDS:
             old_values[field.name] = getattr(f, field.name)
-            if field.name in ('account', 'id', 'changekey', 'parent_folder_id'):
+            if field.name in ("account", "id", "changekey", "parent_folder_id"):
                 # These are needed for a successful refresh()
                 continue
             if field.is_read_only:
@@ -344,7 +421,7 @@ class FolderTest(EWSTest):
             setattr(f, field.name, self.random_val(field))
         f.refresh()
         for field in f.FIELDS:
-            if field.name == 'changekey':
+            if field.name == "changekey":
                 # folders may change while we're testing
                 continue
             if field.is_read_only:
@@ -354,7 +431,7 @@ class FolderTest(EWSTest):
 
         # Test refresh of root
         orig_name = self.account.root.name
-        self.account.root.name = 'xxx'
+        self.account.root.name = "xxx"
         self.account.root.refresh()
         self.assertEqual(self.account.root.name, orig_name)
 
@@ -366,18 +443,12 @@ class FolderTest(EWSTest):
             folder.refresh()  # Must have an id
 
     def test_parent(self):
-        self.assertEqual(
-            self.account.calendar.parent.name,
-            'Top of Information Store'
-        )
-        self.assertEqual(
-            self.account.calendar.parent.parent.name,
-            'root'
-        )
+        self.assertEqual(self.account.calendar.parent.name, "Top of Information Store")
+        self.assertEqual(self.account.calendar.parent.parent.name, "root")
         # Setters
         parent = self.account.calendar.parent
         with self.assertRaises(TypeError) as e:
-            self.account.calendar.parent = 'XXX'
+            self.account.calendar.parent = "XXX"
         self.assertEqual(
             e.exception.args[0], "'value' 'XXX' must be of type <class 'exchangelib.folders.base.BaseFolder'>"
         )
@@ -388,100 +459,83 @@ class FolderTest(EWSTest):
         self.assertIsNone(Folder(id=self.account.inbox.id, parent=self.account.inbox).parent)
 
     def test_children(self):
-        self.assertIn(
-            'Top of Information Store',
-            [c.name for c in self.account.root.children]
-        )
+        self.assertIn("Top of Information Store", [c.name for c in self.account.root.children])
 
     def test_parts(self):
         self.assertEqual(
             [p.name for p in self.account.calendar.parts],
-            ['root', 'Top of Information Store', self.account.calendar.name]
+            ["root", "Top of Information Store", self.account.calendar.name],
         )
 
     def test_absolute(self):
-        self.assertEqual(
-            self.account.calendar.absolute,
-            '/root/Top of Information Store/' + self.account.calendar.name
-        )
+        self.assertEqual(self.account.calendar.absolute, "/root/Top of Information Store/" + self.account.calendar.name)
 
     def test_walk(self):
         self.assertGreaterEqual(len(list(self.account.root.walk())), 20)
         self.assertGreaterEqual(len(list(self.account.contacts.walk())), 2)
 
     def test_tree(self):
-        self.assertTrue(self.account.root.tree().startswith('root'))
+        self.assertTrue(self.account.root.tree().startswith("root"))
 
     def test_glob(self):
-        self.assertGreaterEqual(len(list(self.account.root.glob('*'))), 5)
-        self.assertEqual(len(list(self.account.contacts.glob('GAL*'))), 1)
-        self.assertEqual(len(list(self.account.contacts.glob('gal*'))), 1)  # Test case-insensitivity
-        self.assertGreaterEqual(len(list(self.account.contacts.glob('/'))), 5)
-        self.assertGreaterEqual(len(list(self.account.contacts.glob('../*'))), 5)
-        self.assertEqual(len(list(self.account.root.glob(f'**/{self.account.contacts.name}'))), 1)
-        self.assertEqual(len(list(self.account.root.glob(f'Top of*/{self.account.contacts.name}'))), 1)
+        self.assertGreaterEqual(len(list(self.account.root.glob("*"))), 5)
+        self.assertEqual(len(list(self.account.contacts.glob("GAL*"))), 1)
+        self.assertEqual(len(list(self.account.contacts.glob("gal*"))), 1)  # Test case-insensitivity
+        self.assertGreaterEqual(len(list(self.account.contacts.glob("/"))), 5)
+        self.assertGreaterEqual(len(list(self.account.contacts.glob("../*"))), 5)
+        self.assertEqual(len(list(self.account.root.glob(f"**/{self.account.contacts.name}"))), 1)
+        self.assertEqual(len(list(self.account.root.glob(f"Top of*/{self.account.contacts.name}"))), 1)
         with self.assertRaises(ValueError) as e:
-            list(self.account.root.glob('../*'))
-        self.assertEqual(e.exception.args[0], 'Already at top')
+            list(self.account.root.glob("../*"))
+        self.assertEqual(e.exception.args[0], "Already at top")
 
     def test_collection_filtering(self):
         self.assertGreaterEqual(self.account.root.tois.children.all().count(), 0)
         self.assertGreaterEqual(self.account.root.tois.walk().all().count(), 0)
-        self.assertGreaterEqual(self.account.root.tois.glob('*').all().count(), 0)
+        self.assertGreaterEqual(self.account.root.tois.glob("*").all().count(), 0)
 
     def test_empty_collections(self):
         self.assertEqual(self.account.trash.children.all().count(), 0)
         self.assertEqual(self.account.trash.walk().all().count(), 0)
-        self.assertEqual(self.account.trash.glob('XXX').all().count(), 0)
-        self.assertEqual(list(self.account.trash.glob('XXX').get_folders()), [])
-        self.assertEqual(list(self.account.trash.glob('XXX').find_folders()), [])
+        self.assertEqual(self.account.trash.glob("XXX").all().count(), 0)
+        self.assertEqual(list(self.account.trash.glob("XXX").get_folders()), [])
+        self.assertEqual(list(self.account.trash.glob("XXX").find_folders()), [])
 
     def test_div_navigation(self):
         self.assertEqual(
-            (self.account.root / 'Top of Information Store' / self.account.calendar.name).id,
-            self.account.calendar.id
+            (self.account.root / "Top of Information Store" / self.account.calendar.name).id, self.account.calendar.id
         )
-        self.assertEqual(
-            (self.account.root / 'Top of Information Store' / '..').id,
-            self.account.root.id
-        )
-        self.assertEqual(
-            (self.account.root / '.').id,
-            self.account.root.id
-        )
+        self.assertEqual((self.account.root / "Top of Information Store" / "..").id, self.account.root.id)
+        self.assertEqual((self.account.root / ".").id, self.account.root.id)
         with self.assertRaises(ValueError) as e:
-            _ = self.account.root / '..'
-        self.assertEqual(e.exception.args[0], 'Already at top')
+            _ = self.account.root / ".."
+        self.assertEqual(e.exception.args[0], "Already at top")
 
         # Test invalid subfolder
         with self.assertRaises(ErrorFolderNotFound):
-            _ = self.account.root / 'XXX'
+            _ = self.account.root / "XXX"
 
     def test_double_div_navigation(self):
         self.account.root.clear_cache()  # Clear the cache
 
         # Test normal navigation
         self.assertEqual(
-            (self.account.root // 'Top of Information Store' // self.account.calendar.name).id,
-            self.account.calendar.id
+            (self.account.root // "Top of Information Store" // self.account.calendar.name).id, self.account.calendar.id
         )
         self.assertIsNone(self.account.root._subfolders)
 
         # Test parent ('..') syntax. Should not work
         with self.assertRaises(ValueError) as e:
-            _ = self.account.root // 'Top of Information Store' // '..'
-        self.assertEqual(e.exception.args[0], 'Cannot get parent without a folder cache')
+            _ = self.account.root // "Top of Information Store" // ".."
+        self.assertEqual(e.exception.args[0], "Cannot get parent without a folder cache")
         self.assertIsNone(self.account.root._subfolders)
 
         # Test self ('.') syntax
-        self.assertEqual(
-            (self.account.root // '.').id,
-            self.account.root.id
-        )
+        self.assertEqual((self.account.root // ".").id, self.account.root.id)
 
         # Test invalid subfolder
         with self.assertRaises(ErrorFolderNotFound):
-            _ = self.account.root // 'XXX'
+            _ = self.account.root // "XXX"
 
         # Check that this didn't trigger caching
         self.assertIsNone(self.account.root._subfolders)
@@ -489,22 +543,22 @@ class FolderTest(EWSTest):
     def test_extended_properties(self):
         # Test extended properties on folders and folder roots. This extended prop gets the size (in bytes) of a folder
         class FolderSize(ExtendedProperty):
-            property_tag = 0x0e08
-            property_type = 'Integer'
+            property_tag = 0x0E08
+            property_type = "Integer"
 
         try:
-            Folder.register('size', FolderSize)
+            Folder.register("size", FolderSize)
             self.account.inbox.refresh()
             self.assertGreater(self.account.inbox.size, 0)
         finally:
-            Folder.deregister('size')
+            Folder.deregister("size")
 
         try:
-            RootOfHierarchy.register('size', FolderSize)
+            RootOfHierarchy.register("size", FolderSize)
             self.account.root.refresh()
             self.assertGreater(self.account.root.size, 0)
         finally:
-            RootOfHierarchy.deregister('size')
+            RootOfHierarchy.deregister("size")
 
         # Register and deregister is only allowed on Folder and RootOfHierarchy classes
         with self.assertRaises(TypeError):
@@ -533,7 +587,7 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorObjectTypeChanged):
             # FolderClass may not be changed
             f.folder_class = get_random_string(16)
-            f.save(update_fields=['folder_class'])
+            f.save(update_fields=["folder_class"])
 
         # Create a subfolder
         Messages(parent=f, name=get_random_string(16)).save()
@@ -570,7 +624,7 @@ class FolderTest(EWSTest):
         self.assertEqual(len(list(f.children)), 1)
         tmp = f.empty
         try:
-            f.empty = Mock(side_effect=ErrorCannotEmptyFolder('XXX'))
+            f.empty = Mock(side_effect=ErrorCannotEmptyFolder("XXX"))
             f.wipe()
         finally:
             f.empty = tmp
@@ -583,11 +637,11 @@ class FolderTest(EWSTest):
 
         f1_id, f1_changekey, f1_parent = f1.id, f1.changekey, f1.parent
         with self.assertRaises(TypeError) as e:
-            f1.move(to_folder='XXX')  # Must be folder instance
+            f1.move(to_folder="XXX")  # Must be folder instance
         self.assertEqual(
             e.exception.args[0],
             "'to_folder' 'XXX' must be of type (<class 'exchangelib.folders.base.BaseFolder'>, "
-            "<class 'exchangelib.properties.FolderId'>)"
+            "<class 'exchangelib.properties.FolderId'>)",
         )
         f1.move(f2)
         self.assertEqual(f1.id, f1_id)
@@ -612,8 +666,8 @@ class FolderTest(EWSTest):
         f.delete()
 
         self.assertEqual(Folder().has_distinguished_name, None)
-        self.assertEqual(Inbox(name='XXX').has_distinguished_name, False)
-        self.assertEqual(Inbox(name='Inbox').has_distinguished_name, True)
+        self.assertEqual(Inbox(name="XXX").has_distinguished_name, False)
+        self.assertEqual(Inbox(name="Inbox").has_distinguished_name, True)
         self.assertEqual(Inbox(is_distinguished=False).is_deletable, True)
         self.assertEqual(Inbox(is_distinguished=True).is_deletable, False)
 
@@ -639,55 +693,27 @@ class FolderTest(EWSTest):
         folder_qs = SingleFolderQuerySet(account=self.account, folder=f0)
         try:
             # Test all()
-            self.assertSetEqual(
-                {f.name for f in folder_qs.all()},
-                {f.name for f in (f1, f2, f21, f22)}
-            )
+            self.assertSetEqual({f.name for f in folder_qs.all()}, {f.name for f in (f1, f2, f21, f22)})
 
             # Test only()
-            self.assertSetEqual(
-                {f.name for f in folder_qs.only('name').all()},
-                {f.name for f in (f1, f2, f21, f22)}
-            )
-            self.assertSetEqual(
-                {f.child_folder_count for f in folder_qs.only('name').all()},
-                {None}
-            )
+            self.assertSetEqual({f.name for f in folder_qs.only("name").all()}, {f.name for f in (f1, f2, f21, f22)})
+            self.assertSetEqual({f.child_folder_count for f in folder_qs.only("name").all()}, {None})
             # Test depth()
-            self.assertSetEqual(
-                {f.name for f in folder_qs.depth(SHALLOW).all()},
-                {f.name for f in (f1, f2)}
-            )
+            self.assertSetEqual({f.name for f in folder_qs.depth(SHALLOW).all()}, {f.name for f in (f1, f2)})
 
             # Test filter()
+            self.assertSetEqual({f.name for f in folder_qs.filter(name=f1.name)}, {f.name for f in (f1,)})
             self.assertSetEqual(
-                {f.name for f in folder_qs.filter(name=f1.name)},
-                {f.name for f in (f1,)}
-            )
-            self.assertSetEqual(
-                {f.name for f in folder_qs.filter(name__in=[f1.name, f2.name])},
-                {f.name for f in (f1, f2)}
+                {f.name for f in folder_qs.filter(name__in=[f1.name, f2.name])}, {f.name for f in (f1, f2)}
             )
 
             # Test get()
             self.assertEqual(folder_qs.get(id=f2.id).name, f2.name)
             self.assertEqual(folder_qs.get(id=f2.id, changekey=f2.changekey).name, f2.name)
-            self.assertEqual(
-                folder_qs.get(name=f2.name).child_folder_count,
-                2
-            )
-            self.assertEqual(
-                folder_qs.filter(name=f2.name).get().child_folder_count,
-                2
-            )
-            self.assertEqual(
-                folder_qs.only('name').get(name=f2.name).name,
-                f2.name
-            )
-            self.assertEqual(
-                folder_qs.only('name').get(name=f2.name).child_folder_count,
-                None
-            )
+            self.assertEqual(folder_qs.get(name=f2.name).child_folder_count, 2)
+            self.assertEqual(folder_qs.filter(name=f2.name).get().child_folder_count, 2)
+            self.assertEqual(folder_qs.only("name").get(name=f2.name).name, f2.name)
+            self.assertEqual(folder_qs.only("name").get(name=f2.name).child_folder_count, None)
             with self.assertRaises(DoesNotExist):
                 folder_qs.get(name=get_random_string(16))
             with self.assertRaises(MultipleObjectsReturned):
@@ -698,19 +724,19 @@ class FolderTest(EWSTest):
 
     def test_folder_query_set_failures(self):
         with self.assertRaises(TypeError) as e:
-            FolderQuerySet('XXX')
+            FolderQuerySet("XXX")
         self.assertEqual(
             e.exception.args[0],
-            "'folder_collection' 'XXX' must be of type <class 'exchangelib.folders.collections.FolderCollection'>"
+            "'folder_collection' 'XXX' must be of type <class 'exchangelib.folders.collections.FolderCollection'>",
         )
         # Test FolderQuerySet._copy_cls()
-        self.assertEqual(list(FolderQuerySet(FolderCollection(account=self.account, folders=[])).only('name')), [])
+        self.assertEqual(list(FolderQuerySet(FolderCollection(account=self.account, folders=[])).only("name")), [])
         fld_qs = SingleFolderQuerySet(account=self.account, folder=self.account.inbox)
         with self.assertRaises(InvalidField) as e:
-            fld_qs.only('XXX')
+            fld_qs.only("XXX")
         self.assertIn("Unknown field 'XXX' on folders", e.exception.args[0])
         with self.assertRaises(InvalidField) as e:
-            list(fld_qs.filter(XXX='XXX'))
+            list(fld_qs.filter(XXX="XXX"))
         self.assertIn("Unknown field path 'XXX' on folders", e.exception.args[0])
 
     def test_user_configuration(self):
@@ -723,10 +749,10 @@ class FolderTest(EWSTest):
 
         # Bad property
         with self.assertRaises(ValueError) as e:
-            f.get_user_configuration(name=name, properties='XXX')
+            f.get_user_configuration(name=name, properties="XXX")
         self.assertEqual(
             e.exception.args[0],
-            "'properties' 'XXX' must be one of ['All', 'BinaryData', 'Dictionary', 'Id', 'XmlData']"
+            "'properties' 'XXX' must be one of ['All', 'BinaryData', 'Dictionary', 'Id', 'XmlData']",
         )
 
         # Should not exist yet
@@ -743,7 +769,7 @@ class FolderTest(EWSTest):
             get_random_datetime(tz=self.account.default_timezone): get_random_string(8),
             get_random_str_tuple(4, 4): get_random_datetime(tz=self.account.default_timezone),
         }
-        xml_data = f'<foo>{get_random_string(16)}</foo>'.encode('utf-8')
+        xml_data = f"<foo>{get_random_string(16)}</foo>".encode("utf-8")
         binary_data = get_random_bytes(100)
         f.create_user_configuration(name=name, dictionary=dictionary, xml_data=xml_data, binary_data=binary_data)
 
@@ -763,19 +789,19 @@ class FolderTest(EWSTest):
 
         # Update the config
         f.update_user_configuration(
-            name=name, dictionary={'bar': 'foo', 456: 'a', 'b': True}, xml_data=b'<foo>baz</foo>', binary_data=b'YYY'
+            name=name, dictionary={"bar": "foo", 456: "a", "b": True}, xml_data=b"<foo>baz</foo>", binary_data=b"YYY"
         )
 
         # Fetch again and compare values
         config = f.get_user_configuration(name=name)
-        self.assertEqual(config.dictionary, {'bar': 'foo', 456: 'a', 'b': True})
-        self.assertEqual(config.xml_data, b'<foo>baz</foo>')
-        self.assertEqual(config.binary_data, b'YYY')
+        self.assertEqual(config.dictionary, {"bar": "foo", 456: "a", "b": True})
+        self.assertEqual(config.xml_data, b"<foo>baz</foo>")
+        self.assertEqual(config.binary_data, b"YYY")
 
         # Fetch again but only one property type
-        config = f.get_user_configuration(name=name, properties='XmlData')
+        config = f.get_user_configuration(name=name, properties="XmlData")
         self.assertEqual(config.dictionary, None)
-        self.assertEqual(config.xml_data, b'<foo>baz</foo>')
+        self.assertEqual(config.xml_data, b"<foo>baz</foo>")
         self.assertEqual(config.binary_data, None)
 
         # Delete the config
@@ -788,7 +814,7 @@ class FolderTest(EWSTest):
 
     def test_permissionset_effectiverights_parsing(self):
         # Test static XML since server may not have any permission sets or effective rights
-        xml = b'''\
+        xml = b"""\
 <?xml version="1.0" ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Body>
@@ -856,7 +882,7 @@ class FolderTest(EWSTest):
             </m:ResponseMessages>
         </m:GetFolderResponse>
     </s:Body>
-</s:Envelope>'''
+</s:Envelope>"""
         ws = GetFolder(account=self.account)
         ws.folders = [self.account.calendar]
         res = list(ws.parse(xml))
@@ -865,9 +891,14 @@ class FolderTest(EWSTest):
         self.assertEqual(
             fld.effective_rights,
             EffectiveRights(
-                create_associated=True, create_contents=True, create_hierarchy=True, delete=True, modify=True,
-                read=True, view_private_items=False
-            )
+                create_associated=True,
+                create_contents=True,
+                create_hierarchy=True,
+                delete=True,
+                modify=True,
+                read=True,
+                view_private_items=False,
+            ),
         )
         self.assertEqual(
             fld.permission_set,
@@ -875,45 +906,60 @@ class FolderTest(EWSTest):
                 permissions=None,
                 calendar_permissions=[
                     CalendarPermission(
-                        can_create_items=False, can_create_subfolders=False, is_folder_owner=False,
-                        is_folder_visible=True, is_folder_contact=False, edit_items='None',
-                        delete_items='None', read_items='FullDetails', user_id=UserId(
-                            sid='SID1', primary_smtp_address='user1@example.com', display_name='User 1',
-                            distinguished_user=None, external_user_identity=None
-                        ), calendar_permission_level='Reviewer'
+                        can_create_items=False,
+                        can_create_subfolders=False,
+                        is_folder_owner=False,
+                        is_folder_visible=True,
+                        is_folder_contact=False,
+                        edit_items="None",
+                        delete_items="None",
+                        read_items="FullDetails",
+                        user_id=UserId(
+                            sid="SID1",
+                            primary_smtp_address="user1@example.com",
+                            display_name="User 1",
+                            distinguished_user=None,
+                            external_user_identity=None,
+                        ),
+                        calendar_permission_level="Reviewer",
                     ),
                     CalendarPermission(
-                        can_create_items=True, can_create_subfolders=False, is_folder_owner=False,
-                        is_folder_visible=True, is_folder_contact=False, edit_items='All', delete_items='All',
-                        read_items='FullDetails', user_id=UserId(
-                            sid='SID2', primary_smtp_address='user2@example.com', display_name='User 2',
-                            distinguished_user=None, external_user_identity=None
-                        ), calendar_permission_level='Editor'
-                    )
-                ], unknown_entries=None
+                        can_create_items=True,
+                        can_create_subfolders=False,
+                        is_folder_owner=False,
+                        is_folder_visible=True,
+                        is_folder_contact=False,
+                        edit_items="All",
+                        delete_items="All",
+                        read_items="FullDetails",
+                        user_id=UserId(
+                            sid="SID2",
+                            primary_smtp_address="user2@example.com",
+                            display_name="User 2",
+                            distinguished_user=None,
+                            external_user_identity=None,
+                        ),
+                        calendar_permission_level="Editor",
+                    ),
+                ],
+                unknown_entries=None,
             ),
         )
 
     def test_get_candidate(self):
         # _get_candidate is a private method, but it's really difficult to recreate a situation where it's used.
-        f1 = Inbox(name='XXX', is_distinguished=True)
+        f1 = Inbox(name="XXX", is_distinguished=True)
         f2 = Inbox(name=Inbox.LOCALIZED_NAMES[self.account.locale][0])
         with self.assertRaises(ErrorFolderNotFound) as e:
             self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[])
         self.assertEqual(
             e.exception.args[0], "No usable default <class 'exchangelib.folders.known_folders.Inbox'> folders"
         )
-        self.assertEqual(
-            self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f1]),
-            f1
-        )
-        self.assertEqual(
-            self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f2]),
-            f2
-        )
+        self.assertEqual(self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f1]), f1)
+        self.assertEqual(self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f2]), f2)
         with self.assertRaises(ValueError) as e:
             self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[f1, f1])
         self.assertEqual(
             e.exception.args[0],
-            "Multiple possible default <class 'exchangelib.folders.known_folders.Inbox'> folders: ['XXX', 'XXX']"
+            "Multiple possible default <class 'exchangelib.folders.known_folders.Inbox'> folders: ['XXX', 'XXX']",
         )

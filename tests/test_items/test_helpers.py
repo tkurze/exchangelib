@@ -6,34 +6,33 @@ from .test_basics import BaseItemTest
 
 
 class ItemHelperTest(BaseItemTest):
-    TEST_FOLDER = 'inbox'
+    TEST_FOLDER = "inbox"
     FOLDER_CLASS = Inbox
     ITEM_CLASS = Message
 
     def test_save_with_update_fields(self):
         item = self.get_test_item()
         with self.assertRaises(ValueError):
-            item.save(update_fields=['subject'])  # update_fields does not work on item creation
+            item.save(update_fields=["subject"])  # update_fields does not work on item creation
         item.save()
-        item.subject = 'XXX'
-        item.body = 'YYY'
-        item.save(update_fields=['subject'])
+        item.subject = "XXX"
+        item.body = "YYY"
+        item.save(update_fields=["subject"])
         item.refresh()
-        self.assertEqual(item.subject, 'XXX')
-        self.assertNotEqual(item.body, 'YYY')
+        self.assertEqual(item.subject, "XXX")
+        self.assertNotEqual(item.body, "YYY")
 
         # Test invalid 'update_fields' input
         with self.assertRaises(ValueError) as e:
-            item.save(update_fields=['xxx'])
+            item.save(update_fields=["xxx"])
         self.assertEqual(
-            e.exception.args[0],
-            f"Field name(s) ['xxx'] are not valid {self.ITEM_CLASS.__name__!r} fields"
+            e.exception.args[0], f"Field name(s) ['xxx'] are not valid {self.ITEM_CLASS.__name__!r} fields"
         )
         with self.assertRaises(ValueError) as e:
-            item.save(update_fields='subject')
+            item.save(update_fields="subject")
         self.assertEqual(
             e.exception.args[0],
-            f"Field name(s) ['s', 'u', 'b', 'j', 'e', 'c', 't'] are not valid {self.ITEM_CLASS.__name__!r} fields"
+            f"Field name(s) ['s', 'u', 'b', 'j', 'e', 'c', 't'] are not valid {self.ITEM_CLASS.__name__!r} fields",
         )
 
     def test_soft_delete(self):
@@ -108,7 +107,7 @@ class ItemHelperTest(BaseItemTest):
         # Test that we can refresh items, and that refresh fails if the item no longer exists on the server
         item = self.get_test_item().save()
         orig_subject = item.subject
-        item.subject = 'XXX'
+        item.subject = "XXX"
         item.refresh()
         self.assertEqual(item.subject, orig_subject)
         item.delete()

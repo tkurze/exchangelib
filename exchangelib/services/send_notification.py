@@ -1,8 +1,8 @@
-from .common import EWSService, add_xml_child
 from ..errors import InvalidEnumValue
 from ..properties import Notification
 from ..transport import wrap
-from ..util import create_element, MNS
+from ..util import MNS, create_element
+from .common import EWSService, add_xml_child
 
 
 class SendNotification(EWSService):
@@ -13,9 +13,9 @@ class SendNotification(EWSService):
     push notifications.
     """
 
-    SERVICE_NAME = 'SendNotification'
-    OK = 'OK'
-    UNSUBSCRIBE = 'Unsubscribe'
+    SERVICE_NAME = "SendNotification"
+    OK = "OK"
+    UNSUBSCRIBE = "Unsubscribe"
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
@@ -30,7 +30,7 @@ class SendNotification(EWSService):
     @classmethod
     def _response_tag(cls):
         """Return the name of the element containing the service response."""
-        return f'{{{MNS}}}{cls.SERVICE_NAME}'
+        return f"{{{MNS}}}{cls.SERVICE_NAME}"
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -38,7 +38,7 @@ class SendNotification(EWSService):
 
     def get_payload(self, status):
         if status not in self.STATUS_CHOICES:
-            raise InvalidEnumValue('status', status, self.STATUS_CHOICES)
-        payload = create_element(f'm:{self.SERVICE_NAME}Result')
-        add_xml_child(payload, 'm:SubscriptionStatus', status)
+            raise InvalidEnumValue("status", status, self.STATUS_CHOICES)
+        payload = create_element(f"m:{self.SERVICE_NAME}Result")
+        add_xml_child(payload, "m:SubscriptionStatus", status)
         return payload

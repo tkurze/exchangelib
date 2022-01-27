@@ -1,6 +1,6 @@
-from .common import EWSAccountService, attachment_ids_element
 from ..properties import RootItemId
 from ..util import create_element, set_xml_value
+from .common import EWSAccountService, attachment_ids_element
 
 
 class DeleteAttachment(EWSAccountService):
@@ -8,7 +8,7 @@ class DeleteAttachment(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     """
 
-    SERVICE_NAME = 'DeleteAttachment'
+    SERVICE_NAME = "DeleteAttachment"
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -22,7 +22,7 @@ class DeleteAttachment(EWSAccountService):
 
     def get_payload(self, items):
         return set_xml_value(
-            create_element(f'm:{self.SERVICE_NAME}'),
+            create_element(f"m:{self.SERVICE_NAME}"),
             attachment_ids_element(items=items, version=self.account.version),
-            version=self.account.version
+            version=self.account.version,
         )

@@ -2,21 +2,31 @@ import datetime
 
 from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound, ErrorMissingInformationReferenceItemId
 from exchangelib.ewsdatetime import UTC
-from exchangelib.fields import NOVEMBER, WEEKEND_DAY, WEEK_DAY, THIRD, MONDAY, WEDNESDAY
+from exchangelib.fields import MONDAY, NOVEMBER, THIRD, WEDNESDAY, WEEK_DAY, WEEKEND_DAY
 from exchangelib.folders import Calendar
-from exchangelib.items import CalendarItem, BulkCreateResult
-from exchangelib.items.calendar_item import MeetingRequest, AcceptItem, SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER
-from exchangelib.recurrence import Recurrence, Occurrence, FirstOccurrence, LastOccurrence, DeletedOccurrence, \
-    AbsoluteYearlyPattern, RelativeYearlyPattern, AbsoluteMonthlyPattern, RelativeMonthlyPattern, WeeklyPattern, \
-    DailyPattern
-from exchangelib.version import Version, EXCHANGE_2007
+from exchangelib.items import BulkCreateResult, CalendarItem
+from exchangelib.items.calendar_item import EXCEPTION, OCCURRENCE, RECURRING_MASTER, SINGLE, AcceptItem, MeetingRequest
+from exchangelib.recurrence import (
+    AbsoluteMonthlyPattern,
+    AbsoluteYearlyPattern,
+    DailyPattern,
+    DeletedOccurrence,
+    FirstOccurrence,
+    LastOccurrence,
+    Occurrence,
+    Recurrence,
+    RelativeMonthlyPattern,
+    RelativeYearlyPattern,
+    WeeklyPattern,
+)
+from exchangelib.version import EXCHANGE_2007, Version
 
-from ..common import get_random_string, get_random_datetime_range, get_random_date
+from ..common import get_random_date, get_random_datetime_range, get_random_string
 from .test_basics import CommonItemTest
 
 
 class CalendarTest(CommonItemTest):
-    TEST_FOLDER = 'calendar'
+    TEST_FOLDER = "calendar"
     FOLDER_CLASS = Calendar
     ITEM_CLASS = CalendarItem
 
@@ -43,21 +53,21 @@ class CalendarTest(CommonItemTest):
         item.save()
         item.refresh()
         self.assertEqual(item.type, SINGLE)
-        for i in self.account.calendar.filter(categories__contains=self.categories).only('start', 'end', 'categories'):
+        for i in self.account.calendar.filter(categories__contains=self.categories).only("start", "end", "categories"):
             self.assertEqual(i.start, item.start)
             self.assertEqual(i.start.tzinfo, UTC)
             self.assertEqual(i.end, item.end)
             self.assertEqual(i.end.tzinfo, UTC)
             self.assertEqual(i._start_timezone, self.account.default_timezone)
             self.assertEqual(i._end_timezone, self.account.default_timezone)
-            i.save(update_fields=['start', 'end'])
+            i.save(update_fields=["start", "end"])
             self.assertEqual(i.start, item.start)
             self.assertEqual(i.start.tzinfo, UTC)
             self.assertEqual(i.end, item.end)
             self.assertEqual(i.end.tzinfo, UTC)
             self.assertEqual(i._start_timezone, self.account.default_timezone)
             self.assertEqual(i._end_timezone, self.account.default_timezone)
-        for i in self.account.calendar.filter(categories__contains=self.categories).only('start', 'end', 'categories'):
+        for i in self.account.calendar.filter(categories__contains=self.categories).only("start", "end", "categories"):
             self.assertEqual(i.start, item.start)
             self.assertEqual(i.start.tzinfo, UTC)
             self.assertEqual(i.end, item.end)
@@ -76,8 +86,8 @@ class CalendarTest(CommonItemTest):
         # 'ErrorOccurrenceTimeSpanTooBig' is we go back in time.
         start = get_random_date(start_date=item.start.date() + datetime.timedelta(days=1))
         dt_start, dt_end = [
-            dt.astimezone(self.account.default_timezone) for dt in
-            get_random_datetime_range(start_date=start, end_date=start, tz=self.account.default_timezone)
+            dt.astimezone(self.account.default_timezone)
+            for dt in get_random_datetime_range(start_date=start, end_date=start, tz=self.account.default_timezone)
         ]
         item.start, item.end = dt_start, dt_end
         item.recurrence.boundary.start = dt_start.date()
@@ -90,16 +100,15 @@ class CalendarTest(CommonItemTest):
         # Test that we can use plain dates for start and end values for all-day items
         start = get_random_date()
         start_dt, end_dt = get_random_datetime_range(
-            start_date=start,
-            end_date=start + datetime.timedelta(days=365),
-            tz=self.account.default_timezone
+            start_date=start, end_date=start + datetime.timedelta(days=365), tz=self.account.default_timezone
         )
         # Assign datetimes for start and end
-        item = self.ITEM_CLASS(folder=self.test_folder, start=start_dt, end=end_dt, is_all_day=True,
-                               categories=self.categories).save()
+        item = self.ITEM_CLASS(
+            folder=self.test_folder, start=start_dt, end=end_dt, is_all_day=True, categories=self.categories
+        ).save()
 
         # Returned item start and end values should be EWSDate instances
-        item = self.test_folder.all().only('is_all_day', 'start', 'end').get(id=item.id, changekey=item.changekey)
+        item = self.test_folder.all().only("is_all_day", "start", "end").get(id=item.id, changekey=item.changekey)
         self.assertEqual(item.is_all_day, True)
         self.assertEqual(item.start, start_dt.date())
         self.assertEqual(item.end, end_dt.date())
@@ -107,11 +116,16 @@ class CalendarTest(CommonItemTest):
         item.delete()
 
         # We are also allowed to assign plain dates as values for all-day items
-        item = self.ITEM_CLASS(folder=self.test_folder, start=start_dt.date(), end=end_dt.date(), is_all_day=True,
-                               categories=self.categories).save()
+        item = self.ITEM_CLASS(
+            folder=self.test_folder,
+            start=start_dt.date(),
+            end=end_dt.date(),
+            is_all_day=True,
+            categories=self.categories,
+        ).save()
 
         # Returned item start and end values should be EWSDate instances
-        item = self.test_folder.all().only('is_all_day', 'start', 'end').get(id=item.id, changekey=item.changekey)
+        item = self.test_folder.all().only("is_all_day", "start", "end").get(id=item.id, changekey=item.changekey)
         self.assertEqual(item.is_all_day, True)
         self.assertEqual(item.start, start_dt.date())
         self.assertEqual(item.end, end_dt.date())
@@ -144,54 +158,49 @@ class CalendarTest(CommonItemTest):
         with self.assertRaises(ValueError):
             list(self.test_folder.view(start=item1.end, end=item1.start))
         with self.assertRaises(TypeError):
-            list(self.test_folder.view(start='xxx', end=item1.end))
+            list(self.test_folder.view(start="xxx", end=item1.end))
         with self.assertRaises(ValueError):
             list(self.test_folder.view(start=item1.start, end=item1.end, max_items=0))
 
         # Test dates
         self.assertEqual(
-            len([i for i in self.test_folder.view(start=item1.start, end=item1.end) if self.match_cat(i)]),
-            1
+            len([i for i in self.test_folder.view(start=item1.start, end=item1.end) if self.match_cat(i)]), 1
         )
         self.assertEqual(
-            len([i for i in self.test_folder.view(start=item1.start, end=item2.end) if self.match_cat(i)]),
-            2
+            len([i for i in self.test_folder.view(start=item1.start, end=item2.end) if self.match_cat(i)]), 2
         )
         # Edge cases. Get view from end of item1 to start of item2. Should logically return 0 items, but Exchange wants
         # it differently and returns item1 even though there is no overlap.
         self.assertEqual(
-            len([i for i in self.test_folder.view(start=item1.end, end=item2.start) if self.match_cat(i)]),
-            1
+            len([i for i in self.test_folder.view(start=item1.end, end=item2.start) if self.match_cat(i)]), 1
         )
         self.assertEqual(
-            len([i for i in self.test_folder.view(start=item1.start, end=item2.start) if self.match_cat(i)]),
-            1
+            len([i for i in self.test_folder.view(start=item1.start, end=item2.start) if self.match_cat(i)]), 1
         )
 
         # Test max_items
         self.assertEqual(
-            len([
-                i for i in self.test_folder.view(start=item1.start, end=item2.end, max_items=9999) if self.match_cat(i)
-            ]),
-            2
+            len(
+                [
+                    i
+                    for i in self.test_folder.view(start=item1.start, end=item2.end, max_items=9999)
+                    if self.match_cat(i)
+                ]
+            ),
+            2,
         )
-        self.assertEqual(
-            self.test_folder.view(start=item1.start, end=item2.end, max_items=1).count(),
-            1
-        )
+        self.assertEqual(self.test_folder.view(start=item1.start, end=item2.end, max_items=1).count(), 1)
 
         # Test client-side ordering
         self.assertListEqual(
-            [i.subject for i in qs.order_by('subject') if self.match_cat(i)], sorted([item1.subject, item2.subject])
+            [i.subject for i in qs.order_by("subject") if self.match_cat(i)], sorted([item1.subject, item2.subject])
         )
         # Test client-side ordering on a field with no default value and no default value_cls value
-        self.assertListEqual(
-            [i.start for i in qs.order_by('-start') if self.match_cat(i)], [item2.start, item1.start]
-        )
+        self.assertListEqual([i.start for i in qs.order_by("-start") if self.match_cat(i)], [item2.start, item1.start])
         # Test client-side ordering on multiple fields. Intentionally sort first on a field where values are equal,
         # to see that we can sort on the 2nd field.
         self.assertListEqual(
-            [i.start for i in qs.order_by('categories', '-start') if self.match_cat(i)], [item2.start, item1.start]
+            [i.start for i in qs.order_by("categories", "-start") if self.match_cat(i)], [item2.start, item1.start]
         )
 
         # Test chaining
@@ -199,8 +208,8 @@ class CalendarTest(CommonItemTest):
         with self.assertRaises(ErrorInvalidOperation):
             qs.filter(subject=item1.subject).count()  # EWS does not allow restrictions
         self.assertListEqual(
-            [i for i in qs.order_by('subject').values('subject') if i['subject'] in (item1.subject, item2.subject)],
-            [{'subject': s} for s in sorted([item1.subject, item2.subject])]
+            [i for i in qs.order_by("subject").values("subject") if i["subject"] in (item1.subject, item2.subject)],
+            [{"subject": s} for s in sorted([item1.subject, item2.subject])],
         )
 
     def test_client_side_ordering_on_mixed_all_day_and_normal(self):
@@ -228,26 +237,26 @@ class CalendarTest(CommonItemTest):
             categories=self.categories,
         )
         self.test_folder.bulk_create(items=[item1, item2])
-        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('start'))
-        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by('-start'))
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by("start"))
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).order_by("-start"))
 
         # Test that client-side ordering on non-selected fields works
-        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only('end').order_by('start'))
-        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only('end').order_by('-start'))
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only("end").order_by("start"))
+        list(self.test_folder.view(start=start - datetime.timedelta(days=1), end=end).only("end").order_by("-start"))
 
     def test_all_recurring_pattern_types(self):
         start = datetime.datetime(2016, 1, 1, 8, tzinfo=self.account.default_timezone)
         end = datetime.datetime(2016, 1, 1, 10, tzinfo=self.account.default_timezone)
 
         for pattern in (
-                AbsoluteYearlyPattern(day_of_month=13, month=NOVEMBER),
-                RelativeYearlyPattern(weekday=1, week_number=THIRD, month=11),
-                RelativeYearlyPattern(weekday=WEEKEND_DAY, week_number=3, month=11),
-                AbsoluteMonthlyPattern(interval=3, day_of_month=13),
-                RelativeMonthlyPattern(interval=3, weekday=2, week_number=3),
-                RelativeMonthlyPattern(interval=3, weekday=WEEK_DAY, week_number=3),
-                WeeklyPattern(interval=3, weekdays=[MONDAY, WEDNESDAY], first_day_of_week=1),
-                DailyPattern(interval=1),
+            AbsoluteYearlyPattern(day_of_month=13, month=NOVEMBER),
+            RelativeYearlyPattern(weekday=1, week_number=THIRD, month=11),
+            RelativeYearlyPattern(weekday=WEEKEND_DAY, week_number=3, month=11),
+            AbsoluteMonthlyPattern(interval=3, day_of_month=13),
+            RelativeMonthlyPattern(interval=3, weekday=2, week_number=3),
+            RelativeMonthlyPattern(interval=3, weekday=WEEK_DAY, week_number=3),
+            WeeklyPattern(interval=3, weekdays=[MONDAY, WEDNESDAY], first_day_of_week=1),
+            DailyPattern(interval=1),
         ):
             master_item = self.ITEM_CLASS(
                 folder=self.test_folder,
@@ -405,14 +414,14 @@ class CalendarTest(CommonItemTest):
         second_occurrence = master_item.occurrence(index=2)
         second_occurrence.start = start + datetime.timedelta(days=1, hours=1)
         second_occurrence.end = end + datetime.timedelta(days=1, hours=1)
-        second_occurrence.save(update_fields=['start', 'end'])  # Test that UpdateItem works with only a few fields
+        second_occurrence.save(update_fields=["start", "end"])  # Test that UpdateItem works with only a few fields
 
         second_occurrence = master_item.occurrence(index=2)
         second_occurrence.refresh()
         self.assertEqual(second_occurrence.subject, master_item.subject)
         second_occurrence.start += datetime.timedelta(hours=1)
         second_occurrence.end += datetime.timedelta(hours=1)
-        second_occurrence.save(update_fields=['start', 'end'])  # Test that UpdateItem works after refresh
+        second_occurrence.save(update_fields=["start", "end"])  # Test that UpdateItem works after refresh
 
         # Test change on the master item
         master_item.refresh()
@@ -480,7 +489,7 @@ class CalendarTest(CommonItemTest):
 
         master_from_occurrence = third_occurrence.recurring_master()
         master_from_occurrence.subject = get_random_string(16)
-        master_from_occurrence.save(update_fields=['subject'])  # Test that UpdateItem works
+        master_from_occurrence.save(update_fields=["subject"])  # Test that UpdateItem works
         master_from_occurrence.delete()  # Test that DeleteItem works
 
         with self.assertRaises(ErrorItemNotFound):
@@ -499,7 +508,7 @@ class CalendarTest(CommonItemTest):
         start = item.start
         item.start = None
         with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, ['start'])])
+            self.account.bulk_update([(item, ["start"])])
         self.assertEqual(e.exception.args[0], "'start' is a required field with no default")
         item.start = start
 
@@ -507,13 +516,13 @@ class CalendarTest(CommonItemTest):
         uid = item.uid
         item.uid = None
         with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, ['uid'])])
+            self.account.bulk_update([(item, ["uid"])])
         self.assertEqual(e.exception.args[0], "'uid' is a required field and may not be deleted")
         item.uid = uid
 
         item.is_meeting = None
         with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, ['is_meeting'])])
+            self.account.bulk_update([(item, ["is_meeting"])])
         self.assertEqual(e.exception.args[0], "'is_meeting' is a read-only field")
 
     def test_meeting_request(self):
@@ -534,9 +543,7 @@ class CalendarTest(CommonItemTest):
     def test_clean(self):
         start = get_random_date()
         start_dt, end_dt = get_random_datetime_range(
-            start_date=start,
-            end_date=start + datetime.timedelta(days=365),
-            tz=self.account.default_timezone
+            start_date=start, end_date=start + datetime.timedelta(days=365), tz=self.account.default_timezone
         )
         with self.assertRaises(ValueError) as e:
             CalendarItem(start=end_dt, end=start_dt).clean(version=self.account.version)
@@ -550,20 +557,20 @@ class CalendarTest(CommonItemTest):
 
     def test_tz_field_for_field_name(self):
         self.assertEqual(
-            CalendarItem(account=self.account).tz_field_for_field_name('start').name,
-            '_start_timezone',
+            CalendarItem(account=self.account).tz_field_for_field_name("start").name,
+            "_start_timezone",
         )
         self.assertEqual(
-            CalendarItem(account=self.account).tz_field_for_field_name('end').name,
-            '_end_timezone',
+            CalendarItem(account=self.account).tz_field_for_field_name("end").name,
+            "_end_timezone",
         )
         account = self.get_account()
         account.version = Version(EXCHANGE_2007)
         self.assertEqual(
-            CalendarItem(account=account).tz_field_for_field_name('start').name,
-            '_meeting_timezone',
+            CalendarItem(account=account).tz_field_for_field_name("start").name,
+            "_meeting_timezone",
         )
         self.assertEqual(
-            CalendarItem(account=account).tz_field_for_field_name('end').name,
-            '_meeting_timezone',
+            CalendarItem(account=account).tz_field_for_field_name("end").name,
+            "_meeting_timezone",
         )

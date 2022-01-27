@@ -1,12 +1,12 @@
-from .common import EWSAccountService, item_ids_element
 from ..properties import MovedItemId
 from ..util import create_element
+from .common import EWSAccountService, item_ids_element
 
 
 class MarkAsJunk(EWSAccountService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk-operation"""
 
-    SERVICE_NAME = 'MarkAsJunk'
+    SERVICE_NAME = "MarkAsJunk"
 
     def call(self, items, is_junk, move_item):
         return self._elems_to_objs(
@@ -22,6 +22,6 @@ class MarkAsJunk(EWSAccountService):
 
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message
-        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+        payload = create_element(f"m:{self.SERVICE_NAME}", attrs=dict(IsJunk=is_junk, MoveItem=move_item))
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload

@@ -1,14 +1,14 @@
-from .common import EWSService
 from ..properties import RoomList
-from ..util import create_element, MNS
+from ..util import MNS, create_element
 from ..version import EXCHANGE_2010
+from .common import EWSService
 
 
 class GetRoomLists(EWSService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists-operation"""
 
-    SERVICE_NAME = 'GetRoomLists'
-    element_container_name = f'{{{MNS}}}RoomLists'
+    SERVICE_NAME = "GetRoomLists"
+    element_container_name = f"{{{MNS}}}RoomLists"
     supported_from = EXCHANGE_2010
 
     def call(self):
@@ -18,4 +18,4 @@ class GetRoomLists(EWSService):
         return RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
-        return create_element(f'm:{self.SERVICE_NAME}')
+        return create_element(f"m:{self.SERVICE_NAME}")

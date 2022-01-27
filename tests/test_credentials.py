@@ -1,7 +1,7 @@
 import pickle
 
 from exchangelib.account import Identity
-from exchangelib.credentials import Credentials, OAuth2Credentials, OAuth2AuthorizationCodeCredentials
+from exchangelib.credentials import Credentials, OAuth2AuthorizationCodeCredentials, OAuth2Credentials
 
 from .common import TimedTestCase
 
@@ -9,31 +9,35 @@ from .common import TimedTestCase
 class CredentialsTest(TimedTestCase):
     def test_hash(self):
         # Test that we can use credentials as a dict key
-        self.assertEqual(hash(Credentials('a', 'b')), hash(Credentials('a', 'b')))
-        self.assertNotEqual(hash(Credentials('a', 'b')), hash(Credentials('a', 'a')))
-        self.assertNotEqual(hash(Credentials('a', 'b')), hash(Credentials('b', 'b')))
+        self.assertEqual(hash(Credentials("a", "b")), hash(Credentials("a", "b")))
+        self.assertNotEqual(hash(Credentials("a", "b")), hash(Credentials("a", "a")))
+        self.assertNotEqual(hash(Credentials("a", "b")), hash(Credentials("b", "b")))
 
     def test_equality(self):
-        self.assertEqual(Credentials('a', 'b'), Credentials('a', 'b'))
-        self.assertNotEqual(Credentials('a', 'b'), Credentials('a', 'a'))
-        self.assertNotEqual(Credentials('a', 'b'), Credentials('b', 'b'))
+        self.assertEqual(Credentials("a", "b"), Credentials("a", "b"))
+        self.assertNotEqual(Credentials("a", "b"), Credentials("a", "a"))
+        self.assertNotEqual(Credentials("a", "b"), Credentials("b", "b"))
 
     def test_type(self):
-        self.assertEqual(Credentials('a', 'b').type, Credentials.UPN)
-        self.assertEqual(Credentials('a@example.com', 'b').type, Credentials.EMAIL)
-        self.assertEqual(Credentials('a\\n', 'b').type, Credentials.DOMAIN)
+        self.assertEqual(Credentials("a", "b").type, Credentials.UPN)
+        self.assertEqual(Credentials("a@example.com", "b").type, Credentials.EMAIL)
+        self.assertEqual(Credentials("a\\n", "b").type, Credentials.DOMAIN)
 
     def test_pickle(self):
         # Test that we can pickle, hash, repr, str and compare various credentials types
         for o in (
-            Identity('XXX', 'YYY', 'ZZZ', 'WWW'),
-            Credentials('XXX', 'YYY'),
-            OAuth2Credentials('XXX', 'YYY', 'ZZZZ'),
-            OAuth2Credentials('XXX', 'YYY', 'ZZZZ', identity=Identity('AAA')),
-            OAuth2AuthorizationCodeCredentials(client_id='WWW', client_secret='XXX'),
+            Identity("XXX", "YYY", "ZZZ", "WWW"),
+            Credentials("XXX", "YYY"),
+            OAuth2Credentials("XXX", "YYY", "ZZZZ"),
+            OAuth2Credentials("XXX", "YYY", "ZZZZ", identity=Identity("AAA")),
+            OAuth2AuthorizationCodeCredentials(client_id="WWW", client_secret="XXX"),
             OAuth2AuthorizationCodeCredentials(
-                client_id='WWW', client_secret='XXX', authorization_code='YYY', access_token={'access_token': 'ZZZ'},
-                tenant_id='ZZZ', identity=Identity('AAA')
+                client_id="WWW",
+                client_secret="XXX",
+                authorization_code="YYY",
+                access_token={"access_token": "ZZZ"},
+                tenant_id="ZZZ",
+                identity=Identity("AAA"),
             ),
         ):
             with self.subTest(o=o):
@@ -46,24 +50,24 @@ class CredentialsTest(TimedTestCase):
                 self.assertEqual(str(o), str(unpickled_o))
 
     def test_plain(self):
-        Credentials('XXX', 'YYY').refresh('XXX')  # No-op
+        Credentials("XXX", "YYY").refresh("XXX")  # No-op
 
     def test_oauth_validation(self):
         with self.assertRaises(TypeError) as e:
-            OAuth2AuthorizationCodeCredentials(client_id='WWW', client_secret='XXX', access_token='XXX')
+            OAuth2AuthorizationCodeCredentials(client_id="WWW", client_secret="XXX", access_token="XXX")
         self.assertEqual(
             e.exception.args[0],
-            "'access_token' 'XXX' must be of type <class 'oauthlib.oauth2.rfc6749.tokens.OAuth2Token'>"
+            "'access_token' 'XXX' must be of type <class 'oauthlib.oauth2.rfc6749.tokens.OAuth2Token'>",
         )
 
-        c = OAuth2Credentials('XXX', 'YYY', 'ZZZZ')
-        c.refresh('XXX')  # No-op
+        c = OAuth2Credentials("XXX", "YYY", "ZZZZ")
+        c.refresh("XXX")  # No-op
 
         with self.assertRaises(TypeError) as e:
-            c.on_token_auto_refreshed('XXX')
+            c.on_token_auto_refreshed("XXX")
         self.assertEqual(
             e.exception.args[0],
-            "'access_token' 'XXX' must be of type <class 'oauthlib.oauth2.rfc6749.tokens.OAuth2Token'>"
+            "'access_token' 'XXX' must be of type <class 'oauthlib.oauth2.rfc6749.tokens.OAuth2Token'>",
         )
-        c.on_token_auto_refreshed(dict(access_token='XXX'))
+        c.on_token_auto_refreshed(dict(access_token="XXX"))
         self.assertIsInstance(c.sig(), int)

@@ -1,7 +1,7 @@
-from .common import EWSAccountService
 from ..properties import AvailabilityMailbox
 from ..settings import OofSettings
-from ..util import create_element, set_xml_value, MNS, TNS
+from ..util import MNS, TNS, create_element, set_xml_value
+from .common import EWSAccountService
 
 
 class GetUserOofSettings(EWSAccountService):
@@ -9,8 +9,8 @@ class GetUserOofSettings(EWSAccountService):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseroofsettings-operation
     """
 
-    SERVICE_NAME = 'GetUserOofSettings'
-    element_container_name = f'{{{TNS}}}OofSettings'
+    SERVICE_NAME = "GetUserOofSettings"
+    element_container_name = f"{{{TNS}}}OofSettings"
 
     def call(self, mailbox):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))
@@ -20,9 +20,9 @@ class GetUserOofSettings(EWSAccountService):
 
     def get_payload(self, mailbox):
         return set_xml_value(
-            create_element(f'm:{self.SERVICE_NAME}Request'),
+            create_element(f"m:{self.SERVICE_NAME}Request"),
             AvailabilityMailbox.from_mailbox(mailbox),
-            version=self.account.version
+            version=self.account.version,
         )
 
     @classmethod
@@ -37,4 +37,4 @@ class GetUserOofSettings(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return f'{{{MNS}}}ResponseMessage'
+        return f"{{{MNS}}}ResponseMessage"

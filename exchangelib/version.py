@@ -1,8 +1,8 @@
 import logging
 import re
 
-from .errors import TransportError, ResponseMessageError, InvalidTypeError
-from .util import xml_to_str, TNS
+from .errors import InvalidTypeError, ResponseMessageError, TransportError
+from .util import TNS, xml_to_str
 
 log = logging.getLogger(__name__)
 
@@ -16,20 +16,20 @@ log = logging.getLogger(__name__)
 #    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
 
 VERSIONS = {
-    'Exchange2007': ('Exchange2007', 'Microsoft Exchange Server 2007'),
-    'Exchange2007_SP1': ('Exchange2007_SP1', 'Microsoft Exchange Server 2007 SP1'),
-    'Exchange2007_SP2': ('Exchange2007_SP1', 'Microsoft Exchange Server 2007 SP2'),
-    'Exchange2007_SP3': ('Exchange2007_SP1', 'Microsoft Exchange Server 2007 SP3'),
-    'Exchange2010': ('Exchange2010', 'Microsoft Exchange Server 2010'),
-    'Exchange2010_SP1': ('Exchange2010_SP1', 'Microsoft Exchange Server 2010 SP1'),
-    'Exchange2010_SP2': ('Exchange2010_SP2', 'Microsoft Exchange Server 2010 SP2'),
-    'Exchange2010_SP3': ('Exchange2010_SP2', 'Microsoft Exchange Server 2010 SP3'),
-    'Exchange2013': ('Exchange2013', 'Microsoft Exchange Server 2013'),
-    'Exchange2013_SP1': ('Exchange2013_SP1', 'Microsoft Exchange Server 2013 SP1'),
-    'Exchange2015': ('Exchange2015', 'Microsoft Exchange Server 2015'),
-    'Exchange2015_SP1': ('Exchange2015_SP1', 'Microsoft Exchange Server 2015 SP1'),
-    'Exchange2016': ('Exchange2016', 'Microsoft Exchange Server 2016'),
-    'Exchange2019': ('Exchange2019', 'Microsoft Exchange Server 2019'),
+    "Exchange2007": ("Exchange2007", "Microsoft Exchange Server 2007"),
+    "Exchange2007_SP1": ("Exchange2007_SP1", "Microsoft Exchange Server 2007 SP1"),
+    "Exchange2007_SP2": ("Exchange2007_SP1", "Microsoft Exchange Server 2007 SP2"),
+    "Exchange2007_SP3": ("Exchange2007_SP1", "Microsoft Exchange Server 2007 SP3"),
+    "Exchange2010": ("Exchange2010", "Microsoft Exchange Server 2010"),
+    "Exchange2010_SP1": ("Exchange2010_SP1", "Microsoft Exchange Server 2010 SP1"),
+    "Exchange2010_SP2": ("Exchange2010_SP2", "Microsoft Exchange Server 2010 SP2"),
+    "Exchange2010_SP3": ("Exchange2010_SP2", "Microsoft Exchange Server 2010 SP3"),
+    "Exchange2013": ("Exchange2013", "Microsoft Exchange Server 2013"),
+    "Exchange2013_SP1": ("Exchange2013_SP1", "Microsoft Exchange Server 2013 SP1"),
+    "Exchange2015": ("Exchange2015", "Microsoft Exchange Server 2015"),
+    "Exchange2015_SP1": ("Exchange2015_SP1", "Microsoft Exchange Server 2015 SP1"),
+    "Exchange2016": ("Exchange2016", "Microsoft Exchange Server 2016"),
+    "Exchange2019": ("Exchange2019", "Microsoft Exchange Server 2019"),
 }
 
 # Build a list of unique API versions, used when guessing API version supported by the server. Use reverse order so we
@@ -43,36 +43,36 @@ class Build:
     # List of build numbers here: https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
     API_VERSION_MAP = {
         8: {
-            0: 'Exchange2007',
-            1: 'Exchange2007_SP1',
-            2: 'Exchange2007_SP1',
-            3: 'Exchange2007_SP1',
+            0: "Exchange2007",
+            1: "Exchange2007_SP1",
+            2: "Exchange2007_SP1",
+            3: "Exchange2007_SP1",
         },
         14: {
-            0: 'Exchange2010',
-            1: 'Exchange2010_SP1',
-            2: 'Exchange2010_SP2',
-            3: 'Exchange2010_SP2',
+            0: "Exchange2010",
+            1: "Exchange2010_SP1",
+            2: "Exchange2010_SP2",
+            3: "Exchange2010_SP2",
         },
         15: {
-            0: 'Exchange2013',  # Minor builds starting from 847 are Exchange2013_SP1, see api_version()
-            1: 'Exchange2016',
-            2: 'Exchange2019',
-            20: 'Exchange2016',  # This is Office365. See issue #221
+            0: "Exchange2013",  # Minor builds starting from 847 are Exchange2013_SP1, see api_version()
+            1: "Exchange2016",
+            2: "Exchange2019",
+            20: "Exchange2016",  # This is Office365. See issue #221
         },
     }
 
-    __slots__ = 'major_version', 'minor_version', 'major_build', 'minor_build'
+    __slots__ = "major_version", "minor_version", "major_build", "minor_build"
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
         if not isinstance(major_version, int):
-            raise InvalidTypeError('major_version', major_version, int)
+            raise InvalidTypeError("major_version", major_version, int)
         if not isinstance(minor_version, int):
-            raise InvalidTypeError('minor_version', minor_version, int)
+            raise InvalidTypeError("minor_version", minor_version, int)
         if not isinstance(major_build, int):
-            raise InvalidTypeError('major_build', major_build, int)
+            raise InvalidTypeError("major_build", major_build, int)
         if not isinstance(minor_build, int):
-            raise InvalidTypeError('minor_build', minor_build, int)
+            raise InvalidTypeError("minor_build", minor_build, int)
         self.major_version = major_version
         self.minor_version = minor_version
         self.major_build = major_build
@@ -83,10 +83,10 @@ class Build:
     @classmethod
     def from_xml(cls, elem):
         xml_elems_map = {
-            'major_version': 'MajorVersion',
-            'minor_version': 'MinorVersion',
-            'major_build': 'MajorBuildNumber',
-            'minor_build': 'MinorBuildNumber',
+            "major_version": "MajorVersion",
+            "minor_version": "MinorVersion",
+            "major_build": "MajorBuildNumber",
+            "minor_build": "MinorBuildNumber",
         }
         kwargs = {}
         for k, xml_elem in xml_elems_map.items():
@@ -110,7 +110,7 @@ class Build:
 
         :param s:
         """
-        bin_s = f'{int(s, 16):032b}'  # Convert string to 32-bit binary string
+        bin_s = f"{int(s, 16):032b}"  # Convert string to 32-bit binary string
         major_version = int(bin_s[4:10], 2)
         minor_version = int(bin_s[10:16], 2)
         build_number = int(bin_s[17:32], 2)
@@ -118,11 +118,11 @@ class Build:
 
     def api_version(self):
         if EXCHANGE_2013_SP1 <= self < EXCHANGE_2016:
-            return 'Exchange2013_SP1'
+            return "Exchange2013_SP1"
         try:
             return self.API_VERSION_MAP[self.major_version][self.minor_version]
         except KeyError:
-            raise ValueError(f'API version for build {self} is unknown')
+            raise ValueError(f"API version for build {self} is unknown")
 
     def fullname(self):
         return VERSIONS[self.api_version()][1]
@@ -162,11 +162,12 @@ class Build:
         return self.__cmp__(other) >= 0
 
     def __str__(self):
-        return f'{self.major_version}.{self.minor_version}.{self.major_build}.{self.minor_build}'
+        return f"{self.major_version}.{self.minor_version}.{self.major_build}.{self.minor_build}"
 
     def __repr__(self):
-        return self.__class__.__name__ \
-               + repr((self.major_version, self.minor_version, self.major_build, self.minor_build))
+        return self.__class__.__name__ + repr(
+            (self.major_version, self.minor_version, self.major_build, self.minor_build)
+        )
 
 
 # Helpers for comparison operations elsewhere in this package
@@ -185,18 +186,18 @@ EXCHANGE_O365 = Build(15, 20)
 class Version:
     """Holds information about the server version."""
 
-    __slots__ = 'build', 'api_version'
+    __slots__ = "build", "api_version"
 
     def __init__(self, build, api_version=None):
         if api_version is None:
             if not isinstance(build, Build):
-                raise InvalidTypeError('build', build, Build)
+                raise InvalidTypeError("build", build, Build)
             self.api_version = build.api_version()
         else:
             if not isinstance(build, (Build, type(None))):
-                raise InvalidTypeError('build', build, Build)
+                raise InvalidTypeError("build", build, Build)
             if not isinstance(api_version, str):
-                raise InvalidTypeError('api_version', api_version, str)
+                raise InvalidTypeError("api_version", api_version, str)
             self.api_version = api_version
         self.build = build
 
@@ -217,53 +218,62 @@ class Version:
         :param api_version_hint:  (Default value = None)
         """
         from .services import ResolveNames
+
         # The protocol doesn't have a version yet, so default to latest supported version if we don't have a hint.
         api_version = api_version_hint or API_VERSIONS[0]
-        log.debug('Asking server for version info using API version %s', api_version)
+        log.debug("Asking server for version info using API version %s", api_version)
         # We don't know the build version yet. Hopefully, the server will report it in the SOAP header. Lots of
         # places expect a version to have a build, so this is a bit dangerous, but passing a fake build around is also
         # dangerous. Make sure the call to ResolveNames does not require a version build.
         protocol.config.version = Version(build=None, api_version=api_version)
         # Use ResolveNames as a minimal request to the server to test if the version is correct. If not, ResolveNames
         # will try to guess the version automatically.
-        name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else 'DUMMY'
+        name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else "DUMMY"
         try:
             list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
         except ResponseMessageError as e:
             # We may have survived long enough to get a new version
             if not protocol.config.version.build:
-                raise TransportError(f'No valid version headers found in response ({e!r})')
+                raise TransportError(f"No valid version headers found in response ({e!r})")
         if not protocol.config.version.build:
-            raise TransportError('No valid version headers found in response')
+            raise TransportError("No valid version headers found in response")
         return protocol.config.version
 
     @staticmethod
     def _is_invalid_version_string(version):
         # Check if a version string is bogus, e.g. V2_, V2015_ or V2018_
-        return re.match(r'V[0-9]{1,4}_.*', version)
+        return re.match(r"V[0-9]{1,4}_.*", version)
 
     @classmethod
     def from_soap_header(cls, requested_api_version, header):
-        info = header.find(f'{{{TNS}}}ServerVersionInfo')
+        info = header.find(f"{{{TNS}}}ServerVersionInfo")
         if info is None:
-            raise TransportError(f'No ServerVersionInfo in header: {xml_to_str(header)!r}')
+            raise TransportError(f"No ServerVersionInfo in header: {xml_to_str(header)!r}")
         try:
             build = Build.from_xml(elem=info)
         except ValueError:
-            raise TransportError(f'Bad ServerVersionInfo in response: {xml_to_str(header)!r}')
+            raise TransportError(f"Bad ServerVersionInfo in response: {xml_to_str(header)!r}")
         # Not all Exchange servers send the Version element
-        api_version_from_server = info.get('Version') or build.api_version()
+        api_version_from_server = info.get("Version") or build.api_version()
         if api_version_from_server != requested_api_version:
             if cls._is_invalid_version_string(api_version_from_server):
                 # For unknown reasons, Office 365 may respond with an API version strings that is invalid in a request.
                 # Detect these so we can fallback to a valid version string.
-                log.debug('API version "%s" worked but server reports version "%s". Using "%s"', requested_api_version,
-                          api_version_from_server, requested_api_version)
+                log.debug(
+                    'API version "%s" worked but server reports version "%s". Using "%s"',
+                    requested_api_version,
+                    api_version_from_server,
+                    requested_api_version,
+                )
                 api_version_from_server = requested_api_version
             else:
                 # Trust API version from server response
-                log.debug('API version "%s" worked but server reports version "%s". Using "%s"', requested_api_version,
-                          api_version_from_server, api_version_from_server)
+                log.debug(
+                    'API version "%s" worked but server reports version "%s". Using "%s"',
+                    requested_api_version,
+                    api_version_from_server,
+                    api_version_from_server,
+                )
         return cls(build=build, api_version=api_version_from_server)
 
     def copy(self):
@@ -282,4 +292,4 @@ class Version:
         return self.__class__.__name__ + repr((self.build, self.api_version))
 
     def __str__(self):
-        return f'Build={self.build}, API={self.api_version}, Fullname={self.fullname}'
+        return f"Build={self.build}, API={self.api_version}, Fullname={self.fullname}"

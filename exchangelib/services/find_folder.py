@@ -1,18 +1,18 @@
-from .common import EWSPagingService, shape_element, folder_ids_element
 from ..errors import InvalidEnumValue
 from ..folders import Folder
 from ..folders.queryset import FOLDER_TRAVERSAL_CHOICES
 from ..items import SHAPE_CHOICES
-from ..util import create_element, TNS, MNS
+from ..util import MNS, TNS, create_element
 from ..version import EXCHANGE_2010
+from .common import EWSPagingService, folder_ids_element, shape_element
 
 
 class FindFolder(EWSPagingService):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder-operation"""
 
-    SERVICE_NAME = 'FindFolder'
-    element_container_name = f'{{{TNS}}}Folders'
-    paging_container_name = f'{{{MNS}}}RootFolder'
+    SERVICE_NAME = "FindFolder"
+    element_container_name = f"{{{TNS}}}Folders"
+    paging_container_name = f"{{{MNS}}}RootFolder"
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -33,14 +33,15 @@ class FindFolder(EWSPagingService):
         :return: XML elements for the matching folders
         """
         if shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue('shape', shape, SHAPE_CHOICES)
+            raise InvalidEnumValue("shape", shape, SHAPE_CHOICES)
         if depth not in FOLDER_TRAVERSAL_CHOICES:
-            raise InvalidEnumValue('depth', depth, FOLDER_TRAVERSAL_CHOICES)
+            raise InvalidEnumValue("depth", depth, FOLDER_TRAVERSAL_CHOICES)
         roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError(f"All folders in 'roots' must have the same root hierarchy ({roots})")
         self.root = roots.pop()
-        return self._elems_to_objs(self._paged_call(
+        return self._elems_to_objs(
+            self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,
                 folders=folders,
@@ -51,21 +52,24 @@ class FindFolder(EWSPagingService):
                     depth=depth,
                     page_size=self.page_size,
                     offset=offset,
-                )
-        ))
+                ),
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
-        payload = create_element(f'm:{self.SERVICE_NAME}', attrs=dict(Traversal=depth))
-        payload.append(shape_element(
-            tag='m:FolderShape', shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
+        payload = create_element(f"m:{self.SERVICE_NAME}", attrs=dict(Traversal=depth))
+        payload.append(
+            shape_element(
+                tag="m:FolderShape", shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
         if self.account.version.build >= EXCHANGE_2010:
             indexed_page_folder_view = create_element(
-                'm:IndexedPageFolderView',
-                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint='Beginning')
+                "m:IndexedPageFolderView",
+                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint="Beginning"),
             )
             payload.append(indexed_page_folder_view)
         else:
@@ -73,5 +77,5 @@ class FindFolder(EWSPagingService):
                 raise NotImplementedError("'offset' is only supported for Exchange 2010 servers and later")
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
-        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag='m:ParentFolderIds'))
+        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag="m:ParentFolderIds"))
         return payload

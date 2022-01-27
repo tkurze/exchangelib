@@ -8,7 +8,7 @@ import abc
 import datetime
 import logging
 import random
-from queue import LifoQueue, Empty
+from queue import Empty, LifoQueue
 from threading import Lock
 
 import requests.adapters
@@ -17,13 +17,30 @@ from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient
 from requests_oauthlib import OAuth2Session
 
 from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials
-from .errors import TransportError, SessionPoolMinSizeReached, SessionPoolMaxSizeReached, RateLimitError, CASError, \
-    ErrorInvalidSchemaVersionForMailboxVersion, UnauthorizedError, MalformedResponseError, InvalidTypeError
-from .properties import FreeBusyViewOptions, MailboxData, TimeWindow, TimeZone, RoomList, DLMailbox
-from .services import GetServerTimeZones, GetRoomLists, GetRooms, ResolveNames, GetUserAvailability, \
-    GetSearchableMailboxes, ExpandDL, ConvertId
-from .transport import get_auth_instance, get_service_authtype, NTLM, OAUTH2, CREDENTIALS_REQUIRED, DEFAULT_HEADERS
-from .version import Version, API_VERSIONS
+from .errors import (
+    CASError,
+    ErrorInvalidSchemaVersionForMailboxVersion,
+    InvalidTypeError,
+    MalformedResponseError,
+    RateLimitError,
+    SessionPoolMaxSizeReached,
+    SessionPoolMinSizeReached,
+    TransportError,
+    UnauthorizedError,
+)
+from .properties import DLMailbox, FreeBusyViewOptions, MailboxData, RoomList, TimeWindow, TimeZone
+from .services import (
+    ConvertId,
+    ExpandDL,
+    GetRoomLists,
+    GetRooms,
+    GetSearchableMailboxes,
+    GetServerTimeZones,
+    GetUserAvailability,
+    ResolveNames,
+)
+from .transport import CREDENTIALS_REQUIRED, DEFAULT_HEADERS, NTLM, OAUTH2, get_auth_instance, get_service_authtype
+from .version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +120,7 @@ class BaseProtocol:
 
     def get_auth_type(self):
         # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else 'DUMMY'
+        name = str(self.credentials) if self.credentials and str(self.credentials) else "DUMMY"
         auth_type, api_version_hint = get_service_authtype(
             service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
         )
@@ -113,8 +130,8 @@ class BaseProtocol:
     def __getstate__(self):
         # The session pool and lock cannot be pickled
         state = self.__dict__.copy()
-        del state['_session_pool']
-        del state['_session_pool_lock']
+        del state["_session_pool"]
+        del state["_session_pool_lock"]
         return state
 
     def __setstate__(self, state):
@@ -132,7 +149,7 @@ class BaseProtocol:
             pass
 
     def close(self):
-        log.debug('Server %s: Closing sessions', self.server)
+        log.debug("Server %s: Closing sessions", self.server)
         while True:
             try:
                 session = self._session_pool.get(block=False)
@@ -160,13 +177,17 @@ class BaseProtocol:
         # Create a single session and insert it into the pool. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must not exceed the pool size limit.
         if self._session_pool_size >= self._session_pool_maxsize:
-            raise SessionPoolMaxSizeReached('Session pool size cannot be increased further')
+            raise SessionPoolMaxSizeReached("Session pool size cannot be increased further")
         with self._session_pool_lock:
             if self._session_pool_size >= self._session_pool_maxsize:
-                log.debug('Session pool size was increased in another thread')
+                log.debug("Session pool size was increased in another thread")
                 return
-            log.debug('Server %s: Increasing session pool size from %s to %s', self.server, self._session_pool_size,
-                      self._session_pool_size + 1)
+            log.debug(
+                "Server %s: Increasing session pool size from %s to %s",
+                self.server,
+                self._session_pool_size,
+                self._session_pool_size + 1,
+            )
             self._session_pool.put(self.create_session(), block=False)
             self._session_pool_size += 1
 
@@ -177,13 +198,17 @@ class BaseProtocol:
         # Take a single session from the pool and discard it. We need to protect this with a lock while we are changing
         # the pool size variable, to avoid race conditions. We must keep at least one session in the pool.
         if self._session_pool_size <= 1:
-            raise SessionPoolMinSizeReached('Session pool size cannot be decreased further')
+            raise SessionPoolMinSizeReached("Session pool size cannot be decreased further")
         with self._session_pool_lock:
             if self._session_pool_size <= 1:
-                log.debug('Session pool size was decreased in another thread')
+                log.debug("Session pool size was decreased in another thread")
                 return
-            log.warning('Server %s: Decreasing session pool size from %s to %s', self.server, self._session_pool_size,
-                        self._session_pool_size - 1)
+            log.warning(
+                "Server %s: Decreasing session pool size from %s to %s",
+                self.server,
+                self._session_pool_size,
+                self._session_pool_size - 1,
+            )
             session = self.get_session()
             self.close_session(session)
             self._session_pool_size -= 1
@@ -194,7 +219,7 @@ class BaseProtocol:
         _timeout = 60  # Rate-limit messages about session starvation
         try:
             session = self._session_pool.get(block=False)
-            log.debug('Server %s: Got session immediately', self.server)
+            log.debug("Server %s: Got session immediately", self.server)
         except Empty:
             try:
                 self.increase_poolsize()
@@ -202,21 +227,21 @@ class BaseProtocol:
                 pass
             while True:
                 try:
-                    log.debug('Server %s: Waiting for session', self.server)
+                    log.debug("Server %s: Waiting for session", self.server)
                     session = self._session_pool.get(timeout=_timeout)
                     break
                 except Empty:
                     # This is normal when we have many worker threads starving for available sessions
-                    log.debug('Server %s: No sessions available for %s seconds', self.server, _timeout)
-        log.debug('Server %s: Got session %s', self.server, session.session_id)
+                    log.debug("Server %s: No sessions available for %s seconds", self.server, _timeout)
+        log.debug("Server %s: Got session %s", self.server, session.session_id)
         session.usage_count += 1
         return session
 
     def release_session(self, session):
         # This should never fail, as we don't have more sessions than the queue contains
-        log.debug('Server %s: Releasing session %s', self.server, session.session_id)
+        log.debug("Server %s: Releasing session %s", self.server, session.session_id)
         if self.MAX_SESSION_USAGE_COUNT and session.usage_count >= self.MAX_SESSION_USAGE_COUNT:
-            log.debug('Server %s: session %s usage exceeded limit. Discarding', self.server, session.session_id)
+            log.debug("Server %s: session %s usage exceeded limit. Discarding", self.server, session.session_id)
             session = self.renew_session(session)
         self._session_pool.put(session, block=False)
 
@@ -227,13 +252,13 @@ class BaseProtocol:
 
     def retire_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
-        log.debug('Server %s: Retiring session %s', self.server, session.session_id)
+        log.debug("Server %s: Retiring session %s", self.server, session.session_id)
         self.close_session(session)
         self.release_session(self.create_session())
 
     def renew_session(self, session):
         # The session is useless. Close it completely and place a fresh session in the pool
-        log.debug('Server %s: Renewing session %s', self.server, session.session_id)
+        log.debug("Server %s: Renewing session %s", self.server, session.session_id)
         self.close_session(session)
         return self.create_session()
 
@@ -254,7 +279,7 @@ class BaseProtocol:
     def create_session(self):
         if self.credentials is None:
             if self.auth_type in CREDENTIALS_REQUIRED:
-                raise ValueError(f'Auth type {self.auth_type!r} requires credentials')
+                raise ValueError(f"Auth type {self.auth_type!r} requires credentials")
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
@@ -269,42 +294,43 @@ class BaseProtocol:
                     session.credentials_sig = self.credentials.sig()
                 else:
                     if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
-                        username = '\\' + self.credentials.username
+                        username = "\\" + self.credentials.username
                     else:
                         username = self.credentials.username
                     session = self.raw_session(self.service_endpoint)
-                    session.auth = get_auth_instance(auth_type=self.auth_type, username=username,
-                                                     password=self.credentials.password)
+                    session.auth = get_auth_instance(
+                        auth_type=self.auth_type, username=username, password=self.credentials.password
+                    )
 
         # Add some extra info
         session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
         session.usage_count = 0
-        log.debug('Server %s: Created session %s', self.server, session.session_id)
+        log.debug("Server %s: Created session %s", self.server, session.session_id)
         return session
 
     def create_oauth2_session(self):
         has_token = False
-        scope = ['https://outlook.office365.com/.default']
+        scope = ["https://outlook.office365.com/.default"]
         session_params = {}
         token_params = {}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             # Ask for a refresh token
-            scope.append('offline_access')
+            scope.append("offline_access")
 
             # We don't know (or need) the Microsoft tenant ID. Use
             # common/ to let Microsoft select the appropriate tenant
             # for the provided authorization code or refresh token.
             #
             # Suppress looks-like-password warning from Bandit.
-            token_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'  # nosec
+            token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"  # nosec
 
             client_params = {}
             has_token = self.credentials.access_token is not None
             if has_token:
-                session_params['token'] = self.credentials.access_token
+                session_params["token"] = self.credentials.access_token
             elif self.credentials.authorization_code is not None:
-                token_params['code'] = self.credentials.authorization_code
+                token_params["code"] = self.credentials.authorization_code
                 self.credentials.authorization_code = None
 
             if self.credentials.client_id is not None and self.credentials.client_secret is not None:
@@ -315,25 +341,32 @@ class BaseProtocol:
                 # covers cases where the caller doesn't have access to
                 # the client secret but is working with a service that
                 # can provide it refreshed tokens on a limited basis).
-                session_params.update({
-                    'auto_refresh_kwargs': {
-                        'client_id': self.credentials.client_id,
-                        'client_secret': self.credentials.client_secret,
-                    },
-                    'auto_refresh_url': token_url,
-                    'token_updater': self.credentials.on_token_auto_refreshed,
-                })
+                session_params.update(
+                    {
+                        "auto_refresh_kwargs": {
+                            "client_id": self.credentials.client_id,
+                            "client_secret": self.credentials.client_secret,
+                        },
+                        "auto_refresh_url": token_url,
+                        "token_updater": self.credentials.on_token_auto_refreshed,
+                    }
+                )
             client = WebApplicationClient(self.credentials.client_id, **client_params)
         else:
-            token_url = f'https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token'
+            token_url = f"https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token"
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not has_token:
             # Fetch the token explicitly -- it doesn't occur implicitly
-            token = session.fetch_token(token_url=token_url, client_id=self.credentials.client_id,
-                                        client_secret=self.credentials.client_secret, scope=scope,
-                                        timeout=self.TIMEOUT, **token_params)
+            token = session.fetch_token(
+                token_url=token_url,
+                client_id=self.credentials.client_id,
+                client_secret=self.credentials.client_secret,
+                scope=scope,
+                timeout=self.TIMEOUT,
+                **token_params,
+            )
             # Allow the credentials object to update its copy of the new
             # token, and give the application an opportunity to cache it
             self.credentials.on_token_auto_refreshed(token)
@@ -348,7 +381,7 @@ class BaseProtocol:
         else:
             session = requests.sessions.Session()
         session.headers.update(DEFAULT_HEADERS)
-        session.headers['User-Agent'] = cls.USERAGENT
+        session.headers["User-Agent"] = cls.USERAGENT
         session.mount(prefix, adapter=cls.get_adapter())
         return session
 
@@ -369,10 +402,11 @@ class CachingProtocol(type):
         #
         # We ignore auth_type from kwargs in the cache key. We trust caller to supply the correct auth_type - otherwise
         # __init__ will guess the correct auth type.
-        config = kwargs['config']
+        config = kwargs["config"]
         from .configuration import Configuration
+
         if not isinstance(config, Configuration):
-            raise InvalidTypeError('config', config, Configuration)
+            raise InvalidTypeError("config", config, Configuration)
         if not config.service_endpoint:
             raise AttributeError("'config.service_endpoint' must be set")
         _protocol_cache_key = cls._cache_key(config)
@@ -389,7 +423,7 @@ class CachingProtocol(type):
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
         # probably overkill although it would reduce lock contention.
-        log.debug('Waiting for _protocol_cache_lock')
+        log.debug("Waiting for _protocol_cache_lock")
         with cls._protocol_cache_lock:
             try:
                 protocol, _ = cls._protocol_cache[_protocol_cache_key]
@@ -407,7 +441,7 @@ class CachingProtocol(type):
                 protocol = super().__call__(*args, **kwargs)
             except TransportError as e:
                 # This can happen if, for example, autodiscover supplies us with a bogus EWS endpoint
-                log.warning('Failed to create cached protocol with key %s: %s', _protocol_cache_key, e)
+                log.warning("Failed to create cached protocol with key %s: %s", _protocol_cache_key, e)
                 cls._protocol_cache[_protocol_cache_key] = e, datetime.datetime.now()
                 raise e
             cls._protocol_cache[_protocol_cache_key] = protocol, datetime.datetime.now()
@@ -471,7 +505,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
             timezones=timezones, return_full_timezone_data=return_full_timezone_data
         )
 
-    def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view='DetailedMerged'):
+    def get_free_busy_info(self, accounts, start, end, merged_free_busy_interval=30, requested_view="DetailedMerged"):
         """Return free/busy information for a list of accounts.
 
         :param accounts: A list of (account, attendee_type, exclude_conflicts) tuples, where account is either an
@@ -486,22 +520,23 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: A generator of FreeBusyView objects
         """
         from .account import Account
-        tz_definition = list(self.get_timezones(
-            timezones=[start.tzinfo],
-            return_full_timezone_data=True
-        ))[0]
+
+        tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
         return GetUserAvailability(self).call(
-                timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
-                mailbox_data=[MailboxData(
+            timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
+            mailbox_data=[
+                MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
                     attendee_type=attendee_type,
-                    exclude_conflicts=exclude_conflicts
-                ) for account, attendee_type, exclude_conflicts in accounts],
-                free_busy_view_options=FreeBusyViewOptions(
-                    time_window=TimeWindow(start=start, end=end),
-                    merged_free_busy_interval=merged_free_busy_interval,
-                    requested_view=requested_view,
-                ),
+                    exclude_conflicts=exclude_conflicts,
+                )
+                for account, attendee_type, exclude_conflicts in accounts
+            ],
+            free_busy_view_options=FreeBusyViewOptions(
+                time_window=TimeWindow(start=start, end=end),
+                merged_free_busy_interval=merged_free_busy_interval,
+                requested_view=requested_view,
+            ),
         )
 
     def get_roomlists(self):
@@ -510,8 +545,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def get_rooms(self, roomlist):
         return GetRooms(protocol=self).call(room_list=RoomList(email_address=roomlist))
 
-    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None,
-                      shape=None):
+    def resolve_names(self, names, parent_folders=None, return_full_contact_data=False, search_scope=None, shape=None):
         """Resolve accounts on the server using partial account data, e.g. an email address or initials.
 
         :param names: A list of identifiers to query
@@ -522,10 +556,15 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         :return: A list of Mailbox items or, if return_full_contact_data is True, tuples of (Mailbox, Contact) items
         """
-        return list(ResolveNames(protocol=self).call(
-            unresolved_entries=names, parent_folders=parent_folders, return_full_contact_data=return_full_contact_data,
-            search_scope=search_scope, contact_data_shape=shape,
-        ))
+        return list(
+            ResolveNames(protocol=self).call(
+                unresolved_entries=names,
+                parent_folders=parent_folders,
+                return_full_contact_data=return_full_contact_data,
+                search_scope=search_scope,
+                contact_data_shape=shape,
+            )
+        )
 
     def expand_dl(self, distribution_list):
         """Expand distribution list into it's members.
@@ -535,7 +574,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: List of Mailbox items that are members of the distribution list
         """
         if isinstance(distribution_list, str):
-            distribution_list = DLMailbox(email_address=distribution_list, mailbox_type='PublicDL')
+            distribution_list = DLMailbox(email_address=distribution_list, mailbox_type="PublicDL")
         return list(ExpandDL(protocol=self).call(distribution_list=distribution_list))
 
     def get_searchable_mailboxes(self, search_filter=None, expand_group_membership=False):
@@ -549,10 +588,12 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         :return: a list of SearchableMailbox, FailedMailbox or Exception instances
         """
-        return list(GetSearchableMailboxes(protocol=self).call(
-            search_filter=search_filter,
-            expand_group_membership=expand_group_membership,
-        ))
+        return list(
+            GetSearchableMailboxes(protocol=self).call(
+                search_filter=search_filter,
+                expand_group_membership=expand_group_membership,
+            )
+        )
 
     def convert_ids(self, ids, destination_format):
         """Convert item and folder IDs between multiple formats.
@@ -567,7 +608,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def __getstate__(self):
         # The lock cannot be pickled
         state = super().__getstate__()
-        del state['_version_lock']
+        del state["_version_lock"]
         return state
 
     def __setstate__(self, state):
@@ -580,14 +621,14 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         if self.config.version:
             fullname, api_version, build = self.version.fullname, self.version.api_version, self.version.build
         else:
-            fullname, api_version, build = '[unknown]', '[unknown]', '[unknown]'
+            fullname, api_version, build = "[unknown]", "[unknown]", "[unknown]"
 
-        return f'''\
+        return f"""\
 EWS url: {self.service_endpoint}
 Product name: {fullname}
 EWS API version: {api_version}
 Build number: {build}
-EWS auth: {self.auth_type}'''
+EWS auth: {self.auth_type}"""
 
 
 class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
@@ -605,7 +646,7 @@ class TLSClientAuth(requests.adapters.HTTPAdapter):
     cert_file = None
 
     def init_poolmanager(self, *args, **kwargs):
-        kwargs['cert_file'] = self.cert_file
+        kwargs["cert_file"] = self.cert_file
         return super().init_poolmanager(*args, **kwargs)
 
 
@@ -637,28 +678,30 @@ class RetryPolicy(metaclass=abc.ABCMeta):
         """Return whether retries should still be attempted"""
 
     def raise_response_errors(self, response):
-        cas_error = response.headers.get('X-CasErrorCode')
+        cas_error = response.headers.get("X-CasErrorCode")
         if cas_error:
-            if cas_error.startswith('CAS error:'):
+            if cas_error.startswith("CAS error:"):
                 # Remove unnecessary text
-                cas_error = cas_error.split(':', 1)[1].strip()
+                cas_error = cas_error.split(":", 1)[1].strip()
             raise CASError(cas_error=cas_error, response=response)
-        if response.status_code == 500 and (b'The specified server version is invalid' in response.content or
-                                            b'ErrorInvalidSchemaVersionForMailboxVersion' in response.content):
+        if response.status_code == 500 and (
+            b"The specified server version is invalid" in response.content
+            or b"ErrorInvalidSchemaVersionForMailboxVersion" in response.content
+        ):
             # Another way of communicating invalid schema versions
-            raise ErrorInvalidSchemaVersionForMailboxVersion('Invalid server version')
-        if b'The referenced account is currently locked out' in response.content:
-            raise UnauthorizedError('The referenced account is currently locked out')
+            raise ErrorInvalidSchemaVersionForMailboxVersion("Invalid server version")
+        if b"The referenced account is currently locked out" in response.content:
+            raise UnauthorizedError("The referenced account is currently locked out")
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
-            raise UnauthorizedError(f'Invalid credentials for {response.url}')
-        if 'TimeoutException' in response.headers:
+            raise UnauthorizedError(f"Invalid credentials for {response.url}")
+        if "TimeoutException" in response.headers:
             # A header set by us on CONNECTION_ERRORS
-            raise response.headers['TimeoutException']
+            raise response.headers["TimeoutException"]
         # This could be anything. Let higher layers handle this
         raise MalformedResponseError(
-            f'Unknown failure in response. Code: {response.status_code} headers: {response.headers} '
-            f'content: {response.text}'
+            f"Unknown failure in response. Code: {response.status_code} headers: {response.headers} "
+            f"content: {response.text}"
         )
 
 
@@ -674,10 +717,10 @@ class FailFast(RetryPolicy):
         return None
 
     def back_off(self, seconds):
-        raise ValueError('Cannot back off with fail-fast policy')
+        raise ValueError("Cannot back off with fail-fast policy")
 
     def may_retry_on_error(self, response, wait):
-        log.debug('No retry: no fail-fast policy')
+        log.debug("No retry: no fail-fast policy")
         return False
 
 
@@ -697,7 +740,7 @@ class FaultTolerance(RetryPolicy):
     def __getstate__(self):
         # Locks cannot be pickled
         state = self.__dict__.copy()
-        del state['_back_off_lock']
+        del state["_back_off_lock"]
         return state
 
     def __setstate__(self, state):
@@ -737,20 +780,24 @@ class FaultTolerance(RetryPolicy):
     def may_retry_on_error(self, response, wait):
         if response.status_code not in (301, 302, 401, 500, 503):
             # Don't retry if we didn't get a status code that we can hope to recover from
-            log.debug('No retry: wrong status code %s', response.status_code)
+            log.debug("No retry: wrong status code %s", response.status_code)
             return False
         if wait > self.max_wait:
             # We lost patience. Session is cleaned up in outer loop
             raise RateLimitError(
-                'Max timeout reached', url=response.url, status_code=response.status_code, total_wait=wait)
+                "Max timeout reached", url=response.url, status_code=response.status_code, total_wait=wait
+            )
         if response.status_code == 401:
             # EWS sometimes throws 401's when it wants us to throttle connections. OK to retry.
             return True
-        if response.headers.get('connection') == 'close':
+        if response.headers.get("connection") == "close":
             # Connection closed. OK to retry.
             return True
-        if response.status_code == 302 and response.headers.get('location', '').lower() \
-                == '/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx':
+        if (
+            response.status_code == 302
+            and response.headers.get("location", "").lower()
+            == "/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx"
+        ):
             # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
             #
             # Redirect to '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS
@@ -761,6 +808,6 @@ class FaultTolerance(RetryPolicy):
             return True
         if response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content:
             # "Server Error in '/EWS' Application" has been seen in highly concurrent settings. OK to retry.
-            log.debug('Retry allowed: conditions met')
+            log.debug("Retry allowed: conditions met")
             return True
         return False

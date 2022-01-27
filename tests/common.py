@@ -1,15 +1,16 @@
 import abc
-from collections import namedtuple
 import datetime
-from decimal import Decimal
 import os
 import random
 import string
 import time
 import unittest
 import unittest.util
+from collections import namedtuple
+from decimal import Decimal
 
 from yaml import safe_load
+
 try:
     import zoneinfo
 except ImportError:
@@ -21,26 +22,58 @@ from exchangelib.configuration import Configuration
 from exchangelib.credentials import DELEGATE, Credentials
 from exchangelib.errors import UnknownTimeZone
 from exchangelib.ewsdatetime import EWSTimeZone
-from exchangelib.fields import BooleanField, IntegerField, DecimalField, TextField, EmailAddressField, URIField, \
-    ChoiceField, BodyField, DateTimeField, Base64Field, PhoneNumberField, EmailAddressesField, TimeZoneField, \
-    PhysicalAddressField, ExtendedPropertyField, MailboxField, AttendeesField, AttachmentField, CharListField, \
-    MailboxListField, EWSElementField, CultureField, CharField, TextListField, PermissionSetField, MimeContentField, \
-    DateField, DateTimeBackedDateField
-from exchangelib.indexed_properties import EmailAddress, PhysicalAddress, PhoneNumber
-from exchangelib.properties import Attendee, Mailbox, PermissionSet, Permission, UserId, CompleteName,\
-    ReminderMessageData
-from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter, FaultTolerance
-from exchangelib.recurrence import Recurrence, TaskRecurrence, DailyPattern, DailyRegeneration
+from exchangelib.fields import (
+    AttachmentField,
+    AttendeesField,
+    Base64Field,
+    BodyField,
+    BooleanField,
+    CharField,
+    CharListField,
+    ChoiceField,
+    CultureField,
+    DateField,
+    DateTimeBackedDateField,
+    DateTimeField,
+    DecimalField,
+    EmailAddressesField,
+    EmailAddressField,
+    EWSElementField,
+    ExtendedPropertyField,
+    IntegerField,
+    MailboxField,
+    MailboxListField,
+    MimeContentField,
+    PermissionSetField,
+    PhoneNumberField,
+    PhysicalAddressField,
+    TextField,
+    TextListField,
+    TimeZoneField,
+    URIField,
+)
+from exchangelib.indexed_properties import EmailAddress, PhoneNumber, PhysicalAddress
+from exchangelib.properties import (
+    Attendee,
+    CompleteName,
+    Mailbox,
+    Permission,
+    PermissionSet,
+    ReminderMessageData,
+    UserId,
+)
+from exchangelib.protocol import BaseProtocol, FaultTolerance, NoVerifyHTTPAdapter
+from exchangelib.recurrence import DailyPattern, DailyRegeneration, Recurrence, TaskRecurrence
 from exchangelib.util import DummyResponse
 
-mock_account = namedtuple('mock_account', ('protocol', 'version'))
-mock_protocol = namedtuple('mock_protocol', ('version', 'service_endpoint'))
-mock_version = namedtuple('mock_version', ('build',))
+mock_account = namedtuple("mock_account", ("protocol", "version"))
+mock_protocol = namedtuple("mock_protocol", ("version", "service_endpoint"))
+mock_version = namedtuple("mock_version", ("build",))
 
 
-def mock_post(url, status_code, headers, text=''):
+def mock_post(url, status_code, headers, text=""):
     return lambda **kwargs: DummyResponse(
-        url=url, headers=headers, request_headers={}, content=text.encode('utf-8'), status_code=status_code
+        url=url, headers=headers, request_headers={}, content=text.encode("utf-8"), status_code=status_code
     )
 
 
@@ -73,33 +106,38 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         # If you want to test against your own server and account, create your own settings.yml with credentials for
         # that server. 'settings.yml.sample' is provided as a template.
         try:
-            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings.yml')) as f:
+            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "settings.yml")) as f:
                 settings = safe_load(f)
         except FileNotFoundError:
-            print(f'Skipping {cls.__name__} - no settings.yml file found')
-            print('Copy settings.yml.sample to settings.yml and enter values for your test server')
-            raise unittest.SkipTest(f'Skipping {cls.__name__} - no settings.yml file found')
+            print(f"Skipping {cls.__name__} - no settings.yml file found")
+            print("Copy settings.yml.sample to settings.yml and enter values for your test server")
+            raise unittest.SkipTest(f"Skipping {cls.__name__} - no settings.yml file found")
 
         cls.settings = settings
-        cls.verify_ssl = settings.get('verify_ssl', True)
+        cls.verify_ssl = settings.get("verify_ssl", True)
         if not cls.verify_ssl:
             # Allow unverified TLS if requested in settings file
             BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
         # Create an account shared by all tests
-        cls.tz = zoneinfo.ZoneInfo('Europe/Copenhagen')
+        cls.tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
         cls.retry_policy = FaultTolerance(max_wait=600)
         cls.config = Configuration(
-            server=settings['server'],
-            credentials=Credentials(settings['username'], settings['password']),
+            server=settings["server"],
+            credentials=Credentials(settings["username"], settings["password"]),
             retry_policy=cls.retry_policy,
         )
         cls.account = cls.get_account()
 
     @classmethod
     def get_account(cls):
-        return Account(primary_smtp_address=cls.settings['account'], access_type=DELEGATE, config=cls.config,
-                       locale='da_DK', default_timezone=cls.tz)
+        return Account(
+            primary_smtp_address=cls.settings["account"],
+            access_type=DELEGATE,
+            config=cls.config,
+            locale="da_DK",
+            default_timezone=cls.tz,
+        )
 
     def setUp(self):
         super().setUp()
@@ -117,21 +155,21 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
 
     def random_val(self, field):
         if isinstance(field, ExtendedPropertyField):
-            if field.value_cls.property_type == 'StringArray':
+            if field.value_cls.property_type == "StringArray":
                 return [get_random_string(255) for _ in range(random.randint(1, 4))]
-            if field.value_cls.property_type == 'IntegerArray':
+            if field.value_cls.property_type == "IntegerArray":
                 return [get_random_int(0, 256) for _ in range(random.randint(1, 4))]
-            if field.value_cls.property_type == 'BinaryArray':
+            if field.value_cls.property_type == "BinaryArray":
                 return [get_random_string(255).encode() for _ in range(random.randint(1, 4))]
-            if field.value_cls.property_type == 'String':
+            if field.value_cls.property_type == "String":
                 return get_random_string(255)
-            if field.value_cls.property_type == 'Integer':
+            if field.value_cls.property_type == "Integer":
                 return get_random_int(0, 256)
-            if field.value_cls.property_type == 'Binary':
+            if field.value_cls.property_type == "Binary":
                 # In the test_extended_distinguished_property test, EWS rull return 4 NULL bytes after char 16 if we
                 # send a longer bytes sequence.
                 return get_random_string(16).encode()
-            raise ValueError(f'Unsupported field {field}')
+            raise ValueError(f"Unsupported field {field}")
         if isinstance(field, URIField):
             return get_random_url()
         if isinstance(field, EmailAddressField):
@@ -139,7 +177,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         if isinstance(field, ChoiceField):
             return get_random_choice(field.supported_choices(version=self.account.version))
         if isinstance(field, CultureField):
-            return get_random_choice(['da-DK', 'de-DE', 'en-US', 'es-ES', 'fr-CA', 'nl-NL', 'ru-RU', 'sv-SE'])
+            return get_random_choice(["da-DK", "de-DE", "en-US", "es-ES", "fr-CA", "nl-NL", "ru-RU", "sv-SE"])
         if isinstance(field, BodyField):
             return get_random_string(400)
         if isinstance(field, CharListField):
@@ -151,7 +189,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         if isinstance(field, TextField):
             return get_random_string(400)
         if isinstance(field, MimeContentField):
-            return get_random_string(400).encode('utf-8')
+            return get_random_string(400).encode("utf-8")
         if isinstance(field, Base64Field):
             return get_random_bytes(400)
         if isinstance(field, BooleanField):
@@ -167,7 +205,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         if isinstance(field, DateTimeField):
             return get_random_datetime(tz=self.account.default_timezone)
         if isinstance(field, AttachmentField):
-            return [FileAttachment(name='my_file.txt', content=get_random_string(400).encode('utf-8'))]
+            return [FileAttachment(name="my_file.txt", content=get_random_string(400).encode("utf-8"))]
         if isinstance(field, MailboxListField):
             # email_address must be a real account on the server(?)
             # TODO: Mailbox has multiple optional args but vals must match server account, so we can't easily test
@@ -189,32 +227,40 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
             with_last_response_time = get_random_bool()
             if with_last_response_time:
                 return [
-                    Attendee(mailbox=mbx, response_type='Accept',
-                             last_response_time=get_random_datetime(tz=self.account.default_timezone))
+                    Attendee(
+                        mailbox=mbx,
+                        response_type="Accept",
+                        last_response_time=get_random_datetime(tz=self.account.default_timezone),
+                    )
                 ]
             if get_random_bool():
-                return [Attendee(mailbox=mbx, response_type='Accept')]
+                return [Attendee(mailbox=mbx, response_type="Accept")]
             return [self.account.primary_smtp_address]
         if isinstance(field, EmailAddressesField):
             addrs = []
-            for label in EmailAddress.get_field_by_fieldname('label').supported_choices(version=self.account.version):
+            for label in EmailAddress.get_field_by_fieldname("label").supported_choices(version=self.account.version):
                 addr = EmailAddress(email=get_random_email())
                 addr.label = label
                 addrs.append(addr)
             return addrs
         if isinstance(field, PhysicalAddressField):
             addrs = []
-            for label in PhysicalAddress.get_field_by_fieldname('label')\
-                    .supported_choices(version=self.account.version):
-                addr = PhysicalAddress(street=get_random_string(32), city=get_random_string(32),
-                                       state=get_random_string(32), country=get_random_string(32),
-                                       zipcode=get_random_string(8))
+            for label in PhysicalAddress.get_field_by_fieldname("label").supported_choices(
+                version=self.account.version
+            ):
+                addr = PhysicalAddress(
+                    street=get_random_string(32),
+                    city=get_random_string(32),
+                    state=get_random_string(32),
+                    country=get_random_string(32),
+                    zipcode=get_random_string(8),
+                )
                 addr.label = label
                 addrs.append(addr)
             return addrs
         if isinstance(field, PhoneNumberField):
             pns = []
-            for label in PhoneNumber.get_field_by_fieldname('label').supported_choices(version=self.account.version):
+            for label in PhoneNumber.get_field_by_fieldname("label").supported_choices(version=self.account.version):
                 pn = PhoneNumber(phone_number=get_random_string(16))
                 pn.label = label
                 pns.append(pn)
@@ -262,7 +308,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
                     )
                 ]
             )
-        raise ValueError(f'Unknown field {field}')
+        raise ValueError(f"Unknown field {field}")
 
 
 def get_random_bool():
@@ -275,8 +321,8 @@ def get_random_int(min_val=0, max_val=2147483647):
 
 def get_random_decimal(min_val=0, max_val=100):
     precision = 2
-    val = get_random_int(min_val, max_val * 10**precision) / 10.0**precision
-    return Decimal(f'{val:.2f}')
+    val = get_random_int(min_val, max_val * 10 ** precision) / 10.0 ** precision
+    return Decimal(f"{val:.2f}")
 
 
 def get_random_choice(choices):
@@ -286,11 +332,11 @@ def get_random_choice(choices):
 def get_random_string(length, spaces=True, special=True):
     chars = string.ascii_letters + string.digits
     if special:
-        chars += ':.-_'
+        chars += ":.-_"
     if spaces:
-        chars += ' '
+        chars += " "
     # We want random strings that don't end in spaces - Exchange strips these
-    res = ''.join(map(lambda i: random.choice(chars), range(length))).strip()
+    res = "".join(map(lambda i: random.choice(chars), range(length))).strip()
     if len(res) < length:
         # If strip() made the string shorter, make sure to fill it up
         res += get_random_string(length - len(res), spaces=False)
@@ -314,22 +360,21 @@ def get_random_bytes(length):
 def get_random_hostname():
     domain_len = random.randint(1, 30)
     tld_len = random.randint(2, 4)
-    return '%s.%s' % tuple(get_random_string(i, spaces=False, special=False).lower() for i in (domain_len, tld_len))
+    return "%s.%s" % tuple(get_random_string(i, spaces=False, special=False).lower() for i in (domain_len, tld_len))
 
 
 def get_random_url():
     path_len = random.randint(1, 16)
-    return 'http://%s/%s.html' % (get_random_hostname(), get_random_string(path_len, spaces=False, special=False))
+    return "http://%s/%s.html" % (get_random_hostname(), get_random_string(path_len, spaces=False, special=False))
 
 
 def get_random_email():
     account_len = random.randint(1, 6)
     domain_len = random.randint(1, 30)
     tld_len = random.randint(2, 4)
-    return '%s@%s.%s' % tuple(map(
-        lambda i: get_random_string(i, spaces=False, special=False).lower(),
-        (account_len, domain_len, tld_len)
-    ))
+    return "%s@%s.%s" % tuple(
+        map(lambda i: get_random_string(i, spaces=False, special=False).lower(), (account_len, domain_len, tld_len))
+    )
 
 
 def _total_minutes(tm):
@@ -347,7 +392,7 @@ def get_random_time(start_time=datetime.time.min, end_time=datetime.time.max):
 # does not observe that, but IANA does. So random datetimes before 1996 will fail tests randomly.
 RANDOM_DATE_MIN = datetime.date(1996, 1, 1)
 RANDOM_DATE_MAX = datetime.date(2030, 1, 1)
-UTC = zoneinfo.ZoneInfo('UTC')
+UTC = zoneinfo.ZoneInfo("UTC")
 
 
 def get_random_date(start_date=RANDOM_DATE_MIN, end_date=RANDOM_DATE_MAX):
@@ -359,8 +404,9 @@ def get_random_datetime(start_date=RANDOM_DATE_MIN, end_date=RANDOM_DATE_MAX, tz
     # Create a random datetime with minute precision. Both dates are inclusive.
     # Keep with a reasonable date range. A wider date range than the default values is unstable WRT timezones.
     random_date = get_random_date(start_date=start_date, end_date=end_date)
-    random_datetime = datetime.datetime.combine(random_date, datetime.time.min) \
-        + datetime.timedelta(minutes=random.randint(0, 60 * 24))
+    random_datetime = datetime.datetime.combine(random_date, datetime.time.min) + datetime.timedelta(
+        minutes=random.randint(0, 60 * 24)
+    )
     return random_datetime.replace(tzinfo=tz)
 
 
@@ -368,7 +414,9 @@ def get_random_datetime_range(start_date=RANDOM_DATE_MIN, end_date=RANDOM_DATE_M
     # Create two random datetimes.  Both dates are inclusive.
     # Keep with a reasonable date range. A wider date range than the default values is unstable WRT timezones.
     # Calendar items raise ErrorCalendarDurationIsTooLong if duration is > 5 years.
-    return sorted([
-        get_random_datetime(start_date=start_date, end_date=end_date, tz=tz),
-        get_random_datetime(start_date=start_date, end_date=end_date, tz=tz),
-    ])
+    return sorted(
+        [
+            get_random_datetime(start_date=start_date, end_date=end_date, tz=tz),
+            get_random_datetime(start_date=start_date, end_date=end_date, tz=tz),
+        ]
+    )
