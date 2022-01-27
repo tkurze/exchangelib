@@ -358,8 +358,8 @@ def get_random_bytes(length):
 
 
 def get_random_hostname():
-    domain_len = random.randint(1, 30)
-    tld_len = random.randint(2, 4)
+    domain_len = random.randint(16, 32)
+    tld_len = random.randint(4, 6)
     return "%s.%s" % tuple(get_random_string(i, spaces=False, special=False).lower() for i in (domain_len, tld_len))
 
 
@@ -370,11 +370,7 @@ def get_random_url():
 
 def get_random_email():
     account_len = random.randint(1, 6)
-    domain_len = random.randint(1, 30)
-    tld_len = random.randint(2, 4)
-    return "%s@%s.%s" % tuple(
-        map(lambda i: get_random_string(i, spaces=False, special=False).lower(), (account_len, domain_len, tld_len))
-    )
+    return "%s@%s" % (get_random_string(account_len, spaces=False, special=False).lower(), get_random_hostname())
 
 
 def _total_minutes(tm):
