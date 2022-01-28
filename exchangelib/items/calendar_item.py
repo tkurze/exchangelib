@@ -317,10 +317,10 @@ class BaseMeetingItem(Item, metaclass=EWSMeta):
 
     effective_rights_idx = Item.FIELDS.index_by_name("effective_rights")
     sender_idx = Message.FIELDS.index_by_name("sender")
-    reply_to_idx = Message.FIELDS.index_by_name("reply_to")
+    received_representing_idx = Message.FIELDS.index_by_name("received_representing")
     FIELDS = (
         Item.FIELDS[:effective_rights_idx]
-        + Message.FIELDS[sender_idx : reply_to_idx + 1]
+        + Message.FIELDS[sender_idx : received_representing_idx + 1]
         + Item.FIELDS[effective_rights_idx:]
     )
 
@@ -371,8 +371,6 @@ class MeetingResponse(BaseMeetingItem):
 
     ELEMENT_NAME = "MeetingResponse"
 
-    received_by = MailboxField(field_uri="message:ReceivedBy", is_read_only=True)
-    received_representing = MailboxField(field_uri="message:ReceivedRepresenting", is_read_only=True)
     proposed_start = DateTimeField(field_uri="meeting:ProposedStart", supported_from=EXCHANGE_2013)
     proposed_end = DateTimeField(field_uri="meeting:ProposedEnd", supported_from=EXCHANGE_2013)
 

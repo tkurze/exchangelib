@@ -186,7 +186,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
     reference_item_id = EWSElementField(value_cls=ReferenceItemId)
     new_body = BodyField(field_uri="NewBodyContent")  # Accepts and returns Body or HTMLBody instances
     received_by = MailboxField(field_uri="ReceivedBy", supported_from=EXCHANGE_2007_SP1)
-    received_by_representing = MailboxField(field_uri="ReceivedRepresenting", supported_from=EXCHANGE_2007_SP1)
+    received_representing = MailboxField(field_uri="ReceivedRepresenting", supported_from=EXCHANGE_2007_SP1)
 
     __slots__ = ("account",)
 

@@ -3,6 +3,10 @@ Change Log
 
 HEAD
 ----
+- Fixed field name to match API: `BaseReplyItem.received_by_representing` to
+- `BaseReplyItem.received_representing`
+- Added fields `received_by` and `received_representing` to `MeetingRequest`,
+- `MeetingMessage` and `MeetingCancellation`
 
 
 4.7.1
