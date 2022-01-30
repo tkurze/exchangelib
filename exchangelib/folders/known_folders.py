@@ -102,7 +102,7 @@ class Outbox(Messages):
         "de_DE": ("Postausgang",),
         "en_US": ("Outbox",),
         "es_ES": ("Bandeja de salida",),
-        "fr_CA": (u"Boîte d'envoi",),
+        "fr_CA": ("Boîte d'envoi",),
         "nl_NL": ("Postvak UIT",),
         "ru_RU": ("Исходящие",),
         "sv_SE": ("Utkorgen",),

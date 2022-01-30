@@ -215,7 +215,7 @@ class AttachmentsTest(BaseItemTest):
 
     def test_streaming_file_attachments(self):
         item = self.get_test_item(folder=self.test_folder)
-        large_binary_file_content = get_random_string(2 ** 10).encode("utf-8")
+        large_binary_file_content = get_random_string(2**10).encode("utf-8")
         large_att = FileAttachment(name="my_large_file.txt", content=large_binary_file_content)
         item.attach(large_att)
         item.save()

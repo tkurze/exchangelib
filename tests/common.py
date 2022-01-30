@@ -321,7 +321,7 @@ def get_random_int(min_val=0, max_val=2147483647):
 
 def get_random_decimal(min_val=0, max_val=100):
     precision = 2
-    val = get_random_int(min_val, max_val * 10 ** precision) / 10.0 ** precision
+    val = get_random_int(min_val, max_val * 10**precision) / 10.0**precision
     return Decimal(f"{val:.2f}")
 
 
