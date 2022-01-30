@@ -31,8 +31,18 @@ import logging
 import mimetypes
 
 from .errors import InvalidTypeError
-from .fields import BooleanField, TextField, IntegerField, URIField, DateTimeField, EWSElementField, Base64Field, \
-    ItemField, IdField, FieldPath
+from .fields import (
+    Base64Field,
+    BooleanField,
+    DateTimeField,
+    EWSElementField,
+    FieldPath,
+    IdField,
+    IntegerField,
+    ItemField,
+    TextField,
+    URIField,
+)
 from .properties import EWSElement, EWSMeta
 
 log = logging.getLogger(__name__)
@@ -44,11 +54,11 @@ class AttachmentId(EWSElement):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentid
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AttachmentId&#39;
+    ELEMENT_NAME = &#34;AttachmentId&#34;
 
-    ID_ATTR = &#39;Id&#39;
-    ROOT_ID_ATTR = &#39;RootItemId&#39;
-    ROOT_CHANGEKEY_ATTR = &#39;RootItemChangeKey&#39;
+    ID_ATTR = &#34;Id&#34;
+    ROOT_ID_ATTR = &#34;RootItemId&#34;
+    ROOT_CHANGEKEY_ATTR = &#34;RootItemChangeKey&#34;
 
     id = IdField(field_uri=ID_ATTR, is_required=True)
     root_id = IdField(field_uri=ROOT_ID_ATTR)
@@ -65,35 +75,37 @@ class Attachment(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for FileAttachment and ItemAttachment.&#34;&#34;&#34;
 
     attachment_id = EWSElementField(value_cls=AttachmentId)
-    name = TextField(field_uri=&#39;Name&#39;)
-    content_type = TextField(field_uri=&#39;ContentType&#39;)
-    content_id = TextField(field_uri=&#39;ContentId&#39;)
-    content_location = URIField(field_uri=&#39;ContentLocation&#39;)
-    size = IntegerField(field_uri=&#39;Size&#39;, is_read_only=True)  # Attachment size in bytes
-    last_modified_time = DateTimeField(field_uri=&#39;LastModifiedTime&#39;)
-    is_inline = BooleanField(field_uri=&#39;IsInline&#39;)
+    name = TextField(field_uri=&#34;Name&#34;)
+    content_type = TextField(field_uri=&#34;ContentType&#34;)
+    content_id = TextField(field_uri=&#34;ContentId&#34;)
+    content_location = URIField(field_uri=&#34;ContentLocation&#34;)
+    size = IntegerField(field_uri=&#34;Size&#34;, is_read_only=True)  # Attachment size in bytes
+    last_modified_time = DateTimeField(field_uri=&#34;LastModifiedTime&#34;)
+    is_inline = BooleanField(field_uri=&#34;IsInline&#34;)
 
-    __slots__ = &#39;parent_item&#39;,
+    __slots__ = (&#34;parent_item&#34;,)
 
     def __init__(self, **kwargs):
-        self.parent_item = kwargs.pop(&#39;parent_item&#39;, None)
+        self.parent_item = kwargs.pop(&#34;parent_item&#34;, None)
         super().__init__(**kwargs)
 
     def clean(self, version=None):
         from .items import Item
+
         if self.parent_item is not None and not isinstance(self.parent_item, Item):
-            raise InvalidTypeError(&#39;parent_item&#39;, self.parent_item, Item)
+            raise InvalidTypeError(&#34;parent_item&#34;, self.parent_item, Item)
         if self.content_type is None and self.name is not None:
-            self.content_type = mimetypes.guess_type(self.name)[0] or &#39;application/octet-stream&#39;
+            self.content_type = mimetypes.guess_type(self.name)[0] or &#34;application/octet-stream&#34;
         super().clean(version=version)
 
     def attach(self):
         from .services import CreateAttachment
+
         # Adds this attachment to an item and updates the changekey of the parent item
         if self.attachment_id:
-            raise ValueError(&#39;This attachment has already been created&#39;)
+            raise ValueError(&#34;This attachment has already been created&#34;)
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;Parent item {self.parent_item} must have an account&#39;)
+            raise ValueError(f&#34;Parent item {self.parent_item} must have an account&#34;)
         item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
         attachment_id = item.attachment_id
         self.parent_item.changekey = attachment_id.root_changekey
@@ -104,11 +116,12 @@ class Attachment(EWSElement, metaclass=EWSMeta):
 
     def detach(self):
         from .services import DeleteAttachment
+
         # Deletes an attachment remotely and updates the changekey of the parent item
         if not self.attachment_id:
-            raise ValueError(&#39;This attachment has not been created&#39;)
+            raise ValueError(&#34;This attachment has not been created&#34;)
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;Parent item {self.parent_item} must have an account&#39;)
+            raise ValueError(f&#34;Parent item {self.parent_item} must have an account&#34;)
         DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
         self.parent_item = None
         self.attachment_id = None
@@ -117,27 +130,27 @@ class Attachment(EWSElement, metaclass=EWSMeta):
         if self.attachment_id:
             return hash(self.attachment_id)
         # Be careful to avoid recursion on the back-reference to the parent item
-        return hash(tuple(getattr(self, f) for f in self._slots_keys if f != &#39;parent_item&#39;))
+        return hash(tuple(getattr(self, f) for f in self._slots_keys if f != &#34;parent_item&#34;))
 
     def __repr__(self):
-        args_str = &#39;, &#39;.join(
-            f&#39;{f.name}={getattr(self, f.name)!r}&#39; for f in self.FIELDS if f.name not in (&#39;_item&#39;, &#39;_content&#39;)
+        args_str = &#34;, &#34;.join(
+            f&#34;{f.name}={getattr(self, f.name)!r}&#34; for f in self.FIELDS if f.name not in (&#34;_item&#34;, &#34;_content&#34;)
         )
-        return f&#39;{self.__class__.__name__}({args_str})&#39;
+        return f&#34;{self.__class__.__name__}({args_str})&#34;
 
 
 class FileAttachment(Attachment):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;FileAttachment&#39;
+    ELEMENT_NAME = &#34;FileAttachment&#34;
 
-    is_contact_photo = BooleanField(field_uri=&#39;IsContactPhoto&#39;)
-    _content = Base64Field(field_uri=&#39;Content&#39;)
+    is_contact_photo = BooleanField(field_uri=&#34;IsContactPhoto&#34;)
+    _content = Base64Field(field_uri=&#34;Content&#34;)
 
-    __slots__ = &#39;_fp&#39;,
+    __slots__ = (&#34;_fp&#34;,)
 
     def __init__(self, **kwargs):
-        kwargs[&#39;_content&#39;] = kwargs.pop(&#39;content&#39;, None)
+        kwargs[&#34;_content&#34;] = kwargs.pop(&#34;content&#34;, None)
         super().__init__(**kwargs)
         self._fp = None
 
@@ -152,7 +165,7 @@ class FileAttachment(Attachment):
         # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
         # store the full attachment content in-memory.
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         self._fp = FileAttachmentIO(attachment=self)
 
     @property
@@ -173,13 +186,13 @@ class FileAttachment(Attachment):
     def content(self, value):
         &#34;&#34;&#34;Replace the attachment content.&#34;&#34;&#34;
         if not isinstance(value, bytes):
-            raise InvalidTypeError(&#39;value&#39;, value, bytes)
+            raise InvalidTypeError(&#34;value&#34;, value, bytes)
         self._content = value
 
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-        kwargs[&#39;content&#39;] = kwargs.pop(&#39;_content&#39;)
+        kwargs[&#34;content&#34;] = kwargs.pop(&#34;_content&#34;)
         cls._clear(elem)
         return cls(**kwargs)
 
@@ -190,7 +203,7 @@ class FileAttachment(Attachment):
     def __getstate__(self):
         # The fp does not need to be pickled
         state = {k: getattr(self, k) for k in self._slots_keys}
-        del state[&#39;_fp&#39;]
+        del state[&#34;_fp&#34;]
         return state
 
     def __setstate__(self, state):
@@ -203,30 +216,34 @@ class FileAttachment(Attachment):
 class ItemAttachment(Attachment):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ItemAttachment&#39;
+    ELEMENT_NAME = &#34;ItemAttachment&#34;
 
-    _item = ItemField(field_uri=&#39;Item&#39;)
+    _item = ItemField(field_uri=&#34;Item&#34;)
 
     def __init__(self, **kwargs):
-        kwargs[&#39;_item&#39;] = kwargs.pop(&#39;item&#39;, None)
+        kwargs[&#34;_item&#34;] = kwargs.pop(&#34;item&#34;, None)
         super().__init__(**kwargs)
 
     @property
     def item(self):
         from .folders import BaseFolder
         from .services import GetAttachment
+
         if self.attachment_id is None:
             return self._item
         if self._item is not None:
             return self._item
         # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         additional_fields = {
             FieldPath(field=f) for f in BaseFolder.allowed_item_fields(version=self.parent_item.account.version)
         }
         attachment = GetAttachment(account=self.parent_item.account).get(
-            items=[self.attachment_id], include_mime_content=True, body_type=None, filter_html_content=None,
+            items=[self.attachment_id],
+            include_mime_content=True,
+            body_type=None,
+            filter_html_content=None,
             additional_fields=additional_fields,
         )
         self._item = attachment.item
@@ -235,14 +252,15 @@ class ItemAttachment(Attachment):
     @item.setter
     def item(self, value):
         from .items import Item
+
         if not isinstance(value, Item):
-            raise InvalidTypeError(&#39;value&#39;, value, Item)
+            raise InvalidTypeError(&#34;value&#34;, value, Item)
         self._item = value
 
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-        kwargs[&#39;item&#39;] = kwargs.pop(&#39;_item&#39;)
+        kwargs[&#34;item&#34;] = kwargs.pop(&#34;_item&#34;)
         cls._clear(elem)
         return cls(**kwargs)
 
@@ -270,11 +288,12 @@ class FileAttachmentIO(io.RawIOBase):
             return 0
         else:
             output, self._overflow = chunk[:buf_size], chunk[buf_size:]
-            b[:len(output)] = output
+            b[: len(output)] = output
             return len(output)
 
     def __enter__(self):
         from .services import GetAttachment
+
         self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
             attachment_id=self._attachment.attachment_id
         )
@@ -309,35 +328,37 @@ class FileAttachmentIO(io.RawIOBase):
     &#34;&#34;&#34;Base class for FileAttachment and ItemAttachment.&#34;&#34;&#34;
 
     attachment_id = EWSElementField(value_cls=AttachmentId)
-    name = TextField(field_uri=&#39;Name&#39;)
-    content_type = TextField(field_uri=&#39;ContentType&#39;)
-    content_id = TextField(field_uri=&#39;ContentId&#39;)
-    content_location = URIField(field_uri=&#39;ContentLocation&#39;)
-    size = IntegerField(field_uri=&#39;Size&#39;, is_read_only=True)  # Attachment size in bytes
-    last_modified_time = DateTimeField(field_uri=&#39;LastModifiedTime&#39;)
-    is_inline = BooleanField(field_uri=&#39;IsInline&#39;)
+    name = TextField(field_uri=&#34;Name&#34;)
+    content_type = TextField(field_uri=&#34;ContentType&#34;)
+    content_id = TextField(field_uri=&#34;ContentId&#34;)
+    content_location = URIField(field_uri=&#34;ContentLocation&#34;)
+    size = IntegerField(field_uri=&#34;Size&#34;, is_read_only=True)  # Attachment size in bytes
+    last_modified_time = DateTimeField(field_uri=&#34;LastModifiedTime&#34;)
+    is_inline = BooleanField(field_uri=&#34;IsInline&#34;)
 
-    __slots__ = &#39;parent_item&#39;,
+    __slots__ = (&#34;parent_item&#34;,)
 
     def __init__(self, **kwargs):
-        self.parent_item = kwargs.pop(&#39;parent_item&#39;, None)
+        self.parent_item = kwargs.pop(&#34;parent_item&#34;, None)
         super().__init__(**kwargs)
 
     def clean(self, version=None):
         from .items import Item
+
         if self.parent_item is not None and not isinstance(self.parent_item, Item):
-            raise InvalidTypeError(&#39;parent_item&#39;, self.parent_item, Item)
+            raise InvalidTypeError(&#34;parent_item&#34;, self.parent_item, Item)
         if self.content_type is None and self.name is not None:
-            self.content_type = mimetypes.guess_type(self.name)[0] or &#39;application/octet-stream&#39;
+            self.content_type = mimetypes.guess_type(self.name)[0] or &#34;application/octet-stream&#34;
         super().clean(version=version)
 
     def attach(self):
         from .services import CreateAttachment
+
         # Adds this attachment to an item and updates the changekey of the parent item
         if self.attachment_id:
-            raise ValueError(&#39;This attachment has already been created&#39;)
+            raise ValueError(&#34;This attachment has already been created&#34;)
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;Parent item {self.parent_item} must have an account&#39;)
+            raise ValueError(f&#34;Parent item {self.parent_item} must have an account&#34;)
         item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
         attachment_id = item.attachment_id
         self.parent_item.changekey = attachment_id.root_changekey
@@ -348,11 +369,12 @@ class FileAttachmentIO(io.RawIOBase):
 
     def detach(self):
         from .services import DeleteAttachment
+
         # Deletes an attachment remotely and updates the changekey of the parent item
         if not self.attachment_id:
-            raise ValueError(&#39;This attachment has not been created&#39;)
+            raise ValueError(&#34;This attachment has not been created&#34;)
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;Parent item {self.parent_item} must have an account&#39;)
+            raise ValueError(f&#34;Parent item {self.parent_item} must have an account&#34;)
         DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
         self.parent_item = None
         self.attachment_id = None
@@ -361,13 +383,13 @@ class FileAttachmentIO(io.RawIOBase):
         if self.attachment_id:
             return hash(self.attachment_id)
         # Be careful to avoid recursion on the back-reference to the parent item
-        return hash(tuple(getattr(self, f) for f in self._slots_keys if f != &#39;parent_item&#39;))
+        return hash(tuple(getattr(self, f) for f in self._slots_keys if f != &#34;parent_item&#34;))
 
     def __repr__(self):
-        args_str = &#39;, &#39;.join(
-            f&#39;{f.name}={getattr(self, f.name)!r}&#39; for f in self.FIELDS if f.name not in (&#39;_item&#39;, &#39;_content&#39;)
+        args_str = &#34;, &#34;.join(
+            f&#34;{f.name}={getattr(self, f.name)!r}&#34; for f in self.FIELDS if f.name not in (&#34;_item&#34;, &#34;_content&#34;)
         )
-        return f&#39;{self.__class__.__name__}({args_str})&#39;</code></pre>
+        return f&#34;{self.__class__.__name__}({args_str})&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -437,11 +459,12 @@ class FileAttachmentIO(io.RawIOBase):
 </summary>
 <pre><code class="python">def attach(self):
     from .services import CreateAttachment
+
     # Adds this attachment to an item and updates the changekey of the parent item
     if self.attachment_id:
-        raise ValueError(&#39;This attachment has already been created&#39;)
+        raise ValueError(&#34;This attachment has already been created&#34;)
     if not self.parent_item or not self.parent_item.account:
-        raise ValueError(f&#39;Parent item {self.parent_item} must have an account&#39;)
+        raise ValueError(f&#34;Parent item {self.parent_item} must have an account&#34;)
     item = CreateAttachment(account=self.parent_item.account).get(parent_item=self.parent_item, items=[self])
     attachment_id = item.attachment_id
     self.parent_item.changekey = attachment_id.root_changekey
@@ -462,10 +485,11 @@ class FileAttachmentIO(io.RawIOBase):
 </summary>
 <pre><code class="python">def clean(self, version=None):
     from .items import Item
+
     if self.parent_item is not None and not isinstance(self.parent_item, Item):
-        raise InvalidTypeError(&#39;parent_item&#39;, self.parent_item, Item)
+        raise InvalidTypeError(&#34;parent_item&#34;, self.parent_item, Item)
     if self.content_type is None and self.name is not None:
-        self.content_type = mimetypes.guess_type(self.name)[0] or &#39;application/octet-stream&#39;
+        self.content_type = mimetypes.guess_type(self.name)[0] or &#34;application/octet-stream&#34;
     super().clean(version=version)</code></pre>
 </details>
 </dd>
@@ -480,11 +504,12 @@ class FileAttachmentIO(io.RawIOBase):
 </summary>
 <pre><code class="python">def detach(self):
     from .services import DeleteAttachment
+
     # Deletes an attachment remotely and updates the changekey of the parent item
     if not self.attachment_id:
-        raise ValueError(&#39;This attachment has not been created&#39;)
+        raise ValueError(&#34;This attachment has not been created&#34;)
     if not self.parent_item or not self.parent_item.account:
-        raise ValueError(f&#39;Parent item {self.parent_item} must have an account&#39;)
+        raise ValueError(f&#34;Parent item {self.parent_item} must have an account&#34;)
     DeleteAttachment(account=self.parent_item.account).get(items=[self.attachment_id])
     self.parent_item = None
     self.attachment_id = None</code></pre>
@@ -520,11 +545,11 @@ class FileAttachmentIO(io.RawIOBase):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/attachmentid
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AttachmentId&#39;
+    ELEMENT_NAME = &#34;AttachmentId&#34;
 
-    ID_ATTR = &#39;Id&#39;
-    ROOT_ID_ATTR = &#39;RootItemId&#39;
-    ROOT_CHANGEKEY_ATTR = &#39;RootItemChangeKey&#39;
+    ID_ATTR = &#34;Id&#34;
+    ROOT_ID_ATTR = &#34;RootItemId&#34;
+    ROOT_CHANGEKEY_ATTR = &#34;RootItemChangeKey&#34;
 
     id = IdField(field_uri=ID_ATTR, is_required=True)
     root_id = IdField(field_uri=ROOT_ID_ATTR)
@@ -603,15 +628,15 @@ class FileAttachmentIO(io.RawIOBase):
 <pre><code class="python">class FileAttachment(Attachment):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fileattachment&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;FileAttachment&#39;
+    ELEMENT_NAME = &#34;FileAttachment&#34;
 
-    is_contact_photo = BooleanField(field_uri=&#39;IsContactPhoto&#39;)
-    _content = Base64Field(field_uri=&#39;Content&#39;)
+    is_contact_photo = BooleanField(field_uri=&#34;IsContactPhoto&#34;)
+    _content = Base64Field(field_uri=&#34;Content&#34;)
 
-    __slots__ = &#39;_fp&#39;,
+    __slots__ = (&#34;_fp&#34;,)
 
     def __init__(self, **kwargs):
-        kwargs[&#39;_content&#39;] = kwargs.pop(&#39;content&#39;, None)
+        kwargs[&#34;_content&#34;] = kwargs.pop(&#34;content&#34;, None)
         super().__init__(**kwargs)
         self._fp = None
 
@@ -626,7 +651,7 @@ class FileAttachmentIO(io.RawIOBase):
         # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
         # store the full attachment content in-memory.
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         self._fp = FileAttachmentIO(attachment=self)
 
     @property
@@ -647,13 +672,13 @@ class FileAttachmentIO(io.RawIOBase):
     def content(self, value):
         &#34;&#34;&#34;Replace the attachment content.&#34;&#34;&#34;
         if not isinstance(value, bytes):
-            raise InvalidTypeError(&#39;value&#39;, value, bytes)
+            raise InvalidTypeError(&#34;value&#34;, value, bytes)
         self._content = value
 
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-        kwargs[&#39;content&#39;] = kwargs.pop(&#39;_content&#39;)
+        kwargs[&#34;content&#34;] = kwargs.pop(&#34;_content&#34;)
         cls._clear(elem)
         return cls(**kwargs)
 
@@ -664,7 +689,7 @@ class FileAttachmentIO(io.RawIOBase):
     def __getstate__(self):
         # The fp does not need to be pickled
         state = {k: getattr(self, k) for k in self._slots_keys}
-        del state[&#39;_fp&#39;]
+        del state[&#34;_fp&#34;]
         return state
 
     def __setstate__(self, state):
@@ -703,7 +728,7 @@ class FileAttachmentIO(io.RawIOBase):
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
     kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-    kwargs[&#39;content&#39;] = kwargs.pop(&#39;_content&#39;)
+    kwargs[&#34;content&#34;] = kwargs.pop(&#34;_content&#34;)
     cls._clear(elem)
     return cls(**kwargs)</code></pre>
 </details>
@@ -817,11 +842,12 @@ def fp(self):
             return 0
         else:
             output, self._overflow = chunk[:buf_size], chunk[buf_size:]
-            b[:len(output)] = output
+            b[: len(output)] = output
             return len(output)
 
     def __enter__(self):
         from .services import GetAttachment
+
         self._stream = GetAttachment(account=self._attachment.parent_item.account).stream_file_content(
             attachment_id=self._attachment.attachment_id
         )
@@ -887,7 +913,7 @@ def closed(self):
         return 0
     else:
         output, self._overflow = chunk[:buf_size], chunk[buf_size:]
-        b[:len(output)] = output
+        b[: len(output)] = output
         return len(output)</code></pre>
 </details>
 </dd>
@@ -906,30 +932,34 @@ def closed(self):
 <pre><code class="python">class ItemAttachment(Attachment):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/itemattachment&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ItemAttachment&#39;
+    ELEMENT_NAME = &#34;ItemAttachment&#34;
 
-    _item = ItemField(field_uri=&#39;Item&#39;)
+    _item = ItemField(field_uri=&#34;Item&#34;)
 
     def __init__(self, **kwargs):
-        kwargs[&#39;_item&#39;] = kwargs.pop(&#39;item&#39;, None)
+        kwargs[&#34;_item&#34;] = kwargs.pop(&#34;item&#34;, None)
         super().__init__(**kwargs)
 
     @property
     def item(self):
         from .folders import BaseFolder
         from .services import GetAttachment
+
         if self.attachment_id is None:
             return self._item
         if self._item is not None:
             return self._item
         # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
         if not self.parent_item or not self.parent_item.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         additional_fields = {
             FieldPath(field=f) for f in BaseFolder.allowed_item_fields(version=self.parent_item.account.version)
         }
         attachment = GetAttachment(account=self.parent_item.account).get(
-            items=[self.attachment_id], include_mime_content=True, body_type=None, filter_html_content=None,
+            items=[self.attachment_id],
+            include_mime_content=True,
+            body_type=None,
+            filter_html_content=None,
             additional_fields=additional_fields,
         )
         self._item = attachment.item
@@ -938,14 +968,15 @@ def closed(self):
     @item.setter
     def item(self, value):
         from .items import Item
+
         if not isinstance(value, Item):
-            raise InvalidTypeError(&#39;value&#39;, value, Item)
+            raise InvalidTypeError(&#34;value&#34;, value, Item)
         self._item = value
 
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-        kwargs[&#39;item&#39;] = kwargs.pop(&#39;_item&#39;)
+        kwargs[&#34;item&#34;] = kwargs.pop(&#34;_item&#34;)
         cls._clear(elem)
         return cls(**kwargs)</code></pre>
 </details>
@@ -979,7 +1010,7 @@ def closed(self):
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
     kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-    kwargs[&#39;item&#39;] = kwargs.pop(&#39;_item&#39;)
+    kwargs[&#34;item&#34;] = kwargs.pop(&#34;_item&#34;)
     cls._clear(elem)
     return cls(**kwargs)</code></pre>
 </details>
@@ -998,18 +1029,22 @@ def from_xml(cls, elem, account):
 def item(self):
     from .folders import BaseFolder
     from .services import GetAttachment
+
     if self.attachment_id is None:
         return self._item
     if self._item is not None:
         return self._item
     # We have an ID to the data but still haven&#39;t called GetAttachment to get the actual data. Do that now.
     if not self.parent_item or not self.parent_item.account:
-        raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+        raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
     additional_fields = {
         FieldPath(field=f) for f in BaseFolder.allowed_item_fields(version=self.parent_item.account.version)
     }
     attachment = GetAttachment(account=self.parent_item.account).get(
-        items=[self.attachment_id], include_mime_content=True, body_type=None, filter_html_content=None,
+        items=[self.attachment_id],
+        include_mime_content=True,
+        body_type=None,
+        filter_html_content=None,
         additional_fields=additional_fields,
     )
     self._item = attachment.item

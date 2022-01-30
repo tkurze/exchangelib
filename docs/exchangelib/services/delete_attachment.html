@@ -26,9 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, attachment_ids_element
-from ..properties import RootItemId
+<pre><code class="python">from ..properties import RootItemId
 from ..util import create_element, set_xml_value
+from .common import EWSAccountService, attachment_ids_element
 
 
 class DeleteAttachment(EWSAccountService):
@@ -36,7 +36,7 @@ class DeleteAttachment(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;DeleteAttachment&#39;
+    SERVICE_NAME = &#34;DeleteAttachment&#34;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -50,9 +50,9 @@ class DeleteAttachment(EWSAccountService):
 
     def get_payload(self, items):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;),
             attachment_ids_element(items=items, version=self.account.version),
-            version=self.account.version
+            version=self.account.version,
         )</code></pre>
 </details>
 </section>
@@ -81,7 +81,7 @@ class DeleteAttachment(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;DeleteAttachment&#39;
+    SERVICE_NAME = &#34;DeleteAttachment&#34;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -95,9 +95,9 @@ class DeleteAttachment(EWSAccountService):
 
     def get_payload(self, items):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;),
             attachment_ids_element(items=items, version=self.account.version),
-            version=self.account.version
+            version=self.account.version,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -138,9 +138,9 @@ class DeleteAttachment(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, items):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+        create_element(f&#34;m:{self.SERVICE_NAME}&#34;),
         attachment_ids_element(items=items, version=self.account.version),
-        version=self.account.version
+        version=self.account.version,
     )</code></pre>
 </details>
 </dd>

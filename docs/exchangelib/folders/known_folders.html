@@ -26,31 +26,41 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .base import Folder
-from .collections import FolderCollection
-from ..items import CalendarItem, Contact, Message, Task, DistributionList, MeetingRequest, MeetingResponse, \
-    MeetingCancellation, ITEM_CLASSES, ASSOCIATED
+<pre><code class="python">from ..items import (
+    ASSOCIATED,
+    ITEM_CLASSES,
+    CalendarItem,
+    Contact,
+    DistributionList,
+    MeetingCancellation,
+    MeetingRequest,
+    MeetingResponse,
+    Message,
+    Task,
+)
 from ..properties import EWSMeta
 from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1
+from .base import Folder
+from .collections import FolderCollection
 
 
 class Calendar(Folder):
     &#34;&#34;&#34;An interface for the Exchange calendar.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;calendar&#39;
-    CONTAINER_CLASS = &#39;IPF.Appointment&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;calendar&#34;
+    CONTAINER_CLASS = &#34;IPF.Appointment&#34;
     supported_item_models = (CalendarItem,)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kalender&#39;,),
-        &#39;de_DE&#39;: (&#39;Kalender&#39;,),
-        &#39;en_US&#39;: (&#39;Calendar&#39;,),
-        &#39;es_ES&#39;: (&#39;Calendario&#39;,),
-        &#39;fr_CA&#39;: (&#39;Calendrier&#39;,),
-        &#39;nl_NL&#39;: (&#39;Agenda&#39;,),
-        &#39;ru_RU&#39;: (&#39;Календарь&#39;,),
-        &#39;sv_SE&#39;: (&#39;Kalender&#39;,),
-        &#39;zh_CN&#39;: (&#39;日历&#39;,),
+        &#34;da_DK&#34;: (&#34;Kalender&#34;,),
+        &#34;de_DE&#34;: (&#34;Kalender&#34;,),
+        &#34;en_US&#34;: (&#34;Calendar&#34;,),
+        &#34;es_ES&#34;: (&#34;Calendario&#34;,),
+        &#34;fr_CA&#34;: (&#34;Calendrier&#34;,),
+        &#34;nl_NL&#34;: (&#34;Agenda&#34;,),
+        &#34;ru_RU&#34;: (&#34;Календарь&#34;,),
+        &#34;sv_SE&#34;: (&#34;Kalender&#34;,),
+        &#34;zh_CN&#34;: (&#34;日历&#34;,),
     }
 
     def view(self, *args, **kwargs):
@@ -58,141 +68,141 @@ class Calendar(Folder):
 
 
 class DeletedItems(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;deleteditems&#39;
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;deleteditems&#34;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     supported_item_models = ITEM_CLASSES
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Slettet post&#39;,),
-        &#39;de_DE&#39;: (&#39;Gelöschte Elemente&#39;,),
-        &#39;en_US&#39;: (&#39;Deleted Items&#39;,),
-        &#39;es_ES&#39;: (&#39;Elementos eliminados&#39;,),
-        &#39;fr_CA&#39;: (&#39;Éléments supprimés&#39;,),
-        &#39;nl_NL&#39;: (&#39;Verwijderde items&#39;,),
-        &#39;ru_RU&#39;: (&#39;Удаленные&#39;,),
-        &#39;sv_SE&#39;: (&#39;Borttaget&#39;,),
-        &#39;zh_CN&#39;: (&#39;已删除邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Slettet post&#34;,),
+        &#34;de_DE&#34;: (&#34;Gelöschte Elemente&#34;,),
+        &#34;en_US&#34;: (&#34;Deleted Items&#34;,),
+        &#34;es_ES&#34;: (&#34;Elementos eliminados&#34;,),
+        &#34;fr_CA&#34;: (&#34;Éléments supprimés&#34;,),
+        &#34;nl_NL&#34;: (&#34;Verwijderde items&#34;,),
+        &#34;ru_RU&#34;: (&#34;Удаленные&#34;,),
+        &#34;sv_SE&#34;: (&#34;Borttaget&#34;,),
+        &#34;zh_CN&#34;: (&#34;已删除邮件&#34;,),
     }
 
 
 class Messages(Folder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     supported_item_models = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)
 
 
 class Drafts(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;drafts&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;drafts&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kladder&#39;,),
-        &#39;de_DE&#39;: (&#39;Entwürfe&#39;,),
-        &#39;en_US&#39;: (&#39;Drafts&#39;,),
-        &#39;es_ES&#39;: (&#39;Borradores&#39;,),
-        &#39;fr_CA&#39;: (&#39;Brouillons&#39;,),
-        &#39;nl_NL&#39;: (&#39;Concepten&#39;,),
-        &#39;ru_RU&#39;: (&#39;Черновики&#39;,),
-        &#39;sv_SE&#39;: (&#39;Utkast&#39;,),
-        &#39;zh_CN&#39;: (&#39;草稿&#39;,),
+        &#34;da_DK&#34;: (&#34;Kladder&#34;,),
+        &#34;de_DE&#34;: (&#34;Entwürfe&#34;,),
+        &#34;en_US&#34;: (&#34;Drafts&#34;,),
+        &#34;es_ES&#34;: (&#34;Borradores&#34;,),
+        &#34;fr_CA&#34;: (&#34;Brouillons&#34;,),
+        &#34;nl_NL&#34;: (&#34;Concepten&#34;,),
+        &#34;ru_RU&#34;: (&#34;Черновики&#34;,),
+        &#34;sv_SE&#34;: (&#34;Utkast&#34;,),
+        &#34;zh_CN&#34;: (&#34;草稿&#34;,),
     }
 
 
 class Inbox(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;inbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;inbox&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Indbakke&#39;,),
-        &#39;de_DE&#39;: (&#39;Posteingang&#39;,),
-        &#39;en_US&#39;: (&#39;Inbox&#39;,),
-        &#39;es_ES&#39;: (&#39;Bandeja de entrada&#39;,),
-        &#39;fr_CA&#39;: (&#39;Boîte de réception&#39;,),
-        &#39;nl_NL&#39;: (&#39;Postvak IN&#39;,),
-        &#39;ru_RU&#39;: (&#39;Входящие&#39;,),
-        &#39;sv_SE&#39;: (&#39;Inkorgen&#39;,),
-        &#39;zh_CN&#39;: (&#39;收件箱&#39;,),
+        &#34;da_DK&#34;: (&#34;Indbakke&#34;,),
+        &#34;de_DE&#34;: (&#34;Posteingang&#34;,),
+        &#34;en_US&#34;: (&#34;Inbox&#34;,),
+        &#34;es_ES&#34;: (&#34;Bandeja de entrada&#34;,),
+        &#34;fr_CA&#34;: (&#34;Boîte de réception&#34;,),
+        &#34;nl_NL&#34;: (&#34;Postvak IN&#34;,),
+        &#34;ru_RU&#34;: (&#34;Входящие&#34;,),
+        &#34;sv_SE&#34;: (&#34;Inkorgen&#34;,),
+        &#34;zh_CN&#34;: (&#34;收件箱&#34;,),
     }
 
 
 class Outbox(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;outbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;outbox&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Udbakke&#39;,),
-        &#39;de_DE&#39;: (&#39;Postausgang&#39;,),
-        &#39;en_US&#39;: (&#39;Outbox&#39;,),
-        &#39;es_ES&#39;: (&#39;Bandeja de salida&#39;,),
-        &#39;fr_CA&#39;: (u&#34;Boîte d&#39;envoi&#34;,),
-        &#39;nl_NL&#39;: (&#39;Postvak UIT&#39;,),
-        &#39;ru_RU&#39;: (&#39;Исходящие&#39;,),
-        &#39;sv_SE&#39;: (&#39;Utkorgen&#39;,),
-        &#39;zh_CN&#39;: (&#39;发件箱&#39;,),
+        &#34;da_DK&#34;: (&#34;Udbakke&#34;,),
+        &#34;de_DE&#34;: (&#34;Postausgang&#34;,),
+        &#34;en_US&#34;: (&#34;Outbox&#34;,),
+        &#34;es_ES&#34;: (&#34;Bandeja de salida&#34;,),
+        &#34;fr_CA&#34;: (u&#34;Boîte d&#39;envoi&#34;,),
+        &#34;nl_NL&#34;: (&#34;Postvak UIT&#34;,),
+        &#34;ru_RU&#34;: (&#34;Исходящие&#34;,),
+        &#34;sv_SE&#34;: (&#34;Utkorgen&#34;,),
+        &#34;zh_CN&#34;: (&#34;发件箱&#34;,),
     }
 
 
 class SentItems(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;sentitems&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;sentitems&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Sendt post&#39;,),
-        &#39;de_DE&#39;: (&#39;Gesendete Elemente&#39;,),
-        &#39;en_US&#39;: (&#39;Sent Items&#39;,),
-        &#39;es_ES&#39;: (&#39;Elementos enviados&#39;,),
-        &#39;fr_CA&#39;: (&#39;Éléments envoyés&#39;,),
-        &#39;nl_NL&#39;: (&#39;Verzonden items&#39;,),
-        &#39;ru_RU&#39;: (&#39;Отправленные&#39;,),
-        &#39;sv_SE&#39;: (&#39;Skickat&#39;,),
-        &#39;zh_CN&#39;: (&#39;已发送邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Sendt post&#34;,),
+        &#34;de_DE&#34;: (&#34;Gesendete Elemente&#34;,),
+        &#34;en_US&#34;: (&#34;Sent Items&#34;,),
+        &#34;es_ES&#34;: (&#34;Elementos enviados&#34;,),
+        &#34;fr_CA&#34;: (&#34;Éléments envoyés&#34;,),
+        &#34;nl_NL&#34;: (&#34;Verzonden items&#34;,),
+        &#34;ru_RU&#34;: (&#34;Отправленные&#34;,),
+        &#34;sv_SE&#34;: (&#34;Skickat&#34;,),
+        &#34;zh_CN&#34;: (&#34;已发送邮件&#34;,),
     }
 
 
 class JunkEmail(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;junkemail&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;junkemail&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Uønsket e-mail&#39;,),
-        &#39;de_DE&#39;: (&#39;Junk-E-Mail&#39;,),
-        &#39;en_US&#39;: (&#39;Junk E-mail&#39;,),
-        &#39;es_ES&#39;: (&#39;Correo no deseado&#39;,),
-        &#39;fr_CA&#39;: (&#39;Courrier indésirables&#39;,),
-        &#39;nl_NL&#39;: (&#39;Ongewenste e-mail&#39;,),
-        &#39;ru_RU&#39;: (&#39;Нежелательная почта&#39;,),
-        &#39;sv_SE&#39;: (&#39;Skräppost&#39;,),
-        &#39;zh_CN&#39;: (&#39;垃圾邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Uønsket e-mail&#34;,),
+        &#34;de_DE&#34;: (&#34;Junk-E-Mail&#34;,),
+        &#34;en_US&#34;: (&#34;Junk E-mail&#34;,),
+        &#34;es_ES&#34;: (&#34;Correo no deseado&#34;,),
+        &#34;fr_CA&#34;: (&#34;Courrier indésirables&#34;,),
+        &#34;nl_NL&#34;: (&#34;Ongewenste e-mail&#34;,),
+        &#34;ru_RU&#34;: (&#34;Нежелательная почта&#34;,),
+        &#34;sv_SE&#34;: (&#34;Skräppost&#34;,),
+        &#34;zh_CN&#34;: (&#34;垃圾邮件&#34;,),
     }
 
 
 class Tasks(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;tasks&#39;
-    CONTAINER_CLASS = &#39;IPF.Task&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;tasks&#34;
+    CONTAINER_CLASS = &#34;IPF.Task&#34;
     supported_item_models = (Task,)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Opgaver&#39;,),
-        &#39;de_DE&#39;: (&#39;Aufgaben&#39;,),
-        &#39;en_US&#39;: (&#39;Tasks&#39;,),
-        &#39;es_ES&#39;: (&#39;Tareas&#39;,),
-        &#39;fr_CA&#39;: (&#39;Tâches&#39;,),
-        &#39;nl_NL&#39;: (&#39;Taken&#39;,),
-        &#39;ru_RU&#39;: (&#39;Задачи&#39;,),
-        &#39;sv_SE&#39;: (&#39;Uppgifter&#39;,),
-        &#39;zh_CN&#39;: (&#39;任务&#39;,),
+        &#34;da_DK&#34;: (&#34;Opgaver&#34;,),
+        &#34;de_DE&#34;: (&#34;Aufgaben&#34;,),
+        &#34;en_US&#34;: (&#34;Tasks&#34;,),
+        &#34;es_ES&#34;: (&#34;Tareas&#34;,),
+        &#34;fr_CA&#34;: (&#34;Tâches&#34;,),
+        &#34;nl_NL&#34;: (&#34;Taken&#34;,),
+        &#34;ru_RU&#34;: (&#34;Задачи&#34;,),
+        &#34;sv_SE&#34;: (&#34;Uppgifter&#34;,),
+        &#34;zh_CN&#34;: (&#34;任务&#34;,),
     }
 
 
 class Contacts(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;contacts&#39;
-    CONTAINER_CLASS = &#39;IPF.Contact&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;contacts&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact&#34;
     supported_item_models = (Contact, DistributionList)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kontaktpersoner&#39;,),
-        &#39;de_DE&#39;: (&#39;Kontakte&#39;,),
-        &#39;en_US&#39;: (&#39;Contacts&#39;,),
-        &#39;es_ES&#39;: (&#39;Contactos&#39;,),
-        &#39;fr_CA&#39;: (&#39;Contacts&#39;,),
-        &#39;nl_NL&#39;: (&#39;Contactpersonen&#39;,),
-        &#39;ru_RU&#39;: (&#39;Контакты&#39;,),
-        &#39;sv_SE&#39;: (&#39;Kontakter&#39;,),
-        &#39;zh_CN&#39;: (&#39;联系人&#39;,),
+        &#34;da_DK&#34;: (&#34;Kontaktpersoner&#34;,),
+        &#34;de_DE&#34;: (&#34;Kontakte&#34;,),
+        &#34;en_US&#34;: (&#34;Contacts&#34;,),
+        &#34;es_ES&#34;: (&#34;Contactos&#34;,),
+        &#34;fr_CA&#34;: (&#34;Contacts&#34;,),
+        &#34;nl_NL&#34;: (&#34;Contactpersonen&#34;,),
+        &#34;ru_RU&#34;: (&#34;Контакты&#34;,),
+        &#34;sv_SE&#34;: (&#34;Kontakter&#34;,),
+        &#34;zh_CN&#34;: (&#34;联系人&#34;,),
     }
 
 
@@ -203,175 +213,175 @@ class WellknownFolder(Folder, metaclass=EWSMeta):
 
 
 class AdminAuditLogs(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;adminauditlogs&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;adminauditlogs&#34;
     supported_from = EXCHANGE_2013
     get_folder_allowed = False
 
 
 class ArchiveDeletedItems(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archivedeleteditems&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archivedeleteditems&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class ArchiveInbox(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiveinbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiveinbox&#34;
     supported_from = EXCHANGE_2013_SP1
 
 
 class ArchiveMsgFolderRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archivemsgfolderroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archivemsgfolderroot&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class ArchiveRecoverableItemsDeletions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsdeletions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsdeletions&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class ArchiveRecoverableItemsPurges(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemspurges&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemspurges&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class ArchiveRecoverableItemsRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsroot&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class ArchiveRecoverableItemsVersions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsversions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsversions&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class Conflicts(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;conflicts&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;conflicts&#34;
     supported_from = EXCHANGE_2013
 
 
 class ConversationHistory(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;conversationhistory&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;conversationhistory&#34;
     supported_from = EXCHANGE_2013
 
 
 class Directory(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;directory&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;directory&#34;
     supported_from = EXCHANGE_2013_SP1
 
 
 class Favorites(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;favorites&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;favorites&#34;
     supported_from = EXCHANGE_2013
 
 
 class IMContactList(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Contact.MOC.ImContactList&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;imcontactlist&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.MOC.ImContactList&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;imcontactlist&#34;
     supported_from = EXCHANGE_2013
 
 
 class Journal(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Journal&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;journal&#39;
+    CONTAINER_CLASS = &#34;IPF.Journal&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;journal&#34;
 
 
 class LocalFailures(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;localfailures&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;localfailures&#34;
     supported_from = EXCHANGE_2013
 
 
 class MsgFolderRoot(WellknownFolder):
     &#34;&#34;&#34;Also known as the &#39;Top of Information Store&#39; folder.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;msgfolderroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;msgfolderroot&#34;
     LOCALIZED_NAMES = {
-        &#39;zh_CN&#39;: (&#39;信息存储顶部&#39;,),
+        &#34;zh_CN&#34;: (&#34;信息存储顶部&#34;,),
     }
 
 
 class MyContacts(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;mycontacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;mycontacts&#34;
     supported_from = EXCHANGE_2013
 
 
 class Notes(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.StickyNote&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;notes&#39;
+    CONTAINER_CLASS = &#34;IPF.StickyNote&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;notes&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Noter&#39;,),
+        &#34;da_DK&#34;: (&#34;Noter&#34;,),
     }
 
 
 class PeopleConnect(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;peopleconnect&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;peopleconnect&#34;
     supported_from = EXCHANGE_2013
 
 
 class QuickContacts(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Contact.MOC.QuickContacts&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;quickcontacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.MOC.QuickContacts&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;quickcontacts&#34;
     supported_from = EXCHANGE_2013
 
 
 class RecipientCache(Contacts):
-    DISTINGUISHED_FOLDER_ID = &#39;recipientcache&#39;
-    CONTAINER_CLASS = &#39;IPF.Contact.RecipientCache&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recipientcache&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.RecipientCache&#34;
     supported_from = EXCHANGE_2013
 
     LOCALIZED_NAMES = {}
 
 
 class RecoverableItemsDeletions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsdeletions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsdeletions&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class RecoverableItemsPurges(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemspurges&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemspurges&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class RecoverableItemsRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsroot&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class RecoverableItemsVersions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsversions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsversions&#34;
     supported_from = EXCHANGE_2010_SP1
 
 
 class SearchFolders(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;searchfolders&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;searchfolders&#34;
 
 
 class ServerFailures(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;serverfailures&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;serverfailures&#34;
     supported_from = EXCHANGE_2013
 
 
 class SyncIssues(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;syncissues&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;syncissues&#34;
     supported_from = EXCHANGE_2013
 
 
 class ToDoSearch(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Task&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;todosearch&#39;
+    CONTAINER_CLASS = &#34;IPF.Task&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;todosearch&#34;
     supported_from = EXCHANGE_2013
 
     LOCALIZED_NAMES = {
-        None: (&#39;To-Do Search&#39;,),
+        None: (&#34;To-Do Search&#34;,),
     }
 
 
 class VoiceMail(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;voicemail&#39;
-    CONTAINER_CLASS = &#39;IPF.Note.Microsoft.Voicemail&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;voicemail&#34;
+    CONTAINER_CLASS = &#34;IPF.Note.Microsoft.Voicemail&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Voice Mail&#39;,),
+        None: (&#34;Voice Mail&#34;,),
     }
 
 
@@ -384,251 +394,251 @@ class NonDeletableFolderMixin:
 
 
 class AllContacts(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;AllContacts&#39;,),
+        None: (&#34;AllContacts&#34;,),
     }
 
 
 class AllItems(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF&#39;
+    CONTAINER_CLASS = &#34;IPF&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;AllItems&#39;,),
+        None: (&#34;AllItems&#34;,),
     }
 
 
 class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Audits&#39;,),
+        None: (&#34;Audits&#34;,),
     }
     get_folder_allowed = False
 
 
 class CalendarLogging(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Calendar Logging&#39;,),
+        None: (&#34;Calendar Logging&#34;,),
     }
 
 
 class CommonViews(NonDeletableFolderMixin, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
-        None: (&#39;Common Views&#39;,),
+        None: (&#34;Common Views&#34;,),
     }
 
 
 class Companies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.Company&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Companies&#39;,),
+        None: (&#34;Companies&#34;,),
     }
 
 
 class ConversationSettings(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Configuration&#39;
+    CONTAINER_CLASS = &#34;IPF.Configuration&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Indstillinger for samtalehandlinger&#39;,),
+        &#34;da_DK&#34;: (&#34;Indstillinger for samtalehandlinger&#34;,),
     }
 
 
 class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPM.DefaultFolderHistoryItem&#39;
+    CONTAINER_CLASS = &#34;IPM.DefaultFolderHistoryItem&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;DefaultFoldersChangeHistory&#39;,),
+        None: (&#34;DefaultFoldersChangeHistory&#34;,),
     }
 
 
 class DeferredAction(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Deferred Action&#39;,),
+        None: (&#34;Deferred Action&#34;,),
     }
 
 
 class ExchangeSyncData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;ExchangeSyncData&#39;,),
+        None: (&#34;ExchangeSyncData&#34;,),
     }
 
 
 class Files(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Files&#39;
+    CONTAINER_CLASS = &#34;IPF.Files&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Filer&#39;,),
+        &#34;da_DK&#34;: (&#34;Filer&#34;,),
     }
 
 
 class FreebusyData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Freebusy Data&#39;,),
+        None: (&#34;Freebusy Data&#34;,),
     }
 
 
 class Friends(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
-        &#39;de_DE&#39;: (&#39;Bekannte&#39;,),
+        &#34;de_DE&#34;: (&#34;Bekannte&#34;,),
     }
 
 
 class GALContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINER_CLASS = &#39;IPF.Contact.GalContacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.GalContacts&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;GAL Contacts&#39;,),
+        None: (&#34;GAL Contacts&#34;,),
     }
 
 
 class GraphAnalytics(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.GraphAnalytics&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.GraphAnalytics&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;GraphAnalytics&#39;,),
+        None: (&#34;GraphAnalytics&#34;,),
     }
 
 
 class Location(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Location&#39;,),
+        None: (&#34;Location&#34;,),
     }
 
 
 class MailboxAssociations(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;MailboxAssociations&#39;,),
+        None: (&#34;MailboxAssociations&#34;,),
     }
 
 
 class MyContactsExtended(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;MyContactsExtended&#39;,),
+        None: (&#34;MyContactsExtended&#34;,),
     }
 
 
 class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.OrganizationalContacts&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Organizational Contacts&#39;,),
+        None: (&#34;Organizational Contacts&#34;,),
     }
 
 
 class ParkedMessages(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
-        None: (&#39;ParkedMessages&#39;,),
+        None: (&#34;ParkedMessages&#34;,),
     }
 
 
 class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.PassThroughSearchResults&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.PassThroughSearchResults&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Pass-Through Search Results&#39;,),
+        None: (&#34;Pass-Through Search Results&#34;,),
     }
 
 
 class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.PeopleCentricConversationBuddies&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;PeopleCentricConversation Buddies&#39;,),
+        None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }
 
 
 class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.PdpProfileSecured&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.PdpProfileSecured&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;PdpProfileV2Secured&#39;,),
+        None: (&#34;PdpProfileV2Secured&#34;,),
     }
 
 
 class Reminders(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;Outlook.Reminder&#39;
+    CONTAINER_CLASS = &#34;Outlook.Reminder&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Påmindelser&#39;,),
+        &#34;da_DK&#34;: (&#34;Påmindelser&#34;,),
     }
 
 
 class RSSFeeds(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Note.OutlookHomepage&#39;
+    CONTAINER_CLASS = &#34;IPF.Note.OutlookHomepage&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;RSS Feeds&#39;,),
+        None: (&#34;RSS Feeds&#34;,),
     }
 
 
 class Schedule(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Schedule&#39;,),
+        None: (&#34;Schedule&#34;,),
     }
 
 
 class Sharing(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Sharing&#39;,),
+        None: (&#34;Sharing&#34;,),
     }
 
 
 class Shortcuts(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Shortcuts&#39;,),
+        None: (&#34;Shortcuts&#34;,),
     }
 
 
 class Signal(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.Signal&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.Signal&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Signal&#39;,),
+        None: (&#34;Signal&#34;,),
     }
 
 
 class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.SmsAndChatsSync&#39;
+    CONTAINER_CLASS = &#34;IPF.SmsAndChatsSync&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;SmsAndChatsSync&#39;,),
+        None: (&#34;SmsAndChatsSync&#34;,),
     }
 
 
 class SpoolerQueue(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Spooler Queue&#39;,),
+        None: (&#34;Spooler Queue&#34;,),
     }
 
 
 class System(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;System&#39;,),
+        None: (&#34;System&#34;,),
     }
     get_folder_allowed = False
 
 
 class System1(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;System1&#39;,),
+        None: (&#34;System1&#34;,),
     }
     get_folder_allowed = False
 
 
 class TemporarySaves(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;TemporarySaves&#39;,),
+        None: (&#34;TemporarySaves&#34;,),
     }
 
 
 class Views(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Views&#39;,),
+        None: (&#34;Views&#34;,),
     }
 
 
 class WorkingSet(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Working Set&#39;,),
+        None: (&#34;Working Set&#34;,),
     }
 
 
@@ -739,7 +749,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AdminAuditLogs(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;adminauditlogs&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;adminauditlogs&#34;
     supported_from = EXCHANGE_2013
     get_folder_allowed = False</code></pre>
 </details>
@@ -818,10 +828,10 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AllContacts(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;AllContacts&#39;,),
+        None: (&#34;AllContacts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -896,10 +906,10 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AllItems(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF&#39;
+    CONTAINER_CLASS = &#34;IPF&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;AllItems&#39;,),
+        None: (&#34;AllItems&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -973,7 +983,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveDeletedItems(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archivedeleteditems&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archivedeleteditems&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1047,7 +1057,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveInbox(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiveinbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiveinbox&#34;
     supported_from = EXCHANGE_2013_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1121,7 +1131,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveMsgFolderRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archivemsgfolderroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archivemsgfolderroot&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1195,7 +1205,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsDeletions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsdeletions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsdeletions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1269,7 +1279,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsPurges(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemspurges&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemspurges&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1343,7 +1353,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsroot&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1417,7 +1427,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsVersions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsversions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsversions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1492,7 +1502,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Audits&#39;,),
+        None: (&#34;Audits&#34;,),
     }
     get_folder_allowed = False</code></pre>
 </details>
@@ -1569,20 +1579,20 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <pre><code class="python">class Calendar(Folder):
     &#34;&#34;&#34;An interface for the Exchange calendar.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;calendar&#39;
-    CONTAINER_CLASS = &#39;IPF.Appointment&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;calendar&#34;
+    CONTAINER_CLASS = &#34;IPF.Appointment&#34;
     supported_item_models = (CalendarItem,)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kalender&#39;,),
-        &#39;de_DE&#39;: (&#39;Kalender&#39;,),
-        &#39;en_US&#39;: (&#39;Calendar&#39;,),
-        &#39;es_ES&#39;: (&#39;Calendario&#39;,),
-        &#39;fr_CA&#39;: (&#39;Calendrier&#39;,),
-        &#39;nl_NL&#39;: (&#39;Agenda&#39;,),
-        &#39;ru_RU&#39;: (&#39;Календарь&#39;,),
-        &#39;sv_SE&#39;: (&#39;Kalender&#39;,),
-        &#39;zh_CN&#39;: (&#39;日历&#39;,),
+        &#34;da_DK&#34;: (&#34;Kalender&#34;,),
+        &#34;de_DE&#34;: (&#34;Kalender&#34;,),
+        &#34;en_US&#34;: (&#34;Calendar&#34;,),
+        &#34;es_ES&#34;: (&#34;Calendario&#34;,),
+        &#34;fr_CA&#34;: (&#34;Calendrier&#34;,),
+        &#34;nl_NL&#34;: (&#34;Agenda&#34;,),
+        &#34;ru_RU&#34;: (&#34;Календарь&#34;,),
+        &#34;sv_SE&#34;: (&#34;Kalender&#34;,),
+        &#34;zh_CN&#34;: (&#34;日历&#34;,),
     }
 
     def view(self, *args, **kwargs):
@@ -1683,7 +1693,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class CalendarLogging(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Calendar Logging&#39;,),
+        None: (&#34;Calendar Logging&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1755,7 +1765,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <pre><code class="python">class CommonViews(NonDeletableFolderMixin, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
-        None: (&#39;Common Views&#39;,),
+        None: (&#34;Common Views&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1830,9 +1840,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class Companies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.Company&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Companies&#39;,),
+        None: (&#34;Companies&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1911,7 +1921,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Conflicts(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;conflicts&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;conflicts&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1985,20 +1995,20 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Contacts(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;contacts&#39;
-    CONTAINER_CLASS = &#39;IPF.Contact&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;contacts&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact&#34;
     supported_item_models = (Contact, DistributionList)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kontaktpersoner&#39;,),
-        &#39;de_DE&#39;: (&#39;Kontakte&#39;,),
-        &#39;en_US&#39;: (&#39;Contacts&#39;,),
-        &#39;es_ES&#39;: (&#39;Contactos&#39;,),
-        &#39;fr_CA&#39;: (&#39;Contacts&#39;,),
-        &#39;nl_NL&#39;: (&#39;Contactpersonen&#39;,),
-        &#39;ru_RU&#39;: (&#39;Контакты&#39;,),
-        &#39;sv_SE&#39;: (&#39;Kontakter&#39;,),
-        &#39;zh_CN&#39;: (&#39;联系人&#39;,),
+        &#34;da_DK&#34;: (&#34;Kontaktpersoner&#34;,),
+        &#34;de_DE&#34;: (&#34;Kontakte&#34;,),
+        &#34;en_US&#34;: (&#34;Contacts&#34;,),
+        &#34;es_ES&#34;: (&#34;Contactos&#34;,),
+        &#34;fr_CA&#34;: (&#34;Contacts&#34;,),
+        &#34;nl_NL&#34;: (&#34;Contactpersonen&#34;,),
+        &#34;ru_RU&#34;: (&#34;Контакты&#34;,),
+        &#34;sv_SE&#34;: (&#34;Kontakter&#34;,),
+        &#34;zh_CN&#34;: (&#34;联系人&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2090,7 +2100,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ConversationHistory(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;conversationhistory&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;conversationhistory&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2164,9 +2174,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ConversationSettings(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Configuration&#39;
+    CONTAINER_CLASS = &#34;IPF.Configuration&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Indstillinger for samtalehandlinger&#39;,),
+        &#34;da_DK&#34;: (&#34;Indstillinger for samtalehandlinger&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2240,9 +2250,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPM.DefaultFolderHistoryItem&#39;
+    CONTAINER_CLASS = &#34;IPM.DefaultFolderHistoryItem&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;DefaultFoldersChangeHistory&#39;,),
+        None: (&#34;DefaultFoldersChangeHistory&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2317,7 +2327,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class DeferredAction(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Deferred Action&#39;,),
+        None: (&#34;Deferred Action&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2387,20 +2397,20 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DeletedItems(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;deleteditems&#39;
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;deleteditems&#34;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     supported_item_models = ITEM_CLASSES
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Slettet post&#39;,),
-        &#39;de_DE&#39;: (&#39;Gelöschte Elemente&#39;,),
-        &#39;en_US&#39;: (&#39;Deleted Items&#39;,),
-        &#39;es_ES&#39;: (&#39;Elementos eliminados&#39;,),
-        &#39;fr_CA&#39;: (&#39;Éléments supprimés&#39;,),
-        &#39;nl_NL&#39;: (&#39;Verwijderde items&#39;,),
-        &#39;ru_RU&#39;: (&#39;Удаленные&#39;,),
-        &#39;sv_SE&#39;: (&#39;Borttaget&#39;,),
-        &#39;zh_CN&#39;: (&#39;已删除邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Slettet post&#34;,),
+        &#34;de_DE&#34;: (&#34;Gelöschte Elemente&#34;,),
+        &#34;en_US&#34;: (&#34;Deleted Items&#34;,),
+        &#34;es_ES&#34;: (&#34;Elementos eliminados&#34;,),
+        &#34;fr_CA&#34;: (&#34;Éléments supprimés&#34;,),
+        &#34;nl_NL&#34;: (&#34;Verwijderde items&#34;,),
+        &#34;ru_RU&#34;: (&#34;Удаленные&#34;,),
+        &#34;sv_SE&#34;: (&#34;Borttaget&#34;,),
+        &#34;zh_CN&#34;: (&#34;已删除邮件&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2481,7 +2491,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Directory(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;directory&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;directory&#34;
     supported_from = EXCHANGE_2013_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2555,18 +2565,18 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Drafts(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;drafts&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;drafts&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kladder&#39;,),
-        &#39;de_DE&#39;: (&#39;Entwürfe&#39;,),
-        &#39;en_US&#39;: (&#39;Drafts&#39;,),
-        &#39;es_ES&#39;: (&#39;Borradores&#39;,),
-        &#39;fr_CA&#39;: (&#39;Brouillons&#39;,),
-        &#39;nl_NL&#39;: (&#39;Concepten&#39;,),
-        &#39;ru_RU&#39;: (&#39;Черновики&#39;,),
-        &#39;sv_SE&#39;: (&#39;Utkast&#39;,),
-        &#39;zh_CN&#39;: (&#39;草稿&#39;,),
+        &#34;da_DK&#34;: (&#34;Kladder&#34;,),
+        &#34;de_DE&#34;: (&#34;Entwürfe&#34;,),
+        &#34;en_US&#34;: (&#34;Drafts&#34;,),
+        &#34;es_ES&#34;: (&#34;Borradores&#34;,),
+        &#34;fr_CA&#34;: (&#34;Brouillons&#34;,),
+        &#34;nl_NL&#34;: (&#34;Concepten&#34;,),
+        &#34;ru_RU&#34;: (&#34;Черновики&#34;,),
+        &#34;sv_SE&#34;: (&#34;Utkast&#34;,),
+        &#34;zh_CN&#34;: (&#34;草稿&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2641,7 +2651,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class ExchangeSyncData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;ExchangeSyncData&#39;,),
+        None: (&#34;ExchangeSyncData&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2711,8 +2721,8 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Favorites(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;favorites&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;favorites&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2790,10 +2800,10 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Files(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Files&#39;
+    CONTAINER_CLASS = &#34;IPF.Files&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Filer&#39;,),
+        &#34;da_DK&#34;: (&#34;Filer&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2868,7 +2878,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class FreebusyData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Freebusy Data&#39;,),
+        None: (&#34;Freebusy Data&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2938,10 +2948,10 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Friends(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
-        &#39;de_DE&#39;: (&#39;Bekannte&#39;,),
+        &#34;de_DE&#34;: (&#34;Bekannte&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3017,10 +3027,10 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class GALContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINER_CLASS = &#39;IPF.Contact.GalContacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.GalContacts&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;GAL Contacts&#39;,),
+        None: (&#34;GAL Contacts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3099,9 +3109,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GraphAnalytics(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.GraphAnalytics&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.GraphAnalytics&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;GraphAnalytics&#39;,),
+        None: (&#34;GraphAnalytics&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3175,8 +3185,8 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IMContactList(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Contact.MOC.ImContactList&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;imcontactlist&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.MOC.ImContactList&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;imcontactlist&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3254,18 +3264,18 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Inbox(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;inbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;inbox&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Indbakke&#39;,),
-        &#39;de_DE&#39;: (&#39;Posteingang&#39;,),
-        &#39;en_US&#39;: (&#39;Inbox&#39;,),
-        &#39;es_ES&#39;: (&#39;Bandeja de entrada&#39;,),
-        &#39;fr_CA&#39;: (&#39;Boîte de réception&#39;,),
-        &#39;nl_NL&#39;: (&#39;Postvak IN&#39;,),
-        &#39;ru_RU&#39;: (&#39;Входящие&#39;,),
-        &#39;sv_SE&#39;: (&#39;Inkorgen&#39;,),
-        &#39;zh_CN&#39;: (&#39;收件箱&#39;,),
+        &#34;da_DK&#34;: (&#34;Indbakke&#34;,),
+        &#34;de_DE&#34;: (&#34;Posteingang&#34;,),
+        &#34;en_US&#34;: (&#34;Inbox&#34;,),
+        &#34;es_ES&#34;: (&#34;Bandeja de entrada&#34;,),
+        &#34;fr_CA&#34;: (&#34;Boîte de réception&#34;,),
+        &#34;nl_NL&#34;: (&#34;Postvak IN&#34;,),
+        &#34;ru_RU&#34;: (&#34;Входящие&#34;,),
+        &#34;sv_SE&#34;: (&#34;Inkorgen&#34;,),
+        &#34;zh_CN&#34;: (&#34;收件箱&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3339,8 +3349,8 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Journal(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Journal&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;journal&#39;</code></pre>
+    CONTAINER_CLASS = &#34;IPF.Journal&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;journal&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3413,18 +3423,18 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class JunkEmail(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;junkemail&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;junkemail&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Uønsket e-mail&#39;,),
-        &#39;de_DE&#39;: (&#39;Junk-E-Mail&#39;,),
-        &#39;en_US&#39;: (&#39;Junk E-mail&#39;,),
-        &#39;es_ES&#39;: (&#39;Correo no deseado&#39;,),
-        &#39;fr_CA&#39;: (&#39;Courrier indésirables&#39;,),
-        &#39;nl_NL&#39;: (&#39;Ongewenste e-mail&#39;,),
-        &#39;ru_RU&#39;: (&#39;Нежелательная почта&#39;,),
-        &#39;sv_SE&#39;: (&#39;Skräppost&#39;,),
-        &#39;zh_CN&#39;: (&#39;垃圾邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Uønsket e-mail&#34;,),
+        &#34;de_DE&#34;: (&#34;Junk-E-Mail&#34;,),
+        &#34;en_US&#34;: (&#34;Junk E-mail&#34;,),
+        &#34;es_ES&#34;: (&#34;Correo no deseado&#34;,),
+        &#34;fr_CA&#34;: (&#34;Courrier indésirables&#34;,),
+        &#34;nl_NL&#34;: (&#34;Ongewenste e-mail&#34;,),
+        &#34;ru_RU&#34;: (&#34;Нежелательная почта&#34;,),
+        &#34;sv_SE&#34;: (&#34;Skräppost&#34;,),
+        &#34;zh_CN&#34;: (&#34;垃圾邮件&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3498,7 +3508,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LocalFailures(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;localfailures&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;localfailures&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3573,7 +3583,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class Location(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Location&#39;,),
+        None: (&#34;Location&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3644,7 +3654,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 </summary>
 <pre><code class="python">class MailboxAssociations(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;MailboxAssociations&#39;,),
+        None: (&#34;MailboxAssociations&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3714,7 +3724,7 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Messages(Folder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     supported_item_models = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3797,9 +3807,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <pre><code class="python">class MsgFolderRoot(WellknownFolder):
     &#34;&#34;&#34;Also known as the &#39;Top of Information Store&#39; folder.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;msgfolderroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;msgfolderroot&#34;
     LOCALIZED_NAMES = {
-        &#39;zh_CN&#39;: (&#39;信息存储顶部&#39;,),
+        &#34;zh_CN&#34;: (&#34;信息存储顶部&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3873,8 +3883,8 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MyContacts(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;mycontacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;mycontacts&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3952,9 +3962,9 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MyContactsExtended(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;MyContactsExtended&#39;,),
+        None: (&#34;MyContactsExtended&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4100,10 +4110,10 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Notes(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.StickyNote&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;notes&#39;
+    CONTAINER_CLASS = &#34;IPF.StickyNote&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;notes&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Noter&#39;,),
+        &#34;da_DK&#34;: (&#34;Noter&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4182,9 +4192,9 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.OrganizationalContacts&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Organizational Contacts&#39;,),
+        None: (&#34;Organizational Contacts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4263,18 +4273,18 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Outbox(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;outbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;outbox&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Udbakke&#39;,),
-        &#39;de_DE&#39;: (&#39;Postausgang&#39;,),
-        &#39;en_US&#39;: (&#39;Outbox&#39;,),
-        &#39;es_ES&#39;: (&#39;Bandeja de salida&#39;,),
-        &#39;fr_CA&#39;: (u&#34;Boîte d&#39;envoi&#34;,),
-        &#39;nl_NL&#39;: (&#39;Postvak UIT&#39;,),
-        &#39;ru_RU&#39;: (&#39;Исходящие&#39;,),
-        &#39;sv_SE&#39;: (&#39;Utkorgen&#39;,),
-        &#39;zh_CN&#39;: (&#39;发件箱&#39;,),
+        &#34;da_DK&#34;: (&#34;Udbakke&#34;,),
+        &#34;de_DE&#34;: (&#34;Postausgang&#34;,),
+        &#34;en_US&#34;: (&#34;Outbox&#34;,),
+        &#34;es_ES&#34;: (&#34;Bandeja de salida&#34;,),
+        &#34;fr_CA&#34;: (u&#34;Boîte d&#39;envoi&#34;,),
+        &#34;nl_NL&#34;: (&#34;Postvak UIT&#34;,),
+        &#34;ru_RU&#34;: (&#34;Исходящие&#34;,),
+        &#34;sv_SE&#34;: (&#34;Utkorgen&#34;,),
+        &#34;zh_CN&#34;: (&#34;发件箱&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4350,7 +4360,7 @@ def is_deletable(self):
 <pre><code class="python">class ParkedMessages(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
-        None: (&#39;ParkedMessages&#39;,),
+        None: (&#34;ParkedMessages&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4424,9 +4434,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.PassThroughSearchResults&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.PassThroughSearchResults&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Pass-Through Search Results&#39;,),
+        None: (&#34;Pass-Through Search Results&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4500,9 +4510,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.PdpProfileSecured&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.PdpProfileSecured&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;PdpProfileV2Secured&#39;,),
+        None: (&#34;PdpProfileV2Secured&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4577,9 +4587,9 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.PeopleCentricConversationBuddies&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;PeopleCentricConversation Buddies&#39;,),
+        None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4658,7 +4668,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PeopleConnect(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;peopleconnect&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;peopleconnect&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4732,8 +4742,8 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class QuickContacts(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Contact.MOC.QuickContacts&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;quickcontacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.MOC.QuickContacts&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;quickcontacts&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4811,9 +4821,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RSSFeeds(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Note.OutlookHomepage&#39;
+    CONTAINER_CLASS = &#34;IPF.Note.OutlookHomepage&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;RSS Feeds&#39;,),
+        None: (&#34;RSS Feeds&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4887,8 +4897,8 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecipientCache(Contacts):
-    DISTINGUISHED_FOLDER_ID = &#39;recipientcache&#39;
-    CONTAINER_CLASS = &#39;IPF.Contact.RecipientCache&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recipientcache&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.RecipientCache&#34;
     supported_from = EXCHANGE_2013
 
     LOCALIZED_NAMES = {}</code></pre>
@@ -4972,7 +4982,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsDeletions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsdeletions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsdeletions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5046,7 +5056,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsPurges(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemspurges&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemspurges&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5120,7 +5130,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsroot&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5194,7 +5204,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsVersions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsversions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsversions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5268,9 +5278,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Reminders(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;Outlook.Reminder&#39;
+    CONTAINER_CLASS = &#34;Outlook.Reminder&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Påmindelser&#39;,),
+        &#34;da_DK&#34;: (&#34;Påmindelser&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5345,7 +5355,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class Schedule(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Schedule&#39;,),
+        None: (&#34;Schedule&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5415,7 +5425,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SearchFolders(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;searchfolders&#39;</code></pre>
+    DISTINGUISHED_FOLDER_ID = &#34;searchfolders&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5484,18 +5494,18 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SentItems(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;sentitems&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;sentitems&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Sendt post&#39;,),
-        &#39;de_DE&#39;: (&#39;Gesendete Elemente&#39;,),
-        &#39;en_US&#39;: (&#39;Sent Items&#39;,),
-        &#39;es_ES&#39;: (&#39;Elementos enviados&#39;,),
-        &#39;fr_CA&#39;: (&#39;Éléments envoyés&#39;,),
-        &#39;nl_NL&#39;: (&#39;Verzonden items&#39;,),
-        &#39;ru_RU&#39;: (&#39;Отправленные&#39;,),
-        &#39;sv_SE&#39;: (&#39;Skickat&#39;,),
-        &#39;zh_CN&#39;: (&#39;已发送邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Sendt post&#34;,),
+        &#34;de_DE&#34;: (&#34;Gesendete Elemente&#34;,),
+        &#34;en_US&#34;: (&#34;Sent Items&#34;,),
+        &#34;es_ES&#34;: (&#34;Elementos enviados&#34;,),
+        &#34;fr_CA&#34;: (&#34;Éléments envoyés&#34;,),
+        &#34;nl_NL&#34;: (&#34;Verzonden items&#34;,),
+        &#34;ru_RU&#34;: (&#34;Отправленные&#34;,),
+        &#34;sv_SE&#34;: (&#34;Skickat&#34;,),
+        &#34;zh_CN&#34;: (&#34;已发送邮件&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5569,7 +5579,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ServerFailures(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;serverfailures&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;serverfailures&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5643,9 +5653,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Sharing(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Sharing&#39;,),
+        None: (&#34;Sharing&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5720,7 +5730,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class Shortcuts(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Shortcuts&#39;,),
+        None: (&#34;Shortcuts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5790,9 +5800,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Signal(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.Signal&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.Signal&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Signal&#39;,),
+        None: (&#34;Signal&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5866,9 +5876,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.SmsAndChatsSync&#39;
+    CONTAINER_CLASS = &#34;IPF.SmsAndChatsSync&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;SmsAndChatsSync&#39;,),
+        None: (&#34;SmsAndChatsSync&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5943,7 +5953,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class SpoolerQueue(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Spooler Queue&#39;,),
+        None: (&#34;Spooler Queue&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6013,8 +6023,8 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SyncIssues(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;syncissues&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;syncissues&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6093,7 +6103,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class System(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;System&#39;,),
+        None: (&#34;System&#34;,),
     }
     get_folder_allowed = False</code></pre>
 </details>
@@ -6169,7 +6179,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class System1(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;System1&#39;,),
+        None: (&#34;System1&#34;,),
     }
     get_folder_allowed = False</code></pre>
 </details>
@@ -6244,20 +6254,20 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Tasks(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;tasks&#39;
-    CONTAINER_CLASS = &#39;IPF.Task&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;tasks&#34;
+    CONTAINER_CLASS = &#34;IPF.Task&#34;
     supported_item_models = (Task,)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Opgaver&#39;,),
-        &#39;de_DE&#39;: (&#39;Aufgaben&#39;,),
-        &#39;en_US&#39;: (&#39;Tasks&#39;,),
-        &#39;es_ES&#39;: (&#39;Tareas&#39;,),
-        &#39;fr_CA&#39;: (&#39;Tâches&#39;,),
-        &#39;nl_NL&#39;: (&#39;Taken&#39;,),
-        &#39;ru_RU&#39;: (&#39;Задачи&#39;,),
-        &#39;sv_SE&#39;: (&#39;Uppgifter&#39;,),
-        &#39;zh_CN&#39;: (&#39;任务&#39;,),
+        &#34;da_DK&#34;: (&#34;Opgaver&#34;,),
+        &#34;de_DE&#34;: (&#34;Aufgaben&#34;,),
+        &#34;en_US&#34;: (&#34;Tasks&#34;,),
+        &#34;es_ES&#34;: (&#34;Tareas&#34;,),
+        &#34;fr_CA&#34;: (&#34;Tâches&#34;,),
+        &#34;nl_NL&#34;: (&#34;Taken&#34;,),
+        &#34;ru_RU&#34;: (&#34;Задачи&#34;,),
+        &#34;sv_SE&#34;: (&#34;Uppgifter&#34;,),
+        &#34;zh_CN&#34;: (&#34;任务&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6339,7 +6349,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class TemporarySaves(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;TemporarySaves&#39;,),
+        None: (&#34;TemporarySaves&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6409,12 +6419,12 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ToDoSearch(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Task&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;todosearch&#39;
+    CONTAINER_CLASS = &#34;IPF.Task&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;todosearch&#34;
     supported_from = EXCHANGE_2013
 
     LOCALIZED_NAMES = {
-        None: (&#39;To-Do Search&#39;,),
+        None: (&#34;To-Do Search&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6497,7 +6507,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class Views(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Views&#39;,),
+        None: (&#34;Views&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6567,10 +6577,10 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class VoiceMail(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;voicemail&#39;
-    CONTAINER_CLASS = &#39;IPF.Note.Microsoft.Voicemail&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;voicemail&#34;
+    CONTAINER_CLASS = &#34;IPF.Note.Microsoft.Voicemail&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Voice Mail&#39;,),
+        None: (&#34;Voice Mail&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6751,7 +6761,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class WorkingSet(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Working Set&#39;,),
+        None: (&#34;Working Set&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>

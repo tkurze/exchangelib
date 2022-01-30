@@ -28,13 +28,13 @@
 </summary>
 <pre><code class="python">import logging
 
-from .common import EWSAccountService, add_xml_child
 from ..errors import EWSError, InvalidTypeError
 from ..properties import Notification
-from ..util import create_element, get_xml_attr, get_xml_attrs, MNS, DocumentYielder, DummyResponse
+from ..util import MNS, DocumentYielder, DummyResponse, create_element, get_xml_attr, get_xml_attrs
+from .common import EWSAccountService, add_xml_child
 
 log = logging.getLogger(__name__)
-xml_log = logging.getLogger(f&#39;{__name__}.xml&#39;)
+xml_log = logging.getLogger(f&#34;{__name__}.xml&#34;)
 
 
 class GetStreamingEvents(EWSAccountService):
@@ -42,13 +42,13 @@ class GetStreamingEvents(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetStreamingEvents&#39;
-    element_container_name = f&#39;{{{MNS}}}Notifications&#39;
+    SERVICE_NAME = &#34;GetStreamingEvents&#34;
+    element_container_name = f&#34;{{{MNS}}}Notifications&#34;
     prefer_affinity = True
 
     # Connection status values
-    OK = &#39;OK&#39;
-    CLOSED = &#39;Closed&#39;
+    OK = &#34;OK&#34;
+    CLOSED = &#34;Closed&#34;
 
     def __init__(self, *args, **kwargs):
         # These values are set each time call() is consumed
@@ -58,14 +58,19 @@ class GetStreamingEvents(EWSAccountService):
 
     def call(self, subscription_ids, connection_timeout):
         if not isinstance(connection_timeout, int):
-            raise InvalidTypeError(&#39;connection_timeout&#39;, connection_timeout, int)
+            raise InvalidTypeError(&#34;connection_timeout&#34;, connection_timeout, int)
         if connection_timeout &lt; 1:
             raise ValueError(f&#34;&#39;connection_timeout&#39; {connection_timeout} must be a positive integer&#34;)
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         self.timeout = connection_timeout * 60 + 60
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    subscription_ids=subscription_ids,
+                    connection_timeout=connection_timeout,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -81,7 +86,7 @@ class GetStreamingEvents(EWSAccountService):
         # XML response.
         r = body
         for i, doc in enumerate(DocumentYielder(r.iter_content()), start=1):
-            xml_log.debug(&#39;&#39;&#39;Response XML (docs counter: %(i)s): %(xml_response)s&#39;&#39;&#39;, dict(i=i, xml_response=doc))
+            xml_log.debug(&#34;Response XML (docs counter: %(i)s): %(xml_response)s&#34;, dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
                 _, body = super()._get_soap_parts(response=response, **parse_opts)
@@ -96,10 +101,10 @@ class GetStreamingEvents(EWSAccountService):
                 break
 
     def _get_element_container(self, message, name=None):
-        error_ids_elem = message.find(f&#39;{{{MNS}}}ErrorSubscriptionIds&#39;)
-        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f&#39;{{{MNS}}}SubscriptionId&#39;)
-        self.connection_status = get_xml_attr(message, f&#39;{{{MNS}}}ConnectionStatus&#39;)  # Either &#39;OK&#39; or &#39;Closed&#39;
-        log.debug(&#39;Connection status is: %s&#39;, self.connection_status)
+        error_ids_elem = message.find(f&#34;{{{MNS}}}ErrorSubscriptionIds&#34;)
+        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f&#34;{{{MNS}}}SubscriptionId&#34;)
+        self.connection_status = get_xml_attr(message, f&#34;{{{MNS}}}ConnectionStatus&#34;)  # Either &#39;OK&#39; or &#39;Closed&#39;
+        log.debug(&#34;Connection status is: %s&#34;, self.connection_status)
         # Upstream normally expects to find a &#39;name&#39; tag but our response does not always have it. We still want to
         # call upstream, to have exceptions raised. Return an empty list if there is no &#39;name&#39; tag and no errors.
         if message.find(name) is None:
@@ -111,20 +116,20 @@ class GetStreamingEvents(EWSAccountService):
             # subscriptions seem to never be returned even though the XML spec allows it. This means there&#39;s no point in
             # trying to collect any notifications here and delivering a combination of errors and return values.
             if error_ids:
-                e.value += f&#39; (subscription IDs: {error_ids})&#39;
+                e.value += f&#34; (subscription IDs: {error_ids})&#34;
             raise e
         return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
         for subscription_id in subscription_ids:
-            add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+            add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
         if not len(subscriptions_elem):
             raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
 
         payload.append(subscriptions_elem)
-        add_xml_child(payload, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+        add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
         return payload</code></pre>
 </details>
 </section>
@@ -153,13 +158,13 @@ class GetStreamingEvents(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetStreamingEvents&#39;
-    element_container_name = f&#39;{{{MNS}}}Notifications&#39;
+    SERVICE_NAME = &#34;GetStreamingEvents&#34;
+    element_container_name = f&#34;{{{MNS}}}Notifications&#34;
     prefer_affinity = True
 
     # Connection status values
-    OK = &#39;OK&#39;
-    CLOSED = &#39;Closed&#39;
+    OK = &#34;OK&#34;
+    CLOSED = &#34;Closed&#34;
 
     def __init__(self, *args, **kwargs):
         # These values are set each time call() is consumed
@@ -169,14 +174,19 @@ class GetStreamingEvents(EWSAccountService):
 
     def call(self, subscription_ids, connection_timeout):
         if not isinstance(connection_timeout, int):
-            raise InvalidTypeError(&#39;connection_timeout&#39;, connection_timeout, int)
+            raise InvalidTypeError(&#34;connection_timeout&#34;, connection_timeout, int)
         if connection_timeout &lt; 1:
             raise ValueError(f&#34;&#39;connection_timeout&#39; {connection_timeout} must be a positive integer&#34;)
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         self.timeout = connection_timeout * 60 + 60
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    subscription_ids=subscription_ids,
+                    connection_timeout=connection_timeout,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -192,7 +202,7 @@ class GetStreamingEvents(EWSAccountService):
         # XML response.
         r = body
         for i, doc in enumerate(DocumentYielder(r.iter_content()), start=1):
-            xml_log.debug(&#39;&#39;&#39;Response XML (docs counter: %(i)s): %(xml_response)s&#39;&#39;&#39;, dict(i=i, xml_response=doc))
+            xml_log.debug(&#34;Response XML (docs counter: %(i)s): %(xml_response)s&#34;, dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
                 _, body = super()._get_soap_parts(response=response, **parse_opts)
@@ -207,10 +217,10 @@ class GetStreamingEvents(EWSAccountService):
                 break
 
     def _get_element_container(self, message, name=None):
-        error_ids_elem = message.find(f&#39;{{{MNS}}}ErrorSubscriptionIds&#39;)
-        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f&#39;{{{MNS}}}SubscriptionId&#39;)
-        self.connection_status = get_xml_attr(message, f&#39;{{{MNS}}}ConnectionStatus&#39;)  # Either &#39;OK&#39; or &#39;Closed&#39;
-        log.debug(&#39;Connection status is: %s&#39;, self.connection_status)
+        error_ids_elem = message.find(f&#34;{{{MNS}}}ErrorSubscriptionIds&#34;)
+        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f&#34;{{{MNS}}}SubscriptionId&#34;)
+        self.connection_status = get_xml_attr(message, f&#34;{{{MNS}}}ConnectionStatus&#34;)  # Either &#39;OK&#39; or &#39;Closed&#39;
+        log.debug(&#34;Connection status is: %s&#34;, self.connection_status)
         # Upstream normally expects to find a &#39;name&#39; tag but our response does not always have it. We still want to
         # call upstream, to have exceptions raised. Return an empty list if there is no &#39;name&#39; tag and no errors.
         if message.find(name) is None:
@@ -222,20 +232,20 @@ class GetStreamingEvents(EWSAccountService):
             # subscriptions seem to never be returned even though the XML spec allows it. This means there&#39;s no point in
             # trying to collect any notifications here and delivering a combination of errors and return values.
             if error_ids:
-                e.value += f&#39; (subscription IDs: {error_ids})&#39;
+                e.value += f&#34; (subscription IDs: {error_ids})&#34;
             raise e
         return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
         for subscription_id in subscription_ids:
-            add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+            add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
         if not len(subscriptions_elem):
             raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
 
         payload.append(subscriptions_elem)
-        add_xml_child(payload, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+        add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -279,14 +289,19 @@ class GetStreamingEvents(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, subscription_ids, connection_timeout):
     if not isinstance(connection_timeout, int):
-        raise InvalidTypeError(&#39;connection_timeout&#39;, connection_timeout, int)
+        raise InvalidTypeError(&#34;connection_timeout&#34;, connection_timeout, int)
     if connection_timeout &lt; 1:
         raise ValueError(f&#34;&#39;connection_timeout&#39; {connection_timeout} must be a positive integer&#34;)
     # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
     self.timeout = connection_timeout * 60 + 60
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                subscription_ids=subscription_ids,
+                connection_timeout=connection_timeout,
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_streaming_events.GetStreamingEvents.get_payload"><code class="name flex">
@@ -299,15 +314,15 @@ class GetStreamingEvents(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, subscription_ids, connection_timeout):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
     for subscription_id in subscription_ids:
-        add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+        add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
     if not len(subscriptions_elem):
         raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
 
     payload.append(subscriptions_elem)
-    add_xml_child(payload, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+    add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
     return payload</code></pre>
 </details>
 </dd>

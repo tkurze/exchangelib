@@ -29,30 +29,52 @@
 <pre><code class="python">import datetime
 import logging
 
-from .base import BaseItem, BaseReplyItem, SEND_AND_SAVE_COPY, SEND_TO_NONE
+from ..ewsdatetime import EWSDate, EWSDateTime
+from ..fields import (
+    AppointmentStateField,
+    AssociatedCalendarItemIdField,
+    AttachmentField,
+    AttendeesField,
+    BodyField,
+    BooleanField,
+    CharField,
+    Choice,
+    ChoiceField,
+    DateOrDateTimeField,
+    DateTimeField,
+    EnumAsIntField,
+    EWSElementListField,
+    FreeBusyStatusField,
+    IntegerField,
+    MailboxField,
+    MessageHeaderField,
+    OccurrenceField,
+    OccurrenceListField,
+    RecurrenceField,
+    ReferenceItemIdField,
+    TextField,
+    TimeZoneField,
+    URIField,
+)
+from ..properties import Attendee, EWSMeta, OccurrenceItemId, RecurringMasterItemId, ReferenceItemId
+from ..recurrence import DeletedOccurrence, FirstOccurrence, LastOccurrence, Occurrence
+from ..util import require_account, set_xml_value
+from ..version import EXCHANGE_2010, EXCHANGE_2013
+from .base import SEND_AND_SAVE_COPY, SEND_TO_NONE, BaseItem, BaseReplyItem
 from .item import Item
 from .message import Message
-from ..ewsdatetime import EWSDate, EWSDateTime
-from ..fields import BooleanField, IntegerField, TextField, ChoiceField, URIField, BodyField, DateTimeField, \
-    MessageHeaderField, AttachmentField, RecurrenceField, MailboxField, AttendeesField, Choice, OccurrenceField, \
-    OccurrenceListField, TimeZoneField, CharField, EnumAsIntField, FreeBusyStatusField, ReferenceItemIdField, \
-    AssociatedCalendarItemIdField, DateOrDateTimeField, EWSElementListField, AppointmentStateField
-from ..properties import Attendee, ReferenceItemId, OccurrenceItemId, RecurringMasterItemId, EWSMeta
-from ..recurrence import FirstOccurrence, LastOccurrence, Occurrence, DeletedOccurrence
-from ..util import set_xml_value, require_account
-from ..version import EXCHANGE_2010, EXCHANGE_2013
 
 log = logging.getLogger(__name__)
 
 # Conference Type values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/conferencetype
-CONFERENCE_TYPES = (&#39;NetMeeting&#39;, &#39;NetShow&#39;, &#39;Chat&#39;)
+CONFERENCE_TYPES = (&#34;NetMeeting&#34;, &#34;NetShow&#34;, &#34;Chat&#34;)
 
 # CalendarItemType enums
-SINGLE = &#39;Single&#39;
-OCCURRENCE = &#39;Occurrence&#39;
-EXCEPTION = &#39;Exception&#39;
-RECURRING_MASTER = &#39;RecurringMaster&#39;
+SINGLE = &#34;Single&#34;
+OCCURRENCE = &#34;Occurrence&#34;
+EXCEPTION = &#34;Exception&#34;
+RECURRING_MASTER = &#34;RecurringMaster&#34;
 CALENDAR_ITEM_CHOICES = (SINGLE, OCCURRENCE, EXCEPTION, RECURRING_MASTER)
 
 
@@ -61,89 +83,92 @@ class AcceptDeclineMixIn:
 
     def accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return AcceptItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send(message_disposition)
 
     def decline(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return DeclineItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send(message_disposition)
 
     def tentatively_accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return TentativelyAcceptItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send(message_disposition)
 
 
 class CalendarItem(Item, AcceptDeclineMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendaritem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;CalendarItem&#39;
+    ELEMENT_NAME = &#34;CalendarItem&#34;
 
-    uid = TextField(field_uri=&#39;calendar:UID&#39;, is_required_after_save=True, is_searchable=False)
-    recurrence_id = DateTimeField(field_uri=&#39;calendar:RecurrenceId&#39;, is_read_only=True)
-    start = DateOrDateTimeField(field_uri=&#39;calendar:Start&#39;, is_required=True)
-    end = DateOrDateTimeField(field_uri=&#39;calendar:End&#39;, is_required=True)
-    original_start = DateTimeField(field_uri=&#39;calendar:OriginalStart&#39;, is_read_only=True)
-    is_all_day = BooleanField(field_uri=&#39;calendar:IsAllDayEvent&#39;, is_required=True, default=False)
-    legacy_free_busy_status = FreeBusyStatusField(field_uri=&#39;calendar:LegacyFreeBusyStatus&#39;, is_required=True,
-                                                  default=&#39;Busy&#39;)
-    location = TextField(field_uri=&#39;calendar:Location&#39;)
-    when = TextField(field_uri=&#39;calendar:When&#39;)
-    is_meeting = BooleanField(field_uri=&#39;calendar:IsMeeting&#39;, is_read_only=True)
-    is_cancelled = BooleanField(field_uri=&#39;calendar:IsCancelled&#39;, is_read_only=True)
-    is_recurring = BooleanField(field_uri=&#39;calendar:IsRecurring&#39;, is_read_only=True)
-    meeting_request_was_sent = BooleanField(field_uri=&#39;calendar:MeetingRequestWasSent&#39;, is_read_only=True)
-    is_response_requested = BooleanField(field_uri=&#39;calendar:IsResponseRequested&#39;, default=None,
-                                         is_required_after_save=True, is_searchable=False)
-    type = ChoiceField(field_uri=&#39;calendar:CalendarItemType&#39;, choices={Choice(c) for c in CALENDAR_ITEM_CHOICES},
-                       is_read_only=True)
-    my_response_type = ChoiceField(field_uri=&#39;calendar:MyResponseType&#39;, choices={
-            Choice(c) for c in Attendee.RESPONSE_TYPES
-    }, is_read_only=True)
-    organizer = MailboxField(field_uri=&#39;calendar:Organizer&#39;, is_read_only=True)
-    required_attendees = AttendeesField(field_uri=&#39;calendar:RequiredAttendees&#39;, is_searchable=False)
-    optional_attendees = AttendeesField(field_uri=&#39;calendar:OptionalAttendees&#39;, is_searchable=False)
-    resources = AttendeesField(field_uri=&#39;calendar:Resources&#39;, is_searchable=False)
-    conflicting_meeting_count = IntegerField(field_uri=&#39;calendar:ConflictingMeetingCount&#39;, is_read_only=True)
-    adjacent_meeting_count = IntegerField(field_uri=&#39;calendar:AdjacentMeetingCount&#39;, is_read_only=True)
-    conflicting_meetings = EWSElementListField(field_uri=&#39;calendar:ConflictingMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
-                                               namespace=Item.NAMESPACE, is_read_only=True)
-    adjacent_meetings = EWSElementListField(field_uri=&#39;calendar:AdjacentMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
-                                            namespace=Item.NAMESPACE, is_read_only=True)
-    duration = CharField(field_uri=&#39;calendar:Duration&#39;, is_read_only=True)
-    appointment_reply_time = DateTimeField(field_uri=&#39;calendar:AppointmentReplyTime&#39;, is_read_only=True)
-    appointment_sequence_number = IntegerField(field_uri=&#39;calendar:AppointmentSequenceNumber&#39;, is_read_only=True)
-    appointment_state = AppointmentStateField(field_uri=&#39;calendar:AppointmentState&#39;, is_read_only=True)
-    recurrence = RecurrenceField(field_uri=&#39;calendar:Recurrence&#39;, is_searchable=False)
-    first_occurrence = OccurrenceField(field_uri=&#39;calendar:FirstOccurrence&#39;, value_cls=FirstOccurrence,
-                                       is_read_only=True)
-    last_occurrence = OccurrenceField(field_uri=&#39;calendar:LastOccurrence&#39;, value_cls=LastOccurrence,
-                                      is_read_only=True)
-    modified_occurrences = OccurrenceListField(field_uri=&#39;calendar:ModifiedOccurrences&#39;, value_cls=Occurrence,
-                                               is_read_only=True)
-    deleted_occurrences = OccurrenceListField(field_uri=&#39;calendar:DeletedOccurrences&#39;, value_cls=DeletedOccurrence,
-                                              is_read_only=True)
-    _meeting_timezone = TimeZoneField(field_uri=&#39;calendar:MeetingTimeZone&#39;, deprecated_from=EXCHANGE_2010,
-                                      is_searchable=False)
-    _start_timezone = TimeZoneField(field_uri=&#39;calendar:StartTimeZone&#39;, supported_from=EXCHANGE_2010,
-                                    is_searchable=False)
-    _end_timezone = TimeZoneField(field_uri=&#39;calendar:EndTimeZone&#39;, supported_from=EXCHANGE_2010,
-                                  is_searchable=False)
-    conference_type = EnumAsIntField(field_uri=&#39;calendar:ConferenceType&#39;, enum=CONFERENCE_TYPES, min=0,
-                                     default=None, is_required_after_save=True)
-    allow_new_time_proposal = BooleanField(field_uri=&#39;calendar:AllowNewTimeProposal&#39;, default=None,
-                                           is_required_after_save=True, is_searchable=False)
-    is_online_meeting = BooleanField(field_uri=&#39;calendar:IsOnlineMeeting&#39;, default=None,
-                                     is_read_only=True)
-    meeting_workspace_url = URIField(field_uri=&#39;calendar:MeetingWorkspaceUrl&#39;)
-    net_show_url = URIField(field_uri=&#39;calendar:NetShowUrl&#39;)
+    uid = TextField(field_uri=&#34;calendar:UID&#34;, is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri=&#34;calendar:RecurrenceId&#34;, is_read_only=True)
+    start = DateOrDateTimeField(field_uri=&#34;calendar:Start&#34;, is_required=True)
+    end = DateOrDateTimeField(field_uri=&#34;calendar:End&#34;, is_required=True)
+    original_start = DateTimeField(field_uri=&#34;calendar:OriginalStart&#34;, is_read_only=True)
+    is_all_day = BooleanField(field_uri=&#34;calendar:IsAllDayEvent&#34;, is_required=True, default=False)
+    legacy_free_busy_status = FreeBusyStatusField(
+        field_uri=&#34;calendar:LegacyFreeBusyStatus&#34;, is_required=True, default=&#34;Busy&#34;
+    )
+    location = TextField(field_uri=&#34;calendar:Location&#34;)
+    when = TextField(field_uri=&#34;calendar:When&#34;)
+    is_meeting = BooleanField(field_uri=&#34;calendar:IsMeeting&#34;, is_read_only=True)
+    is_cancelled = BooleanField(field_uri=&#34;calendar:IsCancelled&#34;, is_read_only=True)
+    is_recurring = BooleanField(field_uri=&#34;calendar:IsRecurring&#34;, is_read_only=True)
+    meeting_request_was_sent = BooleanField(field_uri=&#34;calendar:MeetingRequestWasSent&#34;, is_read_only=True)
+    is_response_requested = BooleanField(
+        field_uri=&#34;calendar:IsResponseRequested&#34;, default=None, is_required_after_save=True, is_searchable=False
+    )
+    type = ChoiceField(
+        field_uri=&#34;calendar:CalendarItemType&#34;, choices={Choice(c) for c in CALENDAR_ITEM_CHOICES}, is_read_only=True
+    )
+    my_response_type = ChoiceField(
+        field_uri=&#34;calendar:MyResponseType&#34;, choices={Choice(c) for c in Attendee.RESPONSE_TYPES}, is_read_only=True
+    )
+    organizer = MailboxField(field_uri=&#34;calendar:Organizer&#34;, is_read_only=True)
+    required_attendees = AttendeesField(field_uri=&#34;calendar:RequiredAttendees&#34;, is_searchable=False)
+    optional_attendees = AttendeesField(field_uri=&#34;calendar:OptionalAttendees&#34;, is_searchable=False)
+    resources = AttendeesField(field_uri=&#34;calendar:Resources&#34;, is_searchable=False)
+    conflicting_meeting_count = IntegerField(field_uri=&#34;calendar:ConflictingMeetingCount&#34;, is_read_only=True)
+    adjacent_meeting_count = IntegerField(field_uri=&#34;calendar:AdjacentMeetingCount&#34;, is_read_only=True)
+    conflicting_meetings = EWSElementListField(
+        field_uri=&#34;calendar:ConflictingMeetings&#34;, value_cls=&#34;CalendarItem&#34;, namespace=Item.NAMESPACE, is_read_only=True
+    )
+    adjacent_meetings = EWSElementListField(
+        field_uri=&#34;calendar:AdjacentMeetings&#34;, value_cls=&#34;CalendarItem&#34;, namespace=Item.NAMESPACE, is_read_only=True
+    )
+    duration = CharField(field_uri=&#34;calendar:Duration&#34;, is_read_only=True)
+    appointment_reply_time = DateTimeField(field_uri=&#34;calendar:AppointmentReplyTime&#34;, is_read_only=True)
+    appointment_sequence_number = IntegerField(field_uri=&#34;calendar:AppointmentSequenceNumber&#34;, is_read_only=True)
+    appointment_state = AppointmentStateField(field_uri=&#34;calendar:AppointmentState&#34;, is_read_only=True)
+    recurrence = RecurrenceField(field_uri=&#34;calendar:Recurrence&#34;, is_searchable=False)
+    first_occurrence = OccurrenceField(
+        field_uri=&#34;calendar:FirstOccurrence&#34;, value_cls=FirstOccurrence, is_read_only=True
+    )
+    last_occurrence = OccurrenceField(field_uri=&#34;calendar:LastOccurrence&#34;, value_cls=LastOccurrence, is_read_only=True)
+    modified_occurrences = OccurrenceListField(
+        field_uri=&#34;calendar:ModifiedOccurrences&#34;, value_cls=Occurrence, is_read_only=True
+    )
+    deleted_occurrences = OccurrenceListField(
+        field_uri=&#34;calendar:DeletedOccurrences&#34;, value_cls=DeletedOccurrence, is_read_only=True
+    )
+    _meeting_timezone = TimeZoneField(
+        field_uri=&#34;calendar:MeetingTimeZone&#34;, deprecated_from=EXCHANGE_2010, is_searchable=False
+    )
+    _start_timezone = TimeZoneField(
+        field_uri=&#34;calendar:StartTimeZone&#34;, supported_from=EXCHANGE_2010, is_searchable=False
+    )
+    _end_timezone = TimeZoneField(field_uri=&#34;calendar:EndTimeZone&#34;, supported_from=EXCHANGE_2010, is_searchable=False)
+    conference_type = EnumAsIntField(
+        field_uri=&#34;calendar:ConferenceType&#34;, enum=CONFERENCE_TYPES, min=0, default=None, is_required_after_save=True
+    )
+    allow_new_time_proposal = BooleanField(
+        field_uri=&#34;calendar:AllowNewTimeProposal&#34;, default=None, is_required_after_save=True, is_searchable=False
+    )
+    is_online_meeting = BooleanField(field_uri=&#34;calendar:IsOnlineMeeting&#34;, default=None, is_read_only=True)
+    meeting_workspace_url = URIField(field_uri=&#34;calendar:MeetingWorkspaceUrl&#34;)
+    net_show_url = URIField(field_uri=&#34;calendar:NetShowUrl&#34;)
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
@@ -214,9 +239,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
     def cancel(self, **kwargs):
         return CancelCalendarItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send()
 
     def _update_fieldnames(self):
@@ -224,8 +247,8 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         if self.type == OCCURRENCE:
             # Some CalendarItem fields cannot be updated when the item is an occurrence. The values are empty when we
             # receive them so would have been updated because they are set to None.
-            update_fields.remove(&#39;recurrence&#39;)
-            update_fields.remove(&#39;uid&#39;)
+            update_fields.remove(&#34;recurrence&#34;)
+            update_fields.remove(&#34;uid&#34;)
         return update_fields
 
     @classmethod
@@ -235,15 +258,15 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         # applicable.
         if not item.is_all_day:
             return item
-        for field_name in (&#39;start&#39;, &#39;end&#39;):
+        for field_name in (&#34;start&#34;, &#34;end&#34;):
             val = getattr(item, field_name)
             if val is None:
                 continue
             # Return just the date part of the value. Subtract 1 day from the date if this is the end field. This is
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
-            if field_name == &#39;end&#39;:
+            if field_name == &#34;end&#34;:
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
+            tz = getattr(item, f&#34;_{field_name}_timezone&#34;)
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
@@ -251,11 +274,11 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
         if self.account.version.build &lt; EXCHANGE_2010:
             return meeting_tz_field
-        if field_name == &#39;start&#39;:
+        if field_name == &#34;start&#34;:
             return start_tz_field
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             return end_tz_field
-        raise ValueError(&#39;Unsupported field_name&#39;)
+        raise ValueError(&#34;Unsupported field_name&#34;)
 
     def date_to_datetime(self, field_name):
         # EWS always expects a datetime. If we have a date value, then convert it to datetime in the local
@@ -264,7 +287,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         value = getattr(self, field_name)
         tz = getattr(self, self.tz_field_for_field_name(field_name).name)
         value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             value += datetime.timedelta(days=1)
         return value
 
@@ -278,7 +301,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
         elem = super().to_xml(version=version)
         if not self.is_all_day:
             return elem
-        for field_name in (&#39;start&#39;, &#39;end&#39;):
+        for field_name in (&#34;start&#34;, &#34;end&#34;):
             value = getattr(self, field_name)
             if value is None:
                 continue
@@ -302,96 +325,123 @@ class BaseMeetingItem(Item, metaclass=EWSMeta):
     Therefore BaseMeetingItem inherits from  EWSElement has no save() or send() method
     &#34;&#34;&#34;
 
-    associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri=&#39;meeting:AssociatedCalendarItemId&#39;)
-    is_delegated = BooleanField(field_uri=&#39;meeting:IsDelegated&#39;, is_read_only=True, default=False)
-    is_out_of_date = BooleanField(field_uri=&#39;meeting:IsOutOfDate&#39;, is_read_only=True, default=False)
-    has_been_processed = BooleanField(field_uri=&#39;meeting:HasBeenProcessed&#39;, is_read_only=True, default=False)
-    response_type = ChoiceField(field_uri=&#39;meeting:ResponseType&#39;, choices={
-        Choice(&#39;Unknown&#39;), Choice(&#39;Organizer&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Accept&#39;), Choice(&#39;Decline&#39;),
-        Choice(&#39;NoResponseReceived&#39;)
-    }, is_required=True, default=&#39;Unknown&#39;)
+    associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri=&#34;meeting:AssociatedCalendarItemId&#34;)
+    is_delegated = BooleanField(field_uri=&#34;meeting:IsDelegated&#34;, is_read_only=True, default=False)
+    is_out_of_date = BooleanField(field_uri=&#34;meeting:IsOutOfDate&#34;, is_read_only=True, default=False)
+    has_been_processed = BooleanField(field_uri=&#34;meeting:HasBeenProcessed&#34;, is_read_only=True, default=False)
+    response_type = ChoiceField(
+        field_uri=&#34;meeting:ResponseType&#34;,
+        choices={
+            Choice(&#34;Unknown&#34;),
+            Choice(&#34;Organizer&#34;),
+            Choice(&#34;Tentative&#34;),
+            Choice(&#34;Accept&#34;),
+            Choice(&#34;Decline&#34;),
+            Choice(&#34;NoResponseReceived&#34;),
+        },
+        is_required=True,
+        default=&#34;Unknown&#34;,
+    )
 
-    effective_rights_idx = Item.FIELDS.index_by_name(&#39;effective_rights&#39;)
-    sender_idx = Message.FIELDS.index_by_name(&#39;sender&#39;)
-    reply_to_idx = Message.FIELDS.index_by_name(&#39;reply_to&#39;)
-    FIELDS = Item.FIELDS[:effective_rights_idx] \
-        + Message.FIELDS[sender_idx:reply_to_idx + 1] \
+    effective_rights_idx = Item.FIELDS.index_by_name(&#34;effective_rights&#34;)
+    sender_idx = Message.FIELDS.index_by_name(&#34;sender&#34;)
+    received_representing_idx = Message.FIELDS.index_by_name(&#34;received_representing&#34;)
+    FIELDS = (
+        Item.FIELDS[:effective_rights_idx]
+        + Message.FIELDS[sender_idx : received_representing_idx + 1]
         + Item.FIELDS[effective_rights_idx:]
+    )
 
 
 class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingrequest&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingRequest&#39;
+    ELEMENT_NAME = &#34;MeetingRequest&#34;
 
-    meeting_request_type = ChoiceField(field_uri=&#39;meetingRequest:MeetingRequestType&#39;, choices={
-        Choice(&#39;FullUpdate&#39;), Choice(&#39;InformationalUpdate&#39;), Choice(&#39;NewMeetingRequest&#39;), Choice(&#39;None&#39;),
-        Choice(&#39;Outdated&#39;), Choice(&#39;PrincipalWantsCopy&#39;), Choice(&#39;SilentUpdate&#39;)
-    }, default=&#39;None&#39;)
-    intended_free_busy_status = ChoiceField(field_uri=&#39;meetingRequest:IntendedFreeBusyStatus&#39;, choices={
-            Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Busy&#39;), Choice(&#39;OOF&#39;), Choice(&#39;NoData&#39;)
-    }, is_required=True, default=&#39;Busy&#39;)
+    meeting_request_type = ChoiceField(
+        field_uri=&#34;meetingRequest:MeetingRequestType&#34;,
+        choices={
+            Choice(&#34;FullUpdate&#34;),
+            Choice(&#34;InformationalUpdate&#34;),
+            Choice(&#34;NewMeetingRequest&#34;),
+            Choice(&#34;None&#34;),
+            Choice(&#34;Outdated&#34;),
+            Choice(&#34;PrincipalWantsCopy&#34;),
+            Choice(&#34;SilentUpdate&#34;),
+        },
+        default=&#34;None&#34;,
+    )
+    intended_free_busy_status = ChoiceField(
+        field_uri=&#34;meetingRequest:IntendedFreeBusyStatus&#34;,
+        choices={Choice(&#34;Free&#34;), Choice(&#34;Tentative&#34;), Choice(&#34;Busy&#34;), Choice(&#34;OOF&#34;), Choice(&#34;NoData&#34;)},
+        is_required=True,
+        default=&#34;Busy&#34;,
+    )
 
     # This element also has some fields from CalendarItem
-    start_idx = CalendarItem.FIELDS.index_by_name(&#39;start&#39;)
-    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#39;is_response_requested&#39;)
-    FIELDS = BaseMeetingItem.FIELDS \
-        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]\
-        + CalendarItem.FIELDS[is_response_requested_idx + 1:]
+    start_idx = CalendarItem.FIELDS.index_by_name(&#34;start&#34;)
+    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#34;is_response_requested&#34;)
+    FIELDS = (
+        BaseMeetingItem.FIELDS
+        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]
+        + CalendarItem.FIELDS[is_response_requested_idx + 1 :]
+    )
 
 
 class MeetingMessage(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingmessage&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingMessage&#39;
+    ELEMENT_NAME = &#34;MeetingMessage&#34;
 
 
 class MeetingResponse(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingresponse&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingResponse&#39;
+    ELEMENT_NAME = &#34;MeetingResponse&#34;
 
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    proposed_start = DateTimeField(field_uri=&#39;meeting:ProposedStart&#39;, supported_from=EXCHANGE_2013)
-    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)
+    proposed_start = DateTimeField(field_uri=&#34;meeting:ProposedStart&#34;, supported_from=EXCHANGE_2013)
+    proposed_end = DateTimeField(field_uri=&#34;meeting:ProposedEnd&#34;, supported_from=EXCHANGE_2013)
 
 
 class MeetingCancellation(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingcancellation&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingCancellation&#39;
+    ELEMENT_NAME = &#34;MeetingCancellation&#34;
 
 
 class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for meeting request reply items that share the same fields (Accept, TentativelyAccept, Decline).&#34;&#34;&#34;
 
-    item_class = CharField(field_uri=&#39;item:ItemClass&#39;, is_read_only=True)
-    sensitivity = ChoiceField(field_uri=&#39;item:Sensitivity&#39;, choices={
-        Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
-    }, is_required=True, default=&#39;Normal&#39;)
-    body = BodyField(field_uri=&#39;item:Body&#39;)  # Accepts and returns Body or HTMLBody instances
-    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
-    headers = MessageHeaderField(field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True)
+    item_class = CharField(field_uri=&#34;item:ItemClass&#34;, is_read_only=True)
+    sensitivity = ChoiceField(
+        field_uri=&#34;item:Sensitivity&#34;,
+        choices={Choice(&#34;Normal&#34;), Choice(&#34;Personal&#34;), Choice(&#34;Private&#34;), Choice(&#34;Confidential&#34;)},
+        is_required=True,
+        default=&#34;Normal&#34;,
+    )
+    body = BodyField(field_uri=&#34;item:Body&#34;)  # Accepts and returns Body or HTMLBody instances
+    attachments = AttachmentField(field_uri=&#34;item:Attachments&#34;)  # ItemAttachment or FileAttachment
+    headers = MessageHeaderField(field_uri=&#34;item:InternetMessageHeaders&#34;, is_read_only=True)
 
-    sender = Message.FIELDS[&#39;sender&#39;]
-    to_recipients = Message.FIELDS[&#39;to_recipients&#39;]
-    cc_recipients = Message.FIELDS[&#39;cc_recipients&#39;]
-    bcc_recipients = Message.FIELDS[&#39;bcc_recipients&#39;]
-    is_read_receipt_requested = Message.FIELDS[&#39;is_read_receipt_requested&#39;]
-    is_delivery_receipt_requested = Message.FIELDS[&#39;is_delivery_receipt_requested&#39;]
+    sender = Message.FIELDS[&#34;sender&#34;]
+    to_recipients = Message.FIELDS[&#34;to_recipients&#34;]
+    cc_recipients = Message.FIELDS[&#34;cc_recipients&#34;]
+    bcc_recipients = Message.FIELDS[&#34;bcc_recipients&#34;]
+    is_read_receipt_requested = Message.FIELDS[&#34;is_read_receipt_requested&#34;]
+    is_delivery_receipt_requested = Message.FIELDS[&#34;is_delivery_receipt_requested&#34;]
 
-    reference_item_id = ReferenceItemIdField(field_uri=&#39;item:ReferenceItemId&#39;)
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    proposed_start = DateTimeField(field_uri=&#39;meeting:ProposedStart&#39;, supported_from=EXCHANGE_2013)
-    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)
+    reference_item_id = ReferenceItemIdField(field_uri=&#34;item:ReferenceItemId&#34;)
+    received_by = MailboxField(field_uri=&#34;message:ReceivedBy&#34;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#34;message:ReceivedRepresenting&#34;, is_read_only=True)
+    proposed_start = DateTimeField(field_uri=&#34;meeting:ProposedStart&#34;, supported_from=EXCHANGE_2013)
+    proposed_end = DateTimeField(field_uri=&#34;meeting:ProposedEnd&#34;, supported_from=EXCHANGE_2013)
 
     @require_account
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
         # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
         # the list of IDs.
         from ..services import CreateItem
+
         return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
@@ -403,27 +453,27 @@ class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
 class AcceptItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AcceptItem&#39;
+    ELEMENT_NAME = &#34;AcceptItem&#34;
 
 
 class TentativelyAcceptItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/tentativelyacceptitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;TentativelyAcceptItem&#39;
+    ELEMENT_NAME = &#34;TentativelyAcceptItem&#34;
 
 
 class DeclineItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/declineitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DeclineItem&#39;
+    ELEMENT_NAME = &#34;DeclineItem&#34;
 
 
 class CancelCalendarItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/cancelcalendaritem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;CancelCalendarItem&#39;
-    author_idx = BaseReplyItem.FIELDS.index_by_name(&#39;author&#39;)
-    FIELDS = BaseReplyItem.FIELDS[:author_idx] + BaseReplyItem.FIELDS[author_idx + 1:]</code></pre>
+    ELEMENT_NAME = &#34;CancelCalendarItem&#34;
+    author_idx = BaseReplyItem.FIELDS.index_by_name(&#34;author&#34;)
+    FIELDS = BaseReplyItem.FIELDS[:author_idx] + BaseReplyItem.FIELDS[author_idx + 1 :]</code></pre>
 </details>
 </section>
 <section>
@@ -449,23 +499,17 @@ class CancelCalendarItem(BaseReplyItem):
 
     def accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return AcceptItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send(message_disposition)
 
     def decline(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return DeclineItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send(message_disposition)
 
     def tentatively_accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
         return TentativelyAcceptItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send(message_disposition)</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -486,9 +530,7 @@ class CancelCalendarItem(BaseReplyItem):
 </summary>
 <pre><code class="python">def accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
     return AcceptItem(
-        account=self.account,
-        reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-        **kwargs
+        account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
     ).send(message_disposition)</code></pre>
 </details>
 </dd>
@@ -503,9 +545,7 @@ class CancelCalendarItem(BaseReplyItem):
 </summary>
 <pre><code class="python">def decline(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
     return DeclineItem(
-        account=self.account,
-        reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-        **kwargs
+        account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
     ).send(message_disposition)</code></pre>
 </details>
 </dd>
@@ -520,9 +560,7 @@ class CancelCalendarItem(BaseReplyItem):
 </summary>
 <pre><code class="python">def tentatively_accept(self, message_disposition=SEND_AND_SAVE_COPY, **kwargs):
     return TentativelyAcceptItem(
-        account=self.account,
-        reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-        **kwargs
+        account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
     ).send(message_disposition)</code></pre>
 </details>
 </dd>
@@ -546,7 +584,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class AcceptItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AcceptItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;AcceptItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -610,21 +648,32 @@ we use folder.account.</p></div>
     Therefore BaseMeetingItem inherits from  EWSElement has no save() or send() method
     &#34;&#34;&#34;
 
-    associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri=&#39;meeting:AssociatedCalendarItemId&#39;)
-    is_delegated = BooleanField(field_uri=&#39;meeting:IsDelegated&#39;, is_read_only=True, default=False)
-    is_out_of_date = BooleanField(field_uri=&#39;meeting:IsOutOfDate&#39;, is_read_only=True, default=False)
-    has_been_processed = BooleanField(field_uri=&#39;meeting:HasBeenProcessed&#39;, is_read_only=True, default=False)
-    response_type = ChoiceField(field_uri=&#39;meeting:ResponseType&#39;, choices={
-        Choice(&#39;Unknown&#39;), Choice(&#39;Organizer&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Accept&#39;), Choice(&#39;Decline&#39;),
-        Choice(&#39;NoResponseReceived&#39;)
-    }, is_required=True, default=&#39;Unknown&#39;)
+    associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri=&#34;meeting:AssociatedCalendarItemId&#34;)
+    is_delegated = BooleanField(field_uri=&#34;meeting:IsDelegated&#34;, is_read_only=True, default=False)
+    is_out_of_date = BooleanField(field_uri=&#34;meeting:IsOutOfDate&#34;, is_read_only=True, default=False)
+    has_been_processed = BooleanField(field_uri=&#34;meeting:HasBeenProcessed&#34;, is_read_only=True, default=False)
+    response_type = ChoiceField(
+        field_uri=&#34;meeting:ResponseType&#34;,
+        choices={
+            Choice(&#34;Unknown&#34;),
+            Choice(&#34;Organizer&#34;),
+            Choice(&#34;Tentative&#34;),
+            Choice(&#34;Accept&#34;),
+            Choice(&#34;Decline&#34;),
+            Choice(&#34;NoResponseReceived&#34;),
+        },
+        is_required=True,
+        default=&#34;Unknown&#34;,
+    )
 
-    effective_rights_idx = Item.FIELDS.index_by_name(&#39;effective_rights&#39;)
-    sender_idx = Message.FIELDS.index_by_name(&#39;sender&#39;)
-    reply_to_idx = Message.FIELDS.index_by_name(&#39;reply_to&#39;)
-    FIELDS = Item.FIELDS[:effective_rights_idx] \
-        + Message.FIELDS[sender_idx:reply_to_idx + 1] \
-        + Item.FIELDS[effective_rights_idx:]</code></pre>
+    effective_rights_idx = Item.FIELDS.index_by_name(&#34;effective_rights&#34;)
+    sender_idx = Message.FIELDS.index_by_name(&#34;sender&#34;)
+    received_representing_idx = Message.FIELDS.index_by_name(&#34;received_representing&#34;)
+    FIELDS = (
+        Item.FIELDS[:effective_rights_idx]
+        + Message.FIELDS[sender_idx : received_representing_idx + 1]
+        + Item.FIELDS[effective_rights_idx:]
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -651,7 +700,7 @@ we use folder.account.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.calendar_item.BaseMeetingItem.reply_to_idx"><code class="name">var <span class="ident">reply_to_idx</span></code></dt>
+<dt id="exchangelib.items.calendar_item.BaseMeetingItem.received_representing_idx"><code class="name">var <span class="ident">received_representing_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -718,6 +767,14 @@ we use folder.account.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="exchangelib.items.calendar_item.BaseMeetingItem.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.calendar_item.BaseMeetingItem.received_representing"><code class="name">var <span class="ident">received_representing</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.items.calendar_item.BaseMeetingItem.references"><code class="name">var <span class="ident">references</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -776,32 +833,36 @@ we use folder.account.</p></div>
 <pre><code class="python">class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for meeting request reply items that share the same fields (Accept, TentativelyAccept, Decline).&#34;&#34;&#34;
 
-    item_class = CharField(field_uri=&#39;item:ItemClass&#39;, is_read_only=True)
-    sensitivity = ChoiceField(field_uri=&#39;item:Sensitivity&#39;, choices={
-        Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
-    }, is_required=True, default=&#39;Normal&#39;)
-    body = BodyField(field_uri=&#39;item:Body&#39;)  # Accepts and returns Body or HTMLBody instances
-    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
-    headers = MessageHeaderField(field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True)
+    item_class = CharField(field_uri=&#34;item:ItemClass&#34;, is_read_only=True)
+    sensitivity = ChoiceField(
+        field_uri=&#34;item:Sensitivity&#34;,
+        choices={Choice(&#34;Normal&#34;), Choice(&#34;Personal&#34;), Choice(&#34;Private&#34;), Choice(&#34;Confidential&#34;)},
+        is_required=True,
+        default=&#34;Normal&#34;,
+    )
+    body = BodyField(field_uri=&#34;item:Body&#34;)  # Accepts and returns Body or HTMLBody instances
+    attachments = AttachmentField(field_uri=&#34;item:Attachments&#34;)  # ItemAttachment or FileAttachment
+    headers = MessageHeaderField(field_uri=&#34;item:InternetMessageHeaders&#34;, is_read_only=True)
 
-    sender = Message.FIELDS[&#39;sender&#39;]
-    to_recipients = Message.FIELDS[&#39;to_recipients&#39;]
-    cc_recipients = Message.FIELDS[&#39;cc_recipients&#39;]
-    bcc_recipients = Message.FIELDS[&#39;bcc_recipients&#39;]
-    is_read_receipt_requested = Message.FIELDS[&#39;is_read_receipt_requested&#39;]
-    is_delivery_receipt_requested = Message.FIELDS[&#39;is_delivery_receipt_requested&#39;]
+    sender = Message.FIELDS[&#34;sender&#34;]
+    to_recipients = Message.FIELDS[&#34;to_recipients&#34;]
+    cc_recipients = Message.FIELDS[&#34;cc_recipients&#34;]
+    bcc_recipients = Message.FIELDS[&#34;bcc_recipients&#34;]
+    is_read_receipt_requested = Message.FIELDS[&#34;is_read_receipt_requested&#34;]
+    is_delivery_receipt_requested = Message.FIELDS[&#34;is_delivery_receipt_requested&#34;]
 
-    reference_item_id = ReferenceItemIdField(field_uri=&#39;item:ReferenceItemId&#39;)
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    proposed_start = DateTimeField(field_uri=&#39;meeting:ProposedStart&#39;, supported_from=EXCHANGE_2013)
-    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)
+    reference_item_id = ReferenceItemIdField(field_uri=&#34;item:ReferenceItemId&#34;)
+    received_by = MailboxField(field_uri=&#34;message:ReceivedBy&#34;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#34;message:ReceivedRepresenting&#34;, is_read_only=True)
+    proposed_start = DateTimeField(field_uri=&#34;meeting:ProposedStart&#34;, supported_from=EXCHANGE_2013)
+    proposed_end = DateTimeField(field_uri=&#34;meeting:ProposedEnd&#34;, supported_from=EXCHANGE_2013)
 
     @require_account
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
         # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
         # the list of IDs.
         from ..services import CreateItem
+
         return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
@@ -912,6 +973,7 @@ def send(self, message_disposition=SEND_AND_SAVE_COPY):
     # Some responses contain multiple response IDs, e.g. MeetingRequest.accept(). Return either the single ID or
     # the list of IDs.
     from ..services import CreateItem
+
     return CreateItem(account=self.account).get(
         items=[self],
         folder=self.folder,
@@ -956,66 +1018,75 @@ we use folder.account.</p></div>
 <pre><code class="python">class CalendarItem(Item, AcceptDeclineMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendaritem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;CalendarItem&#39;
+    ELEMENT_NAME = &#34;CalendarItem&#34;
 
-    uid = TextField(field_uri=&#39;calendar:UID&#39;, is_required_after_save=True, is_searchable=False)
-    recurrence_id = DateTimeField(field_uri=&#39;calendar:RecurrenceId&#39;, is_read_only=True)
-    start = DateOrDateTimeField(field_uri=&#39;calendar:Start&#39;, is_required=True)
-    end = DateOrDateTimeField(field_uri=&#39;calendar:End&#39;, is_required=True)
-    original_start = DateTimeField(field_uri=&#39;calendar:OriginalStart&#39;, is_read_only=True)
-    is_all_day = BooleanField(field_uri=&#39;calendar:IsAllDayEvent&#39;, is_required=True, default=False)
-    legacy_free_busy_status = FreeBusyStatusField(field_uri=&#39;calendar:LegacyFreeBusyStatus&#39;, is_required=True,
-                                                  default=&#39;Busy&#39;)
-    location = TextField(field_uri=&#39;calendar:Location&#39;)
-    when = TextField(field_uri=&#39;calendar:When&#39;)
-    is_meeting = BooleanField(field_uri=&#39;calendar:IsMeeting&#39;, is_read_only=True)
-    is_cancelled = BooleanField(field_uri=&#39;calendar:IsCancelled&#39;, is_read_only=True)
-    is_recurring = BooleanField(field_uri=&#39;calendar:IsRecurring&#39;, is_read_only=True)
-    meeting_request_was_sent = BooleanField(field_uri=&#39;calendar:MeetingRequestWasSent&#39;, is_read_only=True)
-    is_response_requested = BooleanField(field_uri=&#39;calendar:IsResponseRequested&#39;, default=None,
-                                         is_required_after_save=True, is_searchable=False)
-    type = ChoiceField(field_uri=&#39;calendar:CalendarItemType&#39;, choices={Choice(c) for c in CALENDAR_ITEM_CHOICES},
-                       is_read_only=True)
-    my_response_type = ChoiceField(field_uri=&#39;calendar:MyResponseType&#39;, choices={
-            Choice(c) for c in Attendee.RESPONSE_TYPES
-    }, is_read_only=True)
-    organizer = MailboxField(field_uri=&#39;calendar:Organizer&#39;, is_read_only=True)
-    required_attendees = AttendeesField(field_uri=&#39;calendar:RequiredAttendees&#39;, is_searchable=False)
-    optional_attendees = AttendeesField(field_uri=&#39;calendar:OptionalAttendees&#39;, is_searchable=False)
-    resources = AttendeesField(field_uri=&#39;calendar:Resources&#39;, is_searchable=False)
-    conflicting_meeting_count = IntegerField(field_uri=&#39;calendar:ConflictingMeetingCount&#39;, is_read_only=True)
-    adjacent_meeting_count = IntegerField(field_uri=&#39;calendar:AdjacentMeetingCount&#39;, is_read_only=True)
-    conflicting_meetings = EWSElementListField(field_uri=&#39;calendar:ConflictingMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
-                                               namespace=Item.NAMESPACE, is_read_only=True)
-    adjacent_meetings = EWSElementListField(field_uri=&#39;calendar:AdjacentMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
-                                            namespace=Item.NAMESPACE, is_read_only=True)
-    duration = CharField(field_uri=&#39;calendar:Duration&#39;, is_read_only=True)
-    appointment_reply_time = DateTimeField(field_uri=&#39;calendar:AppointmentReplyTime&#39;, is_read_only=True)
-    appointment_sequence_number = IntegerField(field_uri=&#39;calendar:AppointmentSequenceNumber&#39;, is_read_only=True)
-    appointment_state = AppointmentStateField(field_uri=&#39;calendar:AppointmentState&#39;, is_read_only=True)
-    recurrence = RecurrenceField(field_uri=&#39;calendar:Recurrence&#39;, is_searchable=False)
-    first_occurrence = OccurrenceField(field_uri=&#39;calendar:FirstOccurrence&#39;, value_cls=FirstOccurrence,
-                                       is_read_only=True)
-    last_occurrence = OccurrenceField(field_uri=&#39;calendar:LastOccurrence&#39;, value_cls=LastOccurrence,
-                                      is_read_only=True)
-    modified_occurrences = OccurrenceListField(field_uri=&#39;calendar:ModifiedOccurrences&#39;, value_cls=Occurrence,
-                                               is_read_only=True)
-    deleted_occurrences = OccurrenceListField(field_uri=&#39;calendar:DeletedOccurrences&#39;, value_cls=DeletedOccurrence,
-                                              is_read_only=True)
-    _meeting_timezone = TimeZoneField(field_uri=&#39;calendar:MeetingTimeZone&#39;, deprecated_from=EXCHANGE_2010,
-                                      is_searchable=False)
-    _start_timezone = TimeZoneField(field_uri=&#39;calendar:StartTimeZone&#39;, supported_from=EXCHANGE_2010,
-                                    is_searchable=False)
-    _end_timezone = TimeZoneField(field_uri=&#39;calendar:EndTimeZone&#39;, supported_from=EXCHANGE_2010,
-                                  is_searchable=False)
-    conference_type = EnumAsIntField(field_uri=&#39;calendar:ConferenceType&#39;, enum=CONFERENCE_TYPES, min=0,
-                                     default=None, is_required_after_save=True)
-    allow_new_time_proposal = BooleanField(field_uri=&#39;calendar:AllowNewTimeProposal&#39;, default=None,
-                                           is_required_after_save=True, is_searchable=False)
-    is_online_meeting = BooleanField(field_uri=&#39;calendar:IsOnlineMeeting&#39;, default=None,
-                                     is_read_only=True)
-    meeting_workspace_url = URIField(field_uri=&#39;calendar:MeetingWorkspaceUrl&#39;)
-    net_show_url = URIField(field_uri=&#39;calendar:NetShowUrl&#39;)
+    uid = TextField(field_uri=&#34;calendar:UID&#34;, is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri=&#34;calendar:RecurrenceId&#34;, is_read_only=True)
+    start = DateOrDateTimeField(field_uri=&#34;calendar:Start&#34;, is_required=True)
+    end = DateOrDateTimeField(field_uri=&#34;calendar:End&#34;, is_required=True)
+    original_start = DateTimeField(field_uri=&#34;calendar:OriginalStart&#34;, is_read_only=True)
+    is_all_day = BooleanField(field_uri=&#34;calendar:IsAllDayEvent&#34;, is_required=True, default=False)
+    legacy_free_busy_status = FreeBusyStatusField(
+        field_uri=&#34;calendar:LegacyFreeBusyStatus&#34;, is_required=True, default=&#34;Busy&#34;
+    )
+    location = TextField(field_uri=&#34;calendar:Location&#34;)
+    when = TextField(field_uri=&#34;calendar:When&#34;)
+    is_meeting = BooleanField(field_uri=&#34;calendar:IsMeeting&#34;, is_read_only=True)
+    is_cancelled = BooleanField(field_uri=&#34;calendar:IsCancelled&#34;, is_read_only=True)
+    is_recurring = BooleanField(field_uri=&#34;calendar:IsRecurring&#34;, is_read_only=True)
+    meeting_request_was_sent = BooleanField(field_uri=&#34;calendar:MeetingRequestWasSent&#34;, is_read_only=True)
+    is_response_requested = BooleanField(
+        field_uri=&#34;calendar:IsResponseRequested&#34;, default=None, is_required_after_save=True, is_searchable=False
+    )
+    type = ChoiceField(
+        field_uri=&#34;calendar:CalendarItemType&#34;, choices={Choice(c) for c in CALENDAR_ITEM_CHOICES}, is_read_only=True
+    )
+    my_response_type = ChoiceField(
+        field_uri=&#34;calendar:MyResponseType&#34;, choices={Choice(c) for c in Attendee.RESPONSE_TYPES}, is_read_only=True
+    )
+    organizer = MailboxField(field_uri=&#34;calendar:Organizer&#34;, is_read_only=True)
+    required_attendees = AttendeesField(field_uri=&#34;calendar:RequiredAttendees&#34;, is_searchable=False)
+    optional_attendees = AttendeesField(field_uri=&#34;calendar:OptionalAttendees&#34;, is_searchable=False)
+    resources = AttendeesField(field_uri=&#34;calendar:Resources&#34;, is_searchable=False)
+    conflicting_meeting_count = IntegerField(field_uri=&#34;calendar:ConflictingMeetingCount&#34;, is_read_only=True)
+    adjacent_meeting_count = IntegerField(field_uri=&#34;calendar:AdjacentMeetingCount&#34;, is_read_only=True)
+    conflicting_meetings = EWSElementListField(
+        field_uri=&#34;calendar:ConflictingMeetings&#34;, value_cls=&#34;CalendarItem&#34;, namespace=Item.NAMESPACE, is_read_only=True
+    )
+    adjacent_meetings = EWSElementListField(
+        field_uri=&#34;calendar:AdjacentMeetings&#34;, value_cls=&#34;CalendarItem&#34;, namespace=Item.NAMESPACE, is_read_only=True
+    )
+    duration = CharField(field_uri=&#34;calendar:Duration&#34;, is_read_only=True)
+    appointment_reply_time = DateTimeField(field_uri=&#34;calendar:AppointmentReplyTime&#34;, is_read_only=True)
+    appointment_sequence_number = IntegerField(field_uri=&#34;calendar:AppointmentSequenceNumber&#34;, is_read_only=True)
+    appointment_state = AppointmentStateField(field_uri=&#34;calendar:AppointmentState&#34;, is_read_only=True)
+    recurrence = RecurrenceField(field_uri=&#34;calendar:Recurrence&#34;, is_searchable=False)
+    first_occurrence = OccurrenceField(
+        field_uri=&#34;calendar:FirstOccurrence&#34;, value_cls=FirstOccurrence, is_read_only=True
+    )
+    last_occurrence = OccurrenceField(field_uri=&#34;calendar:LastOccurrence&#34;, value_cls=LastOccurrence, is_read_only=True)
+    modified_occurrences = OccurrenceListField(
+        field_uri=&#34;calendar:ModifiedOccurrences&#34;, value_cls=Occurrence, is_read_only=True
+    )
+    deleted_occurrences = OccurrenceListField(
+        field_uri=&#34;calendar:DeletedOccurrences&#34;, value_cls=DeletedOccurrence, is_read_only=True
+    )
+    _meeting_timezone = TimeZoneField(
+        field_uri=&#34;calendar:MeetingTimeZone&#34;, deprecated_from=EXCHANGE_2010, is_searchable=False
+    )
+    _start_timezone = TimeZoneField(
+        field_uri=&#34;calendar:StartTimeZone&#34;, supported_from=EXCHANGE_2010, is_searchable=False
+    )
+    _end_timezone = TimeZoneField(field_uri=&#34;calendar:EndTimeZone&#34;, supported_from=EXCHANGE_2010, is_searchable=False)
+    conference_type = EnumAsIntField(
+        field_uri=&#34;calendar:ConferenceType&#34;, enum=CONFERENCE_TYPES, min=0, default=None, is_required_after_save=True
+    )
+    allow_new_time_proposal = BooleanField(
+        field_uri=&#34;calendar:AllowNewTimeProposal&#34;, default=None, is_required_after_save=True, is_searchable=False
+    )
+    is_online_meeting = BooleanField(field_uri=&#34;calendar:IsOnlineMeeting&#34;, default=None, is_read_only=True)
+    meeting_workspace_url = URIField(field_uri=&#34;calendar:MeetingWorkspaceUrl&#34;)
+    net_show_url = URIField(field_uri=&#34;calendar:NetShowUrl&#34;)
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
@@ -1086,9 +1157,7 @@ we use folder.account.</p></div>
 
     def cancel(self, **kwargs):
         return CancelCalendarItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send()
 
     def _update_fieldnames(self):
@@ -1096,8 +1165,8 @@ we use folder.account.</p></div>
         if self.type == OCCURRENCE:
             # Some CalendarItem fields cannot be updated when the item is an occurrence. The values are empty when we
             # receive them so would have been updated because they are set to None.
-            update_fields.remove(&#39;recurrence&#39;)
-            update_fields.remove(&#39;uid&#39;)
+            update_fields.remove(&#34;recurrence&#34;)
+            update_fields.remove(&#34;uid&#34;)
         return update_fields
 
     @classmethod
@@ -1107,15 +1176,15 @@ we use folder.account.</p></div>
         # applicable.
         if not item.is_all_day:
             return item
-        for field_name in (&#39;start&#39;, &#39;end&#39;):
+        for field_name in (&#34;start&#34;, &#34;end&#34;):
             val = getattr(item, field_name)
             if val is None:
                 continue
             # Return just the date part of the value. Subtract 1 day from the date if this is the end field. This is
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
-            if field_name == &#39;end&#39;:
+            if field_name == &#34;end&#34;:
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
+            tz = getattr(item, f&#34;_{field_name}_timezone&#34;)
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
@@ -1123,11 +1192,11 @@ we use folder.account.</p></div>
         meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
         if self.account.version.build &lt; EXCHANGE_2010:
             return meeting_tz_field
-        if field_name == &#39;start&#39;:
+        if field_name == &#34;start&#34;:
             return start_tz_field
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             return end_tz_field
-        raise ValueError(&#39;Unsupported field_name&#39;)
+        raise ValueError(&#34;Unsupported field_name&#34;)
 
     def date_to_datetime(self, field_name):
         # EWS always expects a datetime. If we have a date value, then convert it to datetime in the local
@@ -1136,7 +1205,7 @@ we use folder.account.</p></div>
         value = getattr(self, field_name)
         tz = getattr(self, self.tz_field_for_field_name(field_name).name)
         value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             value += datetime.timedelta(days=1)
         return value
 
@@ -1150,7 +1219,7 @@ we use folder.account.</p></div>
         elem = super().to_xml(version=version)
         if not self.is_all_day:
             return elem
-        for field_name in (&#39;start&#39;, &#39;end&#39;):
+        for field_name in (&#34;start&#34;, &#34;end&#34;):
             value = getattr(self, field_name)
             if value is None:
                 continue
@@ -1201,15 +1270,15 @@ def from_xml(cls, elem, account):
     # applicable.
     if not item.is_all_day:
         return item
-    for field_name in (&#39;start&#39;, &#39;end&#39;):
+    for field_name in (&#34;start&#34;, &#34;end&#34;):
         val = getattr(item, field_name)
         if val is None:
             continue
         # Return just the date part of the value. Subtract 1 day from the date if this is the end field. This is
         # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             val -= datetime.timedelta(days=1)
-        tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
+        tz = getattr(item, f&#34;_{field_name}_timezone&#34;)
         setattr(item, field_name, val.astimezone(tz).date())
     return item</code></pre>
 </details>
@@ -1397,9 +1466,7 @@ def timezone_fields(cls):
 </summary>
 <pre><code class="python">def cancel(self, **kwargs):
     return CancelCalendarItem(
-        account=self.account,
-        reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-        **kwargs
+        account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
     ).send()</code></pre>
 </details>
 </dd>
@@ -1472,7 +1539,7 @@ def timezone_fields(cls):
     value = getattr(self, field_name)
     tz = getattr(self, self.tz_field_for_field_name(field_name).name)
     value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
-    if field_name == &#39;end&#39;:
+    if field_name == &#34;end&#34;:
         value += datetime.timedelta(days=1)
     return value</code></pre>
 </details>
@@ -1553,7 +1620,7 @@ Call refresh() on the item do do so.</p>
     elem = super().to_xml(version=version)
     if not self.is_all_day:
         return elem
-    for field_name in (&#39;start&#39;, &#39;end&#39;):
+    for field_name in (&#34;start&#34;, &#34;end&#34;):
         value = getattr(self, field_name)
         if value is None:
             continue
@@ -1580,11 +1647,11 @@ Call refresh() on the item do do so.</p>
     meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
     if self.account.version.build &lt; EXCHANGE_2010:
         return meeting_tz_field
-    if field_name == &#39;start&#39;:
+    if field_name == &#34;start&#34;:
         return start_tz_field
-    if field_name == &#39;end&#39;:
+    if field_name == &#34;end&#34;:
         return end_tz_field
-    raise ValueError(&#39;Unsupported field_name&#39;)</code></pre>
+    raise ValueError(&#34;Unsupported field_name&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1620,9 +1687,9 @@ Call refresh() on the item do do so.</p>
 <pre><code class="python">class CancelCalendarItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/cancelcalendaritem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;CancelCalendarItem&#39;
-    author_idx = BaseReplyItem.FIELDS.index_by_name(&#39;author&#39;)
-    FIELDS = BaseReplyItem.FIELDS[:author_idx] + BaseReplyItem.FIELDS[author_idx + 1:]</code></pre>
+    ELEMENT_NAME = &#34;CancelCalendarItem&#34;
+    author_idx = BaseReplyItem.FIELDS.index_by_name(&#34;author&#34;)
+    FIELDS = BaseReplyItem.FIELDS[:author_idx] + BaseReplyItem.FIELDS[author_idx + 1 :]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1676,7 +1743,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class DeclineItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/declineitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DeclineItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;DeclineItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1728,7 +1795,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingCancellation(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingcancellation&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingCancellation&#39;</code></pre>
+    ELEMENT_NAME = &#34;MeetingCancellation&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1783,7 +1850,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingMessage(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingmessage&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingMessage&#39;</code></pre>
+    ELEMENT_NAME = &#34;MeetingMessage&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1838,22 +1905,36 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingrequest&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingRequest&#39;
+    ELEMENT_NAME = &#34;MeetingRequest&#34;
 
-    meeting_request_type = ChoiceField(field_uri=&#39;meetingRequest:MeetingRequestType&#39;, choices={
-        Choice(&#39;FullUpdate&#39;), Choice(&#39;InformationalUpdate&#39;), Choice(&#39;NewMeetingRequest&#39;), Choice(&#39;None&#39;),
-        Choice(&#39;Outdated&#39;), Choice(&#39;PrincipalWantsCopy&#39;), Choice(&#39;SilentUpdate&#39;)
-    }, default=&#39;None&#39;)
-    intended_free_busy_status = ChoiceField(field_uri=&#39;meetingRequest:IntendedFreeBusyStatus&#39;, choices={
-            Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Busy&#39;), Choice(&#39;OOF&#39;), Choice(&#39;NoData&#39;)
-    }, is_required=True, default=&#39;Busy&#39;)
+    meeting_request_type = ChoiceField(
+        field_uri=&#34;meetingRequest:MeetingRequestType&#34;,
+        choices={
+            Choice(&#34;FullUpdate&#34;),
+            Choice(&#34;InformationalUpdate&#34;),
+            Choice(&#34;NewMeetingRequest&#34;),
+            Choice(&#34;None&#34;),
+            Choice(&#34;Outdated&#34;),
+            Choice(&#34;PrincipalWantsCopy&#34;),
+            Choice(&#34;SilentUpdate&#34;),
+        },
+        default=&#34;None&#34;,
+    )
+    intended_free_busy_status = ChoiceField(
+        field_uri=&#34;meetingRequest:IntendedFreeBusyStatus&#34;,
+        choices={Choice(&#34;Free&#34;), Choice(&#34;Tentative&#34;), Choice(&#34;Busy&#34;), Choice(&#34;OOF&#34;), Choice(&#34;NoData&#34;)},
+        is_required=True,
+        default=&#34;Busy&#34;,
+    )
 
     # This element also has some fields from CalendarItem
-    start_idx = CalendarItem.FIELDS.index_by_name(&#39;start&#39;)
-    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#39;is_response_requested&#39;)
-    FIELDS = BaseMeetingItem.FIELDS \
-        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]\
-        + CalendarItem.FIELDS[is_response_requested_idx + 1:]</code></pre>
+    start_idx = CalendarItem.FIELDS.index_by_name(&#34;start&#34;)
+    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#34;is_response_requested&#34;)
+    FIELDS = (
+        BaseMeetingItem.FIELDS
+        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]
+        + CalendarItem.FIELDS[is_response_requested_idx + 1 :]
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2072,12 +2153,10 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingResponse(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingresponse&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingResponse&#39;
+    ELEMENT_NAME = &#34;MeetingResponse&#34;
 
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    proposed_start = DateTimeField(field_uri=&#39;meeting:ProposedStart&#39;, supported_from=EXCHANGE_2013)
-    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)</code></pre>
+    proposed_start = DateTimeField(field_uri=&#34;meeting:ProposedStart&#34;, supported_from=EXCHANGE_2013)
+    proposed_end = DateTimeField(field_uri=&#34;meeting:ProposedEnd&#34;, supported_from=EXCHANGE_2013)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2106,14 +2185,6 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.calendar_item.MeetingResponse.proposed_start"><code class="name">var <span class="ident">proposed_start</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.calendar_item.MeetingResponse.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.calendar_item.MeetingResponse.received_representing"><code class="name">var <span class="ident">received_representing</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2155,7 +2226,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class TentativelyAcceptItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/tentativelyacceptitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;TentativelyAcceptItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;TentativelyAcceptItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2238,9 +2309,11 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.is_read_receipt_requested" href="#exchangelib.items.calendar_item.BaseMeetingItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.is_response_requested" href="#exchangelib.items.calendar_item.BaseMeetingItem.is_response_requested">is_response_requested</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.message_id" href="#exchangelib.items.calendar_item.BaseMeetingItem.message_id">message_id</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.received_by" href="#exchangelib.items.calendar_item.BaseMeetingItem.received_by">received_by</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.received_representing" href="#exchangelib.items.calendar_item.BaseMeetingItem.received_representing">received_representing</a></code></li>
+<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.received_representing_idx" href="#exchangelib.items.calendar_item.BaseMeetingItem.received_representing_idx">received_representing_idx</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.references" href="#exchangelib.items.calendar_item.BaseMeetingItem.references">references</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reply_to" href="#exchangelib.items.calendar_item.BaseMeetingItem.reply_to">reply_to</a></code></li>
-<li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.reply_to_idx" href="#exchangelib.items.calendar_item.BaseMeetingItem.reply_to_idx">reply_to_idx</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.response_type" href="#exchangelib.items.calendar_item.BaseMeetingItem.response_type">response_type</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sender" href="#exchangelib.items.calendar_item.BaseMeetingItem.sender">sender</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.BaseMeetingItem.sender_idx" href="#exchangelib.items.calendar_item.BaseMeetingItem.sender_idx">sender_idx</a></code></li>
@@ -2404,8 +2477,6 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.calendar_item.MeetingResponse.FIELDS" href="#exchangelib.items.calendar_item.MeetingResponse.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.MeetingResponse.proposed_end" href="#exchangelib.items.calendar_item.MeetingResponse.proposed_end">proposed_end</a></code></li>
 <li><code><a title="exchangelib.items.calendar_item.MeetingResponse.proposed_start" href="#exchangelib.items.calendar_item.MeetingResponse.proposed_start">proposed_start</a></code></li>
-<li><code><a title="exchangelib.items.calendar_item.MeetingResponse.received_by" href="#exchangelib.items.calendar_item.MeetingResponse.received_by">received_by</a></code></li>
-<li><code><a title="exchangelib.items.calendar_item.MeetingResponse.received_representing" href="#exchangelib.items.calendar_item.MeetingResponse.received_representing">received_representing</a></code></li>
 </ul>
 </li>
 <li>

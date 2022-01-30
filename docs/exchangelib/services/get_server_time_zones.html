@@ -26,10 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..properties import TimeZoneDefinition
-from ..util import create_element, set_xml_value, peek, MNS
+<pre><code class="python">from ..properties import TimeZoneDefinition
+from ..util import MNS, create_element, peek, set_xml_value
 from ..version import EXCHANGE_2010
+from .common import EWSService
 
 
 class GetServerTimeZones(EWSService):
@@ -37,27 +37,28 @@ class GetServerTimeZones(EWSService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetServerTimeZones&#39;
-    element_container_name = f&#39;{{{MNS}}}TimeZoneDefinitions&#39;
+    SERVICE_NAME = &#34;GetServerTimeZones&#34;
+    element_container_name = f&#34;{{{MNS}}}TimeZoneDefinitions&#34;
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            timezones=timezones,
-            return_full_timezone_data=return_full_timezone_data
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(timezones=timezones, return_full_timezone_data=return_full_timezone_data)
+            )
+        )
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
+            f&#34;m:{self.SERVICE_NAME}&#34;,
             attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
         )
         if timezones is not None:
             is_empty, timezones = peek(timezones)
             if not is_empty:
-                tz_ids = create_element(&#39;m:Ids&#39;)
+                tz_ids = create_element(&#34;m:Ids&#34;)
                 for timezone in timezones:
-                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
+                    tz_id = set_xml_value(create_element(&#34;t:Id&#34;), timezone.ms_id)
                     tz_ids.append(tz_id)
                 payload.append(tz_ids)
         return payload
@@ -91,27 +92,28 @@ class GetServerTimeZones(EWSService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetServerTimeZones&#39;
-    element_container_name = f&#39;{{{MNS}}}TimeZoneDefinitions&#39;
+    SERVICE_NAME = &#34;GetServerTimeZones&#34;
+    element_container_name = f&#34;{{{MNS}}}TimeZoneDefinitions&#34;
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            timezones=timezones,
-            return_full_timezone_data=return_full_timezone_data
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(timezones=timezones, return_full_timezone_data=return_full_timezone_data)
+            )
+        )
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
+            f&#34;m:{self.SERVICE_NAME}&#34;,
             attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
         )
         if timezones is not None:
             is_empty, timezones = peek(timezones)
             if not is_empty:
-                tz_ids = create_element(&#39;m:Ids&#39;)
+                tz_ids = create_element(&#34;m:Ids&#34;)
                 for timezone in timezones:
-                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
+                    tz_id = set_xml_value(create_element(&#34;t:Id&#34;), timezone.ms_id)
                     tz_ids.append(tz_id)
                 payload.append(tz_ids)
         return payload
@@ -150,10 +152,11 @@ class GetServerTimeZones(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, timezones=None, return_full_timezone_data=False):
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-        timezones=timezones,
-        return_full_timezone_data=return_full_timezone_data
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(timezones=timezones, return_full_timezone_data=return_full_timezone_data)
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_server_time_zones.GetServerTimeZones.get_payload"><code class="name flex">
@@ -167,15 +170,15 @@ class GetServerTimeZones(EWSService):
 </summary>
 <pre><code class="python">def get_payload(self, timezones, return_full_timezone_data):
     payload = create_element(
-        f&#39;m:{self.SERVICE_NAME}&#39;,
+        f&#34;m:{self.SERVICE_NAME}&#34;,
         attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
     )
     if timezones is not None:
         is_empty, timezones = peek(timezones)
         if not is_empty:
-            tz_ids = create_element(&#39;m:Ids&#39;)
+            tz_ids = create_element(&#34;m:Ids&#34;)
             for timezone in timezones:
-                tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
+                tz_id = set_xml_value(create_element(&#34;t:Id&#34;), timezone.ms_id)
                 tz_ids.append(tz_id)
             payload.append(tz_ids)
     return payload</code></pre>

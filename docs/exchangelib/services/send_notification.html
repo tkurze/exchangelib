@@ -26,11 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService, add_xml_child
-from ..errors import InvalidEnumValue
+<pre><code class="python">from ..errors import InvalidEnumValue
 from ..properties import Notification
 from ..transport import wrap
-from ..util import create_element, MNS
+from ..util import MNS, create_element
+from .common import EWSService, add_xml_child
 
 
 class SendNotification(EWSService):
@@ -41,9 +41,9 @@ class SendNotification(EWSService):
     push notifications.
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SendNotification&#39;
-    OK = &#39;OK&#39;
-    UNSUBSCRIBE = &#39;Unsubscribe&#39;
+    SERVICE_NAME = &#34;SendNotification&#34;
+    OK = &#34;OK&#34;
+    UNSUBSCRIBE = &#34;Unsubscribe&#34;
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
@@ -58,7 +58,7 @@ class SendNotification(EWSService):
     @classmethod
     def _response_tag(cls):
         &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
-        return f&#39;{{{MNS}}}{cls.SERVICE_NAME}&#39;
+        return f&#34;{{{MNS}}}{cls.SERVICE_NAME}&#34;
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -66,9 +66,9 @@ class SendNotification(EWSService):
 
     def get_payload(self, status):
         if status not in self.STATUS_CHOICES:
-            raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+            raise InvalidEnumValue(&#34;status&#34;, status, self.STATUS_CHOICES)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Result&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionStatus&#34;, status)
         return payload</code></pre>
 </details>
 </section>
@@ -102,9 +102,9 @@ push notifications.</p></div>
     push notifications.
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SendNotification&#39;
-    OK = &#39;OK&#39;
-    UNSUBSCRIBE = &#39;Unsubscribe&#39;
+    SERVICE_NAME = &#34;SendNotification&#34;
+    OK = &#34;OK&#34;
+    UNSUBSCRIBE = &#34;Unsubscribe&#34;
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
@@ -119,7 +119,7 @@ push notifications.</p></div>
     @classmethod
     def _response_tag(cls):
         &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
-        return f&#39;{{{MNS}}}{cls.SERVICE_NAME}&#39;
+        return f&#34;{{{MNS}}}{cls.SERVICE_NAME}&#34;
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -127,9 +127,9 @@ push notifications.</p></div>
 
     def get_payload(self, status):
         if status not in self.STATUS_CHOICES:
-            raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+            raise InvalidEnumValue(&#34;status&#34;, status, self.STATUS_CHOICES)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Result&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionStatus&#34;, status)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -168,9 +168,9 @@ push notifications.</p></div>
 </summary>
 <pre><code class="python">def get_payload(self, status):
     if status not in self.STATUS_CHOICES:
-        raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
-    add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+        raise InvalidEnumValue(&#34;status&#34;, status, self.STATUS_CHOICES)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}Result&#34;)
+    add_xml_child(payload, &#34;m:SubscriptionStatus&#34;, status)
     return payload</code></pre>
 </details>
 </dd>

@@ -28,7 +28,7 @@
 </summary>
 <pre><code class="python">import logging
 
-from .fields import EmailSubField, LabelField, SubField, NamedSubField, Choice
+from .fields import Choice, EmailSubField, LabelField, NamedSubField, SubField
 from .properties import EWSElement, EWSMeta
 
 log = logging.getLogger(__name__)
@@ -47,31 +47,47 @@ class SingleFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
     def value_field(cls, version):
         fields = cls.supported_fields(version=version)
         if len(fields) != 1:
-            raise ValueError(f&#39;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#39;)
+            raise ValueError(f&#34;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#34;)
         return fields[0]
 
 
 class EmailAddress(SingleFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-emailaddress&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Entry&#39;
-    LABEL_CHOICES = (&#39;EmailAddress1&#39;, &#39;EmailAddress2&#39;, &#39;EmailAddress3&#39;)
+    ELEMENT_NAME = &#34;Entry&#34;
+    LABEL_CHOICES = (&#34;EmailAddress1&#34;, &#34;EmailAddress2&#34;, &#34;EmailAddress3&#34;)
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
     email = EmailSubField(is_required=True)
 
 
 class PhoneNumber(SingleFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Entry&#39;
+    ELEMENT_NAME = &#34;Entry&#34;
     LABEL_CHOICES = (
-        &#39;AssistantPhone&#39;, &#39;BusinessFax&#39;, &#39;BusinessPhone&#39;, &#39;BusinessPhone2&#39;, &#39;Callback&#39;, &#39;CarPhone&#39;, &#39;CompanyMainPhone&#39;,
-        &#39;HomeFax&#39;, &#39;HomePhone&#39;, &#39;HomePhone2&#39;, &#39;Isdn&#39;, &#39;MobilePhone&#39;, &#39;OtherFax&#39;, &#39;OtherTelephone&#39;, &#39;Pager&#39;,
-        &#39;PrimaryPhone&#39;, &#39;RadioPhone&#39;, &#39;Telex&#39;, &#39;TtyTddPhone&#39;
+        &#34;AssistantPhone&#34;,
+        &#34;BusinessFax&#34;,
+        &#34;BusinessPhone&#34;,
+        &#34;BusinessPhone2&#34;,
+        &#34;Callback&#34;,
+        &#34;CarPhone&#34;,
+        &#34;CompanyMainPhone&#34;,
+        &#34;HomeFax&#34;,
+        &#34;HomePhone&#34;,
+        &#34;HomePhone2&#34;,
+        &#34;Isdn&#34;,
+        &#34;MobilePhone&#34;,
+        &#34;OtherFax&#34;,
+        &#34;OtherTelephone&#34;,
+        &#34;Pager&#34;,
+        &#34;PrimaryPhone&#34;,
+        &#34;RadioPhone&#34;,
+        &#34;Telex&#34;,
+        &#34;TtyTddPhone&#34;,
     )
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=&#39;PrimaryPhone&#39;)
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=&#34;PrimaryPhone&#34;)
     phone_number = SubField(is_required=True)
 
 
@@ -82,15 +98,15 @@ class MultiFieldIndexedElement(IndexedElement, metaclass=EWSMeta):
 class PhysicalAddress(MultiFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-physicaladdress&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Entry&#39;
-    LABEL_CHOICES = (&#39;Business&#39;, &#39;Home&#39;, &#39;Other&#39;)
+    ELEMENT_NAME = &#34;Entry&#34;
+    LABEL_CHOICES = (&#34;Business&#34;, &#34;Home&#34;, &#34;Other&#34;)
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
-    street = NamedSubField(field_uri=&#39;Street&#39;)  # Street, house number, etc.
-    city = NamedSubField(field_uri=&#39;City&#39;)
-    state = NamedSubField(field_uri=&#39;State&#39;)
-    country = NamedSubField(field_uri=&#39;CountryOrRegion&#39;)
-    zipcode = NamedSubField(field_uri=&#39;PostalCode&#39;)
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    street = NamedSubField(field_uri=&#34;Street&#34;)  # Street, house number, etc.
+    city = NamedSubField(field_uri=&#34;City&#34;)
+    state = NamedSubField(field_uri=&#34;State&#34;)
+    country = NamedSubField(field_uri=&#34;CountryOrRegion&#34;)
+    zipcode = NamedSubField(field_uri=&#34;PostalCode&#34;)
 
     def clean(self, version=None):
         if isinstance(self.zipcode, int):
@@ -120,10 +136,10 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <pre><code class="python">class EmailAddress(SingleFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-emailaddress&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Entry&#39;
-    LABEL_CHOICES = (&#39;EmailAddress1&#39;, &#39;EmailAddress2&#39;, &#39;EmailAddress3&#39;)
+    ELEMENT_NAME = &#34;Entry&#34;
+    LABEL_CHOICES = (&#34;EmailAddress1&#34;, &#34;EmailAddress2&#34;, &#34;EmailAddress3&#34;)
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
     email = EmailSubField(is_required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -260,14 +276,30 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <pre><code class="python">class PhoneNumber(SingleFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Entry&#39;
+    ELEMENT_NAME = &#34;Entry&#34;
     LABEL_CHOICES = (
-        &#39;AssistantPhone&#39;, &#39;BusinessFax&#39;, &#39;BusinessPhone&#39;, &#39;BusinessPhone2&#39;, &#39;Callback&#39;, &#39;CarPhone&#39;, &#39;CompanyMainPhone&#39;,
-        &#39;HomeFax&#39;, &#39;HomePhone&#39;, &#39;HomePhone2&#39;, &#39;Isdn&#39;, &#39;MobilePhone&#39;, &#39;OtherFax&#39;, &#39;OtherTelephone&#39;, &#39;Pager&#39;,
-        &#39;PrimaryPhone&#39;, &#39;RadioPhone&#39;, &#39;Telex&#39;, &#39;TtyTddPhone&#39;
+        &#34;AssistantPhone&#34;,
+        &#34;BusinessFax&#34;,
+        &#34;BusinessPhone&#34;,
+        &#34;BusinessPhone2&#34;,
+        &#34;Callback&#34;,
+        &#34;CarPhone&#34;,
+        &#34;CompanyMainPhone&#34;,
+        &#34;HomeFax&#34;,
+        &#34;HomePhone&#34;,
+        &#34;HomePhone2&#34;,
+        &#34;Isdn&#34;,
+        &#34;MobilePhone&#34;,
+        &#34;OtherFax&#34;,
+        &#34;OtherTelephone&#34;,
+        &#34;Pager&#34;,
+        &#34;PrimaryPhone&#34;,
+        &#34;RadioPhone&#34;,
+        &#34;Telex&#34;,
+        &#34;TtyTddPhone&#34;,
     )
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=&#39;PrimaryPhone&#39;)
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=&#34;PrimaryPhone&#34;)
     phone_number = SubField(is_required=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -327,15 +359,15 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <pre><code class="python">class PhysicalAddress(MultiFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-physicaladdress&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Entry&#39;
-    LABEL_CHOICES = (&#39;Business&#39;, &#39;Home&#39;, &#39;Other&#39;)
+    ELEMENT_NAME = &#34;Entry&#34;
+    LABEL_CHOICES = (&#34;Business&#34;, &#34;Home&#34;, &#34;Other&#34;)
 
-    label = LabelField(field_uri=&#39;Key&#39;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
-    street = NamedSubField(field_uri=&#39;Street&#39;)  # Street, house number, etc.
-    city = NamedSubField(field_uri=&#39;City&#39;)
-    state = NamedSubField(field_uri=&#39;State&#39;)
-    country = NamedSubField(field_uri=&#39;CountryOrRegion&#39;)
-    zipcode = NamedSubField(field_uri=&#39;PostalCode&#39;)
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    street = NamedSubField(field_uri=&#34;Street&#34;)  # Street, house number, etc.
+    city = NamedSubField(field_uri=&#34;City&#34;)
+    state = NamedSubField(field_uri=&#34;State&#34;)
+    country = NamedSubField(field_uri=&#34;CountryOrRegion&#34;)
+    zipcode = NamedSubField(field_uri=&#34;PostalCode&#34;)
 
     def clean(self, version=None):
         if isinstance(self.zipcode, int):
@@ -437,7 +469,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
     def value_field(cls, version):
         fields = cls.supported_fields(version=version)
         if len(fields) != 1:
-            raise ValueError(f&#39;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#39;)
+            raise ValueError(f&#34;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#34;)
         return fields[0]</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -465,7 +497,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
 def value_field(cls, version):
     fields = cls.supported_fields(version=version)
     if len(fields) != 1:
-        raise ValueError(f&#39;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#39;)
+        raise ValueError(f&#34;Class {cls} must have only one value field (found {tuple(f.name for f in fields)})&#34;)
     return fields[0]</code></pre>
 </details>
 </dd>

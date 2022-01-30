@@ -29,7 +29,7 @@
 <pre><code class="python">import datetime
 
 from .ewsdatetime import UTC
-from .fields import DateTimeField, MessageField, ChoiceField, Choice
+from .fields import Choice, ChoiceField, DateTimeField, MessageField
 from .properties import EWSElement, OutOfOffice
 from .util import create_element, set_xml_value
 
@@ -37,21 +37,22 @@ from .util import create_element, set_xml_value
 class OofSettings(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oofsettings&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;OofSettings&#39;
-    REQUEST_ELEMENT_NAME = &#39;UserOofSettings&#39;
+    ELEMENT_NAME = &#34;OofSettings&#34;
+    REQUEST_ELEMENT_NAME = &#34;UserOofSettings&#34;
 
-    ENABLED = &#39;Enabled&#39;
-    SCHEDULED = &#39;Scheduled&#39;
-    DISABLED = &#39;Disabled&#39;
+    ENABLED = &#34;Enabled&#34;
+    SCHEDULED = &#34;Scheduled&#34;
+    DISABLED = &#34;Disabled&#34;
     STATE_CHOICES = (ENABLED, SCHEDULED, DISABLED)
 
-    state = ChoiceField(field_uri=&#39;OofState&#39;, is_required=True, choices={Choice(c) for c in STATE_CHOICES})
-    external_audience = ChoiceField(field_uri=&#39;ExternalAudience&#39;,
-                                    choices={Choice(&#39;None&#39;), Choice(&#39;Known&#39;), Choice(&#39;All&#39;)}, default=&#39;All&#39;)
-    start = DateTimeField(field_uri=&#39;StartTime&#39;)
-    end = DateTimeField(field_uri=&#39;EndTime&#39;)
-    internal_reply = MessageField(field_uri=&#39;InternalReply&#39;)
-    external_reply = MessageField(field_uri=&#39;ExternalReply&#39;)
+    state = ChoiceField(field_uri=&#34;OofState&#34;, is_required=True, choices={Choice(c) for c in STATE_CHOICES})
+    external_audience = ChoiceField(
+        field_uri=&#34;ExternalAudience&#34;, choices={Choice(&#34;None&#34;), Choice(&#34;Known&#34;), Choice(&#34;All&#34;)}, default=&#34;All&#34;
+    )
+    start = DateTimeField(field_uri=&#34;StartTime&#34;)
+    end = DateTimeField(field_uri=&#34;EndTime&#34;)
+    internal_reply = MessageField(field_uri=&#34;InternalReply&#34;)
+    external_reply = MessageField(field_uri=&#34;ExternalReply&#34;)
 
     def clean(self, version=None):
         super().clean(version=version)
@@ -68,7 +69,7 @@ class OofSettings(EWSElement):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        for attr in (&#39;state&#39;, &#39;external_audience&#39;, &#39;internal_reply&#39;, &#39;external_reply&#39;):
+        for attr in (&#34;state&#34;, &#34;external_audience&#34;, &#34;internal_reply&#34;, &#34;external_reply&#34;):
             f = cls.get_field_by_fieldname(attr)
             kwargs[attr] = f.from_xml(elem=elem, account=account)
         kwargs.update(OutOfOffice.duration_to_start_end(elem=elem, account=account))
@@ -77,24 +78,24 @@ class OofSettings(EWSElement):
 
     def to_xml(self, version):
         self.clean(version=version)
-        elem = create_element(f&#39;t:{self.REQUEST_ELEMENT_NAME}&#39;)
-        for attr in (&#39;state&#39;, &#39;external_audience&#39;):
+        elem = create_element(f&#34;t:{self.REQUEST_ELEMENT_NAME}&#34;)
+        for attr in (&#34;state&#34;, &#34;external_audience&#34;):
             value = getattr(self, attr)
             f = self.get_field_by_fieldname(attr)
             set_xml_value(elem, f.to_xml(value, version=version))
         if self.start or self.end:
-            duration = create_element(&#39;t:Duration&#39;)
+            duration = create_element(&#34;t:Duration&#34;)
             if self.start:
-                f = self.get_field_by_fieldname(&#39;start&#39;)
+                f = self.get_field_by_fieldname(&#34;start&#34;)
                 set_xml_value(duration, f.to_xml(self.start, version=version))
             if self.end:
-                f = self.get_field_by_fieldname(&#39;end&#39;)
+                f = self.get_field_by_fieldname(&#34;end&#34;)
                 set_xml_value(duration, f.to_xml(self.end, version=version))
             elem.append(duration)
-        for attr in (&#39;internal_reply&#39;, &#39;external_reply&#39;):
+        for attr in (&#34;internal_reply&#34;, &#34;external_reply&#34;):
             value = getattr(self, attr)
             if value is None:
-                value = &#39;&#39;  # The value can be empty, but the XML element must always be present
+                value = &#34;&#34;  # The value can be empty, but the XML element must always be present
             f = self.get_field_by_fieldname(attr)
             set_xml_value(elem, f.to_xml(value, version=version))
         return elem
@@ -103,10 +104,10 @@ class OofSettings(EWSElement):
         # Customize comparison
         if self.state == self.DISABLED:
             # All values except state are ignored by the server
-            relevant_attrs = (&#39;state&#39;,)
+            relevant_attrs = (&#34;state&#34;,)
         elif self.state != self.SCHEDULED:
             # &#39;start&#39; and &#39;end&#39; values are ignored by the server, and the server always returns today&#39;s date
-            relevant_attrs = tuple(f.name for f in self.FIELDS if f.name not in (&#39;start&#39;, &#39;end&#39;))
+            relevant_attrs = tuple(f.name for f in self.FIELDS if f.name not in (&#34;start&#34;, &#34;end&#34;))
         else:
             relevant_attrs = tuple(f.name for f in self.FIELDS)
         return hash(tuple(getattr(self, attr) for attr in relevant_attrs))</code></pre>
@@ -134,21 +135,22 @@ class OofSettings(EWSElement):
 <pre><code class="python">class OofSettings(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oofsettings&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;OofSettings&#39;
-    REQUEST_ELEMENT_NAME = &#39;UserOofSettings&#39;
+    ELEMENT_NAME = &#34;OofSettings&#34;
+    REQUEST_ELEMENT_NAME = &#34;UserOofSettings&#34;
 
-    ENABLED = &#39;Enabled&#39;
-    SCHEDULED = &#39;Scheduled&#39;
-    DISABLED = &#39;Disabled&#39;
+    ENABLED = &#34;Enabled&#34;
+    SCHEDULED = &#34;Scheduled&#34;
+    DISABLED = &#34;Disabled&#34;
     STATE_CHOICES = (ENABLED, SCHEDULED, DISABLED)
 
-    state = ChoiceField(field_uri=&#39;OofState&#39;, is_required=True, choices={Choice(c) for c in STATE_CHOICES})
-    external_audience = ChoiceField(field_uri=&#39;ExternalAudience&#39;,
-                                    choices={Choice(&#39;None&#39;), Choice(&#39;Known&#39;), Choice(&#39;All&#39;)}, default=&#39;All&#39;)
-    start = DateTimeField(field_uri=&#39;StartTime&#39;)
-    end = DateTimeField(field_uri=&#39;EndTime&#39;)
-    internal_reply = MessageField(field_uri=&#39;InternalReply&#39;)
-    external_reply = MessageField(field_uri=&#39;ExternalReply&#39;)
+    state = ChoiceField(field_uri=&#34;OofState&#34;, is_required=True, choices={Choice(c) for c in STATE_CHOICES})
+    external_audience = ChoiceField(
+        field_uri=&#34;ExternalAudience&#34;, choices={Choice(&#34;None&#34;), Choice(&#34;Known&#34;), Choice(&#34;All&#34;)}, default=&#34;All&#34;
+    )
+    start = DateTimeField(field_uri=&#34;StartTime&#34;)
+    end = DateTimeField(field_uri=&#34;EndTime&#34;)
+    internal_reply = MessageField(field_uri=&#34;InternalReply&#34;)
+    external_reply = MessageField(field_uri=&#34;ExternalReply&#34;)
 
     def clean(self, version=None):
         super().clean(version=version)
@@ -165,7 +167,7 @@ class OofSettings(EWSElement):
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        for attr in (&#39;state&#39;, &#39;external_audience&#39;, &#39;internal_reply&#39;, &#39;external_reply&#39;):
+        for attr in (&#34;state&#34;, &#34;external_audience&#34;, &#34;internal_reply&#34;, &#34;external_reply&#34;):
             f = cls.get_field_by_fieldname(attr)
             kwargs[attr] = f.from_xml(elem=elem, account=account)
         kwargs.update(OutOfOffice.duration_to_start_end(elem=elem, account=account))
@@ -174,24 +176,24 @@ class OofSettings(EWSElement):
 
     def to_xml(self, version):
         self.clean(version=version)
-        elem = create_element(f&#39;t:{self.REQUEST_ELEMENT_NAME}&#39;)
-        for attr in (&#39;state&#39;, &#39;external_audience&#39;):
+        elem = create_element(f&#34;t:{self.REQUEST_ELEMENT_NAME}&#34;)
+        for attr in (&#34;state&#34;, &#34;external_audience&#34;):
             value = getattr(self, attr)
             f = self.get_field_by_fieldname(attr)
             set_xml_value(elem, f.to_xml(value, version=version))
         if self.start or self.end:
-            duration = create_element(&#39;t:Duration&#39;)
+            duration = create_element(&#34;t:Duration&#34;)
             if self.start:
-                f = self.get_field_by_fieldname(&#39;start&#39;)
+                f = self.get_field_by_fieldname(&#34;start&#34;)
                 set_xml_value(duration, f.to_xml(self.start, version=version))
             if self.end:
-                f = self.get_field_by_fieldname(&#39;end&#39;)
+                f = self.get_field_by_fieldname(&#34;end&#34;)
                 set_xml_value(duration, f.to_xml(self.end, version=version))
             elem.append(duration)
-        for attr in (&#39;internal_reply&#39;, &#39;external_reply&#39;):
+        for attr in (&#34;internal_reply&#34;, &#34;external_reply&#34;):
             value = getattr(self, attr)
             if value is None:
-                value = &#39;&#39;  # The value can be empty, but the XML element must always be present
+                value = &#34;&#34;  # The value can be empty, but the XML element must always be present
             f = self.get_field_by_fieldname(attr)
             set_xml_value(elem, f.to_xml(value, version=version))
         return elem
@@ -200,10 +202,10 @@ class OofSettings(EWSElement):
         # Customize comparison
         if self.state == self.DISABLED:
             # All values except state are ignored by the server
-            relevant_attrs = (&#39;state&#39;,)
+            relevant_attrs = (&#34;state&#34;,)
         elif self.state != self.SCHEDULED:
             # &#39;start&#39; and &#39;end&#39; values are ignored by the server, and the server always returns today&#39;s date
-            relevant_attrs = tuple(f.name for f in self.FIELDS if f.name not in (&#39;start&#39;, &#39;end&#39;))
+            relevant_attrs = tuple(f.name for f in self.FIELDS if f.name not in (&#34;start&#34;, &#34;end&#34;))
         else:
             relevant_attrs = tuple(f.name for f in self.FIELDS)
         return hash(tuple(getattr(self, attr) for attr in relevant_attrs))</code></pre>
@@ -257,7 +259,7 @@ class OofSettings(EWSElement):
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
     kwargs = {}
-    for attr in (&#39;state&#39;, &#39;external_audience&#39;, &#39;internal_reply&#39;, &#39;external_reply&#39;):
+    for attr in (&#34;state&#34;, &#34;external_audience&#34;, &#34;internal_reply&#34;, &#34;external_reply&#34;):
         f = cls.get_field_by_fieldname(attr)
         kwargs[attr] = f.from_xml(elem=elem, account=account)
     kwargs.update(OutOfOffice.duration_to_start_end(elem=elem, account=account))
@@ -328,24 +330,24 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">def to_xml(self, version):
     self.clean(version=version)
-    elem = create_element(f&#39;t:{self.REQUEST_ELEMENT_NAME}&#39;)
-    for attr in (&#39;state&#39;, &#39;external_audience&#39;):
+    elem = create_element(f&#34;t:{self.REQUEST_ELEMENT_NAME}&#34;)
+    for attr in (&#34;state&#34;, &#34;external_audience&#34;):
         value = getattr(self, attr)
         f = self.get_field_by_fieldname(attr)
         set_xml_value(elem, f.to_xml(value, version=version))
     if self.start or self.end:
-        duration = create_element(&#39;t:Duration&#39;)
+        duration = create_element(&#34;t:Duration&#34;)
         if self.start:
-            f = self.get_field_by_fieldname(&#39;start&#39;)
+            f = self.get_field_by_fieldname(&#34;start&#34;)
             set_xml_value(duration, f.to_xml(self.start, version=version))
         if self.end:
-            f = self.get_field_by_fieldname(&#39;end&#39;)
+            f = self.get_field_by_fieldname(&#34;end&#34;)
             set_xml_value(duration, f.to_xml(self.end, version=version))
         elem.append(duration)
-    for attr in (&#39;internal_reply&#39;, &#39;external_reply&#39;):
+    for attr in (&#34;internal_reply&#34;, &#34;external_reply&#34;):
         value = getattr(self, attr)
         if value is None:
-            value = &#39;&#39;  # The value can be empty, but the XML element must always be present
+            value = &#34;&#34;  # The value can be empty, but the XML element must always be present
         f = self.get_field_by_fieldname(attr)
         set_xml_value(elem, f.to_xml(value, version=version))
     return elem</code></pre>

@@ -30,27 +30,37 @@
 
 from ..errors import InvalidTypeError
 from ..extended_properties import ExtendedProperty
-from ..fields import BooleanField, ExtendedPropertyField, BodyField, MailboxField, MailboxListField, EWSElementField, \
-    CharField, IdElementField, AttachmentField, ExtendedPropertyListField
-from ..properties import InvalidField, IdChangeKeyMixIn, EWSElement, ReferenceItemId, ItemId, EWSMeta
+from ..fields import (
+    AttachmentField,
+    BodyField,
+    BooleanField,
+    CharField,
+    EWSElementField,
+    ExtendedPropertyField,
+    ExtendedPropertyListField,
+    IdElementField,
+    MailboxField,
+    MailboxListField,
+)
+from ..properties import EWSElement, EWSMeta, IdChangeKeyMixIn, InvalidField, ItemId, ReferenceItemId
 from ..util import require_account
 from ..version import EXCHANGE_2007_SP1
 
 log = logging.getLogger(__name__)
 
 # Shape enums
-ID_ONLY = &#39;IdOnly&#39;
-DEFAULT = &#39;Default&#39;
+ID_ONLY = &#34;IdOnly&#34;
+DEFAULT = &#34;Default&#34;
 # AllProperties doesn&#39;t actually get all properties in FindItem, just the &#34;first-class&#34; ones. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/email-properties-and-elements-in-ews-in-exchange
-ALL_PROPERTIES = &#39;AllProperties&#39;
+ALL_PROPERTIES = &#34;AllProperties&#34;
 SHAPE_CHOICES = (ID_ONLY, DEFAULT, ALL_PROPERTIES)
 
 # MessageDisposition values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem
-SAVE_ONLY = &#39;SaveOnly&#39;
-SEND_ONLY = &#39;SendOnly&#39;
-SEND_AND_SAVE_COPY = &#39;SendAndSaveCopy&#39;
+SAVE_ONLY = &#34;SaveOnly&#34;
+SEND_ONLY = &#34;SendOnly&#34;
+SEND_AND_SAVE_COPY = &#34;SendAndSaveCopy&#34;
 MESSAGE_DISPOSITION_CHOICES = (SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY)
 
 # SendMeetingInvitations values. See
@@ -59,34 +69,39 @@ MESSAGE_DISPOSITION_CHOICES = (SAVE_ONLY, SEND_ONLY, SEND_AND_SAVE_COPY)
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem
 # SendMeetingCancellations values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-SEND_TO_NONE = &#39;SendToNone&#39;
-SEND_ONLY_TO_ALL = &#39;SendOnlyToAll&#39;
-SEND_ONLY_TO_CHANGED = &#39;SendOnlyToChanged&#39;
-SEND_TO_ALL_AND_SAVE_COPY = &#39;SendToAllAndSaveCopy&#39;
-SEND_TO_CHANGED_AND_SAVE_COPY = &#39;SendToChangedAndSaveCopy&#39;
+SEND_TO_NONE = &#34;SendToNone&#34;
+SEND_ONLY_TO_ALL = &#34;SendOnlyToAll&#34;
+SEND_ONLY_TO_CHANGED = &#34;SendOnlyToChanged&#34;
+SEND_TO_ALL_AND_SAVE_COPY = &#34;SendToAllAndSaveCopy&#34;
+SEND_TO_CHANGED_AND_SAVE_COPY = &#34;SendToChangedAndSaveCopy&#34;
 SEND_MEETING_INVITATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_TO_ALL_AND_SAVE_COPY)
-SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_ONLY_TO_CHANGED,
-                                                      SEND_TO_ALL_AND_SAVE_COPY, SEND_TO_CHANGED_AND_SAVE_COPY)
+SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES = (
+    SEND_TO_NONE,
+    SEND_ONLY_TO_ALL,
+    SEND_ONLY_TO_CHANGED,
+    SEND_TO_ALL_AND_SAVE_COPY,
+    SEND_TO_CHANGED_AND_SAVE_COPY,
+)
 SEND_MEETING_CANCELLATIONS_CHOICES = (SEND_TO_NONE, SEND_ONLY_TO_ALL, SEND_TO_ALL_AND_SAVE_COPY)
 
 # AffectedTaskOccurrences values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-ALL_OCCURRENCES = &#39;AllOccurrences&#39;
-SPECIFIED_OCCURRENCE_ONLY = &#39;SpecifiedOccurrenceOnly&#39;
+ALL_OCCURRENCES = &#34;AllOccurrences&#34;
+SPECIFIED_OCCURRENCE_ONLY = &#34;SpecifiedOccurrenceOnly&#34;
 AFFECTED_TASK_OCCURRENCES_CHOICES = (ALL_OCCURRENCES, SPECIFIED_OCCURRENCE_ONLY)
 
 # ConflictResolution values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem
-NEVER_OVERWRITE = &#39;NeverOverwrite&#39;
-AUTO_RESOLVE = &#39;AutoResolve&#39;
-ALWAYS_OVERWRITE = &#39;AlwaysOverwrite&#39;
+NEVER_OVERWRITE = &#34;NeverOverwrite&#34;
+AUTO_RESOLVE = &#34;AutoResolve&#34;
+ALWAYS_OVERWRITE = &#34;AlwaysOverwrite&#34;
 CONFLICT_RESOLUTION_CHOICES = (NEVER_OVERWRITE, AUTO_RESOLVE, ALWAYS_OVERWRITE)
 
 # DeleteType values. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem
-HARD_DELETE = &#39;HardDelete&#39;
-SOFT_DELETE = &#39;SoftDelete&#39;
-MOVE_TO_DELETED_ITEMS = &#39;MoveToDeletedItems&#39;
+HARD_DELETE = &#34;HardDelete&#34;
+SOFT_DELETE = &#34;SoftDelete&#34;
+MOVE_TO_DELETED_ITEMS = &#34;MoveToDeletedItems&#34;
 DELETE_TYPE_CHOICES = (HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS)
 
 
@@ -94,7 +109,7 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically.&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
-    __slots__ = &#39;__dict__&#39;,
+    __slots__ = (&#34;__dict__&#34;,)
 
     INSERT_AFTER_FIELD = None
 
@@ -107,7 +122,7 @@ class RegisterMixIn(IdChangeKeyMixIn, metaclass=EWSMeta):
         :return:
         &#34;&#34;&#34;
         if not cls.INSERT_AFTER_FIELD:
-            raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
+            raise ValueError(f&#34;Class {cls} is missing INSERT_AFTER_FIELD value&#34;)
         try:
             cls.get_field_by_fieldname(attr_name)
         except InvalidField:
@@ -148,9 +163,9 @@ class BaseItem(RegisterMixIn, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all other classes that implement EWS items.&#34;&#34;&#34;
 
     ID_ELEMENT_CLS = ItemId
-    _id = IdElementField(field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS)
+    _id = IdElementField(field_uri=&#34;item:ItemId&#34;, value_cls=ID_ELEMENT_CLS)
 
-    __slots__ = &#39;account&#39;, &#39;folder&#39;
+    __slots__ = &#34;account&#34;, &#34;folder&#34;
 
     def __init__(self, **kwargs):
         &#34;&#34;&#34;Pick out optional &#39;account&#39; and &#39;folder&#39; kwargs, and pass the rest to the parent class.
@@ -160,15 +175,16 @@ class BaseItem(RegisterMixIn, metaclass=EWSMeta):
             &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
                 we use folder.account.
         &#34;&#34;&#34;
-        from ..folders import BaseFolder
         from ..account import Account
-        self.account = kwargs.pop(&#39;account&#39;, None)
+        from ..folders import BaseFolder
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise InvalidTypeError(&#39;account&#39;, self.account, Account)
-        self.folder = kwargs.pop(&#39;folder&#39;, None)
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
+        self.folder = kwargs.pop(&#34;folder&#34;, None)
         if self.folder is not None:
             if not isinstance(self.folder, BaseFolder):
-                raise InvalidTypeError(&#39;folder&#39;, self.folder, BaseFolder)
+                raise InvalidTypeError(&#34;folder&#34;, self.folder, BaseFolder)
             if self.folder.account is not None:
                 if self.account is not None:
                     # Make sure the account from kwargs matches the folder account
@@ -187,32 +203,34 @@ class BaseItem(RegisterMixIn, metaclass=EWSMeta):
 class BaseReplyItem(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for reply/forward elements that share the same fields.&#34;&#34;&#34;
 
-    subject = CharField(field_uri=&#39;Subject&#39;)
-    body = BodyField(field_uri=&#39;Body&#39;)  # Accepts and returns Body or HTMLBody instances
-    to_recipients = MailboxListField(field_uri=&#39;ToRecipients&#39;)
-    cc_recipients = MailboxListField(field_uri=&#39;CcRecipients&#39;)
-    bcc_recipients = MailboxListField(field_uri=&#39;BccRecipients&#39;)
-    is_read_receipt_requested = BooleanField(field_uri=&#39;IsReadReceiptRequested&#39;)
-    is_delivery_receipt_requested = BooleanField(field_uri=&#39;IsDeliveryReceiptRequested&#39;)
-    author = MailboxField(field_uri=&#39;From&#39;)
+    subject = CharField(field_uri=&#34;Subject&#34;)
+    body = BodyField(field_uri=&#34;Body&#34;)  # Accepts and returns Body or HTMLBody instances
+    to_recipients = MailboxListField(field_uri=&#34;ToRecipients&#34;)
+    cc_recipients = MailboxListField(field_uri=&#34;CcRecipients&#34;)
+    bcc_recipients = MailboxListField(field_uri=&#34;BccRecipients&#34;)
+    is_read_receipt_requested = BooleanField(field_uri=&#34;IsReadReceiptRequested&#34;)
+    is_delivery_receipt_requested = BooleanField(field_uri=&#34;IsDeliveryReceiptRequested&#34;)
+    author = MailboxField(field_uri=&#34;From&#34;)
     reference_item_id = EWSElementField(value_cls=ReferenceItemId)
-    new_body = BodyField(field_uri=&#39;NewBodyContent&#39;)  # Accepts and returns Body or HTMLBody instances
-    received_by = MailboxField(field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1)
-    received_by_representing = MailboxField(field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1)
+    new_body = BodyField(field_uri=&#34;NewBodyContent&#34;)  # Accepts and returns Body or HTMLBody instances
+    received_by = MailboxField(field_uri=&#34;ReceivedBy&#34;, supported_from=EXCHANGE_2007_SP1)
+    received_representing = MailboxField(field_uri=&#34;ReceivedRepresenting&#34;, supported_from=EXCHANGE_2007_SP1)
 
-    __slots__ = &#39;account&#39;,
+    __slots__ = (&#34;account&#34;,)
 
     def __init__(self, **kwargs):
         # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;save()&#39;
         from ..account import Account
-        self.account = kwargs.pop(&#39;account&#39;, None)
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise InvalidTypeError(&#39;account&#39;, self.account, Account)
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
         super().__init__(**kwargs)
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None):
         from ..services import CreateItem
+
         if copy_to_folder and not save_copy:
             raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
@@ -231,6 +249,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
         :return:
         &#34;&#34;&#34;
         from ..services import CreateItem
+
         return CreateItem(account=self.account).get(
             items=[self],
             folder=folder,
@@ -242,7 +261,7 @@ class BaseReplyItem(EWSElement, metaclass=EWSMeta):
 class BulkCreateResult(BaseItem):
     &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call.&#34;&#34;&#34;
 
-    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
+    attachments = AttachmentField(field_uri=&#34;item:Attachments&#34;)  # ItemAttachment or FileAttachment
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -278,9 +297,9 @@ we use folder.account.</p></div>
     &#34;&#34;&#34;Base class for all other classes that implement EWS items.&#34;&#34;&#34;
 
     ID_ELEMENT_CLS = ItemId
-    _id = IdElementField(field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS)
+    _id = IdElementField(field_uri=&#34;item:ItemId&#34;, value_cls=ID_ELEMENT_CLS)
 
-    __slots__ = &#39;account&#39;, &#39;folder&#39;
+    __slots__ = &#34;account&#34;, &#34;folder&#34;
 
     def __init__(self, **kwargs):
         &#34;&#34;&#34;Pick out optional &#39;account&#39; and &#39;folder&#39; kwargs, and pass the rest to the parent class.
@@ -290,15 +309,16 @@ we use folder.account.</p></div>
             &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
                 we use folder.account.
         &#34;&#34;&#34;
-        from ..folders import BaseFolder
         from ..account import Account
-        self.account = kwargs.pop(&#39;account&#39;, None)
+        from ..folders import BaseFolder
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise InvalidTypeError(&#39;account&#39;, self.account, Account)
-        self.folder = kwargs.pop(&#39;folder&#39;, None)
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
+        self.folder = kwargs.pop(&#34;folder&#34;, None)
         if self.folder is not None:
             if not isinstance(self.folder, BaseFolder):
-                raise InvalidTypeError(&#39;folder&#39;, self.folder, BaseFolder)
+                raise InvalidTypeError(&#34;folder&#34;, self.folder, BaseFolder)
             if self.folder.account is not None:
                 if self.account is not None:
                     # Make sure the account from kwargs matches the folder account
@@ -394,32 +414,34 @@ def from_xml(cls, elem, account):
 <pre><code class="python">class BaseReplyItem(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for reply/forward elements that share the same fields.&#34;&#34;&#34;
 
-    subject = CharField(field_uri=&#39;Subject&#39;)
-    body = BodyField(field_uri=&#39;Body&#39;)  # Accepts and returns Body or HTMLBody instances
-    to_recipients = MailboxListField(field_uri=&#39;ToRecipients&#39;)
-    cc_recipients = MailboxListField(field_uri=&#39;CcRecipients&#39;)
-    bcc_recipients = MailboxListField(field_uri=&#39;BccRecipients&#39;)
-    is_read_receipt_requested = BooleanField(field_uri=&#39;IsReadReceiptRequested&#39;)
-    is_delivery_receipt_requested = BooleanField(field_uri=&#39;IsDeliveryReceiptRequested&#39;)
-    author = MailboxField(field_uri=&#39;From&#39;)
+    subject = CharField(field_uri=&#34;Subject&#34;)
+    body = BodyField(field_uri=&#34;Body&#34;)  # Accepts and returns Body or HTMLBody instances
+    to_recipients = MailboxListField(field_uri=&#34;ToRecipients&#34;)
+    cc_recipients = MailboxListField(field_uri=&#34;CcRecipients&#34;)
+    bcc_recipients = MailboxListField(field_uri=&#34;BccRecipients&#34;)
+    is_read_receipt_requested = BooleanField(field_uri=&#34;IsReadReceiptRequested&#34;)
+    is_delivery_receipt_requested = BooleanField(field_uri=&#34;IsDeliveryReceiptRequested&#34;)
+    author = MailboxField(field_uri=&#34;From&#34;)
     reference_item_id = EWSElementField(value_cls=ReferenceItemId)
-    new_body = BodyField(field_uri=&#39;NewBodyContent&#39;)  # Accepts and returns Body or HTMLBody instances
-    received_by = MailboxField(field_uri=&#39;ReceivedBy&#39;, supported_from=EXCHANGE_2007_SP1)
-    received_by_representing = MailboxField(field_uri=&#39;ReceivedRepresenting&#39;, supported_from=EXCHANGE_2007_SP1)
+    new_body = BodyField(field_uri=&#34;NewBodyContent&#34;)  # Accepts and returns Body or HTMLBody instances
+    received_by = MailboxField(field_uri=&#34;ReceivedBy&#34;, supported_from=EXCHANGE_2007_SP1)
+    received_representing = MailboxField(field_uri=&#34;ReceivedRepresenting&#34;, supported_from=EXCHANGE_2007_SP1)
 
-    __slots__ = &#39;account&#39;,
+    __slots__ = (&#34;account&#34;,)
 
     def __init__(self, **kwargs):
         # &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;save()&#39;
         from ..account import Account
-        self.account = kwargs.pop(&#39;account&#39;, None)
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise InvalidTypeError(&#39;account&#39;, self.account, Account)
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
         super().__init__(**kwargs)
 
     @require_account
     def send(self, save_copy=True, copy_to_folder=None):
         from ..services import CreateItem
+
         if copy_to_folder and not save_copy:
             raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
         message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
@@ -438,6 +460,7 @@ def from_xml(cls, elem, account):
         :return:
         &#34;&#34;&#34;
         from ..services import CreateItem
+
         return CreateItem(account=self.account).get(
             items=[self],
             folder=folder,
@@ -501,7 +524,7 @@ def from_xml(cls, elem, account):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.items.base.BaseReplyItem.received_by_representing"><code class="name">var <span class="ident">received_by_representing</span></code></dt>
+<dt id="exchangelib.items.base.BaseReplyItem.received_representing"><code class="name">var <span class="ident">received_representing</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -539,6 +562,7 @@ def save(self, folder):
     :return:
     &#34;&#34;&#34;
     from ..services import CreateItem
+
     return CreateItem(account=self.account).get(
         items=[self],
         folder=folder,
@@ -559,6 +583,7 @@ def save(self, folder):
 <pre><code class="python">@require_account
 def send(self, save_copy=True, copy_to_folder=None):
     from ..services import CreateItem
+
     if copy_to_folder and not save_copy:
         raise AttributeError(&#34;&#39;save_copy&#39; must be True when &#39;copy_to_folder&#39; is set&#34;)
     message_disposition = SEND_AND_SAVE_COPY if save_copy else SEND_ONLY
@@ -601,7 +626,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class BulkCreateResult(BaseItem):
     &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call.&#34;&#34;&#34;
 
-    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
+    attachments = AttachmentField(field_uri=&#34;item:Attachments&#34;)  # ItemAttachment or FileAttachment
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -660,7 +685,7 @@ we use folder.account.</p></div>
     &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically.&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
-    __slots__ = &#39;__dict__&#39;,
+    __slots__ = (&#34;__dict__&#34;,)
 
     INSERT_AFTER_FIELD = None
 
@@ -673,7 +698,7 @@ we use folder.account.</p></div>
         :return:
         &#34;&#34;&#34;
         if not cls.INSERT_AFTER_FIELD:
-            raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
+            raise ValueError(f&#34;Class {cls} is missing INSERT_AFTER_FIELD value&#34;)
         try:
             cls.get_field_by_fieldname(attr_name)
         except InvalidField:
@@ -776,7 +801,7 @@ def register(cls, attr_name, attr_cls):
     :return:
     &#34;&#34;&#34;
     if not cls.INSERT_AFTER_FIELD:
-        raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
+        raise ValueError(f&#34;Class {cls} is missing INSERT_AFTER_FIELD value&#34;)
     try:
         cls.get_field_by_fieldname(attr_name)
     except InvalidField:
@@ -850,7 +875,7 @@ def register(cls, attr_name, attr_cls):
 <li><code><a title="exchangelib.items.base.BaseReplyItem.is_read_receipt_requested" href="#exchangelib.items.base.BaseReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.new_body" href="#exchangelib.items.base.BaseReplyItem.new_body">new_body</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.received_by" href="#exchangelib.items.base.BaseReplyItem.received_by">received_by</a></code></li>
-<li><code><a title="exchangelib.items.base.BaseReplyItem.received_by_representing" href="#exchangelib.items.base.BaseReplyItem.received_by_representing">received_by_representing</a></code></li>
+<li><code><a title="exchangelib.items.base.BaseReplyItem.received_representing" href="#exchangelib.items.base.BaseReplyItem.received_representing">received_representing</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.reference_item_id" href="#exchangelib.items.base.BaseReplyItem.reference_item_id">reference_item_id</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.save" href="#exchangelib.items.base.BaseReplyItem.save">save</a></code></li>
 <li><code><a title="exchangelib.items.base.BaseReplyItem.send" href="#exchangelib.items.base.BaseReplyItem.send">send</a></code></li>

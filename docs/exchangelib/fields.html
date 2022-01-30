@@ -33,52 +33,60 @@ from decimal import Decimal, InvalidOperation
 from importlib import import_module
 
 from .errors import InvalidTypeError
-from .ewsdatetime import EWSDateTime, EWSDate, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone, UTC
-from .util import create_element, get_xml_attr, get_xml_attrs, set_xml_value, value_to_xml_text, is_iterable, \
-    xml_text_to_value, TNS
-from .version import Build, EXCHANGE_2013
+from .ewsdatetime import UTC, EWSDate, EWSDateTime, EWSTimeZone, NaiveDateTimeNotAllowed, UnknownTimeZone
+from .util import (
+    TNS,
+    create_element,
+    get_xml_attr,
+    get_xml_attrs,
+    is_iterable,
+    set_xml_value,
+    value_to_xml_text,
+    xml_text_to_value,
+)
+from .version import EXCHANGE_2013, Build
 
 log = logging.getLogger(__name__)
 
 
 # DayOfWeekIndex enum. See
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/dayofweekindex
-FIRST = &#39;First&#39;
-SECOND = &#39;Second&#39;
-THIRD = &#39;Third&#39;
-FOURTH = &#39;Fourth&#39;
-LAST = &#39;Last&#39;
+FIRST = &#34;First&#34;
+SECOND = &#34;Second&#34;
+THIRD = &#34;Third&#34;
+FOURTH = &#34;Fourth&#34;
+LAST = &#34;Last&#34;
 WEEK_NUMBERS = (FIRST, SECOND, THIRD, FOURTH, LAST)
 
 # Month enum
-JANUARY = &#39;January&#39;
-FEBRUARY = &#39;February&#39;
-MARCH = &#39;March&#39;
-APRIL = &#39;April&#39;
-MAY = &#39;May&#39;
-JUNE = &#39;June&#39;
-JULY = &#39;July&#39;
-AUGUST = &#39;August&#39;
-SEPTEMBER = &#39;September&#39;
-OCTOBER = &#39;October&#39;
-NOVEMBER = &#39;November&#39;
-DECEMBER = &#39;December&#39;
+JANUARY = &#34;January&#34;
+FEBRUARY = &#34;February&#34;
+MARCH = &#34;March&#34;
+APRIL = &#34;April&#34;
+MAY = &#34;May&#34;
+JUNE = &#34;June&#34;
+JULY = &#34;July&#34;
+AUGUST = &#34;August&#34;
+SEPTEMBER = &#34;September&#34;
+OCTOBER = &#34;October&#34;
+NOVEMBER = &#34;November&#34;
+DECEMBER = &#34;December&#34;
 MONTHS = (JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST, SEPTEMBER, OCTOBER, NOVEMBER, DECEMBER)
 
 # Weekday enum
-MONDAY = &#39;Monday&#39;
-TUESDAY = &#39;Tuesday&#39;
-WEDNESDAY = &#39;Wednesday&#39;
-THURSDAY = &#39;Thursday&#39;
-FRIDAY = &#39;Friday&#39;
-SATURDAY = &#39;Saturday&#39;
-SUNDAY = &#39;Sunday&#39;
+MONDAY = &#34;Monday&#34;
+TUESDAY = &#34;Tuesday&#34;
+WEDNESDAY = &#34;Wednesday&#34;
+THURSDAY = &#34;Thursday&#34;
+FRIDAY = &#34;Friday&#34;
+SATURDAY = &#34;Saturday&#34;
+SUNDAY = &#34;Sunday&#34;
 WEEKDAY_NAMES = (MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY)
 
 # Used for weekday recurrences except weekly recurrences. E.g. for &#34;First WeekendDay in March&#34;
-DAY = &#39;Day&#39;
-WEEK_DAY = &#39;Weekday&#39;  # Non-weekend day
-WEEKEND_DAY = &#39;WeekendDay&#39;
+DAY = &#34;Day&#34;
+WEEK_DAY = &#34;Weekday&#34;  # Non-weekend day
+WEEKEND_DAY = &#34;WeekendDay&#34;
 EXTRA_WEEKDAY_OPTIONS = (DAY, WEEK_DAY, WEEKEND_DAY)
 
 # DaysOfWeek enum: See
@@ -109,8 +117,8 @@ def split_field_path(field_path):
       &#39;physical_addresses__Home__street&#39; -&gt; (&#39;physical_addresses&#39;, &#39;Home&#39;, &#39;street&#39;)
     &#34;&#34;&#34;
     if not isinstance(field_path, str):
-        raise InvalidTypeError(&#39;field_path&#39;, field_path, str)
-    search_parts = field_path.split(&#39;__&#39;)
+        raise InvalidTypeError(&#34;field_path&#34;, field_path, str)
+    search_parts = field_path.split(&#34;__&#34;)
     field = search_parts[0]
     try:
         label = search_parts[1]
@@ -127,7 +135,8 @@ def resolve_field_path(field_path, folder, strict=True):
     &#34;&#34;&#34;Take the name of a field, or &#39;__&#39;-delimited path to a subfield, and return the corresponding Field object,
     label and SubField object.
     &#34;&#34;&#34;
-    from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
+    from .indexed_properties import MultiFieldIndexedElement, SingleFieldIndexedElement
+
     fieldname, label, subfield_name = split_field_path(field_path)
     field = folder.get_item_field_by_fieldname(fieldname)
     subfield = None
@@ -137,9 +146,7 @@ def resolve_field_path(field_path, folder, strict=True):
                 f&#34;IndexedField path {field_path!r} must specify label, e.g. &#34;
                 f&#34;&#39;{fieldname}__{field.value_cls.get_field_by_fieldname(&#39;label&#39;).default}&#39;&#34;
             )
-        valid_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;).supported_choices(
-            version=folder.account.version
-        )
+        valid_labels = field.value_cls.get_field_by_fieldname(&#34;label&#34;).supported_choices(version=folder.account.version)
         if label and label not in valid_labels:
             raise ValueError(
                 f&#34;Label {label!r} on IndexedField path {field_path!r} must be one of {sorted(valid_labels)}&#34;
@@ -155,16 +162,16 @@ def resolve_field_path(field_path, folder, strict=True):
                 try:
                     subfield = field.value_cls.get_field_by_fieldname(subfield_name)
                 except ValueError:
-                    field_names = &#39;, &#39;.join(f.name for f in field.value_cls.supported_fields(
-                        version=folder.account.version
-                    ))
+                    field_names = &#34;, &#34;.join(
+                        f.name for f in field.value_cls.supported_fields(version=folder.account.version)
+                    )
                     raise ValueError(
                         f&#34;Subfield {subfield_name!r} on IndexedField path {field_path!r} &#34;
                         f&#34;must be one of {sorted(field_names)}&#34;
                     )
         else:
             if not issubclass(field.value_cls, SingleFieldIndexedElement):
-                raise InvalidTypeError(&#39;field.value_cls&#39;, field.value_cls, SingleFieldIndexedElement)
+                raise InvalidTypeError(&#34;field.value_cls&#34;, field.value_cls, SingleFieldIndexedElement)
             if subfield_name:
                 raise ValueError(
                     f&#34;IndexedField path {field_path!r} must not specify subfield, e.g. just {fieldname}__{label}&#39;&#34;
@@ -229,8 +236,11 @@ class FieldPath:
         # If this path does not point to a specific subfield on an indexed property, return all the possible path
         # combinations for this field path.
         if isinstance(self.field, IndexedField):
-            labels = [self.label] if self.label \
-                else self.field.value_cls.get_field_by_fieldname(&#39;label&#39;).supported_choices(version=version)
+            labels = (
+                [self.label]
+                if self.label
+                else self.field.value_cls.get_field_by_fieldname(&#34;label&#34;).supported_choices(version=version)
+            )
             subfields = [self.subfield] if self.subfield else self.field.value_cls.supported_fields(version=version)
             for label in labels:
                 for subfield in subfields:
@@ -242,9 +252,10 @@ class FieldPath:
     def path(self):
         if self.label:
             from .indexed_properties import SingleFieldIndexedElement
+
             if issubclass(self.field.value_cls, SingleFieldIndexedElement) or not self.subfield:
-                return f&#39;{self.field.name}__{self.label}&#39;
-            return f&#39;{self.field.name}__{self.label}__{self.subfield.name}&#39;
+                return f&#34;{self.field.name}__{self.label}&#34;
+            return f&#34;{self.field.name}__{self.label}__{self.subfield.name}&#34;
         return self.field.name
 
     def __eq__(self, other):
@@ -262,6 +273,7 @@ class FieldPath:
 
 class FieldOrder:
     &#34;&#34;&#34;Holds values needed to call server-side sorting on a single field path.&#34;&#34;&#34;
+
     def __init__(self, field_path, reverse=False):
         &#34;&#34;&#34;
 
@@ -274,12 +286,12 @@ class FieldOrder:
     @classmethod
     def from_string(cls, field_path, folder):
         return cls(
-            field_path=FieldPath.from_string(field_path=field_path.lstrip(&#39;-&#39;), folder=folder, strict=True),
-            reverse=field_path.startswith(&#39;-&#39;)
+            field_path=FieldPath.from_string(field_path=field_path.lstrip(&#34;-&#34;), folder=folder, strict=True),
+            reverse=field_path.startswith(&#34;-&#34;),
         )
 
     def to_xml(self):
-        field_order = create_element(&#39;t:FieldOrder&#39;, attrs=dict(Order=&#39;Descending&#39; if self.reverse else &#39;Ascending&#39;))
+        field_order = create_element(&#34;t:FieldOrder&#34;, attrs=dict(Order=&#34;Descending&#34; if self.reverse else &#34;Ascending&#34;))
         field_order.append(self.field_path.to_xml())
         return field_order
 
@@ -297,9 +309,19 @@ class Field(metaclass=abc.ABCMeta):
     #
     is_complex = False
 
-    def __init__(self, name=None, is_required=False, is_required_after_save=False, is_read_only=False,
-                 is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None,
-                 supported_from=None, deprecated_from=None):
+    def __init__(
+        self,
+        name=None,
+        is_required=False,
+        is_required_after_save=False,
+        is_read_only=False,
+        is_read_only_after_send=False,
+        is_searchable=True,
+        is_attribute=False,
+        default=None,
+        supported_from=None,
+        deprecated_from=None,
+    ):
         self.name = name  # Usually set by the EWSMeta metaclass
         self.default = default  # Default value if none is given
         self.is_required = is_required
@@ -317,12 +339,12 @@ class Field(metaclass=abc.ABCMeta):
         # The Exchange build when this field was introduced. When talking with versions prior to this version,
         # we will ignore this field.
         if supported_from is not None and not isinstance(supported_from, Build):
-            raise InvalidTypeError(&#39;supported_from&#39;, supported_from, Build)
+            raise InvalidTypeError(&#34;supported_from&#34;, supported_from, Build)
         self.supported_from = supported_from
         # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
         # we will ignore this field.
         if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise InvalidTypeError(&#39;deprecated_from&#39;, deprecated_from, Build)
+            raise InvalidTypeError(&#34;deprecated_from&#34;, deprecated_from, Build)
         self.deprecated_from = deprecated_from
 
     def clean(self, value, version=None):
@@ -340,12 +362,12 @@ class Field(metaclass=abc.ABCMeta):
             for v in value:
                 if not isinstance(v, self.value_cls):
                     raise TypeError(f&#34;Field {self.name!r} value {v!r} must be of type {self.value_cls}&#34;)
-                if hasattr(v, &#39;clean&#39;):
+                if hasattr(v, &#34;clean&#34;):
                     v.clean(version=version)
         else:
             if not isinstance(value, self.value_cls):
                 raise TypeError(f&#34;Field {self.name!r} value {value!r} must be of type {self.value_cls}&#34;)
-            if hasattr(value, &#39;clean&#39;):
+            if hasattr(value, &#34;clean&#34;):
                 value.clean(version=version)
         return value
 
@@ -373,9 +395,10 @@ class Field(metaclass=abc.ABCMeta):
         &#34;&#34;&#34;Field instances must be hashable&#34;&#34;&#34;
 
     def __repr__(self):
-        args_str = &#39;, &#39;.join(f&#39;{f}={getattr(self, f)!r}&#39; for f in (
-            &#39;name&#39;, &#39;value_cls&#39;, &#39;is_list&#39;, &#39;is_complex&#39;, &#39;default&#39;))
-        return f&#39;{self.__class__.__name__}({args_str})&#39;
+        args_str = &#34;, &#34;.join(
+            f&#34;{f}={getattr(self, f)!r}&#34; for f in (&#34;name&#34;, &#34;value_cls&#34;, &#34;is_list&#34;, &#34;is_complex&#34;, &#34;default&#34;)
+        )
+        return f&#34;{self.__class__.__name__}({args_str})&#34;
 
 
 class FieldURIField(Field):
@@ -385,16 +408,16 @@ class FieldURIField(Field):
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.field_uri = kwargs.pop(&#39;field_uri&#39;, None)
-        self.namespace = kwargs.pop(&#39;namespace&#39;, TNS)
+        self.field_uri = kwargs.pop(&#34;field_uri&#34;, None)
+        self.namespace = kwargs.pop(&#34;namespace&#34;, TNS)
         super().__init__(*args, **kwargs)
         # See all valid FieldURI values at
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fielduri
         # The field_uri has a prefix when the FieldURI points to an Item field.
         if self.field_uri is None:
             self.field_uri_postfix = None
-        elif &#39;:&#39; in self.field_uri:
-            self.field_uri_postfix = self.field_uri.split(&#39;:&#39;)[1]
+        elif &#34;:&#34; in self.field_uri:
+            self.field_uri_postfix = self.field_uri.split(&#34;:&#34;)[1]
         else:
             self.field_uri_postfix = self.field_uri
 
@@ -419,6 +442,7 @@ class FieldURIField(Field):
 
     def field_uri_xml(self):
         from .properties import FieldURI
+
         if not self.field_uri:
             raise ValueError(f&#34;&#39;field_uri&#39; value is missing on field &#39;{self.name}&#39;&#34;)
         return FieldURI(field_uri=self.field_uri).to_xml(version=None)
@@ -426,12 +450,12 @@ class FieldURIField(Field):
     def request_tag(self):
         if not self.field_uri_postfix:
             raise ValueError(f&#34;&#39;field_uri_postfix&#39; value is missing on field &#39;{self.name}&#39;&#34;)
-        return f&#39;t:{self.field_uri_postfix}&#39;
+        return f&#34;t:{self.field_uri_postfix}&#34;
 
     def response_tag(self):
         if not self.field_uri_postfix:
             raise ValueError(f&#34;&#39;field_uri_postfix&#39; value is missing on field &#39;{self.name}&#39;&#34;)
-        return f&#39;{{{self.namespace}}}{self.field_uri_postfix}&#39;
+        return f&#34;{{{self.namespace}}}{self.field_uri_postfix}&#34;
 
     def __hash__(self):
         return hash(self.field_uri)
@@ -453,14 +477,13 @@ class IntegerField(FieldURIField):
     value_cls = int
 
     def __init__(self, *args, **kwargs):
-        self.min = kwargs.pop(&#39;min&#39;, None)
-        self.max = kwargs.pop(&#39;max&#39;, None)
+        self.min = kwargs.pop(&#34;min&#34;, None)
+        self.max = kwargs.pop(&#34;max&#34;, None)
         super().__init__(*args, **kwargs)
 
     def _clean_single_value(self, v):
         if self.min is not None and v &lt; self.min:
-            raise ValueError(
-                f&#34;Value {v!r} on field {self.name!r} must be greater than {self.min}&#34;)
+            raise ValueError(f&#34;Value {v!r} on field {self.name!r} must be greater than {self.min}&#34;)
         if self.max is not None and v &gt; self.max:
             raise ValueError(f&#34;Value {v!r} on field {self.name!r} must be less than {self.max}&#34;)
 
@@ -487,12 +510,12 @@ class EnumField(IntegerField):
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.enum = kwargs.pop(&#39;enum&#39;)
+        self.enum = kwargs.pop(&#34;enum&#34;)
         # Set different min/max defaults than IntegerField
-        if &#39;max&#39; in kwargs:
+        if &#34;max&#34; in kwargs:
             raise AttributeError(&#34;EnumField does not support the &#39;max&#39; attribute&#34;)
-        kwargs[&#39;min&#39;] = kwargs.pop(&#39;min&#39;, 1)
-        kwargs[&#39;max&#39;] = kwargs[&#39;min&#39;] + len(self.enum) - 1
+        kwargs[&#34;min&#34;] = kwargs.pop(&#34;min&#34;, 1)
+        kwargs[&#34;max&#34;] = kwargs[&#34;min&#34;] + len(self.enum) - 1
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -525,7 +548,7 @@ class EnumField(IntegerField):
         if val is not None:
             try:
                 if self.is_list:
-                    return [self.enum.index(v) + 1 for v in val.split(&#39; &#39;)]
+                    return [self.enum.index(v) + 1 for v in val.split(&#34; &#34;)]
                 return self.enum.index(val) + 1
             except ValueError:
                 log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
@@ -535,7 +558,7 @@ class EnumField(IntegerField):
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
         if self.is_list:
-            return set_xml_value(field_elem, &#39; &#39;.join(self.as_string(value)), version=version)
+            return set_xml_value(field_elem, &#34; &#34;.join(self.as_string(value)), version=version)
         return set_xml_value(field_elem, self.as_string(value), version=version)
 
 
@@ -568,10 +591,10 @@ class EnumAsIntField(EnumField):
 class AppointmentStateField(IntegerField):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate&#34;&#34;&#34;
 
-    NONE = &#39;None&#39;
-    MEETING = &#39;Meeting&#39;
-    RECEIVED = &#39;Received&#39;
-    CANCELLED = &#39;Cancelled&#39;
+    NONE = &#34;None&#34;
+    MEETING = &#34;Meeting&#34;
+    RECEIVED = &#34;Received&#34;
+    CANCELLED = &#34;Canceled&#34;
     STATES = {
         NONE: 0x0000,
         MEETING: 0x0001,
@@ -593,8 +616,8 @@ class Base64Field(FieldURIField):
     is_complex = True
 
     def __init__(self, *args, **kwargs):
-        if &#39;is_searchable&#39; not in kwargs:
-            kwargs[&#39;is_searchable&#39;] = False
+        if &#34;is_searchable&#34; not in kwargs:
+            kwargs[&#34;is_searchable&#34;] = False
         super().__init__(*args, **kwargs)
 
 
@@ -622,7 +645,7 @@ class DateTimeBackedDateField(DateField):
 
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
-        self._default_time = kwargs.pop(&#39;default_time&#39;, datetime.time(0, 0))
+        self._default_time = kwargs.pop(&#34;default_time&#34;, datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
@@ -659,9 +682,9 @@ class TimeField(FieldURIField):
         val = self._get_val_from_elem(elem)
         if val is not None:
             try:
-                if &#39;:&#39; in val:
+                if &#34;:&#34; in val:
                     # Assume a string of the form HH:MM:SS
-                    return datetime.datetime.strptime(val, &#39;%H:%M:%S&#39;).time()
+                    return datetime.datetime.strptime(val, &#34;%H:%M:%S&#34;).time()
                 # Assume an integer in minutes since midnight
                 return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
             except ValueError:
@@ -675,14 +698,13 @@ class TimeDeltaField(FieldURIField):
     value_cls = datetime.timedelta
 
     def __init__(self, *args, **kwargs):
-        self.min = kwargs.pop(&#39;min&#39;, datetime.timedelta(0))
-        self.max = kwargs.pop(&#39;max&#39;, datetime.timedelta(days=1))
+        self.min = kwargs.pop(&#34;min&#34;, datetime.timedelta(0))
+        self.max = kwargs.pop(&#34;max&#34;, datetime.timedelta(days=1))
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if self.min is not None and value &lt; self.min:
-            raise ValueError(
-                f&#34;Value {value!r} on field {self.name!r} must be greater than {self.min}&#34;)
+            raise ValueError(f&#34;Value {value!r} on field {self.name!r} must be greater than {self.min}&#34;)
         if self.max is not None and value &gt; self.max:
             raise ValueError(f&#34;Value {value!r} on field {self.name!r} must be less than {self.max}&#34;)
         return super().clean(value, version=version)
@@ -712,10 +734,10 @@ class DateTimeField(FieldURIField):
                     if account:
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
-                        log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, e.local_dt, self.name, tz)
+                        log.info(&#34;Found naive datetime %s on field %s. Assuming timezone %s&#34;, e.local_dt, self.name, tz)
                         return e.local_dt.replace(tzinfo=tz)
                     # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                    log.warning(&#39;Returning naive datetime %s on field %s&#39;, e.local_dt, self.name)
+                    log.warning(&#34;Returning naive datetime %s on field %s&#34;, e.local_dt, self.name)
                     return e.local_dt
                 log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
                 return None
@@ -767,14 +789,16 @@ class TimeZoneField(FieldURIField):
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
         if field_elem is not None:
-            ms_id = field_elem.get(&#39;Id&#39;)
-            ms_name = field_elem.get(&#39;Name&#39;)
+            ms_id = field_elem.get(&#34;Id&#34;)
+            ms_name = field_elem.get(&#34;Name&#34;)
             try:
                 return self.value_cls.from_ms_id(ms_id or ms_name)
             except UnknownTimeZone:
                 log.warning(
                     &#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s (unknown timezone ID)&#34;,
-                    (ms_id or ms_name), self.name, self.value_cls
+                    (ms_id or ms_name),
+                    self.name,
+                    self.value_cls,
                 )
                 return None
         return self.default
@@ -782,7 +806,7 @@ class TimeZoneField(FieldURIField):
     def to_xml(self, value, version):
         attrs = dict(Id=value.ms_id)
         if value.ms_name:
-            attrs[&#39;Name&#39;] = value.ms_name
+            attrs[&#34;Name&#34;] = value.ms_name
         return create_element(self.request_tag(), attrs=attrs)
 
 
@@ -799,14 +823,14 @@ class TextListField(TextField):
     is_list = True
 
     def __init__(self, *args, **kwargs):
-        self.list_elem_name = kwargs.pop(&#39;list_elem_name&#39;, &#39;String&#39;)
+        self.list_elem_name = kwargs.pop(&#34;list_elem_name&#34;, &#34;String&#34;)
         super().__init__(*args, **kwargs)
 
     def list_elem_request_tag(self):
-        return f&#39;t:{self.list_elem_name}&#39;
+        return f&#34;t:{self.list_elem_name}&#34;
 
     def list_elem_response_tag(self):
-        return f&#39;{{{self.namespace}}}{self.list_elem_name}&#39;
+        return f&#34;{{{self.namespace}}}{self.list_elem_name}&#34;
 
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
@@ -824,20 +848,20 @@ class TextListField(TextField):
 class MessageField(TextField):
     &#34;&#34;&#34;A field that handles the Message element.&#34;&#34;&#34;
 
-    INNER_ELEMENT_NAME = &#39;Message&#39;
+    INNER_ELEMENT_NAME = &#34;Message&#34;
 
     def from_xml(self, elem, account):
         reply = elem.find(self.response_tag())
         if reply is None:
             return None
-        message = reply.find(f&#39;{{{TNS}}}{self.INNER_ELEMENT_NAME}&#39;)
+        message = reply.find(f&#34;{{{TNS}}}{self.INNER_ELEMENT_NAME}&#34;)
         if message is None:
             return None
         return message.text
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
-        message = create_element(f&#39;t:{self.INNER_ELEMENT_NAME}&#39;)
+        message = create_element(f&#34;t:{self.INNER_ELEMENT_NAME}&#34;)
         message.text = value
         return set_xml_value(field_elem, message, version=version)
 
@@ -848,7 +872,7 @@ class CharField(TextField):
     is_complex = False
 
     def __init__(self, *args, **kwargs):
-        self.max_length = kwargs.pop(&#39;max_length&#39;, 255)
+        self.max_length = kwargs.pop(&#34;max_length&#34;, 255)
         if not 1 &lt;= self.max_length &lt;= 255:
             # A field supporting messages longer than 255 chars should be TextField
             raise ValueError(&#34;&#39;max_length&#39; must be in the range 1-255&#34;)
@@ -878,7 +902,7 @@ class CharListField(TextListField):
     &#34;&#34;&#34;Like TextListField, but for string values with a limited length.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.max_length = kwargs.pop(&#39;max_length&#39;, 255)
+        self.max_length = kwargs.pop(&#34;max_length&#34;, 255)
         if not 1 &lt;= self.max_length &lt;= 255:
             # A field supporting messages longer than 255 chars should be TextField
             raise ValueError(&#34;&#39;max_length&#39; must be in the range 1-255&#34;)
@@ -925,7 +949,7 @@ class ChoiceField(CharField):
     &#34;&#34;&#34;Like CharField, but restricts the value to a limited set of strings.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.choices = kwargs.pop(&#39;choices&#39;)
+        self.choices = kwargs.pop(&#34;choices&#34;)
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -951,15 +975,21 @@ class ChoiceField(CharField):
         return tuple(c.value for c in self.choices if c.supports_version(version))
 
 
-FREE_BUSY_CHOICES = [Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Busy&#39;), Choice(&#39;OOF&#39;), Choice(&#39;NoData&#39;),
-                     Choice(&#39;WorkingElsewhere&#39;, supported_from=EXCHANGE_2013)]
+FREE_BUSY_CHOICES = [
+    Choice(&#34;Free&#34;),
+    Choice(&#34;Tentative&#34;),
+    Choice(&#34;Busy&#34;),
+    Choice(&#34;OOF&#34;),
+    Choice(&#34;NoData&#34;),
+    Choice(&#34;WorkingElsewhere&#34;, supported_from=EXCHANGE_2013),
+]
 
 
 class FreeBusyStatusField(ChoiceField):
     &#34;&#34;&#34;Like ChoiceField, but specifically for Free/Busy values.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        kwargs[&#39;choices&#39;] = set(FREE_BUSY_CHOICES)
+        kwargs[&#34;choices&#34;] = set(FREE_BUSY_CHOICES)
         super().__init__(*args, **kwargs)
 
 
@@ -968,6 +998,7 @@ class BodyField(TextField):
 
     def __init__(self, *args, **kwargs):
         from .properties import Body
+
         self.value_cls = Body
         super().__init__(*args, **kwargs)
 
@@ -978,18 +1009,17 @@ class BodyField(TextField):
 
     def from_xml(self, elem, account):
         from .properties import Body, HTMLBody
+
         field_elem = elem.find(self.response_tag())
         val = None if field_elem is None else field_elem.text or None
         if val is not None:
-            body_type = field_elem.get(&#39;BodyType&#39;)
-            return {
-                Body.body_type: Body,
-                HTMLBody.body_type: HTMLBody,
-            }[body_type](val)
+            body_type = field_elem.get(&#34;BodyType&#34;)
+            return {Body.body_type: Body, HTMLBody.body_type: HTMLBody}[body_type](val)
         return self.default
 
     def to_xml(self, value, version):
         from .properties import Body, HTMLBody
+
         body_type = {
             Body: Body.body_type,
             HTMLBody: HTMLBody.body_type,
@@ -1002,9 +1032,9 @@ class EWSElementField(FieldURIField):
     &#34;&#34;&#34;A generic field for any EWSElement object.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self._value_cls = kwargs.pop(&#39;value_cls&#39;)
-        if &#39;namespace&#39; not in kwargs:
-            kwargs[&#39;namespace&#39;] = self.value_cls.NAMESPACE
+        self._value_cls = kwargs.pop(&#34;value_cls&#34;)
+        if &#34;namespace&#34; not in kwargs:
+            kwargs[&#34;namespace&#34;] = self.value_cls.NAMESPACE
         super().__init__(*args, **kwargs)
 
     @property
@@ -1012,15 +1042,17 @@ class EWSElementField(FieldURIField):
         if isinstance(self._value_cls, str):
             # Support &#39;value_cls&#39; as string to allow self-referencing classes. The class must be importable from the
             # top-level module.
-            self._value_cls = getattr(import_module(self.__module__.split(&#39;.&#39;)[0]), self._value_cls)
+            self._value_cls = getattr(import_module(self.__module__.split(&#34;.&#34;)[0]), self._value_cls)
         return self._value_cls
 
     def from_xml(self, elem, account):
         if self.is_list:
             iter_elem = elem.find(self.response_tag())
             if iter_elem is not None:
-                return [self.value_cls.from_xml(elem=e, account=account)
-                        for e in iter_elem.findall(self.value_cls.response_tag())]
+                return [
+                    self.value_cls.from_xml(elem=e, account=account)
+                    for e in iter_elem.findall(self.value_cls.response_tag())
+                ]
         else:
             if self.field_uri is None:
                 sub_elem = elem.find(self.value_cls.response_tag())
@@ -1047,7 +1079,8 @@ class EWSElementListField(EWSElementField):
 class TransitionListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import BaseTransition
-        kwargs[&#39;value_cls&#39;] = BaseTransition
+
+        kwargs[&#34;value_cls&#34;] = BaseTransition
         super().__init__(*args, **kwargs)
 
     def from_xml(self, elem, account):
@@ -1064,7 +1097,8 @@ class AssociatedCalendarItemIdField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .properties import AssociatedCalendarItemId
-        kwargs[&#39;value_cls&#39;] = AssociatedCalendarItemId
+
+        kwargs[&#34;value_cls&#34;] = AssociatedCalendarItemId
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -1076,7 +1110,8 @@ class RecurrenceField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .recurrence import Recurrence
-        kwargs[&#39;value_cls&#39;] = Recurrence
+
+        kwargs[&#34;value_cls&#34;] = Recurrence
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -1088,7 +1123,8 @@ class TaskRecurrenceField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .recurrence import TaskRecurrence
-        kwargs[&#39;value_cls&#39;] = TaskRecurrence
+
+        kwargs[&#34;value_cls&#34;] = TaskRecurrence
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -1100,7 +1136,8 @@ class ReferenceItemIdField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .properties import ReferenceItemId
-        kwargs[&#39;value_cls&#39;] = ReferenceItemId
+
+        kwargs[&#34;value_cls&#34;] = ReferenceItemId
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -1118,7 +1155,8 @@ class OccurrenceListField(OccurrenceField):
 class MessageHeaderField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import MessageHeader
-        kwargs[&#39;value_cls&#39;] = MessageHeader
+
+        kwargs[&#34;value_cls&#34;] = MessageHeader
         super().__init__(*args, **kwargs)
 
 
@@ -1143,7 +1181,7 @@ class BaseEmailField(EWSElementField, metaclass=abc.ABCMeta):
                 nested_elem = sub_elem.find(self.value_cls.response_tag())
                 if nested_elem is None:
                     raise ValueError(
-                        f&#39;Expected XML element {self.value_cls.response_tag()!r} missing on field {self.name!r}&#39;
+                        f&#34;Expected XML element {self.value_cls.response_tag()!r} missing on field {self.name!r}&#34;
                     )
                 return self.value_cls.from_xml(elem=nested_elem, account=account)
             return self.value_cls.from_xml(elem=sub_elem, account=account)
@@ -1153,28 +1191,32 @@ class BaseEmailField(EWSElementField, metaclass=abc.ABCMeta):
 class EmailField(BaseEmailField):
     def __init__(self, *args, **kwargs):
         from .properties import Email
-        kwargs[&#39;value_cls&#39;] = Email
+
+        kwargs[&#34;value_cls&#34;] = Email
         super().__init__(*args, **kwargs)
 
 
 class RecipientAddressField(BaseEmailField):
     def __init__(self, *args, **kwargs):
         from .properties import RecipientAddress
-        kwargs[&#39;value_cls&#39;] = RecipientAddress
+
+        kwargs[&#34;value_cls&#34;] = RecipientAddress
         super().__init__(*args, **kwargs)
 
 
 class MailboxField(BaseEmailField):
     def __init__(self, *args, **kwargs):
         from .properties import Mailbox
-        kwargs[&#39;value_cls&#39;] = Mailbox
+
+        kwargs[&#34;value_cls&#34;] = Mailbox
         super().__init__(*args, **kwargs)
 
 
 class MailboxListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Mailbox
-        kwargs[&#39;value_cls&#39;] = Mailbox
+
+        kwargs[&#34;value_cls&#34;] = Mailbox
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -1186,29 +1228,33 @@ class MailboxListField(EWSElementListField):
 class MemberListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Member
-        kwargs[&#39;value_cls&#39;] = Member
+
+        kwargs[&#34;value_cls&#34;] = Member
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         from .properties import Mailbox
+
         if value is not None:
-            value = [
-                self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
-            ]
+            value = [self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value]
         return super().clean(value, version=version)
 
 
 class AttendeesField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Attendee
-        kwargs[&#39;value_cls&#39;] = Attendee
+
+        kwargs[&#34;value_cls&#34;] = Attendee
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         from .properties import Mailbox
+
         if value is not None:
-            value = [self.value_cls(mailbox=Mailbox(email_address=s), response_type=&#39;Accept&#39;)
-                     if isinstance(s, str) else s for s in value]
+            value = [
+                self.value_cls(mailbox=Mailbox(email_address=s), response_type=&#34;Accept&#34;) if isinstance(s, str) else s
+                for s in value
+            ]
         return super().clean(value, version=version)
 
 
@@ -1217,11 +1263,13 @@ class AttachmentField(EWSElementListField):
 
     def __init__(self, *args, **kwargs):
         from .attachments import Attachment
-        kwargs[&#39;value_cls&#39;] = Attachment
+
+        kwargs[&#34;value_cls&#34;] = Attachment
         super().__init__(*args, **kwargs)
 
     def from_xml(self, elem, account):
         from .attachments import FileAttachment, ItemAttachment
+
         iter_elem = elem.find(self.response_tag())
         # Look for both FileAttachment and ItemAttachment
         if iter_elem is not None:
@@ -1260,12 +1308,13 @@ class SubField(Field):
     @staticmethod
     def field_uri_xml(field_uri, label):
         from .properties import IndexedFieldURI
+
         return IndexedFieldURI(field_uri=field_uri, field_index=label).to_xml(version=None)
 
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if self.is_required and not value:
-            raise ValueError(f&#39;Value for subfield {self.name!r} must be non-empty&#39;)
+            raise ValueError(f&#34;Value for subfield {self.name!r} must be non-empty&#34;)
         return value
 
     def __hash__(self):
@@ -1278,7 +1327,7 @@ class EmailSubField(SubField):
     value_cls = str
 
     def from_xml(self, elem, account):
-        return elem.text or elem.get(&#39;Name&#39;)  # Sometimes elem.text is empty. Exchange saves the same in &#39;Name&#39; attr
+        return elem.text or elem.get(&#34;Name&#34;)  # Sometimes elem.text is empty. Exchange saves the same in &#39;Name&#39; attr
 
 
 class NamedSubField(SubField):
@@ -1287,8 +1336,8 @@ class NamedSubField(SubField):
     value_cls = str
 
     def __init__(self, *args, **kwargs):
-        self.field_uri = kwargs.pop(&#39;field_uri&#39;)
-        if &#39;:&#39; in self.field_uri:
+        self.field_uri = kwargs.pop(&#34;field_uri&#34;)
+        if &#34;:&#34; in self.field_uri:
             raise ValueError(&#34;&#39;field_uri&#39; value must not contain a colon&#34;)
         super().__init__(*args, **kwargs)
 
@@ -1305,13 +1354,14 @@ class NamedSubField(SubField):
 
     def field_uri_xml(self, field_uri, label):
         from .properties import IndexedFieldURI
-        return IndexedFieldURI(field_uri=f&#39;{field_uri}:{self.field_uri}&#39;, field_index=label).to_xml(version=None)
+
+        return IndexedFieldURI(field_uri=f&#34;{field_uri}:{self.field_uri}&#34;, field_index=label).to_xml(version=None)
 
     def request_tag(self):
-        return f&#39;t:{self.field_uri}&#39;
+        return f&#34;t:{self.field_uri}&#34;
 
     def response_tag(self):
-        return f&#39;{{{self.namespace}}}{self.field_uri}&#39;
+        return f&#34;{{{self.namespace}}}{self.field_uri}&#34;
 
 
 class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
@@ -1321,16 +1371,17 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import IndexedElement
-        value_cls = kwargs[&#39;value_cls&#39;]
+
+        value_cls = kwargs[&#34;value_cls&#34;]
         if not issubclass(value_cls, IndexedElement):
             raise TypeError(f&#34;&#39;value_cls&#39; {value_cls!r} must be a subclass of type {IndexedElement}&#34;)
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
-        return set_xml_value(create_element(f&#39;t:{self.PARENT_ELEMENT_NAME}&#39;), value, version=version)
+        return set_xml_value(create_element(f&#34;t:{self.PARENT_ELEMENT_NAME}&#34;), value, version=version)
 
     def response_tag(self):
-        return f&#39;{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}&#39;
+        return f&#34;{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}&#34;
 
     def __hash__(self):
         return hash(self.field_uri)
@@ -1340,18 +1391,19 @@ class EmailAddressesField(IndexedField):
     is_list = True
     is_complex = True
 
-    PARENT_ELEMENT_NAME = &#39;EmailAddresses&#39;
+    PARENT_ELEMENT_NAME = &#34;EmailAddresses&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import EmailAddress
-        kwargs[&#39;value_cls&#39;] = EmailAddress
+
+        kwargs[&#34;value_cls&#34;] = EmailAddress
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if value is not None:
             default_labels = self.value_cls.LABEL_CHOICES
             if len(value) &gt; len(default_labels):
-                raise ValueError(f&#39;This field can handle at most {len(default_labels)} values (value: {value})&#39;)
+                raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
             tmp = []
             for s, default_label in zip(value, default_labels):
                 if not isinstance(s, str):
@@ -1366,11 +1418,12 @@ class PhoneNumberField(IndexedField):
     is_list = True
     is_complex = True
 
-    PARENT_ELEMENT_NAME = &#39;PhoneNumbers&#39;
+    PARENT_ELEMENT_NAME = &#34;PhoneNumbers&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import PhoneNumber
-        kwargs[&#39;value_cls&#39;] = PhoneNumber
+
+        kwargs[&#34;value_cls&#34;] = PhoneNumber
         super().__init__(*args, **kwargs)
 
 
@@ -1378,11 +1431,12 @@ class PhysicalAddressField(IndexedField):
     is_list = True
     is_complex = True
 
-    PARENT_ELEMENT_NAME = &#39;PhysicalAddresses&#39;
+    PARENT_ELEMENT_NAME = &#34;PhysicalAddresses&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import PhysicalAddress
-        kwargs[&#39;value_cls&#39;] = PhysicalAddress
+
+        kwargs[&#34;value_cls&#34;] = PhysicalAddress
         super().__init__(*args, **kwargs)
 
 
@@ -1390,7 +1444,7 @@ class ExtendedPropertyField(Field):
     is_complex = True
 
     def __init__(self, *args, **kwargs):
-        self.value_cls = kwargs.pop(&#39;value_cls&#39;)
+        self.value_cls = kwargs.pop(&#34;value_cls&#34;)
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -1408,6 +1462,7 @@ class ExtendedPropertyField(Field):
 
     def field_uri_xml(self):
         from .properties import ExtendedFieldURI
+
         cls = self.value_cls
         return ExtendedFieldURI(
             distinguished_property_set_id=cls.distinguished_property_set_id,
@@ -1445,10 +1500,12 @@ class ItemField(FieldURIField):
     @property
     def value_cls(self):
         from .items import Item
+
         return Item
 
     def from_xml(self, elem, account):
         from .items import ITEM_CLASSES
+
         for item_cls in ITEM_CLASSES:
             item_elem = elem.find(item_cls.response_tag())
             if item_elem is not None:
@@ -1462,7 +1519,7 @@ class ItemField(FieldURIField):
 
 class UnknownEntriesField(CharListField):
     def list_elem_tag(self):
-        return f&#39;{{{self.namespace}}}UnknownEntry&#39;
+        return f&#34;{{{self.namespace}}}UnknownEntry&#34;
 
 
 class PermissionSetField(EWSElementField):
@@ -1470,14 +1527,16 @@ class PermissionSetField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .properties import PermissionSet
-        kwargs[&#39;value_cls&#39;] = PermissionSet
+
+        kwargs[&#34;value_cls&#34;] = PermissionSet
         super().__init__(*args, **kwargs)
 
 
 class EffectiveRightsField(EWSElementField):
     def __init__(self, *args, **kwargs):
         from .properties import EffectiveRights
-        kwargs[&#39;value_cls&#39;] = EffectiveRights
+
+        kwargs[&#34;value_cls&#34;] = EffectiveRights
         super().__init__(*args, **kwargs)
 
 
@@ -1492,7 +1551,7 @@ class BuildField(CharField):
             try:
                 return self.value_cls.from_hex_string(val)
             except (TypeError, ValueError):
-                log.warning(&#39;Invalid server version string: %r&#39;, val)
+                log.warning(&#34;Invalid server version string: %r&#34;, val)
         return val
 
 
@@ -1500,7 +1559,8 @@ class ProtocolListField(EWSElementListField):
     # There is not containing element for this field. Just multiple &#39;Protocol&#39; elements on the &#39;Account&#39; element.
     def __init__(self, *args, **kwargs):
         from .autodiscover.properties import Protocol
-        kwargs[&#39;value_cls&#39;] = Protocol
+
+        kwargs[&#34;value_cls&#34;] = Protocol
         super().__init__(*args, **kwargs)
 
     def from_xml(self, elem, account):
@@ -1509,15 +1569,15 @@ class ProtocolListField(EWSElementListField):
 
 class RoutingTypeField(ChoiceField):
     def __init__(self, *args, **kwargs):
-        kwargs[&#39;choices&#39;] = {Choice(&#39;SMTP&#39;), Choice(&#39;EX&#39;)}
-        kwargs[&#39;default&#39;] = &#39;SMTP&#39;
+        kwargs[&#34;choices&#34;] = {Choice(&#34;SMTP&#34;), Choice(&#34;EX&#34;)}
+        kwargs[&#34;default&#34;] = &#34;SMTP&#34;
         super().__init__(*args, **kwargs)
 
 
 class IdElementField(EWSElementField):
     def __init__(self, *args, **kwargs):
-        kwargs[&#39;is_searchable&#39;] = False
-        kwargs[&#39;is_read_only&#39;] = True
+        kwargs[&#34;is_searchable&#34;] = False
+        kwargs[&#34;is_read_only&#34;] = True
         super().__init__(*args, **kwargs)
 
 
@@ -1525,47 +1585,47 @@ class TypeValueField(FieldURIField):
     &#34;&#34;&#34;This field type has no value_cls because values may have many different types.&#34;&#34;&#34;
 
     TYPES_MAP = {
-        &#39;Boolean&#39;: bool,
-        &#39;Integer32&#39;: int,
-        &#39;UnsignedInteger32&#39;: int,
-        &#39;Integer64&#39;: int,
-        &#39;UnsignedInteger64&#39;: int,
+        &#34;Boolean&#34;: bool,
+        &#34;Integer32&#34;: int,
+        &#34;UnsignedInteger32&#34;: int,
+        &#34;Integer64&#34;: int,
+        &#34;UnsignedInteger64&#34;: int,
         # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
-        &#39;ByteArray&#39;: bytes,
-        &#39;String&#39;: str,
-        &#39;StringArray&#39;: str,  # A list of strings
-        &#39;DateTime&#39;: EWSDateTime,
+        &#34;ByteArray&#34;: bytes,
+        &#34;String&#34;: str,
+        &#34;StringArray&#34;: str,  # A list of strings
+        &#34;DateTime&#34;: EWSDateTime,
     }
     TYPES_MAP_REVERSED = {
-        bool: &#39;Boolean&#39;,
-        int: &#39;Integer64&#39;,
+        bool: &#34;Boolean&#34;,
+        int: &#34;Integer64&#34;,
         # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
-        bytes: &#39;ByteArray&#39;,
-        str: &#39;String&#39;,
-        datetime.datetime: &#39;DateTime&#39;,
-        EWSDateTime: &#39;DateTime&#39;,
+        bytes: &#34;ByteArray&#34;,
+        str: &#34;String&#34;,
+        datetime.datetime: &#34;DateTime&#34;,
+        EWSDateTime: &#34;DateTime&#34;,
     }
 
     @classmethod
     def get_type(cls, value):
         if isinstance(value, bytes) and len(value) == 1:
             # This is a single byte. Translate it to the &#39;Byte&#39; type
-            return &#39;Byte&#39;
+            return &#34;Byte&#34;
         if is_iterable(value):
             # We don&#39;t allow generators as values, so keep the logic simple
             try:
                 first = next(iter(value))
             except StopIteration:
                 first = None
-            value_type = f&#39;{cls.TYPES_MAP_REVERSED[type(first)]}Array&#39;
+            value_type = f&#34;{cls.TYPES_MAP_REVERSED[type(first)]}Array&#34;
             if value_type not in cls.TYPES_MAP:
-                raise ValueError(f&#39;{value!r} is not a supported type&#39;)
+                raise ValueError(f&#34;{value!r} is not a supported type&#34;)
             return value_type
         return cls.TYPES_MAP_REVERSED[type(value)]
 
     @classmethod
     def is_array_type(cls, value_type):
-        return value_type == &#39;StringArray&#39;
+        return value_type == &#34;StringArray&#34;
 
     def clean(self, value, version=None):
         if value is None:
@@ -1578,30 +1638,30 @@ class TypeValueField(FieldURIField):
         field_elem = elem.find(self.response_tag())
         if field_elem is None:
             return self.default
-        value_type_str = get_xml_attr(field_elem, f&#39;{{{TNS}}}Type&#39;)
-        value = get_xml_attr(field_elem, f&#39;{{{TNS}}}Value&#39;)
-        if value_type_str == &#39;Byte&#39;:
+        value_type_str = get_xml_attr(field_elem, f&#34;{{{TNS}}}Type&#34;)
+        value = get_xml_attr(field_elem, f&#34;{{{TNS}}}Value&#34;)
+        if value_type_str == &#34;Byte&#34;:
             try:
                 # The value is an unsigned integer in the range 0 -&gt; 255. Convert it to a single byte
-                return xml_text_to_value(value, int).to_bytes(1, &#39;little&#39;, signed=False)
+                return xml_text_to_value(value, int).to_bytes(1, &#34;little&#34;, signed=False)
             except OverflowError as e:
-                log.warning(&#39;Invalid byte value %r (%e)&#39;, value, e)
+                log.warning(&#34;Invalid byte value %r (%e)&#34;, value, e)
                 return None
         value_type = self.TYPES_MAP[value_type_str]
-        if self. is_array_type(value_type_str):
-            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#39; &#39;))
+        if self.is_array_type(value_type_str):
+            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#34; &#34;))
         return xml_text_to_value(value=value, value_type=value_type)
 
     def to_xml(self, value, version):
         value_type_str = self.get_type(value)
-        if value_type_str == &#39;Byte&#39;:
+        if value_type_str == &#34;Byte&#34;:
             # A single byte is encoded to an unsigned integer in the range 0 -&gt; 255
-            value = int.from_bytes(value, byteorder=&#39;little&#39;, signed=False)
+            value = int.from_bytes(value, byteorder=&#34;little&#34;, signed=False)
         elif is_iterable(value):
-            value = &#39; &#39;.join(value_to_xml_text(v) for v in value)
+            value = &#34; &#34;.join(value_to_xml_text(v) for v in value)
         field_elem = create_element(self.request_tag())
-        field_elem.append(set_xml_value(create_element(&#39;t:Type&#39;), value_type_str, version=version))
-        field_elem.append(set_xml_value(create_element(&#39;t:Value&#39;), value, version=version))
+        field_elem.append(set_xml_value(create_element(&#34;t:Type&#34;), value_type_str, version=version))
+        field_elem.append(set_xml_value(create_element(&#34;t:Value&#34;), value, version=version))
         return field_elem
 
 
@@ -1610,6 +1670,7 @@ class DictionaryField(FieldURIField):
 
     def from_xml(self, elem, account):
         from .properties import DictionaryEntry
+
         iter_elem = elem.find(self.response_tag())
         if iter_elem is not None:
             entries = [
@@ -1633,6 +1694,7 @@ class DictionaryField(FieldURIField):
 
     def to_xml(self, value, version):
         from .properties import DictionaryEntry
+
         field_elem = create_element(self.request_tag())
         entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
         return set_xml_value(field_elem, entries, version=version)
@@ -1643,7 +1705,8 @@ class PersonaPhoneNumberField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .properties import PhoneNumber
-        kwargs[&#39;value_cls&#39;] = PhoneNumber
+
+        kwargs[&#34;value_cls&#34;] = PhoneNumber
         super().__init__(*args, **kwargs)
 
 
@@ -1652,35 +1715,40 @@ class BodyContentAttributedValueField(EWSElementField):
 
     def __init__(self, *args, **kwargs):
         from .properties import BodyContentAttributedValue
-        kwargs[&#39;value_cls&#39;] = BodyContentAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = BodyContentAttributedValue
         super().__init__(*args, **kwargs)
 
 
 class StringAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import StringAttributedValue
-        kwargs[&#39;value_cls&#39;] = StringAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = StringAttributedValue
         super().__init__(*args, **kwargs)
 
 
 class PhoneNumberAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import PhoneNumberAttributedValue
-        kwargs[&#39;value_cls&#39;] = PhoneNumberAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = PhoneNumberAttributedValue
         super().__init__(*args, **kwargs)
 
 
 class EmailAddressAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import EmailAddressAttributedValue
-        kwargs[&#39;value_cls&#39;] = EmailAddressAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = EmailAddressAttributedValue
         super().__init__(*args, **kwargs)
 
 
 class PostalAddressAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import PostalAddressAttributedValue
-        kwargs[&#39;value_cls&#39;] = PostalAddressAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = PostalAddressAttributedValue
         super().__init__(*args, **kwargs)
 
 
@@ -1694,13 +1762,28 @@ class GenericEventListField(EWSElementField):
         return {v.response_tag(): v for v in self.value_classes}
 
     def __init__(self, *args, **kwargs):
-        from .properties import CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, \
-            NewMailEvent, StatusEvent, FreeBusyChangedEvent
-        kwargs[&#39;value_cls&#39;] = None  # Parent class requires this kwarg
-        kwargs[&#39;namespace&#39;] = None  # Parent class requires this kwarg
+        from .properties import (
+            CopiedEvent,
+            CreatedEvent,
+            DeletedEvent,
+            FreeBusyChangedEvent,
+            ModifiedEvent,
+            MovedEvent,
+            NewMailEvent,
+            StatusEvent,
+        )
+
+        kwargs[&#34;value_cls&#34;] = None  # Parent class requires this kwarg
+        kwargs[&#34;namespace&#34;] = None  # Parent class requires this kwarg
         super().__init__(*args, **kwargs)
         self.value_classes = (
-            CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent,
+            CopiedEvent,
+            CreatedEvent,
+            DeletedEvent,
+            ModifiedEvent,
+            MovedEvent,
+            NewMailEvent,
+            StatusEvent,
             FreeBusyChangedEvent,
         )
 
@@ -1737,7 +1820,8 @@ label and SubField object.</p></div>
     &#34;&#34;&#34;Take the name of a field, or &#39;__&#39;-delimited path to a subfield, and return the corresponding Field object,
     label and SubField object.
     &#34;&#34;&#34;
-    from .indexed_properties import SingleFieldIndexedElement, MultiFieldIndexedElement
+    from .indexed_properties import MultiFieldIndexedElement, SingleFieldIndexedElement
+
     fieldname, label, subfield_name = split_field_path(field_path)
     field = folder.get_item_field_by_fieldname(fieldname)
     subfield = None
@@ -1747,9 +1831,7 @@ label and SubField object.</p></div>
                 f&#34;IndexedField path {field_path!r} must specify label, e.g. &#34;
                 f&#34;&#39;{fieldname}__{field.value_cls.get_field_by_fieldname(&#39;label&#39;).default}&#39;&#34;
             )
-        valid_labels = field.value_cls.get_field_by_fieldname(&#39;label&#39;).supported_choices(
-            version=folder.account.version
-        )
+        valid_labels = field.value_cls.get_field_by_fieldname(&#34;label&#34;).supported_choices(version=folder.account.version)
         if label and label not in valid_labels:
             raise ValueError(
                 f&#34;Label {label!r} on IndexedField path {field_path!r} must be one of {sorted(valid_labels)}&#34;
@@ -1765,16 +1847,16 @@ label and SubField object.</p></div>
                 try:
                     subfield = field.value_cls.get_field_by_fieldname(subfield_name)
                 except ValueError:
-                    field_names = &#39;, &#39;.join(f.name for f in field.value_cls.supported_fields(
-                        version=folder.account.version
-                    ))
+                    field_names = &#34;, &#34;.join(
+                        f.name for f in field.value_cls.supported_fields(version=folder.account.version)
+                    )
                     raise ValueError(
                         f&#34;Subfield {subfield_name!r} on IndexedField path {field_path!r} &#34;
                         f&#34;must be one of {sorted(field_names)}&#34;
                     )
         else:
             if not issubclass(field.value_cls, SingleFieldIndexedElement):
-                raise InvalidTypeError(&#39;field.value_cls&#39;, field.value_cls, SingleFieldIndexedElement)
+                raise InvalidTypeError(&#34;field.value_cls&#34;, field.value_cls, SingleFieldIndexedElement)
             if subfield_name:
                 raise ValueError(
                     f&#34;IndexedField path {field_path!r} must not specify subfield, e.g. just {fieldname}__{label}&#39;&#34;
@@ -1811,8 +1893,8 @@ label and SubField object.</p></div>
       &#39;physical_addresses__Home__street&#39; -&gt; (&#39;physical_addresses&#39;, &#39;Home&#39;, &#39;street&#39;)
     &#34;&#34;&#34;
     if not isinstance(field_path, str):
-        raise InvalidTypeError(&#39;field_path&#39;, field_path, str)
-    search_parts = field_path.split(&#39;__&#39;)
+        raise InvalidTypeError(&#34;field_path&#34;, field_path, str)
+    search_parts = field_path.split(&#34;__&#34;)
     field = search_parts[0]
     try:
         label = search_parts[1]
@@ -1843,10 +1925,10 @@ label and SubField object.</p></div>
 <pre><code class="python">class AppointmentStateField(IntegerField):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/appointmentstate&#34;&#34;&#34;
 
-    NONE = &#39;None&#39;
-    MEETING = &#39;Meeting&#39;
-    RECEIVED = &#39;Received&#39;
-    CANCELLED = &#39;Cancelled&#39;
+    NONE = &#34;None&#34;
+    MEETING = &#34;Meeting&#34;
+    RECEIVED = &#34;Received&#34;
+    CANCELLED = &#34;Canceled&#34;
     STATES = {
         NONE: 0x0000,
         MEETING: 0x0001,
@@ -1915,7 +1997,8 @@ label and SubField object.</p></div>
 
     def __init__(self, *args, **kwargs):
         from .properties import AssociatedCalendarItemId
-        kwargs[&#39;value_cls&#39;] = AssociatedCalendarItemId
+
+        kwargs[&#34;value_cls&#34;] = AssociatedCalendarItemId
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -1959,11 +2042,13 @@ label and SubField object.</p></div>
 
     def __init__(self, *args, **kwargs):
         from .attachments import Attachment
-        kwargs[&#39;value_cls&#39;] = Attachment
+
+        kwargs[&#34;value_cls&#34;] = Attachment
         super().__init__(*args, **kwargs)
 
     def from_xml(self, elem, account):
         from .attachments import FileAttachment, ItemAttachment
+
         iter_elem = elem.find(self.response_tag())
         # Look for both FileAttachment and ItemAttachment
         if iter_elem is not None:
@@ -2005,14 +2090,18 @@ label and SubField object.</p></div>
 <pre><code class="python">class AttendeesField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Attendee
-        kwargs[&#39;value_cls&#39;] = Attendee
+
+        kwargs[&#34;value_cls&#34;] = Attendee
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         from .properties import Mailbox
+
         if value is not None:
-            value = [self.value_cls(mailbox=Mailbox(email_address=s), response_type=&#39;Accept&#39;)
-                     if isinstance(s, str) else s for s in value]
+            value = [
+                self.value_cls(mailbox=Mailbox(email_address=s), response_type=&#34;Accept&#34;) if isinstance(s, str) else s
+                for s in value
+            ]
         return super().clean(value, version=version)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2035,9 +2124,12 @@ label and SubField object.</p></div>
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
     from .properties import Mailbox
+
     if value is not None:
-        value = [self.value_cls(mailbox=Mailbox(email_address=s), response_type=&#39;Accept&#39;)
-                 if isinstance(s, str) else s for s in value]
+        value = [
+            self.value_cls(mailbox=Mailbox(email_address=s), response_type=&#34;Accept&#34;) if isinstance(s, str) else s
+            for s in value
+        ]
     return super().clean(value, version=version)</code></pre>
 </details>
 </dd>
@@ -2069,8 +2161,8 @@ label and SubField object.</p></div>
     is_complex = True
 
     def __init__(self, *args, **kwargs):
-        if &#39;is_searchable&#39; not in kwargs:
-            kwargs[&#39;is_searchable&#39;] = False
+        if &#34;is_searchable&#34; not in kwargs:
+            kwargs[&#34;is_searchable&#34;] = False
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2143,7 +2235,7 @@ bytes() -&gt; empty bytes object</p>
                 nested_elem = sub_elem.find(self.value_cls.response_tag())
                 if nested_elem is None:
                     raise ValueError(
-                        f&#39;Expected XML element {self.value_cls.response_tag()!r} missing on field {self.name!r}&#39;
+                        f&#34;Expected XML element {self.value_cls.response_tag()!r} missing on field {self.name!r}&#34;
                     )
                 return self.value_cls.from_xml(elem=nested_elem, account=account)
             return self.value_cls.from_xml(elem=sub_elem, account=account)
@@ -2211,7 +2303,8 @@ bytes() -&gt; empty bytes object</p>
 
     def __init__(self, *args, **kwargs):
         from .properties import BodyContentAttributedValue
-        kwargs[&#39;value_cls&#39;] = BodyContentAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = BodyContentAttributedValue
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2252,6 +2345,7 @@ bytes() -&gt; empty bytes object</p>
 
     def __init__(self, *args, **kwargs):
         from .properties import Body
+
         self.value_cls = Body
         super().__init__(*args, **kwargs)
 
@@ -2262,18 +2356,17 @@ bytes() -&gt; empty bytes object</p>
 
     def from_xml(self, elem, account):
         from .properties import Body, HTMLBody
+
         field_elem = elem.find(self.response_tag())
         val = None if field_elem is None else field_elem.text or None
         if val is not None:
-            body_type = field_elem.get(&#39;BodyType&#39;)
-            return {
-                Body.body_type: Body,
-                HTMLBody.body_type: HTMLBody,
-            }[body_type](val)
+            body_type = field_elem.get(&#34;BodyType&#34;)
+            return {Body.body_type: Body, HTMLBody.body_type: HTMLBody}[body_type](val)
         return self.default
 
     def to_xml(self, value, version):
         from .properties import Body, HTMLBody
+
         body_type = {
             Body: Body.body_type,
             HTMLBody: HTMLBody.body_type,
@@ -2381,7 +2474,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
             try:
                 return self.value_cls.from_hex_string(val)
             except (TypeError, ValueError):
-                log.warning(&#39;Invalid server version string: %r&#39;, val)
+                log.warning(&#34;Invalid server version string: %r&#34;, val)
         return val</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2418,7 +2511,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
     is_complex = False
 
     def __init__(self, *args, **kwargs):
-        self.max_length = kwargs.pop(&#39;max_length&#39;, 255)
+        self.max_length = kwargs.pop(&#34;max_length&#34;, 255)
         if not 1 &lt;= self.max_length &lt;= 255:
             # A field supporting messages longer than 255 chars should be TextField
             raise ValueError(&#34;&#39;max_length&#39; must be in the range 1-255&#34;)
@@ -2495,7 +2588,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
     &#34;&#34;&#34;Like TextListField, but for string values with a limited length.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.max_length = kwargs.pop(&#39;max_length&#39;, 255)
+        self.max_length = kwargs.pop(&#34;max_length&#34;, 255)
         if not 1 &lt;= self.max_length &lt;= 255:
             # A field supporting messages longer than 255 chars should be TextField
             raise ValueError(&#34;&#39;max_length&#39; must be in the range 1-255&#34;)
@@ -2609,7 +2702,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
     &#34;&#34;&#34;Like CharField, but restricts the value to a limited set of strings.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.choices = kwargs.pop(&#39;choices&#39;)
+        self.choices = kwargs.pop(&#34;choices&#34;)
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -2897,7 +2990,7 @@ the recurring item is a task or a calendar item.</p>
 
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
-        self._default_time = kwargs.pop(&#39;default_time&#39;, datetime.time(0, 0))
+        self._default_time = kwargs.pop(&#34;default_time&#34;, datetime.time(0, 0))
         super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
@@ -2991,10 +3084,10 @@ the recurring item is a task or a calendar item.</p>
                     if account:
                         # Convert to timezone-aware datetime using the default timezone of the account
                         tz = account.default_timezone
-                        log.info(&#39;Found naive datetime %s on field %s. Assuming timezone %s&#39;, e.local_dt, self.name, tz)
+                        log.info(&#34;Found naive datetime %s on field %s. Assuming timezone %s&#34;, e.local_dt, self.name, tz)
                         return e.local_dt.replace(tzinfo=tz)
                     # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                    log.warning(&#39;Returning naive datetime %s on field %s&#39;, e.local_dt, self.name)
+                    log.warning(&#34;Returning naive datetime %s on field %s&#34;, e.local_dt, self.name)
                     return e.local_dt
                 log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
                 return None
@@ -3096,6 +3189,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 
     def from_xml(self, elem, account):
         from .properties import DictionaryEntry
+
         iter_elem = elem.find(self.response_tag())
         if iter_elem is not None:
             entries = [
@@ -3119,6 +3213,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 
     def to_xml(self, value, version):
         from .properties import DictionaryEntry
+
         field_elem = create_element(self.request_tag())
         entries = [DictionaryEntry(key=k, value=v) for k, v in value.items()]
         return set_xml_value(field_elem, entries, version=version)</code></pre>
@@ -3194,9 +3289,9 @@ dict(one=1, two=2)</p></div>
     &#34;&#34;&#34;A generic field for any EWSElement object.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self._value_cls = kwargs.pop(&#39;value_cls&#39;)
-        if &#39;namespace&#39; not in kwargs:
-            kwargs[&#39;namespace&#39;] = self.value_cls.NAMESPACE
+        self._value_cls = kwargs.pop(&#34;value_cls&#34;)
+        if &#34;namespace&#34; not in kwargs:
+            kwargs[&#34;namespace&#34;] = self.value_cls.NAMESPACE
         super().__init__(*args, **kwargs)
 
     @property
@@ -3204,15 +3299,17 @@ dict(one=1, two=2)</p></div>
         if isinstance(self._value_cls, str):
             # Support &#39;value_cls&#39; as string to allow self-referencing classes. The class must be importable from the
             # top-level module.
-            self._value_cls = getattr(import_module(self.__module__.split(&#39;.&#39;)[0]), self._value_cls)
+            self._value_cls = getattr(import_module(self.__module__.split(&#34;.&#34;)[0]), self._value_cls)
         return self._value_cls
 
     def from_xml(self, elem, account):
         if self.is_list:
             iter_elem = elem.find(self.response_tag())
             if iter_elem is not None:
-                return [self.value_cls.from_xml(elem=e, account=account)
-                        for e in iter_elem.findall(self.value_cls.response_tag())]
+                return [
+                    self.value_cls.from_xml(elem=e, account=account)
+                    for e in iter_elem.findall(self.value_cls.response_tag())
+                ]
         else:
             if self.field_uri is None:
                 sub_elem = elem.find(self.value_cls.response_tag())
@@ -3264,7 +3361,7 @@ def value_cls(self):
     if isinstance(self._value_cls, str):
         # Support &#39;value_cls&#39; as string to allow self-referencing classes. The class must be importable from the
         # top-level module.
-        self._value_cls = getattr(import_module(self.__module__.split(&#39;.&#39;)[0]), self._value_cls)
+        self._value_cls = getattr(import_module(self.__module__.split(&#34;.&#34;)[0]), self._value_cls)
     return self._value_cls</code></pre>
 </details>
 </dd>
@@ -3349,7 +3446,8 @@ def value_cls(self):
 <pre><code class="python">class EffectiveRightsField(EWSElementField):
     def __init__(self, *args, **kwargs):
         from .properties import EffectiveRights
-        kwargs[&#39;value_cls&#39;] = EffectiveRights
+
+        kwargs[&#34;value_cls&#34;] = EffectiveRights
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3381,7 +3479,8 @@ def value_cls(self):
 <pre><code class="python">class EmailAddressAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import EmailAddressAttributedValue
-        kwargs[&#39;value_cls&#39;] = EmailAddressAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = EmailAddressAttributedValue
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3446,18 +3545,19 @@ def value_cls(self):
     is_list = True
     is_complex = True
 
-    PARENT_ELEMENT_NAME = &#39;EmailAddresses&#39;
+    PARENT_ELEMENT_NAME = &#34;EmailAddresses&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import EmailAddress
-        kwargs[&#39;value_cls&#39;] = EmailAddress
+
+        kwargs[&#34;value_cls&#34;] = EmailAddress
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if value is not None:
             default_labels = self.value_cls.LABEL_CHOICES
             if len(value) &gt; len(default_labels):
-                raise ValueError(f&#39;This field can handle at most {len(default_labels)} values (value: {value})&#39;)
+                raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
             tmp = []
             for s, default_label in zip(value, default_labels):
                 if not isinstance(s, str):
@@ -3504,7 +3604,7 @@ def value_cls(self):
     if value is not None:
         default_labels = self.value_cls.LABEL_CHOICES
         if len(value) &gt; len(default_labels):
-            raise ValueError(f&#39;This field can handle at most {len(default_labels)} values (value: {value})&#39;)
+            raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
         tmp = []
         for s, default_label in zip(value, default_labels):
             if not isinstance(s, str):
@@ -3539,7 +3639,8 @@ def value_cls(self):
 <pre><code class="python">class EmailField(BaseEmailField):
     def __init__(self, *args, **kwargs):
         from .properties import Email
-        kwargs[&#39;value_cls&#39;] = Email
+
+        kwargs[&#34;value_cls&#34;] = Email
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3575,7 +3676,7 @@ def value_cls(self):
     value_cls = str
 
     def from_xml(self, elem, account):
-        return elem.text or elem.get(&#39;Name&#39;)  # Sometimes elem.text is empty. Exchange saves the same in &#39;Name&#39; attr</code></pre>
+        return elem.text or elem.get(&#34;Name&#34;)  # Sometimes elem.text is empty. Exchange saves the same in &#39;Name&#39; attr</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3648,12 +3749,12 @@ stored internally as integers but output in XML as strings.</p></div>
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.enum = kwargs.pop(&#39;enum&#39;)
+        self.enum = kwargs.pop(&#34;enum&#34;)
         # Set different min/max defaults than IntegerField
-        if &#39;max&#39; in kwargs:
+        if &#34;max&#34; in kwargs:
             raise AttributeError(&#34;EnumField does not support the &#39;max&#39; attribute&#34;)
-        kwargs[&#39;min&#39;] = kwargs.pop(&#39;min&#39;, 1)
-        kwargs[&#39;max&#39;] = kwargs[&#39;min&#39;] + len(self.enum) - 1
+        kwargs[&#34;min&#34;] = kwargs.pop(&#34;min&#34;, 1)
+        kwargs[&#34;max&#34;] = kwargs[&#34;min&#34;] + len(self.enum) - 1
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -3686,7 +3787,7 @@ stored internally as integers but output in XML as strings.</p></div>
         if val is not None:
             try:
                 if self.is_list:
-                    return [self.enum.index(v) + 1 for v in val.split(&#39; &#39;)]
+                    return [self.enum.index(v) + 1 for v in val.split(&#34; &#34;)]
                 return self.enum.index(val) + 1
             except ValueError:
                 log.warning(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
@@ -3696,7 +3797,7 @@ stored internally as integers but output in XML as strings.</p></div>
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
         if self.is_list:
-            return set_xml_value(field_elem, &#39; &#39;.join(self.as_string(value)), version=version)
+            return set_xml_value(field_elem, &#34; &#34;.join(self.as_string(value)), version=version)
         return set_xml_value(field_elem, self.as_string(value), version=version)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3827,7 +3928,7 @@ stored internally as integers but output in XML as strings.</p></div>
     is_complex = True
 
     def __init__(self, *args, **kwargs):
-        self.value_cls = kwargs.pop(&#39;value_cls&#39;)
+        self.value_cls = kwargs.pop(&#34;value_cls&#34;)
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -3845,6 +3946,7 @@ stored internally as integers but output in XML as strings.</p></div>
 
     def field_uri_xml(self):
         from .properties import ExtendedFieldURI
+
         cls = self.value_cls
         return ExtendedFieldURI(
             distinguished_property_set_id=cls.distinguished_property_set_id,
@@ -3924,6 +4026,7 @@ stored internally as integers but output in XML as strings.</p></div>
 </summary>
 <pre><code class="python">def field_uri_xml(self):
     from .properties import ExtendedFieldURI
+
     cls = self.value_cls
     return ExtendedFieldURI(
         distinguished_property_set_id=cls.distinguished_property_set_id,
@@ -4004,9 +4107,19 @@ stored internally as integers but output in XML as strings.</p></div>
     #
     is_complex = False
 
-    def __init__(self, name=None, is_required=False, is_required_after_save=False, is_read_only=False,
-                 is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None,
-                 supported_from=None, deprecated_from=None):
+    def __init__(
+        self,
+        name=None,
+        is_required=False,
+        is_required_after_save=False,
+        is_read_only=False,
+        is_read_only_after_send=False,
+        is_searchable=True,
+        is_attribute=False,
+        default=None,
+        supported_from=None,
+        deprecated_from=None,
+    ):
         self.name = name  # Usually set by the EWSMeta metaclass
         self.default = default  # Default value if none is given
         self.is_required = is_required
@@ -4024,12 +4137,12 @@ stored internally as integers but output in XML as strings.</p></div>
         # The Exchange build when this field was introduced. When talking with versions prior to this version,
         # we will ignore this field.
         if supported_from is not None and not isinstance(supported_from, Build):
-            raise InvalidTypeError(&#39;supported_from&#39;, supported_from, Build)
+            raise InvalidTypeError(&#34;supported_from&#34;, supported_from, Build)
         self.supported_from = supported_from
         # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
         # we will ignore this field.
         if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise InvalidTypeError(&#39;deprecated_from&#39;, deprecated_from, Build)
+            raise InvalidTypeError(&#34;deprecated_from&#34;, deprecated_from, Build)
         self.deprecated_from = deprecated_from
 
     def clean(self, value, version=None):
@@ -4047,12 +4160,12 @@ stored internally as integers but output in XML as strings.</p></div>
             for v in value:
                 if not isinstance(v, self.value_cls):
                     raise TypeError(f&#34;Field {self.name!r} value {v!r} must be of type {self.value_cls}&#34;)
-                if hasattr(v, &#39;clean&#39;):
+                if hasattr(v, &#34;clean&#34;):
                     v.clean(version=version)
         else:
             if not isinstance(value, self.value_cls):
                 raise TypeError(f&#34;Field {self.name!r} value {value!r} must be of type {self.value_cls}&#34;)
-            if hasattr(value, &#39;clean&#39;):
+            if hasattr(value, &#34;clean&#34;):
                 value.clean(version=version)
         return value
 
@@ -4080,9 +4193,10 @@ stored internally as integers but output in XML as strings.</p></div>
         &#34;&#34;&#34;Field instances must be hashable&#34;&#34;&#34;
 
     def __repr__(self):
-        args_str = &#39;, &#39;.join(f&#39;{f}={getattr(self, f)!r}&#39; for f in (
-            &#39;name&#39;, &#39;value_cls&#39;, &#39;is_list&#39;, &#39;is_complex&#39;, &#39;default&#39;))
-        return f&#39;{self.__class__.__name__}({args_str})&#39;</code></pre>
+        args_str = &#34;, &#34;.join(
+            f&#34;{f}={getattr(self, f)!r}&#34; for f in (&#34;name&#34;, &#34;value_cls&#34;, &#34;is_list&#34;, &#34;is_complex&#34;, &#34;default&#34;)
+        )
+        return f&#34;{self.__class__.__name__}({args_str})&#34;</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -4131,12 +4245,12 @@ stored internally as integers but output in XML as strings.</p></div>
         for v in value:
             if not isinstance(v, self.value_cls):
                 raise TypeError(f&#34;Field {self.name!r} value {v!r} must be of type {self.value_cls}&#34;)
-            if hasattr(v, &#39;clean&#39;):
+            if hasattr(v, &#34;clean&#34;):
                 v.clean(version=version)
     else:
         if not isinstance(value, self.value_cls):
             raise TypeError(f&#34;Field {self.name!r} value {value!r} must be of type {self.value_cls}&#34;)
-        if hasattr(value, &#39;clean&#39;):
+        if hasattr(value, &#34;clean&#34;):
             value.clean(version=version)
     return value</code></pre>
 </details>
@@ -4203,6 +4317,7 @@ def to_xml(self, value, version):
 </summary>
 <pre><code class="python">class FieldOrder:
     &#34;&#34;&#34;Holds values needed to call server-side sorting on a single field path.&#34;&#34;&#34;
+
     def __init__(self, field_path, reverse=False):
         &#34;&#34;&#34;
 
@@ -4215,12 +4330,12 @@ def to_xml(self, value, version):
     @classmethod
     def from_string(cls, field_path, folder):
         return cls(
-            field_path=FieldPath.from_string(field_path=field_path.lstrip(&#39;-&#39;), folder=folder, strict=True),
-            reverse=field_path.startswith(&#39;-&#39;)
+            field_path=FieldPath.from_string(field_path=field_path.lstrip(&#34;-&#34;), folder=folder, strict=True),
+            reverse=field_path.startswith(&#34;-&#34;),
         )
 
     def to_xml(self):
-        field_order = create_element(&#39;t:FieldOrder&#39;, attrs=dict(Order=&#39;Descending&#39; if self.reverse else &#39;Ascending&#39;))
+        field_order = create_element(&#34;t:FieldOrder&#34;, attrs=dict(Order=&#34;Descending&#34; if self.reverse else &#34;Ascending&#34;))
         field_order.append(self.field_path.to_xml())
         return field_order</code></pre>
 </details>
@@ -4238,8 +4353,8 @@ def to_xml(self, value, version):
 <pre><code class="python">@classmethod
 def from_string(cls, field_path, folder):
     return cls(
-        field_path=FieldPath.from_string(field_path=field_path.lstrip(&#39;-&#39;), folder=folder, strict=True),
-        reverse=field_path.startswith(&#39;-&#39;)
+        field_path=FieldPath.from_string(field_path=field_path.lstrip(&#34;-&#34;), folder=folder, strict=True),
+        reverse=field_path.startswith(&#34;-&#34;),
     )</code></pre>
 </details>
 </dd>
@@ -4256,7 +4371,7 @@ def from_string(cls, field_path, folder):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_xml(self):
-    field_order = create_element(&#39;t:FieldOrder&#39;, attrs=dict(Order=&#39;Descending&#39; if self.reverse else &#39;Ascending&#39;))
+    field_order = create_element(&#34;t:FieldOrder&#34;, attrs=dict(Order=&#34;Descending&#34; if self.reverse else &#34;Ascending&#34;))
     field_order.append(self.field_path.to_xml())
     return field_order</code></pre>
 </details>
@@ -4331,8 +4446,11 @@ property with a specific label, or a particular subfield field on that property.
         # If this path does not point to a specific subfield on an indexed property, return all the possible path
         # combinations for this field path.
         if isinstance(self.field, IndexedField):
-            labels = [self.label] if self.label \
-                else self.field.value_cls.get_field_by_fieldname(&#39;label&#39;).supported_choices(version=version)
+            labels = (
+                [self.label]
+                if self.label
+                else self.field.value_cls.get_field_by_fieldname(&#34;label&#34;).supported_choices(version=version)
+            )
             subfields = [self.subfield] if self.subfield else self.field.value_cls.supported_fields(version=version)
             for label in labels:
                 for subfield in subfields:
@@ -4344,9 +4462,10 @@ property with a specific label, or a particular subfield field on that property.
     def path(self):
         if self.label:
             from .indexed_properties import SingleFieldIndexedElement
+
             if issubclass(self.field.value_cls, SingleFieldIndexedElement) or not self.subfield:
-                return f&#39;{self.field.name}__{self.label}&#39;
-            return f&#39;{self.field.name}__{self.label}__{self.subfield.name}&#39;
+                return f&#34;{self.field.name}__{self.label}&#34;
+            return f&#34;{self.field.name}__{self.label}__{self.subfield.name}&#34;
         return self.field.name
 
     def __eq__(self, other):
@@ -4392,9 +4511,10 @@ def from_string(cls, field_path, folder, strict=False):
 def path(self):
     if self.label:
         from .indexed_properties import SingleFieldIndexedElement
+
         if issubclass(self.field.value_cls, SingleFieldIndexedElement) or not self.subfield:
-            return f&#39;{self.field.name}__{self.label}&#39;
-        return f&#39;{self.field.name}__{self.label}__{self.subfield.name}&#39;
+            return f&#34;{self.field.name}__{self.label}&#34;
+        return f&#34;{self.field.name}__{self.label}__{self.subfield.name}&#34;
     return self.field.name</code></pre>
 </details>
 </dd>
@@ -4414,8 +4534,11 @@ def path(self):
     # If this path does not point to a specific subfield on an indexed property, return all the possible path
     # combinations for this field path.
     if isinstance(self.field, IndexedField):
-        labels = [self.label] if self.label \
-            else self.field.value_cls.get_field_by_fieldname(&#39;label&#39;).supported_choices(version=version)
+        labels = (
+            [self.label]
+            if self.label
+            else self.field.value_cls.get_field_by_fieldname(&#34;label&#34;).supported_choices(version=version)
+        )
         subfields = [self.subfield] if self.subfield else self.field.value_cls.supported_fields(version=version)
         for label in labels:
             for subfield in subfields:
@@ -4501,16 +4624,16 @@ may additionally be a label for searching, filtering and limiting fields. In tha
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        self.field_uri = kwargs.pop(&#39;field_uri&#39;, None)
-        self.namespace = kwargs.pop(&#39;namespace&#39;, TNS)
+        self.field_uri = kwargs.pop(&#34;field_uri&#34;, None)
+        self.namespace = kwargs.pop(&#34;namespace&#34;, TNS)
         super().__init__(*args, **kwargs)
         # See all valid FieldURI values at
         # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/fielduri
         # The field_uri has a prefix when the FieldURI points to an Item field.
         if self.field_uri is None:
             self.field_uri_postfix = None
-        elif &#39;:&#39; in self.field_uri:
-            self.field_uri_postfix = self.field_uri.split(&#39;:&#39;)[1]
+        elif &#34;:&#34; in self.field_uri:
+            self.field_uri_postfix = self.field_uri.split(&#34;:&#34;)[1]
         else:
             self.field_uri_postfix = self.field_uri
 
@@ -4535,6 +4658,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 
     def field_uri_xml(self):
         from .properties import FieldURI
+
         if not self.field_uri:
             raise ValueError(f&#34;&#39;field_uri&#39; value is missing on field &#39;{self.name}&#39;&#34;)
         return FieldURI(field_uri=self.field_uri).to_xml(version=None)
@@ -4542,12 +4666,12 @@ may additionally be a label for searching, filtering and limiting fields. In tha
     def request_tag(self):
         if not self.field_uri_postfix:
             raise ValueError(f&#34;&#39;field_uri_postfix&#39; value is missing on field &#39;{self.name}&#39;&#34;)
-        return f&#39;t:{self.field_uri_postfix}&#39;
+        return f&#34;t:{self.field_uri_postfix}&#34;
 
     def response_tag(self):
         if not self.field_uri_postfix:
             raise ValueError(f&#34;&#39;field_uri_postfix&#39; value is missing on field &#39;{self.name}&#39;&#34;)
-        return f&#39;{{{self.namespace}}}{self.field_uri_postfix}&#39;
+        return f&#34;{{{self.namespace}}}{self.field_uri_postfix}&#34;
 
     def __hash__(self):
         return hash(self.field_uri)</code></pre>
@@ -4585,6 +4709,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 </summary>
 <pre><code class="python">def field_uri_xml(self):
     from .properties import FieldURI
+
     if not self.field_uri:
         raise ValueError(f&#34;&#39;field_uri&#39; value is missing on field &#39;{self.name}&#39;&#34;)
     return FieldURI(field_uri=self.field_uri).to_xml(version=None)</code></pre>
@@ -4602,7 +4727,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <pre><code class="python">def request_tag(self):
     if not self.field_uri_postfix:
         raise ValueError(f&#34;&#39;field_uri_postfix&#39; value is missing on field &#39;{self.name}&#39;&#34;)
-    return f&#39;t:{self.field_uri_postfix}&#39;</code></pre>
+    return f&#34;t:{self.field_uri_postfix}&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.FieldURIField.response_tag"><code class="name flex">
@@ -4617,7 +4742,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <pre><code class="python">def response_tag(self):
     if not self.field_uri_postfix:
         raise ValueError(f&#34;&#39;field_uri_postfix&#39; value is missing on field &#39;{self.name}&#39;&#34;)
-    return f&#39;{{{self.namespace}}}{self.field_uri_postfix}&#39;</code></pre>
+    return f&#34;{{{self.namespace}}}{self.field_uri_postfix}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -4645,7 +4770,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
     &#34;&#34;&#34;Like ChoiceField, but specifically for Free/Busy values.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        kwargs[&#39;choices&#39;] = set(FREE_BUSY_CHOICES)
+        kwargs[&#34;choices&#34;] = set(FREE_BUSY_CHOICES)
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4687,13 +4812,28 @@ may additionally be a label for searching, filtering and limiting fields. In tha
         return {v.response_tag(): v for v in self.value_classes}
 
     def __init__(self, *args, **kwargs):
-        from .properties import CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, \
-            NewMailEvent, StatusEvent, FreeBusyChangedEvent
-        kwargs[&#39;value_cls&#39;] = None  # Parent class requires this kwarg
-        kwargs[&#39;namespace&#39;] = None  # Parent class requires this kwarg
+        from .properties import (
+            CopiedEvent,
+            CreatedEvent,
+            DeletedEvent,
+            FreeBusyChangedEvent,
+            ModifiedEvent,
+            MovedEvent,
+            NewMailEvent,
+            StatusEvent,
+        )
+
+        kwargs[&#34;value_cls&#34;] = None  # Parent class requires this kwarg
+        kwargs[&#34;namespace&#34;] = None  # Parent class requires this kwarg
         super().__init__(*args, **kwargs)
         self.value_classes = (
-            CopiedEvent, CreatedEvent, DeletedEvent, ModifiedEvent, MovedEvent, NewMailEvent, StatusEvent,
+            CopiedEvent,
+            CreatedEvent,
+            DeletedEvent,
+            ModifiedEvent,
+            MovedEvent,
+            NewMailEvent,
+            StatusEvent,
             FreeBusyChangedEvent,
         )
 
@@ -4743,8 +4883,8 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 </summary>
 <pre><code class="python">class IdElementField(EWSElementField):
     def __init__(self, *args, **kwargs):
-        kwargs[&#39;is_searchable&#39;] = False
-        kwargs[&#39;is_read_only&#39;] = True
+        kwargs[&#34;is_searchable&#34;] = False
+        kwargs[&#34;is_read_only&#34;] = True
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4822,16 +4962,17 @@ but we can assume 512 bytes in practice. See
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import IndexedElement
-        value_cls = kwargs[&#39;value_cls&#39;]
+
+        value_cls = kwargs[&#34;value_cls&#34;]
         if not issubclass(value_cls, IndexedElement):
             raise TypeError(f&#34;&#39;value_cls&#39; {value_cls!r} must be a subclass of type {IndexedElement}&#34;)
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
-        return set_xml_value(create_element(f&#39;t:{self.PARENT_ELEMENT_NAME}&#39;), value, version=version)
+        return set_xml_value(create_element(f&#34;t:{self.PARENT_ELEMENT_NAME}&#34;), value, version=version)
 
     def response_tag(self):
-        return f&#39;{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}&#39;
+        return f&#34;{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}&#34;
 
     def __hash__(self):
         return hash(self.field_uri)</code></pre>
@@ -4867,7 +5008,7 @@ but we can assume 512 bytes in practice. See
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def response_tag(self):
-    return f&#39;{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}&#39;</code></pre>
+    return f&#34;{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -4897,14 +5038,13 @@ but we can assume 512 bytes in practice. See
     value_cls = int
 
     def __init__(self, *args, **kwargs):
-        self.min = kwargs.pop(&#39;min&#39;, None)
-        self.max = kwargs.pop(&#39;max&#39;, None)
+        self.min = kwargs.pop(&#34;min&#34;, None)
+        self.max = kwargs.pop(&#34;max&#34;, None)
         super().__init__(*args, **kwargs)
 
     def _clean_single_value(self, v):
         if self.min is not None and v &lt; self.min:
-            raise ValueError(
-                f&#34;Value {v!r} on field {self.name!r} must be greater than {self.min}&#34;)
+            raise ValueError(f&#34;Value {v!r} on field {self.name!r} must be greater than {self.min}&#34;)
         if self.max is not None and v &gt; self.max:
             raise ValueError(f&#34;Value {v!r} on field {self.name!r} must be less than {self.max}&#34;)
 
@@ -5062,10 +5202,12 @@ may additionally be a label for searching, filtering and limiting fields. In tha
     @property
     def value_cls(self):
         from .items import Item
+
         return Item
 
     def from_xml(self, elem, account):
         from .items import ITEM_CLASSES
+
         for item_cls in ITEM_CLASSES:
             item_elem = elem.find(item_cls.response_tag())
             if item_elem is not None:
@@ -5093,6 +5235,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <pre><code class="python">@property
 def value_cls(self):
     from .items import Item
+
     return Item</code></pre>
 </details>
 </dd>
@@ -5159,7 +5302,8 @@ def value_cls(self):
 <pre><code class="python">class MailboxField(BaseEmailField):
     def __init__(self, *args, **kwargs):
         from .properties import Mailbox
-        kwargs[&#39;value_cls&#39;] = Mailbox
+
+        kwargs[&#34;value_cls&#34;] = Mailbox
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5192,7 +5336,8 @@ def value_cls(self):
 <pre><code class="python">class MailboxListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Mailbox
-        kwargs[&#39;value_cls&#39;] = Mailbox
+
+        kwargs[&#34;value_cls&#34;] = Mailbox
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -5248,15 +5393,15 @@ def value_cls(self):
 <pre><code class="python">class MemberListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Member
-        kwargs[&#39;value_cls&#39;] = Member
+
+        kwargs[&#34;value_cls&#34;] = Member
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         from .properties import Mailbox
+
         if value is not None:
-            value = [
-                self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
-            ]
+            value = [self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value]
         return super().clean(value, version=version)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5279,10 +5424,9 @@ def value_cls(self):
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
     from .properties import Mailbox
+
     if value is not None:
-        value = [
-            self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value
-        ]
+        value = [self.value_cls(mailbox=Mailbox(email_address=s)) if isinstance(s, str) else s for s in value]
     return super().clean(value, version=version)</code></pre>
 </details>
 </dd>
@@ -5310,20 +5454,20 @@ def value_cls(self):
 <pre><code class="python">class MessageField(TextField):
     &#34;&#34;&#34;A field that handles the Message element.&#34;&#34;&#34;
 
-    INNER_ELEMENT_NAME = &#39;Message&#39;
+    INNER_ELEMENT_NAME = &#34;Message&#34;
 
     def from_xml(self, elem, account):
         reply = elem.find(self.response_tag())
         if reply is None:
             return None
-        message = reply.find(f&#39;{{{TNS}}}{self.INNER_ELEMENT_NAME}&#39;)
+        message = reply.find(f&#34;{{{TNS}}}{self.INNER_ELEMENT_NAME}&#34;)
         if message is None:
             return None
         return message.text
 
     def to_xml(self, value, version):
         field_elem = create_element(self.request_tag())
-        message = create_element(f&#39;t:{self.INNER_ELEMENT_NAME}&#39;)
+        message = create_element(f&#34;t:{self.INNER_ELEMENT_NAME}&#34;)
         message.text = value
         return set_xml_value(field_elem, message, version=version)</code></pre>
 </details>
@@ -5364,7 +5508,8 @@ def value_cls(self):
 <pre><code class="python">class MessageHeaderField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import MessageHeader
-        kwargs[&#39;value_cls&#39;] = MessageHeader
+
+        kwargs[&#34;value_cls&#34;] = MessageHeader
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5435,8 +5580,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
     value_cls = str
 
     def __init__(self, *args, **kwargs):
-        self.field_uri = kwargs.pop(&#39;field_uri&#39;)
-        if &#39;:&#39; in self.field_uri:
+        self.field_uri = kwargs.pop(&#34;field_uri&#34;)
+        if &#34;:&#34; in self.field_uri:
             raise ValueError(&#34;&#39;field_uri&#39; value must not contain a colon&#34;)
         super().__init__(*args, **kwargs)
 
@@ -5453,13 +5598,14 @@ because the decoded data could be in some other encoding, specified in the "Cont
 
     def field_uri_xml(self, field_uri, label):
         from .properties import IndexedFieldURI
-        return IndexedFieldURI(field_uri=f&#39;{field_uri}:{self.field_uri}&#39;, field_index=label).to_xml(version=None)
+
+        return IndexedFieldURI(field_uri=f&#34;{field_uri}:{self.field_uri}&#34;, field_index=label).to_xml(version=None)
 
     def request_tag(self):
-        return f&#39;t:{self.field_uri}&#39;
+        return f&#34;t:{self.field_uri}&#34;
 
     def response_tag(self):
-        return f&#39;{{{self.namespace}}}{self.field_uri}&#39;</code></pre>
+        return f&#34;{{{self.namespace}}}{self.field_uri}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5479,7 +5625,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 </summary>
 <pre><code class="python">def field_uri_xml(self, field_uri, label):
     from .properties import IndexedFieldURI
-    return IndexedFieldURI(field_uri=f&#39;{field_uri}:{self.field_uri}&#39;, field_index=label).to_xml(version=None)</code></pre>
+
+    return IndexedFieldURI(field_uri=f&#34;{field_uri}:{self.field_uri}&#34;, field_index=label).to_xml(version=None)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.NamedSubField.request_tag"><code class="name flex">
@@ -5492,7 +5639,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def request_tag(self):
-    return f&#39;t:{self.field_uri}&#39;</code></pre>
+    return f&#34;t:{self.field_uri}&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.NamedSubField.response_tag"><code class="name flex">
@@ -5505,7 +5652,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def response_tag(self):
-    return f&#39;{{{self.namespace}}}{self.field_uri}&#39;</code></pre>
+    return f&#34;{{{self.namespace}}}{self.field_uri}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -5642,7 +5789,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 
     def __init__(self, *args, **kwargs):
         from .properties import PermissionSet
-        kwargs[&#39;value_cls&#39;] = PermissionSet
+
+        kwargs[&#34;value_cls&#34;] = PermissionSet
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5683,7 +5831,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 
     def __init__(self, *args, **kwargs):
         from .properties import PhoneNumber
-        kwargs[&#39;value_cls&#39;] = PhoneNumber
+
+        kwargs[&#34;value_cls&#34;] = PhoneNumber
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5722,7 +5871,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <pre><code class="python">class PhoneNumberAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import PhoneNumberAttributedValue
-        kwargs[&#39;value_cls&#39;] = PhoneNumberAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = PhoneNumberAttributedValue
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5756,11 +5906,12 @@ because the decoded data could be in some other encoding, specified in the "Cont
     is_list = True
     is_complex = True
 
-    PARENT_ELEMENT_NAME = &#39;PhoneNumbers&#39;
+    PARENT_ELEMENT_NAME = &#34;PhoneNumbers&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import PhoneNumber
-        kwargs[&#39;value_cls&#39;] = PhoneNumber
+
+        kwargs[&#34;value_cls&#34;] = PhoneNumber
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5809,11 +5960,12 @@ because the decoded data could be in some other encoding, specified in the "Cont
     is_list = True
     is_complex = True
 
-    PARENT_ELEMENT_NAME = &#39;PhysicalAddresses&#39;
+    PARENT_ELEMENT_NAME = &#34;PhysicalAddresses&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import PhysicalAddress
-        kwargs[&#39;value_cls&#39;] = PhysicalAddress
+
+        kwargs[&#34;value_cls&#34;] = PhysicalAddress
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5861,7 +6013,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <pre><code class="python">class PostalAddressAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import PostalAddressAttributedValue
-        kwargs[&#39;value_cls&#39;] = PostalAddressAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = PostalAddressAttributedValue
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5895,7 +6048,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
     # There is not containing element for this field. Just multiple &#39;Protocol&#39; elements on the &#39;Account&#39; element.
     def __init__(self, *args, **kwargs):
         from .autodiscover.properties import Protocol
-        kwargs[&#39;value_cls&#39;] = Protocol
+
+        kwargs[&#34;value_cls&#34;] = Protocol
         super().__init__(*args, **kwargs)
 
     def from_xml(self, elem, account):
@@ -5931,7 +6085,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <pre><code class="python">class RecipientAddressField(BaseEmailField):
     def __init__(self, *args, **kwargs):
         from .properties import RecipientAddress
-        kwargs[&#39;value_cls&#39;] = RecipientAddress
+
+        kwargs[&#34;value_cls&#34;] = RecipientAddress
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5966,7 +6121,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 
     def __init__(self, *args, **kwargs):
         from .recurrence import Recurrence
-        kwargs[&#39;value_cls&#39;] = Recurrence
+
+        kwargs[&#34;value_cls&#34;] = Recurrence
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -6010,7 +6166,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 
     def __init__(self, *args, **kwargs):
         from .properties import ReferenceItemId
-        kwargs[&#39;value_cls&#39;] = ReferenceItemId
+
+        kwargs[&#34;value_cls&#34;] = ReferenceItemId
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -6051,8 +6208,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 </summary>
 <pre><code class="python">class RoutingTypeField(ChoiceField):
     def __init__(self, *args, **kwargs):
-        kwargs[&#39;choices&#39;] = {Choice(&#39;SMTP&#39;), Choice(&#39;EX&#39;)}
-        kwargs[&#39;default&#39;] = &#39;SMTP&#39;
+        kwargs[&#34;choices&#34;] = {Choice(&#34;SMTP&#34;), Choice(&#34;EX&#34;)}
+        kwargs[&#34;default&#34;] = &#34;SMTP&#34;
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6087,7 +6244,8 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <pre><code class="python">class StringAttributedValueField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import StringAttributedValue
-        kwargs[&#39;value_cls&#39;] = StringAttributedValue
+
+        kwargs[&#34;value_cls&#34;] = StringAttributedValue
         super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6132,12 +6290,13 @@ because the decoded data could be in some other encoding, specified in the "Cont
     @staticmethod
     def field_uri_xml(field_uri, label):
         from .properties import IndexedFieldURI
+
         return IndexedFieldURI(field_uri=field_uri, field_index=label).to_xml(version=None)
 
     def clean(self, value, version=None):
         value = super().clean(value, version=version)
         if self.is_required and not value:
-            raise ValueError(f&#39;Value for subfield {self.name!r} must be non-empty&#39;)
+            raise ValueError(f&#34;Value for subfield {self.name!r} must be non-empty&#34;)
         return value
 
     def __hash__(self):
@@ -6185,6 +6344,7 @@ errors defaults to 'strict'.</p></div>
 <pre><code class="python">@staticmethod
 def field_uri_xml(field_uri, label):
     from .properties import IndexedFieldURI
+
     return IndexedFieldURI(field_uri=field_uri, field_index=label).to_xml(version=None)</code></pre>
 </details>
 </dd>
@@ -6203,7 +6363,7 @@ def field_uri_xml(field_uri, label):
 <pre><code class="python">def clean(self, value, version=None):
     value = super().clean(value, version=version)
     if self.is_required and not value:
-        raise ValueError(f&#39;Value for subfield {self.name!r} must be non-empty&#39;)
+        raise ValueError(f&#34;Value for subfield {self.name!r} must be non-empty&#34;)
     return value</code></pre>
 </details>
 </dd>
@@ -6233,7 +6393,8 @@ def field_uri_xml(field_uri, label):
 
     def __init__(self, *args, **kwargs):
         from .recurrence import TaskRecurrence
-        kwargs[&#39;value_cls&#39;] = TaskRecurrence
+
+        kwargs[&#34;value_cls&#34;] = TaskRecurrence
         super().__init__(*args, **kwargs)
 
     def to_xml(self, value, version):
@@ -6336,14 +6497,14 @@ errors defaults to 'strict'.</p></div>
     is_list = True
 
     def __init__(self, *args, **kwargs):
-        self.list_elem_name = kwargs.pop(&#39;list_elem_name&#39;, &#39;String&#39;)
+        self.list_elem_name = kwargs.pop(&#34;list_elem_name&#34;, &#34;String&#34;)
         super().__init__(*args, **kwargs)
 
     def list_elem_request_tag(self):
-        return f&#39;t:{self.list_elem_name}&#39;
+        return f&#34;t:{self.list_elem_name}&#34;
 
     def list_elem_response_tag(self):
-        return f&#39;{{{self.namespace}}}{self.list_elem_name}&#39;
+        return f&#34;{{{self.namespace}}}{self.list_elem_name}&#34;
 
     def from_xml(self, elem, account):
         iter_elem = elem.find(self.response_tag())
@@ -6386,7 +6547,7 @@ errors defaults to 'strict'.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def list_elem_request_tag(self):
-    return f&#39;t:{self.list_elem_name}&#39;</code></pre>
+    return f&#34;t:{self.list_elem_name}&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.TextListField.list_elem_response_tag"><code class="name flex">
@@ -6399,7 +6560,7 @@ errors defaults to 'strict'.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def list_elem_response_tag(self):
-    return f&#39;{{{self.namespace}}}{self.list_elem_name}&#39;</code></pre>
+    return f&#34;{{{self.namespace}}}{self.list_elem_name}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -6430,14 +6591,13 @@ errors defaults to 'strict'.</p></div>
     value_cls = datetime.timedelta
 
     def __init__(self, *args, **kwargs):
-        self.min = kwargs.pop(&#39;min&#39;, datetime.timedelta(0))
-        self.max = kwargs.pop(&#39;max&#39;, datetime.timedelta(days=1))
+        self.min = kwargs.pop(&#34;min&#34;, datetime.timedelta(0))
+        self.max = kwargs.pop(&#34;max&#34;, datetime.timedelta(days=1))
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if self.min is not None and value &lt; self.min:
-            raise ValueError(
-                f&#34;Value {value!r} on field {self.name!r} must be greater than {self.min}&#34;)
+            raise ValueError(f&#34;Value {value!r} on field {self.name!r} must be greater than {self.min}&#34;)
         if self.max is not None and value &gt; self.max:
             raise ValueError(f&#34;Value {value!r} on field {self.name!r} must be less than {self.max}&#34;)
         return super().clean(value, version=version)</code></pre>
@@ -6467,8 +6627,7 @@ errors defaults to 'strict'.</p></div>
 </summary>
 <pre><code class="python">def clean(self, value, version=None):
     if self.min is not None and value &lt; self.min:
-        raise ValueError(
-            f&#34;Value {value!r} on field {self.name!r} must be greater than {self.min}&#34;)
+        raise ValueError(f&#34;Value {value!r} on field {self.name!r} must be greater than {self.min}&#34;)
     if self.max is not None and value &gt; self.max:
         raise ValueError(f&#34;Value {value!r} on field {self.name!r} must be less than {self.max}&#34;)
     return super().clean(value, version=version)</code></pre>
@@ -6504,9 +6663,9 @@ errors defaults to 'strict'.</p></div>
         val = self._get_val_from_elem(elem)
         if val is not None:
             try:
-                if &#39;:&#39; in val:
+                if &#34;:&#34; in val:
                     # Assume a string of the form HH:MM:SS
-                    return datetime.datetime.strptime(val, &#39;%H:%M:%S&#39;).time()
+                    return datetime.datetime.strptime(val, &#34;%H:%M:%S&#34;).time()
                 # Assume an integer in minutes since midnight
                 return (datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=int(val))).time()
             except ValueError:
@@ -6561,14 +6720,16 @@ a tzinfo subclass. The remaining arguments may be ints.</p></div>
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
         if field_elem is not None:
-            ms_id = field_elem.get(&#39;Id&#39;)
-            ms_name = field_elem.get(&#39;Name&#39;)
+            ms_id = field_elem.get(&#34;Id&#34;)
+            ms_name = field_elem.get(&#34;Name&#34;)
             try:
                 return self.value_cls.from_ms_id(ms_id or ms_name)
             except UnknownTimeZone:
                 log.warning(
                     &#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s (unknown timezone ID)&#34;,
-                    (ms_id or ms_name), self.name, self.value_cls
+                    (ms_id or ms_name),
+                    self.name,
+                    self.value_cls,
                 )
                 return None
         return self.default
@@ -6576,7 +6737,7 @@ a tzinfo subclass. The remaining arguments may be ints.</p></div>
     def to_xml(self, value, version):
         attrs = dict(Id=value.ms_id)
         if value.ms_name:
-            attrs[&#39;Name&#39;] = value.ms_name
+            attrs[&#34;Name&#34;] = value.ms_name
         return create_element(self.request_tag(), attrs=attrs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6634,7 +6795,8 @@ services.GetServerTimeZones.</p></div>
 <pre><code class="python">class TransitionListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import BaseTransition
-        kwargs[&#39;value_cls&#39;] = BaseTransition
+
+        kwargs[&#34;value_cls&#34;] = BaseTransition
         super().__init__(*args, **kwargs)
 
     def from_xml(self, elem, account):
@@ -6676,47 +6838,47 @@ services.GetServerTimeZones.</p></div>
     &#34;&#34;&#34;This field type has no value_cls because values may have many different types.&#34;&#34;&#34;
 
     TYPES_MAP = {
-        &#39;Boolean&#39;: bool,
-        &#39;Integer32&#39;: int,
-        &#39;UnsignedInteger32&#39;: int,
-        &#39;Integer64&#39;: int,
-        &#39;UnsignedInteger64&#39;: int,
+        &#34;Boolean&#34;: bool,
+        &#34;Integer32&#34;: int,
+        &#34;UnsignedInteger32&#34;: int,
+        &#34;Integer64&#34;: int,
+        &#34;UnsignedInteger64&#34;: int,
         # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
-        &#39;ByteArray&#39;: bytes,
-        &#39;String&#39;: str,
-        &#39;StringArray&#39;: str,  # A list of strings
-        &#39;DateTime&#39;: EWSDateTime,
+        &#34;ByteArray&#34;: bytes,
+        &#34;String&#34;: str,
+        &#34;StringArray&#34;: str,  # A list of strings
+        &#34;DateTime&#34;: EWSDateTime,
     }
     TYPES_MAP_REVERSED = {
-        bool: &#39;Boolean&#39;,
-        int: &#39;Integer64&#39;,
+        bool: &#34;Boolean&#34;,
+        int: &#34;Integer64&#34;,
         # Python doesn&#39;t have a single-byte type to represent &#39;Byte&#39;
-        bytes: &#39;ByteArray&#39;,
-        str: &#39;String&#39;,
-        datetime.datetime: &#39;DateTime&#39;,
-        EWSDateTime: &#39;DateTime&#39;,
+        bytes: &#34;ByteArray&#34;,
+        str: &#34;String&#34;,
+        datetime.datetime: &#34;DateTime&#34;,
+        EWSDateTime: &#34;DateTime&#34;,
     }
 
     @classmethod
     def get_type(cls, value):
         if isinstance(value, bytes) and len(value) == 1:
             # This is a single byte. Translate it to the &#39;Byte&#39; type
-            return &#39;Byte&#39;
+            return &#34;Byte&#34;
         if is_iterable(value):
             # We don&#39;t allow generators as values, so keep the logic simple
             try:
                 first = next(iter(value))
             except StopIteration:
                 first = None
-            value_type = f&#39;{cls.TYPES_MAP_REVERSED[type(first)]}Array&#39;
+            value_type = f&#34;{cls.TYPES_MAP_REVERSED[type(first)]}Array&#34;
             if value_type not in cls.TYPES_MAP:
-                raise ValueError(f&#39;{value!r} is not a supported type&#39;)
+                raise ValueError(f&#34;{value!r} is not a supported type&#34;)
             return value_type
         return cls.TYPES_MAP_REVERSED[type(value)]
 
     @classmethod
     def is_array_type(cls, value_type):
-        return value_type == &#39;StringArray&#39;
+        return value_type == &#34;StringArray&#34;
 
     def clean(self, value, version=None):
         if value is None:
@@ -6729,30 +6891,30 @@ services.GetServerTimeZones.</p></div>
         field_elem = elem.find(self.response_tag())
         if field_elem is None:
             return self.default
-        value_type_str = get_xml_attr(field_elem, f&#39;{{{TNS}}}Type&#39;)
-        value = get_xml_attr(field_elem, f&#39;{{{TNS}}}Value&#39;)
-        if value_type_str == &#39;Byte&#39;:
+        value_type_str = get_xml_attr(field_elem, f&#34;{{{TNS}}}Type&#34;)
+        value = get_xml_attr(field_elem, f&#34;{{{TNS}}}Value&#34;)
+        if value_type_str == &#34;Byte&#34;:
             try:
                 # The value is an unsigned integer in the range 0 -&gt; 255. Convert it to a single byte
-                return xml_text_to_value(value, int).to_bytes(1, &#39;little&#39;, signed=False)
+                return xml_text_to_value(value, int).to_bytes(1, &#34;little&#34;, signed=False)
             except OverflowError as e:
-                log.warning(&#39;Invalid byte value %r (%e)&#39;, value, e)
+                log.warning(&#34;Invalid byte value %r (%e)&#34;, value, e)
                 return None
         value_type = self.TYPES_MAP[value_type_str]
-        if self. is_array_type(value_type_str):
-            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#39; &#39;))
+        if self.is_array_type(value_type_str):
+            return tuple(xml_text_to_value(value=v, value_type=value_type) for v in value.split(&#34; &#34;))
         return xml_text_to_value(value=value, value_type=value_type)
 
     def to_xml(self, value, version):
         value_type_str = self.get_type(value)
-        if value_type_str == &#39;Byte&#39;:
+        if value_type_str == &#34;Byte&#34;:
             # A single byte is encoded to an unsigned integer in the range 0 -&gt; 255
-            value = int.from_bytes(value, byteorder=&#39;little&#39;, signed=False)
+            value = int.from_bytes(value, byteorder=&#34;little&#34;, signed=False)
         elif is_iterable(value):
-            value = &#39; &#39;.join(value_to_xml_text(v) for v in value)
+            value = &#34; &#34;.join(value_to_xml_text(v) for v in value)
         field_elem = create_element(self.request_tag())
-        field_elem.append(set_xml_value(create_element(&#39;t:Type&#39;), value_type_str, version=version))
-        field_elem.append(set_xml_value(create_element(&#39;t:Value&#39;), value, version=version))
+        field_elem.append(set_xml_value(create_element(&#34;t:Type&#34;), value_type_str, version=version))
+        field_elem.append(set_xml_value(create_element(&#34;t:Value&#34;), value, version=version))
         return field_elem</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6786,16 +6948,16 @@ services.GetServerTimeZones.</p></div>
 def get_type(cls, value):
     if isinstance(value, bytes) and len(value) == 1:
         # This is a single byte. Translate it to the &#39;Byte&#39; type
-        return &#39;Byte&#39;
+        return &#34;Byte&#34;
     if is_iterable(value):
         # We don&#39;t allow generators as values, so keep the logic simple
         try:
             first = next(iter(value))
         except StopIteration:
             first = None
-        value_type = f&#39;{cls.TYPES_MAP_REVERSED[type(first)]}Array&#39;
+        value_type = f&#34;{cls.TYPES_MAP_REVERSED[type(first)]}Array&#34;
         if value_type not in cls.TYPES_MAP:
-            raise ValueError(f&#39;{value!r} is not a supported type&#39;)
+            raise ValueError(f&#34;{value!r} is not a supported type&#34;)
         return value_type
     return cls.TYPES_MAP_REVERSED[type(value)]</code></pre>
 </details>
@@ -6811,7 +6973,7 @@ def get_type(cls, value):
 </summary>
 <pre><code class="python">@classmethod
 def is_array_type(cls, value_type):
-    return value_type == &#39;StringArray&#39;</code></pre>
+    return value_type == &#34;StringArray&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -6890,7 +7052,7 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 </summary>
 <pre><code class="python">class UnknownEntriesField(CharListField):
     def list_elem_tag(self):
-        return f&#39;{{{self.namespace}}}UnknownEntry&#39;</code></pre>
+        return f&#34;{{{self.namespace}}}UnknownEntry&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6912,7 +7074,7 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def list_elem_tag(self):
-    return f&#39;{{{self.namespace}}}UnknownEntry&#39;</code></pre>
+    return f&#34;{{{self.namespace}}}UnknownEntry&#34;</code></pre>
 </details>
 </dd>
 </dl>

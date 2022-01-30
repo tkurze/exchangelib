@@ -42,8 +42,13 @@ def clear_cache():
 
 
 __all__ = [
-    &#39;AutodiscoverCache&#39;, &#39;AutodiscoverProtocol&#39;, &#39;Autodiscovery&#39;, &#39;discover&#39;, &#39;autodiscover_cache&#39;,
-    &#39;close_connections&#39;, &#39;clear_cache&#39;
+    &#34;AutodiscoverCache&#34;,
+    &#34;AutodiscoverProtocol&#34;,
+    &#34;Autodiscovery&#34;,
+    &#34;discover&#34;,
+    &#34;autodiscover_cache&#34;,
+    &#34;close_connections&#34;,
+    &#34;clear_cache&#34;,
 ]</code></pre>
 </details>
 </section>
@@ -111,9 +116,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def discover(email, credentials=None, auth_type=None, retry_policy=None):
-    ad_response, protocol = Autodiscovery(
-        email=email, credentials=credentials
-    ).discover()
+    ad_response, protocol = Autodiscovery(email=email, credentials=credentials).discover()
     protocol.config.auth_typ = auth_type
     protocol.config.retry_policy = retry_policy
     return ad_response, protocol</code></pre>
@@ -189,9 +192,11 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
         domain, credentials = key
         with shelve_open_with_failover(self._storage_file) as db:
             endpoint, auth_type, retry_policy = db[str(domain)]  # It&#39;s OK to fail with KeyError here
-        protocol = AutodiscoverProtocol(config=Configuration(
-            service_endpoint=endpoint, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
-        ))
+        protocol = AutodiscoverProtocol(
+            config=Configuration(
+                service_endpoint=endpoint, credentials=credentials, auth_type=auth_type, retry_policy=retry_policy
+            )
+        )
         self._protocols[key] = protocol
         return protocol
 
@@ -220,7 +225,7 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
     def close(self):
         # Close all open connections
         for (domain, _), protocol in self._protocols.items():
-            log.debug(&#39;Domain %s: Closing sessions&#39;, domain)
+            log.debug(&#34;Domain %s: Closing sessions&#34;, domain)
             protocol.close()
             del protocol
         self._protocols.clear()
@@ -272,7 +277,7 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
 <pre><code class="python">def close(self):
     # Close all open connections
     for (domain, _), protocol in self._protocols.items():
-        log.debug(&#39;Domain %s: Closing sessions&#39;, domain)
+        log.debug(&#34;Domain %s: Closing sessions&#34;, domain)
         protocol.close()
         del protocol
     self._protocols.clear()</code></pre>
@@ -296,9 +301,9 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
     TIMEOUT = 10  # Seconds
 
     def __str__(self):
-        return f&#39;&#39;&#39;\
+        return f&#34;&#34;&#34;\
 Autodiscover endpoint: {self.service_endpoint}
-Auth type: {self.auth_type}&#39;&#39;&#39;</code></pre>
+Auth type: {self.auth_type}&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -384,7 +389,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
     MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
     DNS_RESOLVER_KWARGS = {}
     DNS_RESOLVER_ATTRS = {
-        &#39;timeout&#39;: AutodiscoverProtocol.TIMEOUT,
+        &#34;timeout&#34;: AutodiscoverProtocol.TIMEOUT,
     }
 
     def __init__(self, email, credentials=None):
@@ -405,31 +410,31 @@ implementation, start by doing an official test at <a href="https://testconnecti
 
         # Check the autodiscover cache to see if we already know the autodiscover service endpoint for this email
         # domain. Use a lock to guard against multiple threads competing to cache information.
-        log.debug(&#39;Waiting for autodiscover_cache lock&#39;)
+        log.debug(&#34;Waiting for autodiscover_cache lock&#34;)
         with autodiscover_cache:
-            log.debug(&#39;autodiscover_cache lock acquired&#39;)
+            log.debug(&#34;autodiscover_cache lock acquired&#34;)
             cache_key = self._cache_key
             domain = get_domain(self.email)
             if cache_key in autodiscover_cache:
                 ad_protocol = autodiscover_cache[cache_key]
-                log.debug(&#39;Cache hit for key %s: %s&#39;, cache_key, ad_protocol.service_endpoint)
+                log.debug(&#34;Cache hit for key %s: %s&#34;, cache_key, ad_protocol.service_endpoint)
                 try:
                     ad_response = self._quick(protocol=ad_protocol)
                 except AutoDiscoverFailed:
                     # Autodiscover no longer works with this domain. Clear cache and try again after releasing the lock
-                    log.debug(&#39;AD request failure. Removing cache for key %s&#39;, cache_key)
+                    log.debug(&#34;AD request failure. Removing cache for key %s&#34;, cache_key)
                     del autodiscover_cache[cache_key]
                     ad_response = self._step_1(hostname=domain)
             else:
                 # This will cache the result
-                log.debug(&#39;Cache miss for key %s&#39;, cache_key)
+                log.debug(&#34;Cache miss for key %s&#34;, cache_key)
                 ad_response = self._step_1(hostname=domain)
 
-        log.debug(&#39;Released autodiscover_cache_lock&#39;)
+        log.debug(&#34;Released autodiscover_cache_lock&#34;)
         if ad_response.redirect_address:
-            log.debug(&#39;Got a redirect address: %s&#39;, ad_response.redirect_address)
+            log.debug(&#34;Got a redirect address: %s&#34;, ad_response.redirect_address)
             if ad_response.redirect_address.lower() in self._emails_visited:
-                raise AutoDiscoverCircularRedirect(&#39;We were redirected to an email address we have already seen&#39;)
+                raise AutoDiscoverCircularRedirect(&#34;We were redirected to an email address we have already seen&#34;)
 
             # Start over, but with the new email address
             self.email = ad_response.redirect_address
@@ -478,15 +483,15 @@ implementation, start by doing an official test at <a href="https://testconnecti
         try:
             r = self._get_authenticated_response(protocol=protocol)
         except TransportError as e:
-            raise AutoDiscoverFailed(f&#39;Response error: {e}&#39;)
+            raise AutoDiscoverFailed(f&#34;Response error: {e}&#34;)
         if r.status_code == 200:
             try:
                 ad = Autodiscover.from_bytes(bytes_content=r.content)
             except ParseError as e:
-                raise AutoDiscoverFailed(f&#39;Invalid response: {e}&#39;)
+                raise AutoDiscoverFailed(f&#34;Invalid response: {e}&#34;)
             else:
                 return self._step_5(ad=ad)
-        raise AutoDiscoverFailed(f&#39;Invalid response code: {r.status_code}&#39;)
+        raise AutoDiscoverFailed(f&#34;Invalid response code: {r.status_code}&#34;)
 
     def _redirect_url_is_valid(self, url):
         &#34;&#34;&#34;Three separate responses can be “Redirect responses”:
@@ -502,29 +507,29 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :return:
         &#34;&#34;&#34;
         if url.lower() in self._urls_visited:
-            log.warning(&#39;We have already tried this URL: %s&#39;, url)
+            log.warning(&#34;We have already tried this URL: %s&#34;, url)
             return False
 
         if self._redirect_count &gt;= self.MAX_REDIRECTS:
-            log.warning(&#39;We reached max redirects at URL: %s&#39;, url)
+            log.warning(&#34;We reached max redirects at URL: %s&#34;, url)
             return False
 
         # We require TLS endpoints
-        if not url.startswith(&#39;https://&#39;):
-            log.debug(&#39;Invalid scheme for URL: %s&#39;, url)
+        if not url.startswith(&#34;https://&#34;):
+            log.debug(&#34;Invalid scheme for URL: %s&#34;, url)
             return False
 
         # Quick test that the endpoint responds and that TLS handshake is OK
         try:
-            self._get_unauthenticated_response(url, method=&#39;head&#39;)
+            self._get_unauthenticated_response(url, method=&#34;head&#34;)
         except TransportError as e:
-            log.debug(&#39;Response error on redirect URL %s: %s&#39;, url, e)
+            log.debug(&#34;Response error on redirect URL %s: %s&#34;, url, e)
             return False
 
         self._redirect_count += 1
         return True
 
-    def _get_unauthenticated_response(self, url, method=&#39;post&#39;):
+    def _get_unauthenticated_response(self, url, method=&#34;post&#34;):
         &#34;&#34;&#34;Get auth type by tasting headers from the server. Do POST requests be default. HEAD is too error prone, and
         some servers are set up to redirect to OWA on all requests except POST to the autodiscover endpoint.
 
@@ -537,18 +542,18 @@ implementation, start by doing an official test at <a href="https://testconnecti
         if not self._is_valid_hostname(hostname):
             # &#39;requests&#39; is really bad at reporting that a hostname cannot be resolved. Let&#39;s check this separately.
             # Don&#39;t retry on DNS errors. They will most likely be persistent.
-            raise TransportError(f&#39;{hostname!r} has no DNS entry&#39;)
+            raise TransportError(f&#34;{hostname!r} has no DNS entry&#34;)
 
         kwargs = dict(
             url=url, headers=DEFAULT_HEADERS.copy(), allow_redirects=False, timeout=AutodiscoverProtocol.TIMEOUT
         )
-        if method == &#39;post&#39;:
-            kwargs[&#39;data&#39;] = Autodiscover.payload(email=self.email)
+        if method == &#34;post&#34;:
+            kwargs[&#34;data&#34;] = Autodiscover.payload(email=self.email)
         retry = 0
         t_start = time.monotonic()
         while True:
             _back_off_if_needed(self.INITIAL_RETRY_POLICY.back_off_until)
-            log.debug(&#39;Trying to get response from %s&#39;, url)
+            log.debug(&#34;Trying to get response from %s&#34;, url)
             with AutodiscoverProtocol.raw_session(url) as s:
                 try:
                     r = getattr(s, method)(**kwargs)
@@ -558,7 +563,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
                     # Don&#39;t retry on TLS errors. They will most likely be persistent.
                     raise TransportError(str(e))
                 except CONNECTION_ERRORS as e:
-                    r = DummyResponse(url=url, request_headers=kwargs[&#39;headers&#39;])
+                    r = DummyResponse(url=url, request_headers=kwargs[&#34;headers&#34;])
                     total_wait = time.monotonic() - t_start
                     if self.INITIAL_RETRY_POLICY.may_retry_on_error(response=r, wait=total_wait):
                         log.debug(&#34;Connection error on URL %s (retry %s, error: %s). Cool down&#34;, url, retry, e)
@@ -574,12 +579,12 @@ implementation, start by doing an official test at <a href="https://testconnecti
         except UnauthorizedError:
             # Failed to guess the auth type
             auth_type = NOAUTH
-        if r.status_code in (301, 302) and &#39;location&#39; in r.headers:
+        if r.status_code in (301, 302) and &#34;location&#34; in r.headers:
             # Make the redirect URL absolute
             try:
-                r.headers[&#39;location&#39;] = get_redirect_url(r)
+                r.headers[&#34;location&#34;] = get_redirect_url(r)
             except TransportError:
-                del r.headers[&#39;location&#39;]
+                del r.headers[&#34;location&#34;]
         return auth_type, r
 
     def _get_authenticated_response(self, protocol):
@@ -594,17 +599,24 @@ implementation, start by doing an official test at <a href="https://testconnecti
         session = protocol.get_session()
         if GSSAPI in AUTH_TYPE_MAP and isinstance(session.auth, AUTH_TYPE_MAP[GSSAPI]):
             # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/pox-autodiscover-request-for-exchange
-            headers[&#39;X-ClientCanHandle&#39;] = &#39;Negotiate&#39;
+            headers[&#34;X-ClientCanHandle&#34;] = &#34;Negotiate&#34;
         try:
-            r, session = post_ratelimited(protocol=protocol, session=session, url=protocol.service_endpoint,
-                                          headers=headers, data=data, allow_redirects=False, stream=False)
+            r, session = post_ratelimited(
+                protocol=protocol,
+                session=session,
+                url=protocol.service_endpoint,
+                headers=headers,
+                data=data,
+                allow_redirects=False,
+                stream=False,
+            )
             protocol.release_session(session)
         except UnauthorizedError as e:
             # It&#39;s entirely possible for the endpoint to ask for login. We should continue if login fails because this
             # isn&#39;t necessarily the right endpoint to use.
             raise TransportError(str(e))
         except RedirectError as e:
-            r = DummyResponse(url=protocol.service_endpoint, headers={&#39;location&#39;: e.url}, status_code=302)
+            r = DummyResponse(url=protocol.service_endpoint, headers={&#34;location&#34;: e.url}, status_code=302)
         return r
 
     def _attempt_response(self, url):
@@ -614,7 +626,7 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :return:
         &#34;&#34;&#34;
         self._urls_visited.append(url.lower())
-        log.debug(&#39;Attempting to get a valid response from %s&#39;, url)
+        log.debug(&#34;Attempting to get a valid response from %s&#34;, url)
         try:
             auth_type, r = self._get_unauthenticated_response(url=url)
             ad_protocol = AutodiscoverProtocol(
@@ -628,9 +640,9 @@ implementation, start by doing an official test at <a href="https://testconnecti
             if auth_type != NOAUTH:
                 r = self._get_authenticated_response(protocol=ad_protocol)
         except TransportError as e:
-            log.debug(&#39;Failed to get a response: %s&#39;, e)
+            log.debug(&#34;Failed to get a response: %s&#34;, e)
             return False, None
-        if r.status_code in (301, 302) and &#39;location&#39; in r.headers:
+        if r.status_code in (301, 302) and &#34;location&#34; in r.headers:
             redirect_url = get_redirect_url(r)
             if self._redirect_url_is_valid(url=redirect_url):
                 # The protocol does not specify this explicitly, but by looking at how testconnectivity.microsoft.com
@@ -640,18 +652,18 @@ implementation, start by doing an official test at <a href="https://testconnecti
             try:
                 ad = Autodiscover.from_bytes(bytes_content=r.content)
             except ParseError as e:
-                log.debug(&#39;Invalid response: %s&#39;, e)
+                log.debug(&#34;Invalid response: %s&#34;, e)
             else:
                 # We got a valid response. Unless this is a URL redirect response, we cache the result
                 if ad.response is None or not ad.response.redirect_url:
                     cache_key = self._cache_key
-                    log.debug(&#39;Adding cache entry for key %s: %s&#39;, cache_key, ad_protocol.service_endpoint)
+                    log.debug(&#34;Adding cache entry for key %s: %s&#34;, cache_key, ad_protocol.service_endpoint)
                     autodiscover_cache[cache_key] = ad_protocol
                 return True, ad
         return False, None
 
     def _is_valid_hostname(self, hostname):
-        log.debug(&#39;Checking if %s can be looked up in DNS&#39;, hostname)
+        log.debug(&#34;Checking if %s can be looked up in DNS&#34;, hostname)
         try:
             self.resolver.resolve(hostname)
         except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.name.EmptyLabel):
@@ -671,23 +683,23 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :param hostname:
         :return:
         &#34;&#34;&#34;
-        log.debug(&#39;Attempting to get SRV records for %s&#39;, hostname)
+        log.debug(&#34;Attempting to get SRV records for %s&#34;, hostname)
         records = []
         try:
-            answers = self.resolver.resolve(f&#39;{hostname}.&#39;, &#39;SRV&#39;)
+            answers = self.resolver.resolve(f&#34;{hostname}.&#34;, &#34;SRV&#34;)
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
-            log.debug(&#39;DNS lookup failure: %s&#39;, e)
+            log.debug(&#34;DNS lookup failure: %s&#34;, e)
             return records
         for rdata in answers:
             try:
-                vals = rdata.to_text().strip().rstrip(&#39;.&#39;).split(&#39; &#39;)
+                vals = rdata.to_text().strip().rstrip(&#34;.&#34;).split(&#34; &#34;)
                 # Raise ValueError if the first three are not ints, and IndexError if there are less than 4 values
                 priority, weight, port, srv = int(vals[0]), int(vals[1]), int(vals[2]), vals[3]
                 record = SrvRecord(priority=priority, weight=weight, port=port, srv=srv)
-                log.debug(&#39;Found SRV record %s &#39;, record)
+                log.debug(&#34;Found SRV record %s &#34;, record)
                 records.append(record)
             except (ValueError, IndexError):
-                log.debug(&#39;Incompatible SRV record for %s (%s)&#39;, hostname, rdata.to_text())
+                log.debug(&#34;Incompatible SRV record for %s (%s)&#34;, hostname, rdata.to_text())
         return records
 
     def _step_1(self, hostname):
@@ -699,8 +711,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :param hostname:
         :return:
         &#34;&#34;&#34;
-        url = f&#39;https://{hostname}/Autodiscover/Autodiscover.xml&#39;
-        log.info(&#39;Step 1: Trying autodiscover on %r with email %r&#39;, url, self.email)
+        url = f&#34;https://{hostname}/Autodiscover/Autodiscover.xml&#34;
+        log.info(&#34;Step 1: Trying autodiscover on %r with email %r&#34;, url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
@@ -715,8 +727,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :param hostname:
         :return:
         &#34;&#34;&#34;
-        url = f&#39;https://autodiscover.{hostname}/Autodiscover/Autodiscover.xml&#39;
-        log.info(&#39;Step 2: Trying autodiscover on %r with email %r&#39;, url, self.email)
+        url = f&#34;https://autodiscover.{hostname}/Autodiscover/Autodiscover.xml&#34;
+        log.info(&#34;Step 2: Trying autodiscover on %r with email %r&#34;, url, self.email)
         is_valid_response, ad = self._attempt_response(url=url)
         if is_valid_response:
             return self._step_5(ad=ad)
@@ -738,23 +750,23 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :param hostname:
         :return:
         &#34;&#34;&#34;
-        url = f&#39;http://autodiscover.{hostname}/Autodiscover/Autodiscover.xml&#39;
-        log.info(&#39;Step 3: Trying autodiscover on %r with email %r&#39;, url, self.email)
+        url = f&#34;http://autodiscover.{hostname}/Autodiscover/Autodiscover.xml&#34;
+        log.info(&#34;Step 3: Trying autodiscover on %r with email %r&#34;, url, self.email)
         try:
-            _, r = self._get_unauthenticated_response(url=url, method=&#39;get&#39;)
+            _, r = self._get_unauthenticated_response(url=url, method=&#34;get&#34;)
         except TransportError:
             r = DummyResponse(url=url)
-        if r.status_code in (301, 302) and &#39;location&#39; in r.headers:
+        if r.status_code in (301, 302) and &#34;location&#34; in r.headers:
             redirect_url = get_redirect_url(r)
             if self._redirect_url_is_valid(url=redirect_url):
                 is_valid_response, ad = self._attempt_response(url=redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                log.debug(&#39;Got invalid response&#39;)
+                log.debug(&#34;Got invalid response&#34;)
                 return self._step_4(hostname=hostname)
-            log.debug(&#39;Got invalid redirect URL&#39;)
+            log.debug(&#34;Got invalid redirect URL&#34;)
             return self._step_4(hostname=hostname)
-        log.debug(&#39;Got no redirect URL&#39;)
+        log.debug(&#34;Got no redirect URL&#34;)
         return self._step_4(hostname=hostname)
 
     def _step_4(self, hostname):
@@ -774,8 +786,8 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :param hostname:
         :return:
         &#34;&#34;&#34;
-        dns_hostname = f&#39;_autodiscover._tcp.{hostname}&#39;
-        log.info(&#39;Step 4: Trying autodiscover on %r with email %r&#39;, dns_hostname, self.email)
+        dns_hostname = f&#34;_autodiscover._tcp.{hostname}&#34;
+        log.info(&#34;Step 4: Trying autodiscover on %r with email %r&#34;, dns_hostname, self.email)
         srv_records = self._get_srv_records(dns_hostname)
         try:
             srv_host = _select_srv_host(srv_records)
@@ -783,14 +795,14 @@ implementation, start by doing an official test at <a href="https://testconnecti
             srv_host = None
         if not srv_host:
             return self._step_6()
-        redirect_url = f&#39;https://{srv_host}/Autodiscover/Autodiscover.xml&#39;
+        redirect_url = f&#34;https://{srv_host}/Autodiscover/Autodiscover.xml&#34;
         if self._redirect_url_is_valid(url=redirect_url):
             is_valid_response, ad = self._attempt_response(url=redirect_url)
             if is_valid_response:
                 return self._step_5(ad=ad)
-            log.debug(&#39;Got invalid response&#39;)
+            log.debug(&#34;Got invalid response&#34;)
             return self._step_6()
-        log.debug(&#39;Got invalid redirect URL&#39;)
+        log.debug(&#34;Got invalid redirect URL&#34;)
         return self._step_6()
 
     def _step_5(self, ad):
@@ -810,23 +822,23 @@ implementation, start by doing an official test at <a href="https://testconnecti
         :param ad:
         :return:
         &#34;&#34;&#34;
-        log.info(&#39;Step 5: Checking response&#39;)
+        log.info(&#34;Step 5: Checking response&#34;)
         if ad.response is None:
             # This is not explicit in the protocol, but let&#39;s raise errors here
             ad.raise_errors()
 
         ad_response = ad.response
         if ad_response.redirect_url:
-            log.debug(&#39;Got a redirect URL: %s&#39;, ad_response.redirect_url)
+            log.debug(&#34;Got a redirect URL: %s&#34;, ad_response.redirect_url)
             # We are diverging a bit from the protocol here. We will never get an HTTP 302 since earlier steps already
             # followed the redirects where possible. Instead, we handle redirect responses here.
             if self._redirect_url_is_valid(url=ad_response.redirect_url):
                 is_valid_response, ad = self._attempt_response(url=ad_response.redirect_url)
                 if is_valid_response:
                     return self._step_5(ad=ad)
-                log.debug(&#39;Got invalid response&#39;)
+                log.debug(&#34;Got invalid response&#34;)
                 return self._step_6()
-            log.debug(&#39;Invalid redirect URL&#39;)
+            log.debug(&#34;Invalid redirect URL&#34;)
             return self._step_6()
         # This could be an email redirect. Let outer layer handle this
         return ad_response
@@ -837,8 +849,9 @@ implementation, start by doing an official test at <a href="https://testconnecti
         future requests.
         &#34;&#34;&#34;
         raise AutoDiscoverFailed(
-            f&#39;All steps in the autodiscover protocol failed for email {self.email}. If you think this is an error, &#39;
-            f&#39;consider doing an official test at https://testconnectivity.microsoft.com&#39;)</code></pre>
+            f&#34;All steps in the autodiscover protocol failed for email {self.email}. If you think this is an error, &#34;
+            f&#34;consider doing an official test at https://testconnectivity.microsoft.com&#34;
+        )</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -921,31 +934,31 @@ implementation, start by doing an official test at <a href="https://testconnecti
 
     # Check the autodiscover cache to see if we already know the autodiscover service endpoint for this email
     # domain. Use a lock to guard against multiple threads competing to cache information.
-    log.debug(&#39;Waiting for autodiscover_cache lock&#39;)
+    log.debug(&#34;Waiting for autodiscover_cache lock&#34;)
     with autodiscover_cache:
-        log.debug(&#39;autodiscover_cache lock acquired&#39;)
+        log.debug(&#34;autodiscover_cache lock acquired&#34;)
         cache_key = self._cache_key
         domain = get_domain(self.email)
         if cache_key in autodiscover_cache:
             ad_protocol = autodiscover_cache[cache_key]
-            log.debug(&#39;Cache hit for key %s: %s&#39;, cache_key, ad_protocol.service_endpoint)
+            log.debug(&#34;Cache hit for key %s: %s&#34;, cache_key, ad_protocol.service_endpoint)
             try:
                 ad_response = self._quick(protocol=ad_protocol)
             except AutoDiscoverFailed:
                 # Autodiscover no longer works with this domain. Clear cache and try again after releasing the lock
-                log.debug(&#39;AD request failure. Removing cache for key %s&#39;, cache_key)
+                log.debug(&#34;AD request failure. Removing cache for key %s&#34;, cache_key)
                 del autodiscover_cache[cache_key]
                 ad_response = self._step_1(hostname=domain)
         else:
             # This will cache the result
-            log.debug(&#39;Cache miss for key %s&#39;, cache_key)
+            log.debug(&#34;Cache miss for key %s&#34;, cache_key)
             ad_response = self._step_1(hostname=domain)
 
-    log.debug(&#39;Released autodiscover_cache_lock&#39;)
+    log.debug(&#34;Released autodiscover_cache_lock&#34;)
     if ad_response.redirect_address:
-        log.debug(&#39;Got a redirect address: %s&#39;, ad_response.redirect_address)
+        log.debug(&#34;Got a redirect address: %s&#34;, ad_response.redirect_address)
         if ad_response.redirect_address.lower() in self._emails_visited:
-            raise AutoDiscoverCircularRedirect(&#39;We were redirected to an email address we have already seen&#39;)
+            raise AutoDiscoverCircularRedirect(&#34;We were redirected to an email address we have already seen&#34;)
 
         # Start over, but with the new email address
         self.email = ad_response.redirect_address

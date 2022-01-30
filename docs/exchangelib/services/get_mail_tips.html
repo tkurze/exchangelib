@@ -26,32 +26,34 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..properties import MailTips
-from ..util import create_element, set_xml_value, MNS
+<pre><code class="python">from ..properties import MailTips
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSService
 
 
 class GetMailTips(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetMailTips&#39;
+    SERVICE_NAME = &#34;GetMailTips&#34;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=recipients,
-            sending_as=sending_as,
-            mail_tips_requested=mail_tips_requested,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=recipients,
+                sending_as=sending_as,
+                mail_tips_requested=mail_tips_requested,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return MailTips.from_xml(elem=elem, account=None)
 
-    def get_payload(self, recipients, sending_as,  mail_tips_requested):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    def get_payload(self, recipients, sending_as, mail_tips_requested):
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
-        recipients_elem = create_element(&#39;m:Recipients&#39;)
+        recipients_elem = create_element(&#34;m:Recipients&#34;)
         for recipient in recipients:
             set_xml_value(recipients_elem, recipient, version=self.protocol.version)
         payload.append(recipients_elem)
@@ -66,7 +68,7 @@ class GetMailTips(EWSService):
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}MailTipsResponseMessageType&#39;</code></pre>
+        return f&#34;{{{MNS}}}MailTipsResponseMessageType&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -91,24 +93,26 @@ class GetMailTips(EWSService):
 <pre><code class="python">class GetMailTips(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetMailTips&#39;
+    SERVICE_NAME = &#34;GetMailTips&#34;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=recipients,
-            sending_as=sending_as,
-            mail_tips_requested=mail_tips_requested,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=recipients,
+                sending_as=sending_as,
+                mail_tips_requested=mail_tips_requested,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return MailTips.from_xml(elem=elem, account=None)
 
-    def get_payload(self, recipients, sending_as,  mail_tips_requested):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    def get_payload(self, recipients, sending_as, mail_tips_requested):
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
-        recipients_elem = create_element(&#39;m:Recipients&#39;)
+        recipients_elem = create_element(&#34;m:Recipients&#34;)
         for recipient in recipients:
             set_xml_value(recipients_elem, recipient, version=self.protocol.version)
         payload.append(recipients_elem)
@@ -123,7 +127,7 @@ class GetMailTips(EWSService):
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}MailTipsResponseMessageType&#39;</code></pre>
+        return f&#34;{{{MNS}}}MailTipsResponseMessageType&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -148,12 +152,14 @@ class GetMailTips(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, sending_as, recipients, mail_tips_requested):
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=recipients,
-        sending_as=sending_as,
-        mail_tips_requested=mail_tips_requested,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=recipients,
+            sending_as=sending_as,
+            mail_tips_requested=mail_tips_requested,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_mail_tips.GetMailTips.get_payload"><code class="name flex">
@@ -165,11 +171,11 @@ class GetMailTips(EWSService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, recipients, sending_as,  mail_tips_requested):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+<pre><code class="python">def get_payload(self, recipients, sending_as, mail_tips_requested):
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     set_xml_value(payload, sending_as, version=self.protocol.version)
 
-    recipients_elem = create_element(&#39;m:Recipients&#39;)
+    recipients_elem = create_element(&#34;m:Recipients&#34;)
     for recipient in recipients:
         set_xml_value(recipients_elem, recipient, version=self.protocol.version)
     payload.append(recipients_elem)

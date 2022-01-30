@@ -26,23 +26,23 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, item_ids_element, folder_ids_element
-from ..errors import InvalidTypeError
+<pre><code class="python">from ..errors import InvalidTypeError
 from ..folders import BaseFolder
 from ..items import Item
 from ..properties import FolderId
-from ..util import create_element, MNS
+from ..util import MNS, create_element
+from .common import EWSAccountService, folder_ids_element, item_ids_element
 
 
 class MoveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;MoveItem&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;MoveItem&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
     def call(self, items, to_folder):
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
     def _elem_to_obj(self, elem):
@@ -50,8 +50,8 @@ class MoveItem(EWSAccountService):
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -78,12 +78,12 @@ class MoveItem(EWSAccountService):
 <pre><code class="python">class MoveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;MoveItem&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;MoveItem&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
     def call(self, items, to_folder):
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
     def _elem_to_obj(self, elem):
@@ -91,8 +91,8 @@ class MoveItem(EWSAccountService):
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -129,7 +129,7 @@ class MoveItem(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, to_folder):
     if not isinstance(to_folder, (BaseFolder, FolderId)):
-        raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+        raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
     return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))</code></pre>
 </details>
 </dd>
@@ -144,8 +144,8 @@ class MoveItem(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, items, to_folder):
     # Takes a list of items and returns their new item IDs
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>

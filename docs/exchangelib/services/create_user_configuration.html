@@ -26,8 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService
-from ..util import create_element, set_xml_value
+<pre><code class="python">from ..util import create_element, set_xml_value
+from .common import EWSAccountService
 
 
 class CreateUserConfiguration(EWSAccountService):
@@ -35,7 +35,7 @@ class CreateUserConfiguration(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateUserConfiguration&#39;
+    SERVICE_NAME = &#34;CreateUserConfiguration&#34;
     returns_elements = False
 
     def call(self, user_configuration):
@@ -43,7 +43,7 @@ class CreateUserConfiguration(EWSAccountService):
 
     def get_payload(self, user_configuration):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.protocol.version
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.protocol.version
         )</code></pre>
 </details>
 </section>
@@ -72,7 +72,7 @@ class CreateUserConfiguration(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateUserConfiguration&#39;
+    SERVICE_NAME = &#34;CreateUserConfiguration&#34;
     returns_elements = False
 
     def call(self, user_configuration):
@@ -80,7 +80,7 @@ class CreateUserConfiguration(EWSAccountService):
 
     def get_payload(self, user_configuration):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.protocol.version
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.protocol.version
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -125,7 +125,7 @@ class CreateUserConfiguration(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.protocol.version
+        create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.protocol.version
     )</code></pre>
 </details>
 </dd>

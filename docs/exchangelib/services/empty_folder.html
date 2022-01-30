@@ -26,29 +26,28 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, folder_ids_element
-from ..errors import InvalidEnumValue
+<pre><code class="python">from ..errors import InvalidEnumValue
 from ..items import DELETE_TYPE_CHOICES
 from ..util import create_element
+from .common import EWSAccountService, folder_ids_element
 
 
 class EmptyFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;EmptyFolder&#39;
+    SERVICE_NAME = &#34;EmptyFolder&#34;
     returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+            raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
         return self._chunked_get_elements(
             self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
-            attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
+            f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
         payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload</code></pre>
@@ -76,20 +75,19 @@ class EmptyFolder(EWSAccountService):
 <pre><code class="python">class EmptyFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;EmptyFolder&#39;
+    SERVICE_NAME = &#34;EmptyFolder&#34;
     returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+            raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
         return self._chunked_get_elements(
             self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
-            attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
+            f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
         payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload</code></pre>
@@ -123,7 +121,7 @@ class EmptyFolder(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, folders, delete_type, delete_sub_folders):
     if delete_type not in DELETE_TYPE_CHOICES:
-        raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+        raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
     return self._chunked_get_elements(
         self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
     )</code></pre>
@@ -140,8 +138,7 @@ class EmptyFolder(EWSAccountService):
 </summary>
 <pre><code class="python">def get_payload(self, folders, delete_type, delete_sub_folders):
     payload = create_element(
-        f&#39;m:{self.SERVICE_NAME}&#39;,
-        attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
+        f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
     )
     payload.append(folder_ids_element(folders=folders, version=self.account.version))
     return payload</code></pre>

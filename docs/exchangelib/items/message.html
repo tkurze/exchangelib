@@ -28,12 +28,12 @@
 </summary>
 <pre><code class="python">import logging
 
-from .base import BaseReplyItem, AUTO_RESOLVE, SEND_TO_NONE, SEND_ONLY, SEND_AND_SAVE_COPY
-from .item import Item
-from ..fields import BooleanField, Base64Field, TextField, MailboxField, MailboxListField, CharField, EWSElementField
+from ..fields import Base64Field, BooleanField, CharField, EWSElementField, MailboxField, MailboxListField, TextField
 from ..properties import ReferenceItemId, ReminderMessageData
 from ..util import require_account, require_id
 from ..version import EXCHANGE_2013, EXCHANGE_2013_SP1
+from .base import AUTO_RESOLVE, SEND_AND_SAVE_COPY, SEND_ONLY, SEND_TO_NONE, BaseReplyItem
+from .item import Item
 
 log = logging.getLogger(__name__)
 
@@ -43,37 +43,52 @@ class Message(Item):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Message&#39;
+    ELEMENT_NAME = &#34;Message&#34;
 
-    sender = MailboxField(field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True)
-    to_recipients = MailboxListField(field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
-                                     is_searchable=False)
-    cc_recipients = MailboxListField(field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
-                                     is_searchable=False)
-    bcc_recipients = MailboxListField(field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
-                                      is_searchable=False)
-    is_read_receipt_requested = BooleanField(field_uri=&#39;message:IsReadReceiptRequested&#39;,
-                                             is_required=True, default=False, is_read_only_after_send=True)
-    is_delivery_receipt_requested = BooleanField(field_uri=&#39;message:IsDeliveryReceiptRequested&#39;, is_required=True,
-                                                 default=False, is_read_only_after_send=True)
-    conversation_index = Base64Field(field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True)
-    conversation_topic = CharField(field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True)
+    sender = MailboxField(field_uri=&#34;message:Sender&#34;, is_read_only=True, is_read_only_after_send=True)
+    to_recipients = MailboxListField(
+        field_uri=&#34;message:ToRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    cc_recipients = MailboxListField(
+        field_uri=&#34;message:CcRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    bcc_recipients = MailboxListField(
+        field_uri=&#34;message:BccRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    is_read_receipt_requested = BooleanField(
+        field_uri=&#34;message:IsReadReceiptRequested&#34;, is_required=True, default=False, is_read_only_after_send=True
+    )
+    is_delivery_receipt_requested = BooleanField(
+        field_uri=&#34;message:IsDeliveryReceiptRequested&#34;, is_required=True, default=False, is_read_only_after_send=True
+    )
+    conversation_index = Base64Field(field_uri=&#34;message:ConversationIndex&#34;, is_read_only=True)
+    conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
     # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
-    author = MailboxField(field_uri=&#39;message:From&#39;, is_read_only_after_send=True)
-    message_id = CharField(field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True)
-    is_read = BooleanField(field_uri=&#39;message:IsRead&#39;, is_required=True, default=False)
-    is_response_requested = BooleanField(field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True)
-    references = TextField(field_uri=&#39;message:References&#39;)
-    reply_to = MailboxListField(field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False)
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    reminder_message_data = EWSElementField(field_uri=&#39;message:ReminderMessageData&#39;, value_cls=ReminderMessageData,
-                                            supported_from=EXCHANGE_2013_SP1, is_read_only=True)
+    author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
+    message_id = CharField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
+    is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
+    is_response_requested = BooleanField(field_uri=&#34;message:IsResponseRequested&#34;, default=False, is_required=True)
+    references = TextField(field_uri=&#34;message:References&#34;)
+    reply_to = MailboxListField(field_uri=&#34;message:ReplyTo&#34;, is_read_only_after_send=True, is_searchable=False)
+    received_by = MailboxField(field_uri=&#34;message:ReceivedBy&#34;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#34;message:ReceivedRepresenting&#34;, is_read_only=True)
+    reminder_message_data = EWSElementField(
+        field_uri=&#34;message:ReminderMessageData&#34;,
+        value_cls=ReminderMessageData,
+        supported_from=EXCHANGE_2013_SP1,
+        is_read_only=True,
+    )
 
     @require_account
-    def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
-             send_meeting_invitations=SEND_TO_NONE):
+    def send(
+        self,
+        save_copy=True,
+        copy_to_folder=None,
+        conflict_resolution=AUTO_RESOLVE,
+        send_meeting_invitations=SEND_TO_NONE,
+    ):
         from ..services import SendItem
+
         # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
         # not yet exist in EWS.
         if copy_to_folder and not save_copy:
@@ -91,42 +106,48 @@ class Message(Item):
         if copy_to_folder:
             # This would better be done via send_and_save() but lets just support it here
             self.folder = copy_to_folder
-            return self.send_and_save(conflict_resolution=conflict_resolution,
-                                      send_meeting_invitations=send_meeting_invitations)
+            return self.send_and_save(
+                conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+            )
 
         if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
             # At least some versions prior to Exchange 2013 can&#39;t send attachments immediately. You need to first save,
             # then attach, then send. This is done in send_and_save(). send() will delete the item again.
-            self.send_and_save(conflict_resolution=conflict_resolution,
-                               send_meeting_invitations=send_meeting_invitations)
+            self.send_and_save(
+                conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+            )
             return None
 
         self._create(message_disposition=SEND_ONLY, send_meeting_invitations=send_meeting_invitations)
         return None
 
-    def send_and_save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE,
-                      send_meeting_invitations=SEND_TO_NONE):
+    def send_and_save(
+        self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE
+    ):
         # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
         if self.id:
             self._update(
                 update_fieldnames=update_fields,
                 message_disposition=SEND_AND_SAVE_COPY,
                 conflict_resolution=conflict_resolution,
-                send_meeting_invitations=send_meeting_invitations
+                send_meeting_invitations=send_meeting_invitations,
             )
         else:
             if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
                 # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
                 # to first save, then attach, then send. This is done in save().
-                self.save(update_fields=update_fields, conflict_resolution=conflict_resolution,
-                          send_meeting_invitations=send_meeting_invitations)
-                self.send(save_copy=False, conflict_resolution=conflict_resolution,
-                          send_meeting_invitations=send_meeting_invitations)
-            else:
-                self._create(
-                    message_disposition=SEND_AND_SAVE_COPY,
-                    send_meeting_invitations=send_meeting_invitations
+                self.save(
+                    update_fields=update_fields,
+                    conflict_resolution=conflict_resolution,
+                    send_meeting_invitations=send_meeting_invitations,
                 )
+                self.send(
+                    save_copy=False,
+                    conflict_resolution=conflict_resolution,
+                    send_meeting_invitations=send_meeting_invitations,
+                )
+            else:
+                self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
@@ -145,13 +166,7 @@ class Message(Item):
         )
 
     def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-        self.create_reply(
-            subject,
-            body,
-            to_recipients,
-            cc_recipients,
-            bcc_recipients
-        ).send()
+        self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()
 
     @require_id
     def create_reply_all(self, subject, body):
@@ -180,6 +195,7 @@ class Message(Item):
         :return:
         &#34;&#34;&#34;
         from ..services import MarkAsJunk
+
         res = MarkAsJunk(account=self.account).get(
             items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
         )
@@ -192,19 +208,19 @@ class Message(Item):
 class ReplyToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ReplyToItem&#39;
+    ELEMENT_NAME = &#34;ReplyToItem&#34;
 
 
 class ReplyAllToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ReplyAllToItem&#39;
+    ELEMENT_NAME = &#34;ReplyAllToItem&#34;
 
 
 class ForwardItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ForwardItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ForwardItem&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -229,7 +245,7 @@ class ForwardItem(BaseReplyItem):
 <pre><code class="python">class ForwardItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ForwardItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ForwardItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -278,37 +294,52 @@ we use folder.account.</p></div>
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Message&#39;
+    ELEMENT_NAME = &#34;Message&#34;
 
-    sender = MailboxField(field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True)
-    to_recipients = MailboxListField(field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
-                                     is_searchable=False)
-    cc_recipients = MailboxListField(field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
-                                     is_searchable=False)
-    bcc_recipients = MailboxListField(field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
-                                      is_searchable=False)
-    is_read_receipt_requested = BooleanField(field_uri=&#39;message:IsReadReceiptRequested&#39;,
-                                             is_required=True, default=False, is_read_only_after_send=True)
-    is_delivery_receipt_requested = BooleanField(field_uri=&#39;message:IsDeliveryReceiptRequested&#39;, is_required=True,
-                                                 default=False, is_read_only_after_send=True)
-    conversation_index = Base64Field(field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True)
-    conversation_topic = CharField(field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True)
+    sender = MailboxField(field_uri=&#34;message:Sender&#34;, is_read_only=True, is_read_only_after_send=True)
+    to_recipients = MailboxListField(
+        field_uri=&#34;message:ToRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    cc_recipients = MailboxListField(
+        field_uri=&#34;message:CcRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    bcc_recipients = MailboxListField(
+        field_uri=&#34;message:BccRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    is_read_receipt_requested = BooleanField(
+        field_uri=&#34;message:IsReadReceiptRequested&#34;, is_required=True, default=False, is_read_only_after_send=True
+    )
+    is_delivery_receipt_requested = BooleanField(
+        field_uri=&#34;message:IsDeliveryReceiptRequested&#34;, is_required=True, default=False, is_read_only_after_send=True
+    )
+    conversation_index = Base64Field(field_uri=&#34;message:ConversationIndex&#34;, is_read_only=True)
+    conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
     # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
-    author = MailboxField(field_uri=&#39;message:From&#39;, is_read_only_after_send=True)
-    message_id = CharField(field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True)
-    is_read = BooleanField(field_uri=&#39;message:IsRead&#39;, is_required=True, default=False)
-    is_response_requested = BooleanField(field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True)
-    references = TextField(field_uri=&#39;message:References&#39;)
-    reply_to = MailboxListField(field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False)
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    reminder_message_data = EWSElementField(field_uri=&#39;message:ReminderMessageData&#39;, value_cls=ReminderMessageData,
-                                            supported_from=EXCHANGE_2013_SP1, is_read_only=True)
+    author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
+    message_id = CharField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
+    is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
+    is_response_requested = BooleanField(field_uri=&#34;message:IsResponseRequested&#34;, default=False, is_required=True)
+    references = TextField(field_uri=&#34;message:References&#34;)
+    reply_to = MailboxListField(field_uri=&#34;message:ReplyTo&#34;, is_read_only_after_send=True, is_searchable=False)
+    received_by = MailboxField(field_uri=&#34;message:ReceivedBy&#34;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#34;message:ReceivedRepresenting&#34;, is_read_only=True)
+    reminder_message_data = EWSElementField(
+        field_uri=&#34;message:ReminderMessageData&#34;,
+        value_cls=ReminderMessageData,
+        supported_from=EXCHANGE_2013_SP1,
+        is_read_only=True,
+    )
 
     @require_account
-    def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
-             send_meeting_invitations=SEND_TO_NONE):
+    def send(
+        self,
+        save_copy=True,
+        copy_to_folder=None,
+        conflict_resolution=AUTO_RESOLVE,
+        send_meeting_invitations=SEND_TO_NONE,
+    ):
         from ..services import SendItem
+
         # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
         # not yet exist in EWS.
         if copy_to_folder and not save_copy:
@@ -326,42 +357,48 @@ we use folder.account.</p></div>
         if copy_to_folder:
             # This would better be done via send_and_save() but lets just support it here
             self.folder = copy_to_folder
-            return self.send_and_save(conflict_resolution=conflict_resolution,
-                                      send_meeting_invitations=send_meeting_invitations)
+            return self.send_and_save(
+                conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+            )
 
         if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
             # At least some versions prior to Exchange 2013 can&#39;t send attachments immediately. You need to first save,
             # then attach, then send. This is done in send_and_save(). send() will delete the item again.
-            self.send_and_save(conflict_resolution=conflict_resolution,
-                               send_meeting_invitations=send_meeting_invitations)
+            self.send_and_save(
+                conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+            )
             return None
 
         self._create(message_disposition=SEND_ONLY, send_meeting_invitations=send_meeting_invitations)
         return None
 
-    def send_and_save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE,
-                      send_meeting_invitations=SEND_TO_NONE):
+    def send_and_save(
+        self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE
+    ):
         # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
         if self.id:
             self._update(
                 update_fieldnames=update_fields,
                 message_disposition=SEND_AND_SAVE_COPY,
                 conflict_resolution=conflict_resolution,
-                send_meeting_invitations=send_meeting_invitations
+                send_meeting_invitations=send_meeting_invitations,
             )
         else:
             if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
                 # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
                 # to first save, then attach, then send. This is done in save().
-                self.save(update_fields=update_fields, conflict_resolution=conflict_resolution,
-                          send_meeting_invitations=send_meeting_invitations)
-                self.send(save_copy=False, conflict_resolution=conflict_resolution,
-                          send_meeting_invitations=send_meeting_invitations)
-            else:
-                self._create(
-                    message_disposition=SEND_AND_SAVE_COPY,
-                    send_meeting_invitations=send_meeting_invitations
+                self.save(
+                    update_fields=update_fields,
+                    conflict_resolution=conflict_resolution,
+                    send_meeting_invitations=send_meeting_invitations,
                 )
+                self.send(
+                    save_copy=False,
+                    conflict_resolution=conflict_resolution,
+                    send_meeting_invitations=send_meeting_invitations,
+                )
+            else:
+                self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
@@ -380,13 +417,7 @@ we use folder.account.</p></div>
         )
 
     def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-        self.create_reply(
-            subject,
-            body,
-            to_recipients,
-            cc_recipients,
-            bcc_recipients
-        ).send()
+        self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()
 
     @require_id
     def create_reply_all(self, subject, body):
@@ -415,6 +446,7 @@ we use folder.account.</p></div>
         :return:
         &#34;&#34;&#34;
         from ..services import MarkAsJunk
+
         res = MarkAsJunk(account=self.account).get(
             items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
         )
@@ -588,6 +620,7 @@ removed.
     :return:
     &#34;&#34;&#34;
     from ..services import MarkAsJunk
+
     res = MarkAsJunk(account=self.account).get(
         items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
     )
@@ -607,13 +640,7 @@ removed.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-    self.create_reply(
-        subject,
-        body,
-        to_recipients,
-        cc_recipients,
-        bcc_recipients
-    ).send()</code></pre>
+    self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.message.Message.reply_all"><code class="name flex">
@@ -639,9 +666,15 @@ removed.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_account
-def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
-         send_meeting_invitations=SEND_TO_NONE):
+def send(
+    self,
+    save_copy=True,
+    copy_to_folder=None,
+    conflict_resolution=AUTO_RESOLVE,
+    send_meeting_invitations=SEND_TO_NONE,
+):
     from ..services import SendItem
+
     # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
     # not yet exist in EWS.
     if copy_to_folder and not save_copy:
@@ -659,14 +692,16 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
     if copy_to_folder:
         # This would better be done via send_and_save() but lets just support it here
         self.folder = copy_to_folder
-        return self.send_and_save(conflict_resolution=conflict_resolution,
-                                  send_meeting_invitations=send_meeting_invitations)
+        return self.send_and_save(
+            conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+        )
 
     if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
         # At least some versions prior to Exchange 2013 can&#39;t send attachments immediately. You need to first save,
         # then attach, then send. This is done in send_and_save(). send() will delete the item again.
-        self.send_and_save(conflict_resolution=conflict_resolution,
-                           send_meeting_invitations=send_meeting_invitations)
+        self.send_and_save(
+            conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+        )
         return None
 
     self._create(message_disposition=SEND_ONLY, send_meeting_invitations=send_meeting_invitations)
@@ -682,29 +717,33 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_and_save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE,
-                  send_meeting_invitations=SEND_TO_NONE):
+<pre><code class="python">def send_and_save(
+    self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE
+):
     # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
     if self.id:
         self._update(
             update_fieldnames=update_fields,
             message_disposition=SEND_AND_SAVE_COPY,
             conflict_resolution=conflict_resolution,
-            send_meeting_invitations=send_meeting_invitations
+            send_meeting_invitations=send_meeting_invitations,
         )
     else:
         if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
             # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
             # to first save, then attach, then send. This is done in save().
-            self.save(update_fields=update_fields, conflict_resolution=conflict_resolution,
-                      send_meeting_invitations=send_meeting_invitations)
-            self.send(save_copy=False, conflict_resolution=conflict_resolution,
-                      send_meeting_invitations=send_meeting_invitations)
+            self.save(
+                update_fields=update_fields,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+            self.send(
+                save_copy=False,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
         else:
-            self._create(
-                message_disposition=SEND_AND_SAVE_COPY,
-                send_meeting_invitations=send_meeting_invitations
-            )</code></pre>
+            self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)</code></pre>
 </details>
 </dd>
 </dl>
@@ -740,7 +779,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <pre><code class="python">class ReplyAllToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ReplyAllToItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ReplyAllToItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -781,7 +820,7 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <pre><code class="python">class ReplyToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ReplyToItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ReplyToItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

@@ -26,56 +26,144 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .base import RegisterMixIn, BulkCreateResult, MESSAGE_DISPOSITION_CHOICES, SAVE_ONLY, SEND_ONLY, \
-    ID_ONLY, DEFAULT, ALL_PROPERTIES, SEND_MEETING_INVITATIONS_CHOICES, SEND_TO_NONE, SEND_ONLY_TO_ALL, \
-    SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY_TO_CHANGED, SEND_TO_CHANGED_AND_SAVE_COPY, \
-    SEND_MEETING_CANCELLATIONS_CHOICES, AFFECTED_TASK_OCCURRENCES_CHOICES, ALL_OCCURRENCES, \
-    SPECIFIED_OCCURRENCE_ONLY, CONFLICT_RESOLUTION_CHOICES, NEVER_OVERWRITE, AUTO_RESOLVE, ALWAYS_OVERWRITE, \
-    DELETE_TYPE_CHOICES, HARD_DELETE, SOFT_DELETE, MOVE_TO_DELETED_ITEMS, SEND_TO_ALL_AND_SAVE_COPY, \
-    SEND_AND_SAVE_COPY, SHAPE_CHOICES
-from .calendar_item import CalendarItem, AcceptItem, TentativelyAcceptItem, DeclineItem, CancelCalendarItem, \
-    MeetingMessage, MeetingRequest, MeetingResponse, MeetingCancellation, CONFERENCE_TYPES
-from .contact import Contact, Persona, DistributionList
+<pre><code class="python">from .base import (
+    AFFECTED_TASK_OCCURRENCES_CHOICES,
+    ALL_OCCURRENCES,
+    ALL_PROPERTIES,
+    ALWAYS_OVERWRITE,
+    AUTO_RESOLVE,
+    CONFLICT_RESOLUTION_CHOICES,
+    DEFAULT,
+    DELETE_TYPE_CHOICES,
+    HARD_DELETE,
+    ID_ONLY,
+    MESSAGE_DISPOSITION_CHOICES,
+    MOVE_TO_DELETED_ITEMS,
+    NEVER_OVERWRITE,
+    SAVE_ONLY,
+    SEND_AND_SAVE_COPY,
+    SEND_MEETING_CANCELLATIONS_CHOICES,
+    SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
+    SEND_MEETING_INVITATIONS_CHOICES,
+    SEND_ONLY,
+    SEND_ONLY_TO_ALL,
+    SEND_ONLY_TO_CHANGED,
+    SEND_TO_ALL_AND_SAVE_COPY,
+    SEND_TO_CHANGED_AND_SAVE_COPY,
+    SEND_TO_NONE,
+    SHAPE_CHOICES,
+    SOFT_DELETE,
+    SPECIFIED_OCCURRENCE_ONLY,
+    BulkCreateResult,
+    RegisterMixIn,
+)
+from .calendar_item import (
+    CONFERENCE_TYPES,
+    AcceptItem,
+    CalendarItem,
+    CancelCalendarItem,
+    DeclineItem,
+    MeetingCancellation,
+    MeetingMessage,
+    MeetingRequest,
+    MeetingResponse,
+    TentativelyAcceptItem,
+)
+from .contact import Contact, DistributionList, Persona
 from .item import BaseItem, Item
-from .message import Message, ReplyToItem, ReplyAllToItem, ForwardItem
+from .message import ForwardItem, Message, ReplyAllToItem, ReplyToItem
 from .post import PostItem, PostReplyItem
 from .task import Task
 
 # Traversal enums
-SHALLOW = &#39;Shallow&#39;
-SOFT_DELETED = &#39;SoftDeleted&#39;
-ASSOCIATED = &#39;Associated&#39;
+SHALLOW = &#34;Shallow&#34;
+SOFT_DELETED = &#34;SoftDeleted&#34;
+ASSOCIATED = &#34;Associated&#34;
 ITEM_TRAVERSAL_CHOICES = (SHALLOW, SOFT_DELETED, ASSOCIATED)
 
 # Contacts search (ResolveNames) scope enums
-ACTIVE_DIRECTORY = &#39;ActiveDirectory&#39;
-ACTIVE_DIRECTORY_CONTACTS = &#39;ActiveDirectoryContacts&#39;
-CONTACTS = &#39;Contacts&#39;
-CONTACTS_ACTIVE_DIRECTORY = &#39;ContactsActiveDirectory&#39;
+ACTIVE_DIRECTORY = &#34;ActiveDirectory&#34;
+ACTIVE_DIRECTORY_CONTACTS = &#34;ActiveDirectoryContacts&#34;
+CONTACTS = &#34;Contacts&#34;
+CONTACTS_ACTIVE_DIRECTORY = &#34;ContactsActiveDirectory&#34;
 SEARCH_SCOPE_CHOICES = (ACTIVE_DIRECTORY, ACTIVE_DIRECTORY_CONTACTS, CONTACTS, CONTACTS_ACTIVE_DIRECTORY)
 
 
-ITEM_CLASSES = (CalendarItem, Contact, DistributionList, Item, Message, MeetingMessage, MeetingRequest,
-                MeetingResponse, MeetingCancellation, PostItem, Task)
+ITEM_CLASSES = (
+    CalendarItem,
+    Contact,
+    DistributionList,
+    Item,
+    Message,
+    MeetingMessage,
+    MeetingRequest,
+    MeetingResponse,
+    MeetingCancellation,
+    PostItem,
+    Task,
+)
 
 __all__ = [
-    &#39;RegisterMixIn&#39;, &#39;MESSAGE_DISPOSITION_CHOICES&#39;, &#39;SAVE_ONLY&#39;, &#39;SEND_ONLY&#39;, &#39;SEND_AND_SAVE_COPY&#39;,
-    &#39;CalendarItem&#39;, &#39;AcceptItem&#39;, &#39;TentativelyAcceptItem&#39;, &#39;DeclineItem&#39;, &#39;CancelCalendarItem&#39;,
-    &#39;MeetingRequest&#39;, &#39;MeetingResponse&#39;, &#39;MeetingCancellation&#39;, &#39;CONFERENCE_TYPES&#39;,
-    &#39;Contact&#39;, &#39;Persona&#39;, &#39;DistributionList&#39;,
-    &#39;SEND_MEETING_INVITATIONS_CHOICES&#39;, &#39;SEND_TO_NONE&#39;, &#39;SEND_ONLY_TO_ALL&#39;, &#39;SEND_TO_ALL_AND_SAVE_COPY&#39;,
-    &#39;SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES&#39;, &#39;SEND_ONLY_TO_CHANGED&#39;, &#39;SEND_TO_CHANGED_AND_SAVE_COPY&#39;,
-    &#39;SEND_MEETING_CANCELLATIONS_CHOICES&#39;, &#39;AFFECTED_TASK_OCCURRENCES_CHOICES&#39;, &#39;ALL_OCCURRENCES&#39;,
-    &#39;SPECIFIED_OCCURRENCE_ONLY&#39;, &#39;CONFLICT_RESOLUTION_CHOICES&#39;, &#39;NEVER_OVERWRITE&#39;, &#39;AUTO_RESOLVE&#39;, &#39;ALWAYS_OVERWRITE&#39;,
-    &#39;DELETE_TYPE_CHOICES&#39;, &#39;HARD_DELETE&#39;, &#39;SOFT_DELETE&#39;, &#39;MOVE_TO_DELETED_ITEMS&#39;, &#39;BaseItem&#39;, &#39;Item&#39;,
-    &#39;BulkCreateResult&#39;,
-    &#39;Message&#39;, &#39;ReplyToItem&#39;, &#39;ReplyAllToItem&#39;, &#39;ForwardItem&#39;,
-    &#39;PostItem&#39;, &#39;PostReplyItem&#39;,
-    &#39;Task&#39;,
-    &#39;ITEM_TRAVERSAL_CHOICES&#39;, &#39;SHALLOW&#39;, &#39;SOFT_DELETED&#39;, &#39;ASSOCIATED&#39;,
-    &#39;SHAPE_CHOICES&#39;, &#39;ID_ONLY&#39;, &#39;DEFAULT&#39;, &#39;ALL_PROPERTIES&#39;,
-    &#39;SEARCH_SCOPE_CHOICES&#39;, &#39;ACTIVE_DIRECTORY&#39;, &#39;ACTIVE_DIRECTORY_CONTACTS&#39;, &#39;CONTACTS&#39;, &#39;CONTACTS_ACTIVE_DIRECTORY&#39;,
-    &#39;ITEM_CLASSES&#39;,
+    &#34;RegisterMixIn&#34;,
+    &#34;MESSAGE_DISPOSITION_CHOICES&#34;,
+    &#34;SAVE_ONLY&#34;,
+    &#34;SEND_ONLY&#34;,
+    &#34;SEND_AND_SAVE_COPY&#34;,
+    &#34;CalendarItem&#34;,
+    &#34;AcceptItem&#34;,
+    &#34;TentativelyAcceptItem&#34;,
+    &#34;DeclineItem&#34;,
+    &#34;CancelCalendarItem&#34;,
+    &#34;MeetingRequest&#34;,
+    &#34;MeetingResponse&#34;,
+    &#34;MeetingCancellation&#34;,
+    &#34;CONFERENCE_TYPES&#34;,
+    &#34;Contact&#34;,
+    &#34;Persona&#34;,
+    &#34;DistributionList&#34;,
+    &#34;SEND_MEETING_INVITATIONS_CHOICES&#34;,
+    &#34;SEND_TO_NONE&#34;,
+    &#34;SEND_ONLY_TO_ALL&#34;,
+    &#34;SEND_TO_ALL_AND_SAVE_COPY&#34;,
+    &#34;SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES&#34;,
+    &#34;SEND_ONLY_TO_CHANGED&#34;,
+    &#34;SEND_TO_CHANGED_AND_SAVE_COPY&#34;,
+    &#34;SEND_MEETING_CANCELLATIONS_CHOICES&#34;,
+    &#34;AFFECTED_TASK_OCCURRENCES_CHOICES&#34;,
+    &#34;ALL_OCCURRENCES&#34;,
+    &#34;SPECIFIED_OCCURRENCE_ONLY&#34;,
+    &#34;CONFLICT_RESOLUTION_CHOICES&#34;,
+    &#34;NEVER_OVERWRITE&#34;,
+    &#34;AUTO_RESOLVE&#34;,
+    &#34;ALWAYS_OVERWRITE&#34;,
+    &#34;DELETE_TYPE_CHOICES&#34;,
+    &#34;HARD_DELETE&#34;,
+    &#34;SOFT_DELETE&#34;,
+    &#34;MOVE_TO_DELETED_ITEMS&#34;,
+    &#34;BaseItem&#34;,
+    &#34;Item&#34;,
+    &#34;BulkCreateResult&#34;,
+    &#34;Message&#34;,
+    &#34;ReplyToItem&#34;,
+    &#34;ReplyAllToItem&#34;,
+    &#34;ForwardItem&#34;,
+    &#34;PostItem&#34;,
+    &#34;PostReplyItem&#34;,
+    &#34;Task&#34;,
+    &#34;ITEM_TRAVERSAL_CHOICES&#34;,
+    &#34;SHALLOW&#34;,
+    &#34;SOFT_DELETED&#34;,
+    &#34;ASSOCIATED&#34;,
+    &#34;SHAPE_CHOICES&#34;,
+    &#34;ID_ONLY&#34;,
+    &#34;DEFAULT&#34;,
+    &#34;ALL_PROPERTIES&#34;,
+    &#34;SEARCH_SCOPE_CHOICES&#34;,
+    &#34;ACTIVE_DIRECTORY&#34;,
+    &#34;ACTIVE_DIRECTORY_CONTACTS&#34;,
+    &#34;CONTACTS&#34;,
+    &#34;CONTACTS_ACTIVE_DIRECTORY&#34;,
+    &#34;ITEM_CLASSES&#34;,
 ]</code></pre>
 </details>
 </section>
@@ -137,7 +225,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class AcceptItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/acceptitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AcceptItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;AcceptItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -190,9 +278,9 @@ we use folder.account.</p></div>
     &#34;&#34;&#34;Base class for all other classes that implement EWS items.&#34;&#34;&#34;
 
     ID_ELEMENT_CLS = ItemId
-    _id = IdElementField(field_uri=&#39;item:ItemId&#39;, value_cls=ID_ELEMENT_CLS)
+    _id = IdElementField(field_uri=&#34;item:ItemId&#34;, value_cls=ID_ELEMENT_CLS)
 
-    __slots__ = &#39;account&#39;, &#39;folder&#39;
+    __slots__ = &#34;account&#34;, &#34;folder&#34;
 
     def __init__(self, **kwargs):
         &#34;&#34;&#34;Pick out optional &#39;account&#39; and &#39;folder&#39; kwargs, and pass the rest to the parent class.
@@ -202,15 +290,16 @@ we use folder.account.</p></div>
             &#39;folder&#39; is optional but allows calling &#39;save()&#39;. If &#39;folder&#39; has an account, and &#39;account&#39; is not set,
                 we use folder.account.
         &#34;&#34;&#34;
-        from ..folders import BaseFolder
         from ..account import Account
-        self.account = kwargs.pop(&#39;account&#39;, None)
+        from ..folders import BaseFolder
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
         if self.account is not None and not isinstance(self.account, Account):
-            raise InvalidTypeError(&#39;account&#39;, self.account, Account)
-        self.folder = kwargs.pop(&#39;folder&#39;, None)
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
+        self.folder = kwargs.pop(&#34;folder&#34;, None)
         if self.folder is not None:
             if not isinstance(self.folder, BaseFolder):
-                raise InvalidTypeError(&#39;folder&#39;, self.folder, BaseFolder)
+                raise InvalidTypeError(&#34;folder&#34;, self.folder, BaseFolder)
             if self.folder.account is not None:
                 if self.account is not None:
                     # Make sure the account from kwargs matches the folder account
@@ -311,7 +400,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class BulkCreateResult(BaseItem):
     &#34;&#34;&#34;A dummy class to store return values from a CreateItem service call.&#34;&#34;&#34;
 
-    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
+    attachments = AttachmentField(field_uri=&#34;item:Attachments&#34;)  # ItemAttachment or FileAttachment
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -374,66 +463,75 @@ we use folder.account.</p></div>
 <pre><code class="python">class CalendarItem(Item, AcceptDeclineMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/calendaritem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;CalendarItem&#39;
+    ELEMENT_NAME = &#34;CalendarItem&#34;
 
-    uid = TextField(field_uri=&#39;calendar:UID&#39;, is_required_after_save=True, is_searchable=False)
-    recurrence_id = DateTimeField(field_uri=&#39;calendar:RecurrenceId&#39;, is_read_only=True)
-    start = DateOrDateTimeField(field_uri=&#39;calendar:Start&#39;, is_required=True)
-    end = DateOrDateTimeField(field_uri=&#39;calendar:End&#39;, is_required=True)
-    original_start = DateTimeField(field_uri=&#39;calendar:OriginalStart&#39;, is_read_only=True)
-    is_all_day = BooleanField(field_uri=&#39;calendar:IsAllDayEvent&#39;, is_required=True, default=False)
-    legacy_free_busy_status = FreeBusyStatusField(field_uri=&#39;calendar:LegacyFreeBusyStatus&#39;, is_required=True,
-                                                  default=&#39;Busy&#39;)
-    location = TextField(field_uri=&#39;calendar:Location&#39;)
-    when = TextField(field_uri=&#39;calendar:When&#39;)
-    is_meeting = BooleanField(field_uri=&#39;calendar:IsMeeting&#39;, is_read_only=True)
-    is_cancelled = BooleanField(field_uri=&#39;calendar:IsCancelled&#39;, is_read_only=True)
-    is_recurring = BooleanField(field_uri=&#39;calendar:IsRecurring&#39;, is_read_only=True)
-    meeting_request_was_sent = BooleanField(field_uri=&#39;calendar:MeetingRequestWasSent&#39;, is_read_only=True)
-    is_response_requested = BooleanField(field_uri=&#39;calendar:IsResponseRequested&#39;, default=None,
-                                         is_required_after_save=True, is_searchable=False)
-    type = ChoiceField(field_uri=&#39;calendar:CalendarItemType&#39;, choices={Choice(c) for c in CALENDAR_ITEM_CHOICES},
-                       is_read_only=True)
-    my_response_type = ChoiceField(field_uri=&#39;calendar:MyResponseType&#39;, choices={
-            Choice(c) for c in Attendee.RESPONSE_TYPES
-    }, is_read_only=True)
-    organizer = MailboxField(field_uri=&#39;calendar:Organizer&#39;, is_read_only=True)
-    required_attendees = AttendeesField(field_uri=&#39;calendar:RequiredAttendees&#39;, is_searchable=False)
-    optional_attendees = AttendeesField(field_uri=&#39;calendar:OptionalAttendees&#39;, is_searchable=False)
-    resources = AttendeesField(field_uri=&#39;calendar:Resources&#39;, is_searchable=False)
-    conflicting_meeting_count = IntegerField(field_uri=&#39;calendar:ConflictingMeetingCount&#39;, is_read_only=True)
-    adjacent_meeting_count = IntegerField(field_uri=&#39;calendar:AdjacentMeetingCount&#39;, is_read_only=True)
-    conflicting_meetings = EWSElementListField(field_uri=&#39;calendar:ConflictingMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
-                                               namespace=Item.NAMESPACE, is_read_only=True)
-    adjacent_meetings = EWSElementListField(field_uri=&#39;calendar:AdjacentMeetings&#39;, value_cls=&#39;CalendarItem&#39;,
-                                            namespace=Item.NAMESPACE, is_read_only=True)
-    duration = CharField(field_uri=&#39;calendar:Duration&#39;, is_read_only=True)
-    appointment_reply_time = DateTimeField(field_uri=&#39;calendar:AppointmentReplyTime&#39;, is_read_only=True)
-    appointment_sequence_number = IntegerField(field_uri=&#39;calendar:AppointmentSequenceNumber&#39;, is_read_only=True)
-    appointment_state = AppointmentStateField(field_uri=&#39;calendar:AppointmentState&#39;, is_read_only=True)
-    recurrence = RecurrenceField(field_uri=&#39;calendar:Recurrence&#39;, is_searchable=False)
-    first_occurrence = OccurrenceField(field_uri=&#39;calendar:FirstOccurrence&#39;, value_cls=FirstOccurrence,
-                                       is_read_only=True)
-    last_occurrence = OccurrenceField(field_uri=&#39;calendar:LastOccurrence&#39;, value_cls=LastOccurrence,
-                                      is_read_only=True)
-    modified_occurrences = OccurrenceListField(field_uri=&#39;calendar:ModifiedOccurrences&#39;, value_cls=Occurrence,
-                                               is_read_only=True)
-    deleted_occurrences = OccurrenceListField(field_uri=&#39;calendar:DeletedOccurrences&#39;, value_cls=DeletedOccurrence,
-                                              is_read_only=True)
-    _meeting_timezone = TimeZoneField(field_uri=&#39;calendar:MeetingTimeZone&#39;, deprecated_from=EXCHANGE_2010,
-                                      is_searchable=False)
-    _start_timezone = TimeZoneField(field_uri=&#39;calendar:StartTimeZone&#39;, supported_from=EXCHANGE_2010,
-                                    is_searchable=False)
-    _end_timezone = TimeZoneField(field_uri=&#39;calendar:EndTimeZone&#39;, supported_from=EXCHANGE_2010,
-                                  is_searchable=False)
-    conference_type = EnumAsIntField(field_uri=&#39;calendar:ConferenceType&#39;, enum=CONFERENCE_TYPES, min=0,
-                                     default=None, is_required_after_save=True)
-    allow_new_time_proposal = BooleanField(field_uri=&#39;calendar:AllowNewTimeProposal&#39;, default=None,
-                                           is_required_after_save=True, is_searchable=False)
-    is_online_meeting = BooleanField(field_uri=&#39;calendar:IsOnlineMeeting&#39;, default=None,
-                                     is_read_only=True)
-    meeting_workspace_url = URIField(field_uri=&#39;calendar:MeetingWorkspaceUrl&#39;)
-    net_show_url = URIField(field_uri=&#39;calendar:NetShowUrl&#39;)
+    uid = TextField(field_uri=&#34;calendar:UID&#34;, is_required_after_save=True, is_searchable=False)
+    recurrence_id = DateTimeField(field_uri=&#34;calendar:RecurrenceId&#34;, is_read_only=True)
+    start = DateOrDateTimeField(field_uri=&#34;calendar:Start&#34;, is_required=True)
+    end = DateOrDateTimeField(field_uri=&#34;calendar:End&#34;, is_required=True)
+    original_start = DateTimeField(field_uri=&#34;calendar:OriginalStart&#34;, is_read_only=True)
+    is_all_day = BooleanField(field_uri=&#34;calendar:IsAllDayEvent&#34;, is_required=True, default=False)
+    legacy_free_busy_status = FreeBusyStatusField(
+        field_uri=&#34;calendar:LegacyFreeBusyStatus&#34;, is_required=True, default=&#34;Busy&#34;
+    )
+    location = TextField(field_uri=&#34;calendar:Location&#34;)
+    when = TextField(field_uri=&#34;calendar:When&#34;)
+    is_meeting = BooleanField(field_uri=&#34;calendar:IsMeeting&#34;, is_read_only=True)
+    is_cancelled = BooleanField(field_uri=&#34;calendar:IsCancelled&#34;, is_read_only=True)
+    is_recurring = BooleanField(field_uri=&#34;calendar:IsRecurring&#34;, is_read_only=True)
+    meeting_request_was_sent = BooleanField(field_uri=&#34;calendar:MeetingRequestWasSent&#34;, is_read_only=True)
+    is_response_requested = BooleanField(
+        field_uri=&#34;calendar:IsResponseRequested&#34;, default=None, is_required_after_save=True, is_searchable=False
+    )
+    type = ChoiceField(
+        field_uri=&#34;calendar:CalendarItemType&#34;, choices={Choice(c) for c in CALENDAR_ITEM_CHOICES}, is_read_only=True
+    )
+    my_response_type = ChoiceField(
+        field_uri=&#34;calendar:MyResponseType&#34;, choices={Choice(c) for c in Attendee.RESPONSE_TYPES}, is_read_only=True
+    )
+    organizer = MailboxField(field_uri=&#34;calendar:Organizer&#34;, is_read_only=True)
+    required_attendees = AttendeesField(field_uri=&#34;calendar:RequiredAttendees&#34;, is_searchable=False)
+    optional_attendees = AttendeesField(field_uri=&#34;calendar:OptionalAttendees&#34;, is_searchable=False)
+    resources = AttendeesField(field_uri=&#34;calendar:Resources&#34;, is_searchable=False)
+    conflicting_meeting_count = IntegerField(field_uri=&#34;calendar:ConflictingMeetingCount&#34;, is_read_only=True)
+    adjacent_meeting_count = IntegerField(field_uri=&#34;calendar:AdjacentMeetingCount&#34;, is_read_only=True)
+    conflicting_meetings = EWSElementListField(
+        field_uri=&#34;calendar:ConflictingMeetings&#34;, value_cls=&#34;CalendarItem&#34;, namespace=Item.NAMESPACE, is_read_only=True
+    )
+    adjacent_meetings = EWSElementListField(
+        field_uri=&#34;calendar:AdjacentMeetings&#34;, value_cls=&#34;CalendarItem&#34;, namespace=Item.NAMESPACE, is_read_only=True
+    )
+    duration = CharField(field_uri=&#34;calendar:Duration&#34;, is_read_only=True)
+    appointment_reply_time = DateTimeField(field_uri=&#34;calendar:AppointmentReplyTime&#34;, is_read_only=True)
+    appointment_sequence_number = IntegerField(field_uri=&#34;calendar:AppointmentSequenceNumber&#34;, is_read_only=True)
+    appointment_state = AppointmentStateField(field_uri=&#34;calendar:AppointmentState&#34;, is_read_only=True)
+    recurrence = RecurrenceField(field_uri=&#34;calendar:Recurrence&#34;, is_searchable=False)
+    first_occurrence = OccurrenceField(
+        field_uri=&#34;calendar:FirstOccurrence&#34;, value_cls=FirstOccurrence, is_read_only=True
+    )
+    last_occurrence = OccurrenceField(field_uri=&#34;calendar:LastOccurrence&#34;, value_cls=LastOccurrence, is_read_only=True)
+    modified_occurrences = OccurrenceListField(
+        field_uri=&#34;calendar:ModifiedOccurrences&#34;, value_cls=Occurrence, is_read_only=True
+    )
+    deleted_occurrences = OccurrenceListField(
+        field_uri=&#34;calendar:DeletedOccurrences&#34;, value_cls=DeletedOccurrence, is_read_only=True
+    )
+    _meeting_timezone = TimeZoneField(
+        field_uri=&#34;calendar:MeetingTimeZone&#34;, deprecated_from=EXCHANGE_2010, is_searchable=False
+    )
+    _start_timezone = TimeZoneField(
+        field_uri=&#34;calendar:StartTimeZone&#34;, supported_from=EXCHANGE_2010, is_searchable=False
+    )
+    _end_timezone = TimeZoneField(field_uri=&#34;calendar:EndTimeZone&#34;, supported_from=EXCHANGE_2010, is_searchable=False)
+    conference_type = EnumAsIntField(
+        field_uri=&#34;calendar:ConferenceType&#34;, enum=CONFERENCE_TYPES, min=0, default=None, is_required_after_save=True
+    )
+    allow_new_time_proposal = BooleanField(
+        field_uri=&#34;calendar:AllowNewTimeProposal&#34;, default=None, is_required_after_save=True, is_searchable=False
+    )
+    is_online_meeting = BooleanField(field_uri=&#34;calendar:IsOnlineMeeting&#34;, default=None, is_read_only=True)
+    meeting_workspace_url = URIField(field_uri=&#34;calendar:MeetingWorkspaceUrl&#34;)
+    net_show_url = URIField(field_uri=&#34;calendar:NetShowUrl&#34;)
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
@@ -504,9 +602,7 @@ we use folder.account.</p></div>
 
     def cancel(self, **kwargs):
         return CancelCalendarItem(
-            account=self.account,
-            reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-            **kwargs
+            account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
         ).send()
 
     def _update_fieldnames(self):
@@ -514,8 +610,8 @@ we use folder.account.</p></div>
         if self.type == OCCURRENCE:
             # Some CalendarItem fields cannot be updated when the item is an occurrence. The values are empty when we
             # receive them so would have been updated because they are set to None.
-            update_fields.remove(&#39;recurrence&#39;)
-            update_fields.remove(&#39;uid&#39;)
+            update_fields.remove(&#34;recurrence&#34;)
+            update_fields.remove(&#34;uid&#34;)
         return update_fields
 
     @classmethod
@@ -525,15 +621,15 @@ we use folder.account.</p></div>
         # applicable.
         if not item.is_all_day:
             return item
-        for field_name in (&#39;start&#39;, &#39;end&#39;):
+        for field_name in (&#34;start&#34;, &#34;end&#34;):
             val = getattr(item, field_name)
             if val is None:
                 continue
             # Return just the date part of the value. Subtract 1 day from the date if this is the end field. This is
             # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
-            if field_name == &#39;end&#39;:
+            if field_name == &#34;end&#34;:
                 val -= datetime.timedelta(days=1)
-            tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
+            tz = getattr(item, f&#34;_{field_name}_timezone&#34;)
             setattr(item, field_name, val.astimezone(tz).date())
         return item
 
@@ -541,11 +637,11 @@ we use folder.account.</p></div>
         meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
         if self.account.version.build &lt; EXCHANGE_2010:
             return meeting_tz_field
-        if field_name == &#39;start&#39;:
+        if field_name == &#34;start&#34;:
             return start_tz_field
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             return end_tz_field
-        raise ValueError(&#39;Unsupported field_name&#39;)
+        raise ValueError(&#34;Unsupported field_name&#34;)
 
     def date_to_datetime(self, field_name):
         # EWS always expects a datetime. If we have a date value, then convert it to datetime in the local
@@ -554,7 +650,7 @@ we use folder.account.</p></div>
         value = getattr(self, field_name)
         tz = getattr(self, self.tz_field_for_field_name(field_name).name)
         value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             value += datetime.timedelta(days=1)
         return value
 
@@ -568,7 +664,7 @@ we use folder.account.</p></div>
         elem = super().to_xml(version=version)
         if not self.is_all_day:
             return elem
-        for field_name in (&#39;start&#39;, &#39;end&#39;):
+        for field_name in (&#34;start&#34;, &#34;end&#34;):
             value = getattr(self, field_name)
             if value is None:
                 continue
@@ -619,15 +715,15 @@ def from_xml(cls, elem, account):
     # applicable.
     if not item.is_all_day:
         return item
-    for field_name in (&#39;start&#39;, &#39;end&#39;):
+    for field_name in (&#34;start&#34;, &#34;end&#34;):
         val = getattr(item, field_name)
         if val is None:
             continue
         # Return just the date part of the value. Subtract 1 day from the date if this is the end field. This is
         # the inverse of what we do in .to_xml(). Convert to the local timezone before getting the date.
-        if field_name == &#39;end&#39;:
+        if field_name == &#34;end&#34;:
             val -= datetime.timedelta(days=1)
-        tz = getattr(item, f&#39;_{field_name}_timezone&#39;)
+        tz = getattr(item, f&#34;_{field_name}_timezone&#34;)
         setattr(item, field_name, val.astimezone(tz).date())
     return item</code></pre>
 </details>
@@ -815,9 +911,7 @@ def timezone_fields(cls):
 </summary>
 <pre><code class="python">def cancel(self, **kwargs):
     return CancelCalendarItem(
-        account=self.account,
-        reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
-        **kwargs
+        account=self.account, reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey), **kwargs
     ).send()</code></pre>
 </details>
 </dd>
@@ -890,7 +984,7 @@ def timezone_fields(cls):
     value = getattr(self, field_name)
     tz = getattr(self, self.tz_field_for_field_name(field_name).name)
     value = EWSDateTime.combine(value, datetime.time(0, 0)).replace(tzinfo=tz)
-    if field_name == &#39;end&#39;:
+    if field_name == &#34;end&#34;:
         value += datetime.timedelta(days=1)
     return value</code></pre>
 </details>
@@ -971,7 +1065,7 @@ Call refresh() on the item do do so.</p>
     elem = super().to_xml(version=version)
     if not self.is_all_day:
         return elem
-    for field_name in (&#39;start&#39;, &#39;end&#39;):
+    for field_name in (&#34;start&#34;, &#34;end&#34;):
         value = getattr(self, field_name)
         if value is None:
             continue
@@ -998,11 +1092,11 @@ Call refresh() on the item do do so.</p>
     meeting_tz_field, start_tz_field, end_tz_field = CalendarItem.timezone_fields()
     if self.account.version.build &lt; EXCHANGE_2010:
         return meeting_tz_field
-    if field_name == &#39;start&#39;:
+    if field_name == &#34;start&#34;:
         return start_tz_field
-    if field_name == &#39;end&#39;:
+    if field_name == &#34;end&#34;:
         return end_tz_field
-    raise ValueError(&#39;Unsupported field_name&#39;)</code></pre>
+    raise ValueError(&#34;Unsupported field_name&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1038,9 +1132,9 @@ Call refresh() on the item do do so.</p>
 <pre><code class="python">class CancelCalendarItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/cancelcalendaritem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;CancelCalendarItem&#39;
-    author_idx = BaseReplyItem.FIELDS.index_by_name(&#39;author&#39;)
-    FIELDS = BaseReplyItem.FIELDS[:author_idx] + BaseReplyItem.FIELDS[author_idx + 1:]</code></pre>
+    ELEMENT_NAME = &#34;CancelCalendarItem&#34;
+    author_idx = BaseReplyItem.FIELDS.index_by_name(&#34;author&#34;)
+    FIELDS = BaseReplyItem.FIELDS[:author_idx] + BaseReplyItem.FIELDS[author_idx + 1 :]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1094,75 +1188,100 @@ we use folder.account.</p></div>
 <pre><code class="python">class Contact(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Contact&#39;
+    ELEMENT_NAME = &#34;Contact&#34;
 
-    file_as = TextField(field_uri=&#39;contacts:FileAs&#39;)
-    file_as_mapping = ChoiceField(field_uri=&#39;contacts:FileAsMapping&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
-        Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
-        Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
-        Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
-        Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
-        Choice(&#39;Empty&#39;),
-    })
-    display_name = TextField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
-    given_name = CharField(field_uri=&#39;contacts:GivenName&#39;)
-    initials = TextField(field_uri=&#39;contacts:Initials&#39;)
-    middle_name = CharField(field_uri=&#39;contacts:MiddleName&#39;)
-    nickname = TextField(field_uri=&#39;contacts:Nickname&#39;)
-    complete_name = EWSElementField(field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True)
-    company_name = TextField(field_uri=&#39;contacts:CompanyName&#39;)
-    email_addresses = EmailAddressesField(field_uri=&#39;contacts:EmailAddress&#39;)
-    physical_addresses = PhysicalAddressField(field_uri=&#39;contacts:PhysicalAddress&#39;)
-    phone_numbers = PhoneNumberField(field_uri=&#39;contacts:PhoneNumber&#39;)
-    assistant_name = TextField(field_uri=&#39;contacts:AssistantName&#39;)
-    birthday = DateTimeBackedDateField(field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59))
-    business_homepage = URIField(field_uri=&#39;contacts:BusinessHomePage&#39;)
-    children = TextListField(field_uri=&#39;contacts:Children&#39;)
-    companies = TextListField(field_uri=&#39;contacts:Companies&#39;, is_searchable=False)
-    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
-        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-    }, is_read_only=True)
-    department = TextField(field_uri=&#39;contacts:Department&#39;)
-    generation = TextField(field_uri=&#39;contacts:Generation&#39;)
-    im_addresses = CharField(field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True)
-    job_title = TextField(field_uri=&#39;contacts:JobTitle&#39;)
-    manager = TextField(field_uri=&#39;contacts:Manager&#39;)
-    mileage = TextField(field_uri=&#39;contacts:Mileage&#39;)
-    office = TextField(field_uri=&#39;contacts:OfficeLocation&#39;)
-    postal_address_index = ChoiceField(field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
-        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
-    }, default=&#39;None&#39;, is_required_after_save=True)
-    profession = TextField(field_uri=&#39;contacts:Profession&#39;)
-    spouse_name = TextField(field_uri=&#39;contacts:SpouseName&#39;)
-    surname = CharField(field_uri=&#39;contacts:Surname&#39;)
-    wedding_anniversary = DateTimeBackedDateField(field_uri=&#39;contacts:WeddingAnniversary&#39;,
-                                                  default_time=datetime.time(11, 59))
-    has_picture = BooleanField(field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True)
-    phonetic_full_name = TextField(field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    phonetic_first_name = TextField(field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                    is_read_only=True)
-    phonetic_last_name = TextField(field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    email_alias = EmailAddressField(field_uri=&#39;contacts:Alias&#39;, is_read_only=True,
-                                    supported_from=EXCHANGE_2010_SP2)
+    file_as = TextField(field_uri=&#34;contacts:FileAs&#34;)
+    file_as_mapping = ChoiceField(
+        field_uri=&#34;contacts:FileAsMapping&#34;,
+        choices={
+            Choice(&#34;None&#34;),
+            Choice(&#34;LastCommaFirst&#34;),
+            Choice(&#34;FirstSpaceLast&#34;),
+            Choice(&#34;Company&#34;),
+            Choice(&#34;LastCommaFirstCompany&#34;),
+            Choice(&#34;CompanyLastFirst&#34;),
+            Choice(&#34;LastFirst&#34;),
+            Choice(&#34;LastFirstCompany&#34;),
+            Choice(&#34;CompanyLastCommaFirst&#34;),
+            Choice(&#34;LastFirstSuffix&#34;),
+            Choice(&#34;LastSpaceFirstCompany&#34;),
+            Choice(&#34;CompanyLastSpaceFirst&#34;),
+            Choice(&#34;LastSpaceFirst&#34;),
+            Choice(&#34;DisplayName&#34;),
+            Choice(&#34;FirstName&#34;),
+            Choice(&#34;LastFirstMiddleSuffix&#34;),
+            Choice(&#34;LastName&#34;),
+            Choice(&#34;Empty&#34;),
+        },
+    )
+    display_name = TextField(field_uri=&#34;contacts:DisplayName&#34;, is_required=True)
+    given_name = CharField(field_uri=&#34;contacts:GivenName&#34;)
+    initials = TextField(field_uri=&#34;contacts:Initials&#34;)
+    middle_name = CharField(field_uri=&#34;contacts:MiddleName&#34;)
+    nickname = TextField(field_uri=&#34;contacts:Nickname&#34;)
+    complete_name = EWSElementField(field_uri=&#34;contacts:CompleteName&#34;, value_cls=CompleteName, is_read_only=True)
+    company_name = TextField(field_uri=&#34;contacts:CompanyName&#34;)
+    email_addresses = EmailAddressesField(field_uri=&#34;contacts:EmailAddress&#34;)
+    physical_addresses = PhysicalAddressField(field_uri=&#34;contacts:PhysicalAddress&#34;)
+    phone_numbers = PhoneNumberField(field_uri=&#34;contacts:PhoneNumber&#34;)
+    assistant_name = TextField(field_uri=&#34;contacts:AssistantName&#34;)
+    birthday = DateTimeBackedDateField(field_uri=&#34;contacts:Birthday&#34;, default_time=datetime.time(11, 59))
+    business_homepage = URIField(field_uri=&#34;contacts:BusinessHomePage&#34;)
+    children = TextListField(field_uri=&#34;contacts:Children&#34;)
+    companies = TextListField(field_uri=&#34;contacts:Companies&#34;, is_searchable=False)
+    contact_source = ChoiceField(
+        field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
+    )
+    department = TextField(field_uri=&#34;contacts:Department&#34;)
+    generation = TextField(field_uri=&#34;contacts:Generation&#34;)
+    im_addresses = CharField(field_uri=&#34;contacts:ImAddresses&#34;, is_read_only=True)
+    job_title = TextField(field_uri=&#34;contacts:JobTitle&#34;)
+    manager = TextField(field_uri=&#34;contacts:Manager&#34;)
+    mileage = TextField(field_uri=&#34;contacts:Mileage&#34;)
+    office = TextField(field_uri=&#34;contacts:OfficeLocation&#34;)
+    postal_address_index = ChoiceField(
+        field_uri=&#34;contacts:PostalAddressIndex&#34;,
+        choices={Choice(&#34;Business&#34;), Choice(&#34;Home&#34;), Choice(&#34;Other&#34;), Choice(&#34;None&#34;)},
+        default=&#34;None&#34;,
+        is_required_after_save=True,
+    )
+    profession = TextField(field_uri=&#34;contacts:Profession&#34;)
+    spouse_name = TextField(field_uri=&#34;contacts:SpouseName&#34;)
+    surname = CharField(field_uri=&#34;contacts:Surname&#34;)
+    wedding_anniversary = DateTimeBackedDateField(
+        field_uri=&#34;contacts:WeddingAnniversary&#34;, default_time=datetime.time(11, 59)
+    )
+    has_picture = BooleanField(field_uri=&#34;contacts:HasPicture&#34;, supported_from=EXCHANGE_2010, is_read_only=True)
+    phonetic_full_name = TextField(
+        field_uri=&#34;contacts:PhoneticFullName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    phonetic_first_name = TextField(
+        field_uri=&#34;contacts:PhoneticFirstName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    phonetic_last_name = TextField(
+        field_uri=&#34;contacts:PhoneticLastName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    email_alias = EmailAddressField(field_uri=&#34;contacts:Alias&#34;, is_read_only=True, supported_from=EXCHANGE_2010_SP2)
     # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
     # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
-    notes = CharField(field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    notes = CharField(field_uri=&#34;contacts:Notes&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
     # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
     # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
     # the &#39;has_picture&#39; field.
-    photo = Base64Field(field_uri=&#39;contacts:Photo&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
-    user_smime_certificate = Base64Field(field_uri=&#39;contacts:UserSMIMECertificate&#39;, supported_from=EXCHANGE_2010_SP2,
-                                         is_read_only=True)
-    ms_exchange_certificate = Base64Field(field_uri=&#39;contacts:MSExchangeCertificate&#39;, supported_from=EXCHANGE_2010_SP2,
-                                          is_read_only=True)
-    directory_id = TextField(field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
-    manager_mailbox = MailboxField(field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    direct_reports = MailboxListField(field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
-                                      is_read_only=True)</code></pre>
+    photo = Base64Field(field_uri=&#34;contacts:Photo&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    user_smime_certificate = Base64Field(
+        field_uri=&#34;contacts:UserSMIMECertificate&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    ms_exchange_certificate = Base64Field(
+        field_uri=&#34;contacts:MSExchangeCertificate&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    directory_id = TextField(field_uri=&#34;contacts:DirectoryId&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    manager_mailbox = MailboxField(
+        field_uri=&#34;contacts:ManagerMailbox&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    direct_reports = MailboxListField(
+        field_uri=&#34;contacts:DirectReports&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1391,7 +1510,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class DeclineItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/declineitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DeclineItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;DeclineItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1443,14 +1562,14 @@ we use folder.account.</p></div>
 <pre><code class="python">class DistributionList(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DistributionList&#39;
+    ELEMENT_NAME = &#34;DistributionList&#34;
 
-    display_name = CharField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
-    file_as = CharField(field_uri=&#39;contacts:FileAs&#39;, is_read_only=True)
-    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
-        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-    }, is_read_only=True)
-    members = MemberListField(field_uri=&#39;distributionlist:Members&#39;)</code></pre>
+    display_name = CharField(field_uri=&#34;contacts:DisplayName&#34;, is_required=True)
+    file_as = CharField(field_uri=&#34;contacts:FileAs&#34;, is_read_only=True)
+    contact_source = ChoiceField(
+        field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
+    )
+    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1522,7 +1641,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class ForwardItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/forwarditem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ForwardItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ForwardItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1568,62 +1687,75 @@ we use folder.account.</p></div>
 <pre><code class="python">class Item(BaseItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/item&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Item&#39;
+    ELEMENT_NAME = &#34;Item&#34;
 
-    mime_content = MimeContentField(field_uri=&#39;item:MimeContent&#39;, is_read_only_after_send=True)
-    _id = BaseItem.FIELDS[&#39;_id&#39;]
-    parent_folder_id = EWSElementField(field_uri=&#39;item:ParentFolderId&#39;, value_cls=ParentFolderId, is_read_only=True)
-    item_class = CharField(field_uri=&#39;item:ItemClass&#39;, is_read_only=True)
-    subject = CharField(field_uri=&#39;item:Subject&#39;)
-    sensitivity = ChoiceField(field_uri=&#39;item:Sensitivity&#39;, choices={
-        Choice(&#39;Normal&#39;), Choice(&#39;Personal&#39;), Choice(&#39;Private&#39;), Choice(&#39;Confidential&#39;)
-    }, is_required=True, default=&#39;Normal&#39;)
-    text_body = TextField(field_uri=&#39;item:TextBody&#39;, is_read_only=True, supported_from=EXCHANGE_2013)
-    body = BodyField(field_uri=&#39;item:Body&#39;)  # Accepts and returns Body or HTMLBody instances
-    attachments = AttachmentField(field_uri=&#39;item:Attachments&#39;)  # ItemAttachment or FileAttachment
-    datetime_received = DateTimeField(field_uri=&#39;item:DateTimeReceived&#39;, is_read_only=True)
-    size = IntegerField(field_uri=&#39;item:Size&#39;, is_read_only=True)  # Item size in bytes
-    categories = CharListField(field_uri=&#39;item:Categories&#39;)
-    importance = ChoiceField(field_uri=&#39;item:Importance&#39;, choices={
-        Choice(&#39;Low&#39;), Choice(&#39;Normal&#39;), Choice(&#39;High&#39;)
-    }, is_required=True, default=&#39;Normal&#39;)
-    in_reply_to = TextField(field_uri=&#39;item:InReplyTo&#39;)
-    is_submitted = BooleanField(field_uri=&#39;item:IsSubmitted&#39;, is_read_only=True)
-    is_draft = BooleanField(field_uri=&#39;item:IsDraft&#39;, is_read_only=True)
-    is_from_me = BooleanField(field_uri=&#39;item:IsFromMe&#39;, is_read_only=True)
-    is_resend = BooleanField(field_uri=&#39;item:IsResend&#39;, is_read_only=True)
-    is_unmodified = BooleanField(field_uri=&#39;item:IsUnmodified&#39;, is_read_only=True)
-    headers = MessageHeaderField(field_uri=&#39;item:InternetMessageHeaders&#39;, is_read_only=True)
-    datetime_sent = DateTimeField(field_uri=&#39;item:DateTimeSent&#39;, is_read_only=True)
-    datetime_created = DateTimeField(field_uri=&#39;item:DateTimeCreated&#39;, is_read_only=True)
-    response_objects = EWSElementField(field_uri=&#39;item:ResponseObjects&#39;, value_cls=ResponseObjects,
-                                       is_read_only=True,)
+    mime_content = MimeContentField(field_uri=&#34;item:MimeContent&#34;, is_read_only_after_send=True)
+    _id = BaseItem.FIELDS[&#34;_id&#34;]
+    parent_folder_id = EWSElementField(field_uri=&#34;item:ParentFolderId&#34;, value_cls=ParentFolderId, is_read_only=True)
+    item_class = CharField(field_uri=&#34;item:ItemClass&#34;, is_read_only=True)
+    subject = CharField(field_uri=&#34;item:Subject&#34;)
+    sensitivity = ChoiceField(
+        field_uri=&#34;item:Sensitivity&#34;,
+        choices={Choice(&#34;Normal&#34;), Choice(&#34;Personal&#34;), Choice(&#34;Private&#34;), Choice(&#34;Confidential&#34;)},
+        is_required=True,
+        default=&#34;Normal&#34;,
+    )
+    text_body = TextField(field_uri=&#34;item:TextBody&#34;, is_read_only=True, supported_from=EXCHANGE_2013)
+    body = BodyField(field_uri=&#34;item:Body&#34;)  # Accepts and returns Body or HTMLBody instances
+    attachments = AttachmentField(field_uri=&#34;item:Attachments&#34;)  # ItemAttachment or FileAttachment
+    datetime_received = DateTimeField(field_uri=&#34;item:DateTimeReceived&#34;, is_read_only=True)
+    size = IntegerField(field_uri=&#34;item:Size&#34;, is_read_only=True)  # Item size in bytes
+    categories = CharListField(field_uri=&#34;item:Categories&#34;)
+    importance = ChoiceField(
+        field_uri=&#34;item:Importance&#34;,
+        choices={Choice(&#34;Low&#34;), Choice(&#34;Normal&#34;), Choice(&#34;High&#34;)},
+        is_required=True,
+        default=&#34;Normal&#34;,
+    )
+    in_reply_to = TextField(field_uri=&#34;item:InReplyTo&#34;)
+    is_submitted = BooleanField(field_uri=&#34;item:IsSubmitted&#34;, is_read_only=True)
+    is_draft = BooleanField(field_uri=&#34;item:IsDraft&#34;, is_read_only=True)
+    is_from_me = BooleanField(field_uri=&#34;item:IsFromMe&#34;, is_read_only=True)
+    is_resend = BooleanField(field_uri=&#34;item:IsResend&#34;, is_read_only=True)
+    is_unmodified = BooleanField(field_uri=&#34;item:IsUnmodified&#34;, is_read_only=True)
+    headers = MessageHeaderField(field_uri=&#34;item:InternetMessageHeaders&#34;, is_read_only=True)
+    datetime_sent = DateTimeField(field_uri=&#34;item:DateTimeSent&#34;, is_read_only=True)
+    datetime_created = DateTimeField(field_uri=&#34;item:DateTimeCreated&#34;, is_read_only=True)
+    response_objects = EWSElementField(
+        field_uri=&#34;item:ResponseObjects&#34;,
+        value_cls=ResponseObjects,
+        is_read_only=True,
+    )
     # Placeholder for ResponseObjects
-    reminder_due_by = DateTimeField(field_uri=&#39;item:ReminderDueBy&#39;, is_required_after_save=True, is_searchable=False)
-    reminder_is_set = BooleanField(field_uri=&#39;item:ReminderIsSet&#39;, is_required=True, default=False)
-    reminder_minutes_before_start = IntegerField(field_uri=&#39;item:ReminderMinutesBeforeStart&#39;,
-                                                 is_required_after_save=True, min=0, default=0)
-    display_cc = TextField(field_uri=&#39;item:DisplayCc&#39;, is_read_only=True)
-    display_to = TextField(field_uri=&#39;item:DisplayTo&#39;, is_read_only=True)
-    has_attachments = BooleanField(field_uri=&#39;item:HasAttachments&#39;, is_read_only=True)
+    reminder_due_by = DateTimeField(field_uri=&#34;item:ReminderDueBy&#34;, is_required_after_save=True, is_searchable=False)
+    reminder_is_set = BooleanField(field_uri=&#34;item:ReminderIsSet&#34;, is_required=True, default=False)
+    reminder_minutes_before_start = IntegerField(
+        field_uri=&#34;item:ReminderMinutesBeforeStart&#34;, is_required_after_save=True, min=0, default=0
+    )
+    display_cc = TextField(field_uri=&#34;item:DisplayCc&#34;, is_read_only=True)
+    display_to = TextField(field_uri=&#34;item:DisplayTo&#34;, is_read_only=True)
+    has_attachments = BooleanField(field_uri=&#34;item:HasAttachments&#34;, is_read_only=True)
     # ExtendedProperty fields go here
-    culture = CultureField(field_uri=&#39;item:Culture&#39;, is_required_after_save=True, is_searchable=False)
-    effective_rights = EffectiveRightsField(field_uri=&#39;item:EffectiveRights&#39;, is_read_only=True)
-    last_modified_name = CharField(field_uri=&#39;item:LastModifiedName&#39;, is_read_only=True)
-    last_modified_time = DateTimeField(field_uri=&#39;item:LastModifiedTime&#39;, is_read_only=True)
-    is_associated = BooleanField(field_uri=&#39;item:IsAssociated&#39;, is_read_only=True, supported_from=EXCHANGE_2010)
-    web_client_read_form_query_string = URIField(field_uri=&#39;item:WebClientReadFormQueryString&#39;, is_read_only=True,
-                                                 supported_from=EXCHANGE_2010)
-    web_client_edit_form_query_string = URIField(field_uri=&#39;item:WebClientEditFormQueryString&#39;, is_read_only=True,
-                                                 supported_from=EXCHANGE_2010)
-    conversation_id = EWSElementField(field_uri=&#39;item:ConversationId&#39;, value_cls=ConversationId,
-                                      is_read_only=True, supported_from=EXCHANGE_2010)
-    unique_body = BodyField(field_uri=&#39;item:UniqueBody&#39;, is_read_only=True, supported_from=EXCHANGE_2010)
+    culture = CultureField(field_uri=&#34;item:Culture&#34;, is_required_after_save=True, is_searchable=False)
+    effective_rights = EffectiveRightsField(field_uri=&#34;item:EffectiveRights&#34;, is_read_only=True)
+    last_modified_name = CharField(field_uri=&#34;item:LastModifiedName&#34;, is_read_only=True)
+    last_modified_time = DateTimeField(field_uri=&#34;item:LastModifiedTime&#34;, is_read_only=True)
+    is_associated = BooleanField(field_uri=&#34;item:IsAssociated&#34;, is_read_only=True, supported_from=EXCHANGE_2010)
+    web_client_read_form_query_string = URIField(
+        field_uri=&#34;item:WebClientReadFormQueryString&#34;, is_read_only=True, supported_from=EXCHANGE_2010
+    )
+    web_client_edit_form_query_string = URIField(
+        field_uri=&#34;item:WebClientEditFormQueryString&#34;, is_read_only=True, supported_from=EXCHANGE_2010
+    )
+    conversation_id = EWSElementField(
+        field_uri=&#34;item:ConversationId&#34;, value_cls=ConversationId, is_read_only=True, supported_from=EXCHANGE_2010
+    )
+    unique_body = BodyField(field_uri=&#34;item:UniqueBody&#34;, is_read_only=True, supported_from=EXCHANGE_2010)
 
     FIELDS = Fields()
 
     # Used to register extended properties
-    INSERT_AFTER_FIELD = &#39;has_attachments&#39;
+    INSERT_AFTER_FIELD = &#34;has_attachments&#34;
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1640,16 +1772,19 @@ we use folder.account.</p></div>
 
     def save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE):
         from .task import Task
+
         if self.id:
             item_id, changekey = self._update(
                 update_fieldnames=update_fields,
                 message_disposition=SAVE_ONLY,
                 conflict_resolution=conflict_resolution,
-                send_meeting_invitations=send_meeting_invitations
+                send_meeting_invitations=send_meeting_invitations,
             )
-            if self.id != item_id \
-                    and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)) \
-                    and not isinstance(self, Task):
+            if (
+                self.id != item_id
+                and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId))
+                and not isinstance(self, Task)
+            ):
                 # When we update an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
                 # the ID of this item changes.
                 #
@@ -1684,6 +1819,7 @@ we use folder.account.</p></div>
         # Return a BulkCreateResult because we want to return the ID of both the main item *and* attachments. In send
         # and send-and-save-copy mode, the server does not return an ID, so we just return True.
         from ..services import CreateItem
+
         return CreateItem(account=self.account).get(
             items=[self],
             folder=self.folder,
@@ -1693,27 +1829,28 @@ we use folder.account.</p></div>
 
     def _update_fieldnames(self):
         from .contact import Contact, DistributionList
+
         # Return the list of fields we are allowed to update
         update_fieldnames = []
         for f in self.supported_fields(version=self.account.version):
-            if f.name == &#39;attachments&#39;:
+            if f.name == &#34;attachments&#34;:
                 # Attachments are handled separately after item creation
                 continue
             if f.is_read_only:
                 # These cannot be changed
                 continue
             if (f.is_required or f.is_required_after_save) and (
-                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+                getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
             ):
                 # These are required and cannot be deleted
                 continue
             if not self.is_draft and f.is_read_only_after_send:
                 # These cannot be changed when the item is no longer a draft
                 continue
-            if f.name == &#39;message_id&#39; and f.is_read_only_after_send:
+            if f.name == &#34;message_id&#34; and f.is_read_only_after_send:
                 # &#39;message_id&#39; doesn&#39;t support updating, no matter the draft status
                 continue
-            if f.name == &#39;mime_content&#39; and isinstance(self, (Contact, DistributionList)):
+            if f.name == &#34;mime_content&#34; and isinstance(self, (Contact, DistributionList)):
                 # Contact and DistributionList don&#39;t support updating mime_content, no matter the draft status
                 continue
             update_fieldnames.append(f.name)
@@ -1722,8 +1859,9 @@ we use folder.account.</p></div>
     @require_account
     def _update(self, update_fieldnames, message_disposition, conflict_resolution, send_meeting_invitations):
         from ..services import UpdateItem
+
         if not self.changekey:
-            raise ValueError(f&#39;{self.__class__.__name__} must have changekey&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have changekey&#34;)
         if not update_fieldnames:
             # The fields to update was not specified explicitly. Update all fields where update is possible
             update_fieldnames = self._update_fieldnames()
@@ -1741,6 +1879,7 @@ we use folder.account.</p></div>
         # Updates the item based on fresh data from EWS
         from ..folders import Folder
         from ..services import GetItem
+
         additional_fields = {
             FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
         }
@@ -1759,6 +1898,7 @@ we use folder.account.</p></div>
     @require_id
     def copy(self, to_folder):
         from ..services import CopyItem
+
         # If &#39;to_folder&#39; is a public folder or a folder in a different mailbox then None is returned
         return CopyItem(account=self.account).get(
             items=[self],
@@ -1769,6 +1909,7 @@ we use folder.account.</p></div>
     @require_id
     def move(self, to_folder):
         from ..services import MoveItem
+
         res = MoveItem(account=self.account).get(
             items=[self],
             to_folder=to_folder,
@@ -1781,32 +1922,57 @@ we use folder.account.</p></div>
         self._id = self.ID_ELEMENT_CLS(*res)
         self.folder = to_folder
 
-    def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
-                      suppress_read_receipts=True):
+    def move_to_trash(
+        self,
+        send_meeting_cancellations=SEND_TO_NONE,
+        affected_task_occurrences=ALL_OCCURRENCES,
+        suppress_read_receipts=True,
+    ):
         # Delete and move to the trash folder.
-        self._delete(delete_type=MOVE_TO_DELETED_ITEMS, send_meeting_cancellations=send_meeting_cancellations,
-                     affected_task_occurrences=affected_task_occurrences, suppress_read_receipts=suppress_read_receipts)
+        self._delete(
+            delete_type=MOVE_TO_DELETED_ITEMS,
+            send_meeting_cancellations=send_meeting_cancellations,
+            affected_task_occurrences=affected_task_occurrences,
+            suppress_read_receipts=suppress_read_receipts,
+        )
         self._id = None
         self.folder = self.account.trash
 
-    def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
-                    suppress_read_receipts=True):
+    def soft_delete(
+        self,
+        send_meeting_cancellations=SEND_TO_NONE,
+        affected_task_occurrences=ALL_OCCURRENCES,
+        suppress_read_receipts=True,
+    ):
         # Delete and move to the dumpster, if it is enabled.
-        self._delete(delete_type=SOFT_DELETE, send_meeting_cancellations=send_meeting_cancellations,
-                     affected_task_occurrences=affected_task_occurrences, suppress_read_receipts=suppress_read_receipts)
+        self._delete(
+            delete_type=SOFT_DELETE,
+            send_meeting_cancellations=send_meeting_cancellations,
+            affected_task_occurrences=affected_task_occurrences,
+            suppress_read_receipts=suppress_read_receipts,
+        )
         self._id = None
         self.folder = self.account.recoverable_items_deletions
 
-    def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
-               suppress_read_receipts=True):
+    def delete(
+        self,
+        send_meeting_cancellations=SEND_TO_NONE,
+        affected_task_occurrences=ALL_OCCURRENCES,
+        suppress_read_receipts=True,
+    ):
         # Remove the item permanently. No copies are stored anywhere.
-        self._delete(delete_type=HARD_DELETE, send_meeting_cancellations=send_meeting_cancellations,
-                     affected_task_occurrences=affected_task_occurrences, suppress_read_receipts=suppress_read_receipts)
+        self._delete(
+            delete_type=HARD_DELETE,
+            send_meeting_cancellations=send_meeting_cancellations,
+            affected_task_occurrences=affected_task_occurrences,
+            suppress_read_receipts=suppress_read_receipts,
+        )
         self._id, self.folder = None, None
 
     @require_id
     def _delete(self, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
         from ..services import DeleteItem
+
         DeleteItem(account=self.account).get(
             items=[self],
             delete_type=delete_type,
@@ -1818,6 +1984,7 @@ we use folder.account.</p></div>
     @require_id
     def archive(self, to_folder):
         from ..services import ArchiveItem
+
         return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)
 
     def attach(self, attachments):
@@ -1856,7 +2023,7 @@ we use folder.account.</p></div>
             attachments = list(attachments)
         for a in attachments:
             if a.parent_item is not self:
-                raise ValueError(&#39;Attachment does not belong to this item&#39;)
+                raise ValueError(&#34;Attachment does not belong to this item&#34;)
             if self.id:
                 # Item is already created. Detach  the attachment server-side now
                 a.detach()
@@ -1866,6 +2033,7 @@ we use folder.account.</p></div>
     @require_id
     def create_forward(self, subject, body, to_recipients, cc_recipients=None, bcc_recipients=None):
         from .message import ForwardItem
+
         return ForwardItem(
             account=self.account,
             reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
@@ -2083,6 +2251,7 @@ we use folder.account.</p></div>
 <pre><code class="python">@require_id
 def archive(self, to_folder):
     from ..services import ArchiveItem
+
     return ArchiveItem(account=self.account).get(items=[self], to_folder=to_folder, expect_result=True)</code></pre>
 </details>
 </dd>
@@ -2132,6 +2301,7 @@ be created on the server when the item is saved.</p>
 <pre><code class="python">@require_id
 def copy(self, to_folder):
     from ..services import CopyItem
+
     # If &#39;to_folder&#39; is a public folder or a folder in a different mailbox then None is returned
     return CopyItem(account=self.account).get(
         items=[self],
@@ -2152,6 +2322,7 @@ def copy(self, to_folder):
 <pre><code class="python">@require_id
 def create_forward(self, subject, body, to_recipients, cc_recipients=None, bcc_recipients=None):
     from .message import ForwardItem
+
     return ForwardItem(
         account=self.account,
         reference_item_id=ReferenceItemId(id=self.id, changekey=self.changekey),
@@ -2172,11 +2343,19 @@ def create_forward(self, subject, body, to_recipients, cc_recipients=None, bcc_r
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
-           suppress_read_receipts=True):
+<pre><code class="python">def delete(
+    self,
+    send_meeting_cancellations=SEND_TO_NONE,
+    affected_task_occurrences=ALL_OCCURRENCES,
+    suppress_read_receipts=True,
+):
     # Remove the item permanently. No copies are stored anywhere.
-    self._delete(delete_type=HARD_DELETE, send_meeting_cancellations=send_meeting_cancellations,
-                 affected_task_occurrences=affected_task_occurrences, suppress_read_receipts=suppress_read_receipts)
+    self._delete(
+        delete_type=HARD_DELETE,
+        send_meeting_cancellations=send_meeting_cancellations,
+        affected_task_occurrences=affected_task_occurrences,
+        suppress_read_receipts=suppress_read_receipts,
+    )
     self._id, self.folder = None, None</code></pre>
 </details>
 </dd>
@@ -2209,7 +2388,7 @@ simply not be created on the server the item is saved.</p>
         attachments = list(attachments)
     for a in attachments:
         if a.parent_item is not self:
-            raise ValueError(&#39;Attachment does not belong to this item&#39;)
+            raise ValueError(&#34;Attachment does not belong to this item&#34;)
         if self.id:
             # Item is already created. Detach  the attachment server-side now
             a.detach()
@@ -2248,6 +2427,7 @@ simply not be created on the server the item is saved.</p>
 <pre><code class="python">@require_id
 def move(self, to_folder):
     from ..services import MoveItem
+
     res = MoveItem(account=self.account).get(
         items=[self],
         to_folder=to_folder,
@@ -2270,11 +2450,19 @@ def move(self, to_folder):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def move_to_trash(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
-                  suppress_read_receipts=True):
+<pre><code class="python">def move_to_trash(
+    self,
+    send_meeting_cancellations=SEND_TO_NONE,
+    affected_task_occurrences=ALL_OCCURRENCES,
+    suppress_read_receipts=True,
+):
     # Delete and move to the trash folder.
-    self._delete(delete_type=MOVE_TO_DELETED_ITEMS, send_meeting_cancellations=send_meeting_cancellations,
-                 affected_task_occurrences=affected_task_occurrences, suppress_read_receipts=suppress_read_receipts)
+    self._delete(
+        delete_type=MOVE_TO_DELETED_ITEMS,
+        send_meeting_cancellations=send_meeting_cancellations,
+        affected_task_occurrences=affected_task_occurrences,
+        suppress_read_receipts=suppress_read_receipts,
+    )
     self._id = None
     self.folder = self.account.trash</code></pre>
 </details>
@@ -2293,6 +2481,7 @@ def refresh(self):
     # Updates the item based on fresh data from EWS
     from ..folders import Folder
     from ..services import GetItem
+
     additional_fields = {
         FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
     }
@@ -2320,16 +2509,19 @@ def refresh(self):
 </summary>
 <pre><code class="python">def save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE):
     from .task import Task
+
     if self.id:
         item_id, changekey = self._update(
             update_fieldnames=update_fields,
             message_disposition=SAVE_ONLY,
             conflict_resolution=conflict_resolution,
-            send_meeting_invitations=send_meeting_invitations
+            send_meeting_invitations=send_meeting_invitations,
         )
-        if self.id != item_id \
-                and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)) \
-                and not isinstance(self, Task):
+        if (
+            self.id != item_id
+            and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId))
+            and not isinstance(self, Task)
+        ):
             # When we update an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
             # the ID of this item changes.
             #
@@ -2369,11 +2561,19 @@ def refresh(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def soft_delete(self, send_meeting_cancellations=SEND_TO_NONE, affected_task_occurrences=ALL_OCCURRENCES,
-                suppress_read_receipts=True):
+<pre><code class="python">def soft_delete(
+    self,
+    send_meeting_cancellations=SEND_TO_NONE,
+    affected_task_occurrences=ALL_OCCURRENCES,
+    suppress_read_receipts=True,
+):
     # Delete and move to the dumpster, if it is enabled.
-    self._delete(delete_type=SOFT_DELETE, send_meeting_cancellations=send_meeting_cancellations,
-                 affected_task_occurrences=affected_task_occurrences, suppress_read_receipts=suppress_read_receipts)
+    self._delete(
+        delete_type=SOFT_DELETE,
+        send_meeting_cancellations=send_meeting_cancellations,
+        affected_task_occurrences=affected_task_occurrences,
+        suppress_read_receipts=suppress_read_receipts,
+    )
     self._id = None
     self.folder = self.account.recoverable_items_deletions</code></pre>
 </details>
@@ -2414,7 +2614,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingCancellation(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingcancellation&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingCancellation&#39;</code></pre>
+    ELEMENT_NAME = &#34;MeetingCancellation&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2469,22 +2669,36 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingRequest(BaseMeetingItem, AcceptDeclineMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingrequest&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingRequest&#39;
+    ELEMENT_NAME = &#34;MeetingRequest&#34;
 
-    meeting_request_type = ChoiceField(field_uri=&#39;meetingRequest:MeetingRequestType&#39;, choices={
-        Choice(&#39;FullUpdate&#39;), Choice(&#39;InformationalUpdate&#39;), Choice(&#39;NewMeetingRequest&#39;), Choice(&#39;None&#39;),
-        Choice(&#39;Outdated&#39;), Choice(&#39;PrincipalWantsCopy&#39;), Choice(&#39;SilentUpdate&#39;)
-    }, default=&#39;None&#39;)
-    intended_free_busy_status = ChoiceField(field_uri=&#39;meetingRequest:IntendedFreeBusyStatus&#39;, choices={
-            Choice(&#39;Free&#39;), Choice(&#39;Tentative&#39;), Choice(&#39;Busy&#39;), Choice(&#39;OOF&#39;), Choice(&#39;NoData&#39;)
-    }, is_required=True, default=&#39;Busy&#39;)
+    meeting_request_type = ChoiceField(
+        field_uri=&#34;meetingRequest:MeetingRequestType&#34;,
+        choices={
+            Choice(&#34;FullUpdate&#34;),
+            Choice(&#34;InformationalUpdate&#34;),
+            Choice(&#34;NewMeetingRequest&#34;),
+            Choice(&#34;None&#34;),
+            Choice(&#34;Outdated&#34;),
+            Choice(&#34;PrincipalWantsCopy&#34;),
+            Choice(&#34;SilentUpdate&#34;),
+        },
+        default=&#34;None&#34;,
+    )
+    intended_free_busy_status = ChoiceField(
+        field_uri=&#34;meetingRequest:IntendedFreeBusyStatus&#34;,
+        choices={Choice(&#34;Free&#34;), Choice(&#34;Tentative&#34;), Choice(&#34;Busy&#34;), Choice(&#34;OOF&#34;), Choice(&#34;NoData&#34;)},
+        is_required=True,
+        default=&#34;Busy&#34;,
+    )
 
     # This element also has some fields from CalendarItem
-    start_idx = CalendarItem.FIELDS.index_by_name(&#39;start&#39;)
-    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#39;is_response_requested&#39;)
-    FIELDS = BaseMeetingItem.FIELDS \
-        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]\
-        + CalendarItem.FIELDS[is_response_requested_idx + 1:]</code></pre>
+    start_idx = CalendarItem.FIELDS.index_by_name(&#34;start&#34;)
+    is_response_requested_idx = CalendarItem.FIELDS.index_by_name(&#34;is_response_requested&#34;)
+    FIELDS = (
+        BaseMeetingItem.FIELDS
+        + CalendarItem.FIELDS[start_idx:is_response_requested_idx]
+        + CalendarItem.FIELDS[is_response_requested_idx + 1 :]
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2703,12 +2917,10 @@ we use folder.account.</p></div>
 <pre><code class="python">class MeetingResponse(BaseMeetingItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/meetingresponse&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MeetingResponse&#39;
+    ELEMENT_NAME = &#34;MeetingResponse&#34;
 
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    proposed_start = DateTimeField(field_uri=&#39;meeting:ProposedStart&#39;, supported_from=EXCHANGE_2013)
-    proposed_end = DateTimeField(field_uri=&#39;meeting:ProposedEnd&#39;, supported_from=EXCHANGE_2013)</code></pre>
+    proposed_start = DateTimeField(field_uri=&#34;meeting:ProposedStart&#34;, supported_from=EXCHANGE_2013)
+    proposed_end = DateTimeField(field_uri=&#34;meeting:ProposedEnd&#34;, supported_from=EXCHANGE_2013)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2737,14 +2949,6 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.MeetingResponse.proposed_start"><code class="name">var <span class="ident">proposed_start</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.MeetingResponse.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.items.MeetingResponse.received_representing"><code class="name">var <span class="ident">received_representing</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2789,37 +2993,52 @@ we use folder.account.</p></div>
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/message-ex15websvcsotherref
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Message&#39;
+    ELEMENT_NAME = &#34;Message&#34;
 
-    sender = MailboxField(field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True)
-    to_recipients = MailboxListField(field_uri=&#39;message:ToRecipients&#39;, is_read_only_after_send=True,
-                                     is_searchable=False)
-    cc_recipients = MailboxListField(field_uri=&#39;message:CcRecipients&#39;, is_read_only_after_send=True,
-                                     is_searchable=False)
-    bcc_recipients = MailboxListField(field_uri=&#39;message:BccRecipients&#39;, is_read_only_after_send=True,
-                                      is_searchable=False)
-    is_read_receipt_requested = BooleanField(field_uri=&#39;message:IsReadReceiptRequested&#39;,
-                                             is_required=True, default=False, is_read_only_after_send=True)
-    is_delivery_receipt_requested = BooleanField(field_uri=&#39;message:IsDeliveryReceiptRequested&#39;, is_required=True,
-                                                 default=False, is_read_only_after_send=True)
-    conversation_index = Base64Field(field_uri=&#39;message:ConversationIndex&#39;, is_read_only=True)
-    conversation_topic = CharField(field_uri=&#39;message:ConversationTopic&#39;, is_read_only=True)
+    sender = MailboxField(field_uri=&#34;message:Sender&#34;, is_read_only=True, is_read_only_after_send=True)
+    to_recipients = MailboxListField(
+        field_uri=&#34;message:ToRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    cc_recipients = MailboxListField(
+        field_uri=&#34;message:CcRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    bcc_recipients = MailboxListField(
+        field_uri=&#34;message:BccRecipients&#34;, is_read_only_after_send=True, is_searchable=False
+    )
+    is_read_receipt_requested = BooleanField(
+        field_uri=&#34;message:IsReadReceiptRequested&#34;, is_required=True, default=False, is_read_only_after_send=True
+    )
+    is_delivery_receipt_requested = BooleanField(
+        field_uri=&#34;message:IsDeliveryReceiptRequested&#34;, is_required=True, default=False, is_read_only_after_send=True
+    )
+    conversation_index = Base64Field(field_uri=&#34;message:ConversationIndex&#34;, is_read_only=True)
+    conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
     # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
-    author = MailboxField(field_uri=&#39;message:From&#39;, is_read_only_after_send=True)
-    message_id = CharField(field_uri=&#39;message:InternetMessageId&#39;, is_read_only_after_send=True)
-    is_read = BooleanField(field_uri=&#39;message:IsRead&#39;, is_required=True, default=False)
-    is_response_requested = BooleanField(field_uri=&#39;message:IsResponseRequested&#39;, default=False, is_required=True)
-    references = TextField(field_uri=&#39;message:References&#39;)
-    reply_to = MailboxListField(field_uri=&#39;message:ReplyTo&#39;, is_read_only_after_send=True, is_searchable=False)
-    received_by = MailboxField(field_uri=&#39;message:ReceivedBy&#39;, is_read_only=True)
-    received_representing = MailboxField(field_uri=&#39;message:ReceivedRepresenting&#39;, is_read_only=True)
-    reminder_message_data = EWSElementField(field_uri=&#39;message:ReminderMessageData&#39;, value_cls=ReminderMessageData,
-                                            supported_from=EXCHANGE_2013_SP1, is_read_only=True)
+    author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
+    message_id = CharField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
+    is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
+    is_response_requested = BooleanField(field_uri=&#34;message:IsResponseRequested&#34;, default=False, is_required=True)
+    references = TextField(field_uri=&#34;message:References&#34;)
+    reply_to = MailboxListField(field_uri=&#34;message:ReplyTo&#34;, is_read_only_after_send=True, is_searchable=False)
+    received_by = MailboxField(field_uri=&#34;message:ReceivedBy&#34;, is_read_only=True)
+    received_representing = MailboxField(field_uri=&#34;message:ReceivedRepresenting&#34;, is_read_only=True)
+    reminder_message_data = EWSElementField(
+        field_uri=&#34;message:ReminderMessageData&#34;,
+        value_cls=ReminderMessageData,
+        supported_from=EXCHANGE_2013_SP1,
+        is_read_only=True,
+    )
 
     @require_account
-    def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
-             send_meeting_invitations=SEND_TO_NONE):
+    def send(
+        self,
+        save_copy=True,
+        copy_to_folder=None,
+        conflict_resolution=AUTO_RESOLVE,
+        send_meeting_invitations=SEND_TO_NONE,
+    ):
         from ..services import SendItem
+
         # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
         # not yet exist in EWS.
         if copy_to_folder and not save_copy:
@@ -2837,42 +3056,48 @@ we use folder.account.</p></div>
         if copy_to_folder:
             # This would better be done via send_and_save() but lets just support it here
             self.folder = copy_to_folder
-            return self.send_and_save(conflict_resolution=conflict_resolution,
-                                      send_meeting_invitations=send_meeting_invitations)
+            return self.send_and_save(
+                conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+            )
 
         if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
             # At least some versions prior to Exchange 2013 can&#39;t send attachments immediately. You need to first save,
             # then attach, then send. This is done in send_and_save(). send() will delete the item again.
-            self.send_and_save(conflict_resolution=conflict_resolution,
-                               send_meeting_invitations=send_meeting_invitations)
+            self.send_and_save(
+                conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+            )
             return None
 
         self._create(message_disposition=SEND_ONLY, send_meeting_invitations=send_meeting_invitations)
         return None
 
-    def send_and_save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE,
-                      send_meeting_invitations=SEND_TO_NONE):
+    def send_and_save(
+        self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE
+    ):
         # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
         if self.id:
             self._update(
                 update_fieldnames=update_fields,
                 message_disposition=SEND_AND_SAVE_COPY,
                 conflict_resolution=conflict_resolution,
-                send_meeting_invitations=send_meeting_invitations
+                send_meeting_invitations=send_meeting_invitations,
             )
         else:
             if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
                 # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
                 # to first save, then attach, then send. This is done in save().
-                self.save(update_fields=update_fields, conflict_resolution=conflict_resolution,
-                          send_meeting_invitations=send_meeting_invitations)
-                self.send(save_copy=False, conflict_resolution=conflict_resolution,
-                          send_meeting_invitations=send_meeting_invitations)
-            else:
-                self._create(
-                    message_disposition=SEND_AND_SAVE_COPY,
-                    send_meeting_invitations=send_meeting_invitations
+                self.save(
+                    update_fields=update_fields,
+                    conflict_resolution=conflict_resolution,
+                    send_meeting_invitations=send_meeting_invitations,
                 )
+                self.send(
+                    save_copy=False,
+                    conflict_resolution=conflict_resolution,
+                    send_meeting_invitations=send_meeting_invitations,
+                )
+            else:
+                self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
@@ -2891,13 +3116,7 @@ we use folder.account.</p></div>
         )
 
     def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-        self.create_reply(
-            subject,
-            body,
-            to_recipients,
-            cc_recipients,
-            bcc_recipients
-        ).send()
+        self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()
 
     @require_id
     def create_reply_all(self, subject, body):
@@ -2926,6 +3145,7 @@ we use folder.account.</p></div>
         :return:
         &#34;&#34;&#34;
         from ..services import MarkAsJunk
+
         res = MarkAsJunk(account=self.account).get(
             items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
         )
@@ -3099,6 +3319,7 @@ removed.
     :return:
     &#34;&#34;&#34;
     from ..services import MarkAsJunk
+
     res = MarkAsJunk(account=self.account).get(
         items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
     )
@@ -3118,13 +3339,7 @@ removed.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-    self.create_reply(
-        subject,
-        body,
-        to_recipients,
-        cc_recipients,
-        bcc_recipients
-    ).send()</code></pre>
+    self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.Message.reply_all"><code class="name flex">
@@ -3150,9 +3365,15 @@ removed.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_account
-def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RESOLVE,
-         send_meeting_invitations=SEND_TO_NONE):
+def send(
+    self,
+    save_copy=True,
+    copy_to_folder=None,
+    conflict_resolution=AUTO_RESOLVE,
+    send_meeting_invitations=SEND_TO_NONE,
+):
     from ..services import SendItem
+
     # Only sends a message. The message can either be an existing draft stored in EWS or a new message that does
     # not yet exist in EWS.
     if copy_to_folder and not save_copy:
@@ -3170,14 +3391,16 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
     if copy_to_folder:
         # This would better be done via send_and_save() but lets just support it here
         self.folder = copy_to_folder
-        return self.send_and_save(conflict_resolution=conflict_resolution,
-                                  send_meeting_invitations=send_meeting_invitations)
+        return self.send_and_save(
+            conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+        )
 
     if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
         # At least some versions prior to Exchange 2013 can&#39;t send attachments immediately. You need to first save,
         # then attach, then send. This is done in send_and_save(). send() will delete the item again.
-        self.send_and_save(conflict_resolution=conflict_resolution,
-                           send_meeting_invitations=send_meeting_invitations)
+        self.send_and_save(
+            conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
+        )
         return None
 
     self._create(message_disposition=SEND_ONLY, send_meeting_invitations=send_meeting_invitations)
@@ -3193,29 +3416,33 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_and_save(self, update_fields=None, conflict_resolution=AUTO_RESOLVE,
-                  send_meeting_invitations=SEND_TO_NONE):
+<pre><code class="python">def send_and_save(
+    self, update_fields=None, conflict_resolution=AUTO_RESOLVE, send_meeting_invitations=SEND_TO_NONE
+):
     # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
     if self.id:
         self._update(
             update_fieldnames=update_fields,
             message_disposition=SEND_AND_SAVE_COPY,
             conflict_resolution=conflict_resolution,
-            send_meeting_invitations=send_meeting_invitations
+            send_meeting_invitations=send_meeting_invitations,
         )
     else:
         if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
             # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
             # to first save, then attach, then send. This is done in save().
-            self.save(update_fields=update_fields, conflict_resolution=conflict_resolution,
-                      send_meeting_invitations=send_meeting_invitations)
-            self.send(save_copy=False, conflict_resolution=conflict_resolution,
-                      send_meeting_invitations=send_meeting_invitations)
+            self.save(
+                update_fields=update_fields,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+            self.send(
+                save_copy=False,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
         else:
-            self._create(
-                message_disposition=SEND_AND_SAVE_COPY,
-                send_meeting_invitations=send_meeting_invitations
-            )</code></pre>
+            self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3251,105 +3478,105 @@ def send(self, save_copy=True, copy_to_folder=None, conflict_resolution=AUTO_RES
 <pre><code class="python">class Persona(IdChangeKeyMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/persona&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Persona&#39;
+    ELEMENT_NAME = &#34;Persona&#34;
     ID_ELEMENT_CLS = PersonaId
 
-    _id = IdElementField(field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
-    persona_type = CharField(field_uri=&#39;persona:PersonaType&#39;)
-    persona_object_type = TextField(field_uri=&#39;persona:PersonaObjectStatus&#39;)
-    creation_time = DateTimeField(field_uri=&#39;persona:CreationTime&#39;)
-    bodies = BodyContentAttributedValueField(field_uri=&#39;persona:Bodies&#39;)
-    display_name_first_last_sort_key = TextField(field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;)
-    display_name_last_first_sort_key = TextField(field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;)
-    company_sort_key = TextField(field_uri=&#39;persona:CompanyNameSortKey&#39;)
-    home_sort_key = TextField(field_uri=&#39;persona:HomeCitySortKey&#39;)
-    work_city_sort_key = TextField(field_uri=&#39;persona:WorkCitySortKey&#39;)
-    display_name_first_last_header = CharField(field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;)
-    display_name_last_first_header = CharField(field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;)
-    file_as_header = TextField(field_uri=&#39;persona:FileAsHeader&#39;)
-    display_name = CharField(field_uri=&#39;persona:DisplayName&#39;)
-    display_name_first_last = CharField(field_uri=&#39;persona:DisplayNameFirstLast&#39;)
-    display_name_last_first = CharField(field_uri=&#39;persona:DisplayNameLastFirst&#39;)
-    file_as = CharField(field_uri=&#39;persona:FileAs&#39;)
-    file_as_id = TextField(field_uri=&#39;persona:FileAsId&#39;)
-    display_name_prefix = CharField(field_uri=&#39;persona:DisplayNamePrefix&#39;)
-    given_name = CharField(field_uri=&#39;persona:GivenName&#39;)
-    middle_name = CharField(field_uri=&#39;persona:MiddleName&#39;)
-    surname = CharField(field_uri=&#39;persona:Surname&#39;)
-    generation = CharField(field_uri=&#39;persona:Generation&#39;)
-    nickname = TextField(field_uri=&#39;persona:Nickname&#39;)
-    yomi_company_name = TextField(field_uri=&#39;persona:YomiCompanyName&#39;)
-    yomi_first_name = TextField(field_uri=&#39;persona:YomiFirstName&#39;)
-    yomi_last_name = TextField(field_uri=&#39;persona:YomiLastName&#39;)
-    title = CharField(field_uri=&#39;persona:Title&#39;)
-    department = TextField(field_uri=&#39;persona:Department&#39;)
-    company_name = CharField(field_uri=&#39;persona:CompanyName&#39;)
-    email_address = EWSElementField(field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress)
-    email_addresses = EWSElementListField(field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address)
-    PhoneNumber = PersonaPhoneNumberField(field_uri=&#39;persona:PhoneNumber&#39;)
-    im_address = CharField(field_uri=&#39;persona:ImAddress&#39;)
-    home_city = CharField(field_uri=&#39;persona:HomeCity&#39;)
-    work_city = CharField(field_uri=&#39;persona:WorkCity&#39;)
-    relevance_score = CharField(field_uri=&#39;persona:RelevanceScore&#39;)
-    folder_ids = EWSElementListField(field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId)
-    attributions = EWSElementListField(field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution)
-    display_names = StringAttributedValueField(field_uri=&#39;persona:DisplayNames&#39;)
-    file_ases = StringAttributedValueField(field_uri=&#39;persona:FileAses&#39;)
-    file_as_ids = StringAttributedValueField(field_uri=&#39;persona:FileAsIds&#39;)
-    display_name_prefixes = StringAttributedValueField(field_uri=&#39;persona:DisplayNamePrefixes&#39;)
-    given_names = StringAttributedValueField(field_uri=&#39;persona:GivenNames&#39;)
-    middle_names = StringAttributedValueField(field_uri=&#39;persona:MiddleNames&#39;)
-    surnames = StringAttributedValueField(field_uri=&#39;persona:Surnames&#39;)
-    generations = StringAttributedValueField(field_uri=&#39;persona:Generations&#39;)
-    nicknames = StringAttributedValueField(field_uri=&#39;persona:Nicknames&#39;)
-    initials = StringAttributedValueField(field_uri=&#39;persona:Initials&#39;)
-    yomi_company_names = StringAttributedValueField(field_uri=&#39;persona:YomiCompanyNames&#39;)
-    yomi_first_names = StringAttributedValueField(field_uri=&#39;persona:YomiFirstNames&#39;)
-    yomi_last_names = StringAttributedValueField(field_uri=&#39;persona:YomiLastNames&#39;)
-    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers&#39;)
-    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers2&#39;)
-    home_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones&#39;)
-    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones2&#39;)
-    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones&#39;)
-    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones2&#39;)
-    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:AssistantPhoneNumbers&#39;)
-    callback_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CallbackPhones&#39;)
-    car_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CarPhones&#39;)
-    home_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomeFaxes&#39;)
-    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
-    other_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherFaxes&#39;)
-    other_telephones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherTelephones&#39;)
-    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherPhones2&#39;)
-    pagers = PhoneNumberAttributedValueField(field_uri=&#39;persona:Pagers&#39;)
-    radio_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:RadioPhones&#39;)
-    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TelexNumbers&#39;)
-    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;)
-    work_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:WorkFaxes&#39;)
-    emails1 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails1&#39;)
-    emails2 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails2&#39;)
-    emails3 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails3&#39;)
-    business_home_pages = StringAttributedValueField(field_uri=&#39;persona:BusinessHomePages&#39;)
-    personal_home_pages = StringAttributedValueField(field_uri=&#39;persona:PersonalHomePages&#39;)
-    office_locations = StringAttributedValueField(field_uri=&#39;persona:OfficeLocations&#39;)
-    im_addresses = StringAttributedValueField(field_uri=&#39;persona:ImAddresses&#39;)
-    im_addresses2 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses2&#39;)
-    im_addresses3 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses3&#39;)
-    business_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:BusinessAddresses&#39;)
-    home_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:HomeAddresses&#39;)
-    other_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:OtherAddresses&#39;)
-    titles = StringAttributedValueField(field_uri=&#39;persona:Titles&#39;)
-    departments = StringAttributedValueField(field_uri=&#39;persona:Departments&#39;)
-    company_names = StringAttributedValueField(field_uri=&#39;persona:CompanyNames&#39;)
-    managers = StringAttributedValueField(field_uri=&#39;persona:Managers&#39;)
-    assistant_names = StringAttributedValueField(field_uri=&#39;persona:AssistantNames&#39;)
-    professions = StringAttributedValueField(field_uri=&#39;persona:Professions&#39;)
-    spouse_names = StringAttributedValueField(field_uri=&#39;persona:SpouseNames&#39;)
-    children = StringAttributedValueField(field_uri=&#39;persona:Children&#39;)
-    schools = StringAttributedValueField(field_uri=&#39;persona:Schools&#39;)
-    hobbies = StringAttributedValueField(field_uri=&#39;persona:Hobbies&#39;)
-    wedding_anniversaries = StringAttributedValueField(field_uri=&#39;persona:WeddingAnniversaries&#39;)
-    birthdays = StringAttributedValueField(field_uri=&#39;persona:Birthdays&#39;)
-    locations = StringAttributedValueField(field_uri=&#39;persona:Locations&#39;)</code></pre>
+    _id = IdElementField(field_uri=&#34;persona:PersonaId&#34;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
+    persona_type = CharField(field_uri=&#34;persona:PersonaType&#34;)
+    persona_object_type = TextField(field_uri=&#34;persona:PersonaObjectStatus&#34;)
+    creation_time = DateTimeField(field_uri=&#34;persona:CreationTime&#34;)
+    bodies = BodyContentAttributedValueField(field_uri=&#34;persona:Bodies&#34;)
+    display_name_first_last_sort_key = TextField(field_uri=&#34;persona:DisplayNameFirstLastSortKey&#34;)
+    display_name_last_first_sort_key = TextField(field_uri=&#34;persona:DisplayNameLastFirstSortKey&#34;)
+    company_sort_key = TextField(field_uri=&#34;persona:CompanyNameSortKey&#34;)
+    home_sort_key = TextField(field_uri=&#34;persona:HomeCitySortKey&#34;)
+    work_city_sort_key = TextField(field_uri=&#34;persona:WorkCitySortKey&#34;)
+    display_name_first_last_header = CharField(field_uri=&#34;persona:DisplayNameFirstLastHeader&#34;)
+    display_name_last_first_header = CharField(field_uri=&#34;persona:DisplayNameLastFirstHeader&#34;)
+    file_as_header = TextField(field_uri=&#34;persona:FileAsHeader&#34;)
+    display_name = CharField(field_uri=&#34;persona:DisplayName&#34;)
+    display_name_first_last = CharField(field_uri=&#34;persona:DisplayNameFirstLast&#34;)
+    display_name_last_first = CharField(field_uri=&#34;persona:DisplayNameLastFirst&#34;)
+    file_as = CharField(field_uri=&#34;persona:FileAs&#34;)
+    file_as_id = TextField(field_uri=&#34;persona:FileAsId&#34;)
+    display_name_prefix = CharField(field_uri=&#34;persona:DisplayNamePrefix&#34;)
+    given_name = CharField(field_uri=&#34;persona:GivenName&#34;)
+    middle_name = CharField(field_uri=&#34;persona:MiddleName&#34;)
+    surname = CharField(field_uri=&#34;persona:Surname&#34;)
+    generation = CharField(field_uri=&#34;persona:Generation&#34;)
+    nickname = TextField(field_uri=&#34;persona:Nickname&#34;)
+    yomi_company_name = TextField(field_uri=&#34;persona:YomiCompanyName&#34;)
+    yomi_first_name = TextField(field_uri=&#34;persona:YomiFirstName&#34;)
+    yomi_last_name = TextField(field_uri=&#34;persona:YomiLastName&#34;)
+    title = CharField(field_uri=&#34;persona:Title&#34;)
+    department = TextField(field_uri=&#34;persona:Department&#34;)
+    company_name = CharField(field_uri=&#34;persona:CompanyName&#34;)
+    email_address = EWSElementField(field_uri=&#34;persona:EmailAddress&#34;, value_cls=EmailAddress)
+    email_addresses = EWSElementListField(field_uri=&#34;persona:EmailAddresses&#34;, value_cls=Address)
+    PhoneNumber = PersonaPhoneNumberField(field_uri=&#34;persona:PhoneNumber&#34;)
+    im_address = CharField(field_uri=&#34;persona:ImAddress&#34;)
+    home_city = CharField(field_uri=&#34;persona:HomeCity&#34;)
+    work_city = CharField(field_uri=&#34;persona:WorkCity&#34;)
+    relevance_score = CharField(field_uri=&#34;persona:RelevanceScore&#34;)
+    folder_ids = EWSElementListField(field_uri=&#34;persona:FolderIds&#34;, value_cls=FolderId)
+    attributions = EWSElementListField(field_uri=&#34;persona:Attributions&#34;, value_cls=Attribution)
+    display_names = StringAttributedValueField(field_uri=&#34;persona:DisplayNames&#34;)
+    file_ases = StringAttributedValueField(field_uri=&#34;persona:FileAses&#34;)
+    file_as_ids = StringAttributedValueField(field_uri=&#34;persona:FileAsIds&#34;)
+    display_name_prefixes = StringAttributedValueField(field_uri=&#34;persona:DisplayNamePrefixes&#34;)
+    given_names = StringAttributedValueField(field_uri=&#34;persona:GivenNames&#34;)
+    middle_names = StringAttributedValueField(field_uri=&#34;persona:MiddleNames&#34;)
+    surnames = StringAttributedValueField(field_uri=&#34;persona:Surnames&#34;)
+    generations = StringAttributedValueField(field_uri=&#34;persona:Generations&#34;)
+    nicknames = StringAttributedValueField(field_uri=&#34;persona:Nicknames&#34;)
+    initials = StringAttributedValueField(field_uri=&#34;persona:Initials&#34;)
+    yomi_company_names = StringAttributedValueField(field_uri=&#34;persona:YomiCompanyNames&#34;)
+    yomi_first_names = StringAttributedValueField(field_uri=&#34;persona:YomiFirstNames&#34;)
+    yomi_last_names = StringAttributedValueField(field_uri=&#34;persona:YomiLastNames&#34;)
+    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:BusinessPhoneNumbers&#34;)
+    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:BusinessPhoneNumbers2&#34;)
+    home_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomePhones&#34;)
+    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomePhones2&#34;)
+    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:MobilePhones&#34;)
+    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:MobilePhones2&#34;)
+    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:AssistantPhoneNumbers&#34;)
+    callback_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:CallbackPhones&#34;)
+    car_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:CarPhones&#34;)
+    home_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomeFaxes&#34;)
+    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:OrganizationMainPhones&#34;)
+    other_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherFaxes&#34;)
+    other_telephones = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherTelephones&#34;)
+    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherPhones2&#34;)
+    pagers = PhoneNumberAttributedValueField(field_uri=&#34;persona:Pagers&#34;)
+    radio_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:RadioPhones&#34;)
+    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:TelexNumbers&#34;)
+    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:TTYTDDPhoneNumbers&#34;)
+    work_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:WorkFaxes&#34;)
+    emails1 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails1&#34;)
+    emails2 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails2&#34;)
+    emails3 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails3&#34;)
+    business_home_pages = StringAttributedValueField(field_uri=&#34;persona:BusinessHomePages&#34;)
+    personal_home_pages = StringAttributedValueField(field_uri=&#34;persona:PersonalHomePages&#34;)
+    office_locations = StringAttributedValueField(field_uri=&#34;persona:OfficeLocations&#34;)
+    im_addresses = StringAttributedValueField(field_uri=&#34;persona:ImAddresses&#34;)
+    im_addresses2 = StringAttributedValueField(field_uri=&#34;persona:ImAddresses2&#34;)
+    im_addresses3 = StringAttributedValueField(field_uri=&#34;persona:ImAddresses3&#34;)
+    business_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:BusinessAddresses&#34;)
+    home_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:HomeAddresses&#34;)
+    other_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:OtherAddresses&#34;)
+    titles = StringAttributedValueField(field_uri=&#34;persona:Titles&#34;)
+    departments = StringAttributedValueField(field_uri=&#34;persona:Departments&#34;)
+    company_names = StringAttributedValueField(field_uri=&#34;persona:CompanyNames&#34;)
+    managers = StringAttributedValueField(field_uri=&#34;persona:Managers&#34;)
+    assistant_names = StringAttributedValueField(field_uri=&#34;persona:AssistantNames&#34;)
+    professions = StringAttributedValueField(field_uri=&#34;persona:Professions&#34;)
+    spouse_names = StringAttributedValueField(field_uri=&#34;persona:SpouseNames&#34;)
+    children = StringAttributedValueField(field_uri=&#34;persona:Children&#34;)
+    schools = StringAttributedValueField(field_uri=&#34;persona:Schools&#34;)
+    hobbies = StringAttributedValueField(field_uri=&#34;persona:Hobbies&#34;)
+    wedding_anniversaries = StringAttributedValueField(field_uri=&#34;persona:WeddingAnniversaries&#34;)
+    birthdays = StringAttributedValueField(field_uri=&#34;persona:Birthdays&#34;)
+    locations = StringAttributedValueField(field_uri=&#34;persona:Locations&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3784,18 +4011,18 @@ we use folder.account.</p></div>
 <pre><code class="python">class PostItem(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;PostItem&#39;
+    ELEMENT_NAME = &#34;PostItem&#34;
 
-    conversation_index = Message.FIELDS[&#39;conversation_index&#39;]
-    conversation_topic = Message.FIELDS[&#39;conversation_topic&#39;]
+    conversation_index = Message.FIELDS[&#34;conversation_index&#34;]
+    conversation_topic = Message.FIELDS[&#34;conversation_topic&#34;]
 
-    author = Message.FIELDS[&#39;author&#39;]
-    message_id = Message.FIELDS[&#39;message_id&#39;]
-    is_read = Message.FIELDS[&#39;is_read&#39;]
+    author = Message.FIELDS[&#34;author&#34;]
+    message_id = Message.FIELDS[&#34;message_id&#34;]
+    is_read = Message.FIELDS[&#34;is_read&#34;]
 
-    posted_time = DateTimeField(field_uri=&#39;postitem:PostedTime&#39;, is_read_only=True)
-    references = TextField(field_uri=&#39;message:References&#39;)
-    sender = MailboxField(field_uri=&#39;message:Sender&#39;, is_read_only=True, is_read_only_after_send=True)</code></pre>
+    posted_time = DateTimeField(field_uri=&#34;postitem:PostedTime&#34;, is_read_only=True)
+    references = TextField(field_uri=&#34;message:References&#34;)
+    sender = MailboxField(field_uri=&#34;message:Sender&#34;, is_read_only=True, is_read_only_after_send=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3888,15 +4115,15 @@ we use folder.account.</p></div>
 <pre><code class="python">class PostReplyItem(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postreplyitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;PostReplyItem&#39;
+    ELEMENT_NAME = &#34;PostReplyItem&#34;
 
     # This element only has Item fields up to, and including, &#39;culture&#39;
     # TDO: Plus all message fields
-    new_body = BodyField(field_uri=&#39;NewBodyContent&#39;)  # Accepts and returns Body or HTMLBody instances
+    new_body = BodyField(field_uri=&#34;NewBodyContent&#34;)  # Accepts and returns Body or HTMLBody instances
 
-    culture_idx = Item.FIELDS.index_by_name(&#39;culture&#39;)
-    sender_idx = Message.FIELDS.index_by_name(&#39;sender&#39;)
-    FIELDS = Item.FIELDS[:culture_idx + 1] + Message.FIELDS[sender_idx:]</code></pre>
+    culture_idx = Item.FIELDS.index_by_name(&#34;culture&#34;)
+    sender_idx = Message.FIELDS.index_by_name(&#34;sender&#34;)
+    FIELDS = Item.FIELDS[: culture_idx + 1] + Message.FIELDS[sender_idx:]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4033,7 +4260,7 @@ we use folder.account.</p></div>
     &#34;&#34;&#34;Base class for classes that can change their list of supported fields dynamically.&#34;&#34;&#34;
 
     # This class implements dynamic fields on an element class, so we need to include __dict__ in __slots__
-    __slots__ = &#39;__dict__&#39;,
+    __slots__ = (&#34;__dict__&#34;,)
 
     INSERT_AFTER_FIELD = None
 
@@ -4046,7 +4273,7 @@ we use folder.account.</p></div>
         :return:
         &#34;&#34;&#34;
         if not cls.INSERT_AFTER_FIELD:
-            raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
+            raise ValueError(f&#34;Class {cls} is missing INSERT_AFTER_FIELD value&#34;)
         try:
             cls.get_field_by_fieldname(attr_name)
         except InvalidField:
@@ -4149,7 +4376,7 @@ def register(cls, attr_name, attr_cls):
     :return:
     &#34;&#34;&#34;
     if not cls.INSERT_AFTER_FIELD:
-        raise ValueError(f&#39;Class {cls} is missing INSERT_AFTER_FIELD value&#39;)
+        raise ValueError(f&#34;Class {cls} is missing INSERT_AFTER_FIELD value&#34;)
     try:
         cls.get_field_by_fieldname(attr_name)
     except InvalidField:
@@ -4197,7 +4424,7 @@ def register(cls, attr_name, attr_cls):
 <pre><code class="python">class ReplyAllToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replyalltoitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ReplyAllToItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ReplyAllToItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4238,7 +4465,7 @@ def register(cls, attr_name, attr_cls):
 <pre><code class="python">class ReplyToItem(BaseReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/replytoitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ReplyToItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;ReplyToItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4284,49 +4511,78 @@ we use folder.account.</p></div>
 <pre><code class="python">class Task(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/task&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Task&#39;
-    NOT_STARTED = &#39;NotStarted&#39;
-    COMPLETED = &#39;Completed&#39;
+    ELEMENT_NAME = &#34;Task&#34;
+    NOT_STARTED = &#34;NotStarted&#34;
+    COMPLETED = &#34;Completed&#34;
 
-    actual_work = IntegerField(field_uri=&#39;task:ActualWork&#39;, min=0)
-    assigned_time = DateTimeField(field_uri=&#39;task:AssignedTime&#39;, is_read_only=True)
-    billing_information = TextField(field_uri=&#39;task:BillingInformation&#39;)
-    change_count = IntegerField(field_uri=&#39;task:ChangeCount&#39;, is_read_only=True, min=0)
-    companies = TextListField(field_uri=&#39;task:Companies&#39;)
+    actual_work = IntegerField(field_uri=&#34;task:ActualWork&#34;, min=0)
+    assigned_time = DateTimeField(field_uri=&#34;task:AssignedTime&#34;, is_read_only=True)
+    billing_information = TextField(field_uri=&#34;task:BillingInformation&#34;)
+    change_count = IntegerField(field_uri=&#34;task:ChangeCount&#34;, is_read_only=True, min=0)
+    companies = TextListField(field_uri=&#34;task:Companies&#34;)
     # &#39;complete_date&#39; can be set, but is ignored by the server, which sets it to now()
-    complete_date = DateTimeField(field_uri=&#39;task:CompleteDate&#39;, is_read_only=True)
-    contacts = TextListField(field_uri=&#39;task:Contacts&#39;)
-    delegation_state = ChoiceField(field_uri=&#39;task:DelegationState&#39;, choices={
-        Choice(&#39;NoMatch&#39;), Choice(&#39;OwnNew&#39;), Choice(&#39;Owned&#39;), Choice(&#39;Accepted&#39;), Choice(&#39;Declined&#39;), Choice(&#39;Max&#39;)
-    }, is_read_only=True)
-    delegator = CharField(field_uri=&#39;task:Delegator&#39;, is_read_only=True)
-    due_date = DateTimeBackedDateField(field_uri=&#39;task:DueDate&#39;)
-    is_editable = BooleanField(field_uri=&#39;task:IsAssignmentEditable&#39;, is_read_only=True)
-    is_complete = BooleanField(field_uri=&#39;task:IsComplete&#39;, is_read_only=True)
-    is_recurring = BooleanField(field_uri=&#39;task:IsRecurring&#39;, is_read_only=True)
-    is_team_task = BooleanField(field_uri=&#39;task:IsTeamTask&#39;, is_read_only=True)
-    mileage = TextField(field_uri=&#39;task:Mileage&#39;)
-    owner = CharField(field_uri=&#39;task:Owner&#39;, is_read_only=True)
-    percent_complete = DecimalField(field_uri=&#39;task:PercentComplete&#39;, is_required=True, default=Decimal(0.0),
-                                    min=Decimal(0), max=Decimal(100), is_searchable=False)
-    recurrence = TaskRecurrenceField(field_uri=&#39;task:Recurrence&#39;, is_searchable=False)
-    start_date = DateTimeBackedDateField(field_uri=&#39;task:StartDate&#39;)
-    status = ChoiceField(field_uri=&#39;task:Status&#39;, choices={
-        Choice(NOT_STARTED), Choice(&#39;InProgress&#39;), Choice(COMPLETED), Choice(&#39;WaitingOnOthers&#39;), Choice(&#39;Deferred&#39;)
-    }, is_required=True, is_searchable=False, default=NOT_STARTED)
-    status_description = CharField(field_uri=&#39;task:StatusDescription&#39;, is_read_only=True)
-    total_work = IntegerField(field_uri=&#39;task:TotalWork&#39;, min=0)
+    complete_date = DateTimeField(field_uri=&#34;task:CompleteDate&#34;, is_read_only=True)
+    contacts = TextListField(field_uri=&#34;task:Contacts&#34;)
+    delegation_state = ChoiceField(
+        field_uri=&#34;task:DelegationState&#34;,
+        choices={
+            Choice(&#34;NoMatch&#34;),
+            Choice(&#34;OwnNew&#34;),
+            Choice(&#34;Owned&#34;),
+            Choice(&#34;Accepted&#34;),
+            Choice(&#34;Declined&#34;),
+            Choice(&#34;Max&#34;),
+        },
+        is_read_only=True,
+    )
+    delegator = CharField(field_uri=&#34;task:Delegator&#34;, is_read_only=True)
+    due_date = DateTimeBackedDateField(field_uri=&#34;task:DueDate&#34;)
+    is_editable = BooleanField(field_uri=&#34;task:IsAssignmentEditable&#34;, is_read_only=True)
+    is_complete = BooleanField(field_uri=&#34;task:IsComplete&#34;, is_read_only=True)
+    is_recurring = BooleanField(field_uri=&#34;task:IsRecurring&#34;, is_read_only=True)
+    is_team_task = BooleanField(field_uri=&#34;task:IsTeamTask&#34;, is_read_only=True)
+    mileage = TextField(field_uri=&#34;task:Mileage&#34;)
+    owner = CharField(field_uri=&#34;task:Owner&#34;, is_read_only=True)
+    percent_complete = DecimalField(
+        field_uri=&#34;task:PercentComplete&#34;,
+        is_required=True,
+        default=Decimal(0.0),
+        min=Decimal(0),
+        max=Decimal(100),
+        is_searchable=False,
+    )
+    recurrence = TaskRecurrenceField(field_uri=&#34;task:Recurrence&#34;, is_searchable=False)
+    start_date = DateTimeBackedDateField(field_uri=&#34;task:StartDate&#34;)
+    status = ChoiceField(
+        field_uri=&#34;task:Status&#34;,
+        choices={
+            Choice(NOT_STARTED),
+            Choice(&#34;InProgress&#34;),
+            Choice(COMPLETED),
+            Choice(&#34;WaitingOnOthers&#34;),
+            Choice(&#34;Deferred&#34;),
+        },
+        is_required=True,
+        is_searchable=False,
+        default=NOT_STARTED,
+    )
+    status_description = CharField(field_uri=&#34;task:StatusDescription&#34;, is_read_only=True)
+    total_work = IntegerField(field_uri=&#34;task:TotalWork&#34;, min=0)
 
     def clean(self, version=None):
         super().clean(version=version)
         if self.due_date and self.start_date and self.due_date &lt; self.start_date:
-            log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
-                        self.due_date, self.start_date)
+            log.warning(
+                &#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
+                self.due_date,
+                self.start_date,
+            )
             self.due_date = self.start_date
         if self.complete_date:
             if self.status != self.COMPLETED:
-                log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
-                            self.COMPLETED, self.status)
+                log.warning(
+                    &#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;, self.COMPLETED, self.status
+                )
                 self.status = self.COMPLETED
             now = datetime.datetime.now(tz=UTC)
             if (self.complete_date - now).total_seconds() &gt; 120:
@@ -4335,19 +4591,28 @@ we use folder.account.</p></div>
                 log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
                 self.complete_date = now
             if self.start_date and self.complete_date.date() &lt; self.start_date:
-                log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
-                            self.complete_date, self.start_date)
+                log.warning(
+                    &#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
+                    self.complete_date,
+                    self.start_date,
+                )
                 self.complete_date = EWSDateTime.combine(self.start_date, datetime.time(0, 0)).replace(tzinfo=UTC)
         if self.percent_complete is not None:
             if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
                 # percent_complete must be 100% if task is complete
-                log.warning(&#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
-                            self.COMPLETED, self.percent_complete)
+                log.warning(
+                    &#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                    self.COMPLETED,
+                    self.percent_complete,
+                )
                 self.percent_complete = Decimal(100)
             elif self.status == self.NOT_STARTED and self.percent_complete != Decimal(0):
                 # percent_complete must be 0% if task is not started
-                log.warning(&#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
-                            self.NOT_STARTED, self.percent_complete)
+                log.warning(
+                    &#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                    self.NOT_STARTED,
+                    self.percent_complete,
+                )
                 self.percent_complete = Decimal(0)
 
     def complete(self):
@@ -4488,13 +4753,17 @@ we use folder.account.</p></div>
 <pre><code class="python">def clean(self, version=None):
     super().clean(version=version)
     if self.due_date and self.start_date and self.due_date &lt; self.start_date:
-        log.warning(&#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
-                    self.due_date, self.start_date)
+        log.warning(
+            &#34;&#39;due_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting &#39;due_date&#39;&#34;,
+            self.due_date,
+            self.start_date,
+        )
         self.due_date = self.start_date
     if self.complete_date:
         if self.status != self.COMPLETED:
-            log.warning(&#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;,
-                        self.COMPLETED, self.status)
+            log.warning(
+                &#34;&#39;status&#39; must be &#39;%s&#39; when &#39;complete_date&#39; is set (%s). Resetting&#34;, self.COMPLETED, self.status
+            )
             self.status = self.COMPLETED
         now = datetime.datetime.now(tz=UTC)
         if (self.complete_date - now).total_seconds() &gt; 120:
@@ -4503,19 +4772,28 @@ we use folder.account.</p></div>
             log.warning(&#34;&#39;complete_date&#39; must be in the past (%s vs %s). Resetting&#34;, self.complete_date, now)
             self.complete_date = now
         if self.start_date and self.complete_date.date() &lt; self.start_date:
-            log.warning(&#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
-                        self.complete_date, self.start_date)
+            log.warning(
+                &#34;&#39;complete_date&#39; must be greater than &#39;start_date&#39; (%s vs %s). Resetting&#34;,
+                self.complete_date,
+                self.start_date,
+            )
             self.complete_date = EWSDateTime.combine(self.start_date, datetime.time(0, 0)).replace(tzinfo=UTC)
     if self.percent_complete is not None:
         if self.status == self.COMPLETED and self.percent_complete != Decimal(100):
             # percent_complete must be 100% if task is complete
-            log.warning(&#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
-                        self.COMPLETED, self.percent_complete)
+            log.warning(
+                &#34;&#39;percent_complete&#39; must be 100 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                self.COMPLETED,
+                self.percent_complete,
+            )
             self.percent_complete = Decimal(100)
         elif self.status == self.NOT_STARTED and self.percent_complete != Decimal(0):
             # percent_complete must be 0% if task is not started
-            log.warning(&#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
-                        self.NOT_STARTED, self.percent_complete)
+            log.warning(
+                &#34;&#39;percent_complete&#39; must be 0 when &#39;status&#39; is &#39;%s&#39; (%s). Resetting&#34;,
+                self.NOT_STARTED,
+                self.percent_complete,
+            )
             self.percent_complete = Decimal(0)</code></pre>
 </details>
 </dd>
@@ -4573,7 +4851,7 @@ we use folder.account.</p></div>
 <pre><code class="python">class TentativelyAcceptItem(BaseMeetingReplyItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/tentativelyacceptitem&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;TentativelyAcceptItem&#39;</code></pre>
+    ELEMENT_NAME = &#34;TentativelyAcceptItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4908,8 +5186,6 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.MeetingResponse.FIELDS" href="#exchangelib.items.MeetingResponse.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.items.MeetingResponse.proposed_end" href="#exchangelib.items.MeetingResponse.proposed_end">proposed_end</a></code></li>
 <li><code><a title="exchangelib.items.MeetingResponse.proposed_start" href="#exchangelib.items.MeetingResponse.proposed_start">proposed_start</a></code></li>
-<li><code><a title="exchangelib.items.MeetingResponse.received_by" href="#exchangelib.items.MeetingResponse.received_by">received_by</a></code></li>
-<li><code><a title="exchangelib.items.MeetingResponse.received_representing" href="#exchangelib.items.MeetingResponse.received_representing">received_representing</a></code></li>
 </ul>
 </li>
 <li>

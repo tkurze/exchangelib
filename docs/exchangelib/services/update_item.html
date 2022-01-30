@@ -26,48 +26,63 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import to_item_id
-from ..errors import InvalidEnumValue
+<pre><code class="python">from ..errors import InvalidEnumValue
 from ..ewsdatetime import EWSDate
-from ..items import CONFLICT_RESOLUTION_CHOICES, MESSAGE_DISPOSITION_CHOICES, \
-    SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES, SEND_ONLY, Item, CalendarItem
+from ..items import (
+    CONFLICT_RESOLUTION_CHOICES,
+    MESSAGE_DISPOSITION_CHOICES,
+    SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
+    SEND_ONLY,
+    CalendarItem,
+    Item,
+)
 from ..properties import ItemId
-from ..util import create_element, MNS
+from ..util import MNS, create_element
 from ..version import EXCHANGE_2013_SP1
+from .common import to_item_id
 from .update_folder import BaseUpdateService
 
 
 class UpdateItem(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UpdateItem&#39;
-    SET_FIELD_ELEMENT_NAME = &#39;t:SetItemField&#39;
-    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteItemField&#39;
-    CHANGE_ELEMENT_NAME = &#39;t:ItemChange&#39;
-    CHANGES_ELEMENT_NAME = &#39;m:ItemChanges&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;UpdateItem&#34;
+    SET_FIELD_ELEMENT_NAME = &#34;t:SetItemField&#34;
+    DELETE_FIELD_ELEMENT_NAME = &#34;t:DeleteItemField&#34;
+    CHANGE_ELEMENT_NAME = &#34;t:ItemChange&#34;
+    CHANGES_ELEMENT_NAME = &#34;m:ItemChanges&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
-    def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-             suppress_read_receipts):
+    def call(
+        self,
+        items,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+        suppress_read_receipts,
+    ):
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
+            raise InvalidEnumValue(&#34;conflict_resolution&#34;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+            raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
             raise InvalidEnumValue(
-                &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
-                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+                &#34;send_meeting_invitations_or_cancellations&#34;,
+                send_meeting_invitations_or_cancellations,
+                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
             )
         if message_disposition == SEND_ONLY:
-            raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=items,
-            conflict_resolution=conflict_resolution,
-            message_disposition=message_disposition,
-            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-            suppress_read_receipts=suppress_read_receipts,
-        ))
+            raise ValueError(&#34;Cannot send-only existing objects. Use SendItem service instead&#34;)
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                conflict_resolution=conflict_resolution,
+                message_disposition=message_disposition,
+                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+                suppress_read_receipts=suppress_read_receipts,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Item.id_from_xml(elem)
@@ -78,7 +93,7 @@ class UpdateItem(BaseUpdateService):
         if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to update internal timezone fields
             target.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
-            for field_name in (&#39;start&#39;, &#39;end&#39;):
+            for field_name in (&#34;start&#34;, &#34;end&#34;):
                 if field_name in fieldnames_copy:
                     tz_field_name = target.tz_field_for_field_name(field_name).name
                     if tz_field_name not in fieldnames_copy:
@@ -91,7 +106,7 @@ class UpdateItem(BaseUpdateService):
 
         if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
-            if field.name in (&#39;start&#39;, &#39;end&#39;):
+            if field.name in (&#34;start&#34;, &#34;end&#34;):
                 if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return target.date_to_datetime(field_name=field.name)
@@ -103,8 +118,14 @@ class UpdateItem(BaseUpdateService):
     def _target_elem(self, target):
         return to_item_id(target, ItemId)
 
-    def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-                    suppress_read_receipts):
+    def get_payload(
+        self,
+        items,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+        suppress_read_receipts,
+    ):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated.
         attrs = dict(
@@ -113,8 +134,8 @@ class UpdateItem(BaseUpdateService):
             SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
         )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+            attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
         payload.append(self._changes_elem(target_changes=items))
         return payload</code></pre>
 </details>
@@ -141,34 +162,43 @@ class UpdateItem(BaseUpdateService):
 <pre><code class="python">class UpdateItem(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UpdateItem&#39;
-    SET_FIELD_ELEMENT_NAME = &#39;t:SetItemField&#39;
-    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteItemField&#39;
-    CHANGE_ELEMENT_NAME = &#39;t:ItemChange&#39;
-    CHANGES_ELEMENT_NAME = &#39;m:ItemChanges&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;UpdateItem&#34;
+    SET_FIELD_ELEMENT_NAME = &#34;t:SetItemField&#34;
+    DELETE_FIELD_ELEMENT_NAME = &#34;t:DeleteItemField&#34;
+    CHANGE_ELEMENT_NAME = &#34;t:ItemChange&#34;
+    CHANGES_ELEMENT_NAME = &#34;m:ItemChanges&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
-    def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-             suppress_read_receipts):
+    def call(
+        self,
+        items,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+        suppress_read_receipts,
+    ):
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
+            raise InvalidEnumValue(&#34;conflict_resolution&#34;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+            raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
             raise InvalidEnumValue(
-                &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
-                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+                &#34;send_meeting_invitations_or_cancellations&#34;,
+                send_meeting_invitations_or_cancellations,
+                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
             )
         if message_disposition == SEND_ONLY:
-            raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=items,
-            conflict_resolution=conflict_resolution,
-            message_disposition=message_disposition,
-            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-            suppress_read_receipts=suppress_read_receipts,
-        ))
+            raise ValueError(&#34;Cannot send-only existing objects. Use SendItem service instead&#34;)
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                conflict_resolution=conflict_resolution,
+                message_disposition=message_disposition,
+                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+                suppress_read_receipts=suppress_read_receipts,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Item.id_from_xml(elem)
@@ -179,7 +209,7 @@ class UpdateItem(BaseUpdateService):
         if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to update internal timezone fields
             target.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
-            for field_name in (&#39;start&#39;, &#39;end&#39;):
+            for field_name in (&#34;start&#34;, &#34;end&#34;):
                 if field_name in fieldnames_copy:
                     tz_field_name = target.tz_field_for_field_name(field_name).name
                     if tz_field_name not in fieldnames_copy:
@@ -192,7 +222,7 @@ class UpdateItem(BaseUpdateService):
 
         if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
-            if field.name in (&#39;start&#39;, &#39;end&#39;):
+            if field.name in (&#34;start&#34;, &#34;end&#34;):
                 if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return target.date_to_datetime(field_name=field.name)
@@ -204,8 +234,14 @@ class UpdateItem(BaseUpdateService):
     def _target_elem(self, target):
         return to_item_id(target, ItemId)
 
-    def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-                    suppress_read_receipts):
+    def get_payload(
+        self,
+        items,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+        suppress_read_receipts,
+    ):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated.
         attrs = dict(
@@ -214,8 +250,8 @@ class UpdateItem(BaseUpdateService):
             SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
         )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+            attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
         payload.append(self._changes_elem(target_changes=items))
         return payload</code></pre>
 </details>
@@ -263,27 +299,36 @@ class UpdateItem(BaseUpdateService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-         suppress_read_receipts):
+<pre><code class="python">def call(
+    self,
+    items,
+    conflict_resolution,
+    message_disposition,
+    send_meeting_invitations_or_cancellations,
+    suppress_read_receipts,
+):
     if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-        raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
+        raise InvalidEnumValue(&#34;conflict_resolution&#34;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
     if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-        raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+        raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
     if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
         raise InvalidEnumValue(
-            &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
-            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+            &#34;send_meeting_invitations_or_cancellations&#34;,
+            send_meeting_invitations_or_cancellations,
+            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
         )
     if message_disposition == SEND_ONLY:
-        raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=items,
-        conflict_resolution=conflict_resolution,
-        message_disposition=message_disposition,
-        send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-        suppress_read_receipts=suppress_read_receipts,
-    ))</code></pre>
+        raise ValueError(&#34;Cannot send-only existing objects. Use SendItem service instead&#34;)
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=items,
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.update_item.UpdateItem.get_payload"><code class="name flex">
@@ -295,8 +340,14 @@ class UpdateItem(BaseUpdateService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-                suppress_read_receipts):
+<pre><code class="python">def get_payload(
+    self,
+    items,
+    conflict_resolution,
+    message_disposition,
+    send_meeting_invitations_or_cancellations,
+    suppress_read_receipts,
+):
     # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
     # are the attribute names that were updated.
     attrs = dict(
@@ -305,8 +356,8 @@ class UpdateItem(BaseUpdateService):
         SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
     )
     if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-        attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
     payload.append(self._changes_elem(target_changes=items))
     return payload</code></pre>
 </details>

@@ -32,8 +32,17 @@ from decimal import Decimal
 from .errors import InvalidEnumValue
 from .ewsdatetime import EWSDateTime
 from .properties import EWSElement, ExtendedFieldURI
-from .util import create_element, add_xml_child, get_xml_attrs, get_xml_attr, set_xml_value, value_to_xml_text, \
-    xml_text_to_value, is_iterable, TNS
+from .util import (
+    TNS,
+    add_xml_child,
+    create_element,
+    get_xml_attr,
+    get_xml_attrs,
+    is_iterable,
+    set_xml_value,
+    value_to_xml_text,
+    xml_text_to_value,
+)
 
 log = logging.getLogger(__name__)
 
@@ -41,72 +50,73 @@ log = logging.getLogger(__name__)
 class ExtendedProperty(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/extendedproperty&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ExtendedProperty&#39;
+    ELEMENT_NAME = &#34;ExtendedProperty&#34;
 
     # Enum values: https://docs.microsoft.com/en-us/dotnet/api/exchangewebservices.distinguishedpropertysettype
     DISTINGUISHED_SETS = {
-        &#39;Address&#39;,
-        &#39;Appointment&#39;,
-        &#39;CalendarAssistant&#39;,
-        &#39;Common&#39;,
-        &#39;InternetHeaders&#39;,
-        &#39;Meeting&#39;,
-        &#39;PublicStrings&#39;,
-        &#39;Sharing&#39;,
-        &#39;Task&#39;,
-        &#39;UnifiedMessaging&#39;,
+        &#34;Address&#34;,
+        &#34;Appointment&#34;,
+        &#34;CalendarAssistant&#34;,
+        &#34;Common&#34;,
+        &#34;InternetHeaders&#34;,
+        &#34;Meeting&#34;,
+        &#34;PublicStrings&#34;,
+        &#34;Sharing&#34;,
+        &#34;Task&#34;,
+        &#34;UnifiedMessaging&#34;,
     }
     # Enum values: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/extendedfielduri
+    # The following types cannot be used for setting or getting (see docs) and are thus not very useful here:
+    # &#39;Error&#39;
+    # &#39;Null&#39;
+    # &#39;Object&#39;
+    # &#39;ObjectArray&#39;
     PROPERTY_TYPES = {
-        &#39;ApplicationTime&#39;,
-        &#39;Binary&#39;,
-        &#39;BinaryArray&#39;,
-        &#39;Boolean&#39;,
-        &#39;CLSID&#39;,
-        &#39;CLSIDArray&#39;,
-        &#39;Currency&#39;,
-        &#39;CurrencyArray&#39;,
-        &#39;Double&#39;,
-        &#39;DoubleArray&#39;,
-        # &#39;Error&#39;,
-        &#39;Float&#39;,
-        &#39;FloatArray&#39;,
-        &#39;Integer&#39;,
-        &#39;IntegerArray&#39;,
-        &#39;Long&#39;,
-        &#39;LongArray&#39;,
-        # &#39;Null&#39;,
-        # &#39;Object&#39;,
-        # &#39;ObjectArray&#39;,
-        &#39;Short&#39;,
-        &#39;ShortArray&#39;,
-        &#39;SystemTime&#39;,
-        &#39;SystemTimeArray&#39;,
-        &#39;String&#39;,
-        &#39;StringArray&#39;,
-    }  # The commented-out types cannot be used for setting or getting (see docs) and are thus not very useful here
+        &#34;ApplicationTime&#34;,
+        &#34;Binary&#34;,
+        &#34;BinaryArray&#34;,
+        &#34;Boolean&#34;,
+        &#34;CLSID&#34;,
+        &#34;CLSIDArray&#34;,
+        &#34;Currency&#34;,
+        &#34;CurrencyArray&#34;,
+        &#34;Double&#34;,
+        &#34;DoubleArray&#34;,
+        &#34;Float&#34;,
+        &#34;FloatArray&#34;,
+        &#34;Integer&#34;,
+        &#34;IntegerArray&#34;,
+        &#34;Long&#34;,
+        &#34;LongArray&#34;,
+        &#34;Short&#34;,
+        &#34;ShortArray&#34;,
+        &#34;SystemTime&#34;,
+        &#34;SystemTimeArray&#34;,
+        &#34;String&#34;,
+        &#34;StringArray&#34;,
+    }
 
     # Translation table between common distinguished_property_set_id and property_set_id values. See
     # https://docs.microsoft.com/en-us/office/client-developer/outlook/mapi/commonly-used-property-sets
     # ID values must be lowercase.
     DISTINGUISHED_SET_NAME_TO_ID_MAP = {
-        &#39;Address&#39;: &#39;00062004-0000-0000-c000-000000000046&#39;,
-        &#39;AirSync&#39;: &#39;71035549-0739-4dcb-9163-00f0580dbbdf&#39;,
-        &#39;Appointment&#39;: &#39;00062002-0000-0000-c000-000000000046&#39;,
-        &#39;Common&#39;: &#39;00062008-0000-0000-c000-000000000046&#39;,
-        &#39;InternetHeaders&#39;: &#39;00020386-0000-0000-c000-000000000046&#39;,
-        &#39;Log&#39;: &#39;0006200a-0000-0000-c000-000000000046&#39;,
-        &#39;Mapi&#39;: &#39;00020328-0000-0000-c000-000000000046&#39;,
-        &#39;Meeting&#39;: &#39;6ed8da90-450b-101b-98da-00aa003f1305&#39;,
-        &#39;Messaging&#39;: &#39;41f28f13-83f4-4114-a584-eedb5a6b0bff&#39;,
-        &#39;Note&#39;: &#39;0006200e-0000-0000-c000-000000000046&#39;,
-        &#39;PostRss&#39;: &#39;00062041-0000-0000-c000-000000000046&#39;,
-        &#39;PublicStrings&#39;: &#39;00020329-0000-0000-c000-000000000046&#39;,
-        &#39;Remote&#39;: &#39;00062014-0000-0000-c000-000000000046&#39;,
-        &#39;Report&#39;: &#39;00062013-0000-0000-c000-000000000046&#39;,
-        &#39;Sharing&#39;: &#39;00062040-0000-0000-c000-000000000046&#39;,
-        &#39;Task&#39;: &#39;00062003-0000-0000-c000-000000000046&#39;,
-        &#39;UnifiedMessaging&#39;: &#39;4442858e-a9e3-4e80-b900-317a210cc15b&#39;,
+        &#34;Address&#34;: &#34;00062004-0000-0000-c000-000000000046&#34;,
+        &#34;AirSync&#34;: &#34;71035549-0739-4dcb-9163-00f0580dbbdf&#34;,
+        &#34;Appointment&#34;: &#34;00062002-0000-0000-c000-000000000046&#34;,
+        &#34;Common&#34;: &#34;00062008-0000-0000-c000-000000000046&#34;,
+        &#34;InternetHeaders&#34;: &#34;00020386-0000-0000-c000-000000000046&#34;,
+        &#34;Log&#34;: &#34;0006200a-0000-0000-c000-000000000046&#34;,
+        &#34;Mapi&#34;: &#34;00020328-0000-0000-c000-000000000046&#34;,
+        &#34;Meeting&#34;: &#34;6ed8da90-450b-101b-98da-00aa003f1305&#34;,
+        &#34;Messaging&#34;: &#34;41f28f13-83f4-4114-a584-eedb5a6b0bff&#34;,
+        &#34;Note&#34;: &#34;0006200e-0000-0000-c000-000000000046&#34;,
+        &#34;PostRss&#34;: &#34;00062041-0000-0000-c000-000000000046&#34;,
+        &#34;PublicStrings&#34;: &#34;00020329-0000-0000-c000-000000000046&#34;,
+        &#34;Remote&#34;: &#34;00062014-0000-0000-c000-000000000046&#34;,
+        &#34;Report&#34;: &#34;00062013-0000-0000-c000-000000000046&#34;,
+        &#34;Sharing&#34;: &#34;00062040-0000-0000-c000-000000000046&#34;,
+        &#34;Task&#34;: &#34;00062003-0000-0000-c000-000000000046&#34;,
+        &#34;UnifiedMessaging&#34;: &#34;4442858e-a9e3-4e80-b900-317a210cc15b&#34;,
     }
     DISTINGUISHED_SET_ID_TO_NAME_MAP = {v: k for k, v in DISTINGUISHED_SET_NAME_TO_ID_MAP.items()}
 
@@ -115,15 +125,15 @@ class ExtendedProperty(EWSElement):
     property_tag = None  # hex integer (e.g. 0x8000) or string (&#39;0x8000&#39;)
     property_name = None
     property_id = None  # integer as hex-formatted int (e.g. 0x8000) or normal int (32768)
-    property_type = &#39;&#39;
+    property_type = &#34;&#34;
 
-    __slots__ = &#39;value&#39;,
+    __slots__ = (&#34;value&#34;,)
 
     def __init__(self, *args, **kwargs):
         if not kwargs:
             # Allow to set attributes without keyword
             kwargs = dict(zip(self._slots_keys, args))
-        self.value = kwargs.pop(&#39;value&#39;)
+        self.value = kwargs.pop(&#34;value&#34;)
         super().__init__(**kwargs)
 
     @classmethod
@@ -149,7 +159,7 @@ class ExtendedProperty(EWSElement):
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
                 raise InvalidEnumValue(
-                    &#39;distinguished_property_set_id&#39;, cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
+                    &#34;distinguished_property_set_id&#34;, cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
                 )
 
     @classmethod
@@ -160,16 +170,12 @@ class ExtendedProperty(EWSElement):
                     &#34;When &#39;property_set_id&#39; is set, &#39;distinguished_property_set_id&#39; and &#39;property_tag&#39; must be None&#34;
                 )
             if not any([cls.property_id, cls.property_name]):
-                raise ValueError(
-                    &#34;When &#39;property_set_id&#39; is set, &#39;property_id&#39; or &#39;property_name&#39; must also be set&#34;
-                )
+                raise ValueError(&#34;When &#39;property_set_id&#39; is set, &#39;property_id&#39; or &#39;property_name&#39; must also be set&#34;)
 
     @classmethod
     def _validate_property_tag(cls):
         if cls.property_tag:
-            if any([
-                cls.distinguished_property_set_id, cls.property_set_id, cls.property_name, cls.property_id
-            ]):
+            if any([cls.distinguished_property_set_id, cls.property_set_id, cls.property_name, cls.property_id]):
                 raise ValueError(&#34;When &#39;property_tag&#39; is set, only &#39;property_type&#39; must be set&#34;)
             if 0x8000 &lt;= cls.property_tag_as_int() &lt;= 0xFFFE:
                 raise ValueError(
@@ -199,7 +205,7 @@ class ExtendedProperty(EWSElement):
     @classmethod
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
-            raise InvalidEnumValue(&#39;property_type&#39;, cls.property_type, cls.PROPERTY_TYPES)
+            raise InvalidEnumValue(&#34;property_type&#34;, cls.property_type, cls.PROPERTY_TYPES)
 
     def clean(self, version=None):
         self.validate_cls()
@@ -247,30 +253,29 @@ class ExtendedProperty(EWSElement):
         # Gets value of this specific ExtendedProperty from a list of &#39;ExtendedProperty&#39; XML elements
         python_type = cls.python_type()
         if cls.is_array_type():
-            values = elem.find(f&#39;{{{TNS}}}Values&#39;)
+            values = elem.find(f&#34;{{{TNS}}}Values&#34;)
             return [
-                xml_text_to_value(value=val, value_type=python_type)
-                for val in get_xml_attrs(values, f&#39;{{{TNS}}}Value&#39;)
+                xml_text_to_value(value=val, value_type=python_type) for val in get_xml_attrs(values, f&#34;{{{TNS}}}Value&#34;)
             ]
-        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#39;{{{TNS}}}Value&#39;), value_type=python_type)
+        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#34;{{{TNS}}}Value&#34;), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
             # actually found, but there was no XML value. For other types, it would be more problematic
             # to make that distinction, e.g. return False for bool, 0 for int, etc.
-            return &#39;&#39;
+            return &#34;&#34;
         return extended_field_value
 
     def to_xml(self, version):
         if self.is_array_type():
-            values = create_element(&#39;t:Values&#39;)
+            values = create_element(&#34;t:Values&#34;)
             for v in self.value:
-                add_xml_child(values, &#39;t:Value&#39;, v)
+                add_xml_child(values, &#34;t:Value&#34;, v)
             return values
-        return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)
+        return set_xml_value(create_element(&#34;t:Value&#34;), self.value, version=version)
 
     @classmethod
     def is_array_type(cls):
-        return cls.property_type.endswith(&#39;Array&#39;)
+        return cls.property_type.endswith(&#34;Array&#34;)
 
     @classmethod
     def property_tag_as_int(cls):
@@ -287,18 +292,18 @@ class ExtendedProperty(EWSElement):
         # Return the best equivalent for a Python type for the property type of this class
         base_type = cls.property_type[:-5] if cls.is_array_type() else cls.property_type
         return {
-            &#39;ApplicationTime&#39;: Decimal,
-            &#39;Binary&#39;: bytes,
-            &#39;Boolean&#39;: bool,
-            &#39;CLSID&#39;: str,
-            &#39;Currency&#39;: int,
-            &#39;Double&#39;: Decimal,
-            &#39;Float&#39;: Decimal,
-            &#39;Integer&#39;: int,
-            &#39;Long&#39;: int,
-            &#39;Short&#39;: int,
-            &#39;SystemTime&#39;: EWSDateTime,
-            &#39;String&#39;: str,
+            &#34;ApplicationTime&#34;: Decimal,
+            &#34;Binary&#34;: bytes,
+            &#34;Boolean&#34;: bool,
+            &#34;CLSID&#34;: str,
+            &#34;Currency&#34;: int,
+            &#34;Double&#34;: Decimal,
+            &#34;Float&#34;: Decimal,
+            &#34;Integer&#34;: int,
+            &#34;Long&#34;: int,
+            &#34;Short&#34;: int,
+            &#34;SystemTime&#34;: EWSDateTime,
+            &#34;String&#34;: str,
         }[base_type]
 
     @classmethod
@@ -319,9 +324,9 @@ class ExternId(ExtendedProperty):
     from an external system.
     &#34;&#34;&#34;
 
-    property_set_id = &#39;c11ff724-aa03-4555-9952-8fa248a11c3e&#39;  # This is arbitrary. We just want a unique UUID.
-    property_name = &#39;External ID&#39;
-    property_type = &#39;String&#39;
+    property_set_id = &#34;c11ff724-aa03-4555-9952-8fa248a11c3e&#34;  # This is arbitrary. We just want a unique UUID.
+    property_name = &#34;External ID&#34;
+    property_type = &#34;String&#34;
 
 
 class Flag(ExtendedProperty):
@@ -332,7 +337,7 @@ class Flag(ExtendedProperty):
     &#34;&#34;&#34;
 
     property_tag = 0x1090
-    property_type = &#39;Integer&#39;</code></pre>
+    property_type = &#34;Integer&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -357,72 +362,73 @@ class Flag(ExtendedProperty):
 <pre><code class="python">class ExtendedProperty(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/extendedproperty&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;ExtendedProperty&#39;
+    ELEMENT_NAME = &#34;ExtendedProperty&#34;
 
     # Enum values: https://docs.microsoft.com/en-us/dotnet/api/exchangewebservices.distinguishedpropertysettype
     DISTINGUISHED_SETS = {
-        &#39;Address&#39;,
-        &#39;Appointment&#39;,
-        &#39;CalendarAssistant&#39;,
-        &#39;Common&#39;,
-        &#39;InternetHeaders&#39;,
-        &#39;Meeting&#39;,
-        &#39;PublicStrings&#39;,
-        &#39;Sharing&#39;,
-        &#39;Task&#39;,
-        &#39;UnifiedMessaging&#39;,
+        &#34;Address&#34;,
+        &#34;Appointment&#34;,
+        &#34;CalendarAssistant&#34;,
+        &#34;Common&#34;,
+        &#34;InternetHeaders&#34;,
+        &#34;Meeting&#34;,
+        &#34;PublicStrings&#34;,
+        &#34;Sharing&#34;,
+        &#34;Task&#34;,
+        &#34;UnifiedMessaging&#34;,
     }
     # Enum values: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/extendedfielduri
+    # The following types cannot be used for setting or getting (see docs) and are thus not very useful here:
+    # &#39;Error&#39;
+    # &#39;Null&#39;
+    # &#39;Object&#39;
+    # &#39;ObjectArray&#39;
     PROPERTY_TYPES = {
-        &#39;ApplicationTime&#39;,
-        &#39;Binary&#39;,
-        &#39;BinaryArray&#39;,
-        &#39;Boolean&#39;,
-        &#39;CLSID&#39;,
-        &#39;CLSIDArray&#39;,
-        &#39;Currency&#39;,
-        &#39;CurrencyArray&#39;,
-        &#39;Double&#39;,
-        &#39;DoubleArray&#39;,
-        # &#39;Error&#39;,
-        &#39;Float&#39;,
-        &#39;FloatArray&#39;,
-        &#39;Integer&#39;,
-        &#39;IntegerArray&#39;,
-        &#39;Long&#39;,
-        &#39;LongArray&#39;,
-        # &#39;Null&#39;,
-        # &#39;Object&#39;,
-        # &#39;ObjectArray&#39;,
-        &#39;Short&#39;,
-        &#39;ShortArray&#39;,
-        &#39;SystemTime&#39;,
-        &#39;SystemTimeArray&#39;,
-        &#39;String&#39;,
-        &#39;StringArray&#39;,
-    }  # The commented-out types cannot be used for setting or getting (see docs) and are thus not very useful here
+        &#34;ApplicationTime&#34;,
+        &#34;Binary&#34;,
+        &#34;BinaryArray&#34;,
+        &#34;Boolean&#34;,
+        &#34;CLSID&#34;,
+        &#34;CLSIDArray&#34;,
+        &#34;Currency&#34;,
+        &#34;CurrencyArray&#34;,
+        &#34;Double&#34;,
+        &#34;DoubleArray&#34;,
+        &#34;Float&#34;,
+        &#34;FloatArray&#34;,
+        &#34;Integer&#34;,
+        &#34;IntegerArray&#34;,
+        &#34;Long&#34;,
+        &#34;LongArray&#34;,
+        &#34;Short&#34;,
+        &#34;ShortArray&#34;,
+        &#34;SystemTime&#34;,
+        &#34;SystemTimeArray&#34;,
+        &#34;String&#34;,
+        &#34;StringArray&#34;,
+    }
 
     # Translation table between common distinguished_property_set_id and property_set_id values. See
     # https://docs.microsoft.com/en-us/office/client-developer/outlook/mapi/commonly-used-property-sets
     # ID values must be lowercase.
     DISTINGUISHED_SET_NAME_TO_ID_MAP = {
-        &#39;Address&#39;: &#39;00062004-0000-0000-c000-000000000046&#39;,
-        &#39;AirSync&#39;: &#39;71035549-0739-4dcb-9163-00f0580dbbdf&#39;,
-        &#39;Appointment&#39;: &#39;00062002-0000-0000-c000-000000000046&#39;,
-        &#39;Common&#39;: &#39;00062008-0000-0000-c000-000000000046&#39;,
-        &#39;InternetHeaders&#39;: &#39;00020386-0000-0000-c000-000000000046&#39;,
-        &#39;Log&#39;: &#39;0006200a-0000-0000-c000-000000000046&#39;,
-        &#39;Mapi&#39;: &#39;00020328-0000-0000-c000-000000000046&#39;,
-        &#39;Meeting&#39;: &#39;6ed8da90-450b-101b-98da-00aa003f1305&#39;,
-        &#39;Messaging&#39;: &#39;41f28f13-83f4-4114-a584-eedb5a6b0bff&#39;,
-        &#39;Note&#39;: &#39;0006200e-0000-0000-c000-000000000046&#39;,
-        &#39;PostRss&#39;: &#39;00062041-0000-0000-c000-000000000046&#39;,
-        &#39;PublicStrings&#39;: &#39;00020329-0000-0000-c000-000000000046&#39;,
-        &#39;Remote&#39;: &#39;00062014-0000-0000-c000-000000000046&#39;,
-        &#39;Report&#39;: &#39;00062013-0000-0000-c000-000000000046&#39;,
-        &#39;Sharing&#39;: &#39;00062040-0000-0000-c000-000000000046&#39;,
-        &#39;Task&#39;: &#39;00062003-0000-0000-c000-000000000046&#39;,
-        &#39;UnifiedMessaging&#39;: &#39;4442858e-a9e3-4e80-b900-317a210cc15b&#39;,
+        &#34;Address&#34;: &#34;00062004-0000-0000-c000-000000000046&#34;,
+        &#34;AirSync&#34;: &#34;71035549-0739-4dcb-9163-00f0580dbbdf&#34;,
+        &#34;Appointment&#34;: &#34;00062002-0000-0000-c000-000000000046&#34;,
+        &#34;Common&#34;: &#34;00062008-0000-0000-c000-000000000046&#34;,
+        &#34;InternetHeaders&#34;: &#34;00020386-0000-0000-c000-000000000046&#34;,
+        &#34;Log&#34;: &#34;0006200a-0000-0000-c000-000000000046&#34;,
+        &#34;Mapi&#34;: &#34;00020328-0000-0000-c000-000000000046&#34;,
+        &#34;Meeting&#34;: &#34;6ed8da90-450b-101b-98da-00aa003f1305&#34;,
+        &#34;Messaging&#34;: &#34;41f28f13-83f4-4114-a584-eedb5a6b0bff&#34;,
+        &#34;Note&#34;: &#34;0006200e-0000-0000-c000-000000000046&#34;,
+        &#34;PostRss&#34;: &#34;00062041-0000-0000-c000-000000000046&#34;,
+        &#34;PublicStrings&#34;: &#34;00020329-0000-0000-c000-000000000046&#34;,
+        &#34;Remote&#34;: &#34;00062014-0000-0000-c000-000000000046&#34;,
+        &#34;Report&#34;: &#34;00062013-0000-0000-c000-000000000046&#34;,
+        &#34;Sharing&#34;: &#34;00062040-0000-0000-c000-000000000046&#34;,
+        &#34;Task&#34;: &#34;00062003-0000-0000-c000-000000000046&#34;,
+        &#34;UnifiedMessaging&#34;: &#34;4442858e-a9e3-4e80-b900-317a210cc15b&#34;,
     }
     DISTINGUISHED_SET_ID_TO_NAME_MAP = {v: k for k, v in DISTINGUISHED_SET_NAME_TO_ID_MAP.items()}
 
@@ -431,15 +437,15 @@ class Flag(ExtendedProperty):
     property_tag = None  # hex integer (e.g. 0x8000) or string (&#39;0x8000&#39;)
     property_name = None
     property_id = None  # integer as hex-formatted int (e.g. 0x8000) or normal int (32768)
-    property_type = &#39;&#39;
+    property_type = &#34;&#34;
 
-    __slots__ = &#39;value&#39;,
+    __slots__ = (&#34;value&#34;,)
 
     def __init__(self, *args, **kwargs):
         if not kwargs:
             # Allow to set attributes without keyword
             kwargs = dict(zip(self._slots_keys, args))
-        self.value = kwargs.pop(&#39;value&#39;)
+        self.value = kwargs.pop(&#34;value&#34;)
         super().__init__(**kwargs)
 
     @classmethod
@@ -465,7 +471,7 @@ class Flag(ExtendedProperty):
                 )
             if cls.distinguished_property_set_id not in cls.DISTINGUISHED_SETS:
                 raise InvalidEnumValue(
-                    &#39;distinguished_property_set_id&#39;, cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
+                    &#34;distinguished_property_set_id&#34;, cls.distinguished_property_set_id, cls.DISTINGUISHED_SETS
                 )
 
     @classmethod
@@ -476,16 +482,12 @@ class Flag(ExtendedProperty):
                     &#34;When &#39;property_set_id&#39; is set, &#39;distinguished_property_set_id&#39; and &#39;property_tag&#39; must be None&#34;
                 )
             if not any([cls.property_id, cls.property_name]):
-                raise ValueError(
-                    &#34;When &#39;property_set_id&#39; is set, &#39;property_id&#39; or &#39;property_name&#39; must also be set&#34;
-                )
+                raise ValueError(&#34;When &#39;property_set_id&#39; is set, &#39;property_id&#39; or &#39;property_name&#39; must also be set&#34;)
 
     @classmethod
     def _validate_property_tag(cls):
         if cls.property_tag:
-            if any([
-                cls.distinguished_property_set_id, cls.property_set_id, cls.property_name, cls.property_id
-            ]):
+            if any([cls.distinguished_property_set_id, cls.property_set_id, cls.property_name, cls.property_id]):
                 raise ValueError(&#34;When &#39;property_tag&#39; is set, only &#39;property_type&#39; must be set&#34;)
             if 0x8000 &lt;= cls.property_tag_as_int() &lt;= 0xFFFE:
                 raise ValueError(
@@ -515,7 +517,7 @@ class Flag(ExtendedProperty):
     @classmethod
     def _validate_property_type(cls):
         if cls.property_type not in cls.PROPERTY_TYPES:
-            raise InvalidEnumValue(&#39;property_type&#39;, cls.property_type, cls.PROPERTY_TYPES)
+            raise InvalidEnumValue(&#34;property_type&#34;, cls.property_type, cls.PROPERTY_TYPES)
 
     def clean(self, version=None):
         self.validate_cls()
@@ -563,30 +565,29 @@ class Flag(ExtendedProperty):
         # Gets value of this specific ExtendedProperty from a list of &#39;ExtendedProperty&#39; XML elements
         python_type = cls.python_type()
         if cls.is_array_type():
-            values = elem.find(f&#39;{{{TNS}}}Values&#39;)
+            values = elem.find(f&#34;{{{TNS}}}Values&#34;)
             return [
-                xml_text_to_value(value=val, value_type=python_type)
-                for val in get_xml_attrs(values, f&#39;{{{TNS}}}Value&#39;)
+                xml_text_to_value(value=val, value_type=python_type) for val in get_xml_attrs(values, f&#34;{{{TNS}}}Value&#34;)
             ]
-        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#39;{{{TNS}}}Value&#39;), value_type=python_type)
+        extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#34;{{{TNS}}}Value&#34;), value_type=python_type)
         if python_type == str and not extended_field_value:
             # For string types, we want to return the empty string instead of None if the element was
             # actually found, but there was no XML value. For other types, it would be more problematic
             # to make that distinction, e.g. return False for bool, 0 for int, etc.
-            return &#39;&#39;
+            return &#34;&#34;
         return extended_field_value
 
     def to_xml(self, version):
         if self.is_array_type():
-            values = create_element(&#39;t:Values&#39;)
+            values = create_element(&#34;t:Values&#34;)
             for v in self.value:
-                add_xml_child(values, &#39;t:Value&#39;, v)
+                add_xml_child(values, &#34;t:Value&#34;, v)
             return values
-        return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)
+        return set_xml_value(create_element(&#34;t:Value&#34;), self.value, version=version)
 
     @classmethod
     def is_array_type(cls):
-        return cls.property_type.endswith(&#39;Array&#39;)
+        return cls.property_type.endswith(&#34;Array&#34;)
 
     @classmethod
     def property_tag_as_int(cls):
@@ -603,18 +604,18 @@ class Flag(ExtendedProperty):
         # Return the best equivalent for a Python type for the property type of this class
         base_type = cls.property_type[:-5] if cls.is_array_type() else cls.property_type
         return {
-            &#39;ApplicationTime&#39;: Decimal,
-            &#39;Binary&#39;: bytes,
-            &#39;Boolean&#39;: bool,
-            &#39;CLSID&#39;: str,
-            &#39;Currency&#39;: int,
-            &#39;Double&#39;: Decimal,
-            &#39;Float&#39;: Decimal,
-            &#39;Integer&#39;: int,
-            &#39;Long&#39;: int,
-            &#39;Short&#39;: int,
-            &#39;SystemTime&#39;: EWSDateTime,
-            &#39;String&#39;: str,
+            &#34;ApplicationTime&#34;: Decimal,
+            &#34;Binary&#34;: bytes,
+            &#34;Boolean&#34;: bool,
+            &#34;CLSID&#34;: str,
+            &#34;Currency&#34;: int,
+            &#34;Double&#34;: Decimal,
+            &#34;Float&#34;: Decimal,
+            &#34;Integer&#34;: int,
+            &#34;Long&#34;: int,
+            &#34;Short&#34;: int,
+            &#34;SystemTime&#34;: EWSDateTime,
+            &#34;String&#34;: str,
         }[base_type]
 
     @classmethod
@@ -723,17 +724,16 @@ def from_xml(cls, elem, account):
     # Gets value of this specific ExtendedProperty from a list of &#39;ExtendedProperty&#39; XML elements
     python_type = cls.python_type()
     if cls.is_array_type():
-        values = elem.find(f&#39;{{{TNS}}}Values&#39;)
+        values = elem.find(f&#34;{{{TNS}}}Values&#34;)
         return [
-            xml_text_to_value(value=val, value_type=python_type)
-            for val in get_xml_attrs(values, f&#39;{{{TNS}}}Value&#39;)
+            xml_text_to_value(value=val, value_type=python_type) for val in get_xml_attrs(values, f&#34;{{{TNS}}}Value&#34;)
         ]
-    extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#39;{{{TNS}}}Value&#39;), value_type=python_type)
+    extended_field_value = xml_text_to_value(value=get_xml_attr(elem, f&#34;{{{TNS}}}Value&#34;), value_type=python_type)
     if python_type == str and not extended_field_value:
         # For string types, we want to return the empty string instead of None if the element was
         # actually found, but there was no XML value. For other types, it would be more problematic
         # to make that distinction, e.g. return False for bool, 0 for int, etc.
-        return &#39;&#39;
+        return &#34;&#34;
     return extended_field_value</code></pre>
 </details>
 </dd>
@@ -748,7 +748,7 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">@classmethod
 def is_array_type(cls):
-    return cls.property_type.endswith(&#39;Array&#39;)</code></pre>
+    return cls.property_type.endswith(&#34;Array&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.extended_properties.ExtendedProperty.is_property_instance"><code class="name flex">
@@ -822,18 +822,18 @@ def python_type(cls):
     # Return the best equivalent for a Python type for the property type of this class
     base_type = cls.property_type[:-5] if cls.is_array_type() else cls.property_type
     return {
-        &#39;ApplicationTime&#39;: Decimal,
-        &#39;Binary&#39;: bytes,
-        &#39;Boolean&#39;: bool,
-        &#39;CLSID&#39;: str,
-        &#39;Currency&#39;: int,
-        &#39;Double&#39;: Decimal,
-        &#39;Float&#39;: Decimal,
-        &#39;Integer&#39;: int,
-        &#39;Long&#39;: int,
-        &#39;Short&#39;: int,
-        &#39;SystemTime&#39;: EWSDateTime,
-        &#39;String&#39;: str,
+        &#34;ApplicationTime&#34;: Decimal,
+        &#34;Binary&#34;: bytes,
+        &#34;Boolean&#34;: bool,
+        &#34;CLSID&#34;: str,
+        &#34;Currency&#34;: int,
+        &#34;Double&#34;: Decimal,
+        &#34;Float&#34;: Decimal,
+        &#34;Integer&#34;: int,
+        &#34;Long&#34;: int,
+        &#34;Short&#34;: int,
+        &#34;SystemTime&#34;: EWSDateTime,
+        &#34;String&#34;: str,
     }[base_type]</code></pre>
 </details>
 </dd>
@@ -901,11 +901,11 @@ def validate_cls(cls):
 </summary>
 <pre><code class="python">def to_xml(self, version):
     if self.is_array_type():
-        values = create_element(&#39;t:Values&#39;)
+        values = create_element(&#34;t:Values&#34;)
         for v in self.value:
-            add_xml_child(values, &#39;t:Value&#39;, v)
+            add_xml_child(values, &#34;t:Value&#34;, v)
         return values
-    return set_xml_value(create_element(&#39;t:Value&#39;), self.value, version=version)</code></pre>
+    return set_xml_value(create_element(&#34;t:Value&#34;), self.value, version=version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -937,9 +937,9 @@ from an external system.</p></div>
     from an external system.
     &#34;&#34;&#34;
 
-    property_set_id = &#39;c11ff724-aa03-4555-9952-8fa248a11c3e&#39;  # This is arbitrary. We just want a unique UUID.
-    property_name = &#39;External ID&#39;
-    property_type = &#39;String&#39;</code></pre>
+    property_set_id = &#34;c11ff724-aa03-4555-9952-8fa248a11c3e&#34;  # This is arbitrary. We just want a unique UUID.
+    property_name = &#34;External ID&#34;
+    property_type = &#34;String&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -995,7 +995,7 @@ from an external system.</p></div>
     &#34;&#34;&#34;
 
     property_tag = 0x1090
-    property_type = &#39;Integer&#39;</code></pre>
+    property_type = &#34;Integer&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

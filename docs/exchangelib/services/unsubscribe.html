@@ -26,8 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, add_xml_child
-from ..util import create_element
+<pre><code class="python">from ..util import create_element
+from .common import EWSAccountService, add_xml_child
 
 
 class Unsubscribe(EWSAccountService):
@@ -36,7 +36,7 @@ class Unsubscribe(EWSAccountService):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;Unsubscribe&#39;
+    SERVICE_NAME = &#34;Unsubscribe&#34;
     returns_elements = False
     prefer_affinity = True
 
@@ -44,8 +44,8 @@ class Unsubscribe(EWSAccountService):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
 
     def get_payload(self, subscription_id):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
         return payload</code></pre>
 </details>
 </section>
@@ -75,7 +75,7 @@ class Unsubscribe(EWSAccountService):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;Unsubscribe&#39;
+    SERVICE_NAME = &#34;Unsubscribe&#34;
     returns_elements = False
     prefer_affinity = True
 
@@ -83,8 +83,8 @@ class Unsubscribe(EWSAccountService):
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
 
     def get_payload(self, subscription_id):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -132,8 +132,8 @@ class Unsubscribe(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, subscription_id):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
     return payload</code></pre>
 </details>
 </dd>

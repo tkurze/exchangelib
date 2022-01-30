@@ -26,31 +26,31 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, item_ids_element, folder_ids_element
-from ..errors import InvalidTypeError
+<pre><code class="python">from ..errors import InvalidTypeError
 from ..folders import BaseFolder
 from ..properties import FolderId
 from ..util import create_element
+from .common import EWSAccountService, folder_ids_element, item_ids_element
 
 
 class SendItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SendItem&#39;
+    SERVICE_NAME = &#34;SendItem&#34;
     returns_elements = False
 
     def call(self, items, saved_item_folder):
         if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;saved_item_folder&#39;, saved_item_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;saved_item_folder&#34;, saved_item_folder, (BaseFolder, FolderId))
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
         payload.append(item_ids_element(items=items, version=self.account.version))
         if saved_item_folder:
-            payload.append(folder_ids_element(
-                folders=[saved_item_folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-            ))
+            payload.append(
+                folder_ids_element(folders=[saved_item_folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+            )
         return payload</code></pre>
 </details>
 </section>
@@ -76,21 +76,21 @@ class SendItem(EWSAccountService):
 <pre><code class="python">class SendItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SendItem&#39;
+    SERVICE_NAME = &#34;SendItem&#34;
     returns_elements = False
 
     def call(self, items, saved_item_folder):
         if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;saved_item_folder&#39;, saved_item_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;saved_item_folder&#34;, saved_item_folder, (BaseFolder, FolderId))
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
         payload.append(item_ids_element(items=items, version=self.account.version))
         if saved_item_folder:
-            payload.append(folder_ids_element(
-                folders=[saved_item_folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-            ))
+            payload.append(
+                folder_ids_element(folders=[saved_item_folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+            )
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -122,7 +122,7 @@ class SendItem(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, saved_item_folder):
     if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-        raise InvalidTypeError(&#39;saved_item_folder&#39;, saved_item_folder, (BaseFolder, FolderId))
+        raise InvalidTypeError(&#34;saved_item_folder&#34;, saved_item_folder, (BaseFolder, FolderId))
     return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)</code></pre>
 </details>
 </dd>
@@ -136,12 +136,12 @@ class SendItem(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, saved_item_folder):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
     payload.append(item_ids_element(items=items, version=self.account.version))
     if saved_item_folder:
-        payload.append(folder_ids_element(
-            folders=[saved_item_folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-        ))
+        payload.append(
+            folder_ids_element(folders=[saved_item_folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+        )
     return payload</code></pre>
 </details>
 </dd>

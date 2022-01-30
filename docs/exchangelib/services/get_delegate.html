@@ -26,35 +26,37 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService
-from ..properties import DLMailbox, DelegateUser, UserId  # The service expects a Mailbox element in the MNS namespace
-from ..util import create_element, set_xml_value, MNS
+<pre><code class="python">from ..properties import DelegateUser, DLMailbox, UserId  # The service expects a Mailbox element in the MNS namespace
+from ..util import MNS, create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
+from .common import EWSAccountService
 
 
 class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetDelegate&#39;
+    SERVICE_NAME = &#34;GetDelegate&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = ()
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=user_ids or [None],
-            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-            include_permissions=include_permissions,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=user_ids or [None],
+                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+                include_permissions=include_permissions,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
-            user_ids_elem = create_element(&#39;m:UserIds&#39;)
+            user_ids_elem = create_element(&#34;m:UserIds&#34;)
             for user_id in user_ids:
                 if isinstance(user_id, str):
                     user_id = UserId(primary_smtp_address=user_id)
@@ -68,7 +70,7 @@ class GetDelegate(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}DelegateUserResponseMessageType&#39;</code></pre>
+        return f&#34;{{{MNS}}}DelegateUserResponseMessageType&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -93,26 +95,28 @@ class GetDelegate(EWSAccountService):
 <pre><code class="python">class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetDelegate&#39;
+    SERVICE_NAME = &#34;GetDelegate&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = ()
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=user_ids or [None],
-            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-            include_permissions=include_permissions,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=user_ids or [None],
+                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+                include_permissions=include_permissions,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
-            user_ids_elem = create_element(&#39;m:UserIds&#39;)
+            user_ids_elem = create_element(&#34;m:UserIds&#34;)
             for user_id in user_ids:
                 if isinstance(user_id, str):
                     user_id = UserId(primary_smtp_address=user_id)
@@ -126,7 +130,7 @@ class GetDelegate(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}DelegateUserResponseMessageType&#39;</code></pre>
+        return f&#34;{{{MNS}}}DelegateUserResponseMessageType&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -160,12 +164,14 @@ class GetDelegate(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, user_ids, include_permissions):
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=user_ids or [None],
-        mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-        include_permissions=include_permissions,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=user_ids or [None],
+            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+            include_permissions=include_permissions,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_delegate.GetDelegate.get_payload"><code class="name flex">
@@ -178,10 +184,10 @@ class GetDelegate(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_ids, mailbox, include_permissions):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IncludePermissions=include_permissions))
     set_xml_value(payload, mailbox, version=self.protocol.version)
     if user_ids != [None]:
-        user_ids_elem = create_element(&#39;m:UserIds&#39;)
+        user_ids_elem = create_element(&#34;m:UserIds&#34;)
         for user_id in user_ids:
             if isinstance(user_id, str):
                 user_id = UserId(primary_smtp_address=user_id)

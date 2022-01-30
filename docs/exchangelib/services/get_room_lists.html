@@ -26,17 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..properties import RoomList
-from ..util import create_element, MNS
+<pre><code class="python">from ..properties import RoomList
+from ..util import MNS, create_element
 from ..version import EXCHANGE_2010
+from .common import EWSService
 
 
 class GetRoomLists(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetRoomLists&#39;
-    element_container_name = f&#39;{{{MNS}}}RoomLists&#39;
+    SERVICE_NAME = &#34;GetRoomLists&#34;
+    element_container_name = f&#34;{{{MNS}}}RoomLists&#34;
     supported_from = EXCHANGE_2010
 
     def call(self):
@@ -46,7 +46,7 @@ class GetRoomLists(EWSService):
         return RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
-        return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
+        return create_element(f&#34;m:{self.SERVICE_NAME}&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -71,8 +71,8 @@ class GetRoomLists(EWSService):
 <pre><code class="python">class GetRoomLists(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetRoomLists&#39;
-    element_container_name = f&#39;{{{MNS}}}RoomLists&#39;
+    SERVICE_NAME = &#34;GetRoomLists&#34;
+    element_container_name = f&#34;{{{MNS}}}RoomLists&#34;
     supported_from = EXCHANGE_2010
 
     def call(self):
@@ -82,7 +82,7 @@ class GetRoomLists(EWSService):
         return RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
-        return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
+        return create_element(f&#34;m:{self.SERVICE_NAME}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -128,7 +128,7 @@ class GetRoomLists(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self):
-    return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
+    return create_element(f&#34;m:{self.SERVICE_NAME}&#34;)</code></pre>
 </details>
 </dd>
 </dl>

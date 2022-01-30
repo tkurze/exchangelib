@@ -26,44 +26,186 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .base import BaseFolder, Folder
+<pre><code class="python">from ..properties import DistinguishedFolderId, FolderId
+from .base import BaseFolder, Folder
 from .collections import FolderCollection
-from .known_folders import AdminAuditLogs, AllContacts, AllItems, ArchiveDeletedItems, ArchiveInbox, \
-    ArchiveMsgFolderRoot, ArchiveRecoverableItemsDeletions, ArchiveRecoverableItemsPurges, \
-    ArchiveRecoverableItemsRoot, ArchiveRecoverableItemsVersions, Audits, Calendar, CalendarLogging, CommonViews, \
-    Conflicts, Contacts, ConversationHistory, ConversationSettings, DefaultFoldersChangeHistory, DeferredAction, \
-    DeletedItems, Directory, Drafts, ExchangeSyncData, Favorites, Files, FreebusyData, Friends, GALContacts, \
-    GraphAnalytics, IMContactList, Inbox, Journal, JunkEmail, LocalFailures, Location, MailboxAssociations, Messages, \
-    MsgFolderRoot, MyContacts, MyContactsExtended, NonDeletableFolderMixin, Notes, Outbox, ParkedMessages, \
-    PassThroughSearchResults, PdpProfileV2Secured, PeopleConnect, QuickContacts, RSSFeeds, RecipientCache, \
-    RecoverableItemsDeletions, RecoverableItemsPurges, RecoverableItemsRoot, RecoverableItemsVersions, Reminders, \
-    Schedule, SearchFolders, SentItems, ServerFailures, Sharing, Shortcuts, Signal, SmsAndChatsSync, SpoolerQueue, \
-    SyncIssues, System, Tasks, TemporarySaves, ToDoSearch, Views, VoiceMail, WellknownFolder, WorkingSet, \
-    Companies, OrganizationalContacts, PeopleCentricConversationBuddies, NON_DELETABLE_FOLDERS
-from .queryset import FolderQuerySet, SingleFolderQuerySet, FOLDER_TRAVERSAL_CHOICES, SHALLOW, DEEP, SOFT_DELETED
-from .roots import Root, ArchiveRoot, PublicFoldersRoot, RootOfHierarchy
-from ..properties import FolderId, DistinguishedFolderId
+from .known_folders import (
+    NON_DELETABLE_FOLDERS,
+    AdminAuditLogs,
+    AllContacts,
+    AllItems,
+    ArchiveDeletedItems,
+    ArchiveInbox,
+    ArchiveMsgFolderRoot,
+    ArchiveRecoverableItemsDeletions,
+    ArchiveRecoverableItemsPurges,
+    ArchiveRecoverableItemsRoot,
+    ArchiveRecoverableItemsVersions,
+    Audits,
+    Calendar,
+    CalendarLogging,
+    CommonViews,
+    Companies,
+    Conflicts,
+    Contacts,
+    ConversationHistory,
+    ConversationSettings,
+    DefaultFoldersChangeHistory,
+    DeferredAction,
+    DeletedItems,
+    Directory,
+    Drafts,
+    ExchangeSyncData,
+    Favorites,
+    Files,
+    FreebusyData,
+    Friends,
+    GALContacts,
+    GraphAnalytics,
+    IMContactList,
+    Inbox,
+    Journal,
+    JunkEmail,
+    LocalFailures,
+    Location,
+    MailboxAssociations,
+    Messages,
+    MsgFolderRoot,
+    MyContacts,
+    MyContactsExtended,
+    NonDeletableFolderMixin,
+    Notes,
+    OrganizationalContacts,
+    Outbox,
+    ParkedMessages,
+    PassThroughSearchResults,
+    PdpProfileV2Secured,
+    PeopleCentricConversationBuddies,
+    PeopleConnect,
+    QuickContacts,
+    RecipientCache,
+    RecoverableItemsDeletions,
+    RecoverableItemsPurges,
+    RecoverableItemsRoot,
+    RecoverableItemsVersions,
+    Reminders,
+    RSSFeeds,
+    Schedule,
+    SearchFolders,
+    SentItems,
+    ServerFailures,
+    Sharing,
+    Shortcuts,
+    Signal,
+    SmsAndChatsSync,
+    SpoolerQueue,
+    SyncIssues,
+    System,
+    Tasks,
+    TemporarySaves,
+    ToDoSearch,
+    Views,
+    VoiceMail,
+    WellknownFolder,
+    WorkingSet,
+)
+from .queryset import DEEP, FOLDER_TRAVERSAL_CHOICES, SHALLOW, SOFT_DELETED, FolderQuerySet, SingleFolderQuerySet
+from .roots import ArchiveRoot, PublicFoldersRoot, Root, RootOfHierarchy
 
 __all__ = [
-    &#39;FolderId&#39;, &#39;DistinguishedFolderId&#39;,
-    &#39;FolderCollection&#39;,
-    &#39;BaseFolder&#39;, &#39;Folder&#39;,
-    &#39;AdminAuditLogs&#39;, &#39;AllContacts&#39;, &#39;AllItems&#39;, &#39;ArchiveDeletedItems&#39;, &#39;ArchiveInbox&#39;, &#39;ArchiveMsgFolderRoot&#39;,
-    &#39;ArchiveRecoverableItemsDeletions&#39;, &#39;ArchiveRecoverableItemsPurges&#39;, &#39;ArchiveRecoverableItemsRoot&#39;,
-    &#39;ArchiveRecoverableItemsVersions&#39;, &#39;Audits&#39;, &#39;Calendar&#39;, &#39;CalendarLogging&#39;, &#39;CommonViews&#39;, &#39;Conflicts&#39;,
-    &#39;Contacts&#39;, &#39;ConversationHistory&#39;, &#39;ConversationSettings&#39;, &#39;DefaultFoldersChangeHistory&#39;, &#39;DeferredAction&#39;,
-    &#39;DeletedItems&#39;, &#39;Directory&#39;, &#39;Drafts&#39;, &#39;ExchangeSyncData&#39;, &#39;Favorites&#39;, &#39;Files&#39;, &#39;FreebusyData&#39;, &#39;Friends&#39;,
-    &#39;GALContacts&#39;, &#39;GraphAnalytics&#39;, &#39;IMContactList&#39;, &#39;Inbox&#39;, &#39;Journal&#39;, &#39;JunkEmail&#39;, &#39;LocalFailures&#39;,
-    &#39;Location&#39;, &#39;MailboxAssociations&#39;, &#39;Messages&#39;, &#39;MsgFolderRoot&#39;, &#39;MyContacts&#39;, &#39;MyContactsExtended&#39;,
-    &#39;NonDeletableFolderMixin&#39;, &#39;Notes&#39;, &#39;Outbox&#39;, &#39;ParkedMessages&#39;, &#39;PassThroughSearchResults&#39;,
-    &#39;PdpProfileV2Secured&#39;, &#39;PeopleConnect&#39;, &#39;QuickContacts&#39;, &#39;RSSFeeds&#39;, &#39;RecipientCache&#39;,
-    &#39;RecoverableItemsDeletions&#39;, &#39;RecoverableItemsPurges&#39;, &#39;RecoverableItemsRoot&#39;, &#39;RecoverableItemsVersions&#39;,
-    &#39;Reminders&#39;, &#39;Schedule&#39;, &#39;SearchFolders&#39;, &#39;SentItems&#39;, &#39;ServerFailures&#39;, &#39;Sharing&#39;, &#39;Shortcuts&#39;, &#39;Signal&#39;,
-    &#39;SmsAndChatsSync&#39;, &#39;SpoolerQueue&#39;, &#39;SyncIssues&#39;, &#39;System&#39;, &#39;Tasks&#39;, &#39;TemporarySaves&#39;, &#39;ToDoSearch&#39;, &#39;Views&#39;,
-    &#39;VoiceMail&#39;, &#39;WellknownFolder&#39;, &#39;WorkingSet&#39;, &#39;Companies&#39;, &#39;OrganizationalContacts&#39;,
-    &#39;PeopleCentricConversationBuddies&#39;, &#39;NON_DELETABLE_FOLDERS&#39;,
-    &#39;FolderQuerySet&#39;, &#39;SingleFolderQuerySet&#39;, &#39;FOLDER_TRAVERSAL_CHOICES&#39;, &#39;SHALLOW&#39;, &#39;DEEP&#39;, &#39;SOFT_DELETED&#39;,
-    &#39;Root&#39;, &#39;ArchiveRoot&#39;, &#39;PublicFoldersRoot&#39;, &#39;RootOfHierarchy&#39;,
+    &#34;FolderId&#34;,
+    &#34;DistinguishedFolderId&#34;,
+    &#34;FolderCollection&#34;,
+    &#34;BaseFolder&#34;,
+    &#34;Folder&#34;,
+    &#34;AdminAuditLogs&#34;,
+    &#34;AllContacts&#34;,
+    &#34;AllItems&#34;,
+    &#34;ArchiveDeletedItems&#34;,
+    &#34;ArchiveInbox&#34;,
+    &#34;ArchiveMsgFolderRoot&#34;,
+    &#34;ArchiveRecoverableItemsDeletions&#34;,
+    &#34;ArchiveRecoverableItemsPurges&#34;,
+    &#34;ArchiveRecoverableItemsRoot&#34;,
+    &#34;ArchiveRecoverableItemsVersions&#34;,
+    &#34;Audits&#34;,
+    &#34;Calendar&#34;,
+    &#34;CalendarLogging&#34;,
+    &#34;CommonViews&#34;,
+    &#34;Conflicts&#34;,
+    &#34;Contacts&#34;,
+    &#34;ConversationHistory&#34;,
+    &#34;ConversationSettings&#34;,
+    &#34;DefaultFoldersChangeHistory&#34;,
+    &#34;DeferredAction&#34;,
+    &#34;DeletedItems&#34;,
+    &#34;Directory&#34;,
+    &#34;Drafts&#34;,
+    &#34;ExchangeSyncData&#34;,
+    &#34;Favorites&#34;,
+    &#34;Files&#34;,
+    &#34;FreebusyData&#34;,
+    &#34;Friends&#34;,
+    &#34;GALContacts&#34;,
+    &#34;GraphAnalytics&#34;,
+    &#34;IMContactList&#34;,
+    &#34;Inbox&#34;,
+    &#34;Journal&#34;,
+    &#34;JunkEmail&#34;,
+    &#34;LocalFailures&#34;,
+    &#34;Location&#34;,
+    &#34;MailboxAssociations&#34;,
+    &#34;Messages&#34;,
+    &#34;MsgFolderRoot&#34;,
+    &#34;MyContacts&#34;,
+    &#34;MyContactsExtended&#34;,
+    &#34;NonDeletableFolderMixin&#34;,
+    &#34;Notes&#34;,
+    &#34;Outbox&#34;,
+    &#34;ParkedMessages&#34;,
+    &#34;PassThroughSearchResults&#34;,
+    &#34;PdpProfileV2Secured&#34;,
+    &#34;PeopleConnect&#34;,
+    &#34;QuickContacts&#34;,
+    &#34;RSSFeeds&#34;,
+    &#34;RecipientCache&#34;,
+    &#34;RecoverableItemsDeletions&#34;,
+    &#34;RecoverableItemsPurges&#34;,
+    &#34;RecoverableItemsRoot&#34;,
+    &#34;RecoverableItemsVersions&#34;,
+    &#34;Reminders&#34;,
+    &#34;Schedule&#34;,
+    &#34;SearchFolders&#34;,
+    &#34;SentItems&#34;,
+    &#34;ServerFailures&#34;,
+    &#34;Sharing&#34;,
+    &#34;Shortcuts&#34;,
+    &#34;Signal&#34;,
+    &#34;SmsAndChatsSync&#34;,
+    &#34;SpoolerQueue&#34;,
+    &#34;SyncIssues&#34;,
+    &#34;System&#34;,
+    &#34;Tasks&#34;,
+    &#34;TemporarySaves&#34;,
+    &#34;ToDoSearch&#34;,
+    &#34;Views&#34;,
+    &#34;VoiceMail&#34;,
+    &#34;WellknownFolder&#34;,
+    &#34;WorkingSet&#34;,
+    &#34;Companies&#34;,
+    &#34;OrganizationalContacts&#34;,
+    &#34;PeopleCentricConversationBuddies&#34;,
+    &#34;NON_DELETABLE_FOLDERS&#34;,
+    &#34;FolderQuerySet&#34;,
+    &#34;SingleFolderQuerySet&#34;,
+    &#34;FOLDER_TRAVERSAL_CHOICES&#34;,
+    &#34;SHALLOW&#34;,
+    &#34;DEEP&#34;,
+    &#34;SOFT_DELETED&#34;,
+    &#34;Root&#34;,
+    &#34;ArchiveRoot&#34;,
+    &#34;PublicFoldersRoot&#34;,
+    &#34;RootOfHierarchy&#34;,
 ]</code></pre>
 </details>
 </section>
@@ -110,7 +252,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AdminAuditLogs(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;adminauditlogs&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;adminauditlogs&#34;
     supported_from = EXCHANGE_2013
     get_folder_allowed = False</code></pre>
 </details>
@@ -189,10 +331,10 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AllContacts(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;AllContacts&#39;,),
+        None: (&#34;AllContacts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -267,10 +409,10 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AllItems(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF&#39;
+    CONTAINER_CLASS = &#34;IPF&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;AllItems&#39;,),
+        None: (&#34;AllItems&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -344,7 +486,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveDeletedItems(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archivedeleteditems&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archivedeleteditems&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -418,7 +560,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveInbox(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiveinbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiveinbox&#34;
     supported_from = EXCHANGE_2013_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -492,7 +634,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveMsgFolderRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archivemsgfolderroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archivemsgfolderroot&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -566,7 +708,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsDeletions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsdeletions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsdeletions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -640,7 +782,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsPurges(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemspurges&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemspurges&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -714,7 +856,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsroot&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -788,7 +930,7 @@ __all__ = [
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ArchiveRecoverableItemsVersions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;archiverecoverableitemsversions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiverecoverableitemsversions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -864,7 +1006,7 @@ __all__ = [
 <pre><code class="python">class ArchiveRoot(RootOfHierarchy):
     &#34;&#34;&#34;The root of the archive folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;archiveroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiveroot&#34;
     supported_from = EXCHANGE_2010_SP1
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT</code></pre>
 </details>
@@ -945,7 +1087,7 @@ __all__ = [
 </summary>
 <pre><code class="python">class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Audits&#39;,),
+        None: (&#34;Audits&#34;,),
     }
     get_folder_allowed = False</code></pre>
 </details>
@@ -1022,7 +1164,7 @@ __all__ = [
 <pre><code class="python">class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement a folder.&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Folder&#39;
+    ELEMENT_NAME = &#34;Folder&#34;
     NAMESPACE = TNS
     # See https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid
     DISTINGUISHED_FOLDER_ID = None
@@ -1041,24 +1183,23 @@ __all__ = [
     ITEM_MODEL_MAP = {cls.response_tag(): cls for cls in ITEM_CLASSES}
     ID_ELEMENT_CLS = FolderId
 
-    _id = IdElementField(field_uri=&#39;folder:FolderId&#39;, value_cls=ID_ELEMENT_CLS)
-    parent_folder_id = EWSElementField(field_uri=&#39;folder:ParentFolderId&#39;, value_cls=ParentFolderId,
-                                       is_read_only=True)
-    folder_class = CharField(field_uri=&#39;folder:FolderClass&#39;, is_required_after_save=True)
-    name = CharField(field_uri=&#39;folder:DisplayName&#39;)
-    total_count = IntegerField(field_uri=&#39;folder:TotalCount&#39;, is_read_only=True)
-    child_folder_count = IntegerField(field_uri=&#39;folder:ChildFolderCount&#39;, is_read_only=True)
-    unread_count = IntegerField(field_uri=&#39;folder:UnreadCount&#39;, is_read_only=True)
+    _id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=ID_ELEMENT_CLS)
+    parent_folder_id = EWSElementField(field_uri=&#34;folder:ParentFolderId&#34;, value_cls=ParentFolderId, is_read_only=True)
+    folder_class = CharField(field_uri=&#34;folder:FolderClass&#34;, is_required_after_save=True)
+    name = CharField(field_uri=&#34;folder:DisplayName&#34;)
+    total_count = IntegerField(field_uri=&#34;folder:TotalCount&#34;, is_read_only=True)
+    child_folder_count = IntegerField(field_uri=&#34;folder:ChildFolderCount&#34;, is_read_only=True)
+    unread_count = IntegerField(field_uri=&#34;folder:UnreadCount&#34;, is_read_only=True)
 
-    __slots__ = &#39;is_distinguished&#39;, &#39;item_sync_state&#39;, &#39;folder_sync_state&#39;
+    __slots__ = &#34;is_distinguished&#34;, &#34;item_sync_state&#34;, &#34;folder_sync_state&#34;
 
     # Used to register extended properties
-    INSERT_AFTER_FIELD = &#39;child_folder_count&#39;
+    INSERT_AFTER_FIELD = &#34;child_folder_count&#34;
 
     def __init__(self, **kwargs):
-        self.is_distinguished = kwargs.pop(&#39;is_distinguished&#39;, False)
-        self.item_sync_state = kwargs.pop(&#39;item_sync_state&#39;, None)
-        self.folder_sync_state = kwargs.pop(&#39;folder_sync_state&#39;, None)
+        self.is_distinguished = kwargs.pop(&#34;is_distinguished&#34;, False)
+        self.item_sync_state = kwargs.pop(&#34;item_sync_state&#34;, None)
+        self.folder_sync_state = kwargs.pop(&#34;folder_sync_state&#34;, None)
         super().__init__(**kwargs)
 
     @property
@@ -1103,7 +1244,7 @@ __all__ = [
 
     @property
     def absolute(self):
-        return &#39;&#39;.join(f&#39;/{p.name}&#39; for p in self.parts)
+        return &#34;&#34;.join(f&#34;/{p.name}&#34; for p in self.parts)
 
     def _walk(self):
         for c in self.children:
@@ -1114,23 +1255,23 @@ __all__ = [
         return FolderCollection(account=self.account, folders=self._walk())
 
     def _glob(self, pattern):
-        split_pattern = pattern.rsplit(&#39;/&#39;, 1)
+        split_pattern = pattern.rsplit(&#34;/&#34;, 1)
         head, tail = (split_pattern[0], None) if len(split_pattern) == 1 else split_pattern
-        if head == &#39;&#39;:
+        if head == &#34;&#34;:
             # We got an absolute path. Restart globbing at root
-            yield from self.root.glob(tail or &#39;*&#39;)
-        elif head == &#39;..&#39;:
+            yield from self.root.glob(tail or &#34;*&#34;)
+        elif head == &#34;..&#34;:
             # Relative path with reference to parent. Restart globbing at parent
             if not self.parent:
-                raise ValueError(&#39;Already at top&#39;)
-            yield from self.parent.glob(tail or &#39;*&#39;)
-        elif head == &#39;**&#39;:
+                raise ValueError(&#34;Already at top&#34;)
+            yield from self.parent.glob(tail or &#34;*&#34;)
+        elif head == &#34;**&#34;:
             # Match anything here or in any subfolder at arbitrary depth
             for c in self.walk():
                 # fnmatch() may be case-sensitive depending on operating system:
                 # force a case-insensitive match since case appears not to
                 # matter for folders in Exchange
-                if fnmatch(c.name.lower(), (tail or &#39;*&#39;).lower()):
+                if fnmatch(c.name.lower(), (tail or &#34;*&#34;).lower()):
                     yield c
         else:
             # Regular pattern
@@ -1157,22 +1298,22 @@ __all__ = [
             ├── exchangelib issues
             └── Mom
         &#34;&#34;&#34;
-        tree = f&#39;{self.name}\n&#39;
+        tree = f&#34;{self.name}\n&#34;
         children = list(self.children)
-        for i, c in enumerate(sorted(children, key=attrgetter(&#39;name&#39;)), start=1):
-            nodes = c.tree().split(&#39;\n&#39;)
+        for i, c in enumerate(sorted(children, key=attrgetter(&#34;name&#34;)), start=1):
+            nodes = c.tree().split(&#34;\n&#34;)
             for j, node in enumerate(nodes, start=1):
                 if i != len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
-                    tree += f&#39;├── {node}\n&#39;
+                    tree += f&#34;├── {node}\n&#34;
                 elif i != len(children) and j &gt; 1:
                     # Not the last child, and not name of child
-                    tree += f&#39;│   {node}\n&#39;
+                    tree += f&#34;│   {node}\n&#34;
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
-                    tree += f&#39;└── {node}\n&#39;
+                    tree += f&#34;└── {node}\n&#34;
                 else:  # Last child, and not name of child
-                    tree += f&#39;    {node}\n&#39;
+                    tree += f&#34;    {node}\n&#34;
         return tree.strip()
 
     @classmethod
@@ -1200,11 +1341,29 @@ __all__ = [
         :param container_class:
         :return:
         &#34;&#34;&#34;
-        from .known_folders import Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, \
-            RecipientCache, RSSFeeds
+        from .known_folders import (
+            Calendar,
+            Contacts,
+            ConversationSettings,
+            GALContacts,
+            Messages,
+            RecipientCache,
+            Reminders,
+            RSSFeeds,
+            Tasks,
+        )
+
         for folder_cls in (
-                Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, RecipientCache,
-                RSSFeeds):
+            Messages,
+            Tasks,
+            Calendar,
+            ConversationSettings,
+            Contacts,
+            GALContacts,
+            Reminders,
+            RecipientCache,
+            RSSFeeds,
+        ):
             if folder_cls.CONTAINER_CLASS == container_class:
                 return folder_cls
         raise KeyError()
@@ -1214,7 +1373,7 @@ __all__ = [
         try:
             return cls.ITEM_MODEL_MAP[tag]
         except KeyError:
-            raise ValueError(f&#39;Item type {tag} was unexpected in a {cls.__name__} folder&#39;)
+            raise ValueError(f&#34;Item type {tag} was unexpected in a {cls.__name__} folder&#34;)
 
     @classmethod
     def allowed_item_fields(cls, version):
@@ -1240,9 +1399,9 @@ __all__ = [
             elif isinstance(field_path, Field):
                 field_path = FieldPath(field=field_path)
                 fields[i] = field_path
-            if field_path.field.name == &#39;start&#39;:
+            if field_path.field.name == &#34;start&#34;:
                 has_start = True
-            elif field_path.field.name == &#39;end&#39;:
+            elif field_path.field.name == &#34;end&#34;:
                 has_end = True
 
         # For CalendarItem items, we want to inject internal timezone fields. See also CalendarItem.clean()
@@ -1291,6 +1450,7 @@ __all__ = [
 
     def save(self, update_fields=None):
         from ..services import CreateFolder, UpdateFolder
+
         if self.id is None:
             # New folder
             if update_fields:
@@ -1309,7 +1469,7 @@ __all__ = [
                     # These cannot be changed
                     continue
                 if (f.is_required or f.is_required_after_save) and (
-                        getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
                 ):
                     # These are required and cannot be deleted
                     continue
@@ -1317,7 +1477,7 @@ __all__ = [
         res = UpdateFolder(account=self.account).get(folders=[(self, update_fields)])
         folder_id, changekey = res.id, res.changekey
         if self.id != folder_id:
-            raise ValueError(&#39;ID mismatch&#39;)
+            raise ValueError(&#34;ID mismatch&#34;)
         # Don&#39;t check changekey value. It may not change on no-op updates
         self.changekey = changekey
         self.root.update_folder(self)  # Update the folder in the cache
@@ -1325,10 +1485,11 @@ __all__ = [
 
     def move(self, to_folder):
         from ..services import MoveFolder
+
         res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
         folder_id, changekey = res.id, res.changekey
         if self.id != folder_id:
-            raise ValueError(&#39;ID mismatch&#39;)
+            raise ValueError(&#34;ID mismatch&#34;)
         # Don&#39;t check changekey value. It may not change on no-op moves
         self.changekey = changekey
         self.parent_folder_id = ParentFolderId(id=to_folder.id, changekey=to_folder.changekey)
@@ -1336,12 +1497,14 @@ __all__ = [
 
     def delete(self, delete_type=HARD_DELETE):
         from ..services import DeleteFolder
+
         DeleteFolder(account=self.account).get(folders=[self], delete_type=delete_type)
         self.root.remove_folder(self)  # Remove the updated folder from the cache
         self._id = None
 
     def empty(self, delete_type=HARD_DELETE, delete_sub_folders=False):
         from ..services import EmptyFolder
+
         EmptyFolder(account=self.account).get(
             folders=[self], delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
@@ -1354,11 +1517,11 @@ __all__ = [
         # distinguished folders from being deleted. Use with caution!
         _seen = _seen or set()
         if self.id in _seen:
-            raise RecursionError(f&#39;We already tried to wipe {self}&#39;)
+            raise RecursionError(f&#34;We already tried to wipe {self}&#34;)
         if _level &gt; 16:
-            raise RecursionError(f&#39;Max recursion level reached: {_level}&#39;)
+            raise RecursionError(f&#34;Max recursion level reached: {_level}&#34;)
         _seen.add(self.id)
-        log.warning(&#39;Wiping %s&#39;, self)
+        log.warning(&#34;Wiping %s&#34;, self)
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
         try:
             if has_distinguished_subfolders:
@@ -1371,26 +1534,26 @@ __all__ = [
                     raise  # We already tried this
                 self.empty(delete_sub_folders=False)
             except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
-                log.warning(&#39;Not allowed to empty %s. Trying to delete items instead&#39;, self)
+                log.warning(&#34;Not allowed to empty %s. Trying to delete items instead&#34;, self)
                 kwargs = {}
                 if page_size is not None:
-                    kwargs[&#39;page_size&#39;] = page_size
+                    kwargs[&#34;page_size&#34;] = page_size
                 if chunk_size is not None:
-                    kwargs[&#39;chunk_size&#39;] = chunk_size
+                    kwargs[&#34;chunk_size&#34;] = chunk_size
                 try:
                     self.all().delete(**kwargs)
                 except (ErrorAccessDenied, ErrorCannotDeleteObject, ErrorItemNotFound):
-                    log.warning(&#39;Not allowed to delete items in %s&#39;, self)
+                    log.warning(&#34;Not allowed to delete items in %s&#34;, self)
         _level += 1
         for f in self.children:
             f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
             # Remove non-distinguished children that are empty and have no subfolders
             if f.is_deletable and not f.children:
-                log.warning(&#39;Deleting folder %s&#39;, f)
+                log.warning(&#34;Deleting folder %s&#34;, f)
                 try:
                     f.delete()
                 except ErrorDeleteDistinguishedFolder:
-                    log.warning(&#39;Tried to delete a distinguished folder (%s)&#39;, f)
+                    log.warning(&#34;Tried to delete a distinguished folder (%s)&#34;, f)
 
     def test_access(self):
         &#34;&#34;&#34;Does a simple FindItem to test (read) access to the folder. Maybe the account doesn&#39;t exist, maybe the
@@ -1402,12 +1565,12 @@ __all__ = [
     @classmethod
     def _kwargs_from_elem(cls, elem, account):
         # Check for &#39;DisplayName&#39; element before collecting kwargs because because that clears the elements
-        has_name_elem = elem.find(cls.get_field_by_fieldname(&#39;name&#39;).response_tag()) is not None
+        has_name_elem = elem.find(cls.get_field_by_fieldname(&#34;name&#34;).response_tag()) is not None
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
-        if has_name_elem and not kwargs[&#39;name&#39;]:
+        if has_name_elem and not kwargs[&#34;name&#34;]:
             # When we request the &#39;DisplayName&#39; property, some folders may still be returned with an empty value.
             # Assign a default name to these folders.
-            kwargs[&#39;name&#39;] = cls.DISTINGUISHED_FOLDER_ID
+            kwargs[&#34;name&#34;] = cls.DISTINGUISHED_FOLDER_ID
         return kwargs
 
     def to_id(self):
@@ -1416,22 +1579,21 @@ __all__ = [
             # the folder content since we fetched the changekey.
             if self.account:
                 return DistinguishedFolderId(
-                    id=self.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=self.account.primary_smtp_address)
+                    id=self.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
                 )
             return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
         if self.id:
             return FolderId(id=self.id, changekey=self.changekey)
-        raise ValueError(&#39;Must be a distinguished folder or have an ID&#39;)
+        raise ValueError(&#34;Must be a distinguished folder or have an ID&#34;)
 
     @classmethod
     def resolve(cls, account, folder):
         # Resolve a single folder
         folders = list(FolderCollection(account=account, folders=[folder]).resolve())
         if not folders:
-            raise ErrorFolderNotFound(f&#39;Could not find folder {folder!r}&#39;)
+            raise ErrorFolderNotFound(f&#34;Could not find folder {folder!r}&#34;)
         if len(folders) != 1:
-            raise ValueError(f&#39;Expected result length 1, but got {folders}&#39;)
+            raise ValueError(f&#34;Expected result length 1, but got {folders}&#34;)
         f = folders[0]
         if isinstance(f, Exception):
             raise f
@@ -1443,7 +1605,7 @@ __all__ = [
     def refresh(self):
         fresh_folder = self.resolve(account=self.account, folder=self)
         if self.id != fresh_folder.id:
-            raise ValueError(&#39;ID mismatch&#39;)
+            raise ValueError(&#34;ID mismatch&#34;)
         # Apparently, the changekey may get updated
         for f in self.FIELDS:
             setattr(self, f.name, getattr(fresh_folder, f.name))
@@ -1453,6 +1615,7 @@ __all__ = [
     def get_user_configuration(self, name, properties=None):
         from ..services import GetUserConfiguration
         from ..services.get_user_configuration import ALL
+
         if properties is None:
             properties = ALL
         return GetUserConfiguration(account=self.account).get(
@@ -1463,6 +1626,7 @@ __all__ = [
     @require_id
     def create_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
         from ..services import CreateUserConfiguration
+
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -1474,6 +1638,7 @@ __all__ = [
     @require_id
     def update_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
         from ..services import UpdateUserConfiguration
+
         user_configuration = UserConfiguration(
             user_configuration_name=UserConfigurationName(name=name, folder=self),
             dictionary=dictionary,
@@ -1485,6 +1650,7 @@ __all__ = [
     @require_id
     def delete_user_configuration(self, name):
         from ..services import DeleteUserConfiguration
+
         return DeleteUserConfiguration(account=self.account).get(
             user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
         )
@@ -1500,10 +1666,13 @@ __all__ = [
         :return: The subscription ID and a watermark
         &#34;&#34;&#34;
         from ..services import SubscribeToPull
+
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
         return FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
-            event_types=event_types, watermark=watermark, timeout=timeout,
+            event_types=event_types,
+            watermark=watermark,
+            timeout=timeout,
         )
 
     @require_id
@@ -1517,10 +1686,14 @@ __all__ = [
         :return: The subscription ID and a watermark
         &#34;&#34;&#34;
         from ..services import SubscribeToPush
+
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
         return FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
-            event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
+            event_types=event_types,
+            watermark=watermark,
+            status_frequency=status_frequency,
+            callback_url=callback_url,
         )
 
     @require_id
@@ -1531,6 +1704,7 @@ __all__ = [
         :return: The subscription ID
         &#34;&#34;&#34;
         from ..services import SubscribeToStreaming
+
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
         return FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(event_types=event_types)
@@ -1557,6 +1731,7 @@ __all__ = [
         sync methods.
         &#34;&#34;&#34;
         from ..services import Unsubscribe
+
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
@@ -1616,6 +1791,7 @@ __all__ = [
         sync methods.
         &#34;&#34;&#34;
         from ..services import GetEvents
+
         svc = GetEvents(account=self.account)
         while True:
             notification = svc.get(subscription_id=subscription_id, watermark=watermark)
@@ -1637,12 +1813,15 @@ __all__ = [
         sync methods.
         &#34;&#34;&#34;
         from ..services import GetStreamingEvents
+
         svc = GetStreamingEvents(account=self.account)
-        subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+        subscription_ids = (
+            subscription_id_or_ids
+            if is_iterable(subscription_id_or_ids, generators_allowed=True)
             else [subscription_id_or_ids]
+        )
         for i, notification in enumerate(
-                svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
-                start=1
+            svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout), start=1
         ):
             yield notification
             if max_notifications_returned and i &gt;= max_notifications_returned:
@@ -1659,10 +1838,10 @@ __all__ = [
         :param other:
         :return:
         &#34;&#34;&#34;
-        if other == &#39;..&#39;:
-            raise ValueError(&#39;Cannot get parent without a folder cache&#39;)
+        if other == &#34;..&#34;:
+            raise ValueError(&#34;Cannot get parent without a folder cache&#34;)
 
-        if other == &#39;.&#39;:
+        if other == &#34;.&#34;:
             return self
 
         # Assume an exact match on the folder name in a shallow search will only return at most one folder
@@ -1673,11 +1852,11 @@ __all__ = [
 
     def __truediv__(self, other):
         &#34;&#34;&#34;Support the some_folder / &#39;child_folder&#39; / &#39;child_of_child_folder&#39; navigation syntax.&#34;&#34;&#34;
-        if other == &#39;..&#39;:
+        if other == &#34;..&#34;:
             if not self.parent:
-                raise ValueError(&#39;Already at top&#39;)
+                raise ValueError(&#34;Already at top&#34;)
             return self.parent
-        if other == &#39;.&#39;:
+        if other == &#34;.&#34;:
             return self
         for c in self.children:
             if c.name == other:
@@ -1685,12 +1864,21 @@ __all__ = [
         raise ErrorFolderNotFound(f&#34;No subfolder with name {other!r}&#34;)
 
     def __repr__(self):
-        return self.__class__.__name__ + \
-               repr((self.root, self.name, self.total_count, self.unread_count, self.child_folder_count,
-                     self.folder_class, self.id, self.changekey))
+        return self.__class__.__name__ + repr(
+            (
+                self.root,
+                self.name,
+                self.total_count,
+                self.unread_count,
+                self.child_folder_count,
+                self.folder_class,
+                self.id,
+                self.changekey,
+            )
+        )
 
     def __str__(self):
-        return f&#39;{self.__class__.__name__} ({self.name})&#39;</code></pre>
+        return f&#34;{self.__class__.__name__} ({self.name})&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1803,11 +1991,29 @@ def folder_cls_from_container_class(container_class):
     :param container_class:
     :return:
     &#34;&#34;&#34;
-    from .known_folders import Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, \
-        RecipientCache, RSSFeeds
+    from .known_folders import (
+        Calendar,
+        Contacts,
+        ConversationSettings,
+        GALContacts,
+        Messages,
+        RecipientCache,
+        Reminders,
+        RSSFeeds,
+        Tasks,
+    )
+
     for folder_cls in (
-            Messages, Tasks, Calendar, ConversationSettings, Contacts, GALContacts, Reminders, RecipientCache,
-            RSSFeeds):
+        Messages,
+        Tasks,
+        Calendar,
+        ConversationSettings,
+        Contacts,
+        GALContacts,
+        Reminders,
+        RecipientCache,
+        RSSFeeds,
+    ):
         if folder_cls.CONTAINER_CLASS == container_class:
             return folder_cls
     raise KeyError()</code></pre>
@@ -1846,7 +2052,7 @@ def item_model_from_tag(cls, tag):
     try:
         return cls.ITEM_MODEL_MAP[tag]
     except KeyError:
-        raise ValueError(f&#39;Item type {tag} was unexpected in a {cls.__name__} folder&#39;)</code></pre>
+        raise ValueError(f&#34;Item type {tag} was unexpected in a {cls.__name__} folder&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.localized_names"><code class="name flex">
@@ -1879,9 +2085,9 @@ def resolve(cls, account, folder):
     # Resolve a single folder
     folders = list(FolderCollection(account=account, folders=[folder]).resolve())
     if not folders:
-        raise ErrorFolderNotFound(f&#39;Could not find folder {folder!r}&#39;)
+        raise ErrorFolderNotFound(f&#34;Could not find folder {folder!r}&#34;)
     if len(folders) != 1:
-        raise ValueError(f&#39;Expected result length 1, but got {folders}&#39;)
+        raise ValueError(f&#34;Expected result length 1, but got {folders}&#34;)
     f = folders[0]
     if isinstance(f, Exception):
         raise f
@@ -1919,7 +2125,7 @@ def supports_version(cls, version):
 </summary>
 <pre><code class="python">@property
 def absolute(self):
-    return &#39;&#39;.join(f&#39;/{p.name}&#39; for p in self.parts)</code></pre>
+    return &#34;&#34;.join(f&#34;/{p.name}&#34; for p in self.parts)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.account"><code class="name">var <span class="ident">account</span></code></dt>
@@ -2096,6 +2302,7 @@ def root(self):
 <pre><code class="python">@require_id
 def create_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
     from ..services import CreateUserConfiguration
+
     user_configuration = UserConfiguration(
         user_configuration_name=UserConfigurationName(name=name, folder=self),
         dictionary=dictionary,
@@ -2116,6 +2323,7 @@ def create_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">def delete(self, delete_type=HARD_DELETE):
     from ..services import DeleteFolder
+
     DeleteFolder(account=self.account).get(folders=[self], delete_type=delete_type)
     self.root.remove_folder(self)  # Remove the updated folder from the cache
     self._id = None</code></pre>
@@ -2133,6 +2341,7 @@ def create_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <pre><code class="python">@require_id
 def delete_user_configuration(self, name):
     from ..services import DeleteUserConfiguration
+
     return DeleteUserConfiguration(account=self.account).get(
         user_configuration_name=UserConfigurationNameMNS(name=name, folder=self)
     )</code></pre>
@@ -2149,6 +2358,7 @@ def delete_user_configuration(self, name):
 </summary>
 <pre><code class="python">def empty(self, delete_type=HARD_DELETE, delete_sub_folders=False):
     from ..services import EmptyFolder
+
     EmptyFolder(account=self.account).get(
         folders=[self], delete_type=delete_type, delete_sub_folders=delete_sub_folders
     )
@@ -2182,6 +2392,7 @@ sync methods.</p></div>
     sync methods.
     &#34;&#34;&#34;
     from ..services import GetEvents
+
     svc = GetEvents(account=self.account)
     while True:
         notification = svc.get(subscription_id=subscription_id, watermark=watermark)
@@ -2221,12 +2432,15 @@ sync methods.</p></div>
     sync methods.
     &#34;&#34;&#34;
     from ..services import GetStreamingEvents
+
     svc = GetStreamingEvents(account=self.account)
-    subscription_ids = subscription_id_or_ids if is_iterable(subscription_id_or_ids, generators_allowed=True) \
+    subscription_ids = (
+        subscription_id_or_ids
+        if is_iterable(subscription_id_or_ids, generators_allowed=True)
         else [subscription_id_or_ids]
+    )
     for i, notification in enumerate(
-            svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout),
-            start=1
+        svc.call(subscription_ids=subscription_ids, connection_timeout=connection_timeout), start=1
     ):
         yield notification
         if max_notifications_returned and i &gt;= max_notifications_returned:
@@ -2247,6 +2461,7 @@ sync methods.</p></div>
 def get_user_configuration(self, name, properties=None):
     from ..services import GetUserConfiguration
     from ..services.get_user_configuration import ALL
+
     if properties is None:
         properties = ALL
     return GetUserConfiguration(account=self.account).get(
@@ -2279,10 +2494,11 @@ def get_user_configuration(self, name, properties=None):
 </summary>
 <pre><code class="python">def move(self, to_folder):
     from ..services import MoveFolder
+
     res = MoveFolder(account=self.account).get(folders=[self], to_folder=to_folder)
     folder_id, changekey = res.id, res.changekey
     if self.id != folder_id:
-        raise ValueError(&#39;ID mismatch&#39;)
+        raise ValueError(&#34;ID mismatch&#34;)
     # Don&#39;t check changekey value. It may not change on no-op moves
     self.changekey = changekey
     self.parent_folder_id = ParentFolderId(id=to_folder.id, changekey=to_folder.changekey)
@@ -2311,9 +2527,9 @@ def get_user_configuration(self, name, properties=None):
         elif isinstance(field_path, Field):
             field_path = FieldPath(field=field_path)
             fields[i] = field_path
-        if field_path.field.name == &#39;start&#39;:
+        if field_path.field.name == &#34;start&#34;:
             has_start = True
-        elif field_path.field.name == &#39;end&#39;:
+        elif field_path.field.name == &#34;end&#34;:
             has_end = True
 
     # For CalendarItem items, we want to inject internal timezone fields. See also CalendarItem.clean()
@@ -2371,7 +2587,7 @@ def push_subscription(self, **kwargs):
 def refresh(self):
     fresh_folder = self.resolve(account=self.account, folder=self)
     if self.id != fresh_folder.id:
-        raise ValueError(&#39;ID mismatch&#39;)
+        raise ValueError(&#34;ID mismatch&#34;)
     # Apparently, the changekey may get updated
     for f in self.FIELDS:
         setattr(self, f.name, getattr(fresh_folder, f.name))
@@ -2389,6 +2605,7 @@ def refresh(self):
 </summary>
 <pre><code class="python">def save(self, update_fields=None):
     from ..services import CreateFolder, UpdateFolder
+
     if self.id is None:
         # New folder
         if update_fields:
@@ -2407,7 +2624,7 @@ def refresh(self):
                 # These cannot be changed
                 continue
             if (f.is_required or f.is_required_after_save) and (
-                    getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
+                getattr(self, f.name) is None or (f.is_list and not getattr(self, f.name))
             ):
                 # These are required and cannot be deleted
                 continue
@@ -2415,7 +2632,7 @@ def refresh(self):
     res = UpdateFolder(account=self.account).get(folders=[(self, update_fields)])
     folder_id, changekey = res.id, res.changekey
     if self.id != folder_id:
-        raise ValueError(&#39;ID mismatch&#39;)
+        raise ValueError(&#34;ID mismatch&#34;)
     # Don&#39;t check changekey value. It may not change on no-op updates
     self.changekey = changekey
     self.root.update_folder(self)  # Update the folder in the cache
@@ -2461,10 +2678,13 @@ def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
     :return: The subscription ID and a watermark
     &#34;&#34;&#34;
     from ..services import SubscribeToPull
+
     if event_types is None:
         event_types = SubscribeToPull.EVENT_TYPES
     return FolderCollection(account=self.account, folders=[self]).subscribe_to_pull(
-        event_types=event_types, watermark=watermark, timeout=timeout,
+        event_types=event_types,
+        watermark=watermark,
+        timeout=timeout,
     )</code></pre>
 </details>
 </dd>
@@ -2493,10 +2713,14 @@ def subscribe_to_push(self, callback_url, event_types=None, watermark=None, stat
     :return: The subscription ID and a watermark
     &#34;&#34;&#34;
     from ..services import SubscribeToPush
+
     if event_types is None:
         event_types = SubscribeToPush.EVENT_TYPES
     return FolderCollection(account=self.account, folders=[self]).subscribe_to_push(
-        event_types=event_types, watermark=watermark, status_frequency=status_frequency, callback_url=callback_url,
+        event_types=event_types,
+        watermark=watermark,
+        status_frequency=status_frequency,
+        callback_url=callback_url,
     )</code></pre>
 </details>
 </dd>
@@ -2519,6 +2743,7 @@ def subscribe_to_streaming(self, event_types=None):
     :return: The subscription ID
     &#34;&#34;&#34;
     from ..services import SubscribeToStreaming
+
     if event_types is None:
         event_types = SubscribeToStreaming.EVENT_TYPES
     return FolderCollection(account=self.account, folders=[self]).subscribe_to_streaming(event_types=event_types)</code></pre>
@@ -2636,13 +2861,12 @@ service user doesn't have access to the calendar. This will throw the most commo
         # the folder content since we fetched the changekey.
         if self.account:
             return DistinguishedFolderId(
-                id=self.DISTINGUISHED_FOLDER_ID,
-                mailbox=Mailbox(email_address=self.account.primary_smtp_address)
+                id=self.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
             )
         return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
     if self.id:
         return FolderId(id=self.id, changekey=self.changekey)
-    raise ValueError(&#39;Must be a distinguished folder or have an ID&#39;)</code></pre>
+    raise ValueError(&#34;Must be a distinguished folder or have an ID&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.tree"><code class="name flex">
@@ -2673,22 +2897,22 @@ service user doesn't have access to the calendar. This will throw the most commo
         ├── exchangelib issues
         └── Mom
     &#34;&#34;&#34;
-    tree = f&#39;{self.name}\n&#39;
+    tree = f&#34;{self.name}\n&#34;
     children = list(self.children)
-    for i, c in enumerate(sorted(children, key=attrgetter(&#39;name&#39;)), start=1):
-        nodes = c.tree().split(&#39;\n&#39;)
+    for i, c in enumerate(sorted(children, key=attrgetter(&#34;name&#34;)), start=1):
+        nodes = c.tree().split(&#34;\n&#34;)
         for j, node in enumerate(nodes, start=1):
             if i != len(children) and j == 1:
                 # Not the last child, but the first node, which is the name of the child
-                tree += f&#39;├── {node}\n&#39;
+                tree += f&#34;├── {node}\n&#34;
             elif i != len(children) and j &gt; 1:
                 # Not the last child, and not name of child
-                tree += f&#39;│   {node}\n&#39;
+                tree += f&#34;│   {node}\n&#34;
             elif i == len(children) and j == 1:
                 # Not the last child, but the first node, which is the name of the child
-                tree += f&#39;└── {node}\n&#39;
+                tree += f&#34;└── {node}\n&#34;
             else:  # Last child, and not name of child
-                tree += f&#39;    {node}\n&#39;
+                tree += f&#34;    {node}\n&#34;
     return tree.strip()</code></pre>
 </details>
 </dd>
@@ -2715,6 +2939,7 @@ sync methods.</p></div>
     sync methods.
     &#34;&#34;&#34;
     from ..services import Unsubscribe
+
     return Unsubscribe(account=self.account).get(subscription_id=subscription_id)</code></pre>
 </details>
 </dd>
@@ -2730,6 +2955,7 @@ sync methods.</p></div>
 <pre><code class="python">@require_id
 def update_user_configuration(self, name, dictionary=None, xml_data=None, binary_data=None):
     from ..services import UpdateUserConfiguration
+
     user_configuration = UserConfiguration(
         user_configuration_name=UserConfigurationName(name=name, folder=self),
         dictionary=dictionary,
@@ -2779,11 +3005,11 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
     # distinguished folders from being deleted. Use with caution!
     _seen = _seen or set()
     if self.id in _seen:
-        raise RecursionError(f&#39;We already tried to wipe {self}&#39;)
+        raise RecursionError(f&#34;We already tried to wipe {self}&#34;)
     if _level &gt; 16:
-        raise RecursionError(f&#39;Max recursion level reached: {_level}&#39;)
+        raise RecursionError(f&#34;Max recursion level reached: {_level}&#34;)
     _seen.add(self.id)
-    log.warning(&#39;Wiping %s&#39;, self)
+    log.warning(&#34;Wiping %s&#34;, self)
     has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
     try:
         if has_distinguished_subfolders:
@@ -2796,26 +3022,26 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
                 raise  # We already tried this
             self.empty(delete_sub_folders=False)
         except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
-            log.warning(&#39;Not allowed to empty %s. Trying to delete items instead&#39;, self)
+            log.warning(&#34;Not allowed to empty %s. Trying to delete items instead&#34;, self)
             kwargs = {}
             if page_size is not None:
-                kwargs[&#39;page_size&#39;] = page_size
+                kwargs[&#34;page_size&#34;] = page_size
             if chunk_size is not None:
-                kwargs[&#39;chunk_size&#39;] = chunk_size
+                kwargs[&#34;chunk_size&#34;] = chunk_size
             try:
                 self.all().delete(**kwargs)
             except (ErrorAccessDenied, ErrorCannotDeleteObject, ErrorItemNotFound):
-                log.warning(&#39;Not allowed to delete items in %s&#39;, self)
+                log.warning(&#34;Not allowed to delete items in %s&#34;, self)
     _level += 1
     for f in self.children:
         f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
         # Remove non-distinguished children that are empty and have no subfolders
         if f.is_deletable and not f.children:
-            log.warning(&#39;Deleting folder %s&#39;, f)
+            log.warning(&#34;Deleting folder %s&#34;, f)
             try:
                 f.delete()
             except ErrorDeleteDistinguishedFolder:
-                log.warning(&#39;Tried to delete a distinguished folder (%s)&#39;, f)</code></pre>
+                log.warning(&#34;Tried to delete a distinguished folder (%s)&#34;, f)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2856,20 +3082,20 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <pre><code class="python">class Calendar(Folder):
     &#34;&#34;&#34;An interface for the Exchange calendar.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;calendar&#39;
-    CONTAINER_CLASS = &#39;IPF.Appointment&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;calendar&#34;
+    CONTAINER_CLASS = &#34;IPF.Appointment&#34;
     supported_item_models = (CalendarItem,)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kalender&#39;,),
-        &#39;de_DE&#39;: (&#39;Kalender&#39;,),
-        &#39;en_US&#39;: (&#39;Calendar&#39;,),
-        &#39;es_ES&#39;: (&#39;Calendario&#39;,),
-        &#39;fr_CA&#39;: (&#39;Calendrier&#39;,),
-        &#39;nl_NL&#39;: (&#39;Agenda&#39;,),
-        &#39;ru_RU&#39;: (&#39;Календарь&#39;,),
-        &#39;sv_SE&#39;: (&#39;Kalender&#39;,),
-        &#39;zh_CN&#39;: (&#39;日历&#39;,),
+        &#34;da_DK&#34;: (&#34;Kalender&#34;,),
+        &#34;de_DE&#34;: (&#34;Kalender&#34;,),
+        &#34;en_US&#34;: (&#34;Calendar&#34;,),
+        &#34;es_ES&#34;: (&#34;Calendario&#34;,),
+        &#34;fr_CA&#34;: (&#34;Calendrier&#34;,),
+        &#34;nl_NL&#34;: (&#34;Agenda&#34;,),
+        &#34;ru_RU&#34;: (&#34;Календарь&#34;,),
+        &#34;sv_SE&#34;: (&#34;Kalender&#34;,),
+        &#34;zh_CN&#34;: (&#34;日历&#34;,),
     }
 
     def view(self, *args, **kwargs):
@@ -2970,7 +3196,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">class CalendarLogging(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Calendar Logging&#39;,),
+        None: (&#34;Calendar Logging&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3042,7 +3268,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <pre><code class="python">class CommonViews(NonDeletableFolderMixin, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
-        None: (&#39;Common Views&#39;,),
+        None: (&#34;Common Views&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3117,9 +3343,9 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">class Companies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.Company&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Companies&#39;,),
+        None: (&#34;Companies&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3198,7 +3424,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Conflicts(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;conflicts&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;conflicts&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3272,20 +3498,20 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Contacts(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;contacts&#39;
-    CONTAINER_CLASS = &#39;IPF.Contact&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;contacts&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact&#34;
     supported_item_models = (Contact, DistributionList)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kontaktpersoner&#39;,),
-        &#39;de_DE&#39;: (&#39;Kontakte&#39;,),
-        &#39;en_US&#39;: (&#39;Contacts&#39;,),
-        &#39;es_ES&#39;: (&#39;Contactos&#39;,),
-        &#39;fr_CA&#39;: (&#39;Contacts&#39;,),
-        &#39;nl_NL&#39;: (&#39;Contactpersonen&#39;,),
-        &#39;ru_RU&#39;: (&#39;Контакты&#39;,),
-        &#39;sv_SE&#39;: (&#39;Kontakter&#39;,),
-        &#39;zh_CN&#39;: (&#39;联系人&#39;,),
+        &#34;da_DK&#34;: (&#34;Kontaktpersoner&#34;,),
+        &#34;de_DE&#34;: (&#34;Kontakte&#34;,),
+        &#34;en_US&#34;: (&#34;Contacts&#34;,),
+        &#34;es_ES&#34;: (&#34;Contactos&#34;,),
+        &#34;fr_CA&#34;: (&#34;Contacts&#34;,),
+        &#34;nl_NL&#34;: (&#34;Contactpersonen&#34;,),
+        &#34;ru_RU&#34;: (&#34;Контакты&#34;,),
+        &#34;sv_SE&#34;: (&#34;Kontakter&#34;,),
+        &#34;zh_CN&#34;: (&#34;联系人&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3377,7 +3603,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ConversationHistory(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;conversationhistory&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;conversationhistory&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3451,9 +3677,9 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ConversationSettings(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Configuration&#39;
+    CONTAINER_CLASS = &#34;IPF.Configuration&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Indstillinger for samtalehandlinger&#39;,),
+        &#34;da_DK&#34;: (&#34;Indstillinger for samtalehandlinger&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3527,9 +3753,9 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPM.DefaultFolderHistoryItem&#39;
+    CONTAINER_CLASS = &#34;IPM.DefaultFolderHistoryItem&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;DefaultFoldersChangeHistory&#39;,),
+        None: (&#34;DefaultFoldersChangeHistory&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3604,7 +3830,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">class DeferredAction(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Deferred Action&#39;,),
+        None: (&#34;Deferred Action&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3674,20 +3900,20 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DeletedItems(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;deleteditems&#39;
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;deleteditems&#34;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     supported_item_models = ITEM_CLASSES
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Slettet post&#39;,),
-        &#39;de_DE&#39;: (&#39;Gelöschte Elemente&#39;,),
-        &#39;en_US&#39;: (&#39;Deleted Items&#39;,),
-        &#39;es_ES&#39;: (&#39;Elementos eliminados&#39;,),
-        &#39;fr_CA&#39;: (&#39;Éléments supprimés&#39;,),
-        &#39;nl_NL&#39;: (&#39;Verwijderde items&#39;,),
-        &#39;ru_RU&#39;: (&#39;Удаленные&#39;,),
-        &#39;sv_SE&#39;: (&#39;Borttaget&#39;,),
-        &#39;zh_CN&#39;: (&#39;已删除邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Slettet post&#34;,),
+        &#34;de_DE&#34;: (&#34;Gelöschte Elemente&#34;,),
+        &#34;en_US&#34;: (&#34;Deleted Items&#34;,),
+        &#34;es_ES&#34;: (&#34;Elementos eliminados&#34;,),
+        &#34;fr_CA&#34;: (&#34;Éléments supprimés&#34;,),
+        &#34;nl_NL&#34;: (&#34;Verwijderde items&#34;,),
+        &#34;ru_RU&#34;: (&#34;Удаленные&#34;,),
+        &#34;sv_SE&#34;: (&#34;Borttaget&#34;,),
+        &#34;zh_CN&#34;: (&#34;已删除邮件&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3768,7 +3994,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Directory(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;directory&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;directory&#34;
     supported_from = EXCHANGE_2013_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3844,12 +4070,13 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <pre><code class="python">class DistinguishedFolderId(FolderId):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distinguishedfolderid&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DistinguishedFolderId&#39;
+    ELEMENT_NAME = &#34;DistinguishedFolderId&#34;
 
     mailbox = MailboxField()
 
     def clean(self, version=None):
         from .folders import PublicFoldersRoot
+
         super().clean(version=version)
         if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
             # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
@@ -3893,6 +4120,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">def clean(self, version=None):
     from .folders import PublicFoldersRoot
+
     super().clean(version=version)
     if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
         # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
@@ -3923,18 +4151,18 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Drafts(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;drafts&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;drafts&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Kladder&#39;,),
-        &#39;de_DE&#39;: (&#39;Entwürfe&#39;,),
-        &#39;en_US&#39;: (&#39;Drafts&#39;,),
-        &#39;es_ES&#39;: (&#39;Borradores&#39;,),
-        &#39;fr_CA&#39;: (&#39;Brouillons&#39;,),
-        &#39;nl_NL&#39;: (&#39;Concepten&#39;,),
-        &#39;ru_RU&#39;: (&#39;Черновики&#39;,),
-        &#39;sv_SE&#39;: (&#39;Utkast&#39;,),
-        &#39;zh_CN&#39;: (&#39;草稿&#39;,),
+        &#34;da_DK&#34;: (&#34;Kladder&#34;,),
+        &#34;de_DE&#34;: (&#34;Entwürfe&#34;,),
+        &#34;en_US&#34;: (&#34;Drafts&#34;,),
+        &#34;es_ES&#34;: (&#34;Borradores&#34;,),
+        &#34;fr_CA&#34;: (&#34;Brouillons&#34;,),
+        &#34;nl_NL&#34;: (&#34;Concepten&#34;,),
+        &#34;ru_RU&#34;: (&#34;Черновики&#34;,),
+        &#34;sv_SE&#34;: (&#34;Utkast&#34;,),
+        &#34;zh_CN&#34;: (&#34;草稿&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4009,7 +4237,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">class ExchangeSyncData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;ExchangeSyncData&#39;,),
+        None: (&#34;ExchangeSyncData&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4079,8 +4307,8 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Favorites(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;favorites&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;favorites&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4158,10 +4386,10 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Files(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Files&#39;
+    CONTAINER_CLASS = &#34;IPF.Files&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Filer&#39;,),
+        &#34;da_DK&#34;: (&#34;Filer&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4237,24 +4465,25 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <pre><code class="python">class Folder(BaseFolder):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folder&#34;&#34;&#34;
 
-    permission_set = PermissionSetField(field_uri=&#39;folder:PermissionSet&#39;, supported_from=EXCHANGE_2007_SP1)
-    effective_rights = EffectiveRightsField(field_uri=&#39;folder:EffectiveRights&#39;, is_read_only=True,
-                                            supported_from=EXCHANGE_2007_SP1)
+    permission_set = PermissionSetField(field_uri=&#34;folder:PermissionSet&#34;, supported_from=EXCHANGE_2007_SP1)
+    effective_rights = EffectiveRightsField(
+        field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
+    )
 
-    __slots__ = &#39;_root&#39;,
+    __slots__ = (&#34;_root&#34;,)
 
     def __init__(self, **kwargs):
-        self._root = kwargs.pop(&#39;root&#39;, None)  # This is a pointer to the root of the folder hierarchy
-        parent = kwargs.pop(&#39;parent&#39;, None)
+        self._root = kwargs.pop(&#34;root&#34;, None)  # This is a pointer to the root of the folder hierarchy
+        parent = kwargs.pop(&#34;parent&#34;, None)
         if parent:
             if self.root:
                 if parent.root != self.root:
                     raise ValueError(&#34;&#39;parent.root&#39; must match &#39;root&#39;&#34;)
             else:
                 self.root = parent.root
-            if &#39;parent_folder_id&#39; in kwargs and parent.id != kwargs[&#39;parent_folder_id&#39;]:
+            if &#34;parent_folder_id&#34; in kwargs and parent.id != kwargs[&#34;parent_folder_id&#34;]:
                 raise ValueError(&#34;&#39;parent_folder_id&#39; must match &#39;parent&#39; ID&#34;)
-            kwargs[&#39;parent_folder_id&#39;] = ParentFolderId(id=parent.id, changekey=parent.changekey)
+            kwargs[&#34;parent_folder_id&#34;] = ParentFolderId(id=parent.id, changekey=parent.changekey)
         super().__init__(**kwargs)
 
     @property
@@ -4274,13 +4503,13 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not Folder:
-            raise TypeError(&#39;For folders, custom fields must be registered on the Folder class&#39;)
+            raise TypeError(&#34;For folders, custom fields must be registered on the Folder class&#34;)
         return super().register(*args, **kwargs)
 
     @classmethod
     def deregister(cls, *args, **kwargs):
         if cls is not Folder:
-            raise TypeError(&#39;For folders, custom fields must be registered on the Folder class&#39;)
+            raise TypeError(&#34;For folders, custom fields must be registered on the Folder class&#34;)
         return super().deregister(*args, **kwargs)
 
     @classmethod
@@ -4292,11 +4521,10 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         &#34;&#34;&#34;
         try:
             return cls.resolve(
-                account=root.account,
-                folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                account=root.account, folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#39;)
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)
 
     @property
     def parent(self):
@@ -4313,15 +4541,16 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
             self.parent_folder_id = None
         else:
             if not isinstance(value, BaseFolder):
-                raise InvalidTypeError(&#39;value&#39;, value, BaseFolder)
+                raise InvalidTypeError(&#34;value&#34;, value, BaseFolder)
             self.root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
         from .roots import RootOfHierarchy
+
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
-            raise InvalidTypeError(&#39;root&#39;, self.root, RootOfHierarchy)
+            raise InvalidTypeError(&#34;root&#34;, self.root, RootOfHierarchy)
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
@@ -4347,20 +4576,20 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
             if folder.name:
                 try:
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name,
-                                                                  locale=root.account.locale)
-                    log.debug(&#39;Folder class %s matches localized folder name %s&#39;, folder_cls, folder.name)
+                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
+                    log.debug(&#34;Folder class %s matches localized folder name %s&#34;, folder_cls, folder.name)
                 except KeyError:
                     pass
             if folder.folder_class and folder_cls == Folder:
                 try:
                     folder_cls = cls.folder_cls_from_container_class(container_class=folder.folder_class)
-                    log.debug(&#39;Folder class %s matches container class %s (%s)&#39;, folder_cls, folder.folder_class,
-                              folder.name)
+                    log.debug(
+                        &#34;Folder class %s matches container class %s (%s)&#34;, folder_cls, folder.folder_class, folder.name
+                    )
                 except KeyError:
                     pass
             if folder_cls == Folder:
-                log.debug(&#39;Fallback to class Folder (folder_class %s, name %s)&#39;, folder.folder_class, folder.name)
+                log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4451,20 +4680,20 @@ def from_xml_with_root(cls, elem, root):
         if folder.name:
             try:
                 # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name,
-                                                              locale=root.account.locale)
-                log.debug(&#39;Folder class %s matches localized folder name %s&#39;, folder_cls, folder.name)
+                folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
+                log.debug(&#34;Folder class %s matches localized folder name %s&#34;, folder_cls, folder.name)
             except KeyError:
                 pass
         if folder.folder_class and folder_cls == Folder:
             try:
                 folder_cls = cls.folder_cls_from_container_class(container_class=folder.folder_class)
-                log.debug(&#39;Folder class %s matches container class %s (%s)&#39;, folder_cls, folder.folder_class,
-                          folder.name)
+                log.debug(
+                    &#34;Folder class %s matches container class %s (%s)&#34;, folder_cls, folder.folder_class, folder.name
+                )
             except KeyError:
                 pass
         if folder_cls == Folder:
-            log.debug(&#39;Fallback to class Folder (folder_class %s, name %s)&#39;, folder.folder_class, folder.name)
+            log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
     return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
 </details>
 </dd>
@@ -4488,11 +4717,10 @@ def get_distinguished(cls, root):
     &#34;&#34;&#34;
     try:
         return cls.resolve(
-            account=root.account,
-            folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+            account=root.account, folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
         )
     except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#39;)</code></pre>
+        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -4520,9 +4748,10 @@ def get_distinguished(cls, root):
 </summary>
 <pre><code class="python">def clean(self, version=None):
     from .roots import RootOfHierarchy
+
     super().clean(version=version)
     if self.root and not isinstance(self.root, RootOfHierarchy):
-        raise InvalidTypeError(&#39;root&#39;, self.root, RootOfHierarchy)</code></pre>
+        raise InvalidTypeError(&#34;root&#34;, self.root, RootOfHierarchy)</code></pre>
 </details>
 </dd>
 </dl>
@@ -4581,7 +4810,7 @@ def get_distinguished(cls, root):
     &#34;&#34;&#34;A class that implements an API for searching folders.&#34;&#34;&#34;
 
     # These fields are required in a FindFolder or GetFolder call to properly identify folder types
-    REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
+    REQUIRED_FOLDER_FIELDS = (&#34;name&#34;, &#34;folder_class&#34;)
 
     def __init__(self, account, folders):
         &#34;&#34;&#34;Implement a search API on a collection of folders.
@@ -4712,8 +4941,18 @@ def get_distinguished(cls, root):
             query_string = None
         return depth, restriction, query_string
 
-    def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                   calendar_view=None, page_size=None, max_items=None, offset=0):
+    def find_items(
+        self,
+        q,
+        shape=ID_ONLY,
+        depth=None,
+        additional_fields=None,
+        order_fields=None,
+        calendar_view=None,
+        page_size=None,
+        max_items=None,
+        offset=0,
+    ):
         &#34;&#34;&#34;Private method to call the FindItem service.
 
         :param q: a Q instance containing any restrictions
@@ -4731,21 +4970,21 @@ def get_distinguished(cls, root):
         :return: a generator for the returned item IDs or items
         &#34;&#34;&#34;
         from ..services import FindItem
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, depth=depth, additional_fields=additional_fields,
-            field_validator=self.validate_item_field
+            q=q, depth=depth, additional_fields=additional_fields, field_validator=self.validate_item_field
         )
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-            raise InvalidTypeError(&#39;calendar_view&#39;, calendar_view, CalendarView)
+            raise InvalidTypeError(&#34;calendar_view&#34;, calendar_view, CalendarView)
 
         log.debug(
-            &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+            &#34;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#34;,
             self.account,
             self.folders,
             shape,
@@ -4768,14 +5007,23 @@ def get_distinguished(cls, root):
 
     def _get_single_folder(self):
         if len(self.folders) &gt; 1:
-            raise ValueError(&#39;Syncing folder hierarchy can only be done on a single folder&#39;)
+            raise ValueError(&#34;Syncing folder hierarchy can only be done on a single folder&#34;)
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         return self.folders[0]
 
-    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                    page_size=None, max_items=None, offset=0):
+    def find_people(
+        self,
+        q,
+        shape=ID_ONLY,
+        depth=None,
+        additional_fields=None,
+        order_fields=None,
+        page_size=None,
+        max_items=None,
+        offset=0,
+    ):
         &#34;&#34;&#34;Private method to call the FindPeople service.
 
         :param q: a Q instance containing any restrictions
@@ -4791,30 +5039,31 @@ def get_distinguished(cls, root):
         :return: a generator for the returned personas
         &#34;&#34;&#34;
         from ..services import FindPeople
+
         folder = self._get_single_folder()
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, depth=depth, additional_fields=additional_fields,
-            field_validator=Persona.validate_field
+            q=q, depth=depth, additional_fields=additional_fields, field_validator=Persona.validate_field
         )
 
         yield from FindPeople(account=self.account, page_size=page_size).call(
-                folder=folder,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                shape=shape,
-                query_string=query_string,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
+            folder=folder,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            order_fields=order_fields,
+            shape=shape,
+            query_string=query_string,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
         )
 
     def get_folder_fields(self, target_cls, is_complex=None):
         return {
-            FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+            FieldPath(field=f)
+            for f in target_cls.supported_fields(version=self.account.version)
             if is_complex is None or f.is_complex is is_complex
         }
 
@@ -4823,16 +5072,17 @@ def get_distinguished(cls, root):
         # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
         from .base import Folder
         from .roots import RootOfHierarchy
+
         has_roots = False
         has_non_roots = False
         for f in self.folders:
             if isinstance(f, RootOfHierarchy):
                 if has_non_roots:
-                    raise ValueError(f&#39;Cannot call GetFolder on a mix of folder types: {self.folders}&#39;)
+                    raise ValueError(f&#34;Cannot call GetFolder on a mix of folder types: {self.folders}&#34;)
                 has_roots = True
             else:
                 if has_roots:
-                    raise ValueError(f&#39;Cannot call GetFolder on a mix of folder types: {self.folders}&#39;)
+                    raise ValueError(f&#34;Cannot call GetFolder on a mix of folder types: {self.folders}&#34;)
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
@@ -4841,47 +5091,51 @@ def get_distinguished(cls, root):
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            f&#39;Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit &#39;
-            f&#39;traversal depth with QuerySet.depth() (values: {unique_depths})&#39;
+            f&#34;Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit &#34;
+            f&#34;traversal depth with QuerySet.depth() (values: {unique_depths})&#34;
         )
 
     def _get_default_item_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        return self._get_default_traversal_depth(&#39;DEFAULT_ITEM_TRAVERSAL_DEPTH&#39;)
+        return self._get_default_traversal_depth(&#34;DEFAULT_ITEM_TRAVERSAL_DEPTH&#34;)
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        return self._get_default_traversal_depth(&#39;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#39;)
+        return self._get_default_traversal_depth(&#34;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#34;)
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
         from .base import BaseFolder
+
         resolveable_folders = []
         for f in self.folders:
             if isinstance(f, BaseFolder) and not f.get_folder_allowed:
-                log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+                log.debug(&#34;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#34;, f)
                 yield f
             else:
                 resolveable_folders.append(f)
         # Fetch all properties for the remaining folders of folder IDs
         additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
         yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
-                additional_fields=additional_fields
+            additional_fields=additional_fields
         )
 
     @require_account
-    def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
-                     offset=0):
+    def find_folders(
+        self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None, offset=0
+    ):
         from ..services import FindFolder
+
         # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
         from .base import BaseFolder, Folder
+
         if q is None:
             q = Q()
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         if q.is_empty():
             restriction = None
@@ -4903,21 +5157,23 @@ def get_distinguished(cls, root):
         )
 
         yield from FindFolder(account=self.account, page_size=page_size).call(
-                folders=self.folders,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                shape=shape,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
+            folders=self.folders,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            shape=shape,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
         )
 
     def get_folders(self, additional_fields=None):
         from ..services import GetFolder
+
         # Expand folders with their full set of properties
         from .base import BaseFolder
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if additional_fields is None:
             # Default to all complex properties
@@ -4929,38 +5185,47 @@ def get_distinguished(cls, root):
         )
 
         yield from GetFolder(account=self.account).call(
-                folders=self.folders,
-                additional_fields=additional_fields,
-                shape=ID_ONLY,
+            folders=self.folders,
+            additional_fields=additional_fields,
+            shape=ID_ONLY,
         )
 
     def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
         from ..services import SubscribeToPull
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
         return SubscribeToPull(account=self.account).get(
-            folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+            folders=self.folders,
+            event_types=event_types,
+            watermark=watermark,
+            timeout=timeout,
         )
 
     def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
         from ..services import SubscribeToPush
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
         return SubscribeToPush(account=self.account).get(
-            folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            folders=self.folders,
+            event_types=event_types,
+            watermark=watermark,
+            status_frequency=status_frequency,
             url=callback_url,
         )
 
     def subscribe_to_streaming(self, event_types=None):
         from ..services import SubscribeToStreaming
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
@@ -4985,10 +5250,12 @@ def get_distinguished(cls, root):
         sync methods.
         &#34;&#34;&#34;
         from ..services import Unsubscribe
+
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         from ..services import SyncFolderItems
+
         folder = self._get_single_folder()
         if only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -5020,6 +5287,7 @@ def get_distinguished(cls, root):
 
     def sync_hierarchy(self, sync_state=None, only_fields=None):
         from ..services import SyncFolderHierarchy
+
         folder = self._get_single_folder()
         if only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -5186,18 +5454,21 @@ string is not a postfix.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_account
-def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
-                 offset=0):
+def find_folders(
+    self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None, offset=0
+):
     from ..services import FindFolder
+
     # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
     from .base import BaseFolder, Folder
+
     if q is None:
         q = Q()
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return
     if q.is_never():
-        log.debug(&#39;Query will never return results&#39;)
+        log.debug(&#34;Query will never return results&#34;)
         return
     if q.is_empty():
         restriction = None
@@ -5219,13 +5490,13 @@ def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None
     )
 
     yield from FindFolder(account=self.account, page_size=page_size).call(
-            folders=self.folders,
-            additional_fields=additional_fields,
-            restriction=restriction,
-            shape=shape,
-            depth=depth,
-            max_items=max_items,
-            offset=offset,
+        folders=self.folders,
+        additional_fields=additional_fields,
+        restriction=restriction,
+        shape=shape,
+        depth=depth,
+        max_items=max_items,
+        offset=offset,
     )</code></pre>
 </details>
 </dd>
@@ -5250,8 +5521,18 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-               calendar_view=None, page_size=None, max_items=None, offset=0):
+<pre><code class="python">def find_items(
+    self,
+    q,
+    shape=ID_ONLY,
+    depth=None,
+    additional_fields=None,
+    order_fields=None,
+    calendar_view=None,
+    page_size=None,
+    max_items=None,
+    offset=0,
+):
     &#34;&#34;&#34;Private method to call the FindItem service.
 
     :param q: a Q instance containing any restrictions
@@ -5269,21 +5550,21 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
     :return: a generator for the returned item IDs or items
     &#34;&#34;&#34;
     from ..services import FindItem
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return
     if q.is_never():
-        log.debug(&#39;Query will never return results&#39;)
+        log.debug(&#34;Query will never return results&#34;)
         return
     depth, restriction, query_string = self._rinse_args(
-        q=q, depth=depth, additional_fields=additional_fields,
-        field_validator=self.validate_item_field
+        q=q, depth=depth, additional_fields=additional_fields, field_validator=self.validate_item_field
     )
     if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-        raise InvalidTypeError(&#39;calendar_view&#39;, calendar_view, CalendarView)
+        raise InvalidTypeError(&#34;calendar_view&#34;, calendar_view, CalendarView)
 
     log.debug(
-        &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+        &#34;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#34;,
         self.account,
         self.folders,
         shape,
@@ -5324,8 +5605,17 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                page_size=None, max_items=None, offset=0):
+<pre><code class="python">def find_people(
+    self,
+    q,
+    shape=ID_ONLY,
+    depth=None,
+    additional_fields=None,
+    order_fields=None,
+    page_size=None,
+    max_items=None,
+    offset=0,
+):
     &#34;&#34;&#34;Private method to call the FindPeople service.
 
     :param q: a Q instance containing any restrictions
@@ -5341,25 +5631,25 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
     :return: a generator for the returned personas
     &#34;&#34;&#34;
     from ..services import FindPeople
+
     folder = self._get_single_folder()
     if q.is_never():
-        log.debug(&#39;Query will never return results&#39;)
+        log.debug(&#34;Query will never return results&#34;)
         return
     depth, restriction, query_string = self._rinse_args(
-        q=q, depth=depth, additional_fields=additional_fields,
-        field_validator=Persona.validate_field
+        q=q, depth=depth, additional_fields=additional_fields, field_validator=Persona.validate_field
     )
 
     yield from FindPeople(account=self.account, page_size=page_size).call(
-            folder=folder,
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            shape=shape,
-            query_string=query_string,
-            depth=depth,
-            max_items=max_items,
-            offset=offset,
+        folder=folder,
+        additional_fields=additional_fields,
+        restriction=restriction,
+        order_fields=order_fields,
+        shape=shape,
+        query_string=query_string,
+        depth=depth,
+        max_items=max_items,
+        offset=offset,
     )</code></pre>
 </details>
 </dd>
@@ -5374,7 +5664,8 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def get_folder_fields(self, target_cls, is_complex=None):
     return {
-        FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+        FieldPath(field=f)
+        for f in target_cls.supported_fields(version=self.account.version)
         if is_complex is None or f.is_complex is is_complex
     }</code></pre>
 </details>
@@ -5390,10 +5681,12 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def get_folders(self, additional_fields=None):
     from ..services import GetFolder
+
     # Expand folders with their full set of properties
     from .base import BaseFolder
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return
     if additional_fields is None:
         # Default to all complex properties
@@ -5405,9 +5698,9 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
     )
 
     yield from GetFolder(account=self.account).call(
-            folders=self.folders,
-            additional_fields=additional_fields,
-            shape=ID_ONLY,
+        folders=self.folders,
+        additional_fields=additional_fields,
+        shape=ID_ONLY,
     )</code></pre>
 </details>
 </dd>
@@ -5449,17 +5742,18 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 <pre><code class="python">def resolve(self):
     # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
     from .base import BaseFolder
+
     resolveable_folders = []
     for f in self.folders:
         if isinstance(f, BaseFolder) and not f.get_folder_allowed:
-            log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+            log.debug(&#34;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#34;, f)
             yield f
         else:
             resolveable_folders.append(f)
     # Fetch all properties for the remaining folders of folder IDs
     additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
     yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
-            additional_fields=additional_fields
+        additional_fields=additional_fields
     )</code></pre>
 </details>
 </dd>
@@ -5487,13 +5781,17 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
     from ..services import SubscribeToPull
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return None
     if event_types is None:
         event_types = SubscribeToPull.EVENT_TYPES
     return SubscribeToPull(account=self.account).get(
-        folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+        folders=self.folders,
+        event_types=event_types,
+        watermark=watermark,
+        timeout=timeout,
     )</code></pre>
 </details>
 </dd>
@@ -5508,13 +5806,17 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
     from ..services import SubscribeToPush
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return None
     if event_types is None:
         event_types = SubscribeToPush.EVENT_TYPES
     return SubscribeToPush(account=self.account).get(
-        folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+        folders=self.folders,
+        event_types=event_types,
+        watermark=watermark,
+        status_frequency=status_frequency,
         url=callback_url,
     )</code></pre>
 </details>
@@ -5530,8 +5832,9 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def subscribe_to_streaming(self, event_types=None):
     from ..services import SubscribeToStreaming
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return None
     if event_types is None:
         event_types = SubscribeToStreaming.EVENT_TYPES
@@ -5549,6 +5852,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def sync_hierarchy(self, sync_state=None, only_fields=None):
     from ..services import SyncFolderHierarchy
+
     folder = self._get_single_folder()
     if only_fields is None:
         # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -5595,6 +5899,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
     from ..services import SyncFolderItems
+
     folder = self._get_single_folder()
     if only_fields is None:
         # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -5648,6 +5953,7 @@ sync methods.</p></div>
     sync methods.
     &#34;&#34;&#34;
     from ..services import Unsubscribe
+
     return Unsubscribe(account=self.account).get(subscription_id=subscription_id)</code></pre>
 </details>
 </dd>
@@ -5744,7 +6050,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 <pre><code class="python">class FolderId(ItemId):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/folderid&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;FolderId&#39;</code></pre>
+    ELEMENT_NAME = &#34;FolderId&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5790,8 +6096,9 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
+
         if not isinstance(folder_collection, FolderCollection):
-            raise InvalidTypeError(&#39;folder_collection&#39;, folder_collection, FolderCollection)
+            raise InvalidTypeError(&#34;folder_collection&#34;, folder_collection, FolderCollection)
         self.folder_collection = folder_collection
         self.q = Q()  # Default to no restrictions
         self.only_fields = None
@@ -5811,6 +6118,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
     def only(self, *args):
         &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
         from .base import Folder
+
         # Subfolders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
         all_fields.update(Folder.attribute_fields())
@@ -5840,18 +6148,19 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         MultipleObjectsReturned if there are multiple results.
         &#34;&#34;&#34;
         from .collections import FolderCollection
-        if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
-            folders = list(FolderCollection(
-                account=self.folder_collection.account, folders=[FolderId(**kwargs)]
-            ).resolve())
+
+        if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+            folders = list(
+                FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+            )
         elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
         else:
             folders = list(self.all())
         if not folders:
-            raise DoesNotExist(&#39;Could not find a child folder matching the query&#39;)
+            raise DoesNotExist(&#34;Could not find a child folder matching the query&#34;)
         if len(folders) != 1:
-            raise MultipleObjectsReturned(f&#39;Expected result length 1, but got {folders}&#39;)
+            raise MultipleObjectsReturned(f&#34;Expected result length 1, but got {folders}&#34;)
         f = folders[0]
         if isinstance(f, Exception):
             raise f
@@ -5875,6 +6184,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
     def _query(self):
         from .base import Folder
         from .collections import FolderCollection
+
         if self.only_fields is None:
             # Subfolders will always be of class Folder
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
@@ -5897,7 +6207,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
                 yield f
                 continue
             if not f.get_folder_allowed:
-                log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+                log.debug(&#34;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#34;, f)
                 yield f
             else:
                 resolveable_folders.append(f)
@@ -5915,7 +6225,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
                 continue
             # Add the extra field values to the folders we fetched with find_folders()
             if f.__class__ != complex_f.__class__:
-                raise ValueError(f&#39;Type mismatch: {f} vs {complex_f}&#39;)
+                raise ValueError(f&#34;Type mismatch: {f} vs {complex_f}&#34;)
             for complex_field in complex_fields:
                 field_name = complex_field.field.name
                 setattr(f, field_name, getattr(complex_f, field_name))
@@ -5994,18 +6304,19 @@ MultipleObjectsReturned if there are multiple results.</p></div>
     MultipleObjectsReturned if there are multiple results.
     &#34;&#34;&#34;
     from .collections import FolderCollection
-    if not args and set(kwargs) in ({&#39;id&#39;}, {&#39;id&#39;, &#39;changekey&#39;}):
-        folders = list(FolderCollection(
-            account=self.folder_collection.account, folders=[FolderId(**kwargs)]
-        ).resolve())
+
+    if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+        folders = list(
+            FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+        )
     elif args or kwargs:
         folders = list(self.filter(*args, **kwargs))
     else:
         folders = list(self.all())
     if not folders:
-        raise DoesNotExist(&#39;Could not find a child folder matching the query&#39;)
+        raise DoesNotExist(&#34;Could not find a child folder matching the query&#34;)
     if len(folders) != 1:
-        raise MultipleObjectsReturned(f&#39;Expected result length 1, but got {folders}&#39;)
+        raise MultipleObjectsReturned(f&#34;Expected result length 1, but got {folders}&#34;)
     f = folders[0]
     if isinstance(f, Exception):
         raise f
@@ -6024,6 +6335,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <pre><code class="python">def only(self, *args):
     &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
     from .base import Folder
+
     # Subfolders will always be of class Folder
     all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
     all_fields.update(Folder.attribute_fields())
@@ -6054,7 +6366,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </summary>
 <pre><code class="python">class FreebusyData(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Freebusy Data&#39;,),
+        None: (&#34;Freebusy Data&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6124,10 +6436,10 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Friends(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
-        &#39;de_DE&#39;: (&#39;Bekannte&#39;,),
+        &#34;de_DE&#34;: (&#34;Bekannte&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6203,10 +6515,10 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </summary>
 <pre><code class="python">class GALContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINER_CLASS = &#39;IPF.Contact.GalContacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.GalContacts&#34;
 
     LOCALIZED_NAMES = {
-        None: (&#39;GAL Contacts&#39;,),
+        None: (&#34;GAL Contacts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6285,9 +6597,9 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GraphAnalytics(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.GraphAnalytics&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.GraphAnalytics&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;GraphAnalytics&#39;,),
+        None: (&#34;GraphAnalytics&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6361,8 +6673,8 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IMContactList(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Contact.MOC.ImContactList&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;imcontactlist&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.MOC.ImContactList&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;imcontactlist&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6440,18 +6752,18 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Inbox(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;inbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;inbox&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Indbakke&#39;,),
-        &#39;de_DE&#39;: (&#39;Posteingang&#39;,),
-        &#39;en_US&#39;: (&#39;Inbox&#39;,),
-        &#39;es_ES&#39;: (&#39;Bandeja de entrada&#39;,),
-        &#39;fr_CA&#39;: (&#39;Boîte de réception&#39;,),
-        &#39;nl_NL&#39;: (&#39;Postvak IN&#39;,),
-        &#39;ru_RU&#39;: (&#39;Входящие&#39;,),
-        &#39;sv_SE&#39;: (&#39;Inkorgen&#39;,),
-        &#39;zh_CN&#39;: (&#39;收件箱&#39;,),
+        &#34;da_DK&#34;: (&#34;Indbakke&#34;,),
+        &#34;de_DE&#34;: (&#34;Posteingang&#34;,),
+        &#34;en_US&#34;: (&#34;Inbox&#34;,),
+        &#34;es_ES&#34;: (&#34;Bandeja de entrada&#34;,),
+        &#34;fr_CA&#34;: (&#34;Boîte de réception&#34;,),
+        &#34;nl_NL&#34;: (&#34;Postvak IN&#34;,),
+        &#34;ru_RU&#34;: (&#34;Входящие&#34;,),
+        &#34;sv_SE&#34;: (&#34;Inkorgen&#34;,),
+        &#34;zh_CN&#34;: (&#34;收件箱&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6525,8 +6837,8 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Journal(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Journal&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;journal&#39;</code></pre>
+    CONTAINER_CLASS = &#34;IPF.Journal&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;journal&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6599,18 +6911,18 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class JunkEmail(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;junkemail&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;junkemail&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Uønsket e-mail&#39;,),
-        &#39;de_DE&#39;: (&#39;Junk-E-Mail&#39;,),
-        &#39;en_US&#39;: (&#39;Junk E-mail&#39;,),
-        &#39;es_ES&#39;: (&#39;Correo no deseado&#39;,),
-        &#39;fr_CA&#39;: (&#39;Courrier indésirables&#39;,),
-        &#39;nl_NL&#39;: (&#39;Ongewenste e-mail&#39;,),
-        &#39;ru_RU&#39;: (&#39;Нежелательная почта&#39;,),
-        &#39;sv_SE&#39;: (&#39;Skräppost&#39;,),
-        &#39;zh_CN&#39;: (&#39;垃圾邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Uønsket e-mail&#34;,),
+        &#34;de_DE&#34;: (&#34;Junk-E-Mail&#34;,),
+        &#34;en_US&#34;: (&#34;Junk E-mail&#34;,),
+        &#34;es_ES&#34;: (&#34;Correo no deseado&#34;,),
+        &#34;fr_CA&#34;: (&#34;Courrier indésirables&#34;,),
+        &#34;nl_NL&#34;: (&#34;Ongewenste e-mail&#34;,),
+        &#34;ru_RU&#34;: (&#34;Нежелательная почта&#34;,),
+        &#34;sv_SE&#34;: (&#34;Skräppost&#34;,),
+        &#34;zh_CN&#34;: (&#34;垃圾邮件&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6684,7 +6996,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LocalFailures(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;localfailures&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;localfailures&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6759,7 +7071,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </summary>
 <pre><code class="python">class Location(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Location&#39;,),
+        None: (&#34;Location&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6830,7 +7142,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </summary>
 <pre><code class="python">class MailboxAssociations(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;MailboxAssociations&#39;,),
+        None: (&#34;MailboxAssociations&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6900,7 +7212,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Messages(Folder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     supported_item_models = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6983,9 +7295,9 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <pre><code class="python">class MsgFolderRoot(WellknownFolder):
     &#34;&#34;&#34;Also known as the &#39;Top of Information Store&#39; folder.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;msgfolderroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;msgfolderroot&#34;
     LOCALIZED_NAMES = {
-        &#39;zh_CN&#39;: (&#39;信息存储顶部&#39;,),
+        &#34;zh_CN&#34;: (&#34;信息存储顶部&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7059,8 +7371,8 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MyContacts(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;mycontacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;mycontacts&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7138,9 +7450,9 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MyContactsExtended(NonDeletableFolderMixin, Contacts):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;MyContactsExtended&#39;,),
+        None: (&#34;MyContactsExtended&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7286,10 +7598,10 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Notes(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.StickyNote&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;notes&#39;
+    CONTAINER_CLASS = &#34;IPF.StickyNote&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;notes&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Noter&#39;,),
+        &#34;da_DK&#34;: (&#34;Noter&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7368,9 +7680,9 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.OrganizationalContacts&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Organizational Contacts&#39;,),
+        None: (&#34;Organizational Contacts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7449,18 +7761,18 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Outbox(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;outbox&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;outbox&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Udbakke&#39;,),
-        &#39;de_DE&#39;: (&#39;Postausgang&#39;,),
-        &#39;en_US&#39;: (&#39;Outbox&#39;,),
-        &#39;es_ES&#39;: (&#39;Bandeja de salida&#39;,),
-        &#39;fr_CA&#39;: (u&#34;Boîte d&#39;envoi&#34;,),
-        &#39;nl_NL&#39;: (&#39;Postvak UIT&#39;,),
-        &#39;ru_RU&#39;: (&#39;Исходящие&#39;,),
-        &#39;sv_SE&#39;: (&#39;Utkorgen&#39;,),
-        &#39;zh_CN&#39;: (&#39;发件箱&#39;,),
+        &#34;da_DK&#34;: (&#34;Udbakke&#34;,),
+        &#34;de_DE&#34;: (&#34;Postausgang&#34;,),
+        &#34;en_US&#34;: (&#34;Outbox&#34;,),
+        &#34;es_ES&#34;: (&#34;Bandeja de salida&#34;,),
+        &#34;fr_CA&#34;: (u&#34;Boîte d&#39;envoi&#34;,),
+        &#34;nl_NL&#34;: (&#34;Postvak UIT&#34;,),
+        &#34;ru_RU&#34;: (&#34;Исходящие&#34;,),
+        &#34;sv_SE&#34;: (&#34;Utkorgen&#34;,),
+        &#34;zh_CN&#34;: (&#34;发件箱&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7536,7 +7848,7 @@ def is_deletable(self):
 <pre><code class="python">class ParkedMessages(NonDeletableFolderMixin, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
-        None: (&#39;ParkedMessages&#39;,),
+        None: (&#34;ParkedMessages&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7610,9 +7922,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.PassThroughSearchResults&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.PassThroughSearchResults&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Pass-Through Search Results&#39;,),
+        None: (&#34;Pass-Through Search Results&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7686,9 +7998,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.PdpProfileSecured&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.PdpProfileSecured&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;PdpProfileV2Secured&#39;,),
+        None: (&#34;PdpProfileV2Secured&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7763,9 +8075,9 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#39;IPF.Contact.PeopleCentricConversationBuddies&#39;
+    CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;PeopleCentricConversation Buddies&#39;,),
+        None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7844,7 +8156,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PeopleConnect(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;peopleconnect&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;peopleconnect&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7920,7 +8232,7 @@ def is_deletable(self):
 <pre><code class="python">class PublicFoldersRoot(RootOfHierarchy):
     &#34;&#34;&#34;The root of the public folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;publicfoldersroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;publicfoldersroot&#34;
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
 
@@ -7941,9 +8253,11 @@ def is_deletable(self):
 
         children_map = {}
         try:
-            for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
-                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-            ).all():
+            for f in (
+                SingleFolderQuerySet(account=self.account, folder=folder)
+                .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
+                .all()
+            ):
                 if isinstance(f, MISSING_FOLDER_ERRORS):
                     # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                     continue
@@ -8013,9 +8327,11 @@ def is_deletable(self):
 
     children_map = {}
     try:
-        for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
-                self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-        ).all():
+        for f in (
+            SingleFolderQuerySet(account=self.account, folder=folder)
+            .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
+            .all()
+        ):
             if isinstance(f, MISSING_FOLDER_ERRORS):
                 # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                 continue
@@ -8087,8 +8403,8 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class QuickContacts(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Contact.MOC.QuickContacts&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;quickcontacts&#39;
+    CONTAINER_CLASS = &#34;IPF.Contact.MOC.QuickContacts&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;quickcontacts&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8166,9 +8482,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RSSFeeds(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Note.OutlookHomepage&#39;
+    CONTAINER_CLASS = &#34;IPF.Note.OutlookHomepage&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;RSS Feeds&#39;,),
+        None: (&#34;RSS Feeds&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8242,8 +8558,8 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecipientCache(Contacts):
-    DISTINGUISHED_FOLDER_ID = &#39;recipientcache&#39;
-    CONTAINER_CLASS = &#39;IPF.Contact.RecipientCache&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recipientcache&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.RecipientCache&#34;
     supported_from = EXCHANGE_2013
 
     LOCALIZED_NAMES = {}</code></pre>
@@ -8327,7 +8643,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsDeletions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsdeletions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsdeletions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8401,7 +8717,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsPurges(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemspurges&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemspurges&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8475,7 +8791,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsRoot(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsroot&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8549,7 +8865,7 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecoverableItemsVersions(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;recoverableitemsversions&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;recoverableitemsversions&#34;
     supported_from = EXCHANGE_2010_SP1</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8623,9 +8939,9 @@ def is_deletable(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Reminders(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;Outlook.Reminder&#39;
+    CONTAINER_CLASS = &#34;Outlook.Reminder&#34;
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Påmindelser&#39;,),
+        &#34;da_DK&#34;: (&#34;Påmindelser&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8701,7 +9017,7 @@ def is_deletable(self):
 <pre><code class="python">class Root(RootOfHierarchy):
     &#34;&#34;&#34;The root of the standard folder hierarchy.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;root&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;root&#34;
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
 
     @property
@@ -8722,12 +9038,12 @@ def is_deletable(self):
         #  3. Searching TOIS for a direct child folder of the same type that has a localized name
         #  4. Searching root for a direct child folder of the same type that is marked as distinguished
         #  5. Searching root for a direct child folder of the same type that has a localized name
-        log.debug(&#39;Searching default %s folder in full folder list&#39;, folder_cls)
+        log.debug(&#34;Searching default %s folder in full folder list&#34;, folder_cls)
 
         for f in self._folders_map.values():
             # Require exact type, to avoid matching with subclasses (e.g. RecipientCache and Contacts)
             if f.__class__ == folder_cls and f.has_distinguished_name:
-                log.debug(&#39;Found cached %s folder with default distinguished name&#39;, folder_cls)
+                log.debug(&#34;Found cached %s folder with default distinguished name&#34;, folder_cls)
                 return f
 
         # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
@@ -8750,14 +9066,14 @@ def is_deletable(self):
         else:
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
         if not candidates:
-            raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+            raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
         if len(candidates) &gt; 1:
-            raise ValueError(f&#39;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#39;)
+            raise ValueError(f&#34;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#34;)
         candidate = candidates[0]
         if candidate.is_distinguished:
-            log.debug(&#39;Found distinguished %s folder&#39;, folder_cls)
+            log.debug(&#34;Found distinguished %s folder&#34;, folder_cls)
         else:
-            log.debug(&#39;Found %s folder with localized name %s&#39;, folder_cls, candidate.name)
+            log.debug(&#34;Found %s folder with localized name %s&#34;, folder_cls, candidate.name)
         return candidate</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -8862,14 +9178,15 @@ def tois(self):
     # This folder type also has &#39;folder:PermissionSet&#39; on some server versions, but requesting it sometimes causes
     # &#39;ErrorAccessDenied&#39;, as reported by some users. Ignore it entirely for root folders - it&#39;s usefulness is
     # deemed minimal at best.
-    effective_rights = EffectiveRightsField(field_uri=&#39;folder:EffectiveRights&#39;, is_read_only=True,
-                                            supported_from=EXCHANGE_2007_SP1)
+    effective_rights = EffectiveRightsField(
+        field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
+    )
 
-    __slots__ = &#39;_account&#39;, &#39;_subfolders&#39;
+    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
     def __init__(self, **kwargs):
-        self._account = kwargs.pop(&#39;account&#39;, None)  # A pointer back to the account holding the folder hierarchy
+        self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
         self._subfolders = None  # See self._folders_map()
 
@@ -8888,13 +9205,13 @@ def tois(self):
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not RootOfHierarchy:
-            raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
+            raise TypeError(&#34;For folder roots, custom fields must be registered on the RootOfHierarchy class&#34;)
         return super().register(*args, **kwargs)
 
     @classmethod
     def deregister(cls, *args, **kwargs):
         if cls is not RootOfHierarchy:
-            raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
+            raise TypeError(&#34;For folder roots, custom fields must be registered on the RootOfHierarchy class&#34;)
         return super().deregister(*args, **kwargs)
 
     def get_folder(self, folder):
@@ -8938,14 +9255,13 @@ def tois(self):
         :param account:
         &#34;&#34;&#34;
         if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
+            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         try:
             return cls.resolve(
-                account=account,
-                folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
 
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
@@ -8959,21 +9275,21 @@ def tois(self):
             for f in self._folders_map.values():
                 # Require exact class, to not match subclasses, e.g. RecipientCache instead of Contacts
                 if f.__class__ == folder_cls and f.is_distinguished:
-                    log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
+                    log.debug(&#34;Found cached distinguished %s folder&#34;, folder_cls)
                     return f
         try:
-            log.debug(&#39;Requesting distinguished %s folder explicitly&#39;, folder_cls)
+            log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
             return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
-            log.debug(&#39;Testing default %s folder with FindItem&#39;, folder_cls)
+            log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
             fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
         except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+        raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
 
     @property
     def _folders_map(self):
@@ -9004,9 +9320,9 @@ def tois(self):
                 if isinstance(f, Exception):
                     raise f
                 folders_map[f.id] = f
-            for f in SingleFolderQuerySet(account=self.account, folder=self).depth(
-                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-            ).all():
+            for f in (
+                SingleFolderQuerySet(account=self.account, folder=self).depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH).all()
+            ):
                 if isinstance(f, ErrorAccessDenied):
                     # We may not have FindFolder access, or GetFolder access, either to this folder or at all
                     continue
@@ -9042,9 +9358,19 @@ def tois(self):
 
     def __repr__(self):
         # Let&#39;s not create an infinite loop when printing self.root
-        return self.__class__.__name__ + \
-               repr((self.account, &#39;[self]&#39;, self.name, self.total_count, self.unread_count, self.child_folder_count,
-                     self.folder_class, self.id, self.changekey))</code></pre>
+        return self.__class__.__name__ + repr(
+            (
+                self.account,
+                &#34;[self]&#34;,
+                self.name,
+                self.total_count,
+                self.unread_count,
+                self.child_folder_count,
+                self.folder_class,
+                self.id,
+                self.changekey,
+            )
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -9130,14 +9456,13 @@ def get_distinguished(cls, account):
     :param account:
     &#34;&#34;&#34;
     if not cls.DISTINGUISHED_FOLDER_ID:
-        raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
+        raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
     try:
         return cls.resolve(
-            account=account,
-            folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+            account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
         )
     except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)</code></pre>
+        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -9218,21 +9543,21 @@ folder was found, try as best we can to return the default folder of type 'folde
         for f in self._folders_map.values():
             # Require exact class, to not match subclasses, e.g. RecipientCache instead of Contacts
             if f.__class__ == folder_cls and f.is_distinguished:
-                log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
+                log.debug(&#34;Found cached distinguished %s folder&#34;, folder_cls)
                 return f
     try:
-        log.debug(&#39;Requesting distinguished %s folder explicitly&#39;, folder_cls)
+        log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
         return folder_cls.get_distinguished(root=self)
     except ErrorAccessDenied:
         # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
-        log.debug(&#39;Testing default %s folder with FindItem&#39;, folder_cls)
+        log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
         fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
         fld.test_access()
         return self._folders_map.get(fld.id, fld)  # Use cached instance if available
     except MISSING_FOLDER_ERRORS:
         # The Exchange server does not return a distinguished folder of this type
         pass
-    raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)</code></pre>
+    raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.RootOfHierarchy.get_folder"><code class="name flex">
@@ -9334,7 +9659,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class Schedule(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Schedule&#39;,),
+        None: (&#34;Schedule&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9404,7 +9729,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SearchFolders(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;searchfolders&#39;</code></pre>
+    DISTINGUISHED_FOLDER_ID = &#34;searchfolders&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -9473,18 +9798,18 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SentItems(Messages):
-    DISTINGUISHED_FOLDER_ID = &#39;sentitems&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;sentitems&#34;
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Sendt post&#39;,),
-        &#39;de_DE&#39;: (&#39;Gesendete Elemente&#39;,),
-        &#39;en_US&#39;: (&#39;Sent Items&#39;,),
-        &#39;es_ES&#39;: (&#39;Elementos enviados&#39;,),
-        &#39;fr_CA&#39;: (&#39;Éléments envoyés&#39;,),
-        &#39;nl_NL&#39;: (&#39;Verzonden items&#39;,),
-        &#39;ru_RU&#39;: (&#39;Отправленные&#39;,),
-        &#39;sv_SE&#39;: (&#39;Skickat&#39;,),
-        &#39;zh_CN&#39;: (&#39;已发送邮件&#39;,),
+        &#34;da_DK&#34;: (&#34;Sendt post&#34;,),
+        &#34;de_DE&#34;: (&#34;Gesendete Elemente&#34;,),
+        &#34;en_US&#34;: (&#34;Sent Items&#34;,),
+        &#34;es_ES&#34;: (&#34;Elementos enviados&#34;,),
+        &#34;fr_CA&#34;: (&#34;Éléments envoyés&#34;,),
+        &#34;nl_NL&#34;: (&#34;Verzonden items&#34;,),
+        &#34;ru_RU&#34;: (&#34;Отправленные&#34;,),
+        &#34;sv_SE&#34;: (&#34;Skickat&#34;,),
+        &#34;zh_CN&#34;: (&#34;已发送邮件&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9558,7 +9883,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ServerFailures(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;serverfailures&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;serverfailures&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9632,9 +9957,9 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Sharing(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Sharing&#39;,),
+        None: (&#34;Sharing&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9709,7 +10034,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class Shortcuts(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Shortcuts&#39;,),
+        None: (&#34;Shortcuts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9779,9 +10104,9 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Signal(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.StoreItem.Signal&#39;
+    CONTAINER_CLASS = &#34;IPF.StoreItem.Signal&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Signal&#39;,),
+        None: (&#34;Signal&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9859,6 +10184,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 
     def __init__(self, account, folder):
         from .collections import FolderCollection
+
         folder_collection = FolderCollection(account=account, folders=[folder])
         super().__init__(folder_collection=folder_collection)
 
@@ -9911,9 +10237,9 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
-    CONTAINER_CLASS = &#39;IPF.SmsAndChatsSync&#39;
+    CONTAINER_CLASS = &#34;IPF.SmsAndChatsSync&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;SmsAndChatsSync&#39;,),
+        None: (&#34;SmsAndChatsSync&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9988,7 +10314,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class SpoolerQueue(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Spooler Queue&#39;,),
+        None: (&#34;Spooler Queue&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10058,8 +10384,8 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SyncIssues(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Note&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;syncissues&#39;
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;syncissues&#34;
     supported_from = EXCHANGE_2013</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10138,7 +10464,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class System(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;System&#39;,),
+        None: (&#34;System&#34;,),
     }
     get_folder_allowed = False</code></pre>
 </details>
@@ -10213,20 +10539,20 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Tasks(Folder):
-    DISTINGUISHED_FOLDER_ID = &#39;tasks&#39;
-    CONTAINER_CLASS = &#39;IPF.Task&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;tasks&#34;
+    CONTAINER_CLASS = &#34;IPF.Task&#34;
     supported_item_models = (Task,)
 
     LOCALIZED_NAMES = {
-        &#39;da_DK&#39;: (&#39;Opgaver&#39;,),
-        &#39;de_DE&#39;: (&#39;Aufgaben&#39;,),
-        &#39;en_US&#39;: (&#39;Tasks&#39;,),
-        &#39;es_ES&#39;: (&#39;Tareas&#39;,),
-        &#39;fr_CA&#39;: (&#39;Tâches&#39;,),
-        &#39;nl_NL&#39;: (&#39;Taken&#39;,),
-        &#39;ru_RU&#39;: (&#39;Задачи&#39;,),
-        &#39;sv_SE&#39;: (&#39;Uppgifter&#39;,),
-        &#39;zh_CN&#39;: (&#39;任务&#39;,),
+        &#34;da_DK&#34;: (&#34;Opgaver&#34;,),
+        &#34;de_DE&#34;: (&#34;Aufgaben&#34;,),
+        &#34;en_US&#34;: (&#34;Tasks&#34;,),
+        &#34;es_ES&#34;: (&#34;Tareas&#34;,),
+        &#34;fr_CA&#34;: (&#34;Tâches&#34;,),
+        &#34;nl_NL&#34;: (&#34;Taken&#34;,),
+        &#34;ru_RU&#34;: (&#34;Задачи&#34;,),
+        &#34;sv_SE&#34;: (&#34;Uppgifter&#34;,),
+        &#34;zh_CN&#34;: (&#34;任务&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10308,7 +10634,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class TemporarySaves(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;TemporarySaves&#39;,),
+        None: (&#34;TemporarySaves&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10378,12 +10704,12 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ToDoSearch(WellknownFolder):
-    CONTAINER_CLASS = &#39;IPF.Task&#39;
-    DISTINGUISHED_FOLDER_ID = &#39;todosearch&#39;
+    CONTAINER_CLASS = &#34;IPF.Task&#34;
+    DISTINGUISHED_FOLDER_ID = &#34;todosearch&#34;
     supported_from = EXCHANGE_2013
 
     LOCALIZED_NAMES = {
-        None: (&#39;To-Do Search&#39;,),
+        None: (&#34;To-Do Search&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10466,7 +10792,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class Views(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Views&#39;,),
+        None: (&#34;Views&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10536,10 +10862,10 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class VoiceMail(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#39;voicemail&#39;
-    CONTAINER_CLASS = &#39;IPF.Note.Microsoft.Voicemail&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;voicemail&#34;
+    CONTAINER_CLASS = &#34;IPF.Note.Microsoft.Voicemail&#34;
     LOCALIZED_NAMES = {
-        None: (&#39;Voice Mail&#39;,),
+        None: (&#34;Voice Mail&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -10720,7 +11046,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 </summary>
 <pre><code class="python">class WorkingSet(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
-        None: (&#39;Working Set&#39;,),
+        None: (&#34;Working Set&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>

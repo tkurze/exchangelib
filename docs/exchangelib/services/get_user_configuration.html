@@ -26,16 +26,16 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService
-from ..errors import InvalidEnumValue
+<pre><code class="python">from ..errors import InvalidEnumValue
 from ..properties import UserConfiguration
 from ..util import create_element, set_xml_value
+from .common import EWSAccountService
 
-ID = &#39;Id&#39;
-DICTIONARY = &#39;Dictionary&#39;
-XML_DATA = &#39;XmlData&#39;
-BINARY_DATA = &#39;BinaryData&#39;
-ALL = &#39;All&#39;
+ID = &#34;Id&#34;
+DICTIONARY = &#34;Dictionary&#34;
+XML_DATA = &#34;XmlData&#34;
+BINARY_DATA = &#34;BinaryData&#34;
+ALL = &#34;All&#34;
 PROPERTIES_CHOICES = (ID, DICTIONARY, XML_DATA, BINARY_DATA, ALL)
 
 
@@ -44,14 +44,16 @@ class GetUserConfiguration(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetUserConfiguration&#39;
+    SERVICE_NAME = &#34;GetUserConfiguration&#34;
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                user_configuration_name=user_configuration_name, properties=properties
-        )))
+            raise InvalidEnumValue(&#34;properties&#34;, properties, PROPERTIES_CHOICES)
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(user_configuration_name=user_configuration_name, properties=properties)
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return UserConfiguration.from_xml(elem=elem, account=self.account)
@@ -61,10 +63,10 @@ class GetUserConfiguration(EWSAccountService):
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         set_xml_value(payload, user_configuration_name, version=self.account.version)
         payload.append(
-            set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+            set_xml_value(create_element(&#34;m:UserConfigurationProperties&#34;), properties, version=self.account.version)
         )
         return payload</code></pre>
 </details>
@@ -94,14 +96,16 @@ class GetUserConfiguration(EWSAccountService):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetUserConfiguration&#39;
+    SERVICE_NAME = &#34;GetUserConfiguration&#34;
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                user_configuration_name=user_configuration_name, properties=properties
-        )))
+            raise InvalidEnumValue(&#34;properties&#34;, properties, PROPERTIES_CHOICES)
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(user_configuration_name=user_configuration_name, properties=properties)
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return UserConfiguration.from_xml(elem=elem, account=self.account)
@@ -111,10 +115,10 @@ class GetUserConfiguration(EWSAccountService):
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         set_xml_value(payload, user_configuration_name, version=self.account.version)
         payload.append(
-            set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+            set_xml_value(create_element(&#34;m:UserConfigurationProperties&#34;), properties, version=self.account.version)
         )
         return payload</code></pre>
 </details>
@@ -143,10 +147,12 @@ class GetUserConfiguration(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, user_configuration_name, properties):
     if properties not in PROPERTIES_CHOICES:
-        raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            user_configuration_name=user_configuration_name, properties=properties
-    )))</code></pre>
+        raise InvalidEnumValue(&#34;properties&#34;, properties, PROPERTIES_CHOICES)
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(user_configuration_name=user_configuration_name, properties=properties)
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_user_configuration.GetUserConfiguration.get_payload"><code class="name flex">
@@ -159,10 +165,10 @@ class GetUserConfiguration(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration_name, properties):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     set_xml_value(payload, user_configuration_name, version=self.account.version)
     payload.append(
-        set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+        set_xml_value(create_element(&#34;m:UserConfigurationProperties&#34;), properties, version=self.account.version)
     )
     return payload</code></pre>
 </details>

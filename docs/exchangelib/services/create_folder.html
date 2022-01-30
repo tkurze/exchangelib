@@ -26,19 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, parse_folder_elem, folder_ids_element
-from ..errors import ErrorFolderExists
-from ..util import create_element, MNS
+<pre><code class="python">from ..errors import ErrorFolderExists
+from ..util import MNS, create_element
+from .common import EWSAccountService, folder_ids_element, parse_folder_elem
 
 
 class CreateFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateFolder&#39;
-    element_container_name = f&#39;{{{MNS}}}Folders&#39;
-    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
-        ErrorFolderExists,
-    )
+    SERVICE_NAME = &#34;CreateFolder&#34;
+    element_container_name = f&#34;{{{MNS}}}Folders&#34;
+    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorFolderExists,)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -48,9 +46,13 @@ class CreateFolder(EWSAccountService):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
         self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        return self._elems_to_objs(self._chunked_get_elements(
-                self.get_payload, items=self.folders, parent_folder=parent_folder,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=self.folders,
+                parent_folder=parent_folder,
+            )
+        )
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
@@ -60,11 +62,11 @@ class CreateFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(
-            folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#39;m:ParentFolderId&#39;)
+            folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#34;m:ParentFolderId&#34;)
         )
-        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:Folders&#39;))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:Folders&#34;))
         return payload</code></pre>
 </details>
 </section>
@@ -90,11 +92,9 @@ class CreateFolder(EWSAccountService):
 <pre><code class="python">class CreateFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateFolder&#39;
-    element_container_name = f&#39;{{{MNS}}}Folders&#39;
-    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
-        ErrorFolderExists,
-    )
+    SERVICE_NAME = &#34;CreateFolder&#34;
+    element_container_name = f&#34;{{{MNS}}}Folders&#34;
+    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorFolderExists,)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -104,9 +104,13 @@ class CreateFolder(EWSAccountService):
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
         self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        return self._elems_to_objs(self._chunked_get_elements(
-                self.get_payload, items=self.folders, parent_folder=parent_folder,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=self.folders,
+                parent_folder=parent_folder,
+            )
+        )
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
@@ -116,11 +120,11 @@ class CreateFolder(EWSAccountService):
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(
-            folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#39;m:ParentFolderId&#39;)
+            folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#34;m:ParentFolderId&#34;)
         )
-        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:Folders&#39;))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:Folders&#34;))
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -158,9 +162,13 @@ class CreateFolder(EWSAccountService):
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
     self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=self.folders, parent_folder=parent_folder,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=self.folders,
+            parent_folder=parent_folder,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.create_folder.CreateFolder.get_payload"><code class="name flex">
@@ -173,11 +181,11 @@ class CreateFolder(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, parent_folder):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(
-        folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#39;m:ParentFolderId&#39;)
+        folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#34;m:ParentFolderId&#34;)
     )
-    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:Folders&#39;))
+    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:Folders&#34;))
     return payload</code></pre>
 </details>
 </dd>

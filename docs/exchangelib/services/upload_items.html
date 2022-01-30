@@ -26,17 +26,16 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, to_item_id
-from ..properties import ItemId, ParentFolderId
-from ..util import create_element, set_xml_value, add_xml_child, MNS
+<pre><code class="python">from ..properties import ItemId, ParentFolderId
+from ..util import MNS, add_xml_child, create_element, set_xml_value
+from .common import EWSAccountService, to_item_id
 
 
 class UploadItems(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UploadItems&#39;
-    element_container_name = f&#39;{{{MNS}}}ItemId&#39;
+    SERVICE_NAME = &#34;UploadItems&#34;
+    element_container_name = f&#34;{{{MNS}}}ItemId&#34;
 
     def call(self, items):
         # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
@@ -52,19 +51,19 @@ class UploadItems(EWSAccountService):
 
         :param items:
         &#34;&#34;&#34;
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        items_elem = create_element(&#39;m:Items&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        items_elem = create_element(&#34;m:Items&#34;)
         payload.append(items_elem)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-            attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
+            attrs = dict(CreateAction=&#34;Update&#34; if item_id else &#34;CreateNew&#34;)
             if is_associated is not None:
-                attrs[&#39;IsAssociated&#39;] = is_associated
-            item = create_element(&#39;t:Item&#39;, attrs=attrs)
+                attrs[&#34;IsAssociated&#34;] = is_associated
+            item = create_element(&#34;t:Item&#34;, attrs=attrs)
             set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
                 set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
-            add_xml_child(item, &#39;t:Data&#39;, data_str)
+            add_xml_child(item, &#34;t:Data&#34;, data_str)
             items_elem.append(item)
         return payload
 
@@ -96,11 +95,10 @@ class UploadItems(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UploadItems(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UploadItems&#39;
-    element_container_name = f&#39;{{{MNS}}}ItemId&#39;
+    SERVICE_NAME = &#34;UploadItems&#34;
+    element_container_name = f&#34;{{{MNS}}}ItemId&#34;
 
     def call(self, items):
         # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
@@ -116,19 +114,19 @@ class UploadItems(EWSAccountService):
 
         :param items:
         &#34;&#34;&#34;
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        items_elem = create_element(&#39;m:Items&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        items_elem = create_element(&#34;m:Items&#34;)
         payload.append(items_elem)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-            attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
+            attrs = dict(CreateAction=&#34;Update&#34; if item_id else &#34;CreateNew&#34;)
             if is_associated is not None:
-                attrs[&#39;IsAssociated&#39;] = is_associated
-            item = create_element(&#39;t:Item&#39;, attrs=attrs)
+                attrs[&#34;IsAssociated&#34;] = is_associated
+            item = create_element(&#34;t:Item&#34;, attrs=attrs)
             set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
                 set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
-            add_xml_child(item, &#39;t:Data&#39;, data_str)
+            add_xml_child(item, &#34;t:Data&#34;, data_str)
             items_elem.append(item)
         return payload
 
@@ -195,19 +193,19 @@ call.</p>
 
     :param items:
     &#34;&#34;&#34;
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    items_elem = create_element(&#39;m:Items&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    items_elem = create_element(&#34;m:Items&#34;)
     payload.append(items_elem)
     for parent_folder, (item_id, is_associated, data_str) in items:
         # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-        attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
+        attrs = dict(CreateAction=&#34;Update&#34; if item_id else &#34;CreateNew&#34;)
         if is_associated is not None:
-            attrs[&#39;IsAssociated&#39;] = is_associated
-        item = create_element(&#39;t:Item&#39;, attrs=attrs)
+            attrs[&#34;IsAssociated&#34;] = is_associated
+        item = create_element(&#34;t:Item&#34;, attrs=attrs)
         set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
         if item_id:
             set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
-        add_xml_child(item, &#39;t:Data&#39;, data_str)
+        add_xml_child(item, &#34;t:Data&#34;, data_str)
         items_elem.append(item)
     return payload</code></pre>
 </details>

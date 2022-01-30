@@ -26,17 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..errors import ErrorNameResolutionMultipleResults
+<pre><code class="python">from ..errors import ErrorNameResolutionMultipleResults
 from ..properties import Mailbox
-from ..util import create_element, set_xml_value, MNS
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSService
 
 
 class ExpandDL(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ExpandDL&#39;
-    element_container_name = f&#39;{{{MNS}}}DLExpansion&#39;
+    SERVICE_NAME = &#34;ExpandDL&#34;
+    element_container_name = f&#34;{{{MNS}}}DLExpansion&#34;
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -46,7 +46,7 @@ class ExpandDL(EWSService):
         return Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), distribution_list, version=self.protocol.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), distribution_list, version=self.protocol.version)</code></pre>
 </details>
 </section>
 <section>
@@ -71,8 +71,8 @@ class ExpandDL(EWSService):
 <pre><code class="python">class ExpandDL(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ExpandDL&#39;
-    element_container_name = f&#39;{{{MNS}}}DLExpansion&#39;
+    SERVICE_NAME = &#34;ExpandDL&#34;
+    element_container_name = f&#34;{{{MNS}}}DLExpansion&#34;
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -82,7 +82,7 @@ class ExpandDL(EWSService):
         return Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), distribution_list, version=self.protocol.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), distribution_list, version=self.protocol.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -128,7 +128,7 @@ class ExpandDL(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, distribution_list):
-    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), distribution_list, version=self.protocol.version)</code></pre>
+    return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), distribution_list, version=self.protocol.version)</code></pre>
 </details>
 </dd>
 </dl>

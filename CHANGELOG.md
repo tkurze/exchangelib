@@ -3,10 +3,15 @@ Change Log
 
 HEAD
 ----
+
+
+4.7.2
+-----
 - Fixed field name to match API: `BaseReplyItem.received_by_representing` to
-- `BaseReplyItem.received_representing`
+  `BaseReplyItem.received_representing`
 - Added fields `received_by` and `received_representing` to `MeetingRequest`,
-- `MeetingMessage` and `MeetingCancellation`
+  `MeetingMessage` and `MeetingCancellation`
+- Fixed `AppointmentStateField.CANCELLED` enum value.
 
 
 4.7.1

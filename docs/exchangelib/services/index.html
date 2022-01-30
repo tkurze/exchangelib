@@ -40,8 +40,8 @@ Exchange EWS operations overview:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/ews-operations-in-exchange
 &#34;&#34;&#34;
 
-from .common import CHUNK_SIZE, PAGE_SIZE
 from .archive_item import ArchiveItem
+from .common import CHUNK_SIZE, PAGE_SIZE
 from .convert_id import ConvertId
 from .copy_item import CopyItem
 from .create_attachment import CreateAttachment
@@ -80,7 +80,7 @@ from .resolve_names import ResolveNames
 from .send_item import SendItem
 from .send_notification import SendNotification
 from .set_user_oof_settings import SetUserOofSettings
-from .subscribe import SubscribeToStreaming, SubscribeToPull, SubscribeToPush
+from .subscribe import SubscribeToPull, SubscribeToPush, SubscribeToStreaming
 from .sync_folder_hierarchy import SyncFolderHierarchy
 from .sync_folder_items import SyncFolderItems
 from .unsubscribe import Unsubscribe
@@ -90,57 +90,57 @@ from .update_user_configuration import UpdateUserConfiguration
 from .upload_items import UploadItems
 
 __all__ = [
-    &#39;CHUNK_SIZE&#39;,
-    &#39;PAGE_SIZE&#39;,
-    &#39;ArchiveItem&#39;,
-    &#39;ConvertId&#39;,
-    &#39;CopyItem&#39;,
-    &#39;CreateAttachment&#39;,
-    &#39;CreateFolder&#39;,
-    &#39;CreateItem&#39;,
-    &#39;CreateUserConfiguration&#39;,
-    &#39;DeleteAttachment&#39;,
-    &#39;DeleteFolder&#39;,
-    &#39;DeleteUserConfiguration&#39;,
-    &#39;DeleteItem&#39;,
-    &#39;EmptyFolder&#39;,
-    &#39;ExpandDL&#39;,
-    &#39;ExportItems&#39;,
-    &#39;FindFolder&#39;,
-    &#39;FindItem&#39;,
-    &#39;FindPeople&#39;,
-    &#39;GetAttachment&#39;,
-    &#39;GetDelegate&#39;,
-    &#39;GetEvents&#39;,
-    &#39;GetFolder&#39;,
-    &#39;GetItem&#39;,
-    &#39;GetMailTips&#39;,
-    &#39;GetPersona&#39;,
-    &#39;GetRoomLists&#39;,
-    &#39;GetRooms&#39;,
-    &#39;GetSearchableMailboxes&#39;,
-    &#39;GetServerTimeZones&#39;,
-    &#39;GetStreamingEvents&#39;,
-    &#39;GetUserAvailability&#39;,
-    &#39;GetUserConfiguration&#39;,
-    &#39;GetUserOofSettings&#39;,
-    &#39;MarkAsJunk&#39;,
-    &#39;MoveFolder&#39;,
-    &#39;MoveItem&#39;,
-    &#39;ResolveNames&#39;,
-    &#39;SendItem&#39;,
-    &#39;SendNotification&#39;,
-    &#39;SetUserOofSettings&#39;,
-    &#39;SubscribeToPull&#39;,
-    &#39;SubscribeToPush&#39;,
-    &#39;SubscribeToStreaming&#39;,
-    &#39;SyncFolderHierarchy&#39;,
-    &#39;SyncFolderItems&#39;,
-    &#39;Unsubscribe&#39;,
-    &#39;UpdateFolder&#39;,
-    &#39;UpdateItem&#39;,
-    &#39;UpdateUserConfiguration&#39;,
-    &#39;UploadItems&#39;,
+    &#34;CHUNK_SIZE&#34;,
+    &#34;PAGE_SIZE&#34;,
+    &#34;ArchiveItem&#34;,
+    &#34;ConvertId&#34;,
+    &#34;CopyItem&#34;,
+    &#34;CreateAttachment&#34;,
+    &#34;CreateFolder&#34;,
+    &#34;CreateItem&#34;,
+    &#34;CreateUserConfiguration&#34;,
+    &#34;DeleteAttachment&#34;,
+    &#34;DeleteFolder&#34;,
+    &#34;DeleteUserConfiguration&#34;,
+    &#34;DeleteItem&#34;,
+    &#34;EmptyFolder&#34;,
+    &#34;ExpandDL&#34;,
+    &#34;ExportItems&#34;,
+    &#34;FindFolder&#34;,
+    &#34;FindItem&#34;,
+    &#34;FindPeople&#34;,
+    &#34;GetAttachment&#34;,
+    &#34;GetDelegate&#34;,
+    &#34;GetEvents&#34;,
+    &#34;GetFolder&#34;,
+    &#34;GetItem&#34;,
+    &#34;GetMailTips&#34;,
+    &#34;GetPersona&#34;,
+    &#34;GetRoomLists&#34;,
+    &#34;GetRooms&#34;,
+    &#34;GetSearchableMailboxes&#34;,
+    &#34;GetServerTimeZones&#34;,
+    &#34;GetStreamingEvents&#34;,
+    &#34;GetUserAvailability&#34;,
+    &#34;GetUserConfiguration&#34;,
+    &#34;GetUserOofSettings&#34;,
+    &#34;MarkAsJunk&#34;,
+    &#34;MoveFolder&#34;,
+    &#34;MoveItem&#34;,
+    &#34;ResolveNames&#34;,
+    &#34;SendItem&#34;,
+    &#34;SendNotification&#34;,
+    &#34;SetUserOofSettings&#34;,
+    &#34;SubscribeToPull&#34;,
+    &#34;SubscribeToPush&#34;,
+    &#34;SubscribeToStreaming&#34;,
+    &#34;SyncFolderHierarchy&#34;,
+    &#34;SyncFolderItems&#34;,
+    &#34;Unsubscribe&#34;,
+    &#34;UpdateFolder&#34;,
+    &#34;UpdateItem&#34;,
+    &#34;UpdateUserConfiguration&#34;,
+    &#34;UploadItems&#34;,
 ]</code></pre>
 </details>
 </section>
@@ -362,8 +362,8 @@ classes.</p></div>
 <pre><code class="python">class ArchiveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/archiveitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ArchiveItem&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;ArchiveItem&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
     supported_from = EXCHANGE_2013
 
     def call(self, items, to_folder):
@@ -380,9 +380,9 @@ classes.</p></div>
         return Item.id_from_xml(elem)
 
     def get_payload(self, items, to_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(
-            folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ArchiveSourceFolderId&#39;)
+            folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ArchiveSourceFolderId&#34;)
         )
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
@@ -442,9 +442,9 @@ classes.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, to_folder):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(
-        folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ArchiveSourceFolderId&#39;)
+        folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ArchiveSourceFolderId&#34;)
     )
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
@@ -482,15 +482,13 @@ input list.</p>
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ConvertId&#39;
+    SERVICE_NAME = &#34;ConvertId&#34;
     supported_from = EXCHANGE_2007_SP1
-    cls_map = {cls.response_tag(): cls for cls in (
-        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    )}
+    cls_map = {cls.response_tag(): cls for cls in (AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId)}
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
+            raise InvalidEnumValue(&#34;destination_format&#34;, destination_format, ID_FORMATS)
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
@@ -500,11 +498,11 @@ input list.</p>
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
-        item_ids = create_element(&#39;m:SourceIds&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DestinationFormat=destination_format))
+        item_ids = create_element(&#34;m:SourceIds&#34;)
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
+                raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
             set_xml_value(item_ids, item, version=self.protocol.version)
         payload.append(item_ids)
         return payload
@@ -512,9 +510,11 @@ input list.</p>
     @classmethod
     def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        return container.findall(AlternateId.response_tag()) \
-            + container.findall(AlternatePublicFolderId.response_tag()) \
-            + container.findall(AlternatePublicFolderItemId.response_tag())</code></pre>
+        return (
+            container.findall(AlternateId.response_tag())
+            + container.findall(AlternatePublicFolderId.response_tag())
+            + container.findall(AlternatePublicFolderItemId.response_tag())
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -548,7 +548,7 @@ input list.</p>
 </summary>
 <pre><code class="python">def call(self, items, destination_format):
     if destination_format not in ID_FORMATS:
-        raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
+        raise InvalidEnumValue(&#34;destination_format&#34;, destination_format, ID_FORMATS)
     return self._elems_to_objs(
         self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
     )</code></pre>
@@ -565,11 +565,11 @@ input list.</p>
 </summary>
 <pre><code class="python">def get_payload(self, items, destination_format):
     supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
-    item_ids = create_element(&#39;m:SourceIds&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DestinationFormat=destination_format))
+    item_ids = create_element(&#34;m:SourceIds&#34;)
     for item in items:
         if not isinstance(item, supported_item_classes):
-            raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
+            raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
         set_xml_value(item_ids, item, version=self.protocol.version)
     payload.append(item_ids)
     return payload</code></pre>
@@ -601,7 +601,7 @@ input list.</p>
 <pre><code class="python">class CopyItem(move_item.MoveItem):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copyitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CopyItem&#39;</code></pre>
+    SERVICE_NAME = &#34;CopyItem&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -644,8 +644,8 @@ input list.</p>
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createattachment-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateAttachment&#39;
-    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    SERVICE_NAME = &#34;CreateAttachment&#34;
+    element_container_name = f&#34;{{{MNS}}}Attachments&#34;
     cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, parent_item, items):
@@ -655,13 +655,13 @@ input list.</p>
         return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, parent_item):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         version = self.account.version
         if isinstance(parent_item, BaseItem):
             # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId
             parent_item = ParentItemId(parent_item.id, parent_item.changekey)
         set_xml_value(payload, to_item_id(parent_item, ParentItemId), version=self.account.version)
-        attachments = create_element(&#39;m:Attachments&#39;)
+        attachments = create_element(&#34;m:Attachments&#34;)
         for item in items:
             set_xml_value(attachments, item, version=version)
         payload.append(attachments)
@@ -712,13 +712,13 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, parent_item):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     version = self.account.version
     if isinstance(parent_item, BaseItem):
         # to_item_id() would convert this to a normal ItemId, but the service wants a ParentItemId
         parent_item = ParentItemId(parent_item.id, parent_item.changekey)
     set_xml_value(payload, to_item_id(parent_item, ParentItemId), version=self.account.version)
-    attachments = create_element(&#39;m:Attachments&#39;)
+    attachments = create_element(&#34;m:Attachments&#34;)
     for item in items:
         set_xml_value(attachments, item, version=version)
     payload.append(attachments)
@@ -751,11 +751,9 @@ input list.</p>
 <pre><code class="python">class CreateFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateFolder&#39;
-    element_container_name = f&#39;{{{MNS}}}Folders&#39;
-    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
-        ErrorFolderExists,
-    )
+    SERVICE_NAME = &#34;CreateFolder&#34;
+    element_container_name = f&#34;{{{MNS}}}Folders&#34;
+    ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorFolderExists,)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -765,9 +763,13 @@ input list.</p>
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
         self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        return self._elems_to_objs(self._chunked_get_elements(
-                self.get_payload, items=self.folders, parent_folder=parent_folder,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=self.folders,
+                parent_folder=parent_folder,
+            )
+        )
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
@@ -777,11 +779,11 @@ input list.</p>
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, parent_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(
-            folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#39;m:ParentFolderId&#39;)
+            folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#34;m:ParentFolderId&#34;)
         )
-        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:Folders&#39;))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:Folders&#34;))
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -819,9 +821,13 @@ input list.</p>
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
     self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=self.folders, parent_folder=parent_folder,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=self.folders,
+            parent_folder=parent_folder,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.CreateFolder.get_payload"><code class="name flex">
@@ -834,11 +840,11 @@ input list.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, parent_folder):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(
-        folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#39;m:ParentFolderId&#39;)
+        folder_ids_element(folders=[parent_folder], version=self.account.version, tag=&#34;m:ParentFolderId&#34;)
     )
-    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:Folders&#39;))
+    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:Folders&#34;))
     return payload</code></pre>
 </details>
 </dd>
@@ -874,34 +880,36 @@ errormessage), in the same order as the input list.</p>
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateItem&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;CreateItem&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
     def call(self, items, folder, message_disposition, send_meeting_invitations):
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+            raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations not in SEND_MEETING_INVITATIONS_CHOICES:
             raise InvalidEnumValue(
-                &#39;send_meeting_invitations&#39;, send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
+                &#34;send_meeting_invitations&#34;, send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
             )
         if folder is not None:
             if not isinstance(folder, (BaseFolder, FolderId)):
-                raise InvalidTypeError(&#39;folder&#39;, folder, (BaseFolder, FolderId))
+                raise InvalidTypeError(&#34;folder&#34;, folder, (BaseFolder, FolderId))
             if folder.account != self.account:
-                raise ValueError(&#39;Folder must belong to account&#39;)
+                raise ValueError(&#34;Folder must belong to account&#34;)
         if message_disposition == SAVE_ONLY and folder is None:
             raise AttributeError(&#34;Folder must be supplied when in save-only mode&#34;)
         if message_disposition == SEND_AND_SAVE_COPY and folder is None:
             folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
         if message_disposition == SEND_ONLY and folder is not None:
             raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=items,
-            folder=folder,
-            message_disposition=message_disposition,
-            send_meeting_invitations=send_meeting_invitations,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                folder=folder,
+                message_disposition=message_disposition,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         if isinstance(elem, bool):
@@ -933,14 +941,14 @@ errormessage), in the same order as the input list.</p>
         :param send_meeting_invitations:
         &#34;&#34;&#34;
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
-            attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
+            f&#34;m:{self.SERVICE_NAME}&#34;,
+            attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations),
         )
         if folder:
-            payload.append(folder_ids_element(
-                folders=[folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-            ))
-        item_elems = create_element(&#39;m:Items&#39;)
+            payload.append(
+                folder_ids_element(folders=[folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+            )
+        item_elems = create_element(&#34;m:Items&#34;)
         for item in items:
             if not item.account:
                 item.account = self.account
@@ -977,29 +985,31 @@ errormessage), in the same order as the input list.</p>
 </summary>
 <pre><code class="python">def call(self, items, folder, message_disposition, send_meeting_invitations):
     if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-        raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+        raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
     if send_meeting_invitations not in SEND_MEETING_INVITATIONS_CHOICES:
         raise InvalidEnumValue(
-            &#39;send_meeting_invitations&#39;, send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
+            &#34;send_meeting_invitations&#34;, send_meeting_invitations, SEND_MEETING_INVITATIONS_CHOICES
         )
     if folder is not None:
         if not isinstance(folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;folder&#39;, folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;folder&#34;, folder, (BaseFolder, FolderId))
         if folder.account != self.account:
-            raise ValueError(&#39;Folder must belong to account&#39;)
+            raise ValueError(&#34;Folder must belong to account&#34;)
     if message_disposition == SAVE_ONLY and folder is None:
         raise AttributeError(&#34;Folder must be supplied when in save-only mode&#34;)
     if message_disposition == SEND_AND_SAVE_COPY and folder is None:
         folder = self.account.sent  # &#39;Sent&#39; is default EWS behaviour
     if message_disposition == SEND_ONLY and folder is not None:
         raise AttributeError(&#34;Folder must be None in send-ony mode&#34;)
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=items,
-        folder=folder,
-        message_disposition=message_disposition,
-        send_meeting_invitations=send_meeting_invitations,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=items,
+            folder=folder,
+            message_disposition=message_disposition,
+            send_meeting_invitations=send_meeting_invitations,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.CreateItem.get_payload"><code class="name flex">
@@ -1044,14 +1054,14 @@ invitation accepts (see
     :param send_meeting_invitations:
     &#34;&#34;&#34;
     payload = create_element(
-        f&#39;m:{self.SERVICE_NAME}&#39;,
-        attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations)
+        f&#34;m:{self.SERVICE_NAME}&#34;,
+        attrs=dict(MessageDisposition=message_disposition, SendMeetingInvitations=send_meeting_invitations),
     )
     if folder:
-        payload.append(folder_ids_element(
-            folders=[folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-        ))
-    item_elems = create_element(&#39;m:Items&#39;)
+        payload.append(
+            folder_ids_element(folders=[folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+        )
+    item_elems = create_element(&#34;m:Items&#34;)
     for item in items:
         if not item.account:
             item.account = self.account
@@ -1089,7 +1099,7 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;CreateUserConfiguration&#39;
+    SERVICE_NAME = &#34;CreateUserConfiguration&#34;
     returns_elements = False
 
     def call(self, user_configuration):
@@ -1097,7 +1107,7 @@ invitation accepts (see
 
     def get_payload(self, user_configuration):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.protocol.version
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.protocol.version
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1142,7 +1152,7 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.protocol.version
+        create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.protocol.version
     )</code></pre>
 </details>
 </dd>
@@ -1175,7 +1185,7 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteattachment-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;DeleteAttachment&#39;
+    SERVICE_NAME = &#34;DeleteAttachment&#34;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -1189,9 +1199,9 @@ invitation accepts (see
 
     def get_payload(self, items):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;),
             attachment_ids_element(items=items, version=self.account.version),
-            version=self.account.version
+            version=self.account.version,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1232,9 +1242,9 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def get_payload(self, items):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
+        create_element(f&#34;m:{self.SERVICE_NAME}&#34;),
         attachment_ids_element(items=items, version=self.account.version),
-        version=self.account.version
+        version=self.account.version,
     )</code></pre>
 </details>
 </dd>
@@ -1264,16 +1274,16 @@ invitation accepts (see
 <pre><code class="python">class DeleteFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deletefolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;DeleteFolder&#39;
+    SERVICE_NAME = &#34;DeleteFolder&#34;
     returns_elements = False
 
     def call(self, folders, delete_type):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+            raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
         return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)
 
     def get_payload(self, folders, delete_type):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DeleteType=delete_type))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type))
         payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -1306,7 +1316,7 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def call(self, folders, delete_type):
     if delete_type not in DELETE_TYPE_CHOICES:
-        raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+        raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
     return self._chunked_get_elements(self.get_payload, items=folders, delete_type=delete_type)</code></pre>
 </details>
 </dd>
@@ -1320,7 +1330,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, delete_type):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DeleteType=delete_type))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type))
     payload.append(folder_ids_element(folders=folders, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -1357,19 +1367,19 @@ invitation accepts (see
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteitem-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;DeleteItem&#39;
+    SERVICE_NAME = &#34;DeleteItem&#34;
     returns_elements = False
 
     def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+            raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
         if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
             raise InvalidEnumValue(
-                &#39;send_meeting_cancellations&#39;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
+                &#34;send_meeting_cancellations&#34;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
             )
         if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
             raise InvalidEnumValue(
-                &#39;affected_task_occurrences&#39;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
+                &#34;affected_task_occurrences&#34;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
             )
         return self._chunked_get_elements(
             self.get_payload,
@@ -1380,8 +1390,9 @@ invitation accepts (see
             suppress_read_receipts=suppress_read_receipts,
         )
 
-    def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
-                    suppress_read_receipts):
+    def get_payload(
+        self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts
+    ):
         # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
         attrs = dict(
             DeleteType=delete_type,
@@ -1389,8 +1400,8 @@ invitation accepts (see
             AffectedTaskOccurrences=affected_task_occurrences,
         )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+            attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -1423,14 +1434,14 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def call(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts):
     if delete_type not in DELETE_TYPE_CHOICES:
-        raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+        raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
     if send_meeting_cancellations not in SEND_MEETING_CANCELLATIONS_CHOICES:
         raise InvalidEnumValue(
-            &#39;send_meeting_cancellations&#39;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
+            &#34;send_meeting_cancellations&#34;, send_meeting_cancellations, SEND_MEETING_CANCELLATIONS_CHOICES
         )
     if affected_task_occurrences not in AFFECTED_TASK_OCCURRENCES_CHOICES:
         raise InvalidEnumValue(
-            &#39;affected_task_occurrences&#39;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
+            &#34;affected_task_occurrences&#34;, affected_task_occurrences, AFFECTED_TASK_OCCURRENCES_CHOICES
         )
     return self._chunked_get_elements(
         self.get_payload,
@@ -1451,8 +1462,9 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, items, delete_type, send_meeting_cancellations, affected_task_occurrences,
-                suppress_read_receipts):
+<pre><code class="python">def get_payload(
+    self, items, delete_type, send_meeting_cancellations, affected_task_occurrences, suppress_read_receipts
+):
     # Takes a list of (id, changekey) tuples or Item objects and returns the XML for a DeleteItem request.
     attrs = dict(
         DeleteType=delete_type,
@@ -1460,8 +1472,8 @@ invitation accepts (see
         AffectedTaskOccurrences=affected_task_occurrences,
     )
     if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-        attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -1495,7 +1507,7 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;DeleteUserConfiguration&#39;
+    SERVICE_NAME = &#34;DeleteUserConfiguration&#34;
     returns_elements = False
 
     def call(self, user_configuration_name):
@@ -1503,7 +1515,7 @@ invitation accepts (see
 
     def get_payload(self, user_configuration_name):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration_name, version=self.account.version
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration_name, version=self.account.version
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1548,7 +1560,7 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration_name):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration_name, version=self.account.version
+        create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration_name, version=self.account.version
     )</code></pre>
 </details>
 </dd>
@@ -1578,20 +1590,19 @@ invitation accepts (see
 <pre><code class="python">class EmptyFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/emptyfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;EmptyFolder&#39;
+    SERVICE_NAME = &#34;EmptyFolder&#34;
     returns_elements = False
 
     def call(self, folders, delete_type, delete_sub_folders):
         if delete_type not in DELETE_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+            raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
         return self._chunked_get_elements(
             self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
         )
 
     def get_payload(self, folders, delete_type, delete_sub_folders):
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
-            attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
+            f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
         )
         payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload</code></pre>
@@ -1625,7 +1636,7 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def call(self, folders, delete_type, delete_sub_folders):
     if delete_type not in DELETE_TYPE_CHOICES:
-        raise InvalidEnumValue(&#39;delete_type&#39;, delete_type, DELETE_TYPE_CHOICES)
+        raise InvalidEnumValue(&#34;delete_type&#34;, delete_type, DELETE_TYPE_CHOICES)
     return self._chunked_get_elements(
         self.get_payload, items=folders, delete_type=delete_type, delete_sub_folders=delete_sub_folders
     )</code></pre>
@@ -1642,8 +1653,7 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def get_payload(self, folders, delete_type, delete_sub_folders):
     payload = create_element(
-        f&#39;m:{self.SERVICE_NAME}&#39;,
-        attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
+        f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DeleteType=delete_type, DeleteSubFolders=delete_sub_folders)
     )
     payload.append(folder_ids_element(folders=folders, version=self.account.version))
     return payload</code></pre>
@@ -1675,8 +1685,8 @@ invitation accepts (see
 <pre><code class="python">class ExpandDL(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/expanddl-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ExpandDL&#39;
-    element_container_name = f&#39;{{{MNS}}}DLExpansion&#39;
+    SERVICE_NAME = &#34;ExpandDL&#34;
+    element_container_name = f&#34;{{{MNS}}}DLExpansion&#34;
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
 
     def call(self, distribution_list):
@@ -1686,7 +1696,7 @@ invitation accepts (see
         return Mailbox.from_xml(elem, account=None)
 
     def get_payload(self, distribution_list):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), distribution_list, version=self.protocol.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), distribution_list, version=self.protocol.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1732,7 +1742,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, distribution_list):
-    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), distribution_list, version=self.protocol.version)</code></pre>
+    return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), distribution_list, version=self.protocol.version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1762,8 +1772,8 @@ invitation accepts (see
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exportitems-operation&#34;&#34;&#34;
 
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
-    SERVICE_NAME = &#39;ExportItems&#39;
-    element_container_name = f&#39;{{{MNS}}}Data&#39;
+    SERVICE_NAME = &#34;ExportItems&#34;
+    element_container_name = f&#34;{{{MNS}}}Data&#34;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -1772,7 +1782,7 @@ invitation accepts (see
         return elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
 
     def get_payload(self, items):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
@@ -1827,7 +1837,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -1858,9 +1868,9 @@ invitation accepts (see
 <pre><code class="python">class FindFolder(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;FindFolder&#39;
-    element_container_name = f&#39;{{{TNS}}}Folders&#39;
-    paging_container_name = f&#39;{{{MNS}}}RootFolder&#39;
+    SERVICE_NAME = &#34;FindFolder&#34;
+    element_container_name = f&#34;{{{TNS}}}Folders&#34;
+    paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -1881,14 +1891,15 @@ invitation accepts (see
         :return: XML elements for the matching folders
         &#34;&#34;&#34;
         if shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+            raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
         if depth not in FOLDER_TRAVERSAL_CHOICES:
-            raise InvalidEnumValue(&#39;depth&#39;, depth, FOLDER_TRAVERSAL_CHOICES)
+            raise InvalidEnumValue(&#34;depth&#34;, depth, FOLDER_TRAVERSAL_CHOICES)
         roots = {f.root for f in folders}
         if len(roots) != 1:
             raise ValueError(f&#34;All folders in &#39;roots&#39; must have the same root hierarchy ({roots})&#34;)
         self.root = roots.pop()
-        return self._elems_to_objs(self._paged_call(
+        return self._elems_to_objs(
+            self._paged_call(
                 payload_func=self.get_payload,
                 max_items=max_items,
                 folders=folders,
@@ -1899,21 +1910,24 @@ invitation accepts (see
                     depth=depth,
                     page_size=self.page_size,
                     offset=offset,
-                )
-        ))
+                ),
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Folder.from_xml_with_root(elem=elem, root=self.root)
 
     def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-        payload.append(shape_element(
-            tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+        payload.append(
+            shape_element(
+                tag=&#34;m:FolderShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
         if self.account.version.build &gt;= EXCHANGE_2010:
             indexed_page_folder_view = create_element(
-                &#39;m:IndexedPageFolderView&#39;,
-                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
+                &#34;m:IndexedPageFolderView&#34;,
+                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;),
             )
             payload.append(indexed_page_folder_view)
         else:
@@ -1921,7 +1935,7 @@ invitation accepts (see
                 raise NotImplementedError(&#34;&#39;offset&#39; is only supported for Exchange 2010 servers and later&#34;)
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
-        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
+        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#34;m:ParentFolderIds&#34;))
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1982,14 +1996,15 @@ invitation accepts (see
     :return: XML elements for the matching folders
     &#34;&#34;&#34;
     if shape not in SHAPE_CHOICES:
-        raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+        raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
     if depth not in FOLDER_TRAVERSAL_CHOICES:
-        raise InvalidEnumValue(&#39;depth&#39;, depth, FOLDER_TRAVERSAL_CHOICES)
+        raise InvalidEnumValue(&#34;depth&#34;, depth, FOLDER_TRAVERSAL_CHOICES)
     roots = {f.root for f in folders}
     if len(roots) != 1:
         raise ValueError(f&#34;All folders in &#39;roots&#39; must have the same root hierarchy ({roots})&#34;)
     self.root = roots.pop()
-    return self._elems_to_objs(self._paged_call(
+    return self._elems_to_objs(
+        self._paged_call(
             payload_func=self.get_payload,
             max_items=max_items,
             folders=folders,
@@ -2000,8 +2015,9 @@ invitation accepts (see
                 depth=depth,
                 page_size=self.page_size,
                 offset=offset,
-            )
-    ))</code></pre>
+            ),
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.FindFolder.get_payload"><code class="name flex">
@@ -2014,14 +2030,16 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, additional_fields, restriction, shape, depth, page_size, offset=0):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-    payload.append(shape_element(
-        tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    ))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+    payload.append(
+        shape_element(
+            tag=&#34;m:FolderShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+        )
+    )
     if self.account.version.build &gt;= EXCHANGE_2010:
         indexed_page_folder_view = create_element(
-            &#39;m:IndexedPageFolderView&#39;,
-            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
+            &#34;m:IndexedPageFolderView&#34;,
+            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;),
         )
         payload.append(indexed_page_folder_view)
     else:
@@ -2029,7 +2047,7 @@ invitation accepts (see
             raise NotImplementedError(&#34;&#39;offset&#39; is only supported for Exchange 2010 servers and later&#34;)
     if restriction:
         payload.append(restriction.to_xml(version=self.account.version))
-    payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
+    payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#34;m:ParentFolderIds&#34;))
     return payload</code></pre>
 </details>
 </dd>
@@ -2059,9 +2077,9 @@ invitation accepts (see
 <pre><code class="python">class FindItem(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;FindItem&#39;
-    element_container_name = f&#39;{{{TNS}}}Items&#39;
-    paging_container_name = f&#39;{{{MNS}}}RootFolder&#39;
+    SERVICE_NAME = &#34;FindItem&#34;
+    element_container_name = f&#34;{{{TNS}}}Items&#34;
+    paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
     supports_paging = True
 
     def __init__(self, *args, **kwargs):
@@ -2070,8 +2088,19 @@ invitation accepts (see
         self.additional_fields = None
         self.shape = None
 
-    def call(self, folders, additional_fields, restriction, order_fields, shape, query_string, depth, calendar_view,
-             max_items, offset):
+    def call(
+        self,
+        folders,
+        additional_fields,
+        restriction,
+        order_fields,
+        shape,
+        query_string,
+        depth,
+        calendar_view,
+        max_items,
+        offset,
+    ):
         &#34;&#34;&#34;Find items in an account.
 
         :param folders: the folders to act on
@@ -2088,43 +2117,57 @@ invitation accepts (see
         :return: XML elements for the matching items
         &#34;&#34;&#34;
         if shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+            raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
         if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+            raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
         self.additional_fields = additional_fields
         self.shape = shape
-        return self._elems_to_objs(self._paged_call(
-            payload_func=self.get_payload,
-            max_items=max_items,
-            folders=folders,
-            **dict(
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                query_string=query_string,
-                shape=shape,
-                depth=depth,
-                calendar_view=calendar_view,
-                page_size=self.page_size,
-                offset=offset,
+        return self._elems_to_objs(
+            self._paged_call(
+                payload_func=self.get_payload,
+                max_items=max_items,
+                folders=folders,
+                **dict(
+                    additional_fields=additional_fields,
+                    restriction=restriction,
+                    order_fields=order_fields,
+                    query_string=query_string,
+                    shape=shape,
+                    depth=depth,
+                    calendar_view=calendar_view,
+                    page_size=self.page_size,
+                    offset=offset,
+                ),
             )
-        ))
+        )
 
     def _elem_to_obj(self, elem):
         if self.shape == ID_ONLY and self.additional_fields is None:
             return Item.id_from_xml(elem)
         return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
-    def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
-                    calendar_view, page_size, offset=0):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-        payload.append(shape_element(
-            tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
+    def get_payload(
+        self,
+        folders,
+        additional_fields,
+        restriction,
+        order_fields,
+        query_string,
+        shape,
+        depth,
+        calendar_view,
+        page_size,
+        offset=0,
+    ):
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+        payload.append(
+            shape_element(
+                tag=&#34;m:ItemShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
         if calendar_view is None:
             view_type = create_element(
-                &#39;m:IndexedPageItemView&#39;,
-                attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
+                &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
             )
         else:
             view_type = calendar_view.to_xml(version=self.account.version)
@@ -2132,12 +2175,8 @@ invitation accepts (see
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            payload.append(set_xml_value(
-                create_element(&#39;m:SortOrder&#39;),
-                order_fields,
-                version=self.account.version
-            ))
-        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
+            payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+        payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#34;m:ParentFolderIds&#34;))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload</code></pre>
@@ -2189,8 +2228,19 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, folders, additional_fields, restriction, order_fields, shape, query_string, depth, calendar_view,
-         max_items, offset):
+<pre><code class="python">def call(
+    self,
+    folders,
+    additional_fields,
+    restriction,
+    order_fields,
+    shape,
+    query_string,
+    depth,
+    calendar_view,
+    max_items,
+    offset,
+):
     &#34;&#34;&#34;Find items in an account.
 
     :param folders: the folders to act on
@@ -2207,27 +2257,29 @@ invitation accepts (see
     :return: XML elements for the matching items
     &#34;&#34;&#34;
     if shape not in SHAPE_CHOICES:
-        raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+        raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
     if depth not in ITEM_TRAVERSAL_CHOICES:
-        raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+        raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
     self.additional_fields = additional_fields
     self.shape = shape
-    return self._elems_to_objs(self._paged_call(
-        payload_func=self.get_payload,
-        max_items=max_items,
-        folders=folders,
-        **dict(
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            query_string=query_string,
-            shape=shape,
-            depth=depth,
-            calendar_view=calendar_view,
-            page_size=self.page_size,
-            offset=offset,
+    return self._elems_to_objs(
+        self._paged_call(
+            payload_func=self.get_payload,
+            max_items=max_items,
+            folders=folders,
+            **dict(
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                query_string=query_string,
+                shape=shape,
+                depth=depth,
+                calendar_view=calendar_view,
+                page_size=self.page_size,
+                offset=offset,
+            ),
         )
-    ))</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.FindItem.get_payload"><code class="name flex">
@@ -2239,16 +2291,28 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth,
-                calendar_view, page_size, offset=0):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-    payload.append(shape_element(
-        tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    ))
+<pre><code class="python">def get_payload(
+    self,
+    folders,
+    additional_fields,
+    restriction,
+    order_fields,
+    query_string,
+    shape,
+    depth,
+    calendar_view,
+    page_size,
+    offset=0,
+):
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+    payload.append(
+        shape_element(
+            tag=&#34;m:ItemShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+        )
+    )
     if calendar_view is None:
         view_type = create_element(
-            &#39;m:IndexedPageItemView&#39;,
-            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
+            &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
         )
     else:
         view_type = calendar_view.to_xml(version=self.account.version)
@@ -2256,12 +2320,8 @@ invitation accepts (see
     if restriction:
         payload.append(restriction.to_xml(version=self.account.version))
     if order_fields:
-        payload.append(set_xml_value(
-            create_element(&#39;m:SortOrder&#39;),
-            order_fields,
-            version=self.account.version
-        ))
-    payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;))
+        payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+    payload.append(folder_ids_element(folders=folders, version=self.protocol.version, tag=&#34;m:ParentFolderIds&#34;))
     if query_string:
         payload.append(query_string.to_xml(version=self.account.version))
     return payload</code></pre>
@@ -2293,8 +2353,8 @@ invitation accepts (see
 <pre><code class="python">class FindPeople(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;FindPeople&#39;
-    element_container_name = f&#39;{{{MNS}}}People&#39;
+    SERVICE_NAME = &#34;FindPeople&#34;
+    element_container_name = f&#34;{{{MNS}}}People&#34;
     supported_from = EXCHANGE_2013
     supports_paging = True
 
@@ -2320,52 +2380,54 @@ invitation accepts (see
         :return: XML elements for the matching items
         &#34;&#34;&#34;
         if shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+            raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
         if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+            raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
         self.additional_fields = additional_fields
         self.shape = shape
-        return self._elems_to_objs(self._paged_call(
-            payload_func=self.get_payload,
-            max_items=max_items,
-            folders=[folder],  # We just need the list to satisfy self._paged_call()
-            **dict(
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                query_string=query_string,
-                shape=shape,
-                depth=depth,
-                page_size=self.page_size,
-                offset=offset,
+        return self._elems_to_objs(
+            self._paged_call(
+                payload_func=self.get_payload,
+                max_items=max_items,
+                folders=[folder],  # We just need the list to satisfy self._paged_call()
+                **dict(
+                    additional_fields=additional_fields,
+                    restriction=restriction,
+                    order_fields=order_fields,
+                    query_string=query_string,
+                    shape=shape,
+                    depth=depth,
+                    page_size=self.page_size,
+                    offset=offset,
+                ),
             )
-        ))
+        )
 
     def _elem_to_obj(self, elem):
         if self.shape == ID_ONLY and self.additional_fields is None:
             return Persona.id_from_xml(elem)
         return Persona.from_xml(elem, account=self.account)
 
-    def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
-                    offset=0):
+    def get_payload(
+        self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size, offset=0
+    ):
         # We actually only support a single folder, but self._paged_call() sends us a list
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-        payload.append(shape_element(
-            tag=&#39;m:PersonaShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
-        payload.append(create_element(
-            &#39;m:IndexedPageItemView&#39;,
-            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
-        ))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+        payload.append(
+            shape_element(
+                tag=&#34;m:PersonaShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
+        payload.append(
+            create_element(
+                &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
+            )
+        )
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            payload.append(set_xml_value(
-                create_element(&#39;m:SortOrder&#39;),
-                order_fields,
-                version=self.account.version
-            ))
-        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:ParentFolderId&#39;))
+            payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:ParentFolderId&#34;))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload
@@ -2373,11 +2435,15 @@ invitation accepts (see
     @staticmethod
     def _get_paging_values(elem):
         &#34;&#34;&#34;Find paging values. The paging element from FindPeople is different from other paging containers.&#34;&#34;&#34;
-        item_count = int(elem.find(f&#39;{{{MNS}}}TotalNumberOfPeopleInView&#39;).text)
-        first_matching = int(elem.find(f&#39;{{{MNS}}}FirstMatchingRowIndex&#39;).text)
-        first_loaded = int(elem.find(f&#39;{{{MNS}}}FirstLoadedRowIndex&#39;).text)
-        log.debug(&#39;Got page with total items %s, first matching %s, first loaded %s &#39;, item_count, first_matching,
-                  first_loaded)
+        item_count = int(elem.find(f&#34;{{{MNS}}}TotalNumberOfPeopleInView&#34;).text)
+        first_matching = int(elem.find(f&#34;{{{MNS}}}FirstMatchingRowIndex&#34;).text)
+        first_loaded = int(elem.find(f&#34;{{{MNS}}}FirstLoadedRowIndex&#34;).text)
+        log.debug(
+            &#34;Got page with total items %s, first matching %s, first loaded %s &#34;,
+            item_count,
+            first_matching,
+            first_loaded,
+        )
         next_offset = None  # GetPersona does not support fetching more pages
         return item_count, next_offset</code></pre>
 </details>
@@ -2443,26 +2509,28 @@ invitation accepts (see
     :return: XML elements for the matching items
     &#34;&#34;&#34;
     if shape not in SHAPE_CHOICES:
-        raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+        raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
     if depth not in ITEM_TRAVERSAL_CHOICES:
-        raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+        raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
     self.additional_fields = additional_fields
     self.shape = shape
-    return self._elems_to_objs(self._paged_call(
-        payload_func=self.get_payload,
-        max_items=max_items,
-        folders=[folder],  # We just need the list to satisfy self._paged_call()
-        **dict(
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            query_string=query_string,
-            shape=shape,
-            depth=depth,
-            page_size=self.page_size,
-            offset=offset,
+    return self._elems_to_objs(
+        self._paged_call(
+            payload_func=self.get_payload,
+            max_items=max_items,
+            folders=[folder],  # We just need the list to satisfy self._paged_call()
+            **dict(
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                query_string=query_string,
+                shape=shape,
+                depth=depth,
+                page_size=self.page_size,
+                offset=offset,
+            ),
         )
-    ))</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.FindPeople.get_payload"><code class="name flex">
@@ -2474,26 +2542,26 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
-                offset=0):
+<pre><code class="python">def get_payload(
+    self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size, offset=0
+):
     # We actually only support a single folder, but self._paged_call() sends us a list
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-    payload.append(shape_element(
-        tag=&#39;m:PersonaShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    ))
-    payload.append(create_element(
-        &#39;m:IndexedPageItemView&#39;,
-        attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
-    ))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+    payload.append(
+        shape_element(
+            tag=&#34;m:PersonaShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+        )
+    )
+    payload.append(
+        create_element(
+            &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
+        )
+    )
     if restriction:
         payload.append(restriction.to_xml(version=self.account.version))
     if order_fields:
-        payload.append(set_xml_value(
-            create_element(&#39;m:SortOrder&#39;),
-            order_fields,
-            version=self.account.version
-        ))
-    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:ParentFolderId&#39;))
+        payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:ParentFolderId&#34;))
     if query_string:
         payload.append(query_string.to_xml(version=self.account.version))
     return payload</code></pre>
@@ -2525,37 +2593,44 @@ invitation accepts (see
 <pre><code class="python">class GetAttachment(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetAttachment&#39;
-    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    SERVICE_NAME = &#34;GetAttachment&#34;
+    element_container_name = f&#34;{{{MNS}}}Attachments&#34;
     cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=items, include_mime_content=include_mime_content,
-            body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
-        ))
+            raise InvalidEnumValue(&#34;body_type&#34;, body_type, BODY_TYPE_CHOICES)
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                include_mime_content=include_mime_content,
+                body_type=body_type,
+                filter_html_content=filter_html_content,
+                additional_fields=additional_fields,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        shape_elem = create_element(&#39;m:AttachmentShape&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        shape_elem = create_element(&#34;m:AttachmentShape&#34;)
         if include_mime_content:
-            add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+            add_xml_child(shape_elem, &#34;t:IncludeMimeContent&#34;, &#34;true&#34;)
         if body_type:
-            add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+            add_xml_child(shape_elem, &#34;t:BodyType&#34;, body_type)
         if filter_html_content is not None:
-            add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+            add_xml_child(shape_elem, &#34;t:FilterHtmlContent&#34;, &#34;true&#34; if filter_html_content else &#34;false&#34;)
         if additional_fields:
-            additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+            additional_properties = create_element(&#34;t:AdditionalProperties&#34;)
             expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
-            set_xml_value(additional_properties, sorted(
-                expanded_fields,
-                key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
-            ), version=self.account.version)
+            set_xml_value(
+                additional_properties,
+                sorted(expanded_fields, key=lambda f: (getattr(f.field, &#34;field_uri&#34;, &#34;&#34;), f.path)),
+                version=self.account.version,
+            )
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
@@ -2563,26 +2638,26 @@ invitation accepts (see
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             super()._update_api_version(api_version, header, **parse_opts)
         # TODO: We&#39;re skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             return super()._get_soap_parts(response, **parse_opts)
 
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
     def _get_soap_messages(self, body, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             return super()._get_soap_messages(body, **parse_opts)
 
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
         parser = StreamingBase64Parser()
-        field = FileAttachment.get_field_by_fieldname(&#39;_content&#39;)
+        field = FileAttachment.get_field_by_fieldname(&#34;_content&#34;)
         handler = StreamingContentHandler(parser=parser, ns=field.namespace, element_name=field.field_uri)
         parser.setContentHandler(handler)
         return parser.parse(r)
@@ -2590,7 +2665,10 @@ invitation accepts (see
     def stream_file_content(self, attachment_id):
         # The streaming XML parser can only stream content of one attachment
         payload = self.get_payload(
-            items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+            items=[attachment_id],
+            include_mime_content=False,
+            body_type=None,
+            filter_html_content=None,
             additional_fields=None,
         )
         self.streaming = True
@@ -2645,11 +2723,17 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
     if body_type and body_type not in BODY_TYPE_CHOICES:
-        raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload, items=items, include_mime_content=include_mime_content,
-        body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
-    ))</code></pre>
+        raise InvalidEnumValue(&#34;body_type&#34;, body_type, BODY_TYPE_CHOICES)
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=items,
+            include_mime_content=include_mime_content,
+            body_type=body_type,
+            filter_html_content=filter_html_content,
+            additional_fields=additional_fields,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetAttachment.get_payload"><code class="name flex">
@@ -2662,21 +2746,22 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    shape_elem = create_element(&#39;m:AttachmentShape&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    shape_elem = create_element(&#34;m:AttachmentShape&#34;)
     if include_mime_content:
-        add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+        add_xml_child(shape_elem, &#34;t:IncludeMimeContent&#34;, &#34;true&#34;)
     if body_type:
-        add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+        add_xml_child(shape_elem, &#34;t:BodyType&#34;, body_type)
     if filter_html_content is not None:
-        add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+        add_xml_child(shape_elem, &#34;t:FilterHtmlContent&#34;, &#34;true&#34; if filter_html_content else &#34;false&#34;)
     if additional_fields:
-        additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+        additional_properties = create_element(&#34;t:AdditionalProperties&#34;)
         expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
-        set_xml_value(additional_properties, sorted(
-            expanded_fields,
-            key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
-        ), version=self.account.version)
+        set_xml_value(
+            additional_properties,
+            sorted(expanded_fields, key=lambda f: (getattr(f.field, &#34;field_uri&#34;, &#34;&#34;), f.path)),
+            version=self.account.version,
+        )
         shape_elem.append(additional_properties)
     if len(shape_elem):
         payload.append(shape_elem)
@@ -2696,7 +2781,10 @@ invitation accepts (see
 <pre><code class="python">def stream_file_content(self, attachment_id):
     # The streaming XML parser can only stream content of one attachment
     payload = self.get_payload(
-        items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+        items=[attachment_id],
+        include_mime_content=False,
+        body_type=None,
+        filter_html_content=None,
         additional_fields=None,
     )
     self.streaming = True
@@ -2745,26 +2833,28 @@ invitation accepts (see
 <pre><code class="python">class GetDelegate(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getdelegate-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetDelegate&#39;
+    SERVICE_NAME = &#34;GetDelegate&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = ()
     supported_from = EXCHANGE_2007_SP1
 
     def call(self, user_ids, include_permissions):
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=user_ids or [None],
-            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-            include_permissions=include_permissions,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=user_ids or [None],
+                mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+                include_permissions=include_permissions,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return DelegateUser.from_xml(elem=elem, account=self.account)
 
     def get_payload(self, user_ids, mailbox, include_permissions):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IncludePermissions=include_permissions))
         set_xml_value(payload, mailbox, version=self.protocol.version)
         if user_ids != [None]:
-            user_ids_elem = create_element(&#39;m:UserIds&#39;)
+            user_ids_elem = create_element(&#34;m:UserIds&#34;)
             for user_id in user_ids:
                 if isinstance(user_id, str):
                     user_id = UserId(primary_smtp_address=user_id)
@@ -2778,7 +2868,7 @@ invitation accepts (see
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}DelegateUserResponseMessageType&#39;</code></pre>
+        return f&#34;{{{MNS}}}DelegateUserResponseMessageType&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2812,12 +2902,14 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, user_ids, include_permissions):
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=user_ids or [None],
-        mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
-        include_permissions=include_permissions,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=user_ids or [None],
+            mailbox=DLMailbox(email_address=self.account.primary_smtp_address),
+            include_permissions=include_permissions,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetDelegate.get_payload"><code class="name flex">
@@ -2830,10 +2922,10 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_ids, mailbox, include_permissions):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IncludePermissions=include_permissions))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IncludePermissions=include_permissions))
     set_xml_value(payload, mailbox, version=self.protocol.version)
     if user_ids != [None]:
-        user_ids_elem = create_element(&#39;m:UserIds&#39;)
+        user_ids_elem = create_element(&#34;m:UserIds&#34;)
         for user_id in user_ids:
             if isinstance(user_id, str):
                 user_id = UserId(primary_smtp_address=user_id)
@@ -2871,13 +2963,18 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getevents-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetEvents&#39;
+    SERVICE_NAME = &#34;GetEvents&#34;
     prefer_affinity = True
 
     def call(self, subscription_id, watermark):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                subscription_id=subscription_id, watermark=watermark,
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    subscription_id=subscription_id,
+                    watermark=watermark,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -2887,9 +2984,9 @@ invitation accepts (see
         return container.findall(Notification.response_tag())
 
     def get_payload(self, subscription_id, watermark):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
-        add_xml_child(payload, &#39;m:Watermark&#39;, watermark)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
+        add_xml_child(payload, &#34;m:Watermark&#34;, watermark)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2920,9 +3017,14 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, subscription_id, watermark):
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            subscription_id=subscription_id, watermark=watermark,
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                subscription_id=subscription_id,
+                watermark=watermark,
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetEvents.get_payload"><code class="name flex">
@@ -2935,9 +3037,9 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, subscription_id, watermark):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
-    add_xml_child(payload, &#39;m:Watermark&#39;, watermark)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
+    add_xml_child(payload, &#34;m:Watermark&#34;, watermark)
     return payload</code></pre>
 </details>
 </dd>
@@ -2967,10 +3069,12 @@ invitation accepts (see
 <pre><code class="python">class GetFolder(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetFolder&#39;
-    element_container_name = f&#39;{{{MNS}}}Folders&#39;
+    SERVICE_NAME = &#34;GetFolder&#34;
+    element_container_name = f&#34;{{{MNS}}}Folders&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
-        ErrorFolderNotFound, ErrorNoPublicFolderReplicaAvailable, ErrorInvalidOperation,
+        ErrorFolderNotFound,
+        ErrorNoPublicFolderReplicaAvailable,
+        ErrorInvalidOperation,
     )
 
     def __init__(self, *args, **kwargs):
@@ -2989,12 +3093,14 @@ invitation accepts (see
         # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
         # class as the folder instance it was requested with.
         self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=self.folders,
-            additional_fields=additional_fields,
-            shape=shape,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=self.folders,
+                additional_fields=additional_fields,
+                shape=shape,
+            )
+        )
 
     def _elems_to_objs(self, elems):
         for folder, elem in zip(self.folders, elems):
@@ -3004,10 +3110,12 @@ invitation accepts (see
             yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
 
     def get_payload(self, folders, additional_fields, shape):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        payload.append(shape_element(
-            tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        payload.append(
+            shape_element(
+                tag=&#34;m:FolderShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
         payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -3058,12 +3166,14 @@ invitation accepts (see
     # We can&#39;t easily find the correct folder class from the returned XML. Instead, return objects with the same
     # class as the folder instance it was requested with.
     self.folders = list(folders)  # Convert to a list, in case &#39;folders&#39; is a generator. We&#39;re iterating twice.
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=self.folders,
-        additional_fields=additional_fields,
-        shape=shape,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=self.folders,
+            additional_fields=additional_fields,
+            shape=shape,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetFolder.get_payload"><code class="name flex">
@@ -3076,10 +3186,12 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, additional_fields, shape):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    payload.append(shape_element(
-        tag=&#39;m:FolderShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    ))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    payload.append(
+        shape_element(
+            tag=&#34;m:FolderShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+        )
+    )
     payload.append(folder_ids_element(folders=folders, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -3110,8 +3222,8 @@ invitation accepts (see
 <pre><code class="python">class GetItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetItem&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;GetItem&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
     def call(self, items, additional_fields, shape):
         &#34;&#34;&#34;Return all items in an account that correspond to a list of ID&#39;s, in stable order.
@@ -3122,18 +3234,25 @@ invitation accepts (see
 
         :return: XML elements for the items, in stable order
         &#34;&#34;&#34;
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                additional_fields=additional_fields,
+                shape=shape,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return BaseFolder.item_model_from_tag(elem.tag).from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, additional_fields, shape):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        payload.append(shape_element(
-            tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        payload.append(
+            shape_element(
+                tag=&#34;m:ItemShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -3177,9 +3296,14 @@ invitation accepts (see
 
     :return: XML elements for the items, in stable order
     &#34;&#34;&#34;
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload, items=items, additional_fields=additional_fields, shape=shape,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=items,
+            additional_fields=additional_fields,
+            shape=shape,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetItem.get_payload"><code class="name flex">
@@ -3192,10 +3316,12 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, additional_fields, shape):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    payload.append(shape_element(
-        tag=&#39;m:ItemShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    ))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    payload.append(
+        shape_element(
+            tag=&#34;m:ItemShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+        )
+    )
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -3226,24 +3352,26 @@ invitation accepts (see
 <pre><code class="python">class GetMailTips(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getmailtips-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetMailTips&#39;
+    SERVICE_NAME = &#34;GetMailTips&#34;
 
     def call(self, sending_as, recipients, mail_tips_requested):
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=recipients,
-            sending_as=sending_as,
-            mail_tips_requested=mail_tips_requested,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=recipients,
+                sending_as=sending_as,
+                mail_tips_requested=mail_tips_requested,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return MailTips.from_xml(elem=elem, account=None)
 
-    def get_payload(self, recipients, sending_as,  mail_tips_requested):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    def get_payload(self, recipients, sending_as, mail_tips_requested):
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         set_xml_value(payload, sending_as, version=self.protocol.version)
 
-        recipients_elem = create_element(&#39;m:Recipients&#39;)
+        recipients_elem = create_element(&#34;m:Recipients&#34;)
         for recipient in recipients:
             set_xml_value(recipients_elem, recipient, version=self.protocol.version)
         payload.append(recipients_elem)
@@ -3258,7 +3386,7 @@ invitation accepts (see
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}MailTipsResponseMessageType&#39;</code></pre>
+        return f&#34;{{{MNS}}}MailTipsResponseMessageType&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3283,12 +3411,14 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, sending_as, recipients, mail_tips_requested):
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=recipients,
-        sending_as=sending_as,
-        mail_tips_requested=mail_tips_requested,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=recipients,
+            sending_as=sending_as,
+            mail_tips_requested=mail_tips_requested,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetMailTips.get_payload"><code class="name flex">
@@ -3300,11 +3430,11 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, recipients, sending_as,  mail_tips_requested):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+<pre><code class="python">def get_payload(self, recipients, sending_as, mail_tips_requested):
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     set_xml_value(payload, sending_as, version=self.protocol.version)
 
-    recipients_elem = create_element(&#39;m:Recipients&#39;)
+    recipients_elem = create_element(&#34;m:Recipients&#34;)
     for recipient in recipients:
         set_xml_value(recipients_elem, recipient, version=self.protocol.version)
     payload.append(recipients_elem)
@@ -3340,7 +3470,7 @@ invitation accepts (see
 <pre><code class="python">class GetPersona(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getpersona-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetPersona&#39;
+    SERVICE_NAME = &#34;GetPersona&#34;
 
     def call(self, personas):
         # GetPersona only accepts one persona ID per request. Crazy.
@@ -3352,18 +3482,16 @@ invitation accepts (see
 
     def get_payload(self, persona):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
-            to_item_id(persona, PersonaId),
-            version=self.protocol.version
+            create_element(f&#34;m:{self.SERVICE_NAME}&#34;), to_item_id(persona, PersonaId), version=self.protocol.version
         )
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return container.findall(f&#39;{{{MNS}}}{Persona.ELEMENT_NAME}&#39;)
+        return container.findall(f&#34;{{{MNS}}}{Persona.ELEMENT_NAME}&#34;)
 
     @classmethod
     def _response_tag(cls):
-        return f&#39;{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage&#39;</code></pre>
+        return f&#34;{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3405,9 +3533,7 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def get_payload(self, persona):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}&#39;),
-        to_item_id(persona, PersonaId),
-        version=self.protocol.version
+        create_element(f&#34;m:{self.SERVICE_NAME}&#34;), to_item_id(persona, PersonaId), version=self.protocol.version
     )</code></pre>
 </details>
 </dd>
@@ -3437,8 +3563,8 @@ invitation accepts (see
 <pre><code class="python">class GetRoomLists(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getroomlists-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetRoomLists&#39;
-    element_container_name = f&#39;{{{MNS}}}RoomLists&#39;
+    SERVICE_NAME = &#34;GetRoomLists&#34;
+    element_container_name = f&#34;{{{MNS}}}RoomLists&#34;
     supported_from = EXCHANGE_2010
 
     def call(self):
@@ -3448,7 +3574,7 @@ invitation accepts (see
         return RoomList.from_xml(elem=elem, account=None)
 
     def get_payload(self):
-        return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
+        return create_element(f&#34;m:{self.SERVICE_NAME}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3494,7 +3620,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self):
-    return create_element(f&#39;m:{self.SERVICE_NAME}&#39;)</code></pre>
+    return create_element(f&#34;m:{self.SERVICE_NAME}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3523,8 +3649,8 @@ invitation accepts (see
 <pre><code class="python">class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = f&#39;{{{MNS}}}Rooms&#39;
+    SERVICE_NAME = &#34;GetRooms&#34;
+    element_container_name = f&#34;{{{MNS}}}Rooms&#34;
     supported_from = EXCHANGE_2010
 
     def call(self, room_list):
@@ -3534,7 +3660,7 @@ invitation accepts (see
         return Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, room_list):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), room_list, version=self.protocol.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3580,7 +3706,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, room_list):
-    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
+    return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), room_list, version=self.protocol.version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3612,27 +3738,31 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getsearchablemailboxes-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetSearchableMailboxes&#39;
-    element_container_name = f&#39;{{{MNS}}}SearchableMailboxes&#39;
-    failed_mailboxes_container_name = f&#39;{{{MNS}}}FailedMailboxes&#39;
+    SERVICE_NAME = &#34;GetSearchableMailboxes&#34;
+    element_container_name = f&#34;{{{MNS}}}SearchableMailboxes&#34;
+    failed_mailboxes_container_name = f&#34;{{{MNS}}}FailedMailboxes&#34;
     supported_from = EXCHANGE_2013
     cls_map = {cls.response_tag(): cls for cls in (SearchableMailbox, FailedMailbox)}
 
     def call(self, search_filter, expand_group_membership):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                search_filter=search_filter,
-                expand_group_membership=expand_group_membership,
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    search_filter=search_filter,
+                    expand_group_membership=expand_group_membership,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return self.cls_map[elem.tag].from_xml(elem=elem, account=None)
 
     def get_payload(self, search_filter, expand_group_membership):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         if search_filter:
-            add_xml_child(payload, &#39;m:SearchFilter&#39;, search_filter)
+            add_xml_child(payload, &#34;m:SearchFilter&#34;, search_filter)
         if expand_group_membership is not None:
-            add_xml_child(payload, &#39;m:ExpandGroupMembership&#39;, &#39;true&#39; if expand_group_membership else &#39;false&#39;)
+            add_xml_child(payload, &#34;m:ExpandGroupMembership&#34;, &#34;true&#34; if expand_group_membership else &#34;false&#34;)
         return payload
 
     def _get_elements_in_response(self, response):
@@ -3684,10 +3814,14 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, search_filter, expand_group_membership):
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            search_filter=search_filter,
-            expand_group_membership=expand_group_membership,
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                search_filter=search_filter,
+                expand_group_membership=expand_group_membership,
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetSearchableMailboxes.get_payload"><code class="name flex">
@@ -3700,11 +3834,11 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, search_filter, expand_group_membership):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     if search_filter:
-        add_xml_child(payload, &#39;m:SearchFilter&#39;, search_filter)
+        add_xml_child(payload, &#34;m:SearchFilter&#34;, search_filter)
     if expand_group_membership is not None:
-        add_xml_child(payload, &#39;m:ExpandGroupMembership&#39;, &#39;true&#39; if expand_group_membership else &#39;false&#39;)
+        add_xml_child(payload, &#34;m:ExpandGroupMembership&#34;, &#34;true&#34; if expand_group_membership else &#34;false&#34;)
     return payload</code></pre>
 </details>
 </dd>
@@ -3737,27 +3871,28 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getservertimezones-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetServerTimeZones&#39;
-    element_container_name = f&#39;{{{MNS}}}TimeZoneDefinitions&#39;
+    SERVICE_NAME = &#34;GetServerTimeZones&#34;
+    element_container_name = f&#34;{{{MNS}}}TimeZoneDefinitions&#34;
     supported_from = EXCHANGE_2010
 
     def call(self, timezones=None, return_full_timezone_data=False):
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            timezones=timezones,
-            return_full_timezone_data=return_full_timezone_data
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(timezones=timezones, return_full_timezone_data=return_full_timezone_data)
+            )
+        )
 
     def get_payload(self, timezones, return_full_timezone_data):
         payload = create_element(
-            f&#39;m:{self.SERVICE_NAME}&#39;,
+            f&#34;m:{self.SERVICE_NAME}&#34;,
             attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
         )
         if timezones is not None:
             is_empty, timezones = peek(timezones)
             if not is_empty:
-                tz_ids = create_element(&#39;m:Ids&#39;)
+                tz_ids = create_element(&#34;m:Ids&#34;)
                 for timezone in timezones:
-                    tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
+                    tz_id = set_xml_value(create_element(&#34;t:Id&#34;), timezone.ms_id)
                     tz_ids.append(tz_id)
                 payload.append(tz_ids)
         return payload
@@ -3796,10 +3931,11 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, timezones=None, return_full_timezone_data=False):
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-        timezones=timezones,
-        return_full_timezone_data=return_full_timezone_data
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(timezones=timezones, return_full_timezone_data=return_full_timezone_data)
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetServerTimeZones.get_payload"><code class="name flex">
@@ -3813,15 +3949,15 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def get_payload(self, timezones, return_full_timezone_data):
     payload = create_element(
-        f&#39;m:{self.SERVICE_NAME}&#39;,
+        f&#34;m:{self.SERVICE_NAME}&#34;,
         attrs=dict(ReturnFullTimeZoneData=return_full_timezone_data),
     )
     if timezones is not None:
         is_empty, timezones = peek(timezones)
         if not is_empty:
-            tz_ids = create_element(&#39;m:Ids&#39;)
+            tz_ids = create_element(&#34;m:Ids&#34;)
             for timezone in timezones:
-                tz_id = set_xml_value(create_element(&#39;t:Id&#39;), timezone.ms_id)
+                tz_id = set_xml_value(create_element(&#34;t:Id&#34;), timezone.ms_id)
                 tz_ids.append(tz_id)
             payload.append(tz_ids)
     return payload</code></pre>
@@ -3856,13 +3992,13 @@ invitation accepts (see
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getstreamingevents-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetStreamingEvents&#39;
-    element_container_name = f&#39;{{{MNS}}}Notifications&#39;
+    SERVICE_NAME = &#34;GetStreamingEvents&#34;
+    element_container_name = f&#34;{{{MNS}}}Notifications&#34;
     prefer_affinity = True
 
     # Connection status values
-    OK = &#39;OK&#39;
-    CLOSED = &#39;Closed&#39;
+    OK = &#34;OK&#34;
+    CLOSED = &#34;Closed&#34;
 
     def __init__(self, *args, **kwargs):
         # These values are set each time call() is consumed
@@ -3872,14 +4008,19 @@ invitation accepts (see
 
     def call(self, subscription_ids, connection_timeout):
         if not isinstance(connection_timeout, int):
-            raise InvalidTypeError(&#39;connection_timeout&#39;, connection_timeout, int)
+            raise InvalidTypeError(&#34;connection_timeout&#34;, connection_timeout, int)
         if connection_timeout &lt; 1:
             raise ValueError(f&#34;&#39;connection_timeout&#39; {connection_timeout} must be a positive integer&#34;)
         # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
         self.timeout = connection_timeout * 60 + 60
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    subscription_ids=subscription_ids,
+                    connection_timeout=connection_timeout,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -3895,7 +4036,7 @@ invitation accepts (see
         # XML response.
         r = body
         for i, doc in enumerate(DocumentYielder(r.iter_content()), start=1):
-            xml_log.debug(&#39;&#39;&#39;Response XML (docs counter: %(i)s): %(xml_response)s&#39;&#39;&#39;, dict(i=i, xml_response=doc))
+            xml_log.debug(&#34;Response XML (docs counter: %(i)s): %(xml_response)s&#34;, dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
                 _, body = super()._get_soap_parts(response=response, **parse_opts)
@@ -3910,10 +4051,10 @@ invitation accepts (see
                 break
 
     def _get_element_container(self, message, name=None):
-        error_ids_elem = message.find(f&#39;{{{MNS}}}ErrorSubscriptionIds&#39;)
-        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f&#39;{{{MNS}}}SubscriptionId&#39;)
-        self.connection_status = get_xml_attr(message, f&#39;{{{MNS}}}ConnectionStatus&#39;)  # Either &#39;OK&#39; or &#39;Closed&#39;
-        log.debug(&#39;Connection status is: %s&#39;, self.connection_status)
+        error_ids_elem = message.find(f&#34;{{{MNS}}}ErrorSubscriptionIds&#34;)
+        error_ids = [] if error_ids_elem is None else get_xml_attrs(error_ids_elem, f&#34;{{{MNS}}}SubscriptionId&#34;)
+        self.connection_status = get_xml_attr(message, f&#34;{{{MNS}}}ConnectionStatus&#34;)  # Either &#39;OK&#39; or &#39;Closed&#39;
+        log.debug(&#34;Connection status is: %s&#34;, self.connection_status)
         # Upstream normally expects to find a &#39;name&#39; tag but our response does not always have it. We still want to
         # call upstream, to have exceptions raised. Return an empty list if there is no &#39;name&#39; tag and no errors.
         if message.find(name) is None:
@@ -3925,20 +4066,20 @@ invitation accepts (see
             # subscriptions seem to never be returned even though the XML spec allows it. This means there&#39;s no point in
             # trying to collect any notifications here and delivering a combination of errors and return values.
             if error_ids:
-                e.value += f&#39; (subscription IDs: {error_ids})&#39;
+                e.value += f&#34; (subscription IDs: {error_ids})&#34;
             raise e
         return [] if name is None else res
 
     def get_payload(self, subscription_ids, connection_timeout):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
         for subscription_id in subscription_ids:
-            add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+            add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
         if not len(subscriptions_elem):
             raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
 
         payload.append(subscriptions_elem)
-        add_xml_child(payload, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+        add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3982,14 +4123,19 @@ invitation accepts (see
 </summary>
 <pre><code class="python">def call(self, subscription_ids, connection_timeout):
     if not isinstance(connection_timeout, int):
-        raise InvalidTypeError(&#39;connection_timeout&#39;, connection_timeout, int)
+        raise InvalidTypeError(&#34;connection_timeout&#34;, connection_timeout, int)
     if connection_timeout &lt; 1:
         raise ValueError(f&#34;&#39;connection_timeout&#39; {connection_timeout} must be a positive integer&#34;)
     # Add 60 seconds to the timeout, to allow us to always get the final message containing ConnectionStatus=Closed
     self.timeout = connection_timeout * 60 + 60
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            subscription_ids=subscription_ids, connection_timeout=connection_timeout,
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                subscription_ids=subscription_ids,
+                connection_timeout=connection_timeout,
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetStreamingEvents.get_payload"><code class="name flex">
@@ -4002,15 +4148,15 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, subscription_ids, connection_timeout):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    subscriptions_elem = create_element(&#39;m:SubscriptionIds&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
     for subscription_id in subscription_ids:
-        add_xml_child(subscriptions_elem, &#39;t:SubscriptionId&#39;, subscription_id)
+        add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
     if not len(subscriptions_elem):
         raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
 
     payload.append(subscriptions_elem)
-    add_xml_child(payload, &#39;m:ConnectionTimeout&#39;, connection_timeout)
+    add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
     return payload</code></pre>
 </details>
 </dd>
@@ -4045,45 +4191,47 @@ MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseravailability-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetUserAvailability&#39;
+    SERVICE_NAME = &#34;GetUserAvailability&#34;
 
     def call(self, timezone, mailbox_data, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
         #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            timezone=timezone,
-            mailbox_data=mailbox_data,
-            free_busy_view_options=free_busy_view_options
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    timezone=timezone, mailbox_data=mailbox_data, free_busy_view_options=free_busy_view_options
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return FreeBusyView.from_xml(elem=elem, account=None)
 
     def get_payload(self, timezone, mailbox_data, free_busy_view_options):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
         set_xml_value(payload, timezone, version=self.protocol.version)
-        mailbox_data_array = create_element(&#39;m:MailboxDataArray&#39;)
+        mailbox_data_array = create_element(&#34;m:MailboxDataArray&#34;)
         set_xml_value(mailbox_data_array, mailbox_data, version=self.protocol.version)
         payload.append(mailbox_data_array)
         return set_xml_value(payload, free_busy_view_options, version=self.protocol.version)
 
     @staticmethod
     def _response_messages_tag():
-        return f&#39;{{{MNS}}}FreeBusyResponseArray&#39;
+        return f&#34;{{{MNS}}}FreeBusyResponseArray&#34;
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}FreeBusyResponse&#39;
+        return f&#34;{{{MNS}}}FreeBusyResponse&#34;
 
     def _get_elements_in_response(self, response):
         for msg in response:
             # Just check the response code and raise errors
-            self._get_element_container(message=msg.find(f&#39;{{{MNS}}}ResponseMessage&#39;))
+            self._get_element_container(message=msg.find(f&#34;{{{MNS}}}ResponseMessage&#34;))
             yield from self._get_elements_in_container(container=msg)
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find(f&#39;{{{MNS}}}FreeBusyView&#39;)]</code></pre>
+        return [container.find(f&#34;{{{MNS}}}FreeBusyView&#34;)]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4110,11 +4258,13 @@ MSDN:
 <pre><code class="python">def call(self, timezone, mailbox_data, free_busy_view_options):
     # TODO: Also supports SuggestionsViewOptions, see
     #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-        timezone=timezone,
-        mailbox_data=mailbox_data,
-        free_busy_view_options=free_busy_view_options
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                timezone=timezone, mailbox_data=mailbox_data, free_busy_view_options=free_busy_view_options
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetUserAvailability.get_payload"><code class="name flex">
@@ -4127,9 +4277,9 @@ MSDN:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, timezone, mailbox_data, free_busy_view_options):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
     set_xml_value(payload, timezone, version=self.protocol.version)
-    mailbox_data_array = create_element(&#39;m:MailboxDataArray&#39;)
+    mailbox_data_array = create_element(&#34;m:MailboxDataArray&#34;)
     set_xml_value(mailbox_data_array, mailbox_data, version=self.protocol.version)
     payload.append(mailbox_data_array)
     return set_xml_value(payload, free_busy_view_options, version=self.protocol.version)</code></pre>
@@ -4164,14 +4314,16 @@ MSDN:
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetUserConfiguration&#39;
+    SERVICE_NAME = &#34;GetUserConfiguration&#34;
 
     def call(self, user_configuration_name, properties):
         if properties not in PROPERTIES_CHOICES:
-            raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                user_configuration_name=user_configuration_name, properties=properties
-        )))
+            raise InvalidEnumValue(&#34;properties&#34;, properties, PROPERTIES_CHOICES)
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(user_configuration_name=user_configuration_name, properties=properties)
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return UserConfiguration.from_xml(elem=elem, account=self.account)
@@ -4181,10 +4333,10 @@ MSDN:
         return container.findall(UserConfiguration.response_tag())
 
     def get_payload(self, user_configuration_name, properties):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         set_xml_value(payload, user_configuration_name, version=self.account.version)
         payload.append(
-            set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+            set_xml_value(create_element(&#34;m:UserConfigurationProperties&#34;), properties, version=self.account.version)
         )
         return payload</code></pre>
 </details>
@@ -4213,10 +4365,12 @@ MSDN:
 </summary>
 <pre><code class="python">def call(self, user_configuration_name, properties):
     if properties not in PROPERTIES_CHOICES:
-        raise InvalidEnumValue(&#39;properties&#39;, properties, PROPERTIES_CHOICES)
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            user_configuration_name=user_configuration_name, properties=properties
-    )))</code></pre>
+        raise InvalidEnumValue(&#34;properties&#34;, properties, PROPERTIES_CHOICES)
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(user_configuration_name=user_configuration_name, properties=properties)
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.GetUserConfiguration.get_payload"><code class="name flex">
@@ -4229,10 +4383,10 @@ MSDN:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration_name, properties):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     set_xml_value(payload, user_configuration_name, version=self.account.version)
     payload.append(
-        set_xml_value(create_element(&#39;m:UserConfigurationProperties&#39;), properties, version=self.account.version)
+        set_xml_value(create_element(&#34;m:UserConfigurationProperties&#34;), properties, version=self.account.version)
     )
     return payload</code></pre>
 </details>
@@ -4266,8 +4420,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getuseroofsettings-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetUserOofSettings&#39;
-    element_container_name = f&#39;{{{TNS}}}OofSettings&#39;
+    SERVICE_NAME = &#34;GetUserOofSettings&#34;
+    element_container_name = f&#34;{{{TNS}}}OofSettings&#34;
 
     def call(self, mailbox):
         return self._elems_to_objs(self._get_elements(payload=self.get_payload(mailbox=mailbox)))
@@ -4277,9 +4431,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def get_payload(self, mailbox):
         return set_xml_value(
-            create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;),
+            create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;),
             AvailabilityMailbox.from_mailbox(mailbox),
-            version=self.account.version
+            version=self.account.version,
         )
 
     @classmethod
@@ -4294,7 +4448,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}ResponseMessage&#39;</code></pre>
+        return f&#34;{{{MNS}}}ResponseMessage&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4338,9 +4492,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def get_payload(self, mailbox):
     return set_xml_value(
-        create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;),
+        create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;),
         AvailabilityMailbox.from_mailbox(mailbox),
-        version=self.account.version
+        version=self.account.version,
     )</code></pre>
 </details>
 </dd>
@@ -4370,7 +4524,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class MarkAsJunk(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/markasjunk-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;MarkAsJunk&#39;
+    SERVICE_NAME = &#34;MarkAsJunk&#34;
 
     def call(self, items, is_junk, move_item):
         return self._elems_to_objs(
@@ -4386,7 +4540,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def get_payload(self, items, is_junk, move_item):
         # Takes a list of items and returns either success or raises an error message
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -4430,7 +4584,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def get_payload(self, items, is_junk, move_item):
     # Takes a list of items and returns either success or raises an error message
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(IsJunk=is_junk, MoveItem=move_item))
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -4462,11 +4616,11 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/movefolder-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#34;MoveFolder&#34;
-    element_container_name = f&#39;{{{MNS}}}Folders&#39;
+    element_container_name = f&#34;{{{MNS}}}Folders&#34;
 
     def call(self, folders, to_folder):
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))
 
     def _elem_to_obj(self, elem):
@@ -4474,8 +4628,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def get_payload(self, folders, to_folder):
         # Takes a list of folders and returns their new folder IDs
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
         payload.append(folder_ids_element(folders=folders, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -4508,7 +4662,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, folders, to_folder):
     if not isinstance(to_folder, (BaseFolder, FolderId)):
-        raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+        raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
     return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=folders, to_folder=to_folder))</code></pre>
 </details>
 </dd>
@@ -4523,8 +4677,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def get_payload(self, folders, to_folder):
     # Takes a list of folders and returns their new folder IDs
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
     payload.append(folder_ids_element(folders=folders, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -4555,12 +4709,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class MoveItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/moveitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;MoveItem&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;MoveItem&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
     def call(self, items, to_folder):
         if not isinstance(to_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))
 
     def _elem_to_obj(self, elem):
@@ -4568,8 +4722,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     def get_payload(self, items, to_folder):
         # Takes a list of items and returns their new item IDs
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload</code></pre>
 </details>
@@ -4606,7 +4760,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, items, to_folder):
     if not isinstance(to_folder, (BaseFolder, FolderId)):
-        raise InvalidTypeError(&#39;to_folder&#39;, to_folder, (BaseFolder, FolderId))
+        raise InvalidTypeError(&#34;to_folder&#34;, to_folder, (BaseFolder, FolderId))
     return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items, to_folder=to_folder))</code></pre>
 </details>
 </dd>
@@ -4621,8 +4775,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def get_payload(self, items, to_folder):
     # Takes a list of items and returns their new item IDs
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#39;m:ToFolderId&#39;))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    payload.append(folder_ids_element(folders=[to_folder], version=self.account.version, tag=&#34;m:ToFolderId&#34;))
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>
@@ -4653,8 +4807,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class ResolveNames(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/resolvenames-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ResolveNames&#39;
-    element_container_name = f&#39;{{{MNS}}}ResolutionSet&#39;
+    SERVICE_NAME = &#34;ResolveNames&#34;
+    element_container_name = f&#34;{{{MNS}}}ResolutionSet&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
     # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
@@ -4666,26 +4820,34 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         super().__init__(*args, **kwargs)
         self.return_full_contact_data = False  # A hack to communicate parsing args to _elems_to_objs()
 
-    def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
-             contact_data_shape=None):
+    def call(
+        self,
+        unresolved_entries,
+        parent_folders=None,
+        return_full_contact_data=False,
+        search_scope=None,
+        contact_data_shape=None,
+    ):
         if self.chunk_size &gt; 100:
             raise ValueError(
-                f&#39;Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 &#39;
-                f&#39;candidates for a lookup&#39;,
+                f&#34;Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 &#34;
+                f&#34;candidates for a lookup&#34;,
             )
         if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
-            raise InvalidEnumValue(&#39;search_scope&#39;, search_scope, SEARCH_SCOPE_CHOICES)
+            raise InvalidEnumValue(&#34;search_scope&#34;, search_scope, SEARCH_SCOPE_CHOICES)
         if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue(&#39;contact_data_shape&#39;, contact_data_shape, SHAPE_CHOICES)
+            raise InvalidEnumValue(&#34;contact_data_shape&#34;, contact_data_shape, SHAPE_CHOICES)
         self.return_full_contact_data = return_full_contact_data
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=unresolved_entries,
-            parent_folders=parent_folders,
-            return_full_contact_data=return_full_contact_data,
-            search_scope=search_scope,
-            contact_data_shape=contact_data_shape,
-        ))
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=unresolved_entries,
+                parent_folders=parent_folders,
+                return_full_contact_data=return_full_contact_data,
+                search_scope=search_scope,
+                contact_data_shape=contact_data_shape,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         if self.return_full_contact_data:
@@ -4697,23 +4859,25 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             )
         return Mailbox.from_xml(elem=elem.find(Mailbox.response_tag()), account=None)
 
-    def get_payload(self, unresolved_entries, parent_folders, return_full_contact_data, search_scope,
-                    contact_data_shape):
+    def get_payload(
+        self, unresolved_entries, parent_folders, return_full_contact_data, search_scope, contact_data_shape
+    ):
         attrs = dict(ReturnFullContactData=return_full_contact_data)
         if search_scope:
-            attrs[&#39;SearchScope&#39;] = search_scope
+            attrs[&#34;SearchScope&#34;] = search_scope
         if contact_data_shape:
             if self.protocol.version.build &lt; EXCHANGE_2010_SP2:
                 raise NotImplementedError(
-                    &#34;&#39;contact_data_shape&#39; is only supported for Exchange 2010 SP2 servers and later&#34;)
-            attrs[&#39;ContactDataShape&#39;] = contact_data_shape
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+                    &#34;&#39;contact_data_shape&#39; is only supported for Exchange 2010 SP2 servers and later&#34;
+                )
+            attrs[&#34;ContactDataShape&#34;] = contact_data_shape
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
         if parent_folders:
-            payload.append(folder_ids_element(
-                folders=parent_folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;
-            ))
+            payload.append(
+                folder_ids_element(folders=parent_folders, version=self.protocol.version, tag=&#34;m:ParentFolderIds&#34;)
+            )
         for entry in unresolved_entries:
-            add_xml_child(payload, &#39;m:UnresolvedEntry&#39;, entry)
+            add_xml_child(payload, &#34;m:UnresolvedEntry&#34;, entry)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4754,26 +4918,34 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, unresolved_entries, parent_folders=None, return_full_contact_data=False, search_scope=None,
-         contact_data_shape=None):
+<pre><code class="python">def call(
+    self,
+    unresolved_entries,
+    parent_folders=None,
+    return_full_contact_data=False,
+    search_scope=None,
+    contact_data_shape=None,
+):
     if self.chunk_size &gt; 100:
         raise ValueError(
-            f&#39;Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 &#39;
-            f&#39;candidates for a lookup&#39;,
+            f&#34;Chunk size {self.chunk_size} is too high. {self.SERVICE_NAME} supports returning at most 100 &#34;
+            f&#34;candidates for a lookup&#34;,
         )
     if search_scope and search_scope not in SEARCH_SCOPE_CHOICES:
-        raise InvalidEnumValue(&#39;search_scope&#39;, search_scope, SEARCH_SCOPE_CHOICES)
+        raise InvalidEnumValue(&#34;search_scope&#34;, search_scope, SEARCH_SCOPE_CHOICES)
     if contact_data_shape and contact_data_shape not in SHAPE_CHOICES:
-        raise InvalidEnumValue(&#39;contact_data_shape&#39;, contact_data_shape, SHAPE_CHOICES)
+        raise InvalidEnumValue(&#34;contact_data_shape&#34;, contact_data_shape, SHAPE_CHOICES)
     self.return_full_contact_data = return_full_contact_data
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=unresolved_entries,
-        parent_folders=parent_folders,
-        return_full_contact_data=return_full_contact_data,
-        search_scope=search_scope,
-        contact_data_shape=contact_data_shape,
-    ))</code></pre>
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=unresolved_entries,
+            parent_folders=parent_folders,
+            return_full_contact_data=return_full_contact_data,
+            search_scope=search_scope,
+            contact_data_shape=contact_data_shape,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.ResolveNames.get_payload"><code class="name flex">
@@ -4785,23 +4957,25 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, unresolved_entries, parent_folders, return_full_contact_data, search_scope,
-                contact_data_shape):
+<pre><code class="python">def get_payload(
+    self, unresolved_entries, parent_folders, return_full_contact_data, search_scope, contact_data_shape
+):
     attrs = dict(ReturnFullContactData=return_full_contact_data)
     if search_scope:
-        attrs[&#39;SearchScope&#39;] = search_scope
+        attrs[&#34;SearchScope&#34;] = search_scope
     if contact_data_shape:
         if self.protocol.version.build &lt; EXCHANGE_2010_SP2:
             raise NotImplementedError(
-                &#34;&#39;contact_data_shape&#39; is only supported for Exchange 2010 SP2 servers and later&#34;)
-        attrs[&#39;ContactDataShape&#39;] = contact_data_shape
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+                &#34;&#39;contact_data_shape&#39; is only supported for Exchange 2010 SP2 servers and later&#34;
+            )
+        attrs[&#34;ContactDataShape&#34;] = contact_data_shape
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
     if parent_folders:
-        payload.append(folder_ids_element(
-            folders=parent_folders, version=self.protocol.version, tag=&#39;m:ParentFolderIds&#39;
-        ))
+        payload.append(
+            folder_ids_element(folders=parent_folders, version=self.protocol.version, tag=&#34;m:ParentFolderIds&#34;)
+        )
     for entry in unresolved_entries:
-        add_xml_child(payload, &#39;m:UnresolvedEntry&#39;, entry)
+        add_xml_child(payload, &#34;m:UnresolvedEntry&#34;, entry)
     return payload</code></pre>
 </details>
 </dd>
@@ -4831,21 +5005,21 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class SendItem(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/senditem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SendItem&#39;
+    SERVICE_NAME = &#34;SendItem&#34;
     returns_elements = False
 
     def call(self, items, saved_item_folder):
         if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-            raise InvalidTypeError(&#39;saved_item_folder&#39;, saved_item_folder, (BaseFolder, FolderId))
+            raise InvalidTypeError(&#34;saved_item_folder&#34;, saved_item_folder, (BaseFolder, FolderId))
         return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)
 
     def get_payload(self, items, saved_item_folder):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
         payload.append(item_ids_element(items=items, version=self.account.version))
         if saved_item_folder:
-            payload.append(folder_ids_element(
-                folders=[saved_item_folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-            ))
+            payload.append(
+                folder_ids_element(folders=[saved_item_folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+            )
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4877,7 +5051,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, items, saved_item_folder):
     if saved_item_folder and not isinstance(saved_item_folder, (BaseFolder, FolderId)):
-        raise InvalidTypeError(&#39;saved_item_folder&#39;, saved_item_folder, (BaseFolder, FolderId))
+        raise InvalidTypeError(&#34;saved_item_folder&#34;, saved_item_folder, (BaseFolder, FolderId))
     return self._chunked_get_elements(self.get_payload, items=items, saved_item_folder=saved_item_folder)</code></pre>
 </details>
 </dd>
@@ -4891,12 +5065,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, saved_item_folder):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(SaveItemToFolder=bool(saved_item_folder)))
     payload.append(item_ids_element(items=items, version=self.account.version))
     if saved_item_folder:
-        payload.append(folder_ids_element(
-            folders=[saved_item_folder], version=self.account.version, tag=&#39;m:SavedItemFolderId&#39;
-        ))
+        payload.append(
+            folder_ids_element(folders=[saved_item_folder], version=self.account.version, tag=&#34;m:SavedItemFolderId&#34;)
+        )
     return payload</code></pre>
 </details>
 </dd>
@@ -4934,9 +5108,9 @@ push notifications.</p></div>
     push notifications.
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SendNotification&#39;
-    OK = &#39;OK&#39;
-    UNSUBSCRIBE = &#39;Unsubscribe&#39;
+    SERVICE_NAME = &#34;SendNotification&#34;
+    OK = &#34;OK&#34;
+    UNSUBSCRIBE = &#34;Unsubscribe&#34;
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
@@ -4951,7 +5125,7 @@ push notifications.</p></div>
     @classmethod
     def _response_tag(cls):
         &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
-        return f&#39;{{{MNS}}}{cls.SERVICE_NAME}&#39;
+        return f&#34;{{{MNS}}}{cls.SERVICE_NAME}&#34;
 
     @classmethod
     def _get_elements_in_container(cls, container):
@@ -4959,9 +5133,9 @@ push notifications.</p></div>
 
     def get_payload(self, status):
         if status not in self.STATUS_CHOICES:
-            raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+            raise InvalidEnumValue(&#34;status&#34;, status, self.STATUS_CHOICES)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Result&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionStatus&#34;, status)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5000,9 +5174,9 @@ push notifications.</p></div>
 </summary>
 <pre><code class="python">def get_payload(self, status):
     if status not in self.STATUS_CHOICES:
-        raise InvalidEnumValue(&#39;status&#39;, status, self.STATUS_CHOICES)
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}Result&#39;)
-    add_xml_child(payload, &#39;m:SubscriptionStatus&#39;, status)
+        raise InvalidEnumValue(&#34;status&#34;, status, self.STATUS_CHOICES)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}Result&#34;)
+    add_xml_child(payload, &#34;m:SubscriptionStatus&#34;, status)
     return payload</code></pre>
 </details>
 </dd>
@@ -5061,18 +5235,18 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setuseroofsettings-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SetUserOofSettings&#39;
+    SERVICE_NAME = &#34;SetUserOofSettings&#34;
     returns_elements = False
 
     def call(self, oof_settings, mailbox):
         if not isinstance(oof_settings, OofSettings):
-            raise InvalidTypeError(&#39;oof_settings&#39;, oof_settings, OofSettings)
+            raise InvalidTypeError(&#34;oof_settings&#34;, oof_settings, OofSettings)
         if not isinstance(mailbox, Mailbox):
-            raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
+            raise InvalidTypeError(&#34;mailbox&#34;, mailbox, Mailbox)
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
         return set_xml_value(payload, oof_settings, version=self.account.version)
 
@@ -5082,7 +5256,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}ResponseMessage&#39;</code></pre>
+        return f&#34;{{{MNS}}}ResponseMessage&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5113,9 +5287,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, oof_settings, mailbox):
     if not isinstance(oof_settings, OofSettings):
-        raise InvalidTypeError(&#39;oof_settings&#39;, oof_settings, OofSettings)
+        raise InvalidTypeError(&#34;oof_settings&#34;, oof_settings, OofSettings)
     if not isinstance(mailbox, Mailbox):
-        raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
+        raise InvalidTypeError(&#34;mailbox&#34;, mailbox, Mailbox)
     return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))</code></pre>
 </details>
 </dd>
@@ -5129,7 +5303,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, oof_settings, mailbox):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
     set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
     return set_xml_value(payload, oof_settings, version=self.account.version)</code></pre>
 </details>
@@ -5158,21 +5332,24 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SubscribeToPull(Subscribe):
-    subscription_request_elem_tag = &#39;m:PullSubscriptionRequest&#39;
+    subscription_request_elem_tag = &#34;m:PullSubscriptionRequest&#34;
     prefer_affinity = True
 
     def call(self, folders, event_types, watermark, timeout):
         yield from self._partial_call(
-            payload_func=self.get_payload, folders=folders, event_types=event_types, timeout=timeout,
+            payload_func=self.get_payload,
+            folders=folders,
+            event_types=event_types,
+            timeout=timeout,
             watermark=watermark,
         )
 
     def get_payload(self, folders, event_types, watermark, timeout):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
-            add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
-        add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
+            add_xml_child(request_elem, &#34;m:Watermark&#34;, watermark)
+        add_xml_child(request_elem, &#34;t:Timeout&#34;, timeout)  # In minutes
         payload.append(request_elem)
         return payload</code></pre>
 </details>
@@ -5206,7 +5383,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, folders, event_types, watermark, timeout):
     yield from self._partial_call(
-        payload_func=self.get_payload, folders=folders, event_types=event_types, timeout=timeout,
+        payload_func=self.get_payload,
+        folders=folders,
+        event_types=event_types,
+        timeout=timeout,
         watermark=watermark,
     )</code></pre>
 </details>
@@ -5221,11 +5401,11 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, event_types, watermark, timeout):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     request_elem = self._partial_payload(folders=folders, event_types=event_types)
     if watermark:
-        add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
-    add_xml_child(request_elem, &#39;t:Timeout&#39;, timeout)  # In minutes
+        add_xml_child(request_elem, &#34;m:Watermark&#34;, watermark)
+    add_xml_child(request_elem, &#34;t:Timeout&#34;, timeout)  # In minutes
     payload.append(request_elem)
     return payload</code></pre>
 </details>
@@ -5254,21 +5434,25 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SubscribeToPush(Subscribe):
-    subscription_request_elem_tag = &#39;m:PushSubscriptionRequest&#39;
+    subscription_request_elem_tag = &#34;m:PushSubscriptionRequest&#34;
 
     def call(self, folders, event_types, watermark, status_frequency, url):
         yield from self._partial_call(
-            payload_func=self.get_payload, folders=folders, event_types=event_types,
-            status_frequency=status_frequency, url=url, watermark=watermark,
+            payload_func=self.get_payload,
+            folders=folders,
+            event_types=event_types,
+            status_frequency=status_frequency,
+            url=url,
+            watermark=watermark,
         )
 
     def get_payload(self, folders, event_types, watermark, status_frequency, url):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         request_elem = self._partial_payload(folders=folders, event_types=event_types)
         if watermark:
-            add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
-        add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
-        add_xml_child(request_elem, &#39;t:URL&#39;, url)
+            add_xml_child(request_elem, &#34;m:Watermark&#34;, watermark)
+        add_xml_child(request_elem, &#34;t:StatusFrequency&#34;, status_frequency)  # In minutes
+        add_xml_child(request_elem, &#34;t:URL&#34;, url)
         payload.append(request_elem)
         return payload</code></pre>
 </details>
@@ -5298,8 +5482,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, folders, event_types, watermark, status_frequency, url):
     yield from self._partial_call(
-        payload_func=self.get_payload, folders=folders, event_types=event_types,
-        status_frequency=status_frequency, url=url, watermark=watermark,
+        payload_func=self.get_payload,
+        folders=folders,
+        event_types=event_types,
+        status_frequency=status_frequency,
+        url=url,
+        watermark=watermark,
     )</code></pre>
 </details>
 </dd>
@@ -5313,12 +5501,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, event_types, watermark, status_frequency, url):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     request_elem = self._partial_payload(folders=folders, event_types=event_types)
     if watermark:
-        add_xml_child(request_elem, &#39;m:Watermark&#39;, watermark)
-    add_xml_child(request_elem, &#39;t:StatusFrequency&#39;, status_frequency)  # In minutes
-    add_xml_child(request_elem, &#39;t:URL&#39;, url)
+        add_xml_child(request_elem, &#34;m:Watermark&#34;, watermark)
+    add_xml_child(request_elem, &#34;t:StatusFrequency&#34;, status_frequency)  # In minutes
+    add_xml_child(request_elem, &#34;t:URL&#34;, url)
     payload.append(request_elem)
     return payload</code></pre>
 </details>
@@ -5347,7 +5535,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SubscribeToStreaming(Subscribe):
-    subscription_request_elem_tag = &#39;m:StreamingSubscriptionRequest&#39;
+    subscription_request_elem_tag = &#34;m:StreamingSubscriptionRequest&#34;
     prefer_affinity = True
 
     def call(self, folders, event_types):
@@ -5358,10 +5546,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     @classmethod
     def _get_elements_in_container(cls, container):
-        return [container.find(f&#39;{{{MNS}}}SubscriptionId&#39;)]
+        return [container.find(f&#34;{{{MNS}}}SubscriptionId&#34;)]
 
     def get_payload(self, folders, event_types):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(self._partial_payload(folders=folders, event_types=event_types))
         return payload</code></pre>
 </details>
@@ -5407,7 +5595,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders, event_types):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(self._partial_payload(folders=folders, event_types=event_types))
     return payload</code></pre>
 </details>
@@ -5441,9 +5629,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderhierarchy-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SyncFolderHierarchy&#39;
-    shape_tag = &#39;m:FolderShape&#39;
-    last_in_range_name = f&#39;{{{MNS}}}IncludesLastFolderInRange&#39;
+    SERVICE_NAME = &#34;SyncFolderHierarchy&#34;
+    shape_tag = &#34;m:FolderShape&#34;
+    last_in_range_name = f&#34;{{{MNS}}}IncludesLastFolderInRange&#34;
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -5452,12 +5640,16 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def call(self, folder, shape, additional_fields, sync_state):
         self.sync_state = sync_state
         self.folder = folder
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                folder=folder,
-                shape=shape,
-                additional_fields=additional_fields,
-                sync_state=sync_state,
-        )))
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    folder=folder,
+                    shape=shape,
+                    additional_fields=additional_fields,
+                    sync_state=sync_state,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         change_type = self.change_types_map[elem.tag]
@@ -5511,12 +5703,16 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">def call(self, folder, shape, additional_fields, sync_state):
     self.sync_state = sync_state
     self.folder = folder
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            folder=folder,
-            shape=shape,
-            additional_fields=additional_fields,
-            sync_state=sync_state,
-    )))</code></pre>
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                folder=folder,
+                shape=shape,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.SyncFolderHierarchy.get_payload"><code class="name flex">
@@ -5563,45 +5759,49 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/syncfolderitems-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SyncFolderItems&#39;
+    SERVICE_NAME = &#34;SyncFolderItems&#34;
     SYNC_SCOPES = (
-        &#39;NormalItems&#39;,
-        &#39;NormalAndAssociatedItems&#39;,
+        &#34;NormalItems&#34;,
+        &#34;NormalAndAssociatedItems&#34;,
     )
     # Extra change type
-    READ_FLAG_CHANGE = &#39;read_flag_change&#39;
+    READ_FLAG_CHANGE = &#34;read_flag_change&#34;
     CHANGE_TYPES = SyncFolder.CHANGE_TYPES + (READ_FLAG_CHANGE,)
-    shape_tag = &#39;m:ItemShape&#39;
-    last_in_range_name = f&#39;{{{MNS}}}IncludesLastItemInRange&#39;
+    shape_tag = &#34;m:ItemShape&#34;
+    last_in_range_name = f&#34;{{{MNS}}}IncludesLastItemInRange&#34;
     change_types_map = SyncFolder.change_types_map
-    change_types_map[f&#39;{{{TNS}}}ReadFlagChange&#39;] = READ_FLAG_CHANGE
+    change_types_map[f&#34;{{{TNS}}}ReadFlagChange&#34;] = READ_FLAG_CHANGE
 
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
         if max_changes_returned is None:
             max_changes_returned = self.page_size
         if not isinstance(max_changes_returned, int):
-            raise InvalidTypeError(&#39;max_changes_returned&#39;, max_changes_returned, int)
+            raise InvalidTypeError(&#34;max_changes_returned&#34;, max_changes_returned, int)
         if max_changes_returned &lt;= 0:
             raise ValueError(f&#34;&#39;max_changes_returned&#39; {max_changes_returned} must be a positive integer&#34;)
         if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-            raise InvalidEnumValue(&#39;sync_scope&#39;, sync_scope, self.SYNC_SCOPES)
-        return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-                folder=folder,
-                shape=shape,
-                additional_fields=additional_fields,
-                sync_state=sync_state,
-                ignore=ignore,
-                max_changes_returned=max_changes_returned,
-                sync_scope=sync_scope,
-        )))
+            raise InvalidEnumValue(&#34;sync_scope&#34;, sync_scope, self.SYNC_SCOPES)
+        return self._elems_to_objs(
+            self._get_elements(
+                payload=self.get_payload(
+                    folder=folder,
+                    shape=shape,
+                    additional_fields=additional_fields,
+                    sync_state=sync_state,
+                    ignore=ignore,
+                    max_changes_returned=max_changes_returned,
+                    sync_scope=sync_scope,
+                )
+            )
+        )
 
     def _elem_to_obj(self, elem):
         change_type = self.change_types_map[elem.tag]
         if change_type == self.READ_FLAG_CHANGE:
             item = (
                 ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account),
-                xml_text_to_value(elem.find(f&#39;{{{TNS}}}IsRead&#39;).text, bool)
+                xml_text_to_value(elem.find(f&#34;{{{TNS}}}IsRead&#34;).text, bool),
             )
         elif change_type == self.DELETE:
             item = ItemId.from_xml(elem=elem.find(ItemId.response_tag()), account=self.account)
@@ -5618,10 +5818,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         )
         is_empty, ignore = (True, None) if ignore is None else peek(ignore)
         if not is_empty:
-            sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;))
-        add_xml_child(sync_folder_items, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+            sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#34;m:Ignore&#34;))
+        add_xml_child(sync_folder_items, &#34;m:MaxChangesReturned&#34;, max_changes_returned)
         if sync_scope:
-            add_xml_child(sync_folder_items, &#39;m:SyncScope&#39;, sync_scope)
+            add_xml_child(sync_folder_items, &#34;m:SyncScope&#34;, sync_scope)
         return sync_folder_items</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5678,20 +5878,24 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     if max_changes_returned is None:
         max_changes_returned = self.page_size
     if not isinstance(max_changes_returned, int):
-        raise InvalidTypeError(&#39;max_changes_returned&#39;, max_changes_returned, int)
+        raise InvalidTypeError(&#34;max_changes_returned&#34;, max_changes_returned, int)
     if max_changes_returned &lt;= 0:
         raise ValueError(f&#34;&#39;max_changes_returned&#39; {max_changes_returned} must be a positive integer&#34;)
     if sync_scope is not None and sync_scope not in self.SYNC_SCOPES:
-        raise InvalidEnumValue(&#39;sync_scope&#39;, sync_scope, self.SYNC_SCOPES)
-    return self._elems_to_objs(self._get_elements(payload=self.get_payload(
-            folder=folder,
-            shape=shape,
-            additional_fields=additional_fields,
-            sync_state=sync_state,
-            ignore=ignore,
-            max_changes_returned=max_changes_returned,
-            sync_scope=sync_scope,
-    )))</code></pre>
+        raise InvalidEnumValue(&#34;sync_scope&#34;, sync_scope, self.SYNC_SCOPES)
+    return self._elems_to_objs(
+        self._get_elements(
+            payload=self.get_payload(
+                folder=folder,
+                shape=shape,
+                additional_fields=additional_fields,
+                sync_state=sync_state,
+                ignore=ignore,
+                max_changes_returned=max_changes_returned,
+                sync_scope=sync_scope,
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.SyncFolderItems.get_payload"><code class="name flex">
@@ -5709,10 +5913,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     )
     is_empty, ignore = (True, None) if ignore is None else peek(ignore)
     if not is_empty:
-        sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#39;m:Ignore&#39;))
-    add_xml_child(sync_folder_items, &#39;m:MaxChangesReturned&#39;, max_changes_returned)
+        sync_folder_items.append(item_ids_element(items=ignore, version=self.account.version, tag=&#34;m:Ignore&#34;))
+    add_xml_child(sync_folder_items, &#34;m:MaxChangesReturned&#34;, max_changes_returned)
     if sync_scope:
-        add_xml_child(sync_folder_items, &#39;m:SyncScope&#39;, sync_scope)
+        add_xml_child(sync_folder_items, &#34;m:SyncScope&#34;, sync_scope)
     return sync_folder_items</code></pre>
 </details>
 </dd>
@@ -5746,7 +5950,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/unsubscribe-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;Unsubscribe&#39;
+    SERVICE_NAME = &#34;Unsubscribe&#34;
     returns_elements = False
     prefer_affinity = True
 
@@ -5754,8 +5958,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         return self._get_elements(payload=self.get_payload(subscription_id=subscription_id))
 
     def get_payload(self, subscription_id):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
         return payload</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5803,8 +6007,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, subscription_id):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    add_xml_child(payload, &#39;m:SubscriptionId&#39;, subscription_id)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    add_xml_child(payload, &#34;m:SubscriptionId&#34;, subscription_id)
     return payload</code></pre>
 </details>
 </dd>
@@ -5834,12 +6038,12 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class UpdateFolder(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updatefolder-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UpdateFolder&#39;
-    SET_FIELD_ELEMENT_NAME = &#39;t:SetFolderField&#39;
-    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteFolderField&#39;
-    CHANGE_ELEMENT_NAME = &#39;t:FolderChange&#39;
-    CHANGES_ELEMENT_NAME = &#39;m:FolderChanges&#39;
-    element_container_name = f&#39;{{{MNS}}}Folders&#39;
+    SERVICE_NAME = &#34;UpdateFolder&#34;
+    SET_FIELD_ELEMENT_NAME = &#34;t:SetFolderField&#34;
+    DELETE_FIELD_ELEMENT_NAME = &#34;t:DeleteFolderField&#34;
+    CHANGE_ELEMENT_NAME = &#34;t:FolderChange&#34;
+    CHANGES_ELEMENT_NAME = &#34;m:FolderChanges&#34;
+    element_container_name = f&#34;{{{MNS}}}Folders&#34;
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -5864,7 +6068,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def get_payload(self, folders):
         # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
         # &#39;fieldnames&#39; are the attribute names that were updated.
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(self._changes_elem(target_changes=folders))
         return payload</code></pre>
 </details>
@@ -5931,7 +6135,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">def get_payload(self, folders):
     # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
     # &#39;fieldnames&#39; are the attribute names that were updated.
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(self._changes_elem(target_changes=folders))
     return payload</code></pre>
 </details>
@@ -5962,34 +6166,43 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">class UpdateItem(BaseUpdateService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UpdateItem&#39;
-    SET_FIELD_ELEMENT_NAME = &#39;t:SetItemField&#39;
-    DELETE_FIELD_ELEMENT_NAME = &#39;t:DeleteItemField&#39;
-    CHANGE_ELEMENT_NAME = &#39;t:ItemChange&#39;
-    CHANGES_ELEMENT_NAME = &#39;m:ItemChanges&#39;
-    element_container_name = f&#39;{{{MNS}}}Items&#39;
+    SERVICE_NAME = &#34;UpdateItem&#34;
+    SET_FIELD_ELEMENT_NAME = &#34;t:SetItemField&#34;
+    DELETE_FIELD_ELEMENT_NAME = &#34;t:DeleteItemField&#34;
+    CHANGE_ELEMENT_NAME = &#34;t:ItemChange&#34;
+    CHANGES_ELEMENT_NAME = &#34;m:ItemChanges&#34;
+    element_container_name = f&#34;{{{MNS}}}Items&#34;
 
-    def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-             suppress_read_receipts):
+    def call(
+        self,
+        items,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+        suppress_read_receipts,
+    ):
         if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-            raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
+            raise InvalidEnumValue(&#34;conflict_resolution&#34;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
         if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-            raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+            raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
         if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
             raise InvalidEnumValue(
-                &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
-                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+                &#34;send_meeting_invitations_or_cancellations&#34;,
+                send_meeting_invitations_or_cancellations,
+                SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
             )
         if message_disposition == SEND_ONLY:
-            raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload,
-            items=items,
-            conflict_resolution=conflict_resolution,
-            message_disposition=message_disposition,
-            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-            suppress_read_receipts=suppress_read_receipts,
-        ))
+            raise ValueError(&#34;Cannot send-only existing objects. Use SendItem service instead&#34;)
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                conflict_resolution=conflict_resolution,
+                message_disposition=message_disposition,
+                send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+                suppress_read_receipts=suppress_read_receipts,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return Item.id_from_xml(elem)
@@ -6000,7 +6213,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to update internal timezone fields
             target.clean_timezone_fields(version=self.account.version)  # Possibly also sets timezone values
-            for field_name in (&#39;start&#39;, &#39;end&#39;):
+            for field_name in (&#34;start&#34;, &#34;end&#34;):
                 if field_name in fieldnames_copy:
                     tz_field_name = target.tz_field_for_field_name(field_name).name
                     if tz_field_name not in fieldnames_copy:
@@ -6013,7 +6226,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
         if target.__class__ == CalendarItem:
             # For CalendarItem items where we update &#39;start&#39; or &#39;end&#39;, we want to send values in the local timezone
-            if field.name in (&#39;start&#39;, &#39;end&#39;):
+            if field.name in (&#34;start&#34;, &#34;end&#34;):
                 if type(value) is EWSDate:
                     # EWS always expects a datetime
                     return target.date_to_datetime(field_name=field.name)
@@ -6025,8 +6238,14 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def _target_elem(self, target):
         return to_item_id(target, ItemId)
 
-    def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-                    suppress_read_receipts):
+    def get_payload(
+        self,
+        items,
+        conflict_resolution,
+        message_disposition,
+        send_meeting_invitations_or_cancellations,
+        suppress_read_receipts,
+    ):
         # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated.
         attrs = dict(
@@ -6035,8 +6254,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
         )
         if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-            attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+            attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
         payload.append(self._changes_elem(target_changes=items))
         return payload</code></pre>
 </details>
@@ -6084,27 +6303,36 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-         suppress_read_receipts):
+<pre><code class="python">def call(
+    self,
+    items,
+    conflict_resolution,
+    message_disposition,
+    send_meeting_invitations_or_cancellations,
+    suppress_read_receipts,
+):
     if conflict_resolution not in CONFLICT_RESOLUTION_CHOICES:
-        raise InvalidEnumValue(&#39;conflict_resolution&#39;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
+        raise InvalidEnumValue(&#34;conflict_resolution&#34;, conflict_resolution, CONFLICT_RESOLUTION_CHOICES)
     if message_disposition not in MESSAGE_DISPOSITION_CHOICES:
-        raise InvalidEnumValue(&#39;message_disposition&#39;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
+        raise InvalidEnumValue(&#34;message_disposition&#34;, message_disposition, MESSAGE_DISPOSITION_CHOICES)
     if send_meeting_invitations_or_cancellations not in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES:
         raise InvalidEnumValue(
-            &#39;send_meeting_invitations_or_cancellations&#39;, send_meeting_invitations_or_cancellations,
-            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES
+            &#34;send_meeting_invitations_or_cancellations&#34;,
+            send_meeting_invitations_or_cancellations,
+            SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES,
         )
     if message_disposition == SEND_ONLY:
-        raise ValueError(&#39;Cannot send-only existing objects. Use SendItem service instead&#39;)
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload,
-        items=items,
-        conflict_resolution=conflict_resolution,
-        message_disposition=message_disposition,
-        send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
-        suppress_read_receipts=suppress_read_receipts,
-    ))</code></pre>
+        raise ValueError(&#34;Cannot send-only existing objects. Use SendItem service instead&#34;)
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=items,
+            conflict_resolution=conflict_resolution,
+            message_disposition=message_disposition,
+            send_meeting_invitations_or_cancellations=send_meeting_invitations_or_cancellations,
+            suppress_read_receipts=suppress_read_receipts,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.UpdateItem.get_payload"><code class="name flex">
@@ -6116,8 +6344,14 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, items, conflict_resolution, message_disposition, send_meeting_invitations_or_cancellations,
-                suppress_read_receipts):
+<pre><code class="python">def get_payload(
+    self,
+    items,
+    conflict_resolution,
+    message_disposition,
+    send_meeting_invitations_or_cancellations,
+    suppress_read_receipts,
+):
     # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
     # are the attribute names that were updated.
     attrs = dict(
@@ -6126,8 +6360,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         SendMeetingInvitationsOrCancellations=send_meeting_invitations_or_cancellations,
     )
     if self.account.version.build &gt;= EXCHANGE_2013_SP1:
-        attrs[&#39;SuppressReadReceipts&#39;] = suppress_read_receipts
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=attrs)
+        attrs[&#34;SuppressReadReceipts&#34;] = suppress_read_receipts
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=attrs)
     payload.append(self._changes_elem(target_changes=items))
     return payload</code></pre>
 </details>
@@ -6161,14 +6395,14 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateuserconfiguration-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UpdateUserConfiguration&#39;
+    SERVICE_NAME = &#34;UpdateUserConfiguration&#34;
     returns_elements = False
 
     def call(self, user_configuration):
         return self._get_elements(payload=self.get_payload(user_configuration=user_configuration))
 
     def get_payload(self, user_configuration):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.account.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.account.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6211,7 +6445,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, user_configuration):
-    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), user_configuration, version=self.account.version)</code></pre>
+    return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), user_configuration, version=self.account.version)</code></pre>
 </details>
 </dd>
 </dl>
@@ -6238,11 +6472,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UploadItems(EWSAccountService):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/uploaditems-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;UploadItems&#39;
-    element_container_name = f&#39;{{{MNS}}}ItemId&#39;
+    SERVICE_NAME = &#34;UploadItems&#34;
+    element_container_name = f&#34;{{{MNS}}}ItemId&#34;
 
     def call(self, items):
         # _pool_requests expects &#39;items&#39;, not &#39;data&#39;
@@ -6258,19 +6491,19 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
         :param items:
         &#34;&#34;&#34;
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        items_elem = create_element(&#39;m:Items&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        items_elem = create_element(&#34;m:Items&#34;)
         payload.append(items_elem)
         for parent_folder, (item_id, is_associated, data_str) in items:
             # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-            attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
+            attrs = dict(CreateAction=&#34;Update&#34; if item_id else &#34;CreateNew&#34;)
             if is_associated is not None:
-                attrs[&#39;IsAssociated&#39;] = is_associated
-            item = create_element(&#39;t:Item&#39;, attrs=attrs)
+                attrs[&#34;IsAssociated&#34;] = is_associated
+            item = create_element(&#34;t:Item&#34;, attrs=attrs)
             set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
             if item_id:
                 set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
-            add_xml_child(item, &#39;t:Data&#39;, data_str)
+            add_xml_child(item, &#34;t:Data&#34;, data_str)
             items_elem.append(item)
         return payload
 
@@ -6337,19 +6570,19 @@ call.</p>
 
     :param items:
     &#34;&#34;&#34;
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    items_elem = create_element(&#39;m:Items&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    items_elem = create_element(&#34;m:Items&#34;)
     payload.append(items_elem)
     for parent_folder, (item_id, is_associated, data_str) in items:
         # TODO: The full spec also allows the &#34;UpdateOrCreate&#34; create action.
-        attrs = dict(CreateAction=&#39;Update&#39; if item_id else &#39;CreateNew&#39;)
+        attrs = dict(CreateAction=&#34;Update&#34; if item_id else &#34;CreateNew&#34;)
         if is_associated is not None:
-            attrs[&#39;IsAssociated&#39;] = is_associated
-        item = create_element(&#39;t:Item&#39;, attrs=attrs)
+            attrs[&#34;IsAssociated&#34;] = is_associated
+        item = create_element(&#34;t:Item&#34;, attrs=attrs)
         set_xml_value(item, ParentFolderId(parent_folder.id, parent_folder.changekey), version=self.account.version)
         if item_id:
             set_xml_value(item, to_item_id(item_id, ItemId), version=self.account.version)
-        add_xml_child(item, &#39;t:Data&#39;, data_str)
+        add_xml_child(item, &#34;t:Data&#34;, data_str)
         items_elem.append(item)
     return payload</code></pre>
 </details>

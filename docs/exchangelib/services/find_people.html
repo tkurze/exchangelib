@@ -27,11 +27,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import logging
-from .common import EWSPagingService, shape_element, folder_ids_element
+
 from ..errors import InvalidEnumValue
-from ..items import Persona, ID_ONLY, SHAPE_CHOICES, ITEM_TRAVERSAL_CHOICES
-from ..util import create_element, set_xml_value, MNS
+from ..items import ID_ONLY, ITEM_TRAVERSAL_CHOICES, SHAPE_CHOICES, Persona
+from ..util import MNS, create_element, set_xml_value
 from ..version import EXCHANGE_2013
+from .common import EWSPagingService, folder_ids_element, shape_element
 
 log = logging.getLogger(__name__)
 
@@ -39,8 +40,8 @@ log = logging.getLogger(__name__)
 class FindPeople(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;FindPeople&#39;
-    element_container_name = f&#39;{{{MNS}}}People&#39;
+    SERVICE_NAME = &#34;FindPeople&#34;
+    element_container_name = f&#34;{{{MNS}}}People&#34;
     supported_from = EXCHANGE_2013
     supports_paging = True
 
@@ -66,52 +67,54 @@ class FindPeople(EWSPagingService):
         :return: XML elements for the matching items
         &#34;&#34;&#34;
         if shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+            raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
         if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+            raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
         self.additional_fields = additional_fields
         self.shape = shape
-        return self._elems_to_objs(self._paged_call(
-            payload_func=self.get_payload,
-            max_items=max_items,
-            folders=[folder],  # We just need the list to satisfy self._paged_call()
-            **dict(
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                query_string=query_string,
-                shape=shape,
-                depth=depth,
-                page_size=self.page_size,
-                offset=offset,
+        return self._elems_to_objs(
+            self._paged_call(
+                payload_func=self.get_payload,
+                max_items=max_items,
+                folders=[folder],  # We just need the list to satisfy self._paged_call()
+                **dict(
+                    additional_fields=additional_fields,
+                    restriction=restriction,
+                    order_fields=order_fields,
+                    query_string=query_string,
+                    shape=shape,
+                    depth=depth,
+                    page_size=self.page_size,
+                    offset=offset,
+                ),
             )
-        ))
+        )
 
     def _elem_to_obj(self, elem):
         if self.shape == ID_ONLY and self.additional_fields is None:
             return Persona.id_from_xml(elem)
         return Persona.from_xml(elem, account=self.account)
 
-    def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
-                    offset=0):
+    def get_payload(
+        self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size, offset=0
+    ):
         # We actually only support a single folder, but self._paged_call() sends us a list
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-        payload.append(shape_element(
-            tag=&#39;m:PersonaShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
-        payload.append(create_element(
-            &#39;m:IndexedPageItemView&#39;,
-            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
-        ))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+        payload.append(
+            shape_element(
+                tag=&#34;m:PersonaShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
+        payload.append(
+            create_element(
+                &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
+            )
+        )
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            payload.append(set_xml_value(
-                create_element(&#39;m:SortOrder&#39;),
-                order_fields,
-                version=self.account.version
-            ))
-        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:ParentFolderId&#39;))
+            payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:ParentFolderId&#34;))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload
@@ -119,11 +122,15 @@ class FindPeople(EWSPagingService):
     @staticmethod
     def _get_paging_values(elem):
         &#34;&#34;&#34;Find paging values. The paging element from FindPeople is different from other paging containers.&#34;&#34;&#34;
-        item_count = int(elem.find(f&#39;{{{MNS}}}TotalNumberOfPeopleInView&#39;).text)
-        first_matching = int(elem.find(f&#39;{{{MNS}}}FirstMatchingRowIndex&#39;).text)
-        first_loaded = int(elem.find(f&#39;{{{MNS}}}FirstLoadedRowIndex&#39;).text)
-        log.debug(&#39;Got page with total items %s, first matching %s, first loaded %s &#39;, item_count, first_matching,
-                  first_loaded)
+        item_count = int(elem.find(f&#34;{{{MNS}}}TotalNumberOfPeopleInView&#34;).text)
+        first_matching = int(elem.find(f&#34;{{{MNS}}}FirstMatchingRowIndex&#34;).text)
+        first_loaded = int(elem.find(f&#34;{{{MNS}}}FirstLoadedRowIndex&#34;).text)
+        log.debug(
+            &#34;Got page with total items %s, first matching %s, first loaded %s &#34;,
+            item_count,
+            first_matching,
+            first_loaded,
+        )
         next_offset = None  # GetPersona does not support fetching more pages
         return item_count, next_offset</code></pre>
 </details>
@@ -150,8 +157,8 @@ class FindPeople(EWSPagingService):
 <pre><code class="python">class FindPeople(EWSPagingService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/findpeople-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;FindPeople&#39;
-    element_container_name = f&#39;{{{MNS}}}People&#39;
+    SERVICE_NAME = &#34;FindPeople&#34;
+    element_container_name = f&#34;{{{MNS}}}People&#34;
     supported_from = EXCHANGE_2013
     supports_paging = True
 
@@ -177,52 +184,54 @@ class FindPeople(EWSPagingService):
         :return: XML elements for the matching items
         &#34;&#34;&#34;
         if shape not in SHAPE_CHOICES:
-            raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+            raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
         if depth not in ITEM_TRAVERSAL_CHOICES:
-            raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+            raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
         self.additional_fields = additional_fields
         self.shape = shape
-        return self._elems_to_objs(self._paged_call(
-            payload_func=self.get_payload,
-            max_items=max_items,
-            folders=[folder],  # We just need the list to satisfy self._paged_call()
-            **dict(
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                query_string=query_string,
-                shape=shape,
-                depth=depth,
-                page_size=self.page_size,
-                offset=offset,
+        return self._elems_to_objs(
+            self._paged_call(
+                payload_func=self.get_payload,
+                max_items=max_items,
+                folders=[folder],  # We just need the list to satisfy self._paged_call()
+                **dict(
+                    additional_fields=additional_fields,
+                    restriction=restriction,
+                    order_fields=order_fields,
+                    query_string=query_string,
+                    shape=shape,
+                    depth=depth,
+                    page_size=self.page_size,
+                    offset=offset,
+                ),
             )
-        ))
+        )
 
     def _elem_to_obj(self, elem):
         if self.shape == ID_ONLY and self.additional_fields is None:
             return Persona.id_from_xml(elem)
         return Persona.from_xml(elem, account=self.account)
 
-    def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
-                    offset=0):
+    def get_payload(
+        self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size, offset=0
+    ):
         # We actually only support a single folder, but self._paged_call() sends us a list
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-        payload.append(shape_element(
-            tag=&#39;m:PersonaShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-        ))
-        payload.append(create_element(
-            &#39;m:IndexedPageItemView&#39;,
-            attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
-        ))
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+        payload.append(
+            shape_element(
+                tag=&#34;m:PersonaShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+            )
+        )
+        payload.append(
+            create_element(
+                &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
+            )
+        )
         if restriction:
             payload.append(restriction.to_xml(version=self.account.version))
         if order_fields:
-            payload.append(set_xml_value(
-                create_element(&#39;m:SortOrder&#39;),
-                order_fields,
-                version=self.account.version
-            ))
-        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:ParentFolderId&#39;))
+            payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+        payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:ParentFolderId&#34;))
         if query_string:
             payload.append(query_string.to_xml(version=self.account.version))
         return payload
@@ -230,11 +239,15 @@ class FindPeople(EWSPagingService):
     @staticmethod
     def _get_paging_values(elem):
         &#34;&#34;&#34;Find paging values. The paging element from FindPeople is different from other paging containers.&#34;&#34;&#34;
-        item_count = int(elem.find(f&#39;{{{MNS}}}TotalNumberOfPeopleInView&#39;).text)
-        first_matching = int(elem.find(f&#39;{{{MNS}}}FirstMatchingRowIndex&#39;).text)
-        first_loaded = int(elem.find(f&#39;{{{MNS}}}FirstLoadedRowIndex&#39;).text)
-        log.debug(&#39;Got page with total items %s, first matching %s, first loaded %s &#39;, item_count, first_matching,
-                  first_loaded)
+        item_count = int(elem.find(f&#34;{{{MNS}}}TotalNumberOfPeopleInView&#34;).text)
+        first_matching = int(elem.find(f&#34;{{{MNS}}}FirstMatchingRowIndex&#34;).text)
+        first_loaded = int(elem.find(f&#34;{{{MNS}}}FirstLoadedRowIndex&#34;).text)
+        log.debug(
+            &#34;Got page with total items %s, first matching %s, first loaded %s &#34;,
+            item_count,
+            first_matching,
+            first_loaded,
+        )
         next_offset = None  # GetPersona does not support fetching more pages
         return item_count, next_offset</code></pre>
 </details>
@@ -300,26 +313,28 @@ class FindPeople(EWSPagingService):
     :return: XML elements for the matching items
     &#34;&#34;&#34;
     if shape not in SHAPE_CHOICES:
-        raise InvalidEnumValue(&#39;shape&#39;, shape, SHAPE_CHOICES)
+        raise InvalidEnumValue(&#34;shape&#34;, shape, SHAPE_CHOICES)
     if depth not in ITEM_TRAVERSAL_CHOICES:
-        raise InvalidEnumValue(&#39;depth&#39;, depth, ITEM_TRAVERSAL_CHOICES)
+        raise InvalidEnumValue(&#34;depth&#34;, depth, ITEM_TRAVERSAL_CHOICES)
     self.additional_fields = additional_fields
     self.shape = shape
-    return self._elems_to_objs(self._paged_call(
-        payload_func=self.get_payload,
-        max_items=max_items,
-        folders=[folder],  # We just need the list to satisfy self._paged_call()
-        **dict(
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            query_string=query_string,
-            shape=shape,
-            depth=depth,
-            page_size=self.page_size,
-            offset=offset,
+    return self._elems_to_objs(
+        self._paged_call(
+            payload_func=self.get_payload,
+            max_items=max_items,
+            folders=[folder],  # We just need the list to satisfy self._paged_call()
+            **dict(
+                additional_fields=additional_fields,
+                restriction=restriction,
+                order_fields=order_fields,
+                query_string=query_string,
+                shape=shape,
+                depth=depth,
+                page_size=self.page_size,
+                offset=offset,
+            ),
         )
-    ))</code></pre>
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.find_people.FindPeople.get_payload"><code class="name flex">
@@ -331,26 +346,26 @@ class FindPeople(EWSPagingService):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_payload(self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size,
-                offset=0):
+<pre><code class="python">def get_payload(
+    self, folders, additional_fields, restriction, order_fields, query_string, shape, depth, page_size, offset=0
+):
     # We actually only support a single folder, but self._paged_call() sends us a list
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(Traversal=depth))
-    payload.append(shape_element(
-        tag=&#39;m:PersonaShape&#39;, shape=shape, additional_fields=additional_fields, version=self.account.version
-    ))
-    payload.append(create_element(
-        &#39;m:IndexedPageItemView&#39;,
-        attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#39;Beginning&#39;)
-    ))
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(Traversal=depth))
+    payload.append(
+        shape_element(
+            tag=&#34;m:PersonaShape&#34;, shape=shape, additional_fields=additional_fields, version=self.account.version
+        )
+    )
+    payload.append(
+        create_element(
+            &#34;m:IndexedPageItemView&#34;, attrs=dict(MaxEntriesReturned=page_size, Offset=offset, BasePoint=&#34;Beginning&#34;)
+        )
+    )
     if restriction:
         payload.append(restriction.to_xml(version=self.account.version))
     if order_fields:
-        payload.append(set_xml_value(
-            create_element(&#39;m:SortOrder&#39;),
-            order_fields,
-            version=self.account.version
-        ))
-    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#39;m:ParentFolderId&#39;))
+        payload.append(set_xml_value(create_element(&#34;m:SortOrder&#34;), order_fields, version=self.account.version))
+    payload.append(folder_ids_element(folders=folders, version=self.account.version, tag=&#34;m:ParentFolderId&#34;))
     if query_string:
         payload.append(query_string.to_xml(version=self.account.version))
     return payload</code></pre>

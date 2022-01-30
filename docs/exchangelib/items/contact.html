@@ -29,16 +29,38 @@
 <pre><code class="python">import datetime
 import logging
 
-from .item import Item
-from ..fields import BooleanField, Base64Field, TextField, ChoiceField, URIField, DateTimeBackedDateField, \
-    PhoneNumberField, EmailAddressesField, PhysicalAddressField, Choice, MemberListField, CharField, TextListField, \
-    EmailAddressField, IdElementField, EWSElementField, DateTimeField, EWSElementListField, \
-    BodyContentAttributedValueField, StringAttributedValueField, PhoneNumberAttributedValueField, \
-    PersonaPhoneNumberField, EmailAddressAttributedValueField, PostalAddressAttributedValueField, MailboxField, \
-    MailboxListField
-from ..properties import PersonaId, IdChangeKeyMixIn, CompleteName, Attribution, EmailAddress, Address, FolderId
+from ..fields import (
+    Base64Field,
+    BodyContentAttributedValueField,
+    BooleanField,
+    CharField,
+    Choice,
+    ChoiceField,
+    DateTimeBackedDateField,
+    DateTimeField,
+    EmailAddressAttributedValueField,
+    EmailAddressesField,
+    EmailAddressField,
+    EWSElementField,
+    EWSElementListField,
+    IdElementField,
+    MailboxField,
+    MailboxListField,
+    MemberListField,
+    PersonaPhoneNumberField,
+    PhoneNumberAttributedValueField,
+    PhoneNumberField,
+    PhysicalAddressField,
+    PostalAddressAttributedValueField,
+    StringAttributedValueField,
+    TextField,
+    TextListField,
+    URIField,
+)
+from ..properties import Address, Attribution, CompleteName, EmailAddress, FolderId, IdChangeKeyMixIn, PersonaId
 from ..util import TNS
 from ..version import EXCHANGE_2010, EXCHANGE_2010_SP2
+from .item import Item
 
 log = logging.getLogger(__name__)
 
@@ -46,193 +68,219 @@ log = logging.getLogger(__name__)
 class Contact(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Contact&#39;
+    ELEMENT_NAME = &#34;Contact&#34;
 
-    file_as = TextField(field_uri=&#39;contacts:FileAs&#39;)
-    file_as_mapping = ChoiceField(field_uri=&#39;contacts:FileAsMapping&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
-        Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
-        Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
-        Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
-        Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
-        Choice(&#39;Empty&#39;),
-    })
-    display_name = TextField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
-    given_name = CharField(field_uri=&#39;contacts:GivenName&#39;)
-    initials = TextField(field_uri=&#39;contacts:Initials&#39;)
-    middle_name = CharField(field_uri=&#39;contacts:MiddleName&#39;)
-    nickname = TextField(field_uri=&#39;contacts:Nickname&#39;)
-    complete_name = EWSElementField(field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True)
-    company_name = TextField(field_uri=&#39;contacts:CompanyName&#39;)
-    email_addresses = EmailAddressesField(field_uri=&#39;contacts:EmailAddress&#39;)
-    physical_addresses = PhysicalAddressField(field_uri=&#39;contacts:PhysicalAddress&#39;)
-    phone_numbers = PhoneNumberField(field_uri=&#39;contacts:PhoneNumber&#39;)
-    assistant_name = TextField(field_uri=&#39;contacts:AssistantName&#39;)
-    birthday = DateTimeBackedDateField(field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59))
-    business_homepage = URIField(field_uri=&#39;contacts:BusinessHomePage&#39;)
-    children = TextListField(field_uri=&#39;contacts:Children&#39;)
-    companies = TextListField(field_uri=&#39;contacts:Companies&#39;, is_searchable=False)
-    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
-        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-    }, is_read_only=True)
-    department = TextField(field_uri=&#39;contacts:Department&#39;)
-    generation = TextField(field_uri=&#39;contacts:Generation&#39;)
-    im_addresses = CharField(field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True)
-    job_title = TextField(field_uri=&#39;contacts:JobTitle&#39;)
-    manager = TextField(field_uri=&#39;contacts:Manager&#39;)
-    mileage = TextField(field_uri=&#39;contacts:Mileage&#39;)
-    office = TextField(field_uri=&#39;contacts:OfficeLocation&#39;)
-    postal_address_index = ChoiceField(field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
-        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
-    }, default=&#39;None&#39;, is_required_after_save=True)
-    profession = TextField(field_uri=&#39;contacts:Profession&#39;)
-    spouse_name = TextField(field_uri=&#39;contacts:SpouseName&#39;)
-    surname = CharField(field_uri=&#39;contacts:Surname&#39;)
-    wedding_anniversary = DateTimeBackedDateField(field_uri=&#39;contacts:WeddingAnniversary&#39;,
-                                                  default_time=datetime.time(11, 59))
-    has_picture = BooleanField(field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True)
-    phonetic_full_name = TextField(field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    phonetic_first_name = TextField(field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                    is_read_only=True)
-    phonetic_last_name = TextField(field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    email_alias = EmailAddressField(field_uri=&#39;contacts:Alias&#39;, is_read_only=True,
-                                    supported_from=EXCHANGE_2010_SP2)
+    file_as = TextField(field_uri=&#34;contacts:FileAs&#34;)
+    file_as_mapping = ChoiceField(
+        field_uri=&#34;contacts:FileAsMapping&#34;,
+        choices={
+            Choice(&#34;None&#34;),
+            Choice(&#34;LastCommaFirst&#34;),
+            Choice(&#34;FirstSpaceLast&#34;),
+            Choice(&#34;Company&#34;),
+            Choice(&#34;LastCommaFirstCompany&#34;),
+            Choice(&#34;CompanyLastFirst&#34;),
+            Choice(&#34;LastFirst&#34;),
+            Choice(&#34;LastFirstCompany&#34;),
+            Choice(&#34;CompanyLastCommaFirst&#34;),
+            Choice(&#34;LastFirstSuffix&#34;),
+            Choice(&#34;LastSpaceFirstCompany&#34;),
+            Choice(&#34;CompanyLastSpaceFirst&#34;),
+            Choice(&#34;LastSpaceFirst&#34;),
+            Choice(&#34;DisplayName&#34;),
+            Choice(&#34;FirstName&#34;),
+            Choice(&#34;LastFirstMiddleSuffix&#34;),
+            Choice(&#34;LastName&#34;),
+            Choice(&#34;Empty&#34;),
+        },
+    )
+    display_name = TextField(field_uri=&#34;contacts:DisplayName&#34;, is_required=True)
+    given_name = CharField(field_uri=&#34;contacts:GivenName&#34;)
+    initials = TextField(field_uri=&#34;contacts:Initials&#34;)
+    middle_name = CharField(field_uri=&#34;contacts:MiddleName&#34;)
+    nickname = TextField(field_uri=&#34;contacts:Nickname&#34;)
+    complete_name = EWSElementField(field_uri=&#34;contacts:CompleteName&#34;, value_cls=CompleteName, is_read_only=True)
+    company_name = TextField(field_uri=&#34;contacts:CompanyName&#34;)
+    email_addresses = EmailAddressesField(field_uri=&#34;contacts:EmailAddress&#34;)
+    physical_addresses = PhysicalAddressField(field_uri=&#34;contacts:PhysicalAddress&#34;)
+    phone_numbers = PhoneNumberField(field_uri=&#34;contacts:PhoneNumber&#34;)
+    assistant_name = TextField(field_uri=&#34;contacts:AssistantName&#34;)
+    birthday = DateTimeBackedDateField(field_uri=&#34;contacts:Birthday&#34;, default_time=datetime.time(11, 59))
+    business_homepage = URIField(field_uri=&#34;contacts:BusinessHomePage&#34;)
+    children = TextListField(field_uri=&#34;contacts:Children&#34;)
+    companies = TextListField(field_uri=&#34;contacts:Companies&#34;, is_searchable=False)
+    contact_source = ChoiceField(
+        field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
+    )
+    department = TextField(field_uri=&#34;contacts:Department&#34;)
+    generation = TextField(field_uri=&#34;contacts:Generation&#34;)
+    im_addresses = CharField(field_uri=&#34;contacts:ImAddresses&#34;, is_read_only=True)
+    job_title = TextField(field_uri=&#34;contacts:JobTitle&#34;)
+    manager = TextField(field_uri=&#34;contacts:Manager&#34;)
+    mileage = TextField(field_uri=&#34;contacts:Mileage&#34;)
+    office = TextField(field_uri=&#34;contacts:OfficeLocation&#34;)
+    postal_address_index = ChoiceField(
+        field_uri=&#34;contacts:PostalAddressIndex&#34;,
+        choices={Choice(&#34;Business&#34;), Choice(&#34;Home&#34;), Choice(&#34;Other&#34;), Choice(&#34;None&#34;)},
+        default=&#34;None&#34;,
+        is_required_after_save=True,
+    )
+    profession = TextField(field_uri=&#34;contacts:Profession&#34;)
+    spouse_name = TextField(field_uri=&#34;contacts:SpouseName&#34;)
+    surname = CharField(field_uri=&#34;contacts:Surname&#34;)
+    wedding_anniversary = DateTimeBackedDateField(
+        field_uri=&#34;contacts:WeddingAnniversary&#34;, default_time=datetime.time(11, 59)
+    )
+    has_picture = BooleanField(field_uri=&#34;contacts:HasPicture&#34;, supported_from=EXCHANGE_2010, is_read_only=True)
+    phonetic_full_name = TextField(
+        field_uri=&#34;contacts:PhoneticFullName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    phonetic_first_name = TextField(
+        field_uri=&#34;contacts:PhoneticFirstName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    phonetic_last_name = TextField(
+        field_uri=&#34;contacts:PhoneticLastName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    email_alias = EmailAddressField(field_uri=&#34;contacts:Alias&#34;, is_read_only=True, supported_from=EXCHANGE_2010_SP2)
     # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
     # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
-    notes = CharField(field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    notes = CharField(field_uri=&#34;contacts:Notes&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
     # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
     # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
     # the &#39;has_picture&#39; field.
-    photo = Base64Field(field_uri=&#39;contacts:Photo&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
-    user_smime_certificate = Base64Field(field_uri=&#39;contacts:UserSMIMECertificate&#39;, supported_from=EXCHANGE_2010_SP2,
-                                         is_read_only=True)
-    ms_exchange_certificate = Base64Field(field_uri=&#39;contacts:MSExchangeCertificate&#39;, supported_from=EXCHANGE_2010_SP2,
-                                          is_read_only=True)
-    directory_id = TextField(field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
-    manager_mailbox = MailboxField(field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    direct_reports = MailboxListField(field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
-                                      is_read_only=True)
+    photo = Base64Field(field_uri=&#34;contacts:Photo&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    user_smime_certificate = Base64Field(
+        field_uri=&#34;contacts:UserSMIMECertificate&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    ms_exchange_certificate = Base64Field(
+        field_uri=&#34;contacts:MSExchangeCertificate&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    directory_id = TextField(field_uri=&#34;contacts:DirectoryId&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    manager_mailbox = MailboxField(
+        field_uri=&#34;contacts:ManagerMailbox&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    direct_reports = MailboxListField(
+        field_uri=&#34;contacts:DirectReports&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
 
 
 class Persona(IdChangeKeyMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/persona&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Persona&#39;
+    ELEMENT_NAME = &#34;Persona&#34;
     ID_ELEMENT_CLS = PersonaId
 
-    _id = IdElementField(field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
-    persona_type = CharField(field_uri=&#39;persona:PersonaType&#39;)
-    persona_object_type = TextField(field_uri=&#39;persona:PersonaObjectStatus&#39;)
-    creation_time = DateTimeField(field_uri=&#39;persona:CreationTime&#39;)
-    bodies = BodyContentAttributedValueField(field_uri=&#39;persona:Bodies&#39;)
-    display_name_first_last_sort_key = TextField(field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;)
-    display_name_last_first_sort_key = TextField(field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;)
-    company_sort_key = TextField(field_uri=&#39;persona:CompanyNameSortKey&#39;)
-    home_sort_key = TextField(field_uri=&#39;persona:HomeCitySortKey&#39;)
-    work_city_sort_key = TextField(field_uri=&#39;persona:WorkCitySortKey&#39;)
-    display_name_first_last_header = CharField(field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;)
-    display_name_last_first_header = CharField(field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;)
-    file_as_header = TextField(field_uri=&#39;persona:FileAsHeader&#39;)
-    display_name = CharField(field_uri=&#39;persona:DisplayName&#39;)
-    display_name_first_last = CharField(field_uri=&#39;persona:DisplayNameFirstLast&#39;)
-    display_name_last_first = CharField(field_uri=&#39;persona:DisplayNameLastFirst&#39;)
-    file_as = CharField(field_uri=&#39;persona:FileAs&#39;)
-    file_as_id = TextField(field_uri=&#39;persona:FileAsId&#39;)
-    display_name_prefix = CharField(field_uri=&#39;persona:DisplayNamePrefix&#39;)
-    given_name = CharField(field_uri=&#39;persona:GivenName&#39;)
-    middle_name = CharField(field_uri=&#39;persona:MiddleName&#39;)
-    surname = CharField(field_uri=&#39;persona:Surname&#39;)
-    generation = CharField(field_uri=&#39;persona:Generation&#39;)
-    nickname = TextField(field_uri=&#39;persona:Nickname&#39;)
-    yomi_company_name = TextField(field_uri=&#39;persona:YomiCompanyName&#39;)
-    yomi_first_name = TextField(field_uri=&#39;persona:YomiFirstName&#39;)
-    yomi_last_name = TextField(field_uri=&#39;persona:YomiLastName&#39;)
-    title = CharField(field_uri=&#39;persona:Title&#39;)
-    department = TextField(field_uri=&#39;persona:Department&#39;)
-    company_name = CharField(field_uri=&#39;persona:CompanyName&#39;)
-    email_address = EWSElementField(field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress)
-    email_addresses = EWSElementListField(field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address)
-    PhoneNumber = PersonaPhoneNumberField(field_uri=&#39;persona:PhoneNumber&#39;)
-    im_address = CharField(field_uri=&#39;persona:ImAddress&#39;)
-    home_city = CharField(field_uri=&#39;persona:HomeCity&#39;)
-    work_city = CharField(field_uri=&#39;persona:WorkCity&#39;)
-    relevance_score = CharField(field_uri=&#39;persona:RelevanceScore&#39;)
-    folder_ids = EWSElementListField(field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId)
-    attributions = EWSElementListField(field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution)
-    display_names = StringAttributedValueField(field_uri=&#39;persona:DisplayNames&#39;)
-    file_ases = StringAttributedValueField(field_uri=&#39;persona:FileAses&#39;)
-    file_as_ids = StringAttributedValueField(field_uri=&#39;persona:FileAsIds&#39;)
-    display_name_prefixes = StringAttributedValueField(field_uri=&#39;persona:DisplayNamePrefixes&#39;)
-    given_names = StringAttributedValueField(field_uri=&#39;persona:GivenNames&#39;)
-    middle_names = StringAttributedValueField(field_uri=&#39;persona:MiddleNames&#39;)
-    surnames = StringAttributedValueField(field_uri=&#39;persona:Surnames&#39;)
-    generations = StringAttributedValueField(field_uri=&#39;persona:Generations&#39;)
-    nicknames = StringAttributedValueField(field_uri=&#39;persona:Nicknames&#39;)
-    initials = StringAttributedValueField(field_uri=&#39;persona:Initials&#39;)
-    yomi_company_names = StringAttributedValueField(field_uri=&#39;persona:YomiCompanyNames&#39;)
-    yomi_first_names = StringAttributedValueField(field_uri=&#39;persona:YomiFirstNames&#39;)
-    yomi_last_names = StringAttributedValueField(field_uri=&#39;persona:YomiLastNames&#39;)
-    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers&#39;)
-    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers2&#39;)
-    home_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones&#39;)
-    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones2&#39;)
-    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones&#39;)
-    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones2&#39;)
-    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:AssistantPhoneNumbers&#39;)
-    callback_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CallbackPhones&#39;)
-    car_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CarPhones&#39;)
-    home_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomeFaxes&#39;)
-    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
-    other_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherFaxes&#39;)
-    other_telephones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherTelephones&#39;)
-    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherPhones2&#39;)
-    pagers = PhoneNumberAttributedValueField(field_uri=&#39;persona:Pagers&#39;)
-    radio_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:RadioPhones&#39;)
-    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TelexNumbers&#39;)
-    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;)
-    work_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:WorkFaxes&#39;)
-    emails1 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails1&#39;)
-    emails2 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails2&#39;)
-    emails3 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails3&#39;)
-    business_home_pages = StringAttributedValueField(field_uri=&#39;persona:BusinessHomePages&#39;)
-    personal_home_pages = StringAttributedValueField(field_uri=&#39;persona:PersonalHomePages&#39;)
-    office_locations = StringAttributedValueField(field_uri=&#39;persona:OfficeLocations&#39;)
-    im_addresses = StringAttributedValueField(field_uri=&#39;persona:ImAddresses&#39;)
-    im_addresses2 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses2&#39;)
-    im_addresses3 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses3&#39;)
-    business_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:BusinessAddresses&#39;)
-    home_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:HomeAddresses&#39;)
-    other_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:OtherAddresses&#39;)
-    titles = StringAttributedValueField(field_uri=&#39;persona:Titles&#39;)
-    departments = StringAttributedValueField(field_uri=&#39;persona:Departments&#39;)
-    company_names = StringAttributedValueField(field_uri=&#39;persona:CompanyNames&#39;)
-    managers = StringAttributedValueField(field_uri=&#39;persona:Managers&#39;)
-    assistant_names = StringAttributedValueField(field_uri=&#39;persona:AssistantNames&#39;)
-    professions = StringAttributedValueField(field_uri=&#39;persona:Professions&#39;)
-    spouse_names = StringAttributedValueField(field_uri=&#39;persona:SpouseNames&#39;)
-    children = StringAttributedValueField(field_uri=&#39;persona:Children&#39;)
-    schools = StringAttributedValueField(field_uri=&#39;persona:Schools&#39;)
-    hobbies = StringAttributedValueField(field_uri=&#39;persona:Hobbies&#39;)
-    wedding_anniversaries = StringAttributedValueField(field_uri=&#39;persona:WeddingAnniversaries&#39;)
-    birthdays = StringAttributedValueField(field_uri=&#39;persona:Birthdays&#39;)
-    locations = StringAttributedValueField(field_uri=&#39;persona:Locations&#39;)
-    # ExtendedPropertyAttributedValueField(&#39;extended_properties&#39;, field_uri=&#39;persona:ExtendedProperties&#39;)
+    _id = IdElementField(field_uri=&#34;persona:PersonaId&#34;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
+    persona_type = CharField(field_uri=&#34;persona:PersonaType&#34;)
+    persona_object_type = TextField(field_uri=&#34;persona:PersonaObjectStatus&#34;)
+    creation_time = DateTimeField(field_uri=&#34;persona:CreationTime&#34;)
+    bodies = BodyContentAttributedValueField(field_uri=&#34;persona:Bodies&#34;)
+    display_name_first_last_sort_key = TextField(field_uri=&#34;persona:DisplayNameFirstLastSortKey&#34;)
+    display_name_last_first_sort_key = TextField(field_uri=&#34;persona:DisplayNameLastFirstSortKey&#34;)
+    company_sort_key = TextField(field_uri=&#34;persona:CompanyNameSortKey&#34;)
+    home_sort_key = TextField(field_uri=&#34;persona:HomeCitySortKey&#34;)
+    work_city_sort_key = TextField(field_uri=&#34;persona:WorkCitySortKey&#34;)
+    display_name_first_last_header = CharField(field_uri=&#34;persona:DisplayNameFirstLastHeader&#34;)
+    display_name_last_first_header = CharField(field_uri=&#34;persona:DisplayNameLastFirstHeader&#34;)
+    file_as_header = TextField(field_uri=&#34;persona:FileAsHeader&#34;)
+    display_name = CharField(field_uri=&#34;persona:DisplayName&#34;)
+    display_name_first_last = CharField(field_uri=&#34;persona:DisplayNameFirstLast&#34;)
+    display_name_last_first = CharField(field_uri=&#34;persona:DisplayNameLastFirst&#34;)
+    file_as = CharField(field_uri=&#34;persona:FileAs&#34;)
+    file_as_id = TextField(field_uri=&#34;persona:FileAsId&#34;)
+    display_name_prefix = CharField(field_uri=&#34;persona:DisplayNamePrefix&#34;)
+    given_name = CharField(field_uri=&#34;persona:GivenName&#34;)
+    middle_name = CharField(field_uri=&#34;persona:MiddleName&#34;)
+    surname = CharField(field_uri=&#34;persona:Surname&#34;)
+    generation = CharField(field_uri=&#34;persona:Generation&#34;)
+    nickname = TextField(field_uri=&#34;persona:Nickname&#34;)
+    yomi_company_name = TextField(field_uri=&#34;persona:YomiCompanyName&#34;)
+    yomi_first_name = TextField(field_uri=&#34;persona:YomiFirstName&#34;)
+    yomi_last_name = TextField(field_uri=&#34;persona:YomiLastName&#34;)
+    title = CharField(field_uri=&#34;persona:Title&#34;)
+    department = TextField(field_uri=&#34;persona:Department&#34;)
+    company_name = CharField(field_uri=&#34;persona:CompanyName&#34;)
+    email_address = EWSElementField(field_uri=&#34;persona:EmailAddress&#34;, value_cls=EmailAddress)
+    email_addresses = EWSElementListField(field_uri=&#34;persona:EmailAddresses&#34;, value_cls=Address)
+    PhoneNumber = PersonaPhoneNumberField(field_uri=&#34;persona:PhoneNumber&#34;)
+    im_address = CharField(field_uri=&#34;persona:ImAddress&#34;)
+    home_city = CharField(field_uri=&#34;persona:HomeCity&#34;)
+    work_city = CharField(field_uri=&#34;persona:WorkCity&#34;)
+    relevance_score = CharField(field_uri=&#34;persona:RelevanceScore&#34;)
+    folder_ids = EWSElementListField(field_uri=&#34;persona:FolderIds&#34;, value_cls=FolderId)
+    attributions = EWSElementListField(field_uri=&#34;persona:Attributions&#34;, value_cls=Attribution)
+    display_names = StringAttributedValueField(field_uri=&#34;persona:DisplayNames&#34;)
+    file_ases = StringAttributedValueField(field_uri=&#34;persona:FileAses&#34;)
+    file_as_ids = StringAttributedValueField(field_uri=&#34;persona:FileAsIds&#34;)
+    display_name_prefixes = StringAttributedValueField(field_uri=&#34;persona:DisplayNamePrefixes&#34;)
+    given_names = StringAttributedValueField(field_uri=&#34;persona:GivenNames&#34;)
+    middle_names = StringAttributedValueField(field_uri=&#34;persona:MiddleNames&#34;)
+    surnames = StringAttributedValueField(field_uri=&#34;persona:Surnames&#34;)
+    generations = StringAttributedValueField(field_uri=&#34;persona:Generations&#34;)
+    nicknames = StringAttributedValueField(field_uri=&#34;persona:Nicknames&#34;)
+    initials = StringAttributedValueField(field_uri=&#34;persona:Initials&#34;)
+    yomi_company_names = StringAttributedValueField(field_uri=&#34;persona:YomiCompanyNames&#34;)
+    yomi_first_names = StringAttributedValueField(field_uri=&#34;persona:YomiFirstNames&#34;)
+    yomi_last_names = StringAttributedValueField(field_uri=&#34;persona:YomiLastNames&#34;)
+    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:BusinessPhoneNumbers&#34;)
+    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:BusinessPhoneNumbers2&#34;)
+    home_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomePhones&#34;)
+    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomePhones2&#34;)
+    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:MobilePhones&#34;)
+    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:MobilePhones2&#34;)
+    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:AssistantPhoneNumbers&#34;)
+    callback_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:CallbackPhones&#34;)
+    car_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:CarPhones&#34;)
+    home_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomeFaxes&#34;)
+    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:OrganizationMainPhones&#34;)
+    other_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherFaxes&#34;)
+    other_telephones = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherTelephones&#34;)
+    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherPhones2&#34;)
+    pagers = PhoneNumberAttributedValueField(field_uri=&#34;persona:Pagers&#34;)
+    radio_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:RadioPhones&#34;)
+    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:TelexNumbers&#34;)
+    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:TTYTDDPhoneNumbers&#34;)
+    work_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:WorkFaxes&#34;)
+    emails1 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails1&#34;)
+    emails2 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails2&#34;)
+    emails3 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails3&#34;)
+    business_home_pages = StringAttributedValueField(field_uri=&#34;persona:BusinessHomePages&#34;)
+    personal_home_pages = StringAttributedValueField(field_uri=&#34;persona:PersonalHomePages&#34;)
+    office_locations = StringAttributedValueField(field_uri=&#34;persona:OfficeLocations&#34;)
+    im_addresses = StringAttributedValueField(field_uri=&#34;persona:ImAddresses&#34;)
+    im_addresses2 = StringAttributedValueField(field_uri=&#34;persona:ImAddresses2&#34;)
+    im_addresses3 = StringAttributedValueField(field_uri=&#34;persona:ImAddresses3&#34;)
+    business_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:BusinessAddresses&#34;)
+    home_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:HomeAddresses&#34;)
+    other_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:OtherAddresses&#34;)
+    titles = StringAttributedValueField(field_uri=&#34;persona:Titles&#34;)
+    departments = StringAttributedValueField(field_uri=&#34;persona:Departments&#34;)
+    company_names = StringAttributedValueField(field_uri=&#34;persona:CompanyNames&#34;)
+    managers = StringAttributedValueField(field_uri=&#34;persona:Managers&#34;)
+    assistant_names = StringAttributedValueField(field_uri=&#34;persona:AssistantNames&#34;)
+    professions = StringAttributedValueField(field_uri=&#34;persona:Professions&#34;)
+    spouse_names = StringAttributedValueField(field_uri=&#34;persona:SpouseNames&#34;)
+    children = StringAttributedValueField(field_uri=&#34;persona:Children&#34;)
+    schools = StringAttributedValueField(field_uri=&#34;persona:Schools&#34;)
+    hobbies = StringAttributedValueField(field_uri=&#34;persona:Hobbies&#34;)
+    wedding_anniversaries = StringAttributedValueField(field_uri=&#34;persona:WeddingAnniversaries&#34;)
+    birthdays = StringAttributedValueField(field_uri=&#34;persona:Birthdays&#34;)
+    locations = StringAttributedValueField(field_uri=&#34;persona:Locations&#34;)
+    # This class has an additional field of type &#34;ExtendedPropertyAttributedValueField&#34; and
+    # field_uri &#39;persona:ExtendedProperties&#39;
 
 
 class DistributionList(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DistributionList&#39;
+    ELEMENT_NAME = &#34;DistributionList&#34;
 
-    display_name = CharField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
-    file_as = CharField(field_uri=&#39;contacts:FileAs&#39;, is_read_only=True)
-    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
-        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-    }, is_read_only=True)
-    members = MemberListField(field_uri=&#39;distributionlist:Members&#39;)</code></pre>
+    display_name = CharField(field_uri=&#34;contacts:DisplayName&#34;, is_required=True)
+    file_as = CharField(field_uri=&#34;contacts:FileAs&#34;, is_read_only=True)
+    contact_source = ChoiceField(
+        field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
+    )
+    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -262,75 +310,100 @@ we use folder.account.</p></div>
 <pre><code class="python">class Contact(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contact&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Contact&#39;
+    ELEMENT_NAME = &#34;Contact&#34;
 
-    file_as = TextField(field_uri=&#39;contacts:FileAs&#39;)
-    file_as_mapping = ChoiceField(field_uri=&#39;contacts:FileAsMapping&#39;, choices={
-        Choice(&#39;None&#39;), Choice(&#39;LastCommaFirst&#39;), Choice(&#39;FirstSpaceLast&#39;), Choice(&#39;Company&#39;),
-        Choice(&#39;LastCommaFirstCompany&#39;), Choice(&#39;CompanyLastFirst&#39;), Choice(&#39;LastFirst&#39;),
-        Choice(&#39;LastFirstCompany&#39;), Choice(&#39;CompanyLastCommaFirst&#39;), Choice(&#39;LastFirstSuffix&#39;),
-        Choice(&#39;LastSpaceFirstCompany&#39;), Choice(&#39;CompanyLastSpaceFirst&#39;), Choice(&#39;LastSpaceFirst&#39;),
-        Choice(&#39;DisplayName&#39;), Choice(&#39;FirstName&#39;), Choice(&#39;LastFirstMiddleSuffix&#39;), Choice(&#39;LastName&#39;),
-        Choice(&#39;Empty&#39;),
-    })
-    display_name = TextField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
-    given_name = CharField(field_uri=&#39;contacts:GivenName&#39;)
-    initials = TextField(field_uri=&#39;contacts:Initials&#39;)
-    middle_name = CharField(field_uri=&#39;contacts:MiddleName&#39;)
-    nickname = TextField(field_uri=&#39;contacts:Nickname&#39;)
-    complete_name = EWSElementField(field_uri=&#39;contacts:CompleteName&#39;, value_cls=CompleteName, is_read_only=True)
-    company_name = TextField(field_uri=&#39;contacts:CompanyName&#39;)
-    email_addresses = EmailAddressesField(field_uri=&#39;contacts:EmailAddress&#39;)
-    physical_addresses = PhysicalAddressField(field_uri=&#39;contacts:PhysicalAddress&#39;)
-    phone_numbers = PhoneNumberField(field_uri=&#39;contacts:PhoneNumber&#39;)
-    assistant_name = TextField(field_uri=&#39;contacts:AssistantName&#39;)
-    birthday = DateTimeBackedDateField(field_uri=&#39;contacts:Birthday&#39;, default_time=datetime.time(11, 59))
-    business_homepage = URIField(field_uri=&#39;contacts:BusinessHomePage&#39;)
-    children = TextListField(field_uri=&#39;contacts:Children&#39;)
-    companies = TextListField(field_uri=&#39;contacts:Companies&#39;, is_searchable=False)
-    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
-        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-    }, is_read_only=True)
-    department = TextField(field_uri=&#39;contacts:Department&#39;)
-    generation = TextField(field_uri=&#39;contacts:Generation&#39;)
-    im_addresses = CharField(field_uri=&#39;contacts:ImAddresses&#39;, is_read_only=True)
-    job_title = TextField(field_uri=&#39;contacts:JobTitle&#39;)
-    manager = TextField(field_uri=&#39;contacts:Manager&#39;)
-    mileage = TextField(field_uri=&#39;contacts:Mileage&#39;)
-    office = TextField(field_uri=&#39;contacts:OfficeLocation&#39;)
-    postal_address_index = ChoiceField(field_uri=&#39;contacts:PostalAddressIndex&#39;, choices={
-        Choice(&#39;Business&#39;), Choice(&#39;Home&#39;), Choice(&#39;Other&#39;), Choice(&#39;None&#39;)
-    }, default=&#39;None&#39;, is_required_after_save=True)
-    profession = TextField(field_uri=&#39;contacts:Profession&#39;)
-    spouse_name = TextField(field_uri=&#39;contacts:SpouseName&#39;)
-    surname = CharField(field_uri=&#39;contacts:Surname&#39;)
-    wedding_anniversary = DateTimeBackedDateField(field_uri=&#39;contacts:WeddingAnniversary&#39;,
-                                                  default_time=datetime.time(11, 59))
-    has_picture = BooleanField(field_uri=&#39;contacts:HasPicture&#39;, supported_from=EXCHANGE_2010, is_read_only=True)
-    phonetic_full_name = TextField(field_uri=&#39;contacts:PhoneticFullName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    phonetic_first_name = TextField(field_uri=&#39;contacts:PhoneticFirstName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                    is_read_only=True)
-    phonetic_last_name = TextField(field_uri=&#39;contacts:PhoneticLastName&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    email_alias = EmailAddressField(field_uri=&#39;contacts:Alias&#39;, is_read_only=True,
-                                    supported_from=EXCHANGE_2010_SP2)
+    file_as = TextField(field_uri=&#34;contacts:FileAs&#34;)
+    file_as_mapping = ChoiceField(
+        field_uri=&#34;contacts:FileAsMapping&#34;,
+        choices={
+            Choice(&#34;None&#34;),
+            Choice(&#34;LastCommaFirst&#34;),
+            Choice(&#34;FirstSpaceLast&#34;),
+            Choice(&#34;Company&#34;),
+            Choice(&#34;LastCommaFirstCompany&#34;),
+            Choice(&#34;CompanyLastFirst&#34;),
+            Choice(&#34;LastFirst&#34;),
+            Choice(&#34;LastFirstCompany&#34;),
+            Choice(&#34;CompanyLastCommaFirst&#34;),
+            Choice(&#34;LastFirstSuffix&#34;),
+            Choice(&#34;LastSpaceFirstCompany&#34;),
+            Choice(&#34;CompanyLastSpaceFirst&#34;),
+            Choice(&#34;LastSpaceFirst&#34;),
+            Choice(&#34;DisplayName&#34;),
+            Choice(&#34;FirstName&#34;),
+            Choice(&#34;LastFirstMiddleSuffix&#34;),
+            Choice(&#34;LastName&#34;),
+            Choice(&#34;Empty&#34;),
+        },
+    )
+    display_name = TextField(field_uri=&#34;contacts:DisplayName&#34;, is_required=True)
+    given_name = CharField(field_uri=&#34;contacts:GivenName&#34;)
+    initials = TextField(field_uri=&#34;contacts:Initials&#34;)
+    middle_name = CharField(field_uri=&#34;contacts:MiddleName&#34;)
+    nickname = TextField(field_uri=&#34;contacts:Nickname&#34;)
+    complete_name = EWSElementField(field_uri=&#34;contacts:CompleteName&#34;, value_cls=CompleteName, is_read_only=True)
+    company_name = TextField(field_uri=&#34;contacts:CompanyName&#34;)
+    email_addresses = EmailAddressesField(field_uri=&#34;contacts:EmailAddress&#34;)
+    physical_addresses = PhysicalAddressField(field_uri=&#34;contacts:PhysicalAddress&#34;)
+    phone_numbers = PhoneNumberField(field_uri=&#34;contacts:PhoneNumber&#34;)
+    assistant_name = TextField(field_uri=&#34;contacts:AssistantName&#34;)
+    birthday = DateTimeBackedDateField(field_uri=&#34;contacts:Birthday&#34;, default_time=datetime.time(11, 59))
+    business_homepage = URIField(field_uri=&#34;contacts:BusinessHomePage&#34;)
+    children = TextListField(field_uri=&#34;contacts:Children&#34;)
+    companies = TextListField(field_uri=&#34;contacts:Companies&#34;, is_searchable=False)
+    contact_source = ChoiceField(
+        field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
+    )
+    department = TextField(field_uri=&#34;contacts:Department&#34;)
+    generation = TextField(field_uri=&#34;contacts:Generation&#34;)
+    im_addresses = CharField(field_uri=&#34;contacts:ImAddresses&#34;, is_read_only=True)
+    job_title = TextField(field_uri=&#34;contacts:JobTitle&#34;)
+    manager = TextField(field_uri=&#34;contacts:Manager&#34;)
+    mileage = TextField(field_uri=&#34;contacts:Mileage&#34;)
+    office = TextField(field_uri=&#34;contacts:OfficeLocation&#34;)
+    postal_address_index = ChoiceField(
+        field_uri=&#34;contacts:PostalAddressIndex&#34;,
+        choices={Choice(&#34;Business&#34;), Choice(&#34;Home&#34;), Choice(&#34;Other&#34;), Choice(&#34;None&#34;)},
+        default=&#34;None&#34;,
+        is_required_after_save=True,
+    )
+    profession = TextField(field_uri=&#34;contacts:Profession&#34;)
+    spouse_name = TextField(field_uri=&#34;contacts:SpouseName&#34;)
+    surname = CharField(field_uri=&#34;contacts:Surname&#34;)
+    wedding_anniversary = DateTimeBackedDateField(
+        field_uri=&#34;contacts:WeddingAnniversary&#34;, default_time=datetime.time(11, 59)
+    )
+    has_picture = BooleanField(field_uri=&#34;contacts:HasPicture&#34;, supported_from=EXCHANGE_2010, is_read_only=True)
+    phonetic_full_name = TextField(
+        field_uri=&#34;contacts:PhoneticFullName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    phonetic_first_name = TextField(
+        field_uri=&#34;contacts:PhoneticFirstName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    phonetic_last_name = TextField(
+        field_uri=&#34;contacts:PhoneticLastName&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    email_alias = EmailAddressField(field_uri=&#34;contacts:Alias&#34;, is_read_only=True, supported_from=EXCHANGE_2010_SP2)
     # &#39;notes&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
     # put entries into the &#39;notes&#39; form field into the &#39;body&#39; field.
-    notes = CharField(field_uri=&#39;contacts:Notes&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    notes = CharField(field_uri=&#34;contacts:Notes&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
     # &#39;photo&#39; is documented in MSDN but apparently unused. Writing to it raises ErrorInvalidPropertyRequest. OWA
     # adds photos as FileAttachments on the contact item (with &#39;is_contact_photo=True&#39;), which automatically flips
     # the &#39;has_picture&#39; field.
-    photo = Base64Field(field_uri=&#39;contacts:Photo&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
-    user_smime_certificate = Base64Field(field_uri=&#39;contacts:UserSMIMECertificate&#39;, supported_from=EXCHANGE_2010_SP2,
-                                         is_read_only=True)
-    ms_exchange_certificate = Base64Field(field_uri=&#39;contacts:MSExchangeCertificate&#39;, supported_from=EXCHANGE_2010_SP2,
-                                          is_read_only=True)
-    directory_id = TextField(field_uri=&#39;contacts:DirectoryId&#39;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
-    manager_mailbox = MailboxField(field_uri=&#39;contacts:ManagerMailbox&#39;, supported_from=EXCHANGE_2010_SP2,
-                                   is_read_only=True)
-    direct_reports = MailboxListField(field_uri=&#39;contacts:DirectReports&#39;, supported_from=EXCHANGE_2010_SP2,
-                                      is_read_only=True)</code></pre>
+    photo = Base64Field(field_uri=&#34;contacts:Photo&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    user_smime_certificate = Base64Field(
+        field_uri=&#34;contacts:UserSMIMECertificate&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    ms_exchange_certificate = Base64Field(
+        field_uri=&#34;contacts:MSExchangeCertificate&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    directory_id = TextField(field_uri=&#34;contacts:DirectoryId&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True)
+    manager_mailbox = MailboxField(
+        field_uri=&#34;contacts:ManagerMailbox&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )
+    direct_reports = MailboxListField(
+        field_uri=&#34;contacts:DirectReports&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -559,14 +632,14 @@ we use folder.account.</p></div>
 <pre><code class="python">class DistributionList(Item):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/distributionlist&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;DistributionList&#39;
+    ELEMENT_NAME = &#34;DistributionList&#34;
 
-    display_name = CharField(field_uri=&#39;contacts:DisplayName&#39;, is_required=True)
-    file_as = CharField(field_uri=&#39;contacts:FileAs&#39;, is_read_only=True)
-    contact_source = ChoiceField(field_uri=&#39;contacts:ContactSource&#39;, choices={
-        Choice(&#39;Store&#39;), Choice(&#39;ActiveDirectory&#39;)
-    }, is_read_only=True)
-    members = MemberListField(field_uri=&#39;distributionlist:Members&#39;)</code></pre>
+    display_name = CharField(field_uri=&#34;contacts:DisplayName&#34;, is_required=True)
+    file_as = CharField(field_uri=&#34;contacts:FileAs&#34;, is_read_only=True)
+    contact_source = ChoiceField(
+        field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
+    )
+    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -638,105 +711,105 @@ we use folder.account.</p></div>
 <pre><code class="python">class Persona(IdChangeKeyMixIn):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/persona&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Persona&#39;
+    ELEMENT_NAME = &#34;Persona&#34;
     ID_ELEMENT_CLS = PersonaId
 
-    _id = IdElementField(field_uri=&#39;persona:PersonaId&#39;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
-    persona_type = CharField(field_uri=&#39;persona:PersonaType&#39;)
-    persona_object_type = TextField(field_uri=&#39;persona:PersonaObjectStatus&#39;)
-    creation_time = DateTimeField(field_uri=&#39;persona:CreationTime&#39;)
-    bodies = BodyContentAttributedValueField(field_uri=&#39;persona:Bodies&#39;)
-    display_name_first_last_sort_key = TextField(field_uri=&#39;persona:DisplayNameFirstLastSortKey&#39;)
-    display_name_last_first_sort_key = TextField(field_uri=&#39;persona:DisplayNameLastFirstSortKey&#39;)
-    company_sort_key = TextField(field_uri=&#39;persona:CompanyNameSortKey&#39;)
-    home_sort_key = TextField(field_uri=&#39;persona:HomeCitySortKey&#39;)
-    work_city_sort_key = TextField(field_uri=&#39;persona:WorkCitySortKey&#39;)
-    display_name_first_last_header = CharField(field_uri=&#39;persona:DisplayNameFirstLastHeader&#39;)
-    display_name_last_first_header = CharField(field_uri=&#39;persona:DisplayNameLastFirstHeader&#39;)
-    file_as_header = TextField(field_uri=&#39;persona:FileAsHeader&#39;)
-    display_name = CharField(field_uri=&#39;persona:DisplayName&#39;)
-    display_name_first_last = CharField(field_uri=&#39;persona:DisplayNameFirstLast&#39;)
-    display_name_last_first = CharField(field_uri=&#39;persona:DisplayNameLastFirst&#39;)
-    file_as = CharField(field_uri=&#39;persona:FileAs&#39;)
-    file_as_id = TextField(field_uri=&#39;persona:FileAsId&#39;)
-    display_name_prefix = CharField(field_uri=&#39;persona:DisplayNamePrefix&#39;)
-    given_name = CharField(field_uri=&#39;persona:GivenName&#39;)
-    middle_name = CharField(field_uri=&#39;persona:MiddleName&#39;)
-    surname = CharField(field_uri=&#39;persona:Surname&#39;)
-    generation = CharField(field_uri=&#39;persona:Generation&#39;)
-    nickname = TextField(field_uri=&#39;persona:Nickname&#39;)
-    yomi_company_name = TextField(field_uri=&#39;persona:YomiCompanyName&#39;)
-    yomi_first_name = TextField(field_uri=&#39;persona:YomiFirstName&#39;)
-    yomi_last_name = TextField(field_uri=&#39;persona:YomiLastName&#39;)
-    title = CharField(field_uri=&#39;persona:Title&#39;)
-    department = TextField(field_uri=&#39;persona:Department&#39;)
-    company_name = CharField(field_uri=&#39;persona:CompanyName&#39;)
-    email_address = EWSElementField(field_uri=&#39;persona:EmailAddress&#39;, value_cls=EmailAddress)
-    email_addresses = EWSElementListField(field_uri=&#39;persona:EmailAddresses&#39;, value_cls=Address)
-    PhoneNumber = PersonaPhoneNumberField(field_uri=&#39;persona:PhoneNumber&#39;)
-    im_address = CharField(field_uri=&#39;persona:ImAddress&#39;)
-    home_city = CharField(field_uri=&#39;persona:HomeCity&#39;)
-    work_city = CharField(field_uri=&#39;persona:WorkCity&#39;)
-    relevance_score = CharField(field_uri=&#39;persona:RelevanceScore&#39;)
-    folder_ids = EWSElementListField(field_uri=&#39;persona:FolderIds&#39;, value_cls=FolderId)
-    attributions = EWSElementListField(field_uri=&#39;persona:Attributions&#39;, value_cls=Attribution)
-    display_names = StringAttributedValueField(field_uri=&#39;persona:DisplayNames&#39;)
-    file_ases = StringAttributedValueField(field_uri=&#39;persona:FileAses&#39;)
-    file_as_ids = StringAttributedValueField(field_uri=&#39;persona:FileAsIds&#39;)
-    display_name_prefixes = StringAttributedValueField(field_uri=&#39;persona:DisplayNamePrefixes&#39;)
-    given_names = StringAttributedValueField(field_uri=&#39;persona:GivenNames&#39;)
-    middle_names = StringAttributedValueField(field_uri=&#39;persona:MiddleNames&#39;)
-    surnames = StringAttributedValueField(field_uri=&#39;persona:Surnames&#39;)
-    generations = StringAttributedValueField(field_uri=&#39;persona:Generations&#39;)
-    nicknames = StringAttributedValueField(field_uri=&#39;persona:Nicknames&#39;)
-    initials = StringAttributedValueField(field_uri=&#39;persona:Initials&#39;)
-    yomi_company_names = StringAttributedValueField(field_uri=&#39;persona:YomiCompanyNames&#39;)
-    yomi_first_names = StringAttributedValueField(field_uri=&#39;persona:YomiFirstNames&#39;)
-    yomi_last_names = StringAttributedValueField(field_uri=&#39;persona:YomiLastNames&#39;)
-    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers&#39;)
-    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:BusinessPhoneNumbers2&#39;)
-    home_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones&#39;)
-    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomePhones2&#39;)
-    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones&#39;)
-    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:MobilePhones2&#39;)
-    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:AssistantPhoneNumbers&#39;)
-    callback_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CallbackPhones&#39;)
-    car_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:CarPhones&#39;)
-    home_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:HomeFaxes&#39;)
-    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OrganizationMainPhones&#39;)
-    other_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherFaxes&#39;)
-    other_telephones = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherTelephones&#39;)
-    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#39;persona:OtherPhones2&#39;)
-    pagers = PhoneNumberAttributedValueField(field_uri=&#39;persona:Pagers&#39;)
-    radio_phones = PhoneNumberAttributedValueField(field_uri=&#39;persona:RadioPhones&#39;)
-    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TelexNumbers&#39;)
-    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#39;persona:TTYTDDPhoneNumbers&#39;)
-    work_faxes = PhoneNumberAttributedValueField(field_uri=&#39;persona:WorkFaxes&#39;)
-    emails1 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails1&#39;)
-    emails2 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails2&#39;)
-    emails3 = EmailAddressAttributedValueField(field_uri=&#39;persona:Emails3&#39;)
-    business_home_pages = StringAttributedValueField(field_uri=&#39;persona:BusinessHomePages&#39;)
-    personal_home_pages = StringAttributedValueField(field_uri=&#39;persona:PersonalHomePages&#39;)
-    office_locations = StringAttributedValueField(field_uri=&#39;persona:OfficeLocations&#39;)
-    im_addresses = StringAttributedValueField(field_uri=&#39;persona:ImAddresses&#39;)
-    im_addresses2 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses2&#39;)
-    im_addresses3 = StringAttributedValueField(field_uri=&#39;persona:ImAddresses3&#39;)
-    business_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:BusinessAddresses&#39;)
-    home_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:HomeAddresses&#39;)
-    other_addresses = PostalAddressAttributedValueField(field_uri=&#39;persona:OtherAddresses&#39;)
-    titles = StringAttributedValueField(field_uri=&#39;persona:Titles&#39;)
-    departments = StringAttributedValueField(field_uri=&#39;persona:Departments&#39;)
-    company_names = StringAttributedValueField(field_uri=&#39;persona:CompanyNames&#39;)
-    managers = StringAttributedValueField(field_uri=&#39;persona:Managers&#39;)
-    assistant_names = StringAttributedValueField(field_uri=&#39;persona:AssistantNames&#39;)
-    professions = StringAttributedValueField(field_uri=&#39;persona:Professions&#39;)
-    spouse_names = StringAttributedValueField(field_uri=&#39;persona:SpouseNames&#39;)
-    children = StringAttributedValueField(field_uri=&#39;persona:Children&#39;)
-    schools = StringAttributedValueField(field_uri=&#39;persona:Schools&#39;)
-    hobbies = StringAttributedValueField(field_uri=&#39;persona:Hobbies&#39;)
-    wedding_anniversaries = StringAttributedValueField(field_uri=&#39;persona:WeddingAnniversaries&#39;)
-    birthdays = StringAttributedValueField(field_uri=&#39;persona:Birthdays&#39;)
-    locations = StringAttributedValueField(field_uri=&#39;persona:Locations&#39;)</code></pre>
+    _id = IdElementField(field_uri=&#34;persona:PersonaId&#34;, value_cls=ID_ELEMENT_CLS, namespace=TNS)
+    persona_type = CharField(field_uri=&#34;persona:PersonaType&#34;)
+    persona_object_type = TextField(field_uri=&#34;persona:PersonaObjectStatus&#34;)
+    creation_time = DateTimeField(field_uri=&#34;persona:CreationTime&#34;)
+    bodies = BodyContentAttributedValueField(field_uri=&#34;persona:Bodies&#34;)
+    display_name_first_last_sort_key = TextField(field_uri=&#34;persona:DisplayNameFirstLastSortKey&#34;)
+    display_name_last_first_sort_key = TextField(field_uri=&#34;persona:DisplayNameLastFirstSortKey&#34;)
+    company_sort_key = TextField(field_uri=&#34;persona:CompanyNameSortKey&#34;)
+    home_sort_key = TextField(field_uri=&#34;persona:HomeCitySortKey&#34;)
+    work_city_sort_key = TextField(field_uri=&#34;persona:WorkCitySortKey&#34;)
+    display_name_first_last_header = CharField(field_uri=&#34;persona:DisplayNameFirstLastHeader&#34;)
+    display_name_last_first_header = CharField(field_uri=&#34;persona:DisplayNameLastFirstHeader&#34;)
+    file_as_header = TextField(field_uri=&#34;persona:FileAsHeader&#34;)
+    display_name = CharField(field_uri=&#34;persona:DisplayName&#34;)
+    display_name_first_last = CharField(field_uri=&#34;persona:DisplayNameFirstLast&#34;)
+    display_name_last_first = CharField(field_uri=&#34;persona:DisplayNameLastFirst&#34;)
+    file_as = CharField(field_uri=&#34;persona:FileAs&#34;)
+    file_as_id = TextField(field_uri=&#34;persona:FileAsId&#34;)
+    display_name_prefix = CharField(field_uri=&#34;persona:DisplayNamePrefix&#34;)
+    given_name = CharField(field_uri=&#34;persona:GivenName&#34;)
+    middle_name = CharField(field_uri=&#34;persona:MiddleName&#34;)
+    surname = CharField(field_uri=&#34;persona:Surname&#34;)
+    generation = CharField(field_uri=&#34;persona:Generation&#34;)
+    nickname = TextField(field_uri=&#34;persona:Nickname&#34;)
+    yomi_company_name = TextField(field_uri=&#34;persona:YomiCompanyName&#34;)
+    yomi_first_name = TextField(field_uri=&#34;persona:YomiFirstName&#34;)
+    yomi_last_name = TextField(field_uri=&#34;persona:YomiLastName&#34;)
+    title = CharField(field_uri=&#34;persona:Title&#34;)
+    department = TextField(field_uri=&#34;persona:Department&#34;)
+    company_name = CharField(field_uri=&#34;persona:CompanyName&#34;)
+    email_address = EWSElementField(field_uri=&#34;persona:EmailAddress&#34;, value_cls=EmailAddress)
+    email_addresses = EWSElementListField(field_uri=&#34;persona:EmailAddresses&#34;, value_cls=Address)
+    PhoneNumber = PersonaPhoneNumberField(field_uri=&#34;persona:PhoneNumber&#34;)
+    im_address = CharField(field_uri=&#34;persona:ImAddress&#34;)
+    home_city = CharField(field_uri=&#34;persona:HomeCity&#34;)
+    work_city = CharField(field_uri=&#34;persona:WorkCity&#34;)
+    relevance_score = CharField(field_uri=&#34;persona:RelevanceScore&#34;)
+    folder_ids = EWSElementListField(field_uri=&#34;persona:FolderIds&#34;, value_cls=FolderId)
+    attributions = EWSElementListField(field_uri=&#34;persona:Attributions&#34;, value_cls=Attribution)
+    display_names = StringAttributedValueField(field_uri=&#34;persona:DisplayNames&#34;)
+    file_ases = StringAttributedValueField(field_uri=&#34;persona:FileAses&#34;)
+    file_as_ids = StringAttributedValueField(field_uri=&#34;persona:FileAsIds&#34;)
+    display_name_prefixes = StringAttributedValueField(field_uri=&#34;persona:DisplayNamePrefixes&#34;)
+    given_names = StringAttributedValueField(field_uri=&#34;persona:GivenNames&#34;)
+    middle_names = StringAttributedValueField(field_uri=&#34;persona:MiddleNames&#34;)
+    surnames = StringAttributedValueField(field_uri=&#34;persona:Surnames&#34;)
+    generations = StringAttributedValueField(field_uri=&#34;persona:Generations&#34;)
+    nicknames = StringAttributedValueField(field_uri=&#34;persona:Nicknames&#34;)
+    initials = StringAttributedValueField(field_uri=&#34;persona:Initials&#34;)
+    yomi_company_names = StringAttributedValueField(field_uri=&#34;persona:YomiCompanyNames&#34;)
+    yomi_first_names = StringAttributedValueField(field_uri=&#34;persona:YomiFirstNames&#34;)
+    yomi_last_names = StringAttributedValueField(field_uri=&#34;persona:YomiLastNames&#34;)
+    business_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:BusinessPhoneNumbers&#34;)
+    business_phone_numbers2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:BusinessPhoneNumbers2&#34;)
+    home_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomePhones&#34;)
+    home_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomePhones2&#34;)
+    mobile_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:MobilePhones&#34;)
+    mobile_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:MobilePhones2&#34;)
+    assistant_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:AssistantPhoneNumbers&#34;)
+    callback_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:CallbackPhones&#34;)
+    car_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:CarPhones&#34;)
+    home_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:HomeFaxes&#34;)
+    organization_main_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:OrganizationMainPhones&#34;)
+    other_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherFaxes&#34;)
+    other_telephones = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherTelephones&#34;)
+    other_phones2 = PhoneNumberAttributedValueField(field_uri=&#34;persona:OtherPhones2&#34;)
+    pagers = PhoneNumberAttributedValueField(field_uri=&#34;persona:Pagers&#34;)
+    radio_phones = PhoneNumberAttributedValueField(field_uri=&#34;persona:RadioPhones&#34;)
+    telex_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:TelexNumbers&#34;)
+    tty_tdd_phone_numbers = PhoneNumberAttributedValueField(field_uri=&#34;persona:TTYTDDPhoneNumbers&#34;)
+    work_faxes = PhoneNumberAttributedValueField(field_uri=&#34;persona:WorkFaxes&#34;)
+    emails1 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails1&#34;)
+    emails2 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails2&#34;)
+    emails3 = EmailAddressAttributedValueField(field_uri=&#34;persona:Emails3&#34;)
+    business_home_pages = StringAttributedValueField(field_uri=&#34;persona:BusinessHomePages&#34;)
+    personal_home_pages = StringAttributedValueField(field_uri=&#34;persona:PersonalHomePages&#34;)
+    office_locations = StringAttributedValueField(field_uri=&#34;persona:OfficeLocations&#34;)
+    im_addresses = StringAttributedValueField(field_uri=&#34;persona:ImAddresses&#34;)
+    im_addresses2 = StringAttributedValueField(field_uri=&#34;persona:ImAddresses2&#34;)
+    im_addresses3 = StringAttributedValueField(field_uri=&#34;persona:ImAddresses3&#34;)
+    business_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:BusinessAddresses&#34;)
+    home_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:HomeAddresses&#34;)
+    other_addresses = PostalAddressAttributedValueField(field_uri=&#34;persona:OtherAddresses&#34;)
+    titles = StringAttributedValueField(field_uri=&#34;persona:Titles&#34;)
+    departments = StringAttributedValueField(field_uri=&#34;persona:Departments&#34;)
+    company_names = StringAttributedValueField(field_uri=&#34;persona:CompanyNames&#34;)
+    managers = StringAttributedValueField(field_uri=&#34;persona:Managers&#34;)
+    assistant_names = StringAttributedValueField(field_uri=&#34;persona:AssistantNames&#34;)
+    professions = StringAttributedValueField(field_uri=&#34;persona:Professions&#34;)
+    spouse_names = StringAttributedValueField(field_uri=&#34;persona:SpouseNames&#34;)
+    children = StringAttributedValueField(field_uri=&#34;persona:Children&#34;)
+    schools = StringAttributedValueField(field_uri=&#34;persona:Schools&#34;)
+    hobbies = StringAttributedValueField(field_uri=&#34;persona:Hobbies&#34;)
+    wedding_anniversaries = StringAttributedValueField(field_uri=&#34;persona:WeddingAnniversaries&#34;)
+    birthdays = StringAttributedValueField(field_uri=&#34;persona:Birthdays&#34;)
+    locations = StringAttributedValueField(field_uri=&#34;persona:Locations&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

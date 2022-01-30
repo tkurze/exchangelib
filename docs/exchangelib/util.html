@@ -51,19 +51,26 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 
-from .errors import TransportError, RateLimitError, RedirectError, RelativeRedirect, MalformedResponseError, \
-    InvalidTypeError
+from .errors import (
+    InvalidTypeError,
+    MalformedResponseError,
+    RateLimitError,
+    RedirectError,
+    RelativeRedirect,
+    TransportError,
+)
 
 log = logging.getLogger(__name__)
-xml_log = logging.getLogger(f&#39;{__name__}.xml&#39;)
+xml_log = logging.getLogger(f&#34;{__name__}.xml&#34;)
 
 
 def require_account(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         return f(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -71,10 +78,11 @@ def require_id(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         if not self.id:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an ID&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an ID&#34;)
         return f(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -91,21 +99,21 @@ class ElementNotFound(Exception):
 
 
 # Regex of UTF-8 control characters that are illegal in XML 1.0 (and XML 1.1)
-_ILLEGAL_XML_CHARS_RE = re.compile(&#39;[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]&#39;)
+_ILLEGAL_XML_CHARS_RE = re.compile(&#34;[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]&#34;)
 
 # XML namespaces
-SOAPNS = &#39;http://schemas.xmlsoap.org/soap/envelope/&#39;
-MNS = &#39;http://schemas.microsoft.com/exchange/services/2006/messages&#39;
-TNS = &#39;http://schemas.microsoft.com/exchange/services/2006/types&#39;
-ENS = &#39;http://schemas.microsoft.com/exchange/services/2006/errors&#39;
-AUTODISCOVER_BASE_NS = &#39;http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006&#39;
-AUTODISCOVER_REQUEST_NS = &#39;http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006&#39;
-AUTODISCOVER_RESPONSE_NS = &#39;http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a&#39;
+SOAPNS = &#34;http://schemas.xmlsoap.org/soap/envelope/&#34;
+MNS = &#34;http://schemas.microsoft.com/exchange/services/2006/messages&#34;
+TNS = &#34;http://schemas.microsoft.com/exchange/services/2006/types&#34;
+ENS = &#34;http://schemas.microsoft.com/exchange/services/2006/errors&#34;
+AUTODISCOVER_BASE_NS = &#34;http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006&#34;
+AUTODISCOVER_REQUEST_NS = &#34;http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006&#34;
+AUTODISCOVER_RESPONSE_NS = &#34;http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a&#34;
 
 ns_translation = {
-    &#39;s&#39;: SOAPNS,
-    &#39;m&#39;: MNS,
-    &#39;t&#39;: TNS,
+    &#34;s&#34;: SOAPNS,
+    &#34;m&#34;: MNS,
+    &#34;t&#34;: TNS,
 }
 for item in ns_translation.items():
     lxml.etree.register_namespace(*item)
@@ -122,7 +130,7 @@ def is_iterable(value, generators_allowed=False):
     :return: True or False
     &#34;&#34;&#34;
     if generators_allowed:
-        if not isinstance(value, (bytes, str)) and hasattr(value, &#39;__iter__&#39;):
+        if not isinstance(value, (bytes, str)) and hasattr(value, &#34;__iter__&#34;):
             return True
     else:
         if isinstance(value, (tuple, list, set)):
@@ -138,10 +146,11 @@ def chunkify(iterable, chunksize):
     :return:
     &#34;&#34;&#34;
     from .queryset import QuerySet
-    if hasattr(iterable, &#39;__getitem__&#39;) and not isinstance(iterable, QuerySet):
+
+    if hasattr(iterable, &#34;__getitem__&#34;) and not isinstance(iterable, QuerySet):
         # tuple, list. QuerySet has __getitem__ but that evaluates the entire query greedily. We don&#39;t want that here.
         for i in range(0, len(iterable), chunksize):
-            yield iterable[i:i + chunksize]
+            yield iterable[i : i + chunksize]
     else:
         # generator, set, map, QuerySet
         chunk = []
@@ -160,7 +169,7 @@ def peek(iterable):
     :param iterable:
     :return:
     &#34;&#34;&#34;
-    if hasattr(iterable, &#39;__len__&#39;):
+    if hasattr(iterable, &#34;__len__&#34;):
         # tuple, list, set
         return not iterable, iterable
     # generator
@@ -199,16 +208,17 @@ def get_xml_attrs(tree, name):
 
 
 def value_to_xml_text(value):
-    from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
-    from .indexed_properties import PhoneNumber, EmailAddress
-    from .properties import Mailbox, AssociatedCalendarItemId, Attendee, ConversationId
+    from .ewsdatetime import EWSDate, EWSDateTime, EWSTimeZone
+    from .indexed_properties import EmailAddress, PhoneNumber
+    from .properties import AssociatedCalendarItemId, Attendee, ConversationId, Mailbox
+
     # We can&#39;t just create a map and look up with type(value) because we want to support subtypes
     if isinstance(value, str):
         return safe_xml_value(value)
     if isinstance(value, bool):
-        return &#39;1&#39; if value else &#39;0&#39;
+        return &#34;1&#34; if value else &#34;0&#34;
     if isinstance(value, bytes):
-        return b64encode(value).decode(&#39;ascii&#39;)
+        return b64encode(value).decode(&#34;ascii&#34;)
     if isinstance(value, (int, Decimal)):
         return str(value)
     if isinstance(value, datetime.time):
@@ -231,20 +241,21 @@ def value_to_xml_text(value):
         return value.id
     if isinstance(value, AssociatedCalendarItemId):
         return value.id
-    raise TypeError(f&#39;Unsupported type: {type(value)} ({value})&#39;)
+    raise TypeError(f&#34;Unsupported type: {type(value)} ({value})&#34;)
 
 
 def xml_text_to_value(value, value_type):
     from .ewsdatetime import EWSDate, EWSDateTime
+
     if value_type == str:
         return value
     if value_type == bool:
         try:
             return {
-                &#39;true&#39;: True,
-                &#39;on&#39;: True,
-                &#39;false&#39;: False,
-                &#39;off&#39;: False,
+                &#34;true&#34;: True,
+                &#34;on&#34;: True,
+                &#34;false&#34;: False,
+                &#34;off&#34;: False,
             }[value.lower()]
         except KeyError:
             return None
@@ -259,10 +270,11 @@ def xml_text_to_value(value, value_type):
 
 
 def set_xml_value(elem, value, version=None):
-    from .ewsdatetime import EWSDateTime, EWSDate
-    from .fields import FieldPath, FieldOrder
+    from .ewsdatetime import EWSDate, EWSDateTime
+    from .fields import FieldOrder, FieldPath
     from .properties import EWSElement
     from .version import Version
+
     if isinstance(value, (str, bool, bytes, int, Decimal, datetime.time, EWSDate, EWSDateTime)):
         elem.text = value_to_xml_text(value)
     elif isinstance(value, _element_class):
@@ -271,31 +283,31 @@ def set_xml_value(elem, value, version=None):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
         if not isinstance(version, Version):
-            raise InvalidTypeError(&#39;version&#39;, version, Version)
+            raise InvalidTypeError(&#34;version&#34;, version, Version)
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:
             set_xml_value(elem, v, version=version)
     else:
-        raise ValueError(f&#39;Unsupported type {type(value)} for value {value} on elem {elem}&#39;)
+        raise ValueError(f&#34;Unsupported type {type(value)} for value {value} on elem {elem}&#34;)
     return elem
 
 
-def safe_xml_value(value, replacement=&#39;?&#39;):
+def safe_xml_value(value, replacement=&#34;?&#34;):
     return _ILLEGAL_XML_CHARS_RE.sub(replacement, value)
 
 
 def create_element(name, attrs=None, nsmap=None):
-    if &#39;:&#39; in name:
-        ns, name = name.split(&#39;:&#39;)
-        name = f&#39;{{{ns_translation[ns]}}}{name}&#39;
+    if &#34;:&#34; in name:
+        ns, name = name.split(&#34;:&#34;)
+        name = f&#34;{{{ns_translation[ns]}}}{name}&#34;
     elem = _forgiving_parser.makeelement(name, nsmap=nsmap)
     if attrs:
         # Try hard to keep attribute order, to ensure deterministic output. This simplifies testing.
         # Dicts in Python 3.6+ have stable ordering.
         for k, v in attrs.items():
             if isinstance(v, bool):
-                v = &#39;true&#39; if v else &#39;false&#39;
+                v = &#34;true&#34; if v else &#34;false&#34;
             elif isinstance(v, int):
                 v = str(v)
             elem.set(k, v)
@@ -351,9 +363,9 @@ def safe_b64decode(data):
     overflow = len(data) % 4
     if overflow:
         if isinstance(data, str):
-            padding = &#39;=&#39; * (4 - overflow)
+            padding = &#34;=&#34; * (4 - overflow)
         else:
-            padding = b&#39;=&#39; * (4 - overflow)
+            padding = b&#34;=&#34; * (4 - overflow)
         data += padding
     return b64decode(data)
 
@@ -387,7 +399,7 @@ class StreamingBase64Parser(DefusedExpatParser):
         self.close()
         if not self.element_found:
             data = bytes(collected_data)
-            raise ElementNotFound(&#39;The element to be streamed from was not found&#39;, data=bytes(data))
+            raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(data))
 
     def feed(self, data, isFinal=0):
         &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
@@ -395,13 +407,13 @@ class StreamingBase64Parser(DefusedExpatParser):
         return self._decode_buffer()
 
     def _decode_buffer(self):
-        remainder = &#39;&#39;
+        remainder = &#34;&#34;
         for data in self.buffer:
             available = len(remainder) + len(data)
             overflow = available % 4  # Make sure we always decode a multiple of 4
             if remainder:
-                data = (remainder + data)
-                remainder = &#39;&#39;
+                data = remainder + data
+                remainder = &#34;&#34;
             if overflow:
                 remainder, data = data[-overflow:], data[:-overflow]
             if data:
@@ -414,7 +426,7 @@ _forgiving_parser = lxml.etree.XMLParser(
     recover=True,  # This setting is non-default
     huge_tree=True,  # This setting enables parsing huge attachments, mime_content and other large data
 )
-_element_class = _forgiving_parser.makeelement(&#39;x&#39;).__class__
+_element_class = _forgiving_parser.makeelement(&#34;x&#34;).__class__
 
 
 class BytesGeneratorIO(io.RawIOBase):
@@ -441,7 +453,7 @@ class BytesGeneratorIO(io.RawIOBase):
         if self.closed:
             raise ValueError(&#34;read from a closed file&#34;)
         if self._next is None:
-            return b&#39;&#39;
+            return b&#34;&#34;
         if size is None:
             size = -1
 
@@ -469,7 +481,7 @@ class BytesGeneratorIO(io.RawIOBase):
 class DocumentYielder:
     &#34;&#34;&#34;Look for XML documents in a streaming HTTP response and yield them as they become available from the stream.&#34;&#34;&#34;
 
-    def __init__(self, content_iterator, document_tag=&#39;Envelope&#39;):
+    def __init__(self, content_iterator, document_tag=&#34;Envelope&#34;):
         self._iterator = content_iterator
         self._document_tag = document_tag.encode()
 
@@ -477,16 +489,16 @@ class DocumentYielder:
         &#34;&#34;&#34;Iterate over the bytes until we have a full tag in the buffer. If there&#39;s a &#39;&gt;&#39; in an attr value, then we&#39;ll
         exit on that, but it&#39;s OK becaus wejust need the plain tag name later.
         &#34;&#34;&#34;
-        tag_buffer = [b&#39;&lt;&#39;]
+        tag_buffer = [b&#34;&lt;&#34;]
         while True:
             try:
                 c = next(self._iterator)
             except StopIteration:
                 break
             tag_buffer.append(c)
-            if c == b&#39;&gt;&#39;:
+            if c == b&#34;&gt;&#34;:
                 break
-        return b&#39;&#39;.join(tag_buffer)
+        return b&#34;&#34;.join(tag_buffer)
 
     @staticmethod
     def _normalize_tag(tag):
@@ -496,7 +508,7 @@ class DocumentYielder:
         * &lt;ns:tag foo=&#39;bar&#39;&gt;
         * &lt;/ns:tag foo=&#39;bar&#39;&gt;
         &#34;&#34;&#34;
-        return tag.strip(b&#39;&lt;&gt;/&#39;).split(b&#39; &#39;)[0].split(b&#39;:&#39;)[-1]
+        return tag.strip(b&#34;&lt;&gt;/&#34;).split(b&#34; &#34;)[0].split(b&#34;:&#34;)[-1]
 
     def __iter__(self):
         &#34;&#34;&#34;Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
@@ -507,18 +519,18 @@ class DocumentYielder:
         try:
             while True:
                 c = next(self._iterator)
-                if not doc_started and c == b&#39;&lt;&#39;:
+                if not doc_started and c == b&#34;&lt;&#34;:
                     tag = self._get_tag()
                     if self._normalize_tag(tag) == self._document_tag:
                         # Start of document. Collect bytes from this point
                         buffer.append(tag)
                         doc_started = True
-                elif doc_started and c == b&#39;&lt;&#39;:
+                elif doc_started and c == b&#34;&lt;&#34;:
                     tag = self._get_tag()
                     buffer.append(tag)
                     if self._normalize_tag(tag) == self._document_tag:
                         # End of document. Yield a valid document and reset the buffer
-                        yield b&#34;&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&gt;\n&#34; + b&#39;&#39;.join(buffer)
+                        yield b&#34;&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&gt;\n&#34; + b&#34;&#34;.join(buffer)
                         doc_started = False
                         buffer = []
                 elif doc_started:
@@ -537,39 +549,39 @@ def to_xml(bytes_content):
     try:
         res = lxml.etree.parse(stream, parser=_forgiving_parser)  # nosec
     except AssertionError as e:
-        raise ParseError(e.args[0], &#39;&lt;not from file&gt;&#39;, -1, 0)
+        raise ParseError(e.args[0], &#34;&lt;not from file&gt;&#34;, -1, 0)
     except lxml.etree.ParseError as e:
-        if hasattr(e, &#39;position&#39;):
+        if hasattr(e, &#34;position&#34;):
             e.lineno, e.offset = e.position
         if not e.lineno:
-            raise ParseError(str(e), &#39;&lt;not from file&gt;&#39;, e.lineno, e.offset)
+            raise ParseError(str(e), &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
         try:
             stream.seek(0)
             offending_line = stream.read().splitlines()[e.lineno - 1]
         except (IndexError, io.UnsupportedOperation):
-            raise ParseError(str(e), &#39;&lt;not from file&gt;&#39;, e.lineno, e.offset)
+            raise ParseError(str(e), &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
         else:
-            offending_excerpt = offending_line[max(0, e.offset - 20):e.offset + 20]
+            offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
             msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
-            raise ParseError(msg, &#39;&lt;not from file&gt;&#39;, e.lineno, e.offset)
+            raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
     except TypeError:
         try:
             stream.seek(0)
         except (IndexError, io.UnsupportedOperation):
             pass
-        raise ParseError(f&#39;This is not XML: {stream.read()!r}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+        raise ParseError(f&#34;This is not XML: {stream.read()!r}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
 
     if res.getroot() is None:
         try:
             stream.seek(0)
-            msg = f&#39;No root element found: {stream.read()!r}&#39;
+            msg = f&#34;No root element found: {stream.read()!r}&#34;
         except (IndexError, io.UnsupportedOperation):
-            msg = &#39;No root element found&#39;
-        raise ParseError(msg, &#39;&lt;not from file&gt;&#39;, -1, 0)
+            msg = &#34;No root element found&#34;
+        raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, -1, 0)
     return res
 
 
-def is_xml(text, expected_prefix=b&#39;&lt;?xml&#39;):
+def is_xml(text, expected_prefix=b&#34;&lt;?xml&#34;):
     &#34;&#34;&#34;Lightweight test if response is an XML doc. It&#39;s better to be fast than correct here.
 
     :param text: The string to check
@@ -580,7 +592,7 @@ def is_xml(text, expected_prefix=b&#39;&lt;?xml&#39;):
     bom_len = len(BOM_UTF8)
     prefix_len = len(expected_prefix)
     if text[:bom_len] == BOM_UTF8:
-        prefix = text[bom_len:bom_len + prefix_len]
+        prefix = text[bom_len : bom_len + prefix_len]
     else:
         prefix = text[:prefix_len]
     return prefix == expected_prefix
@@ -596,12 +608,11 @@ class PrettyXmlHandler(logging.StreamHandler):
     @classmethod
     def prettify_xml(cls, xml_bytes):
         &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
-        return lxml.etree.tostring(
-            cls.parse_bytes(xml_bytes),
-            xml_declaration=True,
-            encoding=&#39;utf-8&#39;,
-            pretty_print=True
-        ).replace(b&#39;\t&#39;, b&#39;    &#39;).replace(b&#39; xmlns:&#39;, b&#39;\n    xmlns:&#39;)
+        return (
+            lxml.etree.tostring(cls.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
+            .replace(b&#34;\t&#34;, b&#34;    &#34;)
+            .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+        )
 
     @staticmethod
     def highlight_xml(xml_str):
@@ -618,7 +629,7 @@ class PrettyXmlHandler(logging.StreamHandler):
         &#34;&#34;&#34;
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
             for key, value in record.args.items():
-                if not key.startswith(&#39;xml_&#39;):
+                if not key.startswith(&#34;xml_&#34;):
                     continue
                 if not isinstance(value, bytes):
                     continue
@@ -628,7 +639,7 @@ class PrettyXmlHandler(logging.StreamHandler):
                     record.args[key] = self.highlight_xml(self.prettify_xml(value))
                 except Exception as e:
                     # Something bad happened, but we don&#39;t want to crash the program just because logging failed
-                    print(f&#39;XML highlighting failed: {e}&#39;)
+                    print(f&#34;XML highlighting failed: {e}&#34;)
         return super().emit(record)
 
     def is_tty(self):
@@ -641,7 +652,8 @@ class PrettyXmlHandler(logging.StreamHandler):
 
 class AnonymizingXmlHandler(PrettyXmlHandler):
     &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.&#34;&#34;&#34;
-    PRIVATE_TAGS = {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}
+
+    PRIVATE_TAGS = {&#34;RootItemId&#34;, &#34;ItemId&#34;, &#34;Id&#34;, &#34;RootItemChangeKey&#34;, &#34;ChangeKey&#34;}
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -652,11 +664,11 @@ class AnonymizingXmlHandler(PrettyXmlHandler):
         for elem in root.iter():
             # Anonymize element attribute values known to contain private data
             for attr in set(elem.keys()) &amp; self.PRIVATE_TAGS:
-                elem.set(attr, &#39;DEADBEEF=&#39;)
+                elem.set(attr, &#34;DEADBEEF=&#34;)
             # Anonymize anything requested by the caller
             for s in self.forbidden_strings:
                 if elem.text is not None:
-                    elem.text = elem.text.replace(s, &#39;[REMOVED]&#39;)
+                    elem.text = elem.text.replace(s, &#34;[REMOVED]&#34;)
         return root
 
 
@@ -670,15 +682,16 @@ class DummyRequest:
 class DummyResponse:
     &#34;&#34;&#34;A class to fake a requests Response object for functions that expect this.&#34;&#34;&#34;
 
-    def __init__(self, url=None, headers=None, request_headers=None, content=b&#39;&#39;, status_code=503, streaming=False,
-                 history=None):
+    def __init__(
+        self, url=None, headers=None, request_headers=None, content=b&#34;&#34;, status_code=503, streaming=False, history=None
+    ):
         self.status_code = status_code
         self.url = url
         self.headers = headers or {}
         self.content = iter((bytes([b]) for b in content)) if streaming else content
-        self.text = content.decode(&#39;utf-8&#39;, errors=&#39;ignore&#39;)
+        self.text = content.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)
         self.request = DummyRequest(headers=request_headers)
-        self.reason = &#39;&#39;
+        self.reason = &#34;&#34;
         self.history = history
 
     def iter_content(self):
@@ -690,7 +703,7 @@ class DummyResponse:
 
 def get_domain(email):
     try:
-        return email.split(&#39;@&#39;)[1].lower()
+        return email.split(&#34;@&#34;)[1].lower()
     except (IndexError, AttributeError):
         raise ValueError(f&#34;{email!r} is not a valid email&#34;)
 
@@ -698,15 +711,15 @@ def get_domain(email):
 def split_url(url):
     parsed_url = urlparse(url)
     # Use netloc instead of hostname since hostname is None if URL is relative
-    return parsed_url.scheme == &#39;https&#39;, parsed_url.netloc.lower(), parsed_url.path
+    return parsed_url.scheme == &#34;https&#34;, parsed_url.netloc.lower(), parsed_url.path
 
 
 def get_redirect_url(response, allow_relative=True, require_relative=False):
     # allow_relative=False throws RelativeRedirect error if scheme and hostname are equal to the request
     # require_relative=True throws RelativeRedirect error if scheme and hostname are not equal to the request
-    redirect_url = response.headers.get(&#39;location&#39;)
+    redirect_url = response.headers.get(&#34;location&#34;)
     if not redirect_url:
-        raise TransportError(&#39;HTTP redirect but no location header&#39;)
+        raise TransportError(&#34;HTTP redirect but no location header&#34;)
     # At least some servers are kind enough to supply a new location. It may be relative
     redirect_has_ssl, redirect_server, redirect_path = split_url(redirect_url)
     # The response may have been redirected already. Get the original URL
@@ -718,13 +731,13 @@ def get_redirect_url(response, allow_relative=True, require_relative=False):
         # Redirect URL is relative. Inherit server and scheme from response URL
         redirect_server = response_server
         redirect_has_ssl = response_has_ssl
-    if not redirect_path.startswith(&#39;/&#39;):
+    if not redirect_path.startswith(&#34;/&#34;):
         # The path is not top-level. Add response path
-        redirect_path = (response_path or &#39;/&#39;) + redirect_path
+        redirect_path = (response_path or &#34;/&#34;) + redirect_path
     redirect_url = f&#34;{&#39;https&#39; if redirect_has_ssl else &#39;http&#39;}://{redirect_server}{redirect_path}&#34;
     if redirect_url == request_url:
         # And some are mean enough to redirect to the same location
-        raise TransportError(f&#39;Redirect to same location: {redirect_url}&#39;)
+        raise TransportError(f&#34;Redirect to same location: {redirect_url}&#34;)
     if not allow_relative and (request_has_ssl == response_has_ssl and request_server == redirect_server):
         raise RelativeRedirect(redirect_url)
     if require_relative and (request_has_ssl != response_has_ssl or request_server != redirect_server):
@@ -736,14 +749,20 @@ RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
 MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
 
 # A collection of error classes we want to handle as general connection errors
-CONNECTION_ERRORS = (requests.exceptions.ChunkedEncodingError, requests.exceptions.ConnectionError,
-                     requests.exceptions.Timeout, socket.timeout, ConnectionResetError)
+CONNECTION_ERRORS = (
+    requests.exceptions.ChunkedEncodingError,
+    requests.exceptions.ConnectionError,
+    requests.exceptions.Timeout,
+    socket.timeout,
+    ConnectionResetError,
+)
 
 # A collection of error classes we want to handle as TLS verification errors
 TLS_ERRORS = (requests.exceptions.SSLError,)
 try:
     # If pyOpenSSL is installed, requests will use it and throw this class on TLS errors
     import OpenSSL.SSL
+
     TLS_ERRORS += (OpenSSL.SSL.Error,)
 except ImportError:
     pass
@@ -791,7 +810,7 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
     redirects = 0
-    log_msg = &#39;&#39;&#39;\
+    log_msg = &#34;&#34;&#34;\
 Retry: %(retry)s
 Waited: %(wait)s
 Timeout: %(timeout)s
@@ -805,10 +824,10 @@ Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
 Request headers: %(request_headers)s
-Response headers: %(response_headers)s&#39;&#39;&#39;
-    xml_log_msg = &#39;&#39;&#39;\
+Response headers: %(response_headers)s&#34;&#34;&#34;
+    xml_log_msg = &#34;&#34;&#34;\
 Request XML: %(xml_request)s
-Response XML: %(xml_response)s&#39;&#39;&#39;
+Response XML: %(xml_response)s&#34;&#34;&#34;
     log_vals = dict(
         retry=retry,
         wait=wait,
@@ -836,28 +855,36 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
             if backed_off:
                 # We may have slept for a long time. Renew the session.
                 session = protocol.renew_session(session)
-            log.debug(&#39;Session %s thread %s: retry %s timeout %s POST\&#39;ing to %s after %ss wait&#39;, session.session_id,
-                      thread_id, retry, timeout, url, wait)
+            log.debug(
+                &#34;Session %s thread %s: retry %s timeout %s POST&#39;ing to %s after %ss wait&#34;,
+                session.session_id,
+                thread_id,
+                retry,
+                timeout,
+                url,
+                wait,
+            )
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, request_headers=headers)
             try:
-                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout,
-                                 stream=stream)
+                r = session.post(
+                    url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream
+                )
             except TLS_ERRORS as e:
                 # Don&#39;t retry on TLS errors. They will most likely be persistent.
                 raise TransportError(str(e))
             except CONNECTION_ERRORS as e:
-                log.debug(&#39;Session %s thread %s: connection error POST\&#39;ing to %s&#39;, session.session_id, thread_id, url)
-                r = DummyResponse(url=url, headers={&#39;TimeoutException&#39;: e}, request_headers=headers)
+                log.debug(&#34;Session %s thread %s: connection error POST&#39;ing to %s&#34;, session.session_id, thread_id, url)
+                r = DummyResponse(url=url, headers={&#34;TimeoutException&#34;: e}, request_headers=headers)
             except TokenExpiredError as e:
-                log.debug(&#39;Session %s thread %s: OAuth token expired; refreshing&#39;, session.session_id, thread_id)
-                r = DummyResponse(url=url, headers={&#39;TokenExpiredError&#39;: e}, request_headers=headers, status_code=401)
+                log.debug(&#34;Session %s thread %s: OAuth token expired; refreshing&#34;, session.session_id, thread_id)
+                r = DummyResponse(url=url, headers={&#34;TokenExpiredError&#34;: e}, request_headers=headers, status_code=401)
             except KeyError as e:
-                if e.args[0] != &#39;www-authenticate&#39;:
+                if e.args[0] != &#34;www-authenticate&#34;:
                     raise
-                log.debug(&#39;Session %s thread %s: auth headers missing from %s&#39;, session.session_id, thread_id, url)
-                r = DummyResponse(url=url, headers={&#39;KeyError&#39;: e}, request_headers=headers)
+                log.debug(&#34;Session %s thread %s: auth headers missing from %s&#34;, session.session_id, thread_id, url)
+                r = DummyResponse(url=url, headers={&#34;KeyError&#34;: e}, request_headers=headers)
             finally:
                 log_vals.update(
                     retry=retry,
@@ -871,7 +898,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 )
                 xml_log_vals.update(
                     xml_request=data,
-                    xml_response=&#39;[STREAMING]&#39; if stream else r.content,
+                    xml_response=&#34;[STREAMING]&#34; if stream else r.content,
                 )
             log.debug(log_msg, log_vals)
             xml_log.debug(xml_log_msg, xml_log_vals)
@@ -882,8 +909,14 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
             total_wait = time.monotonic() - t_start
             if protocol.retry_policy.may_retry_on_error(response=r, wait=total_wait):
                 r.close()  # Release memory
-                log.info(&#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
-                         session.session_id, thread_id, r.url, r.status_code, wait)
+                log.info(
+                    &#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
+                    session.session_id,
+                    thread_id,
+                    r.url,
+                    r.status_code,
+                    wait,
+                )
                 wait = _retry_after(r, wait)
                 protocol.retry_policy.back_off(wait)
                 retry += 1
@@ -900,22 +933,20 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         raise
     except Exception as e:
         # Let higher layers handle this. Add full context for better debugging.
-        log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+        log.error(&#34;%s: %s\n%s\n%s&#34;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
         protocol.retire_session(session)
         raise
     if r.status_code == 500 and r.content and is_xml(r.content):
         # Some genius at Microsoft thinks it&#39;s OK to send a valid SOAP response as an HTTP 500
-        log.debug(&#39;Got status code %s but trying to parse content anyway&#39;, r.status_code)
+        log.debug(&#34;Got status code %s but trying to parse content anyway&#34;, r.status_code)
     elif r.status_code != 200:
         protocol.retire_session(session)
         try:
             protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
         except MalformedResponseError as e:
-            log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            log.error(&#34;%s: %s\n%s\n%s&#34;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
             raise
-        except Exception:
-            raise
-    log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
+    log.debug(&#34;Session %s thread %s: Useful response from %s&#34;, session.session_id, thread_id, url)
     return r, session
 
 
@@ -924,15 +955,14 @@ def _back_off_if_needed(back_off_until):
         sleep_secs = (back_off_until - datetime.datetime.now()).total_seconds()
         # The back off value may have expired within the last few milliseconds
         if sleep_secs &gt; 0:
-            log.warning(&#39;Server requested back off until %s. Sleeping %s seconds&#39;, back_off_until, sleep_secs)
+            log.warning(&#34;Server requested back off until %s. Sleeping %s seconds&#34;, back_off_until, sleep_secs)
             time.sleep(sleep_secs)
             return True
     return False
 
 
 def _need_new_credentials(response):
-    return response.status_code == 401 \
-        and response.headers.get(&#39;TokenExpiredError&#39;)
+    return response.status_code == 401 and response.headers.get(&#34;TokenExpiredError&#34;)
 
 
 def _redirect_or_fail(response, redirects, allow_redirects):
@@ -944,18 +974,18 @@ def _redirect_or_fail(response, redirects, allow_redirects):
         log.debug(&#34;&#39;allow_redirects&#39; only supports relative redirects (%s -&gt; %s)&#34;, response.url, e.value)
         raise RedirectError(url=e.value)
     if not allow_redirects:
-        raise TransportError(f&#39;Redirect not allowed but we were redirected ({response.url} -&gt; {redirect_url})&#39;)
-    log.debug(&#39;HTTP redirected to %s&#39;, redirect_url)
+        raise TransportError(f&#34;Redirect not allowed but we were redirected ({response.url} -&gt; {redirect_url})&#34;)
+    log.debug(&#34;HTTP redirected to %s&#34;, redirect_url)
     redirects += 1
     if redirects &gt; MAX_REDIRECTS:
-        raise TransportError(&#39;Max redirect count exceeded&#39;)
+        raise TransportError(&#34;Max redirect count exceeded&#34;)
     return redirect_url, redirects
 
 
 def _retry_after(r, wait):
     &#34;&#34;&#34;Either return the Retry-After header value or the default wait, whichever is larger.&#34;&#34;&#34;
     try:
-        retry_after = int(r.headers.get(&#39;Retry-After&#39;, &#39;0&#39;))
+        retry_after = int(r.headers.get(&#34;Retry-After&#34;, &#34;0&#34;))
     except ValueError:
         pass
     else:
@@ -1006,10 +1036,11 @@ def _retry_after(r, wait):
     :return:
     &#34;&#34;&#34;
     from .queryset import QuerySet
-    if hasattr(iterable, &#39;__getitem__&#39;) and not isinstance(iterable, QuerySet):
+
+    if hasattr(iterable, &#34;__getitem__&#34;) and not isinstance(iterable, QuerySet):
         # tuple, list. QuerySet has __getitem__ but that evaluates the entire query greedily. We don&#39;t want that here.
         for i in range(0, len(iterable), chunksize):
-            yield iterable[i:i + chunksize]
+            yield iterable[i : i + chunksize]
     else:
         # generator, set, map, QuerySet
         chunk = []
@@ -1032,16 +1063,16 @@ def _retry_after(r, wait):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_element(name, attrs=None, nsmap=None):
-    if &#39;:&#39; in name:
-        ns, name = name.split(&#39;:&#39;)
-        name = f&#39;{{{ns_translation[ns]}}}{name}&#39;
+    if &#34;:&#34; in name:
+        ns, name = name.split(&#34;:&#34;)
+        name = f&#34;{{{ns_translation[ns]}}}{name}&#34;
     elem = _forgiving_parser.makeelement(name, nsmap=nsmap)
     if attrs:
         # Try hard to keep attribute order, to ensure deterministic output. This simplifies testing.
         # Dicts in Python 3.6+ have stable ordering.
         for k, v in attrs.items():
             if isinstance(v, bool):
-                v = &#39;true&#39; if v else &#39;false&#39;
+                v = &#34;true&#34; if v else &#34;false&#34;
             elif isinstance(v, int):
                 v = str(v)
             elem.set(k, v)
@@ -1059,7 +1090,7 @@ def _retry_after(r, wait):
 </summary>
 <pre><code class="python">def get_domain(email):
     try:
-        return email.split(&#39;@&#39;)[1].lower()
+        return email.split(&#34;@&#34;)[1].lower()
     except (IndexError, AttributeError):
         raise ValueError(f&#34;{email!r} is not a valid email&#34;)</code></pre>
 </details>
@@ -1076,9 +1107,9 @@ def _retry_after(r, wait):
 <pre><code class="python">def get_redirect_url(response, allow_relative=True, require_relative=False):
     # allow_relative=False throws RelativeRedirect error if scheme and hostname are equal to the request
     # require_relative=True throws RelativeRedirect error if scheme and hostname are not equal to the request
-    redirect_url = response.headers.get(&#39;location&#39;)
+    redirect_url = response.headers.get(&#34;location&#34;)
     if not redirect_url:
-        raise TransportError(&#39;HTTP redirect but no location header&#39;)
+        raise TransportError(&#34;HTTP redirect but no location header&#34;)
     # At least some servers are kind enough to supply a new location. It may be relative
     redirect_has_ssl, redirect_server, redirect_path = split_url(redirect_url)
     # The response may have been redirected already. Get the original URL
@@ -1090,13 +1121,13 @@ def _retry_after(r, wait):
         # Redirect URL is relative. Inherit server and scheme from response URL
         redirect_server = response_server
         redirect_has_ssl = response_has_ssl
-    if not redirect_path.startswith(&#39;/&#39;):
+    if not redirect_path.startswith(&#34;/&#34;):
         # The path is not top-level. Add response path
-        redirect_path = (response_path or &#39;/&#39;) + redirect_path
+        redirect_path = (response_path or &#34;/&#34;) + redirect_path
     redirect_url = f&#34;{&#39;https&#39; if redirect_has_ssl else &#39;http&#39;}://{redirect_server}{redirect_path}&#34;
     if redirect_url == request_url:
         # And some are mean enough to redirect to the same location
-        raise TransportError(f&#39;Redirect to same location: {redirect_url}&#39;)
+        raise TransportError(f&#34;Redirect to same location: {redirect_url}&#34;)
     if not allow_relative and (request_has_ssl == response_has_ssl and request_server == redirect_server):
         raise RelativeRedirect(redirect_url)
     if require_relative and (request_has_ssl != response_has_ssl or request_server != redirect_server):
@@ -1158,7 +1189,7 @@ bytes.</p>
     :return: True or False
     &#34;&#34;&#34;
     if generators_allowed:
-        if not isinstance(value, (bytes, str)) and hasattr(value, &#39;__iter__&#39;):
+        if not isinstance(value, (bytes, str)) and hasattr(value, &#34;__iter__&#34;):
             return True
     else:
         if isinstance(value, (tuple, list, set)):
@@ -1178,7 +1209,7 @@ bytes.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_xml(text, expected_prefix=b&#39;&lt;?xml&#39;):
+<pre><code class="python">def is_xml(text, expected_prefix=b&#34;&lt;?xml&#34;):
     &#34;&#34;&#34;Lightweight test if response is an XML doc. It&#39;s better to be fast than correct here.
 
     :param text: The string to check
@@ -1189,7 +1220,7 @@ bytes.</p>
     bom_len = len(BOM_UTF8)
     prefix_len = len(expected_prefix)
     if text[:bom_len] == BOM_UTF8:
-        prefix = text[bom_len:bom_len + prefix_len]
+        prefix = text[bom_len : bom_len + prefix_len]
     else:
         prefix = text[:prefix_len]
     return prefix == expected_prefix</code></pre>
@@ -1212,7 +1243,7 @@ bytes.</p>
     :param iterable:
     :return:
     &#34;&#34;&#34;
-    if hasattr(iterable, &#39;__len__&#39;):
+    if hasattr(iterable, &#34;__len__&#34;):
         # tuple, list, set
         return not iterable, iterable
     # generator
@@ -1303,7 +1334,7 @@ intend to raise an exception. We give up on max_wait timeout, not number of retr
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
     redirects = 0
-    log_msg = &#39;&#39;&#39;\
+    log_msg = &#34;&#34;&#34;\
 Retry: %(retry)s
 Waited: %(wait)s
 Timeout: %(timeout)s
@@ -1317,10 +1348,10 @@ Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
 Request headers: %(request_headers)s
-Response headers: %(response_headers)s&#39;&#39;&#39;
-    xml_log_msg = &#39;&#39;&#39;\
+Response headers: %(response_headers)s&#34;&#34;&#34;
+    xml_log_msg = &#34;&#34;&#34;\
 Request XML: %(xml_request)s
-Response XML: %(xml_response)s&#39;&#39;&#39;
+Response XML: %(xml_response)s&#34;&#34;&#34;
     log_vals = dict(
         retry=retry,
         wait=wait,
@@ -1348,28 +1379,36 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
             if backed_off:
                 # We may have slept for a long time. Renew the session.
                 session = protocol.renew_session(session)
-            log.debug(&#39;Session %s thread %s: retry %s timeout %s POST\&#39;ing to %s after %ss wait&#39;, session.session_id,
-                      thread_id, retry, timeout, url, wait)
+            log.debug(
+                &#34;Session %s thread %s: retry %s timeout %s POST&#39;ing to %s after %ss wait&#34;,
+                session.session_id,
+                thread_id,
+                retry,
+                timeout,
+                url,
+                wait,
+            )
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, request_headers=headers)
             try:
-                r = session.post(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout,
-                                 stream=stream)
+                r = session.post(
+                    url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream
+                )
             except TLS_ERRORS as e:
                 # Don&#39;t retry on TLS errors. They will most likely be persistent.
                 raise TransportError(str(e))
             except CONNECTION_ERRORS as e:
-                log.debug(&#39;Session %s thread %s: connection error POST\&#39;ing to %s&#39;, session.session_id, thread_id, url)
-                r = DummyResponse(url=url, headers={&#39;TimeoutException&#39;: e}, request_headers=headers)
+                log.debug(&#34;Session %s thread %s: connection error POST&#39;ing to %s&#34;, session.session_id, thread_id, url)
+                r = DummyResponse(url=url, headers={&#34;TimeoutException&#34;: e}, request_headers=headers)
             except TokenExpiredError as e:
-                log.debug(&#39;Session %s thread %s: OAuth token expired; refreshing&#39;, session.session_id, thread_id)
-                r = DummyResponse(url=url, headers={&#39;TokenExpiredError&#39;: e}, request_headers=headers, status_code=401)
+                log.debug(&#34;Session %s thread %s: OAuth token expired; refreshing&#34;, session.session_id, thread_id)
+                r = DummyResponse(url=url, headers={&#34;TokenExpiredError&#34;: e}, request_headers=headers, status_code=401)
             except KeyError as e:
-                if e.args[0] != &#39;www-authenticate&#39;:
+                if e.args[0] != &#34;www-authenticate&#34;:
                     raise
-                log.debug(&#39;Session %s thread %s: auth headers missing from %s&#39;, session.session_id, thread_id, url)
-                r = DummyResponse(url=url, headers={&#39;KeyError&#39;: e}, request_headers=headers)
+                log.debug(&#34;Session %s thread %s: auth headers missing from %s&#34;, session.session_id, thread_id, url)
+                r = DummyResponse(url=url, headers={&#34;KeyError&#34;: e}, request_headers=headers)
             finally:
                 log_vals.update(
                     retry=retry,
@@ -1383,7 +1422,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
                 )
                 xml_log_vals.update(
                     xml_request=data,
-                    xml_response=&#39;[STREAMING]&#39; if stream else r.content,
+                    xml_response=&#34;[STREAMING]&#34; if stream else r.content,
                 )
             log.debug(log_msg, log_vals)
             xml_log.debug(xml_log_msg, xml_log_vals)
@@ -1394,8 +1433,14 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
             total_wait = time.monotonic() - t_start
             if protocol.retry_policy.may_retry_on_error(response=r, wait=total_wait):
                 r.close()  # Release memory
-                log.info(&#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
-                         session.session_id, thread_id, r.url, r.status_code, wait)
+                log.info(
+                    &#34;Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs&#34;,
+                    session.session_id,
+                    thread_id,
+                    r.url,
+                    r.status_code,
+                    wait,
+                )
                 wait = _retry_after(r, wait)
                 protocol.retry_policy.back_off(wait)
                 retry += 1
@@ -1412,22 +1457,20 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         raise
     except Exception as e:
         # Let higher layers handle this. Add full context for better debugging.
-        log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+        log.error(&#34;%s: %s\n%s\n%s&#34;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
         protocol.retire_session(session)
         raise
     if r.status_code == 500 and r.content and is_xml(r.content):
         # Some genius at Microsoft thinks it&#39;s OK to send a valid SOAP response as an HTTP 500
-        log.debug(&#39;Got status code %s but trying to parse content anyway&#39;, r.status_code)
+        log.debug(&#34;Got status code %s but trying to parse content anyway&#34;, r.status_code)
     elif r.status_code != 200:
         protocol.retire_session(session)
         try:
             protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
         except MalformedResponseError as e:
-            log.error(&#39;%s: %s\n%s\n%s&#39;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
+            log.error(&#34;%s: %s\n%s\n%s&#34;, e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
             raise
-        except Exception:
-            raise
-    log.debug(&#39;Session %s thread %s: Useful response from %s&#39;, session.session_id, thread_id, url)
+    log.debug(&#34;Session %s thread %s: Useful response from %s&#34;, session.session_id, thread_id, url)
     return r, session</code></pre>
 </details>
 </dd>
@@ -1461,8 +1504,9 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         return f(self, *args, **kwargs)
+
     return wrapper</code></pre>
 </details>
 </dd>
@@ -1479,10 +1523,11 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not self.account:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an account&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
         if not self.id:
-            raise ValueError(f&#39;{self.__class__.__name__} must have an ID&#39;)
+            raise ValueError(f&#34;{self.__class__.__name__} must have an ID&#34;)
         return f(self, *args, **kwargs)
+
     return wrapper</code></pre>
 </details>
 </dd>
@@ -1501,9 +1546,9 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     overflow = len(data) % 4
     if overflow:
         if isinstance(data, str):
-            padding = &#39;=&#39; * (4 - overflow)
+            padding = &#34;=&#34; * (4 - overflow)
         else:
-            padding = b&#39;=&#39; * (4 - overflow)
+            padding = b&#34;=&#34; * (4 - overflow)
         data += padding
     return b64decode(data)</code></pre>
 </details>
@@ -1517,7 +1562,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def safe_xml_value(value, replacement=&#39;?&#39;):
+<pre><code class="python">def safe_xml_value(value, replacement=&#34;?&#34;):
     return _ILLEGAL_XML_CHARS_RE.sub(replacement, value)</code></pre>
 </details>
 </dd>
@@ -1531,10 +1576,11 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_xml_value(elem, value, version=None):
-    from .ewsdatetime import EWSDateTime, EWSDate
-    from .fields import FieldPath, FieldOrder
+    from .ewsdatetime import EWSDate, EWSDateTime
+    from .fields import FieldOrder, FieldPath
     from .properties import EWSElement
     from .version import Version
+
     if isinstance(value, (str, bool, bytes, int, Decimal, datetime.time, EWSDate, EWSDateTime)):
         elem.text = value_to_xml_text(value)
     elif isinstance(value, _element_class):
@@ -1543,13 +1589,13 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
         if not isinstance(version, Version):
-            raise InvalidTypeError(&#39;version&#39;, version, Version)
+            raise InvalidTypeError(&#34;version&#34;, version, Version)
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:
             set_xml_value(elem, v, version=version)
     else:
-        raise ValueError(f&#39;Unsupported type {type(value)} for value {value} on elem {elem}&#39;)
+        raise ValueError(f&#34;Unsupported type {type(value)} for value {value} on elem {elem}&#34;)
     return elem</code></pre>
 </details>
 </dd>
@@ -1565,7 +1611,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <pre><code class="python">def split_url(url):
     parsed_url = urlparse(url)
     # Use netloc instead of hostname since hostname is None if URL is relative
-    return parsed_url.scheme == &#39;https&#39;, parsed_url.netloc.lower(), parsed_url.path</code></pre>
+    return parsed_url.scheme == &#34;https&#34;, parsed_url.netloc.lower(), parsed_url.path</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.to_xml"><code class="name flex">
@@ -1587,35 +1633,35 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     try:
         res = lxml.etree.parse(stream, parser=_forgiving_parser)  # nosec
     except AssertionError as e:
-        raise ParseError(e.args[0], &#39;&lt;not from file&gt;&#39;, -1, 0)
+        raise ParseError(e.args[0], &#34;&lt;not from file&gt;&#34;, -1, 0)
     except lxml.etree.ParseError as e:
-        if hasattr(e, &#39;position&#39;):
+        if hasattr(e, &#34;position&#34;):
             e.lineno, e.offset = e.position
         if not e.lineno:
-            raise ParseError(str(e), &#39;&lt;not from file&gt;&#39;, e.lineno, e.offset)
+            raise ParseError(str(e), &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
         try:
             stream.seek(0)
             offending_line = stream.read().splitlines()[e.lineno - 1]
         except (IndexError, io.UnsupportedOperation):
-            raise ParseError(str(e), &#39;&lt;not from file&gt;&#39;, e.lineno, e.offset)
+            raise ParseError(str(e), &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
         else:
-            offending_excerpt = offending_line[max(0, e.offset - 20):e.offset + 20]
+            offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
             msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
-            raise ParseError(msg, &#39;&lt;not from file&gt;&#39;, e.lineno, e.offset)
+            raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
     except TypeError:
         try:
             stream.seek(0)
         except (IndexError, io.UnsupportedOperation):
             pass
-        raise ParseError(f&#39;This is not XML: {stream.read()!r}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+        raise ParseError(f&#34;This is not XML: {stream.read()!r}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
 
     if res.getroot() is None:
         try:
             stream.seek(0)
-            msg = f&#39;No root element found: {stream.read()!r}&#39;
+            msg = f&#34;No root element found: {stream.read()!r}&#34;
         except (IndexError, io.UnsupportedOperation):
-            msg = &#39;No root element found&#39;
-        raise ParseError(msg, &#39;&lt;not from file&gt;&#39;, -1, 0)
+            msg = &#34;No root element found&#34;
+        raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, -1, 0)
     return res</code></pre>
 </details>
 </dd>
@@ -1629,16 +1675,17 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def value_to_xml_text(value):
-    from .ewsdatetime import EWSTimeZone, EWSDateTime, EWSDate
-    from .indexed_properties import PhoneNumber, EmailAddress
-    from .properties import Mailbox, AssociatedCalendarItemId, Attendee, ConversationId
+    from .ewsdatetime import EWSDate, EWSDateTime, EWSTimeZone
+    from .indexed_properties import EmailAddress, PhoneNumber
+    from .properties import AssociatedCalendarItemId, Attendee, ConversationId, Mailbox
+
     # We can&#39;t just create a map and look up with type(value) because we want to support subtypes
     if isinstance(value, str):
         return safe_xml_value(value)
     if isinstance(value, bool):
-        return &#39;1&#39; if value else &#39;0&#39;
+        return &#34;1&#34; if value else &#34;0&#34;
     if isinstance(value, bytes):
-        return b64encode(value).decode(&#39;ascii&#39;)
+        return b64encode(value).decode(&#34;ascii&#34;)
     if isinstance(value, (int, Decimal)):
         return str(value)
     if isinstance(value, datetime.time):
@@ -1661,7 +1708,7 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         return value.id
     if isinstance(value, AssociatedCalendarItemId):
         return value.id
-    raise TypeError(f&#39;Unsupported type: {type(value)} ({value})&#39;)</code></pre>
+    raise TypeError(f&#34;Unsupported type: {type(value)} ({value})&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.xml_text_to_value"><code class="name flex">
@@ -1675,15 +1722,16 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 </summary>
 <pre><code class="python">def xml_text_to_value(value, value_type):
     from .ewsdatetime import EWSDate, EWSDateTime
+
     if value_type == str:
         return value
     if value_type == bool:
         try:
             return {
-                &#39;true&#39;: True,
-                &#39;on&#39;: True,
-                &#39;false&#39;: False,
-                &#39;off&#39;: False,
+                &#34;true&#34;: True,
+                &#34;on&#34;: True,
+                &#34;false&#34;: False,
+                &#34;off&#34;: False,
             }[value.lower()]
         except KeyError:
             return None
@@ -1746,7 +1794,8 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
 </summary>
 <pre><code class="python">class AnonymizingXmlHandler(PrettyXmlHandler):
     &#34;&#34;&#34;A steaming log handler that prettifies and anonymizes log statements containing XML when output is a terminal.&#34;&#34;&#34;
-    PRIVATE_TAGS = {&#39;RootItemId&#39;, &#39;ItemId&#39;, &#39;Id&#39;, &#39;RootItemChangeKey&#39;, &#39;ChangeKey&#39;}
+
+    PRIVATE_TAGS = {&#34;RootItemId&#34;, &#34;ItemId&#34;, &#34;Id&#34;, &#34;RootItemChangeKey&#34;, &#34;ChangeKey&#34;}
 
     def __init__(self, forbidden_strings, *args, **kwargs):
         self.forbidden_strings = forbidden_strings
@@ -1757,11 +1806,11 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
         for elem in root.iter():
             # Anonymize element attribute values known to contain private data
             for attr in set(elem.keys()) &amp; self.PRIVATE_TAGS:
-                elem.set(attr, &#39;DEADBEEF=&#39;)
+                elem.set(attr, &#34;DEADBEEF=&#34;)
             # Anonymize anything requested by the caller
             for s in self.forbidden_strings:
                 if elem.text is not None:
-                    elem.text = elem.text.replace(s, &#39;[REMOVED]&#39;)
+                    elem.text = elem.text.replace(s, &#34;[REMOVED]&#34;)
         return root</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1794,11 +1843,11 @@ Response XML: %(xml_response)s&#39;&#39;&#39;
     for elem in root.iter():
         # Anonymize element attribute values known to contain private data
         for attr in set(elem.keys()) &amp; self.PRIVATE_TAGS:
-            elem.set(attr, &#39;DEADBEEF=&#39;)
+            elem.set(attr, &#34;DEADBEEF=&#34;)
         # Anonymize anything requested by the caller
         for s in self.forbidden_strings:
             if elem.text is not None:
-                elem.text = elem.text.replace(s, &#39;[REMOVED]&#39;)
+                elem.text = elem.text.replace(s, &#34;[REMOVED]&#34;)
     return root</code></pre>
 </details>
 </dd>
@@ -1851,7 +1900,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         if self.closed:
             raise ValueError(&#34;read from a closed file&#34;)
         if self._next is None:
-            return b&#39;&#39;
+            return b&#34;&#34;
         if size is None:
             size = -1
 
@@ -1915,7 +1964,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
     if self.closed:
         raise ValueError(&#34;read from a closed file&#34;)
     if self._next is None:
-        return b&#39;&#39;
+        return b&#34;&#34;
     if size is None:
         size = -1
 
@@ -1977,7 +2026,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <pre><code class="python">class DocumentYielder:
     &#34;&#34;&#34;Look for XML documents in a streaming HTTP response and yield them as they become available from the stream.&#34;&#34;&#34;
 
-    def __init__(self, content_iterator, document_tag=&#39;Envelope&#39;):
+    def __init__(self, content_iterator, document_tag=&#34;Envelope&#34;):
         self._iterator = content_iterator
         self._document_tag = document_tag.encode()
 
@@ -1985,16 +2034,16 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         &#34;&#34;&#34;Iterate over the bytes until we have a full tag in the buffer. If there&#39;s a &#39;&gt;&#39; in an attr value, then we&#39;ll
         exit on that, but it&#39;s OK becaus wejust need the plain tag name later.
         &#34;&#34;&#34;
-        tag_buffer = [b&#39;&lt;&#39;]
+        tag_buffer = [b&#34;&lt;&#34;]
         while True:
             try:
                 c = next(self._iterator)
             except StopIteration:
                 break
             tag_buffer.append(c)
-            if c == b&#39;&gt;&#39;:
+            if c == b&#34;&gt;&#34;:
                 break
-        return b&#39;&#39;.join(tag_buffer)
+        return b&#34;&#34;.join(tag_buffer)
 
     @staticmethod
     def _normalize_tag(tag):
@@ -2004,7 +2053,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         * &lt;ns:tag foo=&#39;bar&#39;&gt;
         * &lt;/ns:tag foo=&#39;bar&#39;&gt;
         &#34;&#34;&#34;
-        return tag.strip(b&#39;&lt;&gt;/&#39;).split(b&#39; &#39;)[0].split(b&#39;:&#39;)[-1]
+        return tag.strip(b&#34;&lt;&gt;/&#34;).split(b&#34; &#34;)[0].split(b&#34;:&#34;)[-1]
 
     def __iter__(self):
         &#34;&#34;&#34;Consumes the content iterator, looking for start and end tags. Returns each document when we have fully
@@ -2015,18 +2064,18 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         try:
             while True:
                 c = next(self._iterator)
-                if not doc_started and c == b&#39;&lt;&#39;:
+                if not doc_started and c == b&#34;&lt;&#34;:
                     tag = self._get_tag()
                     if self._normalize_tag(tag) == self._document_tag:
                         # Start of document. Collect bytes from this point
                         buffer.append(tag)
                         doc_started = True
-                elif doc_started and c == b&#39;&lt;&#39;:
+                elif doc_started and c == b&#34;&lt;&#34;:
                     tag = self._get_tag()
                     buffer.append(tag)
                     if self._normalize_tag(tag) == self._document_tag:
                         # End of document. Yield a valid document and reset the buffer
-                        yield b&#34;&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&gt;\n&#34; + b&#39;&#39;.join(buffer)
+                        yield b&#34;&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&gt;\n&#34; + b&#34;&#34;.join(buffer)
                         doc_started = False
                         buffer = []
                 elif doc_started:
@@ -2065,15 +2114,16 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <pre><code class="python">class DummyResponse:
     &#34;&#34;&#34;A class to fake a requests Response object for functions that expect this.&#34;&#34;&#34;
 
-    def __init__(self, url=None, headers=None, request_headers=None, content=b&#39;&#39;, status_code=503, streaming=False,
-                 history=None):
+    def __init__(
+        self, url=None, headers=None, request_headers=None, content=b&#34;&#34;, status_code=503, streaming=False, history=None
+    ):
         self.status_code = status_code
         self.url = url
         self.headers = headers or {}
         self.content = iter((bytes([b]) for b in content)) if streaming else content
-        self.text = content.decode(&#39;utf-8&#39;, errors=&#39;ignore&#39;)
+        self.text = content.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)
         self.request = DummyRequest(headers=request_headers)
-        self.reason = &#39;&#39;
+        self.reason = &#34;&#34;
         self.history = history
 
     def iter_content(self):
@@ -2181,12 +2231,11 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
     @classmethod
     def prettify_xml(cls, xml_bytes):
         &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
-        return lxml.etree.tostring(
-            cls.parse_bytes(xml_bytes),
-            xml_declaration=True,
-            encoding=&#39;utf-8&#39;,
-            pretty_print=True
-        ).replace(b&#39;\t&#39;, b&#39;    &#39;).replace(b&#39; xmlns:&#39;, b&#39;\n    xmlns:&#39;)
+        return (
+            lxml.etree.tostring(cls.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
+            .replace(b&#34;\t&#34;, b&#34;    &#34;)
+            .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+        )
 
     @staticmethod
     def highlight_xml(xml_str):
@@ -2203,7 +2252,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         &#34;&#34;&#34;
         if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
             for key, value in record.args.items():
-                if not key.startswith(&#39;xml_&#39;):
+                if not key.startswith(&#34;xml_&#34;):
                     continue
                 if not isinstance(value, bytes):
                     continue
@@ -2213,7 +2262,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
                     record.args[key] = self.highlight_xml(self.prettify_xml(value))
                 except Exception as e:
                     # Something bad happened, but we don&#39;t want to crash the program just because logging failed
-                    print(f&#39;XML highlighting failed: {e}&#39;)
+                    print(f&#34;XML highlighting failed: {e}&#34;)
         return super().emit(record)
 
     def is_tty(self):
@@ -2276,12 +2325,11 @@ def parse_bytes(xml_bytes):
 <pre><code class="python">@classmethod
 def prettify_xml(cls, xml_bytes):
     &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
-    return lxml.etree.tostring(
-        cls.parse_bytes(xml_bytes),
-        xml_declaration=True,
-        encoding=&#39;utf-8&#39;,
-        pretty_print=True
-    ).replace(b&#39;\t&#39;, b&#39;    &#39;).replace(b&#39; xmlns:&#39;, b&#39;\n    xmlns:&#39;)</code></pre>
+    return (
+        lxml.etree.tostring(cls.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
+        .replace(b&#34;\t&#34;, b&#34;    &#34;)
+        .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -2310,7 +2358,7 @@ def prettify_xml(cls, xml_bytes):
     &#34;&#34;&#34;
     if record.levelno == logging.DEBUG and self.is_tty() and isinstance(record.args, dict):
         for key, value in record.args.items():
-            if not key.startswith(&#39;xml_&#39;):
+            if not key.startswith(&#34;xml_&#34;):
                 continue
             if not isinstance(value, bytes):
                 continue
@@ -2320,7 +2368,7 @@ def prettify_xml(cls, xml_bytes):
                 record.args[key] = self.highlight_xml(self.prettify_xml(value))
             except Exception as e:
                 # Something bad happened, but we don&#39;t want to crash the program just because logging failed
-                print(f&#39;XML highlighting failed: {e}&#39;)
+                print(f&#34;XML highlighting failed: {e}&#34;)
     return super().emit(record)</code></pre>
 </details>
 </dd>
@@ -2382,7 +2430,7 @@ def prettify_xml(cls, xml_bytes):
         self.close()
         if not self.element_found:
             data = bytes(collected_data)
-            raise ElementNotFound(&#39;The element to be streamed from was not found&#39;, data=bytes(data))
+            raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(data))
 
     def feed(self, data, isFinal=0):
         &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
@@ -2390,13 +2438,13 @@ def prettify_xml(cls, xml_bytes):
         return self._decode_buffer()
 
     def _decode_buffer(self):
-        remainder = &#39;&#39;
+        remainder = &#34;&#34;
         for data in self.buffer:
             available = len(remainder) + len(data)
             overflow = available % 4  # Make sure we always decode a multiple of 4
             if remainder:
-                data = (remainder + data)
-                remainder = &#39;&#39;
+                data = remainder + data
+                remainder = &#34;&#34;
             if overflow:
                 remainder, data = data[-overflow:], data[:-overflow]
             if data:
@@ -2457,7 +2505,7 @@ def prettify_xml(cls, xml_bytes):
     self.close()
     if not self.element_found:
         data = bytes(collected_data)
-        raise ElementNotFound(&#39;The element to be streamed from was not found&#39;, data=bytes(data))</code></pre>
+        raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(data))</code></pre>
 </details>
 </dd>
 </dl>

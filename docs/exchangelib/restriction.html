@@ -30,8 +30,8 @@
 from copy import copy
 
 from .errors import InvalidEnumValue
-from .fields import InvalidField, FieldPath, DateTimeBackedDateField
-from .util import create_element, xml_to_str, value_to_xml_text, is_iterable
+from .fields import DateTimeBackedDateField, FieldPath, InvalidField
+from .util import create_element, is_iterable, value_to_xml_text, xml_to_str
 from .version import EXCHANGE_2010
 
 log = logging.getLogger(__name__)
@@ -41,52 +41,65 @@ class Q:
     &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implement advanced filtering logic.&#34;&#34;&#34;
 
     # Connection types
-    AND = &#39;AND&#39;
-    OR = &#39;OR&#39;
-    NOT = &#39;NOT&#39;
-    NEVER = &#39;NEVER&#39;  # This is not specified by EWS. We use it for queries that will never match, e.g. &#39;foo__in=()&#39;
+    AND = &#34;AND&#34;
+    OR = &#34;OR&#34;
+    NOT = &#34;NOT&#34;
+    NEVER = &#34;NEVER&#34;  # This is not specified by EWS. We use it for queries that will never match, e.g. &#39;foo__in=()&#39;
     CONN_TYPES = {AND, OR, NOT, NEVER}
 
     # EWS Operators
-    EQ = &#39;==&#39;
-    NE = &#39;!=&#39;
-    GT = &#39;&gt;&#39;
-    GTE = &#39;&gt;=&#39;
-    LT = &#39;&lt;&#39;
-    LTE = &#39;&lt;=&#39;
-    EXACT = &#39;exact&#39;
-    IEXACT = &#39;iexact&#39;
-    CONTAINS = &#39;contains&#39;
-    ICONTAINS = &#39;icontains&#39;
-    STARTSWITH = &#39;startswith&#39;
-    ISTARTSWITH = &#39;istartswith&#39;
-    EXISTS = &#39;exists&#39;
+    EQ = &#34;==&#34;
+    NE = &#34;!=&#34;
+    GT = &#34;&gt;&#34;
+    GTE = &#34;&gt;=&#34;
+    LT = &#34;&lt;&#34;
+    LTE = &#34;&lt;=&#34;
+    EXACT = &#34;exact&#34;
+    IEXACT = &#34;iexact&#34;
+    CONTAINS = &#34;contains&#34;
+    ICONTAINS = &#34;icontains&#34;
+    STARTSWITH = &#34;startswith&#34;
+    ISTARTSWITH = &#34;istartswith&#34;
+    EXISTS = &#34;exists&#34;
     OP_TYPES = {EQ, NE, GT, GTE, LT, LTE, EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH, EXISTS}
     CONTAINS_OPS = {EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH}
 
     # Valid lookups
-    LOOKUP_RANGE = &#39;range&#39;
-    LOOKUP_IN = &#39;in&#39;
-    LOOKUP_NOT = &#39;not&#39;
-    LOOKUP_GT = &#39;gt&#39;
-    LOOKUP_GTE = &#39;gte&#39;
-    LOOKUP_LT = &#39;lt&#39;
-    LOOKUP_LTE = &#39;lte&#39;
-    LOOKUP_EXACT = &#39;exact&#39;
-    LOOKUP_IEXACT = &#39;iexact&#39;
-    LOOKUP_CONTAINS = &#39;contains&#39;
-    LOOKUP_ICONTAINS = &#39;icontains&#39;
-    LOOKUP_STARTSWITH = &#39;startswith&#39;
-    LOOKUP_ISTARTSWITH = &#39;istartswith&#39;
-    LOOKUP_EXISTS = &#39;exists&#39;
-    LOOKUP_TYPES = {LOOKUP_RANGE, LOOKUP_IN, LOOKUP_NOT, LOOKUP_GT, LOOKUP_GTE, LOOKUP_LT, LOOKUP_LTE, LOOKUP_EXACT,
-                    LOOKUP_IEXACT, LOOKUP_CONTAINS, LOOKUP_ICONTAINS, LOOKUP_STARTSWITH, LOOKUP_ISTARTSWITH,
-                    LOOKUP_EXISTS}
+    LOOKUP_RANGE = &#34;range&#34;
+    LOOKUP_IN = &#34;in&#34;
+    LOOKUP_NOT = &#34;not&#34;
+    LOOKUP_GT = &#34;gt&#34;
+    LOOKUP_GTE = &#34;gte&#34;
+    LOOKUP_LT = &#34;lt&#34;
+    LOOKUP_LTE = &#34;lte&#34;
+    LOOKUP_EXACT = &#34;exact&#34;
+    LOOKUP_IEXACT = &#34;iexact&#34;
+    LOOKUP_CONTAINS = &#34;contains&#34;
+    LOOKUP_ICONTAINS = &#34;icontains&#34;
+    LOOKUP_STARTSWITH = &#34;startswith&#34;
+    LOOKUP_ISTARTSWITH = &#34;istartswith&#34;
+    LOOKUP_EXISTS = &#34;exists&#34;
+    LOOKUP_TYPES = {
+        LOOKUP_RANGE,
+        LOOKUP_IN,
+        LOOKUP_NOT,
+        LOOKUP_GT,
+        LOOKUP_GTE,
+        LOOKUP_LT,
+        LOOKUP_LTE,
+        LOOKUP_EXACT,
+        LOOKUP_IEXACT,
+        LOOKUP_CONTAINS,
+        LOOKUP_ICONTAINS,
+        LOOKUP_STARTSWITH,
+        LOOKUP_ISTARTSWITH,
+        LOOKUP_EXISTS,
+    }
 
-    __slots__ = &#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;
+    __slots__ = &#34;conn_type&#34;, &#34;field_path&#34;, &#34;op&#34;, &#34;value&#34;, &#34;children&#34;, &#34;query_string&#34;
 
     def __init__(self, *args, **kwargs):
-        self.conn_type = kwargs.pop(&#39;conn_type&#39;, self.AND)
+        self.conn_type = kwargs.pop(&#34;conn_type&#34;, self.AND)
 
         self.field_path = None  # Name of the field we want to filter on
         self.op = None
@@ -110,9 +123,7 @@ class Q:
         # Parse keyword args and extract the filter
         is_single_kwarg = len(args) == 0 and len(kwargs) == 1
         for key, value in kwargs.items():
-            self.children.extend(
-                self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg)
-            )
+            self.children.extend(self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg))
 
         # Simplify this object
         self.reduce()
@@ -124,7 +135,7 @@ class Q:
         &#34;&#34;&#34;Generate Q objects corresponding to a single keyword argument. Make this a leaf if there are no children to
         generate.
         &#34;&#34;&#34;
-        key_parts = key.rsplit(&#39;__&#39;, 1)
+        key_parts = key.rsplit(&#34;__&#34;, 1)
         if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
             # This is a kwarg with a lookup at the end
             field_path, lookup = key_parts
@@ -139,8 +150,8 @@ class Q:
                 if len(value) != 2:
                     raise ValueError(f&#34;Value of lookup {key!r} must have exactly 2 elements&#34;)
                 return (
-                    self.__class__(**{f&#39;{field_path}__gte&#39;: value[0]}),
-                    self.__class__(**{f&#39;{field_path}__lte&#39;: value[1]}),
+                    self.__class__(**{f&#34;{field_path}__gte&#34;: value[0]}),
+                    self.__class__(**{f&#34;{field_path}__lte&#34;: value[1]}),
                 )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
@@ -243,6 +254,7 @@ class Q:
         validating. There&#39;s no reason to replicate much of that here.
         &#34;&#34;&#34;
         from .folders import Folder
+
         self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
 
     @classmethod
@@ -265,28 +277,28 @@ class Q:
     @classmethod
     def _conn_to_xml(cls, conn_type):
         xml_tag_map = {
-            cls.AND: &#39;t:And&#39;,
-            cls.OR: &#39;t:Or&#39;,
-            cls.NOT: &#39;t:Not&#39;,
+            cls.AND: &#34;t:And&#34;,
+            cls.OR: &#34;t:Or&#34;,
+            cls.NOT: &#34;t:Not&#34;,
         }
         return create_element(xml_tag_map[conn_type])
 
     @classmethod
     def _op_to_xml(cls, op):
         xml_tag_map = {
-            cls.EQ: &#39;t:IsEqualTo&#39;,
-            cls.NE: &#39;t:IsNotEqualTo&#39;,
-            cls.GTE: &#39;t:IsGreaterThanOrEqualTo&#39;,
-            cls.LTE: &#39;t:IsLessThanOrEqualTo&#39;,
-            cls.LT: &#39;t:IsLessThan&#39;,
-            cls.GT: &#39;t:IsGreaterThan&#39;,
-            cls.EXISTS: &#39;t:Exists&#39;,
+            cls.EQ: &#34;t:IsEqualTo&#34;,
+            cls.NE: &#34;t:IsNotEqualTo&#34;,
+            cls.GTE: &#34;t:IsGreaterThanOrEqualTo&#34;,
+            cls.LTE: &#34;t:IsLessThanOrEqualTo&#34;,
+            cls.LT: &#34;t:IsLessThan&#34;,
+            cls.GT: &#34;t:IsGreaterThan&#34;,
+            cls.EXISTS: &#34;t:Exists&#34;,
         }
         if op in xml_tag_map:
             return create_element(xml_tag_map[op])
         valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
         if op not in valid_ops:
-            raise InvalidEnumValue(&#39;op&#39;, op, valid_ops)
+            raise InvalidEnumValue(&#34;op&#34;, op, valid_ops)
 
         # For description of Contains attribute values, see
         #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
@@ -310,21 +322,18 @@ class Q:
         #    https://en.wikipedia.org/wiki/Graphic_character#Spacing_and_non-spacing_characters
         # we shouldn&#39;t ignore them (&#39;a&#39; would match both &#39;a&#39; and &#39;å&#39;, the latter having a non-spacing character).
         if op in {cls.EXACT, cls.IEXACT}:
-            match_mode = &#39;FullString&#39;
+            match_mode = &#34;FullString&#34;
         elif op in (cls.CONTAINS, cls.ICONTAINS):
-            match_mode = &#39;Substring&#39;
+            match_mode = &#34;Substring&#34;
         elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
-            match_mode = &#39;Prefixed&#39;
+            match_mode = &#34;Prefixed&#34;
         else:
-            raise ValueError(f&#39;Unsupported op: {op}&#39;)
+            raise ValueError(f&#34;Unsupported op: {op}&#34;)
         if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
-            compare_mode = &#39;IgnoreCase&#39;
+            compare_mode = &#34;IgnoreCase&#34;
         else:
-            compare_mode = &#39;Exact&#39;
-        return create_element(
-            &#39;t:Contains&#39;,
-            attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode)
-        )
+            compare_mode = &#34;Exact&#34;
+        return create_element(&#34;t:Contains&#34;, attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode))
 
     def is_leaf(self):
         return not self.children
@@ -345,33 +354,33 @@ class Q:
         if self.query_string:
             return self.query_string
         if self.is_leaf():
-            expr = f&#39;{self.field_path} {self.op} {self.value!r}&#39;
+            expr = f&#34;{self.field_path} {self.op} {self.value!r}&#34;
         else:
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-            expr = f&#39; {self.AND if self.conn_type == self.NOT else self.conn_type} &#39;.join(
-                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#39;({c.expr()})&#39;)
-                for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
+            expr = f&#34; {self.AND if self.conn_type == self.NOT else self.conn_type} &#34;.join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#34;({c.expr()})&#34;)
+                for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;)
             )
         if self.conn_type == self.NOT:
             # Add the NOT operator. Put children in parens if there is more than one child.
             if self.is_leaf() or len(self.children) == 1:
-                return self.conn_type + f&#39; {expr}&#39;
-            return self.conn_type + f&#39; ({expr})&#39;
+                return self.conn_type + f&#34; {expr}&#34;
+            return self.conn_type + f&#34; ({expr})&#34;
         return expr
 
     def to_xml(self, folders, version, applies_to):
         if self.query_string:
             self._check_integrity()
             if version.build &lt; EXCHANGE_2010:
-                raise NotImplementedError(&#39;QueryString filtering is only supported for Exchange 2010 servers and later&#39;)
-            elem = create_element(&#39;m:QueryString&#39;)
+                raise NotImplementedError(&#34;QueryString filtering is only supported for Exchange 2010 servers and later&#34;)
+            elem = create_element(&#34;m:QueryString&#34;)
             elem.text = self.query_string
             return elem
         # Translate this Q object to a valid Restriction XML tree
         elem = self.xml_elem(folders=folders, version=version, applies_to=applies_to)
         if elem is None:
             return None
-        restriction = create_element(&#39;m:Restriction&#39;)
+        restriction = create_element(&#34;m:Restriction&#34;)
         restriction.append(elem)
         return restriction
 
@@ -384,30 +393,31 @@ class Q:
             return
         if self.query_string:
             if any([self.field_path, self.op, self.value, self.children]):
-                raise ValueError(&#39;Query strings cannot be combined with other settings&#39;)
+                raise ValueError(&#34;Query strings cannot be combined with other settings&#34;)
             return
         if self.conn_type not in self.CONN_TYPES:
-            raise InvalidEnumValue(&#39;conn_type&#39;, self.conn_type, self.CONN_TYPES)
+            raise InvalidEnumValue(&#34;conn_type&#34;, self.conn_type, self.CONN_TYPES)
         if not self.is_leaf():
             for q in self.children:
                 if q.query_string and len(self.children) &gt; 1:
-                    raise ValueError(&#39;A query string cannot be combined with other restrictions&#39;)
+                    raise ValueError(&#34;A query string cannot be combined with other restrictions&#34;)
             return
         if not self.field_path:
             raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
         if self.op not in self.OP_TYPES:
-            raise InvalidEnumValue(&#39;op&#39;, self.op, self.OP_TYPES)
+            raise InvalidEnumValue(&#34;op&#34;, self.op, self.OP_TYPES)
         if self.op == self.EXISTS and self.value is not True:
             raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
         if self.value is None:
-            raise ValueError(f&#39;Value for filter on field path {self.field_path!r} cannot be None&#39;)
+            raise ValueError(f&#34;Value for filter on field path {self.field_path!r} cannot be None&#34;)
         if is_iterable(self.value, generators_allowed=True):
             raise ValueError(
-                f&#39;Value {self.value!r} for filter on field path {self.field_path!r} must be a single value&#39;
+                f&#34;Value {self.value!r} for filter on field path {self.field_path!r} must be a single value&#34;
             )
 
     def _validate_field_path(self, field_path, folder, applies_to, version):
         from .indexed_properties import MultiFieldIndexedElement
+
         if applies_to == Restriction.FOLDERS:
             # This is a restriction on Folder fields
             folder.validate_field(field=field_path.field, version=version)
@@ -452,6 +462,7 @@ class Q:
         # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
         # return None.
         from .indexed_properties import SingleFieldIndexedElement
+
         # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
         # This is done in _get_field_path() and _get_clean_value(), respectively.
         self._check_integrity()
@@ -472,11 +483,11 @@ class Q:
                 clean_value = field_path.field.date_to_datetime(clean_value)
             elem.append(field_path.to_xml())
             if self.op != self.EXISTS:
-                constant = create_element(&#39;t:Constant&#39;, attrs=dict(Value=value_to_xml_text(clean_value)))
+                constant = create_element(&#34;t:Constant&#34;, attrs=dict(Value=value_to_xml_text(clean_value)))
                 if self.op in self.CONTAINS_OPS:
                     elem.append(constant)
                 else:
-                    uriorconst = create_element(&#39;t:FieldURIOrConstant&#39;)
+                    uriorconst = create_element(&#34;t:FieldURIOrConstant&#34;)
                     uriorconst.append(constant)
                     elem.append(uriorconst)
         elif len(self.children) == 1:
@@ -486,7 +497,7 @@ class Q:
             # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
             elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty
-            for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;):
+            for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;):
                 elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
         if elem is None:
             return None  # Should not be necessary, but play safe
@@ -538,16 +549,16 @@ class Q:
         return hash(repr(self))
 
     def __str__(self):
-        return self.expr() or &#39;Q()&#39;
+        return self.expr() or &#34;Q()&#34;
 
     def __repr__(self):
         if self.is_leaf():
             if self.query_string:
-                return self.__class__.__name__ + f&#39;({self.query_string!r})&#39;
+                return self.__class__.__name__ + f&#34;({self.query_string!r})&#34;
             if self.is_never():
-                return self.__class__.__name__ + f&#39;(conn_type={self.conn_type!r})&#39;
-            return self.__class__.__name__ + f&#39;({self.field_path} {self.op} {self.value!r})&#39;
-        sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#39;&#39;))
+                return self.__class__.__name__ + f&#34;(conn_type={self.conn_type!r})&#34;
+            return self.__class__.__name__ + f&#34;({self.field_path} {self.op} {self.value!r})&#34;
+        sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#34;&#34;))
         if self.conn_type == self.NOT or len(self.children) &gt; 1:
             return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
         return self.__class__.__name__ + repr(sorted_children)
@@ -557,8 +568,8 @@ class Restriction:
     &#34;&#34;&#34;Implement an EWS Restriction type.&#34;&#34;&#34;
 
     # The type of item the restriction applies to
-    FOLDERS = &#39;folders&#39;
-    ITEMS = &#39;items&#39;
+    FOLDERS = &#34;folders&#34;
+    ITEMS = &#34;items&#34;
     RESTRICTION_TYPES = (FOLDERS, ITEMS)
 
     def __init__(self, q, folders, applies_to):
@@ -604,52 +615,65 @@ class Restriction:
     &#34;&#34;&#34;A class with an API similar to Django Q objects. Used to implement advanced filtering logic.&#34;&#34;&#34;
 
     # Connection types
-    AND = &#39;AND&#39;
-    OR = &#39;OR&#39;
-    NOT = &#39;NOT&#39;
-    NEVER = &#39;NEVER&#39;  # This is not specified by EWS. We use it for queries that will never match, e.g. &#39;foo__in=()&#39;
+    AND = &#34;AND&#34;
+    OR = &#34;OR&#34;
+    NOT = &#34;NOT&#34;
+    NEVER = &#34;NEVER&#34;  # This is not specified by EWS. We use it for queries that will never match, e.g. &#39;foo__in=()&#39;
     CONN_TYPES = {AND, OR, NOT, NEVER}
 
     # EWS Operators
-    EQ = &#39;==&#39;
-    NE = &#39;!=&#39;
-    GT = &#39;&gt;&#39;
-    GTE = &#39;&gt;=&#39;
-    LT = &#39;&lt;&#39;
-    LTE = &#39;&lt;=&#39;
-    EXACT = &#39;exact&#39;
-    IEXACT = &#39;iexact&#39;
-    CONTAINS = &#39;contains&#39;
-    ICONTAINS = &#39;icontains&#39;
-    STARTSWITH = &#39;startswith&#39;
-    ISTARTSWITH = &#39;istartswith&#39;
-    EXISTS = &#39;exists&#39;
+    EQ = &#34;==&#34;
+    NE = &#34;!=&#34;
+    GT = &#34;&gt;&#34;
+    GTE = &#34;&gt;=&#34;
+    LT = &#34;&lt;&#34;
+    LTE = &#34;&lt;=&#34;
+    EXACT = &#34;exact&#34;
+    IEXACT = &#34;iexact&#34;
+    CONTAINS = &#34;contains&#34;
+    ICONTAINS = &#34;icontains&#34;
+    STARTSWITH = &#34;startswith&#34;
+    ISTARTSWITH = &#34;istartswith&#34;
+    EXISTS = &#34;exists&#34;
     OP_TYPES = {EQ, NE, GT, GTE, LT, LTE, EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH, EXISTS}
     CONTAINS_OPS = {EXACT, IEXACT, CONTAINS, ICONTAINS, STARTSWITH, ISTARTSWITH}
 
     # Valid lookups
-    LOOKUP_RANGE = &#39;range&#39;
-    LOOKUP_IN = &#39;in&#39;
-    LOOKUP_NOT = &#39;not&#39;
-    LOOKUP_GT = &#39;gt&#39;
-    LOOKUP_GTE = &#39;gte&#39;
-    LOOKUP_LT = &#39;lt&#39;
-    LOOKUP_LTE = &#39;lte&#39;
-    LOOKUP_EXACT = &#39;exact&#39;
-    LOOKUP_IEXACT = &#39;iexact&#39;
-    LOOKUP_CONTAINS = &#39;contains&#39;
-    LOOKUP_ICONTAINS = &#39;icontains&#39;
-    LOOKUP_STARTSWITH = &#39;startswith&#39;
-    LOOKUP_ISTARTSWITH = &#39;istartswith&#39;
-    LOOKUP_EXISTS = &#39;exists&#39;
-    LOOKUP_TYPES = {LOOKUP_RANGE, LOOKUP_IN, LOOKUP_NOT, LOOKUP_GT, LOOKUP_GTE, LOOKUP_LT, LOOKUP_LTE, LOOKUP_EXACT,
-                    LOOKUP_IEXACT, LOOKUP_CONTAINS, LOOKUP_ICONTAINS, LOOKUP_STARTSWITH, LOOKUP_ISTARTSWITH,
-                    LOOKUP_EXISTS}
+    LOOKUP_RANGE = &#34;range&#34;
+    LOOKUP_IN = &#34;in&#34;
+    LOOKUP_NOT = &#34;not&#34;
+    LOOKUP_GT = &#34;gt&#34;
+    LOOKUP_GTE = &#34;gte&#34;
+    LOOKUP_LT = &#34;lt&#34;
+    LOOKUP_LTE = &#34;lte&#34;
+    LOOKUP_EXACT = &#34;exact&#34;
+    LOOKUP_IEXACT = &#34;iexact&#34;
+    LOOKUP_CONTAINS = &#34;contains&#34;
+    LOOKUP_ICONTAINS = &#34;icontains&#34;
+    LOOKUP_STARTSWITH = &#34;startswith&#34;
+    LOOKUP_ISTARTSWITH = &#34;istartswith&#34;
+    LOOKUP_EXISTS = &#34;exists&#34;
+    LOOKUP_TYPES = {
+        LOOKUP_RANGE,
+        LOOKUP_IN,
+        LOOKUP_NOT,
+        LOOKUP_GT,
+        LOOKUP_GTE,
+        LOOKUP_LT,
+        LOOKUP_LTE,
+        LOOKUP_EXACT,
+        LOOKUP_IEXACT,
+        LOOKUP_CONTAINS,
+        LOOKUP_ICONTAINS,
+        LOOKUP_STARTSWITH,
+        LOOKUP_ISTARTSWITH,
+        LOOKUP_EXISTS,
+    }
 
-    __slots__ = &#39;conn_type&#39;, &#39;field_path&#39;, &#39;op&#39;, &#39;value&#39;, &#39;children&#39;, &#39;query_string&#39;
+    __slots__ = &#34;conn_type&#34;, &#34;field_path&#34;, &#34;op&#34;, &#34;value&#34;, &#34;children&#34;, &#34;query_string&#34;
 
     def __init__(self, *args, **kwargs):
-        self.conn_type = kwargs.pop(&#39;conn_type&#39;, self.AND)
+        self.conn_type = kwargs.pop(&#34;conn_type&#34;, self.AND)
 
         self.field_path = None  # Name of the field we want to filter on
         self.op = None
@@ -673,9 +697,7 @@ class Restriction:
         # Parse keyword args and extract the filter
         is_single_kwarg = len(args) == 0 and len(kwargs) == 1
         for key, value in kwargs.items():
-            self.children.extend(
-                self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg)
-            )
+            self.children.extend(self._get_children_from_kwarg(key=key, value=value, is_single_kwarg=is_single_kwarg))
 
         # Simplify this object
         self.reduce()
@@ -687,7 +709,7 @@ class Restriction:
         &#34;&#34;&#34;Generate Q objects corresponding to a single keyword argument. Make this a leaf if there are no children to
         generate.
         &#34;&#34;&#34;
-        key_parts = key.rsplit(&#39;__&#39;, 1)
+        key_parts = key.rsplit(&#34;__&#34;, 1)
         if len(key_parts) == 2 and key_parts[1] in self.LOOKUP_TYPES:
             # This is a kwarg with a lookup at the end
             field_path, lookup = key_parts
@@ -702,8 +724,8 @@ class Restriction:
                 if len(value) != 2:
                     raise ValueError(f&#34;Value of lookup {key!r} must have exactly 2 elements&#34;)
                 return (
-                    self.__class__(**{f&#39;{field_path}__gte&#39;: value[0]}),
-                    self.__class__(**{f&#39;{field_path}__lte&#39;: value[1]}),
+                    self.__class__(**{f&#34;{field_path}__gte&#34;: value[0]}),
+                    self.__class__(**{f&#34;{field_path}__lte&#34;: value[1]}),
                 )
 
             # Filtering on list types is a bit quirky. The only lookup type I have found to work is:
@@ -806,6 +828,7 @@ class Restriction:
         validating. There&#39;s no reason to replicate much of that here.
         &#34;&#34;&#34;
         from .folders import Folder
+
         self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)
 
     @classmethod
@@ -828,28 +851,28 @@ class Restriction:
     @classmethod
     def _conn_to_xml(cls, conn_type):
         xml_tag_map = {
-            cls.AND: &#39;t:And&#39;,
-            cls.OR: &#39;t:Or&#39;,
-            cls.NOT: &#39;t:Not&#39;,
+            cls.AND: &#34;t:And&#34;,
+            cls.OR: &#34;t:Or&#34;,
+            cls.NOT: &#34;t:Not&#34;,
         }
         return create_element(xml_tag_map[conn_type])
 
     @classmethod
     def _op_to_xml(cls, op):
         xml_tag_map = {
-            cls.EQ: &#39;t:IsEqualTo&#39;,
-            cls.NE: &#39;t:IsNotEqualTo&#39;,
-            cls.GTE: &#39;t:IsGreaterThanOrEqualTo&#39;,
-            cls.LTE: &#39;t:IsLessThanOrEqualTo&#39;,
-            cls.LT: &#39;t:IsLessThan&#39;,
-            cls.GT: &#39;t:IsGreaterThan&#39;,
-            cls.EXISTS: &#39;t:Exists&#39;,
+            cls.EQ: &#34;t:IsEqualTo&#34;,
+            cls.NE: &#34;t:IsNotEqualTo&#34;,
+            cls.GTE: &#34;t:IsGreaterThanOrEqualTo&#34;,
+            cls.LTE: &#34;t:IsLessThanOrEqualTo&#34;,
+            cls.LT: &#34;t:IsLessThan&#34;,
+            cls.GT: &#34;t:IsGreaterThan&#34;,
+            cls.EXISTS: &#34;t:Exists&#34;,
         }
         if op in xml_tag_map:
             return create_element(xml_tag_map[op])
         valid_ops = cls.EXACT, cls.IEXACT, cls.CONTAINS, cls.ICONTAINS, cls.STARTSWITH, cls.ISTARTSWITH
         if op not in valid_ops:
-            raise InvalidEnumValue(&#39;op&#39;, op, valid_ops)
+            raise InvalidEnumValue(&#34;op&#34;, op, valid_ops)
 
         # For description of Contains attribute values, see
         #     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/contains
@@ -873,21 +896,18 @@ class Restriction:
         #    https://en.wikipedia.org/wiki/Graphic_character#Spacing_and_non-spacing_characters
         # we shouldn&#39;t ignore them (&#39;a&#39; would match both &#39;a&#39; and &#39;å&#39;, the latter having a non-spacing character).
         if op in {cls.EXACT, cls.IEXACT}:
-            match_mode = &#39;FullString&#39;
+            match_mode = &#34;FullString&#34;
         elif op in (cls.CONTAINS, cls.ICONTAINS):
-            match_mode = &#39;Substring&#39;
+            match_mode = &#34;Substring&#34;
         elif op in (cls.STARTSWITH, cls.ISTARTSWITH):
-            match_mode = &#39;Prefixed&#39;
+            match_mode = &#34;Prefixed&#34;
         else:
-            raise ValueError(f&#39;Unsupported op: {op}&#39;)
+            raise ValueError(f&#34;Unsupported op: {op}&#34;)
         if op in (cls.IEXACT, cls.ICONTAINS, cls.ISTARTSWITH):
-            compare_mode = &#39;IgnoreCase&#39;
+            compare_mode = &#34;IgnoreCase&#34;
         else:
-            compare_mode = &#39;Exact&#39;
-        return create_element(
-            &#39;t:Contains&#39;,
-            attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode)
-        )
+            compare_mode = &#34;Exact&#34;
+        return create_element(&#34;t:Contains&#34;, attrs=dict(ContainmentMode=match_mode, ContainmentComparison=compare_mode))
 
     def is_leaf(self):
         return not self.children
@@ -908,33 +928,33 @@ class Restriction:
         if self.query_string:
             return self.query_string
         if self.is_leaf():
-            expr = f&#39;{self.field_path} {self.op} {self.value!r}&#39;
+            expr = f&#34;{self.field_path} {self.op} {self.value!r}&#34;
         else:
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-            expr = f&#39; {self.AND if self.conn_type == self.NOT else self.conn_type} &#39;.join(
-                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#39;({c.expr()})&#39;)
-                for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
+            expr = f&#34; {self.AND if self.conn_type == self.NOT else self.conn_type} &#34;.join(
+                (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#34;({c.expr()})&#34;)
+                for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;)
             )
         if self.conn_type == self.NOT:
             # Add the NOT operator. Put children in parens if there is more than one child.
             if self.is_leaf() or len(self.children) == 1:
-                return self.conn_type + f&#39; {expr}&#39;
-            return self.conn_type + f&#39; ({expr})&#39;
+                return self.conn_type + f&#34; {expr}&#34;
+            return self.conn_type + f&#34; ({expr})&#34;
         return expr
 
     def to_xml(self, folders, version, applies_to):
         if self.query_string:
             self._check_integrity()
             if version.build &lt; EXCHANGE_2010:
-                raise NotImplementedError(&#39;QueryString filtering is only supported for Exchange 2010 servers and later&#39;)
-            elem = create_element(&#39;m:QueryString&#39;)
+                raise NotImplementedError(&#34;QueryString filtering is only supported for Exchange 2010 servers and later&#34;)
+            elem = create_element(&#34;m:QueryString&#34;)
             elem.text = self.query_string
             return elem
         # Translate this Q object to a valid Restriction XML tree
         elem = self.xml_elem(folders=folders, version=version, applies_to=applies_to)
         if elem is None:
             return None
-        restriction = create_element(&#39;m:Restriction&#39;)
+        restriction = create_element(&#34;m:Restriction&#34;)
         restriction.append(elem)
         return restriction
 
@@ -947,30 +967,31 @@ class Restriction:
             return
         if self.query_string:
             if any([self.field_path, self.op, self.value, self.children]):
-                raise ValueError(&#39;Query strings cannot be combined with other settings&#39;)
+                raise ValueError(&#34;Query strings cannot be combined with other settings&#34;)
             return
         if self.conn_type not in self.CONN_TYPES:
-            raise InvalidEnumValue(&#39;conn_type&#39;, self.conn_type, self.CONN_TYPES)
+            raise InvalidEnumValue(&#34;conn_type&#34;, self.conn_type, self.CONN_TYPES)
         if not self.is_leaf():
             for q in self.children:
                 if q.query_string and len(self.children) &gt; 1:
-                    raise ValueError(&#39;A query string cannot be combined with other restrictions&#39;)
+                    raise ValueError(&#34;A query string cannot be combined with other restrictions&#34;)
             return
         if not self.field_path:
             raise ValueError(&#34;&#39;field_path&#39; must be set&#34;)
         if self.op not in self.OP_TYPES:
-            raise InvalidEnumValue(&#39;op&#39;, self.op, self.OP_TYPES)
+            raise InvalidEnumValue(&#34;op&#34;, self.op, self.OP_TYPES)
         if self.op == self.EXISTS and self.value is not True:
             raise ValueError(&#34;&#39;value&#39; must be True when operator is EXISTS&#34;)
         if self.value is None:
-            raise ValueError(f&#39;Value for filter on field path {self.field_path!r} cannot be None&#39;)
+            raise ValueError(f&#34;Value for filter on field path {self.field_path!r} cannot be None&#34;)
         if is_iterable(self.value, generators_allowed=True):
             raise ValueError(
-                f&#39;Value {self.value!r} for filter on field path {self.field_path!r} must be a single value&#39;
+                f&#34;Value {self.value!r} for filter on field path {self.field_path!r} must be a single value&#34;
             )
 
     def _validate_field_path(self, field_path, folder, applies_to, version):
         from .indexed_properties import MultiFieldIndexedElement
+
         if applies_to == Restriction.FOLDERS:
             # This is a restriction on Folder fields
             folder.validate_field(field=field_path.field, version=version)
@@ -1015,6 +1036,7 @@ class Restriction:
         # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
         # return None.
         from .indexed_properties import SingleFieldIndexedElement
+
         # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
         # This is done in _get_field_path() and _get_clean_value(), respectively.
         self._check_integrity()
@@ -1035,11 +1057,11 @@ class Restriction:
                 clean_value = field_path.field.date_to_datetime(clean_value)
             elem.append(field_path.to_xml())
             if self.op != self.EXISTS:
-                constant = create_element(&#39;t:Constant&#39;, attrs=dict(Value=value_to_xml_text(clean_value)))
+                constant = create_element(&#34;t:Constant&#34;, attrs=dict(Value=value_to_xml_text(clean_value)))
                 if self.op in self.CONTAINS_OPS:
                     elem.append(constant)
                 else:
-                    uriorconst = create_element(&#39;t:FieldURIOrConstant&#39;)
+                    uriorconst = create_element(&#34;t:FieldURIOrConstant&#34;)
                     uriorconst.append(constant)
                     elem.append(uriorconst)
         elif len(self.children) == 1:
@@ -1049,7 +1071,7 @@ class Restriction:
             # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
             elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
             # Sort children by field name so we get stable output (for easier testing). Children should never be empty
-            for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;):
+            for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;):
                 elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
         if elem is None:
             return None  # Should not be necessary, but play safe
@@ -1101,16 +1123,16 @@ class Restriction:
         return hash(repr(self))
 
     def __str__(self):
-        return self.expr() or &#39;Q()&#39;
+        return self.expr() or &#34;Q()&#34;
 
     def __repr__(self):
         if self.is_leaf():
             if self.query_string:
-                return self.__class__.__name__ + f&#39;({self.query_string!r})&#39;
+                return self.__class__.__name__ + f&#34;({self.query_string!r})&#34;
             if self.is_never():
-                return self.__class__.__name__ + f&#39;(conn_type={self.conn_type!r})&#39;
-            return self.__class__.__name__ + f&#39;({self.field_path} {self.op} {self.value!r})&#39;
-        sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#39;&#39;))
+                return self.__class__.__name__ + f&#34;(conn_type={self.conn_type!r})&#34;
+            return self.__class__.__name__ + f&#34;({self.field_path} {self.op} {self.value!r})&#34;
+        sorted_children = tuple(sorted(self.children, key=lambda i: i.field_path or &#34;&#34;))
         if self.conn_type == self.NOT or len(self.children) &gt; 1:
             return self.__class__.__name__ + repr((self.conn_type,) + sorted_children)
         return self.__class__.__name__ + repr(sorted_children)</code></pre>
@@ -1302,6 +1324,7 @@ validating. There's no reason to replicate much of that here.</p></div>
     validating. There&#39;s no reason to replicate much of that here.
     &#34;&#34;&#34;
     from .folders import Folder
+
     self.to_xml(folders=[Folder()], version=version, applies_to=Restriction.ITEMS)</code></pre>
 </details>
 </dd>
@@ -1322,18 +1345,18 @@ validating. There's no reason to replicate much of that here.</p></div>
     if self.query_string:
         return self.query_string
     if self.is_leaf():
-        expr = f&#39;{self.field_path} {self.op} {self.value!r}&#39;
+        expr = f&#34;{self.field_path} {self.op} {self.value!r}&#34;
     else:
         # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
-        expr = f&#39; {self.AND if self.conn_type == self.NOT else self.conn_type} &#39;.join(
-            (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#39;({c.expr()})&#39;)
-            for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;)
+        expr = f&#34; {self.AND if self.conn_type == self.NOT else self.conn_type} &#34;.join(
+            (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#34;({c.expr()})&#34;)
+            for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;)
         )
     if self.conn_type == self.NOT:
         # Add the NOT operator. Put children in parens if there is more than one child.
         if self.is_leaf() or len(self.children) == 1:
-            return self.conn_type + f&#39; {expr}&#39;
-        return self.conn_type + f&#39; ({expr})&#39;
+            return self.conn_type + f&#34; {expr}&#34;
+        return self.conn_type + f&#34; ({expr})&#34;
     return expr</code></pre>
 </details>
 </dd>
@@ -1406,15 +1429,15 @@ validating. There's no reason to replicate much of that here.</p></div>
     if self.query_string:
         self._check_integrity()
         if version.build &lt; EXCHANGE_2010:
-            raise NotImplementedError(&#39;QueryString filtering is only supported for Exchange 2010 servers and later&#39;)
-        elem = create_element(&#39;m:QueryString&#39;)
+            raise NotImplementedError(&#34;QueryString filtering is only supported for Exchange 2010 servers and later&#34;)
+        elem = create_element(&#34;m:QueryString&#34;)
         elem.text = self.query_string
         return elem
     # Translate this Q object to a valid Restriction XML tree
     elem = self.xml_elem(folders=folders, version=version, applies_to=applies_to)
     if elem is None:
         return None
-    restriction = create_element(&#39;m:Restriction&#39;)
+    restriction = create_element(&#34;m:Restriction&#34;)
     restriction.append(elem)
     return restriction</code></pre>
 </details>
@@ -1432,6 +1455,7 @@ validating. There's no reason to replicate much of that here.</p></div>
     # Recursively build an XML tree structure of this Q object. If this is an empty leaf (the equivalent of Q()),
     # return None.
     from .indexed_properties import SingleFieldIndexedElement
+
     # Don&#39;t check self.value just yet. We want to return error messages on the field path first, and then the value.
     # This is done in _get_field_path() and _get_clean_value(), respectively.
     self._check_integrity()
@@ -1452,11 +1476,11 @@ validating. There's no reason to replicate much of that here.</p></div>
             clean_value = field_path.field.date_to_datetime(clean_value)
         elem.append(field_path.to_xml())
         if self.op != self.EXISTS:
-            constant = create_element(&#39;t:Constant&#39;, attrs=dict(Value=value_to_xml_text(clean_value)))
+            constant = create_element(&#34;t:Constant&#34;, attrs=dict(Value=value_to_xml_text(clean_value)))
             if self.op in self.CONTAINS_OPS:
                 elem.append(constant)
             else:
-                uriorconst = create_element(&#39;t:FieldURIOrConstant&#39;)
+                uriorconst = create_element(&#34;t:FieldURIOrConstant&#34;)
                 uriorconst.append(constant)
                 elem.append(uriorconst)
     elif len(self.children) == 1:
@@ -1466,7 +1490,7 @@ validating. There's no reason to replicate much of that here.</p></div>
         # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
         elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
         # Sort children by field name so we get stable output (for easier testing). Children should never be empty
-        for c in sorted(self.children, key=lambda i: i.field_path or &#39;&#39;):
+        for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;):
             elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
     if elem is None:
         return None  # Should not be necessary, but play safe
@@ -1497,8 +1521,8 @@ validating. There's no reason to replicate much of that here.</p></div>
     &#34;&#34;&#34;Implement an EWS Restriction type.&#34;&#34;&#34;
 
     # The type of item the restriction applies to
-    FOLDERS = &#39;folders&#39;
-    ITEMS = &#39;items&#39;
+    FOLDERS = &#34;folders&#34;
+    ITEMS = &#34;items&#34;
     RESTRICTION_TYPES = (FOLDERS, ITEMS)
 
     def __init__(self, q, folders, applies_to):

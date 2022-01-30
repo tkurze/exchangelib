@@ -29,15 +29,19 @@
 <pre><code class="python">import logging
 from threading import Lock
 
-from .base import BaseFolder
-from .collections import FolderCollection
-from .known_folders import MsgFolderRoot, NON_DELETABLE_FOLDERS, WELLKNOWN_FOLDERS_IN_ROOT, \
-    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT
-from .queryset import SingleFolderQuerySet, SHALLOW, MISSING_FOLDER_ERRORS
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
 from ..properties import EWSMeta
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
+from .base import BaseFolder
+from .collections import FolderCollection
+from .known_folders import (
+    NON_DELETABLE_FOLDERS,
+    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT,
+    WELLKNOWN_FOLDERS_IN_ROOT,
+    MsgFolderRoot,
+)
+from .queryset import MISSING_FOLDER_ERRORS, SHALLOW, SingleFolderQuerySet
 
 log = logging.getLogger(__name__)
 
@@ -56,14 +60,15 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     # This folder type also has &#39;folder:PermissionSet&#39; on some server versions, but requesting it sometimes causes
     # &#39;ErrorAccessDenied&#39;, as reported by some users. Ignore it entirely for root folders - it&#39;s usefulness is
     # deemed minimal at best.
-    effective_rights = EffectiveRightsField(field_uri=&#39;folder:EffectiveRights&#39;, is_read_only=True,
-                                            supported_from=EXCHANGE_2007_SP1)
+    effective_rights = EffectiveRightsField(
+        field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
+    )
 
-    __slots__ = &#39;_account&#39;, &#39;_subfolders&#39;
+    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
     def __init__(self, **kwargs):
-        self._account = kwargs.pop(&#39;account&#39;, None)  # A pointer back to the account holding the folder hierarchy
+        self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
         self._subfolders = None  # See self._folders_map()
 
@@ -82,13 +87,13 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not RootOfHierarchy:
-            raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
+            raise TypeError(&#34;For folder roots, custom fields must be registered on the RootOfHierarchy class&#34;)
         return super().register(*args, **kwargs)
 
     @classmethod
     def deregister(cls, *args, **kwargs):
         if cls is not RootOfHierarchy:
-            raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
+            raise TypeError(&#34;For folder roots, custom fields must be registered on the RootOfHierarchy class&#34;)
         return super().deregister(*args, **kwargs)
 
     def get_folder(self, folder):
@@ -132,14 +137,13 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         :param account:
         &#34;&#34;&#34;
         if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
+            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         try:
             return cls.resolve(
-                account=account,
-                folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
 
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
@@ -153,21 +157,21 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             for f in self._folders_map.values():
                 # Require exact class, to not match subclasses, e.g. RecipientCache instead of Contacts
                 if f.__class__ == folder_cls and f.is_distinguished:
-                    log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
+                    log.debug(&#34;Found cached distinguished %s folder&#34;, folder_cls)
                     return f
         try:
-            log.debug(&#39;Requesting distinguished %s folder explicitly&#39;, folder_cls)
+            log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
             return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
-            log.debug(&#39;Testing default %s folder with FindItem&#39;, folder_cls)
+            log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
             fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
         except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+        raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
 
     @property
     def _folders_map(self):
@@ -198,9 +202,9 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
                 if isinstance(f, Exception):
                     raise f
                 folders_map[f.id] = f
-            for f in SingleFolderQuerySet(account=self.account, folder=self).depth(
-                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-            ).all():
+            for f in (
+                SingleFolderQuerySet(account=self.account, folder=self).depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH).all()
+            ):
                 if isinstance(f, ErrorAccessDenied):
                     # We may not have FindFolder access, or GetFolder access, either to this folder or at all
                     continue
@@ -236,15 +240,25 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
 
     def __repr__(self):
         # Let&#39;s not create an infinite loop when printing self.root
-        return self.__class__.__name__ + \
-               repr((self.account, &#39;[self]&#39;, self.name, self.total_count, self.unread_count, self.child_folder_count,
-                     self.folder_class, self.id, self.changekey))
+        return self.__class__.__name__ + repr(
+            (
+                self.account,
+                &#34;[self]&#34;,
+                self.name,
+                self.total_count,
+                self.unread_count,
+                self.child_folder_count,
+                self.folder_class,
+                self.id,
+                self.changekey,
+            )
+        )
 
 
 class Root(RootOfHierarchy):
     &#34;&#34;&#34;The root of the standard folder hierarchy.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;root&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;root&#34;
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
 
     @property
@@ -265,12 +279,12 @@ class Root(RootOfHierarchy):
         #  3. Searching TOIS for a direct child folder of the same type that has a localized name
         #  4. Searching root for a direct child folder of the same type that is marked as distinguished
         #  5. Searching root for a direct child folder of the same type that has a localized name
-        log.debug(&#39;Searching default %s folder in full folder list&#39;, folder_cls)
+        log.debug(&#34;Searching default %s folder in full folder list&#34;, folder_cls)
 
         for f in self._folders_map.values():
             # Require exact type, to avoid matching with subclasses (e.g. RecipientCache and Contacts)
             if f.__class__ == folder_cls and f.has_distinguished_name:
-                log.debug(&#39;Found cached %s folder with default distinguished name&#39;, folder_cls)
+                log.debug(&#34;Found cached %s folder with default distinguished name&#34;, folder_cls)
                 return f
 
         # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
@@ -293,21 +307,21 @@ class Root(RootOfHierarchy):
         else:
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
         if not candidates:
-            raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+            raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
         if len(candidates) &gt; 1:
-            raise ValueError(f&#39;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#39;)
+            raise ValueError(f&#34;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#34;)
         candidate = candidates[0]
         if candidate.is_distinguished:
-            log.debug(&#39;Found distinguished %s folder&#39;, folder_cls)
+            log.debug(&#34;Found distinguished %s folder&#34;, folder_cls)
         else:
-            log.debug(&#39;Found %s folder with localized name %s&#39;, folder_cls, candidate.name)
+            log.debug(&#34;Found %s folder with localized name %s&#34;, folder_cls, candidate.name)
         return candidate
 
 
 class PublicFoldersRoot(RootOfHierarchy):
     &#34;&#34;&#34;The root of the public folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;publicfoldersroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;publicfoldersroot&#34;
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
 
@@ -328,9 +342,11 @@ class PublicFoldersRoot(RootOfHierarchy):
 
         children_map = {}
         try:
-            for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
-                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-            ).all():
+            for f in (
+                SingleFolderQuerySet(account=self.account, folder=folder)
+                .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
+                .all()
+            ):
                 if isinstance(f, MISSING_FOLDER_ERRORS):
                     # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                     continue
@@ -352,7 +368,7 @@ class PublicFoldersRoot(RootOfHierarchy):
 class ArchiveRoot(RootOfHierarchy):
     &#34;&#34;&#34;The root of the archive folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;archiveroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiveroot&#34;
     supported_from = EXCHANGE_2010_SP1
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT</code></pre>
 </details>
@@ -379,7 +395,7 @@ class ArchiveRoot(RootOfHierarchy):
 <pre><code class="python">class ArchiveRoot(RootOfHierarchy):
     &#34;&#34;&#34;The root of the archive folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;archiveroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;archiveroot&#34;
     supported_from = EXCHANGE_2010_SP1
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT</code></pre>
 </details>
@@ -461,7 +477,7 @@ class ArchiveRoot(RootOfHierarchy):
 <pre><code class="python">class PublicFoldersRoot(RootOfHierarchy):
     &#34;&#34;&#34;The root of the public folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;publicfoldersroot&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;publicfoldersroot&#34;
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
 
@@ -482,9 +498,11 @@ class ArchiveRoot(RootOfHierarchy):
 
         children_map = {}
         try:
-            for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
-                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-            ).all():
+            for f in (
+                SingleFolderQuerySet(account=self.account, folder=folder)
+                .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
+                .all()
+            ):
                 if isinstance(f, MISSING_FOLDER_ERRORS):
                     # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                     continue
@@ -554,9 +572,11 @@ class ArchiveRoot(RootOfHierarchy):
 
     children_map = {}
     try:
-        for f in SingleFolderQuerySet(account=self.account, folder=folder).depth(
-                self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-        ).all():
+        for f in (
+            SingleFolderQuerySet(account=self.account, folder=folder)
+            .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
+            .all()
+        ):
             if isinstance(f, MISSING_FOLDER_ERRORS):
                 # We were unlucky. The folder disappeared between the FindFolder and the GetFolder calls
                 continue
@@ -630,7 +650,7 @@ class ArchiveRoot(RootOfHierarchy):
 <pre><code class="python">class Root(RootOfHierarchy):
     &#34;&#34;&#34;The root of the standard folder hierarchy.&#34;&#34;&#34;
 
-    DISTINGUISHED_FOLDER_ID = &#39;root&#39;
+    DISTINGUISHED_FOLDER_ID = &#34;root&#34;
     WELLKNOWN_FOLDERS = WELLKNOWN_FOLDERS_IN_ROOT
 
     @property
@@ -651,12 +671,12 @@ class ArchiveRoot(RootOfHierarchy):
         #  3. Searching TOIS for a direct child folder of the same type that has a localized name
         #  4. Searching root for a direct child folder of the same type that is marked as distinguished
         #  5. Searching root for a direct child folder of the same type that has a localized name
-        log.debug(&#39;Searching default %s folder in full folder list&#39;, folder_cls)
+        log.debug(&#34;Searching default %s folder in full folder list&#34;, folder_cls)
 
         for f in self._folders_map.values():
             # Require exact type, to avoid matching with subclasses (e.g. RecipientCache and Contacts)
             if f.__class__ == folder_cls and f.has_distinguished_name:
-                log.debug(&#39;Found cached %s folder with default distinguished name&#39;, folder_cls)
+                log.debug(&#34;Found cached %s folder with default distinguished name&#34;, folder_cls)
                 return f
 
         # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
@@ -679,14 +699,14 @@ class ArchiveRoot(RootOfHierarchy):
         else:
             candidates = [f for f in same_type if f.name.lower() in folder_cls.localized_names(self.account.locale)]
         if not candidates:
-            raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+            raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
         if len(candidates) &gt; 1:
-            raise ValueError(f&#39;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#39;)
+            raise ValueError(f&#34;Multiple possible default {folder_cls} folders: {[f.name for f in candidates]}&#34;)
         candidate = candidates[0]
         if candidate.is_distinguished:
-            log.debug(&#39;Found distinguished %s folder&#39;, folder_cls)
+            log.debug(&#34;Found distinguished %s folder&#34;, folder_cls)
         else:
-            log.debug(&#39;Found %s folder with localized name %s&#39;, folder_cls, candidate.name)
+            log.debug(&#34;Found %s folder with localized name %s&#34;, folder_cls, candidate.name)
         return candidate</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -791,14 +811,15 @@ def tois(self):
     # This folder type also has &#39;folder:PermissionSet&#39; on some server versions, but requesting it sometimes causes
     # &#39;ErrorAccessDenied&#39;, as reported by some users. Ignore it entirely for root folders - it&#39;s usefulness is
     # deemed minimal at best.
-    effective_rights = EffectiveRightsField(field_uri=&#39;folder:EffectiveRights&#39;, is_read_only=True,
-                                            supported_from=EXCHANGE_2007_SP1)
+    effective_rights = EffectiveRightsField(
+        field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
+    )
 
-    __slots__ = &#39;_account&#39;, &#39;_subfolders&#39;
+    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
     def __init__(self, **kwargs):
-        self._account = kwargs.pop(&#39;account&#39;, None)  # A pointer back to the account holding the folder hierarchy
+        self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
         self._subfolders = None  # See self._folders_map()
 
@@ -817,13 +838,13 @@ def tois(self):
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not RootOfHierarchy:
-            raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
+            raise TypeError(&#34;For folder roots, custom fields must be registered on the RootOfHierarchy class&#34;)
         return super().register(*args, **kwargs)
 
     @classmethod
     def deregister(cls, *args, **kwargs):
         if cls is not RootOfHierarchy:
-            raise TypeError(&#39;For folder roots, custom fields must be registered on the RootOfHierarchy class&#39;)
+            raise TypeError(&#34;For folder roots, custom fields must be registered on the RootOfHierarchy class&#34;)
         return super().deregister(*args, **kwargs)
 
     def get_folder(self, folder):
@@ -867,14 +888,13 @@ def tois(self):
         :param account:
         &#34;&#34;&#34;
         if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
+            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         try:
             return cls.resolve(
-                account=account,
-                folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             )
         except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
 
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
@@ -888,21 +908,21 @@ def tois(self):
             for f in self._folders_map.values():
                 # Require exact class, to not match subclasses, e.g. RecipientCache instead of Contacts
                 if f.__class__ == folder_cls and f.is_distinguished:
-                    log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
+                    log.debug(&#34;Found cached distinguished %s folder&#34;, folder_cls)
                     return f
         try:
-            log.debug(&#39;Requesting distinguished %s folder explicitly&#39;, folder_cls)
+            log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
             return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
-            log.debug(&#39;Testing default %s folder with FindItem&#39;, folder_cls)
+            log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
             fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
         except MISSING_FOLDER_ERRORS:
             # The Exchange server does not return a distinguished folder of this type
             pass
-        raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)
+        raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
 
     @property
     def _folders_map(self):
@@ -933,9 +953,9 @@ def tois(self):
                 if isinstance(f, Exception):
                     raise f
                 folders_map[f.id] = f
-            for f in SingleFolderQuerySet(account=self.account, folder=self).depth(
-                    self.DEFAULT_FOLDER_TRAVERSAL_DEPTH
-            ).all():
+            for f in (
+                SingleFolderQuerySet(account=self.account, folder=self).depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH).all()
+            ):
                 if isinstance(f, ErrorAccessDenied):
                     # We may not have FindFolder access, or GetFolder access, either to this folder or at all
                     continue
@@ -971,9 +991,19 @@ def tois(self):
 
     def __repr__(self):
         # Let&#39;s not create an infinite loop when printing self.root
-        return self.__class__.__name__ + \
-               repr((self.account, &#39;[self]&#39;, self.name, self.total_count, self.unread_count, self.child_folder_count,
-                     self.folder_class, self.id, self.changekey))</code></pre>
+        return self.__class__.__name__ + repr(
+            (
+                self.account,
+                &#34;[self]&#34;,
+                self.name,
+                self.total_count,
+                self.unread_count,
+                self.child_folder_count,
+                self.folder_class,
+                self.id,
+                self.changekey,
+            )
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1059,14 +1089,13 @@ def get_distinguished(cls, account):
     :param account:
     &#34;&#34;&#34;
     if not cls.DISTINGUISHED_FOLDER_ID:
-        raise ValueError(f&#39;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#39;)
+        raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
     try:
         return cls.resolve(
-            account=account,
-            folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+            account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
         )
     except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#39;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#39;)</code></pre>
+        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1147,21 +1176,21 @@ folder was found, try as best we can to return the default folder of type 'folde
         for f in self._folders_map.values():
             # Require exact class, to not match subclasses, e.g. RecipientCache instead of Contacts
             if f.__class__ == folder_cls and f.is_distinguished:
-                log.debug(&#39;Found cached distinguished %s folder&#39;, folder_cls)
+                log.debug(&#34;Found cached distinguished %s folder&#34;, folder_cls)
                 return f
     try:
-        log.debug(&#39;Requesting distinguished %s folder explicitly&#39;, folder_cls)
+        log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
         return folder_cls.get_distinguished(root=self)
     except ErrorAccessDenied:
         # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
-        log.debug(&#39;Testing default %s folder with FindItem&#39;, folder_cls)
+        log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
         fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
         fld.test_access()
         return self._folders_map.get(fld.id, fld)  # Use cached instance if available
     except MISSING_FOLDER_ERRORS:
         # The Exchange server does not return a distinguished folder of this type
         pass
-    raise ErrorFolderNotFound(f&#39;No usable default {folder_cls} folders&#39;)</code></pre>
+    raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.get_folder"><code class="name flex">

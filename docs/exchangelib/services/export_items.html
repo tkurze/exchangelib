@@ -26,17 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService, item_ids_element
-from ..errors import ResponseMessageError
-from ..util import create_element, MNS
+<pre><code class="python">from ..errors import ResponseMessageError
+from ..util import MNS, create_element
+from .common import EWSAccountService, item_ids_element
 
 
 class ExportItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exportitems-operation&#34;&#34;&#34;
 
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
-    SERVICE_NAME = &#39;ExportItems&#39;
-    element_container_name = f&#39;{{{MNS}}}Data&#39;
+    SERVICE_NAME = &#34;ExportItems&#34;
+    element_container_name = f&#34;{{{MNS}}}Data&#34;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -45,7 +45,7 @@ class ExportItems(EWSAccountService):
         return elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
 
     def get_payload(self, items):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
@@ -79,8 +79,8 @@ class ExportItems(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exportitems-operation&#34;&#34;&#34;
 
     ERRORS_TO_CATCH_IN_RESPONSE = ResponseMessageError
-    SERVICE_NAME = &#39;ExportItems&#39;
-    element_container_name = f&#39;{{{MNS}}}Data&#39;
+    SERVICE_NAME = &#34;ExportItems&#34;
+    element_container_name = f&#34;{{{MNS}}}Data&#34;
 
     def call(self, items):
         return self._elems_to_objs(self._chunked_get_elements(self.get_payload, items=items))
@@ -89,7 +89,7 @@ class ExportItems(EWSAccountService):
         return elem.text  # All we want is the 64bit string in the &#39;Data&#39; tag
 
     def get_payload(self, items):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
@@ -144,7 +144,7 @@ class ExportItems(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(item_ids_element(items=items, version=self.account.version))
     return payload</code></pre>
 </details>

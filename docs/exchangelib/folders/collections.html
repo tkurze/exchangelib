@@ -33,9 +33,9 @@ from cached_property import threaded_cached_property
 
 from ..errors import InvalidTypeError
 from ..fields import FieldPath, InvalidField
-from ..items import Persona, ID_ONLY
+from ..items import ID_ONLY, Persona
 from ..properties import CalendarView
-from ..queryset import QuerySet, SearchableMixIn, Q
+from ..queryset import Q, QuerySet, SearchableMixIn
 from ..restriction import Restriction
 from ..util import require_account
 
@@ -54,7 +54,7 @@ class FolderCollection(SearchableMixIn):
     &#34;&#34;&#34;A class that implements an API for searching folders.&#34;&#34;&#34;
 
     # These fields are required in a FindFolder or GetFolder call to properly identify folder types
-    REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
+    REQUIRED_FOLDER_FIELDS = (&#34;name&#34;, &#34;folder_class&#34;)
 
     def __init__(self, account, folders):
         &#34;&#34;&#34;Implement a search API on a collection of folders.
@@ -185,8 +185,18 @@ class FolderCollection(SearchableMixIn):
             query_string = None
         return depth, restriction, query_string
 
-    def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                   calendar_view=None, page_size=None, max_items=None, offset=0):
+    def find_items(
+        self,
+        q,
+        shape=ID_ONLY,
+        depth=None,
+        additional_fields=None,
+        order_fields=None,
+        calendar_view=None,
+        page_size=None,
+        max_items=None,
+        offset=0,
+    ):
         &#34;&#34;&#34;Private method to call the FindItem service.
 
         :param q: a Q instance containing any restrictions
@@ -204,21 +214,21 @@ class FolderCollection(SearchableMixIn):
         :return: a generator for the returned item IDs or items
         &#34;&#34;&#34;
         from ..services import FindItem
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, depth=depth, additional_fields=additional_fields,
-            field_validator=self.validate_item_field
+            q=q, depth=depth, additional_fields=additional_fields, field_validator=self.validate_item_field
         )
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-            raise InvalidTypeError(&#39;calendar_view&#39;, calendar_view, CalendarView)
+            raise InvalidTypeError(&#34;calendar_view&#34;, calendar_view, CalendarView)
 
         log.debug(
-            &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+            &#34;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#34;,
             self.account,
             self.folders,
             shape,
@@ -241,14 +251,23 @@ class FolderCollection(SearchableMixIn):
 
     def _get_single_folder(self):
         if len(self.folders) &gt; 1:
-            raise ValueError(&#39;Syncing folder hierarchy can only be done on a single folder&#39;)
+            raise ValueError(&#34;Syncing folder hierarchy can only be done on a single folder&#34;)
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         return self.folders[0]
 
-    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                    page_size=None, max_items=None, offset=0):
+    def find_people(
+        self,
+        q,
+        shape=ID_ONLY,
+        depth=None,
+        additional_fields=None,
+        order_fields=None,
+        page_size=None,
+        max_items=None,
+        offset=0,
+    ):
         &#34;&#34;&#34;Private method to call the FindPeople service.
 
         :param q: a Q instance containing any restrictions
@@ -264,30 +283,31 @@ class FolderCollection(SearchableMixIn):
         :return: a generator for the returned personas
         &#34;&#34;&#34;
         from ..services import FindPeople
+
         folder = self._get_single_folder()
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, depth=depth, additional_fields=additional_fields,
-            field_validator=Persona.validate_field
+            q=q, depth=depth, additional_fields=additional_fields, field_validator=Persona.validate_field
         )
 
         yield from FindPeople(account=self.account, page_size=page_size).call(
-                folder=folder,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                shape=shape,
-                query_string=query_string,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
+            folder=folder,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            order_fields=order_fields,
+            shape=shape,
+            query_string=query_string,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
         )
 
     def get_folder_fields(self, target_cls, is_complex=None):
         return {
-            FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+            FieldPath(field=f)
+            for f in target_cls.supported_fields(version=self.account.version)
             if is_complex is None or f.is_complex is is_complex
         }
 
@@ -296,16 +316,17 @@ class FolderCollection(SearchableMixIn):
         # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
         from .base import Folder
         from .roots import RootOfHierarchy
+
         has_roots = False
         has_non_roots = False
         for f in self.folders:
             if isinstance(f, RootOfHierarchy):
                 if has_non_roots:
-                    raise ValueError(f&#39;Cannot call GetFolder on a mix of folder types: {self.folders}&#39;)
+                    raise ValueError(f&#34;Cannot call GetFolder on a mix of folder types: {self.folders}&#34;)
                 has_roots = True
             else:
                 if has_roots:
-                    raise ValueError(f&#39;Cannot call GetFolder on a mix of folder types: {self.folders}&#39;)
+                    raise ValueError(f&#34;Cannot call GetFolder on a mix of folder types: {self.folders}&#34;)
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
@@ -314,47 +335,51 @@ class FolderCollection(SearchableMixIn):
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            f&#39;Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit &#39;
-            f&#39;traversal depth with QuerySet.depth() (values: {unique_depths})&#39;
+            f&#34;Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit &#34;
+            f&#34;traversal depth with QuerySet.depth() (values: {unique_depths})&#34;
         )
 
     def _get_default_item_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        return self._get_default_traversal_depth(&#39;DEFAULT_ITEM_TRAVERSAL_DEPTH&#39;)
+        return self._get_default_traversal_depth(&#34;DEFAULT_ITEM_TRAVERSAL_DEPTH&#34;)
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        return self._get_default_traversal_depth(&#39;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#39;)
+        return self._get_default_traversal_depth(&#34;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#34;)
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
         from .base import BaseFolder
+
         resolveable_folders = []
         for f in self.folders:
             if isinstance(f, BaseFolder) and not f.get_folder_allowed:
-                log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+                log.debug(&#34;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#34;, f)
                 yield f
             else:
                 resolveable_folders.append(f)
         # Fetch all properties for the remaining folders of folder IDs
         additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
         yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
-                additional_fields=additional_fields
+            additional_fields=additional_fields
         )
 
     @require_account
-    def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
-                     offset=0):
+    def find_folders(
+        self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None, offset=0
+    ):
         from ..services import FindFolder
+
         # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
         from .base import BaseFolder, Folder
+
         if q is None:
             q = Q()
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         if q.is_empty():
             restriction = None
@@ -376,21 +401,23 @@ class FolderCollection(SearchableMixIn):
         )
 
         yield from FindFolder(account=self.account, page_size=page_size).call(
-                folders=self.folders,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                shape=shape,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
+            folders=self.folders,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            shape=shape,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
         )
 
     def get_folders(self, additional_fields=None):
         from ..services import GetFolder
+
         # Expand folders with their full set of properties
         from .base import BaseFolder
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if additional_fields is None:
             # Default to all complex properties
@@ -402,38 +429,47 @@ class FolderCollection(SearchableMixIn):
         )
 
         yield from GetFolder(account=self.account).call(
-                folders=self.folders,
-                additional_fields=additional_fields,
-                shape=ID_ONLY,
+            folders=self.folders,
+            additional_fields=additional_fields,
+            shape=ID_ONLY,
         )
 
     def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
         from ..services import SubscribeToPull
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
         return SubscribeToPull(account=self.account).get(
-            folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+            folders=self.folders,
+            event_types=event_types,
+            watermark=watermark,
+            timeout=timeout,
         )
 
     def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
         from ..services import SubscribeToPush
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
         return SubscribeToPush(account=self.account).get(
-            folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            folders=self.folders,
+            event_types=event_types,
+            watermark=watermark,
+            status_frequency=status_frequency,
             url=callback_url,
         )
 
     def subscribe_to_streaming(self, event_types=None):
         from ..services import SubscribeToStreaming
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
@@ -458,10 +494,12 @@ class FolderCollection(SearchableMixIn):
         sync methods.
         &#34;&#34;&#34;
         from ..services import Unsubscribe
+
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         from ..services import SyncFolderItems
+
         folder = self._get_single_folder()
         if only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -493,6 +531,7 @@ class FolderCollection(SearchableMixIn):
 
     def sync_hierarchy(self, sync_state=None, only_fields=None):
         from ..services import SyncFolderHierarchy
+
         folder = self._get_single_folder()
         if only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -622,7 +661,7 @@ class StreamingSubscription(BaseSubscription):
     &#34;&#34;&#34;A class that implements an API for searching folders.&#34;&#34;&#34;
 
     # These fields are required in a FindFolder or GetFolder call to properly identify folder types
-    REQUIRED_FOLDER_FIELDS = (&#39;name&#39;, &#39;folder_class&#39;)
+    REQUIRED_FOLDER_FIELDS = (&#34;name&#34;, &#34;folder_class&#34;)
 
     def __init__(self, account, folders):
         &#34;&#34;&#34;Implement a search API on a collection of folders.
@@ -753,8 +792,18 @@ class StreamingSubscription(BaseSubscription):
             query_string = None
         return depth, restriction, query_string
 
-    def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                   calendar_view=None, page_size=None, max_items=None, offset=0):
+    def find_items(
+        self,
+        q,
+        shape=ID_ONLY,
+        depth=None,
+        additional_fields=None,
+        order_fields=None,
+        calendar_view=None,
+        page_size=None,
+        max_items=None,
+        offset=0,
+    ):
         &#34;&#34;&#34;Private method to call the FindItem service.
 
         :param q: a Q instance containing any restrictions
@@ -772,21 +821,21 @@ class StreamingSubscription(BaseSubscription):
         :return: a generator for the returned item IDs or items
         &#34;&#34;&#34;
         from ..services import FindItem
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, depth=depth, additional_fields=additional_fields,
-            field_validator=self.validate_item_field
+            q=q, depth=depth, additional_fields=additional_fields, field_validator=self.validate_item_field
         )
         if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-            raise InvalidTypeError(&#39;calendar_view&#39;, calendar_view, CalendarView)
+            raise InvalidTypeError(&#34;calendar_view&#34;, calendar_view, CalendarView)
 
         log.debug(
-            &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+            &#34;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#34;,
             self.account,
             self.folders,
             shape,
@@ -809,14 +858,23 @@ class StreamingSubscription(BaseSubscription):
 
     def _get_single_folder(self):
         if len(self.folders) &gt; 1:
-            raise ValueError(&#39;Syncing folder hierarchy can only be done on a single folder&#39;)
+            raise ValueError(&#34;Syncing folder hierarchy can only be done on a single folder&#34;)
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         return self.folders[0]
 
-    def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                    page_size=None, max_items=None, offset=0):
+    def find_people(
+        self,
+        q,
+        shape=ID_ONLY,
+        depth=None,
+        additional_fields=None,
+        order_fields=None,
+        page_size=None,
+        max_items=None,
+        offset=0,
+    ):
         &#34;&#34;&#34;Private method to call the FindPeople service.
 
         :param q: a Q instance containing any restrictions
@@ -832,30 +890,31 @@ class StreamingSubscription(BaseSubscription):
         :return: a generator for the returned personas
         &#34;&#34;&#34;
         from ..services import FindPeople
+
         folder = self._get_single_folder()
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         depth, restriction, query_string = self._rinse_args(
-            q=q, depth=depth, additional_fields=additional_fields,
-            field_validator=Persona.validate_field
+            q=q, depth=depth, additional_fields=additional_fields, field_validator=Persona.validate_field
         )
 
         yield from FindPeople(account=self.account, page_size=page_size).call(
-                folder=folder,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                order_fields=order_fields,
-                shape=shape,
-                query_string=query_string,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
+            folder=folder,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            order_fields=order_fields,
+            shape=shape,
+            query_string=query_string,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
         )
 
     def get_folder_fields(self, target_cls, is_complex=None):
         return {
-            FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+            FieldPath(field=f)
+            for f in target_cls.supported_fields(version=self.account.version)
             if is_complex is None or f.is_complex is is_complex
         }
 
@@ -864,16 +923,17 @@ class StreamingSubscription(BaseSubscription):
         # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
         from .base import Folder
         from .roots import RootOfHierarchy
+
         has_roots = False
         has_non_roots = False
         for f in self.folders:
             if isinstance(f, RootOfHierarchy):
                 if has_non_roots:
-                    raise ValueError(f&#39;Cannot call GetFolder on a mix of folder types: {self.folders}&#39;)
+                    raise ValueError(f&#34;Cannot call GetFolder on a mix of folder types: {self.folders}&#34;)
                 has_roots = True
             else:
                 if has_roots:
-                    raise ValueError(f&#39;Cannot call GetFolder on a mix of folder types: {self.folders}&#39;)
+                    raise ValueError(f&#34;Cannot call GetFolder on a mix of folder types: {self.folders}&#34;)
                 has_non_roots = True
         return RootOfHierarchy if has_roots else Folder
 
@@ -882,47 +942,51 @@ class StreamingSubscription(BaseSubscription):
         if len(unique_depths) == 1:
             return unique_depths.pop()
         raise ValueError(
-            f&#39;Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit &#39;
-            f&#39;traversal depth with QuerySet.depth() (values: {unique_depths})&#39;
+            f&#34;Folders in this collection do not have a common {traversal_attr} value. You need to define an explicit &#34;
+            f&#34;traversal depth with QuerySet.depth() (values: {unique_depths})&#34;
         )
 
     def _get_default_item_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Associated&#39; traversal depth.
-        return self._get_default_traversal_depth(&#39;DEFAULT_ITEM_TRAVERSAL_DEPTH&#39;)
+        return self._get_default_traversal_depth(&#34;DEFAULT_ITEM_TRAVERSAL_DEPTH&#34;)
 
     def _get_default_folder_traversal_depth(self):
         # When searching folders, some folders require &#39;Shallow&#39; and others &#39;Deep&#39; traversal depth.
-        return self._get_default_traversal_depth(&#39;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#39;)
+        return self._get_default_traversal_depth(&#34;DEFAULT_FOLDER_TRAVERSAL_DEPTH&#34;)
 
     def resolve(self):
         # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
         from .base import BaseFolder
+
         resolveable_folders = []
         for f in self.folders:
             if isinstance(f, BaseFolder) and not f.get_folder_allowed:
-                log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+                log.debug(&#34;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#34;, f)
                 yield f
             else:
                 resolveable_folders.append(f)
         # Fetch all properties for the remaining folders of folder IDs
         additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
         yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
-                additional_fields=additional_fields
+            additional_fields=additional_fields
         )
 
     @require_account
-    def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
-                     offset=0):
+    def find_folders(
+        self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None, offset=0
+    ):
         from ..services import FindFolder
+
         # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
         from .base import BaseFolder, Folder
+
         if q is None:
             q = Q()
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if q.is_never():
-            log.debug(&#39;Query will never return results&#39;)
+            log.debug(&#34;Query will never return results&#34;)
             return
         if q.is_empty():
             restriction = None
@@ -944,21 +1008,23 @@ class StreamingSubscription(BaseSubscription):
         )
 
         yield from FindFolder(account=self.account, page_size=page_size).call(
-                folders=self.folders,
-                additional_fields=additional_fields,
-                restriction=restriction,
-                shape=shape,
-                depth=depth,
-                max_items=max_items,
-                offset=offset,
+            folders=self.folders,
+            additional_fields=additional_fields,
+            restriction=restriction,
+            shape=shape,
+            depth=depth,
+            max_items=max_items,
+            offset=offset,
         )
 
     def get_folders(self, additional_fields=None):
         from ..services import GetFolder
+
         # Expand folders with their full set of properties
         from .base import BaseFolder
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return
         if additional_fields is None:
             # Default to all complex properties
@@ -970,38 +1036,47 @@ class StreamingSubscription(BaseSubscription):
         )
 
         yield from GetFolder(account=self.account).call(
-                folders=self.folders,
-                additional_fields=additional_fields,
-                shape=ID_ONLY,
+            folders=self.folders,
+            additional_fields=additional_fields,
+            shape=ID_ONLY,
         )
 
     def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
         from ..services import SubscribeToPull
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToPull.EVENT_TYPES
         return SubscribeToPull(account=self.account).get(
-            folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+            folders=self.folders,
+            event_types=event_types,
+            watermark=watermark,
+            timeout=timeout,
         )
 
     def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
         from ..services import SubscribeToPush
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToPush.EVENT_TYPES
         return SubscribeToPush(account=self.account).get(
-            folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+            folders=self.folders,
+            event_types=event_types,
+            watermark=watermark,
+            status_frequency=status_frequency,
             url=callback_url,
         )
 
     def subscribe_to_streaming(self, event_types=None):
         from ..services import SubscribeToStreaming
+
         if not self.folders:
-            log.debug(&#39;Folder list is empty&#39;)
+            log.debug(&#34;Folder list is empty&#34;)
             return None
         if event_types is None:
             event_types = SubscribeToStreaming.EVENT_TYPES
@@ -1026,10 +1101,12 @@ class StreamingSubscription(BaseSubscription):
         sync methods.
         &#34;&#34;&#34;
         from ..services import Unsubscribe
+
         return Unsubscribe(account=self.account).get(subscription_id=subscription_id)
 
     def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
         from ..services import SyncFolderItems
+
         folder = self._get_single_folder()
         if only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -1061,6 +1138,7 @@ class StreamingSubscription(BaseSubscription):
 
     def sync_hierarchy(self, sync_state=None, only_fields=None):
         from ..services import SyncFolderHierarchy
+
         folder = self._get_single_folder()
         if only_fields is None:
             # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -1227,18 +1305,21 @@ string is not a postfix.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_account
-def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None,
-                 offset=0):
+def find_folders(
+    self, q=None, shape=ID_ONLY, depth=None, additional_fields=None, page_size=None, max_items=None, offset=0
+):
     from ..services import FindFolder
+
     # &#39;depth&#39; controls whether to return direct children or recurse into sub-folders
     from .base import BaseFolder, Folder
+
     if q is None:
         q = Q()
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return
     if q.is_never():
-        log.debug(&#39;Query will never return results&#39;)
+        log.debug(&#34;Query will never return results&#34;)
         return
     if q.is_empty():
         restriction = None
@@ -1260,13 +1341,13 @@ def find_folders(self, q=None, shape=ID_ONLY, depth=None, additional_fields=None
     )
 
     yield from FindFolder(account=self.account, page_size=page_size).call(
-            folders=self.folders,
-            additional_fields=additional_fields,
-            restriction=restriction,
-            shape=shape,
-            depth=depth,
-            max_items=max_items,
-            offset=offset,
+        folders=self.folders,
+        additional_fields=additional_fields,
+        restriction=restriction,
+        shape=shape,
+        depth=depth,
+        max_items=max_items,
+        offset=offset,
     )</code></pre>
 </details>
 </dd>
@@ -1291,8 +1372,18 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_items(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-               calendar_view=None, page_size=None, max_items=None, offset=0):
+<pre><code class="python">def find_items(
+    self,
+    q,
+    shape=ID_ONLY,
+    depth=None,
+    additional_fields=None,
+    order_fields=None,
+    calendar_view=None,
+    page_size=None,
+    max_items=None,
+    offset=0,
+):
     &#34;&#34;&#34;Private method to call the FindItem service.
 
     :param q: a Q instance containing any restrictions
@@ -1310,21 +1401,21 @@ that complex fields can only be fetched with fetch() (i.e. the GetItem service).
     :return: a generator for the returned item IDs or items
     &#34;&#34;&#34;
     from ..services import FindItem
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return
     if q.is_never():
-        log.debug(&#39;Query will never return results&#39;)
+        log.debug(&#34;Query will never return results&#34;)
         return
     depth, restriction, query_string = self._rinse_args(
-        q=q, depth=depth, additional_fields=additional_fields,
-        field_validator=self.validate_item_field
+        q=q, depth=depth, additional_fields=additional_fields, field_validator=self.validate_item_field
     )
     if calendar_view is not None and not isinstance(calendar_view, CalendarView):
-        raise InvalidTypeError(&#39;calendar_view&#39;, calendar_view, CalendarView)
+        raise InvalidTypeError(&#34;calendar_view&#34;, calendar_view, CalendarView)
 
     log.debug(
-        &#39;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#39;,
+        &#34;Finding %s items in folders %s (shape: %s, depth: %s, additional_fields: %s, restriction: %s)&#34;,
         self.account,
         self.folders,
         shape,
@@ -1365,8 +1456,17 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_people(self, q, shape=ID_ONLY, depth=None, additional_fields=None, order_fields=None,
-                page_size=None, max_items=None, offset=0):
+<pre><code class="python">def find_people(
+    self,
+    q,
+    shape=ID_ONLY,
+    depth=None,
+    additional_fields=None,
+    order_fields=None,
+    page_size=None,
+    max_items=None,
+    offset=0,
+):
     &#34;&#34;&#34;Private method to call the FindPeople service.
 
     :param q: a Q instance containing any restrictions
@@ -1382,25 +1482,25 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
     :return: a generator for the returned personas
     &#34;&#34;&#34;
     from ..services import FindPeople
+
     folder = self._get_single_folder()
     if q.is_never():
-        log.debug(&#39;Query will never return results&#39;)
+        log.debug(&#34;Query will never return results&#34;)
         return
     depth, restriction, query_string = self._rinse_args(
-        q=q, depth=depth, additional_fields=additional_fields,
-        field_validator=Persona.validate_field
+        q=q, depth=depth, additional_fields=additional_fields, field_validator=Persona.validate_field
     )
 
     yield from FindPeople(account=self.account, page_size=page_size).call(
-            folder=folder,
-            additional_fields=additional_fields,
-            restriction=restriction,
-            order_fields=order_fields,
-            shape=shape,
-            query_string=query_string,
-            depth=depth,
-            max_items=max_items,
-            offset=offset,
+        folder=folder,
+        additional_fields=additional_fields,
+        restriction=restriction,
+        order_fields=order_fields,
+        shape=shape,
+        query_string=query_string,
+        depth=depth,
+        max_items=max_items,
+        offset=offset,
     )</code></pre>
 </details>
 </dd>
@@ -1415,7 +1515,8 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def get_folder_fields(self, target_cls, is_complex=None):
     return {
-        FieldPath(field=f) for f in target_cls.supported_fields(version=self.account.version)
+        FieldPath(field=f)
+        for f in target_cls.supported_fields(version=self.account.version)
         if is_complex is None or f.is_complex is is_complex
     }</code></pre>
 </details>
@@ -1431,10 +1532,12 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def get_folders(self, additional_fields=None):
     from ..services import GetFolder
+
     # Expand folders with their full set of properties
     from .base import BaseFolder
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return
     if additional_fields is None:
         # Default to all complex properties
@@ -1446,9 +1549,9 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
     )
 
     yield from GetFolder(account=self.account).call(
-            folders=self.folders,
-            additional_fields=additional_fields,
-            shape=ID_ONLY,
+        folders=self.folders,
+        additional_fields=additional_fields,
+        shape=ID_ONLY,
     )</code></pre>
 </details>
 </dd>
@@ -1490,17 +1593,18 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 <pre><code class="python">def resolve(self):
     # Looks up the folders or folder IDs in the collection and returns full Folder instances with all fields set.
     from .base import BaseFolder
+
     resolveable_folders = []
     for f in self.folders:
         if isinstance(f, BaseFolder) and not f.get_folder_allowed:
-            log.debug(&#39;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#39;, f)
+            log.debug(&#34;GetFolder not allowed on folder %s. Non-complex fields must be fetched with FindFolder&#34;, f)
             yield f
         else:
             resolveable_folders.append(f)
     # Fetch all properties for the remaining folders of folder IDs
     additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
     yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
-            additional_fields=additional_fields
+        additional_fields=additional_fields
     )</code></pre>
 </details>
 </dd>
@@ -1528,13 +1632,17 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def subscribe_to_pull(self, event_types=None, watermark=None, timeout=60):
     from ..services import SubscribeToPull
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return None
     if event_types is None:
         event_types = SubscribeToPull.EVENT_TYPES
     return SubscribeToPull(account=self.account).get(
-        folders=self.folders, event_types=event_types, watermark=watermark, timeout=timeout,
+        folders=self.folders,
+        event_types=event_types,
+        watermark=watermark,
+        timeout=timeout,
     )</code></pre>
 </details>
 </dd>
@@ -1549,13 +1657,17 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def subscribe_to_push(self, callback_url, event_types=None, watermark=None, status_frequency=1):
     from ..services import SubscribeToPush
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return None
     if event_types is None:
         event_types = SubscribeToPush.EVENT_TYPES
     return SubscribeToPush(account=self.account).get(
-        folders=self.folders, event_types=event_types, watermark=watermark, status_frequency=status_frequency,
+        folders=self.folders,
+        event_types=event_types,
+        watermark=watermark,
+        status_frequency=status_frequency,
         url=callback_url,
     )</code></pre>
 </details>
@@ -1571,8 +1683,9 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def subscribe_to_streaming(self, event_types=None):
     from ..services import SubscribeToStreaming
+
     if not self.folders:
-        log.debug(&#39;Folder list is empty&#39;)
+        log.debug(&#34;Folder list is empty&#34;)
         return None
     if event_types is None:
         event_types = SubscribeToStreaming.EVENT_TYPES
@@ -1590,6 +1703,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def sync_hierarchy(self, sync_state=None, only_fields=None):
     from ..services import SyncFolderHierarchy
+
     folder = self._get_single_folder()
     if only_fields is None:
         # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -1636,6 +1750,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
 </summary>
 <pre><code class="python">def sync_items(self, sync_state=None, only_fields=None, ignore=None, max_changes_returned=None, sync_scope=None):
     from ..services import SyncFolderItems
+
     folder = self._get_single_folder()
     if only_fields is None:
         # We didn&#39;t restrict list of field paths. Get all fields from the server, including extended properties.
@@ -1689,6 +1804,7 @@ sync methods.</p></div>
     sync methods.
     &#34;&#34;&#34;
     from ..services import Unsubscribe
+
     return Unsubscribe(account=self.account).get(subscription_id=subscription_id)</code></pre>
 </details>
 </dd>

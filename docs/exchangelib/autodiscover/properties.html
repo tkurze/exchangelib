@@ -26,13 +26,24 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..errors import ErrorNonExistentMailbox, AutoDiscoverFailed
-from ..fields import TextField, EmailAddressField, ChoiceField, Choice, EWSElementField, OnOffField, BooleanField, \
-    IntegerField, BuildField, ProtocolListField
+<pre><code class="python">from ..errors import AutoDiscoverFailed, ErrorNonExistentMailbox
+from ..fields import (
+    BooleanField,
+    BuildField,
+    Choice,
+    ChoiceField,
+    EmailAddressField,
+    EWSElementField,
+    IntegerField,
+    OnOffField,
+    ProtocolListField,
+    TextField,
+)
 from ..properties import EWSElement
-from ..transport import DEFAULT_ENCODING, NOAUTH, NTLM, BASIC, GSSAPI, SSPI, CBA
-from ..util import create_element, add_xml_child, to_xml, is_xml, xml_to_str, AUTODISCOVER_REQUEST_NS, \
-    AUTODISCOVER_BASE_NS, AUTODISCOVER_RESPONSE_NS as RNS, ParseError
+from ..transport import BASIC, CBA, DEFAULT_ENCODING, GSSAPI, NOAUTH, NTLM, SSPI
+from ..util import AUTODISCOVER_BASE_NS, AUTODISCOVER_REQUEST_NS
+from ..util import AUTODISCOVER_RESPONSE_NS as RNS
+from ..util import ParseError, add_xml_child, create_element, is_xml, to_xml, xml_to_str
 from ..version import Version
 
 
@@ -43,40 +54,40 @@ class AutodiscoverBase(EWSElement):
 class User(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/user-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;User&#39;
+    ELEMENT_NAME = &#34;User&#34;
 
-    display_name = TextField(field_uri=&#39;DisplayName&#39;, namespace=RNS)
-    legacy_dn = TextField(field_uri=&#39;LegacyDN&#39;, namespace=RNS)
-    deployment_id = TextField(field_uri=&#39;DeploymentId&#39;, namespace=RNS)  # GUID format
-    autodiscover_smtp_address = EmailAddressField(field_uri=&#39;AutoDiscoverSMTPAddress&#39;, namespace=RNS)
+    display_name = TextField(field_uri=&#34;DisplayName&#34;, namespace=RNS)
+    legacy_dn = TextField(field_uri=&#34;LegacyDN&#34;, namespace=RNS)
+    deployment_id = TextField(field_uri=&#34;DeploymentId&#34;, namespace=RNS)  # GUID format
+    autodiscover_smtp_address = EmailAddressField(field_uri=&#34;AutoDiscoverSMTPAddress&#34;, namespace=RNS)
 
 
 class IntExtUrlBase(AutodiscoverBase):
-    external_url = TextField(field_uri=&#39;ExternalUrl&#39;, namespace=RNS)
-    internal_url = TextField(field_uri=&#39;InternalUrl&#39;, namespace=RNS)
+    external_url = TextField(field_uri=&#34;ExternalUrl&#34;, namespace=RNS)
+    internal_url = TextField(field_uri=&#34;InternalUrl&#34;, namespace=RNS)
 
 
 class AddressBook(IntExtUrlBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/addressbook-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AddressBook&#39;
+    ELEMENT_NAME = &#34;AddressBook&#34;
 
 
 class MailStore(IntExtUrlBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailstore-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MailStore&#39;
+    ELEMENT_NAME = &#34;MailStore&#34;
 
 
 class NetworkRequirements(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/networkrequirements-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;NetworkRequirements&#39;
+    ELEMENT_NAME = &#34;NetworkRequirements&#34;
 
-    ipv4_start = TextField(field_uri=&#39;IPv4Start&#39;, namespace=RNS)
-    ipv4_end = TextField(field_uri=&#39;IPv4End&#39;, namespace=RNS)
-    ipv6_start = TextField(field_uri=&#39;IPv6Start&#39;, namespace=RNS)
-    ipv6_end = TextField(field_uri=&#39;IPv6End&#39;, namespace=RNS)
+    ipv4_start = TextField(field_uri=&#34;IPv4Start&#34;, namespace=RNS)
+    ipv4_end = TextField(field_uri=&#34;IPv4End&#34;, namespace=RNS)
+    ipv6_start = TextField(field_uri=&#34;IPv6Start&#34;, namespace=RNS)
+    ipv6_end = TextField(field_uri=&#34;IPv6End&#34;, namespace=RNS)
 
 
 class SimpleProtocol(AutodiscoverBase):
@@ -85,84 +96,86 @@ class SimpleProtocol(AutodiscoverBase):
     Used for the &#39;Internal&#39; and &#39;External&#39; elements that may contain a stripped-down version of the Protocol element.
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Protocol&#39;
-    WEB = &#39;WEB&#39;
-    EXCH = &#39;EXCH&#39;
-    EXPR = &#39;EXPR&#39;
-    EXHTTP = &#39;EXHTTP&#39;
+    ELEMENT_NAME = &#34;Protocol&#34;
+    WEB = &#34;WEB&#34;
+    EXCH = &#34;EXCH&#34;
+    EXPR = &#34;EXPR&#34;
+    EXHTTP = &#34;EXHTTP&#34;
     TYPES = (WEB, EXCH, EXPR, EXHTTP)
 
-    type = ChoiceField(field_uri=&#39;Type&#39;, choices={Choice(c) for c in TYPES}, namespace=RNS)
-    as_url = TextField(field_uri=&#39;ASUrl&#39;, namespace=RNS)
+    type = ChoiceField(field_uri=&#34;Type&#34;, choices={Choice(c) for c in TYPES}, namespace=RNS)
+    as_url = TextField(field_uri=&#34;ASUrl&#34;, namespace=RNS)
 
 
 class IntExtBase(AutodiscoverBase):
     # TODO: &#39;OWAUrl&#39; also has an AuthenticationMethod enum-style XML attribute with values:
     #  WindowsIntegrated, FBA, NTLM, Digest, Basic
-    owa_url = TextField(field_uri=&#39;OWAUrl&#39;, namespace=RNS)
+    owa_url = TextField(field_uri=&#34;OWAUrl&#34;, namespace=RNS)
     protocol = EWSElementField(value_cls=SimpleProtocol)
 
 
 class Internal(IntExtBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/internal-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Internal&#39;
+    ELEMENT_NAME = &#34;Internal&#34;
 
 
 class External(IntExtBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/external-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;External&#39;
+    ELEMENT_NAME = &#34;External&#34;
 
 
 class Protocol(SimpleProtocol):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/protocol-pox&#34;&#34;&#34;
 
     # Attribute &#39;Type&#39; is ignored here. Has a name conflict with the child element and does not seem useful.
-    version = TextField(field_uri=&#39;Version&#39;, is_attribute=True, namespace=RNS)
+    version = TextField(field_uri=&#34;Version&#34;, is_attribute=True, namespace=RNS)
     internal = EWSElementField(value_cls=Internal)
     external = EWSElementField(value_cls=External)
-    ttl = IntegerField(field_uri=&#39;TTL&#39;, namespace=RNS, default=1)  # TTL for this autodiscover response, in hours
-    server = TextField(field_uri=&#39;Server&#39;, namespace=RNS)
-    server_dn = TextField(field_uri=&#39;ServerDN&#39;, namespace=RNS)
-    server_version = BuildField(field_uri=&#39;ServerVersion&#39;, namespace=RNS)
-    mdb_dn = TextField(field_uri=&#39;MdbDN&#39;, namespace=RNS)
-    public_folder_server = TextField(field_uri=&#39;PublicFolderServer&#39;, namespace=RNS)
-    port = IntegerField(field_uri=&#39;Port&#39;, namespace=RNS, min=1, max=65535)
-    directory_port = IntegerField(field_uri=&#39;DirectoryPort&#39;, namespace=RNS, min=1, max=65535)
-    referral_port = IntegerField(field_uri=&#39;ReferralPort&#39;, namespace=RNS, min=1, max=65535)
-    ews_url = TextField(field_uri=&#39;EwsUrl&#39;, namespace=RNS)
-    emws_url = TextField(field_uri=&#39;EmwsUrl&#39;, namespace=RNS)
-    sharing_url = TextField(field_uri=&#39;SharingUrl&#39;, namespace=RNS)
-    ecp_url = TextField(field_uri=&#39;EcpUrl&#39;, namespace=RNS)
-    ecp_url_um = TextField(field_uri=&#39;EcpUrl-um&#39;, namespace=RNS)
-    ecp_url_aggr = TextField(field_uri=&#39;EcpUrl-aggr&#39;, namespace=RNS)
-    ecp_url_mt = TextField(field_uri=&#39;EcpUrl-mt&#39;, namespace=RNS)
-    ecp_url_ret = TextField(field_uri=&#39;EcpUrl-ret&#39;, namespace=RNS)
-    ecp_url_sms = TextField(field_uri=&#39;EcpUrl-sms&#39;, namespace=RNS)
-    ecp_url_publish = TextField(field_uri=&#39;EcpUrl-publish&#39;, namespace=RNS)
-    ecp_url_photo = TextField(field_uri=&#39;EcpUrl-photo&#39;, namespace=RNS)
-    ecp_url_tm = TextField(field_uri=&#39;EcpUrl-tm&#39;, namespace=RNS)
-    ecp_url_tm_creating = TextField(field_uri=&#39;EcpUrl-tmCreating&#39;, namespace=RNS)
-    ecp_url_tm_hiding = TextField(field_uri=&#39;EcpUrl-tmHiding&#39;, namespace=RNS)
-    ecp_url_tm_editing = TextField(field_uri=&#39;EcpUrl-tmEditing&#39;, namespace=RNS)
-    ecp_url_extinstall = TextField(field_uri=&#39;EcpUrl-extinstall&#39;, namespace=RNS)
-    oof_url = TextField(field_uri=&#39;OOFUrl&#39;, namespace=RNS)
-    oab_url = TextField(field_uri=&#39;OABUrl&#39;, namespace=RNS)
-    um_url = TextField(field_uri=&#39;UMUrl&#39;, namespace=RNS)
-    ews_partner_url = TextField(field_uri=&#39;EwsPartnerUrl&#39;, namespace=RNS)
-    login_name = TextField(field_uri=&#39;LoginName&#39;, namespace=RNS)
-    domain_required = OnOffField(field_uri=&#39;DomainRequired&#39;, namespace=RNS)
-    domain_name = TextField(field_uri=&#39;DomainName&#39;, namespace=RNS)
-    spa = OnOffField(field_uri=&#39;SPA&#39;, namespace=RNS, default=True)
-    auth_package = ChoiceField(field_uri=&#39;AuthPackage&#39;, namespace=RNS, choices={
-        Choice(c) for c in (&#39;basic&#39;, &#39;kerb&#39;, &#39;kerbntlm&#39;, &#39;ntlm&#39;, &#39;certificate&#39;, &#39;negotiate&#39;, &#39;nego2&#39;)
-    })
-    cert_principal_name = TextField(field_uri=&#39;CertPrincipalName&#39;, namespace=RNS)
-    ssl = OnOffField(field_uri=&#39;SSL&#39;, namespace=RNS, default=True)
-    auth_required = OnOffField(field_uri=&#39;AuthRequired&#39;, namespace=RNS, default=True)
-    use_pop_path = OnOffField(field_uri=&#39;UsePOPAuth&#39;, namespace=RNS)
-    smtp_last = OnOffField(field_uri=&#39;SMTPLast&#39;, namespace=RNS, default=False)
+    ttl = IntegerField(field_uri=&#34;TTL&#34;, namespace=RNS, default=1)  # TTL for this autodiscover response, in hours
+    server = TextField(field_uri=&#34;Server&#34;, namespace=RNS)
+    server_dn = TextField(field_uri=&#34;ServerDN&#34;, namespace=RNS)
+    server_version = BuildField(field_uri=&#34;ServerVersion&#34;, namespace=RNS)
+    mdb_dn = TextField(field_uri=&#34;MdbDN&#34;, namespace=RNS)
+    public_folder_server = TextField(field_uri=&#34;PublicFolderServer&#34;, namespace=RNS)
+    port = IntegerField(field_uri=&#34;Port&#34;, namespace=RNS, min=1, max=65535)
+    directory_port = IntegerField(field_uri=&#34;DirectoryPort&#34;, namespace=RNS, min=1, max=65535)
+    referral_port = IntegerField(field_uri=&#34;ReferralPort&#34;, namespace=RNS, min=1, max=65535)
+    ews_url = TextField(field_uri=&#34;EwsUrl&#34;, namespace=RNS)
+    emws_url = TextField(field_uri=&#34;EmwsUrl&#34;, namespace=RNS)
+    sharing_url = TextField(field_uri=&#34;SharingUrl&#34;, namespace=RNS)
+    ecp_url = TextField(field_uri=&#34;EcpUrl&#34;, namespace=RNS)
+    ecp_url_um = TextField(field_uri=&#34;EcpUrl-um&#34;, namespace=RNS)
+    ecp_url_aggr = TextField(field_uri=&#34;EcpUrl-aggr&#34;, namespace=RNS)
+    ecp_url_mt = TextField(field_uri=&#34;EcpUrl-mt&#34;, namespace=RNS)
+    ecp_url_ret = TextField(field_uri=&#34;EcpUrl-ret&#34;, namespace=RNS)
+    ecp_url_sms = TextField(field_uri=&#34;EcpUrl-sms&#34;, namespace=RNS)
+    ecp_url_publish = TextField(field_uri=&#34;EcpUrl-publish&#34;, namespace=RNS)
+    ecp_url_photo = TextField(field_uri=&#34;EcpUrl-photo&#34;, namespace=RNS)
+    ecp_url_tm = TextField(field_uri=&#34;EcpUrl-tm&#34;, namespace=RNS)
+    ecp_url_tm_creating = TextField(field_uri=&#34;EcpUrl-tmCreating&#34;, namespace=RNS)
+    ecp_url_tm_hiding = TextField(field_uri=&#34;EcpUrl-tmHiding&#34;, namespace=RNS)
+    ecp_url_tm_editing = TextField(field_uri=&#34;EcpUrl-tmEditing&#34;, namespace=RNS)
+    ecp_url_extinstall = TextField(field_uri=&#34;EcpUrl-extinstall&#34;, namespace=RNS)
+    oof_url = TextField(field_uri=&#34;OOFUrl&#34;, namespace=RNS)
+    oab_url = TextField(field_uri=&#34;OABUrl&#34;, namespace=RNS)
+    um_url = TextField(field_uri=&#34;UMUrl&#34;, namespace=RNS)
+    ews_partner_url = TextField(field_uri=&#34;EwsPartnerUrl&#34;, namespace=RNS)
+    login_name = TextField(field_uri=&#34;LoginName&#34;, namespace=RNS)
+    domain_required = OnOffField(field_uri=&#34;DomainRequired&#34;, namespace=RNS)
+    domain_name = TextField(field_uri=&#34;DomainName&#34;, namespace=RNS)
+    spa = OnOffField(field_uri=&#34;SPA&#34;, namespace=RNS, default=True)
+    auth_package = ChoiceField(
+        field_uri=&#34;AuthPackage&#34;,
+        namespace=RNS,
+        choices={Choice(c) for c in (&#34;basic&#34;, &#34;kerb&#34;, &#34;kerbntlm&#34;, &#34;ntlm&#34;, &#34;certificate&#34;, &#34;negotiate&#34;, &#34;nego2&#34;)},
+    )
+    cert_principal_name = TextField(field_uri=&#34;CertPrincipalName&#34;, namespace=RNS)
+    ssl = OnOffField(field_uri=&#34;SSL&#34;, namespace=RNS, default=True)
+    auth_required = OnOffField(field_uri=&#34;AuthRequired&#34;, namespace=RNS, default=True)
+    use_pop_path = OnOffField(field_uri=&#34;UsePOPAuth&#34;, namespace=RNS)
+    smtp_last = OnOffField(field_uri=&#34;SMTPLast&#34;, namespace=RNS, default=False)
     network_requirements = EWSElementField(value_cls=NetworkRequirements)
     address_book = EWSElementField(value_cls=AddressBook)
     mail_store = EWSElementField(value_cls=MailStore)
@@ -176,56 +189,56 @@ class Protocol(SimpleProtocol):
             return None
         return {
             # Missing in list are DIGEST and OAUTH2
-            &#39;basic&#39;: BASIC,
-            &#39;kerb&#39;: GSSAPI,
-            &#39;kerbntlm&#39;: NTLM,  # Means client can chose between NTLM and GSSAPI
-            &#39;ntlm&#39;: NTLM,
-            &#39;certificate&#39;: CBA,
-            &#39;negotiate&#39;: SSPI,  # Unsure about this one
-            &#39;nego2&#39;: GSSAPI,
-            &#39;anonymous&#39;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
+            &#34;basic&#34;: BASIC,
+            &#34;kerb&#34;: GSSAPI,
+            &#34;kerbntlm&#34;: NTLM,  # Means client can chose between NTLM and GSSAPI
+            &#34;ntlm&#34;: NTLM,
+            &#34;certificate&#34;: CBA,
+            &#34;negotiate&#34;: SSPI,  # Unsure about this one
+            &#34;nego2&#34;: GSSAPI,
+            &#34;anonymous&#34;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
         }.get(self.auth_package.lower())
 
 
 class Error(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/error-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Error&#39;
+    ELEMENT_NAME = &#34;Error&#34;
     NAMESPACE = AUTODISCOVER_BASE_NS
 
-    id = TextField(field_uri=&#39;Id&#39;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
-    time = TextField(field_uri=&#39;Time&#39;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
-    code = TextField(field_uri=&#39;ErrorCode&#39;, namespace=AUTODISCOVER_BASE_NS)
-    message = TextField(field_uri=&#39;Message&#39;, namespace=AUTODISCOVER_BASE_NS)
-    debug_data = TextField(field_uri=&#39;DebugData&#39;, namespace=AUTODISCOVER_BASE_NS)
+    id = TextField(field_uri=&#34;Id&#34;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
+    time = TextField(field_uri=&#34;Time&#34;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
+    code = TextField(field_uri=&#34;ErrorCode&#34;, namespace=AUTODISCOVER_BASE_NS)
+    message = TextField(field_uri=&#34;Message&#34;, namespace=AUTODISCOVER_BASE_NS)
+    debug_data = TextField(field_uri=&#34;DebugData&#34;, namespace=AUTODISCOVER_BASE_NS)
 
 
 class Account(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/account-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Account&#39;
-    REDIRECT_URL = &#39;redirectUrl&#39;
-    REDIRECT_ADDR = &#39;redirectAddr&#39;
-    SETTINGS = &#39;settings&#39;
+    ELEMENT_NAME = &#34;Account&#34;
+    REDIRECT_URL = &#34;redirectUrl&#34;
+    REDIRECT_ADDR = &#34;redirectAddr&#34;
+    SETTINGS = &#34;settings&#34;
     ACTIONS = (REDIRECT_URL, REDIRECT_ADDR, SETTINGS)
 
-    type = ChoiceField(field_uri=&#39;AccountType&#39;, namespace=RNS, choices={Choice(&#39;email&#39;)})
-    action = ChoiceField(field_uri=&#39;Action&#39;, namespace=RNS, choices={Choice(p) for p in ACTIONS})
-    microsoft_online = BooleanField(field_uri=&#39;MicrosoftOnline&#39;, namespace=RNS)
-    redirect_url = TextField(field_uri=&#39;RedirectURL&#39;, namespace=RNS)
-    redirect_address = EmailAddressField(field_uri=&#39;RedirectAddr&#39;, namespace=RNS)
-    image = TextField(field_uri=&#39;Image&#39;, namespace=RNS)  # Path to image used for branding
-    service_home = TextField(field_uri=&#39;ServiceHome&#39;, namespace=RNS)  # URL to website of ISP
+    type = ChoiceField(field_uri=&#34;AccountType&#34;, namespace=RNS, choices={Choice(&#34;email&#34;)})
+    action = ChoiceField(field_uri=&#34;Action&#34;, namespace=RNS, choices={Choice(p) for p in ACTIONS})
+    microsoft_online = BooleanField(field_uri=&#34;MicrosoftOnline&#34;, namespace=RNS)
+    redirect_url = TextField(field_uri=&#34;RedirectURL&#34;, namespace=RNS)
+    redirect_address = EmailAddressField(field_uri=&#34;RedirectAddr&#34;, namespace=RNS)
+    image = TextField(field_uri=&#34;Image&#34;, namespace=RNS)  # Path to image used for branding
+    service_home = TextField(field_uri=&#34;ServiceHome&#34;, namespace=RNS)  # URL to website of ISP
     protocols = ProtocolListField()
     # &#39;SmtpAddress&#39; is inside the &#39;PublicFolderInformation&#39; element
-    public_folder_smtp_address = TextField(field_uri=&#39;SmtpAddress&#39;, namespace=RNS)
+    public_folder_smtp_address = TextField(field_uri=&#34;SmtpAddress&#34;, namespace=RNS)
 
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        public_folder_information = elem.find(f&#39;{{{cls.NAMESPACE}}}PublicFolderInformation&#39;)
+        public_folder_information = elem.find(f&#34;{{{cls.NAMESPACE}}}PublicFolderInformation&#34;)
         for f in cls.FIELDS:
-            if f.name == &#39;public_folder_smtp_address&#39;:
+            if f.name == &#34;public_folder_smtp_address&#34;:
                 if public_folder_information is None:
                     continue
                 kwargs[f.name] = f.from_xml(elem=public_folder_information, account=account)
@@ -238,7 +251,7 @@ class Account(AutodiscoverBase):
 class Response(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/response-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Response&#39;
+    ELEMENT_NAME = &#34;Response&#34;
 
     user = EWSElementField(value_cls=User)
     account = EWSElementField(value_cls=Account)
@@ -300,7 +313,7 @@ class Response(AutodiscoverBase):
         if Protocol.EXCH in protocols:
             return protocols[Protocol.EXCH]
         raise ValueError(
-            f&#39;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#39;
+            f&#34;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#34;
         )
 
 
@@ -310,14 +323,14 @@ class ErrorResponse(EWSElement):
     Like &#39;Response&#39;, but with a different namespace.
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Response&#39;
+    ELEMENT_NAME = &#34;Response&#34;
     NAMESPACE = AUTODISCOVER_BASE_NS
 
     error = EWSElementField(value_cls=Error)
 
 
 class Autodiscover(EWSElement):
-    ELEMENT_NAME = &#39;Autodiscover&#39;
+    ELEMENT_NAME = &#34;Autodiscover&#34;
     NAMESPACE = AUTODISCOVER_BASE_NS
 
     response = EWSElementField(value_cls=Response)
@@ -337,10 +350,10 @@ class Autodiscover(EWSElement):
         :return:
         &#34;&#34;&#34;
         if not is_xml(bytes_content):
-            raise ParseError(f&#39;Response is not XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+            raise ParseError(f&#34;Response is not XML: {bytes_content}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
         root = to_xml(bytes_content).getroot()  # May raise ParseError
         if root.tag != cls.response_tag():
-            raise ParseError(f&#39;Unknown root element in XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+            raise ParseError(f&#34;Unknown root element in XML: {bytes_content}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
@@ -348,19 +361,19 @@ class Autodiscover(EWSElement):
         try:
             errorcode = self.error_response.error.code
             message = self.error_response.error.message
-            if message in (&#39;The e-mail address cannot be found.&#39;, &#34;The email address can&#39;t be found.&#34;):
-                raise ErrorNonExistentMailbox(&#39;The SMTP address has no mailbox associated with it&#39;)
-            raise AutoDiscoverFailed(f&#39;Unknown error {errorcode}: {message}&#39;)
+            if message in (&#34;The e-mail address cannot be found.&#34;, &#34;The email address can&#39;t be found.&#34;):
+                raise ErrorNonExistentMailbox(&#34;The SMTP address has no mailbox associated with it&#34;)
+            raise AutoDiscoverFailed(f&#34;Unknown error {errorcode}: {message}&#34;)
         except AttributeError:
-            raise AutoDiscoverFailed(f&#39;Unknown autodiscover error response: {self.error_response}&#39;)
+            raise AutoDiscoverFailed(f&#34;Unknown autodiscover error response: {self.error_response}&#34;)
 
     @staticmethod
     def payload(email):
         # Builds a full Autodiscover XML request
-        payload = create_element(&#39;Autodiscover&#39;, attrs=dict(xmlns=AUTODISCOVER_REQUEST_NS))
-        request = create_element(&#39;Request&#39;)
-        add_xml_child(request, &#39;EMailAddress&#39;, email)
-        add_xml_child(request, &#39;AcceptableResponseSchema&#39;, RNS)
+        payload = create_element(&#34;Autodiscover&#34;, attrs=dict(xmlns=AUTODISCOVER_REQUEST_NS))
+        request = create_element(&#34;Request&#34;)
+        add_xml_child(request, &#34;EMailAddress&#34;, email)
+        add_xml_child(request, &#34;AcceptableResponseSchema&#34;, RNS)
         payload.append(request)
         return xml_to_str(payload, encoding=DEFAULT_ENCODING, xml_declaration=True)</code></pre>
 </details>
@@ -387,29 +400,29 @@ class Autodiscover(EWSElement):
 <pre><code class="python">class Account(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/account-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Account&#39;
-    REDIRECT_URL = &#39;redirectUrl&#39;
-    REDIRECT_ADDR = &#39;redirectAddr&#39;
-    SETTINGS = &#39;settings&#39;
+    ELEMENT_NAME = &#34;Account&#34;
+    REDIRECT_URL = &#34;redirectUrl&#34;
+    REDIRECT_ADDR = &#34;redirectAddr&#34;
+    SETTINGS = &#34;settings&#34;
     ACTIONS = (REDIRECT_URL, REDIRECT_ADDR, SETTINGS)
 
-    type = ChoiceField(field_uri=&#39;AccountType&#39;, namespace=RNS, choices={Choice(&#39;email&#39;)})
-    action = ChoiceField(field_uri=&#39;Action&#39;, namespace=RNS, choices={Choice(p) for p in ACTIONS})
-    microsoft_online = BooleanField(field_uri=&#39;MicrosoftOnline&#39;, namespace=RNS)
-    redirect_url = TextField(field_uri=&#39;RedirectURL&#39;, namespace=RNS)
-    redirect_address = EmailAddressField(field_uri=&#39;RedirectAddr&#39;, namespace=RNS)
-    image = TextField(field_uri=&#39;Image&#39;, namespace=RNS)  # Path to image used for branding
-    service_home = TextField(field_uri=&#39;ServiceHome&#39;, namespace=RNS)  # URL to website of ISP
+    type = ChoiceField(field_uri=&#34;AccountType&#34;, namespace=RNS, choices={Choice(&#34;email&#34;)})
+    action = ChoiceField(field_uri=&#34;Action&#34;, namespace=RNS, choices={Choice(p) for p in ACTIONS})
+    microsoft_online = BooleanField(field_uri=&#34;MicrosoftOnline&#34;, namespace=RNS)
+    redirect_url = TextField(field_uri=&#34;RedirectURL&#34;, namespace=RNS)
+    redirect_address = EmailAddressField(field_uri=&#34;RedirectAddr&#34;, namespace=RNS)
+    image = TextField(field_uri=&#34;Image&#34;, namespace=RNS)  # Path to image used for branding
+    service_home = TextField(field_uri=&#34;ServiceHome&#34;, namespace=RNS)  # URL to website of ISP
     protocols = ProtocolListField()
     # &#39;SmtpAddress&#39; is inside the &#39;PublicFolderInformation&#39; element
-    public_folder_smtp_address = TextField(field_uri=&#39;SmtpAddress&#39;, namespace=RNS)
+    public_folder_smtp_address = TextField(field_uri=&#34;SmtpAddress&#34;, namespace=RNS)
 
     @classmethod
     def from_xml(cls, elem, account):
         kwargs = {}
-        public_folder_information = elem.find(f&#39;{{{cls.NAMESPACE}}}PublicFolderInformation&#39;)
+        public_folder_information = elem.find(f&#34;{{{cls.NAMESPACE}}}PublicFolderInformation&#34;)
         for f in cls.FIELDS:
-            if f.name == &#39;public_folder_smtp_address&#39;:
+            if f.name == &#34;public_folder_smtp_address&#34;:
                 if public_folder_information is None:
                     continue
                 kwargs[f.name] = f.from_xml(elem=public_folder_information, account=account)
@@ -464,9 +477,9 @@ class Autodiscover(EWSElement):
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
     kwargs = {}
-    public_folder_information = elem.find(f&#39;{{{cls.NAMESPACE}}}PublicFolderInformation&#39;)
+    public_folder_information = elem.find(f&#34;{{{cls.NAMESPACE}}}PublicFolderInformation&#34;)
     for f in cls.FIELDS:
-        if f.name == &#39;public_folder_smtp_address&#39;:
+        if f.name == &#34;public_folder_smtp_address&#34;:
             if public_folder_information is None:
                 continue
             kwargs[f.name] = f.from_xml(elem=public_folder_information, account=account)
@@ -541,7 +554,7 @@ def from_xml(cls, elem, account):
 <pre><code class="python">class AddressBook(IntExtUrlBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/addressbook-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;AddressBook&#39;</code></pre>
+    ELEMENT_NAME = &#34;AddressBook&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -579,7 +592,7 @@ def from_xml(cls, elem, account):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Autodiscover(EWSElement):
-    ELEMENT_NAME = &#39;Autodiscover&#39;
+    ELEMENT_NAME = &#34;Autodiscover&#34;
     NAMESPACE = AUTODISCOVER_BASE_NS
 
     response = EWSElementField(value_cls=Response)
@@ -599,10 +612,10 @@ def from_xml(cls, elem, account):
         :return:
         &#34;&#34;&#34;
         if not is_xml(bytes_content):
-            raise ParseError(f&#39;Response is not XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+            raise ParseError(f&#34;Response is not XML: {bytes_content}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
         root = to_xml(bytes_content).getroot()  # May raise ParseError
         if root.tag != cls.response_tag():
-            raise ParseError(f&#39;Unknown root element in XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+            raise ParseError(f&#34;Unknown root element in XML: {bytes_content}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
@@ -610,19 +623,19 @@ def from_xml(cls, elem, account):
         try:
             errorcode = self.error_response.error.code
             message = self.error_response.error.message
-            if message in (&#39;The e-mail address cannot be found.&#39;, &#34;The email address can&#39;t be found.&#34;):
-                raise ErrorNonExistentMailbox(&#39;The SMTP address has no mailbox associated with it&#39;)
-            raise AutoDiscoverFailed(f&#39;Unknown error {errorcode}: {message}&#39;)
+            if message in (&#34;The e-mail address cannot be found.&#34;, &#34;The email address can&#39;t be found.&#34;):
+                raise ErrorNonExistentMailbox(&#34;The SMTP address has no mailbox associated with it&#34;)
+            raise AutoDiscoverFailed(f&#34;Unknown error {errorcode}: {message}&#34;)
         except AttributeError:
-            raise AutoDiscoverFailed(f&#39;Unknown autodiscover error response: {self.error_response}&#39;)
+            raise AutoDiscoverFailed(f&#34;Unknown autodiscover error response: {self.error_response}&#34;)
 
     @staticmethod
     def payload(email):
         # Builds a full Autodiscover XML request
-        payload = create_element(&#39;Autodiscover&#39;, attrs=dict(xmlns=AUTODISCOVER_REQUEST_NS))
-        request = create_element(&#39;Request&#39;)
-        add_xml_child(request, &#39;EMailAddress&#39;, email)
-        add_xml_child(request, &#39;AcceptableResponseSchema&#39;, RNS)
+        payload = create_element(&#34;Autodiscover&#34;, attrs=dict(xmlns=AUTODISCOVER_REQUEST_NS))
+        request = create_element(&#34;Request&#34;)
+        add_xml_child(request, &#34;EMailAddress&#34;, email)
+        add_xml_child(request, &#34;AcceptableResponseSchema&#34;, RNS)
         payload.append(request)
         return xml_to_str(payload, encoding=DEFAULT_ENCODING, xml_declaration=True)</code></pre>
 </details>
@@ -668,10 +681,10 @@ def from_bytes(cls, bytes_content):
     :return:
     &#34;&#34;&#34;
     if not is_xml(bytes_content):
-        raise ParseError(f&#39;Response is not XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+        raise ParseError(f&#34;Response is not XML: {bytes_content}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
     root = to_xml(bytes_content).getroot()  # May raise ParseError
     if root.tag != cls.response_tag():
-        raise ParseError(f&#39;Unknown root element in XML: {bytes_content}&#39;, &#39;&lt;not from file&gt;&#39;, -1, 0)
+        raise ParseError(f&#34;Unknown root element in XML: {bytes_content}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
     return cls.from_xml(elem=root, account=None)</code></pre>
 </details>
 </dd>
@@ -687,10 +700,10 @@ def from_bytes(cls, bytes_content):
 <pre><code class="python">@staticmethod
 def payload(email):
     # Builds a full Autodiscover XML request
-    payload = create_element(&#39;Autodiscover&#39;, attrs=dict(xmlns=AUTODISCOVER_REQUEST_NS))
-    request = create_element(&#39;Request&#39;)
-    add_xml_child(request, &#39;EMailAddress&#39;, email)
-    add_xml_child(request, &#39;AcceptableResponseSchema&#39;, RNS)
+    payload = create_element(&#34;Autodiscover&#34;, attrs=dict(xmlns=AUTODISCOVER_REQUEST_NS))
+    request = create_element(&#34;Request&#34;)
+    add_xml_child(request, &#34;EMailAddress&#34;, email)
+    add_xml_child(request, &#34;AcceptableResponseSchema&#34;, RNS)
     payload.append(request)
     return xml_to_str(payload, encoding=DEFAULT_ENCODING, xml_declaration=True)</code></pre>
 </details>
@@ -723,11 +736,11 @@ def payload(email):
     try:
         errorcode = self.error_response.error.code
         message = self.error_response.error.message
-        if message in (&#39;The e-mail address cannot be found.&#39;, &#34;The email address can&#39;t be found.&#34;):
-            raise ErrorNonExistentMailbox(&#39;The SMTP address has no mailbox associated with it&#39;)
-        raise AutoDiscoverFailed(f&#39;Unknown error {errorcode}: {message}&#39;)
+        if message in (&#34;The e-mail address cannot be found.&#34;, &#34;The email address can&#39;t be found.&#34;):
+            raise ErrorNonExistentMailbox(&#34;The SMTP address has no mailbox associated with it&#34;)
+        raise AutoDiscoverFailed(f&#34;Unknown error {errorcode}: {message}&#34;)
     except AttributeError:
-        raise AutoDiscoverFailed(f&#39;Unknown autodiscover error response: {self.error_response}&#39;)</code></pre>
+        raise AutoDiscoverFailed(f&#34;Unknown autodiscover error response: {self.error_response}&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -802,14 +815,14 @@ def payload(email):
 <pre><code class="python">class Error(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/error-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Error&#39;
+    ELEMENT_NAME = &#34;Error&#34;
     NAMESPACE = AUTODISCOVER_BASE_NS
 
-    id = TextField(field_uri=&#39;Id&#39;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
-    time = TextField(field_uri=&#39;Time&#39;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
-    code = TextField(field_uri=&#39;ErrorCode&#39;, namespace=AUTODISCOVER_BASE_NS)
-    message = TextField(field_uri=&#39;Message&#39;, namespace=AUTODISCOVER_BASE_NS)
-    debug_data = TextField(field_uri=&#39;DebugData&#39;, namespace=AUTODISCOVER_BASE_NS)</code></pre>
+    id = TextField(field_uri=&#34;Id&#34;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
+    time = TextField(field_uri=&#34;Time&#34;, namespace=AUTODISCOVER_BASE_NS, is_attribute=True)
+    code = TextField(field_uri=&#34;ErrorCode&#34;, namespace=AUTODISCOVER_BASE_NS)
+    message = TextField(field_uri=&#34;Message&#34;, namespace=AUTODISCOVER_BASE_NS)
+    debug_data = TextField(field_uri=&#34;DebugData&#34;, namespace=AUTODISCOVER_BASE_NS)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -882,7 +895,7 @@ def payload(email):
     Like &#39;Response&#39;, but with a different namespace.
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Response&#39;
+    ELEMENT_NAME = &#34;Response&#34;
     NAMESPACE = AUTODISCOVER_BASE_NS
 
     error = EWSElementField(value_cls=Error)</code></pre>
@@ -938,7 +951,7 @@ def payload(email):
 <pre><code class="python">class External(IntExtBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/external-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;External&#39;</code></pre>
+    ELEMENT_NAME = &#34;External&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -978,7 +991,7 @@ def payload(email):
 <pre><code class="python">class IntExtBase(AutodiscoverBase):
     # TODO: &#39;OWAUrl&#39; also has an AuthenticationMethod enum-style XML attribute with values:
     #  WindowsIntegrated, FBA, NTLM, Digest, Basic
-    owa_url = TextField(field_uri=&#39;OWAUrl&#39;, namespace=RNS)
+    owa_url = TextField(field_uri=&#34;OWAUrl&#34;, namespace=RNS)
     protocol = EWSElementField(value_cls=SimpleProtocol)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1032,8 +1045,8 @@ def payload(email):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IntExtUrlBase(AutodiscoverBase):
-    external_url = TextField(field_uri=&#39;ExternalUrl&#39;, namespace=RNS)
-    internal_url = TextField(field_uri=&#39;InternalUrl&#39;, namespace=RNS)</code></pre>
+    external_url = TextField(field_uri=&#34;ExternalUrl&#34;, namespace=RNS)
+    internal_url = TextField(field_uri=&#34;InternalUrl&#34;, namespace=RNS)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1088,7 +1101,7 @@ def payload(email):
 <pre><code class="python">class Internal(IntExtBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/internal-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Internal&#39;</code></pre>
+    ELEMENT_NAME = &#34;Internal&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1128,7 +1141,7 @@ def payload(email):
 <pre><code class="python">class MailStore(IntExtUrlBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailstore-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;MailStore&#39;</code></pre>
+    ELEMENT_NAME = &#34;MailStore&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1168,12 +1181,12 @@ def payload(email):
 <pre><code class="python">class NetworkRequirements(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/networkrequirements-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;NetworkRequirements&#39;
+    ELEMENT_NAME = &#34;NetworkRequirements&#34;
 
-    ipv4_start = TextField(field_uri=&#39;IPv4Start&#39;, namespace=RNS)
-    ipv4_end = TextField(field_uri=&#39;IPv4End&#39;, namespace=RNS)
-    ipv6_start = TextField(field_uri=&#39;IPv6Start&#39;, namespace=RNS)
-    ipv6_end = TextField(field_uri=&#39;IPv6End&#39;, namespace=RNS)</code></pre>
+    ipv4_start = TextField(field_uri=&#34;IPv4Start&#34;, namespace=RNS)
+    ipv4_end = TextField(field_uri=&#34;IPv4End&#34;, namespace=RNS)
+    ipv6_start = TextField(field_uri=&#34;IPv6Start&#34;, namespace=RNS)
+    ipv6_end = TextField(field_uri=&#34;IPv6End&#34;, namespace=RNS)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1236,50 +1249,52 @@ def payload(email):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/protocol-pox&#34;&#34;&#34;
 
     # Attribute &#39;Type&#39; is ignored here. Has a name conflict with the child element and does not seem useful.
-    version = TextField(field_uri=&#39;Version&#39;, is_attribute=True, namespace=RNS)
+    version = TextField(field_uri=&#34;Version&#34;, is_attribute=True, namespace=RNS)
     internal = EWSElementField(value_cls=Internal)
     external = EWSElementField(value_cls=External)
-    ttl = IntegerField(field_uri=&#39;TTL&#39;, namespace=RNS, default=1)  # TTL for this autodiscover response, in hours
-    server = TextField(field_uri=&#39;Server&#39;, namespace=RNS)
-    server_dn = TextField(field_uri=&#39;ServerDN&#39;, namespace=RNS)
-    server_version = BuildField(field_uri=&#39;ServerVersion&#39;, namespace=RNS)
-    mdb_dn = TextField(field_uri=&#39;MdbDN&#39;, namespace=RNS)
-    public_folder_server = TextField(field_uri=&#39;PublicFolderServer&#39;, namespace=RNS)
-    port = IntegerField(field_uri=&#39;Port&#39;, namespace=RNS, min=1, max=65535)
-    directory_port = IntegerField(field_uri=&#39;DirectoryPort&#39;, namespace=RNS, min=1, max=65535)
-    referral_port = IntegerField(field_uri=&#39;ReferralPort&#39;, namespace=RNS, min=1, max=65535)
-    ews_url = TextField(field_uri=&#39;EwsUrl&#39;, namespace=RNS)
-    emws_url = TextField(field_uri=&#39;EmwsUrl&#39;, namespace=RNS)
-    sharing_url = TextField(field_uri=&#39;SharingUrl&#39;, namespace=RNS)
-    ecp_url = TextField(field_uri=&#39;EcpUrl&#39;, namespace=RNS)
-    ecp_url_um = TextField(field_uri=&#39;EcpUrl-um&#39;, namespace=RNS)
-    ecp_url_aggr = TextField(field_uri=&#39;EcpUrl-aggr&#39;, namespace=RNS)
-    ecp_url_mt = TextField(field_uri=&#39;EcpUrl-mt&#39;, namespace=RNS)
-    ecp_url_ret = TextField(field_uri=&#39;EcpUrl-ret&#39;, namespace=RNS)
-    ecp_url_sms = TextField(field_uri=&#39;EcpUrl-sms&#39;, namespace=RNS)
-    ecp_url_publish = TextField(field_uri=&#39;EcpUrl-publish&#39;, namespace=RNS)
-    ecp_url_photo = TextField(field_uri=&#39;EcpUrl-photo&#39;, namespace=RNS)
-    ecp_url_tm = TextField(field_uri=&#39;EcpUrl-tm&#39;, namespace=RNS)
-    ecp_url_tm_creating = TextField(field_uri=&#39;EcpUrl-tmCreating&#39;, namespace=RNS)
-    ecp_url_tm_hiding = TextField(field_uri=&#39;EcpUrl-tmHiding&#39;, namespace=RNS)
-    ecp_url_tm_editing = TextField(field_uri=&#39;EcpUrl-tmEditing&#39;, namespace=RNS)
-    ecp_url_extinstall = TextField(field_uri=&#39;EcpUrl-extinstall&#39;, namespace=RNS)
-    oof_url = TextField(field_uri=&#39;OOFUrl&#39;, namespace=RNS)
-    oab_url = TextField(field_uri=&#39;OABUrl&#39;, namespace=RNS)
-    um_url = TextField(field_uri=&#39;UMUrl&#39;, namespace=RNS)
-    ews_partner_url = TextField(field_uri=&#39;EwsPartnerUrl&#39;, namespace=RNS)
-    login_name = TextField(field_uri=&#39;LoginName&#39;, namespace=RNS)
-    domain_required = OnOffField(field_uri=&#39;DomainRequired&#39;, namespace=RNS)
-    domain_name = TextField(field_uri=&#39;DomainName&#39;, namespace=RNS)
-    spa = OnOffField(field_uri=&#39;SPA&#39;, namespace=RNS, default=True)
-    auth_package = ChoiceField(field_uri=&#39;AuthPackage&#39;, namespace=RNS, choices={
-        Choice(c) for c in (&#39;basic&#39;, &#39;kerb&#39;, &#39;kerbntlm&#39;, &#39;ntlm&#39;, &#39;certificate&#39;, &#39;negotiate&#39;, &#39;nego2&#39;)
-    })
-    cert_principal_name = TextField(field_uri=&#39;CertPrincipalName&#39;, namespace=RNS)
-    ssl = OnOffField(field_uri=&#39;SSL&#39;, namespace=RNS, default=True)
-    auth_required = OnOffField(field_uri=&#39;AuthRequired&#39;, namespace=RNS, default=True)
-    use_pop_path = OnOffField(field_uri=&#39;UsePOPAuth&#39;, namespace=RNS)
-    smtp_last = OnOffField(field_uri=&#39;SMTPLast&#39;, namespace=RNS, default=False)
+    ttl = IntegerField(field_uri=&#34;TTL&#34;, namespace=RNS, default=1)  # TTL for this autodiscover response, in hours
+    server = TextField(field_uri=&#34;Server&#34;, namespace=RNS)
+    server_dn = TextField(field_uri=&#34;ServerDN&#34;, namespace=RNS)
+    server_version = BuildField(field_uri=&#34;ServerVersion&#34;, namespace=RNS)
+    mdb_dn = TextField(field_uri=&#34;MdbDN&#34;, namespace=RNS)
+    public_folder_server = TextField(field_uri=&#34;PublicFolderServer&#34;, namespace=RNS)
+    port = IntegerField(field_uri=&#34;Port&#34;, namespace=RNS, min=1, max=65535)
+    directory_port = IntegerField(field_uri=&#34;DirectoryPort&#34;, namespace=RNS, min=1, max=65535)
+    referral_port = IntegerField(field_uri=&#34;ReferralPort&#34;, namespace=RNS, min=1, max=65535)
+    ews_url = TextField(field_uri=&#34;EwsUrl&#34;, namespace=RNS)
+    emws_url = TextField(field_uri=&#34;EmwsUrl&#34;, namespace=RNS)
+    sharing_url = TextField(field_uri=&#34;SharingUrl&#34;, namespace=RNS)
+    ecp_url = TextField(field_uri=&#34;EcpUrl&#34;, namespace=RNS)
+    ecp_url_um = TextField(field_uri=&#34;EcpUrl-um&#34;, namespace=RNS)
+    ecp_url_aggr = TextField(field_uri=&#34;EcpUrl-aggr&#34;, namespace=RNS)
+    ecp_url_mt = TextField(field_uri=&#34;EcpUrl-mt&#34;, namespace=RNS)
+    ecp_url_ret = TextField(field_uri=&#34;EcpUrl-ret&#34;, namespace=RNS)
+    ecp_url_sms = TextField(field_uri=&#34;EcpUrl-sms&#34;, namespace=RNS)
+    ecp_url_publish = TextField(field_uri=&#34;EcpUrl-publish&#34;, namespace=RNS)
+    ecp_url_photo = TextField(field_uri=&#34;EcpUrl-photo&#34;, namespace=RNS)
+    ecp_url_tm = TextField(field_uri=&#34;EcpUrl-tm&#34;, namespace=RNS)
+    ecp_url_tm_creating = TextField(field_uri=&#34;EcpUrl-tmCreating&#34;, namespace=RNS)
+    ecp_url_tm_hiding = TextField(field_uri=&#34;EcpUrl-tmHiding&#34;, namespace=RNS)
+    ecp_url_tm_editing = TextField(field_uri=&#34;EcpUrl-tmEditing&#34;, namespace=RNS)
+    ecp_url_extinstall = TextField(field_uri=&#34;EcpUrl-extinstall&#34;, namespace=RNS)
+    oof_url = TextField(field_uri=&#34;OOFUrl&#34;, namespace=RNS)
+    oab_url = TextField(field_uri=&#34;OABUrl&#34;, namespace=RNS)
+    um_url = TextField(field_uri=&#34;UMUrl&#34;, namespace=RNS)
+    ews_partner_url = TextField(field_uri=&#34;EwsPartnerUrl&#34;, namespace=RNS)
+    login_name = TextField(field_uri=&#34;LoginName&#34;, namespace=RNS)
+    domain_required = OnOffField(field_uri=&#34;DomainRequired&#34;, namespace=RNS)
+    domain_name = TextField(field_uri=&#34;DomainName&#34;, namespace=RNS)
+    spa = OnOffField(field_uri=&#34;SPA&#34;, namespace=RNS, default=True)
+    auth_package = ChoiceField(
+        field_uri=&#34;AuthPackage&#34;,
+        namespace=RNS,
+        choices={Choice(c) for c in (&#34;basic&#34;, &#34;kerb&#34;, &#34;kerbntlm&#34;, &#34;ntlm&#34;, &#34;certificate&#34;, &#34;negotiate&#34;, &#34;nego2&#34;)},
+    )
+    cert_principal_name = TextField(field_uri=&#34;CertPrincipalName&#34;, namespace=RNS)
+    ssl = OnOffField(field_uri=&#34;SSL&#34;, namespace=RNS, default=True)
+    auth_required = OnOffField(field_uri=&#34;AuthRequired&#34;, namespace=RNS, default=True)
+    use_pop_path = OnOffField(field_uri=&#34;UsePOPAuth&#34;, namespace=RNS)
+    smtp_last = OnOffField(field_uri=&#34;SMTPLast&#34;, namespace=RNS, default=False)
     network_requirements = EWSElementField(value_cls=NetworkRequirements)
     address_book = EWSElementField(value_cls=AddressBook)
     mail_store = EWSElementField(value_cls=MailStore)
@@ -1293,14 +1308,14 @@ def payload(email):
             return None
         return {
             # Missing in list are DIGEST and OAUTH2
-            &#39;basic&#39;: BASIC,
-            &#39;kerb&#39;: GSSAPI,
-            &#39;kerbntlm&#39;: NTLM,  # Means client can chose between NTLM and GSSAPI
-            &#39;ntlm&#39;: NTLM,
-            &#39;certificate&#39;: CBA,
-            &#39;negotiate&#39;: SSPI,  # Unsure about this one
-            &#39;nego2&#39;: GSSAPI,
-            &#39;anonymous&#39;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
+            &#34;basic&#34;: BASIC,
+            &#34;kerb&#34;: GSSAPI,
+            &#34;kerbntlm&#34;: NTLM,  # Means client can chose between NTLM and GSSAPI
+            &#34;ntlm&#34;: NTLM,
+            &#34;certificate&#34;: CBA,
+            &#34;negotiate&#34;: SSPI,  # Unsure about this one
+            &#34;nego2&#34;: GSSAPI,
+            &#34;anonymous&#34;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
         }.get(self.auth_package.lower())</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1346,14 +1361,14 @@ def auth_type(self):
         return None
     return {
         # Missing in list are DIGEST and OAUTH2
-        &#39;basic&#39;: BASIC,
-        &#39;kerb&#39;: GSSAPI,
-        &#39;kerbntlm&#39;: NTLM,  # Means client can chose between NTLM and GSSAPI
-        &#39;ntlm&#39;: NTLM,
-        &#39;certificate&#39;: CBA,
-        &#39;negotiate&#39;: SSPI,  # Unsure about this one
-        &#39;nego2&#39;: GSSAPI,
-        &#39;anonymous&#39;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
+        &#34;basic&#34;: BASIC,
+        &#34;kerb&#34;: GSSAPI,
+        &#34;kerbntlm&#34;: NTLM,  # Means client can chose between NTLM and GSSAPI
+        &#34;ntlm&#34;: NTLM,
+        &#34;certificate&#34;: CBA,
+        &#34;negotiate&#34;: SSPI,  # Unsure about this one
+        &#34;nego2&#34;: GSSAPI,
+        &#34;anonymous&#34;: NOAUTH,  # Seen in some docs even though it&#39;s not mentioned in MSDN
     }.get(self.auth_package.lower())</code></pre>
 </details>
 </dd>
@@ -1551,7 +1566,7 @@ def auth_type(self):
 <pre><code class="python">class Response(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/response-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Response&#39;
+    ELEMENT_NAME = &#34;Response&#34;
 
     user = EWSElementField(value_cls=User)
     account = EWSElementField(value_cls=Account)
@@ -1613,7 +1628,7 @@ def auth_type(self):
         if Protocol.EXCH in protocols:
             return protocols[Protocol.EXCH]
         raise ValueError(
-            f&#39;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#39;
+            f&#34;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#34;
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1684,7 +1699,7 @@ def protocol(self):
     if Protocol.EXCH in protocols:
         return protocols[Protocol.EXCH]
     raise ValueError(
-        f&#39;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#39;
+        f&#34;No EWS URL found in any of the available protocols: {[str(p) for p in self.account.protocols]}&#34;
     )</code></pre>
 </details>
 </dd>
@@ -1776,15 +1791,15 @@ def version(self):
     Used for the &#39;Internal&#39; and &#39;External&#39; elements that may contain a stripped-down version of the Protocol element.
     &#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;Protocol&#39;
-    WEB = &#39;WEB&#39;
-    EXCH = &#39;EXCH&#39;
-    EXPR = &#39;EXPR&#39;
-    EXHTTP = &#39;EXHTTP&#39;
+    ELEMENT_NAME = &#34;Protocol&#34;
+    WEB = &#34;WEB&#34;
+    EXCH = &#34;EXCH&#34;
+    EXPR = &#34;EXPR&#34;
+    EXHTTP = &#34;EXHTTP&#34;
     TYPES = (WEB, EXCH, EXPR, EXHTTP)
 
-    type = ChoiceField(field_uri=&#39;Type&#39;, choices={Choice(c) for c in TYPES}, namespace=RNS)
-    as_url = TextField(field_uri=&#39;ASUrl&#39;, namespace=RNS)</code></pre>
+    type = ChoiceField(field_uri=&#34;Type&#34;, choices={Choice(c) for c in TYPES}, namespace=RNS)
+    as_url = TextField(field_uri=&#34;ASUrl&#34;, namespace=RNS)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1862,12 +1877,12 @@ def version(self):
 <pre><code class="python">class User(AutodiscoverBase):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/user-pox&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#39;User&#39;
+    ELEMENT_NAME = &#34;User&#34;
 
-    display_name = TextField(field_uri=&#39;DisplayName&#39;, namespace=RNS)
-    legacy_dn = TextField(field_uri=&#39;LegacyDN&#39;, namespace=RNS)
-    deployment_id = TextField(field_uri=&#39;DeploymentId&#39;, namespace=RNS)  # GUID format
-    autodiscover_smtp_address = EmailAddressField(field_uri=&#39;AutoDiscoverSMTPAddress&#39;, namespace=RNS)</code></pre>
+    display_name = TextField(field_uri=&#34;DisplayName&#34;, namespace=RNS)
+    legacy_dn = TextField(field_uri=&#34;LegacyDN&#34;, namespace=RNS)
+    deployment_id = TextField(field_uri=&#34;DeploymentId&#34;, namespace=RNS)  # GUID format
+    autodiscover_smtp_address = EmailAddressField(field_uri=&#34;AutoDiscoverSMTPAddress&#34;, namespace=RNS)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

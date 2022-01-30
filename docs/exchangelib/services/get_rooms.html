@@ -26,17 +26,17 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..properties import Room
-from ..util import create_element, set_xml_value, MNS
+<pre><code class="python">from ..properties import Room
+from ..util import MNS, create_element, set_xml_value
 from ..version import EXCHANGE_2010
+from .common import EWSService
 
 
 class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = f&#39;{{{MNS}}}Rooms&#39;
+    SERVICE_NAME = &#34;GetRooms&#34;
+    element_container_name = f&#34;{{{MNS}}}Rooms&#34;
     supported_from = EXCHANGE_2010
 
     def call(self, room_list):
@@ -46,7 +46,7 @@ class GetRooms(EWSService):
         return Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, room_list):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), room_list, version=self.protocol.version)</code></pre>
 </details>
 </section>
 <section>
@@ -71,8 +71,8 @@ class GetRooms(EWSService):
 <pre><code class="python">class GetRooms(EWSService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getrooms-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetRooms&#39;
-    element_container_name = f&#39;{{{MNS}}}Rooms&#39;
+    SERVICE_NAME = &#34;GetRooms&#34;
+    element_container_name = f&#34;{{{MNS}}}Rooms&#34;
     supported_from = EXCHANGE_2010
 
     def call(self, room_list):
@@ -82,7 +82,7 @@ class GetRooms(EWSService):
         return Room.from_xml(elem=elem, account=None)
 
     def get_payload(self, room_list):
-        return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
+        return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), room_list, version=self.protocol.version)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -128,7 +128,7 @@ class GetRooms(EWSService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, room_list):
-    return set_xml_value(create_element(f&#39;m:{self.SERVICE_NAME}&#39;), room_list, version=self.protocol.version)</code></pre>
+    return set_xml_value(create_element(f&#34;m:{self.SERVICE_NAME}&#34;), room_list, version=self.protocol.version)</code></pre>
 </details>
 </dd>
 </dl>

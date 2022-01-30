@@ -26,11 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSService
-from ..errors import InvalidEnumValue, InvalidTypeError
-from ..properties import AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId, ID_FORMATS
+<pre><code class="python">from ..errors import InvalidEnumValue, InvalidTypeError
+from ..properties import ID_FORMATS, AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
 from ..util import create_element, set_xml_value
 from ..version import EXCHANGE_2007_SP1
+from .common import EWSService
 
 
 class ConvertId(EWSService):
@@ -40,15 +40,13 @@ class ConvertId(EWSService):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ConvertId&#39;
+    SERVICE_NAME = &#34;ConvertId&#34;
     supported_from = EXCHANGE_2007_SP1
-    cls_map = {cls.response_tag(): cls for cls in (
-        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    )}
+    cls_map = {cls.response_tag(): cls for cls in (AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId)}
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
+            raise InvalidEnumValue(&#34;destination_format&#34;, destination_format, ID_FORMATS)
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
@@ -58,11 +56,11 @@ class ConvertId(EWSService):
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
-        item_ids = create_element(&#39;m:SourceIds&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DestinationFormat=destination_format))
+        item_ids = create_element(&#34;m:SourceIds&#34;)
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
+                raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
             set_xml_value(item_ids, item, version=self.protocol.version)
         payload.append(item_ids)
         return payload
@@ -70,9 +68,11 @@ class ConvertId(EWSService):
     @classmethod
     def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        return container.findall(AlternateId.response_tag()) \
-            + container.findall(AlternatePublicFolderId.response_tag()) \
-            + container.findall(AlternatePublicFolderItemId.response_tag())</code></pre>
+        return (
+            container.findall(AlternateId.response_tag())
+            + container.findall(AlternatePublicFolderId.response_tag())
+            + container.findall(AlternatePublicFolderItemId.response_tag())
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -103,15 +103,13 @@ input list.</p>
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/convertid-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;ConvertId&#39;
+    SERVICE_NAME = &#34;ConvertId&#34;
     supported_from = EXCHANGE_2007_SP1
-    cls_map = {cls.response_tag(): cls for cls in (
-        AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    )}
+    cls_map = {cls.response_tag(): cls for cls in (AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId)}
 
     def call(self, items, destination_format):
         if destination_format not in ID_FORMATS:
-            raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
+            raise InvalidEnumValue(&#34;destination_format&#34;, destination_format, ID_FORMATS)
         return self._elems_to_objs(
             self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
         )
@@ -121,11 +119,11 @@ input list.</p>
 
     def get_payload(self, items, destination_format):
         supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
-        item_ids = create_element(&#39;m:SourceIds&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DestinationFormat=destination_format))
+        item_ids = create_element(&#34;m:SourceIds&#34;)
         for item in items:
             if not isinstance(item, supported_item_classes):
-                raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
+                raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
             set_xml_value(item_ids, item, version=self.protocol.version)
         payload.append(item_ids)
         return payload
@@ -133,9 +131,11 @@ input list.</p>
     @classmethod
     def _get_elements_in_container(cls, container):
         # We may have other elements in here, e.g. &#39;ResponseCode&#39;. Filter away those.
-        return container.findall(AlternateId.response_tag()) \
-            + container.findall(AlternatePublicFolderId.response_tag()) \
-            + container.findall(AlternatePublicFolderItemId.response_tag())</code></pre>
+        return (
+            container.findall(AlternateId.response_tag())
+            + container.findall(AlternatePublicFolderId.response_tag())
+            + container.findall(AlternatePublicFolderItemId.response_tag())
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -169,7 +169,7 @@ input list.</p>
 </summary>
 <pre><code class="python">def call(self, items, destination_format):
     if destination_format not in ID_FORMATS:
-        raise InvalidEnumValue(&#39;destination_format&#39;, destination_format, ID_FORMATS)
+        raise InvalidEnumValue(&#34;destination_format&#34;, destination_format, ID_FORMATS)
     return self._elems_to_objs(
         self._chunked_get_elements(self.get_payload, items=items, destination_format=destination_format)
     )</code></pre>
@@ -186,11 +186,11 @@ input list.</p>
 </summary>
 <pre><code class="python">def get_payload(self, items, destination_format):
     supported_item_classes = AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;, attrs=dict(DestinationFormat=destination_format))
-    item_ids = create_element(&#39;m:SourceIds&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;, attrs=dict(DestinationFormat=destination_format))
+    item_ids = create_element(&#34;m:SourceIds&#34;)
     for item in items:
         if not isinstance(item, supported_item_classes):
-            raise InvalidTypeError(&#39;item&#39;, item, supported_item_classes)
+            raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
         set_xml_value(item_ids, item, version=self.protocol.version)
     payload.append(item_ids)
     return payload</code></pre>

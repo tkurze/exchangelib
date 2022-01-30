@@ -28,50 +28,65 @@
 </summary>
 <pre><code class="python">from itertools import chain
 
-from .common import EWSAccountService, attachment_ids_element
 from ..attachments import FileAttachment, ItemAttachment
 from ..errors import InvalidEnumValue
-from ..util import create_element, add_xml_child, set_xml_value, DummyResponse, StreamingBase64Parser,\
-    StreamingContentHandler, ElementNotFound, MNS
+from ..util import (
+    MNS,
+    DummyResponse,
+    ElementNotFound,
+    StreamingBase64Parser,
+    StreamingContentHandler,
+    add_xml_child,
+    create_element,
+    set_xml_value,
+)
+from .common import EWSAccountService, attachment_ids_element
 
 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/bodytype
-BODY_TYPE_CHOICES = (&#39;Best&#39;, &#39;HTML&#39;, &#39;Text&#39;)
+BODY_TYPE_CHOICES = (&#34;Best&#34;, &#34;HTML&#34;, &#34;Text&#34;)
 
 
 class GetAttachment(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetAttachment&#39;
-    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    SERVICE_NAME = &#34;GetAttachment&#34;
+    element_container_name = f&#34;{{{MNS}}}Attachments&#34;
     cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=items, include_mime_content=include_mime_content,
-            body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
-        ))
+            raise InvalidEnumValue(&#34;body_type&#34;, body_type, BODY_TYPE_CHOICES)
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                include_mime_content=include_mime_content,
+                body_type=body_type,
+                filter_html_content=filter_html_content,
+                additional_fields=additional_fields,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        shape_elem = create_element(&#39;m:AttachmentShape&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        shape_elem = create_element(&#34;m:AttachmentShape&#34;)
         if include_mime_content:
-            add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+            add_xml_child(shape_elem, &#34;t:IncludeMimeContent&#34;, &#34;true&#34;)
         if body_type:
-            add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+            add_xml_child(shape_elem, &#34;t:BodyType&#34;, body_type)
         if filter_html_content is not None:
-            add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+            add_xml_child(shape_elem, &#34;t:FilterHtmlContent&#34;, &#34;true&#34; if filter_html_content else &#34;false&#34;)
         if additional_fields:
-            additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+            additional_properties = create_element(&#34;t:AdditionalProperties&#34;)
             expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
-            set_xml_value(additional_properties, sorted(
-                expanded_fields,
-                key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
-            ), version=self.account.version)
+            set_xml_value(
+                additional_properties,
+                sorted(expanded_fields, key=lambda f: (getattr(f.field, &#34;field_uri&#34;, &#34;&#34;), f.path)),
+                version=self.account.version,
+            )
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
@@ -79,26 +94,26 @@ class GetAttachment(EWSAccountService):
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             super()._update_api_version(api_version, header, **parse_opts)
         # TODO: We&#39;re skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             return super()._get_soap_parts(response, **parse_opts)
 
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
     def _get_soap_messages(self, body, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             return super()._get_soap_messages(body, **parse_opts)
 
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
         parser = StreamingBase64Parser()
-        field = FileAttachment.get_field_by_fieldname(&#39;_content&#39;)
+        field = FileAttachment.get_field_by_fieldname(&#34;_content&#34;)
         handler = StreamingContentHandler(parser=parser, ns=field.namespace, element_name=field.field_uri)
         parser.setContentHandler(handler)
         return parser.parse(r)
@@ -106,7 +121,10 @@ class GetAttachment(EWSAccountService):
     def stream_file_content(self, attachment_id):
         # The streaming XML parser can only stream content of one attachment
         payload = self.get_payload(
-            items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+            items=[attachment_id],
+            include_mime_content=False,
+            body_type=None,
+            filter_html_content=None,
             additional_fields=None,
         )
         self.streaming = True
@@ -151,37 +169,44 @@ class GetAttachment(EWSAccountService):
 <pre><code class="python">class GetAttachment(EWSAccountService):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/getattachment-operation&#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;GetAttachment&#39;
-    element_container_name = f&#39;{{{MNS}}}Attachments&#39;
+    SERVICE_NAME = &#34;GetAttachment&#34;
+    element_container_name = f&#34;{{{MNS}}}Attachments&#34;
     cls_map = {cls.response_tag(): cls for cls in (FileAttachment, ItemAttachment)}
 
     def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
         if body_type and body_type not in BODY_TYPE_CHOICES:
-            raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
-        return self._elems_to_objs(self._chunked_get_elements(
-            self.get_payload, items=items, include_mime_content=include_mime_content,
-            body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
-        ))
+            raise InvalidEnumValue(&#34;body_type&#34;, body_type, BODY_TYPE_CHOICES)
+        return self._elems_to_objs(
+            self._chunked_get_elements(
+                self.get_payload,
+                items=items,
+                include_mime_content=include_mime_content,
+                body_type=body_type,
+                filter_html_content=filter_html_content,
+                additional_fields=additional_fields,
+            )
+        )
 
     def _elem_to_obj(self, elem):
         return self.cls_map[elem.tag].from_xml(elem=elem, account=self.account)
 
     def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-        shape_elem = create_element(&#39;m:AttachmentShape&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+        shape_elem = create_element(&#34;m:AttachmentShape&#34;)
         if include_mime_content:
-            add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+            add_xml_child(shape_elem, &#34;t:IncludeMimeContent&#34;, &#34;true&#34;)
         if body_type:
-            add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+            add_xml_child(shape_elem, &#34;t:BodyType&#34;, body_type)
         if filter_html_content is not None:
-            add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+            add_xml_child(shape_elem, &#34;t:FilterHtmlContent&#34;, &#34;true&#34; if filter_html_content else &#34;false&#34;)
         if additional_fields:
-            additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+            additional_properties = create_element(&#34;t:AdditionalProperties&#34;)
             expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
-            set_xml_value(additional_properties, sorted(
-                expanded_fields,
-                key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
-            ), version=self.account.version)
+            set_xml_value(
+                additional_properties,
+                sorted(expanded_fields, key=lambda f: (getattr(f.field, &#34;field_uri&#34;, &#34;&#34;), f.path)),
+                version=self.account.version,
+            )
             shape_elem.append(additional_properties)
         if len(shape_elem):
             payload.append(shape_elem)
@@ -189,26 +214,26 @@ class GetAttachment(EWSAccountService):
         return payload
 
     def _update_api_version(self, api_version, header, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             super()._update_api_version(api_version, header, **parse_opts)
         # TODO: We&#39;re skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             return super()._get_soap_parts(response, **parse_opts)
 
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
     def _get_soap_messages(self, body, **parse_opts):
-        if not parse_opts.get(&#39;stream_file_content&#39;, False):
+        if not parse_opts.get(&#34;stream_file_content&#34;, False):
             return super()._get_soap_messages(body, **parse_opts)
 
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
         parser = StreamingBase64Parser()
-        field = FileAttachment.get_field_by_fieldname(&#39;_content&#39;)
+        field = FileAttachment.get_field_by_fieldname(&#34;_content&#34;)
         handler = StreamingContentHandler(parser=parser, ns=field.namespace, element_name=field.field_uri)
         parser.setContentHandler(handler)
         return parser.parse(r)
@@ -216,7 +241,10 @@ class GetAttachment(EWSAccountService):
     def stream_file_content(self, attachment_id):
         # The streaming XML parser can only stream content of one attachment
         payload = self.get_payload(
-            items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+            items=[attachment_id],
+            include_mime_content=False,
+            body_type=None,
+            filter_html_content=None,
             additional_fields=None,
         )
         self.streaming = True
@@ -271,11 +299,17 @@ class GetAttachment(EWSAccountService):
 </summary>
 <pre><code class="python">def call(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
     if body_type and body_type not in BODY_TYPE_CHOICES:
-        raise InvalidEnumValue(&#39;body_type&#39;, body_type, BODY_TYPE_CHOICES)
-    return self._elems_to_objs(self._chunked_get_elements(
-        self.get_payload, items=items, include_mime_content=include_mime_content,
-        body_type=body_type, filter_html_content=filter_html_content, additional_fields=additional_fields,
-    ))</code></pre>
+        raise InvalidEnumValue(&#34;body_type&#34;, body_type, BODY_TYPE_CHOICES)
+    return self._elems_to_objs(
+        self._chunked_get_elements(
+            self.get_payload,
+            items=items,
+            include_mime_content=include_mime_content,
+            body_type=body_type,
+            filter_html_content=filter_html_content,
+            additional_fields=additional_fields,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.get_attachment.GetAttachment.get_payload"><code class="name flex">
@@ -288,21 +322,22 @@ class GetAttachment(EWSAccountService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, include_mime_content, body_type, filter_html_content, additional_fields):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}&#39;)
-    shape_elem = create_element(&#39;m:AttachmentShape&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
+    shape_elem = create_element(&#34;m:AttachmentShape&#34;)
     if include_mime_content:
-        add_xml_child(shape_elem, &#39;t:IncludeMimeContent&#39;, &#39;true&#39;)
+        add_xml_child(shape_elem, &#34;t:IncludeMimeContent&#34;, &#34;true&#34;)
     if body_type:
-        add_xml_child(shape_elem, &#39;t:BodyType&#39;, body_type)
+        add_xml_child(shape_elem, &#34;t:BodyType&#34;, body_type)
     if filter_html_content is not None:
-        add_xml_child(shape_elem, &#39;t:FilterHtmlContent&#39;, &#39;true&#39; if filter_html_content else &#39;false&#39;)
+        add_xml_child(shape_elem, &#34;t:FilterHtmlContent&#34;, &#34;true&#34; if filter_html_content else &#34;false&#34;)
     if additional_fields:
-        additional_properties = create_element(&#39;t:AdditionalProperties&#39;)
+        additional_properties = create_element(&#34;t:AdditionalProperties&#34;)
         expanded_fields = chain(*(f.expand(version=self.account.version) for f in additional_fields))
-        set_xml_value(additional_properties, sorted(
-            expanded_fields,
-            key=lambda f: (getattr(f.field, &#39;field_uri&#39;, &#39;&#39;), f.path)
-        ), version=self.account.version)
+        set_xml_value(
+            additional_properties,
+            sorted(expanded_fields, key=lambda f: (getattr(f.field, &#34;field_uri&#34;, &#34;&#34;), f.path)),
+            version=self.account.version,
+        )
         shape_elem.append(additional_properties)
     if len(shape_elem):
         payload.append(shape_elem)
@@ -322,7 +357,10 @@ class GetAttachment(EWSAccountService):
 <pre><code class="python">def stream_file_content(self, attachment_id):
     # The streaming XML parser can only stream content of one attachment
     payload = self.get_payload(
-        items=[attachment_id], include_mime_content=False, body_type=None, filter_html_content=None,
+        items=[attachment_id],
+        include_mime_content=False,
+        body_type=None,
+        filter_html_content=None,
         additional_fields=None,
     )
     self.streaming = True

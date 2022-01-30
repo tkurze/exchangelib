@@ -26,11 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .common import EWSAccountService
-from ..errors import InvalidTypeError
+<pre><code class="python">from ..errors import InvalidTypeError
 from ..properties import AvailabilityMailbox, Mailbox
 from ..settings import OofSettings
-from ..util import create_element, set_xml_value, MNS
+from ..util import MNS, create_element, set_xml_value
+from .common import EWSAccountService
 
 
 class SetUserOofSettings(EWSAccountService):
@@ -38,18 +38,18 @@ class SetUserOofSettings(EWSAccountService):
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setuseroofsettings-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SetUserOofSettings&#39;
+    SERVICE_NAME = &#34;SetUserOofSettings&#34;
     returns_elements = False
 
     def call(self, oof_settings, mailbox):
         if not isinstance(oof_settings, OofSettings):
-            raise InvalidTypeError(&#39;oof_settings&#39;, oof_settings, OofSettings)
+            raise InvalidTypeError(&#34;oof_settings&#34;, oof_settings, OofSettings)
         if not isinstance(mailbox, Mailbox):
-            raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
+            raise InvalidTypeError(&#34;mailbox&#34;, mailbox, Mailbox)
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
         return set_xml_value(payload, oof_settings, version=self.account.version)
 
@@ -59,7 +59,7 @@ class SetUserOofSettings(EWSAccountService):
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}ResponseMessage&#39;</code></pre>
+        return f&#34;{{{MNS}}}ResponseMessage&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -87,18 +87,18 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setuseroofsettings-operation
     &#34;&#34;&#34;
 
-    SERVICE_NAME = &#39;SetUserOofSettings&#39;
+    SERVICE_NAME = &#34;SetUserOofSettings&#34;
     returns_elements = False
 
     def call(self, oof_settings, mailbox):
         if not isinstance(oof_settings, OofSettings):
-            raise InvalidTypeError(&#39;oof_settings&#39;, oof_settings, OofSettings)
+            raise InvalidTypeError(&#34;oof_settings&#34;, oof_settings, OofSettings)
         if not isinstance(mailbox, Mailbox):
-            raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
+            raise InvalidTypeError(&#34;mailbox&#34;, mailbox, Mailbox)
         return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))
 
     def get_payload(self, oof_settings, mailbox):
-        payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+        payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
         set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
         return set_xml_value(payload, oof_settings, version=self.account.version)
 
@@ -108,7 +108,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 
     @classmethod
     def _response_message_tag(cls):
-        return f&#39;{{{MNS}}}ResponseMessage&#39;</code></pre>
+        return f&#34;{{{MNS}}}ResponseMessage&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -139,9 +139,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 </summary>
 <pre><code class="python">def call(self, oof_settings, mailbox):
     if not isinstance(oof_settings, OofSettings):
-        raise InvalidTypeError(&#39;oof_settings&#39;, oof_settings, OofSettings)
+        raise InvalidTypeError(&#34;oof_settings&#34;, oof_settings, OofSettings)
     if not isinstance(mailbox, Mailbox):
-        raise InvalidTypeError(&#39;mailbox&#39;, mailbox, Mailbox)
+        raise InvalidTypeError(&#34;mailbox&#34;, mailbox, Mailbox)
     return self._get_elements(payload=self.get_payload(oof_settings=oof_settings, mailbox=mailbox))</code></pre>
 </details>
 </dd>
@@ -155,7 +155,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, oof_settings, mailbox):
-    payload = create_element(f&#39;m:{self.SERVICE_NAME}Request&#39;)
+    payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
     set_xml_value(payload, AvailabilityMailbox.from_mailbox(mailbox), version=self.account.version)
     return set_xml_value(payload, oof_settings, version=self.account.version)</code></pre>
 </details>
