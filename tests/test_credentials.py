@@ -28,9 +28,13 @@ class CredentialsTest(TimedTestCase):
         for o in (
             Identity("XXX", "YYY", "ZZZ", "WWW"),
             Credentials("XXX", "YYY"),
-            OAuth2Credentials("XXX", "YYY", "ZZZZ"),
-            OAuth2Credentials("XXX", "YYY", "ZZZZ", identity=Identity("AAA")),
-            OAuth2AuthorizationCodeCredentials(client_id="WWW", client_secret="XXX"),
+            OAuth2Credentials(client_id="XXX", client_secret="YYY", tenant_id="ZZZZ"),
+            OAuth2Credentials(client_id="XXX", client_secret="YYY", tenant_id="ZZZZ", identity=Identity("AAA")),
+            OAuth2AuthorizationCodeCredentials(client_id="WWW", client_secret="XXX", authorization_code="YYY"),
+            OAuth2AuthorizationCodeCredentials(
+                client_id="WWW", client_secret="XXX", access_token={"access_token": "ZZZ"}
+            ),
+            OAuth2AuthorizationCodeCredentials(access_token={"access_token": "ZZZ"}),
             OAuth2AuthorizationCodeCredentials(
                 client_id="WWW",
                 client_secret="XXX",

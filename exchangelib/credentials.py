@@ -108,21 +108,21 @@ class OAuth2Credentials(BaseCredentials):
     the associated auth code grant type for multi-tenant applications.
     """
 
-    def __init__(self, client_id, client_secret, tenant_id=None, identity=None):
+    def __init__(self, client_id, client_secret, tenant_id=None, identity=None, access_token=None):
         """
 
         :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
         :param client_secret: Secret associated with the OAuth application
         :param tenant_id: Microsoft tenant ID of the account to access
         :param identity: An Identity object representing the account that these credentials are connected to.
+        :param access_token: Previously-obtained access token, as a dict or an oauthlib.oauth2.OAuth2Token
         """
         super().__init__()
         self.client_id = client_id
         self.client_secret = client_secret
         self.tenant_id = tenant_id
         self.identity = identity
-        # When set, access_token is a dict (or an oauthlib.oauth2.OAuth2Token, which is also a dict)
-        self.access_token = None
+        self.access_token = access_token
 
     def refresh(self, session):
         # Creating a new session gets a new access token, so there's no work here to refresh the credentials. This
@@ -174,8 +174,8 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
     several ways:
     * Given an authorization code, client ID, and client secret, fetch a token ourselves and refresh it as needed if
       supplied with a refresh token.
-    * Given an existing access token, refresh token, client ID, and client secret, use the access token until it
-      expires and then refresh it as needed.
+    * Given an existing access token, client ID, and client secret, use the access token until it expires and then
+      refresh it as needed.
     * Given only an existing access token, use it until it expires. This can be used to let the calling application
       refresh tokens itself by subclassing and implementing refresh().
 
@@ -184,7 +184,7 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
     tenant.
     """
 
-    def __init__(self, authorization_code=None, access_token=None, **kwargs):
+    def __init__(self, authorization_code=None, access_token=None, client_id=None, client_secret=None, **kwargs):
         """
 
         :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
@@ -196,7 +196,7 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
         :param access_token: Previously-obtained access token. If a token exists and the application will handle
           refreshing by itself (or opts not to handle it), this parameter alone is sufficient.
         """
-        super().__init__(**kwargs)
+        super().__init__(client_id=client_id, client_secret=client_secret, **kwargs)
         self.authorization_code = authorization_code
         if access_token is not None and not isinstance(access_token, dict):
             raise InvalidTypeError("access_token", access_token, OAuth2Token)

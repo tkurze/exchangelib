@@ -309,10 +309,10 @@ class BaseProtocol:
         return session
 
     def create_oauth2_session(self):
-        has_token = False
         scope = ["https://outlook.office365.com/.default"]
         session_params = {}
         token_params = {}
+        has_token = self.credentials.access_token is not None
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             # Ask for a refresh token
@@ -326,7 +326,6 @@ class BaseProtocol:
             token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"  # nosec
 
             client_params = {}
-            has_token = self.credentials.access_token is not None
             if has_token:
                 session_params["token"] = self.credentials.access_token
             elif self.credentials.authorization_code is not None:
