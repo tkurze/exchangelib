@@ -378,7 +378,7 @@ class Autodiscovery:
         log.debug("Attempting to get SRV records for %s", hostname)
         records = []
         try:
-            answers = self.resolver.resolve(f"{hostname}.", "SRV")
+            answers = self.resolver.resolve(f"{hostname}.", "SRV", lifetime=self.DNS_RESOLVER_ATTRS.get("timeout"))
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
             log.debug("DNS lookup failure: %s", e)
             return records
