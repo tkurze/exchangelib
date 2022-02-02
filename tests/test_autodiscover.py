@@ -542,7 +542,7 @@ class AutodiscoverTest(EWSTest):
 
         class _Mock1:
             @staticmethod
-            def resolve(hostname, cat):
+            def resolve(*args, **kwargs):
                 class A:
                     @staticmethod
                     def to_text():
@@ -560,7 +560,7 @@ class AutodiscoverTest(EWSTest):
 
         class _Mock2:
             @staticmethod
-            def resolve(hostname, cat):
+            def resolve(*args, **kwargs):
                 class A:
                     @staticmethod
                     def to_text():

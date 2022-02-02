@@ -1691,7 +1691,7 @@ class ErrorWrongServerVersionDelegate(ResponseMessageError):
     pass
 
 
-# Microsoft recommends to cache the autodiscover data around 24 hours and perform autodiscover
+# Microsoft recommends caching the autodiscover data around 24 hours and perform autodiscover
 # immediately following certain error responses from EWS. See more at
 # http://blogs.msdn.com/b/mstehle/archive/2010/11/09/ews-best-practices-use-autodiscover.aspx
 

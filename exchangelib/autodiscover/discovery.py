@@ -26,6 +26,13 @@ from .protocol import AutodiscoverProtocol
 
 log = logging.getLogger(__name__)
 
+DNS_LOOKUP_ERRORS = (
+    dns.name.EmptyLabel,
+    dns.resolver.NXDOMAIN,
+    dns.resolver.NoAnswer,
+    dns.resolver.NoNameservers,
+)
+
 
 def discover(email, credentials=None, auth_type=None, retry_policy=None):
     ad_response, protocol = Autodiscovery(email=email, credentials=credentials).discover()
@@ -357,8 +364,9 @@ class Autodiscovery:
     def _is_valid_hostname(self, hostname):
         log.debug("Checking if %s can be looked up in DNS", hostname)
         try:
-            self.resolver.resolve(hostname)
-        except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.name.EmptyLabel):
+            self.resolver.resolve(f"{hostname}.", "A", lifetime=self.DNS_RESOLVER_ATTRS.get("timeout"))
+        except DNS_LOOKUP_ERRORS as e:
+            log.debug("DNS A lookup failure: %s", e)
             return False
         return True
 
@@ -379,8 +387,8 @@ class Autodiscovery:
         records = []
         try:
             answers = self.resolver.resolve(f"{hostname}.", "SRV", lifetime=self.DNS_RESOLVER_ATTRS.get("timeout"))
-        except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
-            log.debug("DNS lookup failure: %s", e)
+        except DNS_LOOKUP_ERRORS as e:
+            log.debug("DNS SRV lookup failure: %s", e)
             return records
         for rdata in answers:
             try:
