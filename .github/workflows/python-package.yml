@@ -77,8 +77,8 @@ jobs:
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        black --check exchangelib tests
-        isort --check exchangelib tests
+        black --check --diff exchangelib tests
+        isort --check --diff exchangelib tests
         unittest-parallel -j 4 --class-fixtures --coverage --coverage-source exchangelib
         coveralls --service=github
 
