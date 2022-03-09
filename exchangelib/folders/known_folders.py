@@ -267,6 +267,8 @@ class MsgFolderRoot(WellknownFolder):
 
     DISTINGUISHED_FOLDER_ID = "msgfolderroot"
     LOCALIZED_NAMES = {
+        None: ("Top of Information Store",),
+        "da_DK": ("Informationslagerets øverste niveau",),
         "zh_CN": ("信息存储顶部",),
     }
 

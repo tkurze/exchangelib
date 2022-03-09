@@ -217,30 +217,31 @@ class FolderTest(EWSTest):
 
     def test_find_folders_with_restriction(self):
         # Exact match
+        tois_folder_name = self.account.root.tois.name
         folders = list(
             FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
-                q=Q(name="Top of Information Store")
+                q=Q(name=tois_folder_name)
             )
         )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
         # Startswith
         folders = list(
             FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
-                q=Q(name__startswith="Top of ")
+                q=Q(name__startswith=tois_folder_name[:6])
             )
         )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
         # Wrong case
         folders = list(
             FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
-                q=Q(name__startswith="top of ")
+                q=Q(name__startswith=tois_folder_name[:6].lower())
             )
         )
         self.assertEqual(len(folders), 0, sorted(f.name for f in folders))
         # Case insensitive
         folders = list(
             FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
-                q=Q(name__istartswith="top of ")
+                q=Q(name__istartswith=tois_folder_name[:6].lower())
             )
         )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
@@ -443,7 +444,7 @@ class FolderTest(EWSTest):
             folder.refresh()  # Must have an id
 
     def test_parent(self):
-        self.assertEqual(self.account.calendar.parent.name, "Top of Information Store")
+        self.assertEqual(self.account.calendar.parent.name, self.account.root.tois.name)
         self.assertEqual(self.account.calendar.parent.parent.name, "root")
         # Setters
         parent = self.account.calendar.parent
@@ -459,16 +460,19 @@ class FolderTest(EWSTest):
         self.assertIsNone(Folder(id=self.account.inbox.id, parent=self.account.inbox).parent)
 
     def test_children(self):
-        self.assertIn("Top of Information Store", [c.name for c in self.account.root.children])
+        self.assertIn(self.account.root.tois.name, [c.name for c in self.account.root.children])
 
     def test_parts(self):
         self.assertEqual(
             [p.name for p in self.account.calendar.parts],
-            ["root", "Top of Information Store", self.account.calendar.name],
+            ["root", self.account.root.tois.name, self.account.calendar.name],
         )
 
     def test_absolute(self):
-        self.assertEqual(self.account.calendar.absolute, "/root/Top of Information Store/" + self.account.calendar.name)
+        self.assertEqual(
+            self.account.calendar.absolute,
+            f"/root/{self.account.root.tois.name}/{self.account.calendar.name}"
+        )
 
     def test_walk(self):
         self.assertGreaterEqual(len(list(self.account.root.walk())), 20)
@@ -484,7 +488,7 @@ class FolderTest(EWSTest):
         self.assertGreaterEqual(len(list(self.account.contacts.glob("/"))), 5)
         self.assertGreaterEqual(len(list(self.account.contacts.glob("../*"))), 5)
         self.assertEqual(len(list(self.account.root.glob(f"**/{self.account.contacts.name}"))), 1)
-        self.assertEqual(len(list(self.account.root.glob(f"Top of*/{self.account.contacts.name}"))), 1)
+        self.assertEqual(len(list(self.account.root.glob(f"{self.account.root.tois.name[:6]}*/{self.account.contacts.name}"))), 1)
         with self.assertRaises(ValueError) as e:
             list(self.account.root.glob("../*"))
         self.assertEqual(e.exception.args[0], "Already at top")
@@ -503,9 +507,9 @@ class FolderTest(EWSTest):
 
     def test_div_navigation(self):
         self.assertEqual(
-            (self.account.root / "Top of Information Store" / self.account.calendar.name).id, self.account.calendar.id
+            (self.account.root / self.account.root.tois.name / self.account.calendar.name).id, self.account.calendar.id
         )
-        self.assertEqual((self.account.root / "Top of Information Store" / "..").id, self.account.root.id)
+        self.assertEqual((self.account.root / self.account.root.tois.name / "..").id, self.account.root.id)
         self.assertEqual((self.account.root / ".").id, self.account.root.id)
         with self.assertRaises(ValueError) as e:
             _ = self.account.root / ".."
@@ -520,13 +524,13 @@ class FolderTest(EWSTest):
 
         # Test normal navigation
         self.assertEqual(
-            (self.account.root // "Top of Information Store" // self.account.calendar.name).id, self.account.calendar.id
+            (self.account.root // self.account.root.tois.name // self.account.calendar.name).id, self.account.calendar.id
         )
         self.assertIsNone(self.account.root._subfolders)
 
         # Test parent ('..') syntax. Should not work
         with self.assertRaises(ValueError) as e:
-            _ = self.account.root // "Top of Information Store" // ".."
+            _ = self.account.root // self.account.root.tois.name // ".."
         self.assertEqual(e.exception.args[0], "Cannot get parent without a folder cache")
         self.assertIsNone(self.account.root._subfolders)
 
