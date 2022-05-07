@@ -783,7 +783,7 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     def _account_to_impersonate(self):
         if self.account.access_type == IMPERSONATION:
             return self.account.identity
-        return None
+        return super()._account_to_impersonate
 
     @property
     def _timezone(self):
