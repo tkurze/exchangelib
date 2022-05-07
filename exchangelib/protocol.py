@@ -318,9 +318,8 @@ class BaseProtocol:
             # Ask for a refresh token
             scope.append("offline_access")
 
-            # We don't know (or need) the Microsoft tenant ID. Use
-            # common/ to let Microsoft select the appropriate tenant
-            # for the provided authorization code or refresh token.
+            # We don't know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+            # tenant for the provided authorization code or refresh token.
             #
             # Suppress looks-like-password warning from Bandit.
             token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"  # nosec
@@ -333,13 +332,10 @@ class BaseProtocol:
                 self.credentials.authorization_code = None
 
             if self.credentials.client_id is not None and self.credentials.client_secret is not None:
-                # If we're given a client ID and secret, we have enough
-                # to refresh access tokens ourselves. In other cases the
-                # session will raise TokenExpiredError and we'll need to
-                # ask the calling application to refresh the token (that
-                # covers cases where the caller doesn't have access to
-                # the client secret but is working with a service that
-                # can provide it refreshed tokens on a limited basis).
+                # If we're given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+                # cases the session will raise TokenExpiredError, and we'll need to ask the calling application to
+                # refresh the token (that covers cases where the caller doesn't have access to the client secret but
+                # is working with a service that can provide it refreshed tokens on a limited basis).
                 session_params.update(
                     {
                         "auto_refresh_kwargs": {
@@ -366,8 +362,8 @@ class BaseProtocol:
                 timeout=self.TIMEOUT,
                 **token_params,
             )
-            # Allow the credentials object to update its copy of the new
-            # token, and give the application an opportunity to cache it
+            # Allow the credentials object to update its copy of the new token, and give the application an opportunity
+            # to cache it.
             self.credentials.on_token_auto_refreshed(token)
         session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
 
