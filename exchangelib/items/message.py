@@ -37,7 +37,7 @@ class Message(Item):
     conversation_topic = CharField(field_uri="message:ConversationTopic", is_read_only=True)
     # Rename 'From' to 'author'. We can't use fieldname 'from' since it's a Python keyword.
     author = MailboxField(field_uri="message:From", is_read_only_after_send=True)
-    message_id = CharField(field_uri="message:InternetMessageId", is_read_only_after_send=True)
+    message_id = TextField(field_uri="message:InternetMessageId", is_read_only_after_send=True)
     is_read = BooleanField(field_uri="message:IsRead", is_required=True, default=False)
     is_response_requested = BooleanField(field_uri="message:IsResponseRequested", default=False, is_required=True)
     references = TextField(field_uri="message:References")
@@ -169,7 +169,7 @@ class Message(Item):
         from ..services import MarkAsJunk
 
         res = MarkAsJunk(account=self.account).get(
-            items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+            items=[self], is_junk=is_junk, move_item=move_item, expect_result=None
         )
         if res is None:
             return
