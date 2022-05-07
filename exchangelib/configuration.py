@@ -61,12 +61,12 @@ class Configuration:
         if auth_type is None:
             # Set a default auth type for the credentials where this makes sense
             auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
-        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
+            raise InvalidEnumValue("auth_type", auth_type, AUTH_TYPE_MAP)
+        if credentials is None and auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(f"Auth type {auth_type!r} was detected but no credentials were provided")
         if server and service_endpoint:
             raise AttributeError("Only one of 'server' or 'service_endpoint' must be provided")
-        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise InvalidEnumValue("auth_type", auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
