@@ -310,9 +310,8 @@ class BaseProtocol:
 
     def create_oauth2_session(self):
         scope = ["https://outlook.office365.com/.default"]
-        session_params = {}
+        session_params = {"token": self.credentials.access_token}  # Token may be None
         token_params = {}
-        has_token = self.credentials.access_token is not None
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             # Ask for a refresh token
@@ -325,11 +324,8 @@ class BaseProtocol:
             token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"  # nosec
 
             client_params = {}
-            if has_token:
-                session_params["token"] = self.credentials.access_token
-            elif self.credentials.authorization_code is not None:
-                token_params["code"] = self.credentials.authorization_code
-                self.credentials.authorization_code = None
+            token_params["code"] = self.credentials.authorization_code  # Auth code may be None
+            self.credentials.authorization_code = None  # We can only use the code once
 
             if self.credentials.client_id is not None and self.credentials.client_secret is not None:
                 # If we're given a client ID and secret, we have enough to refresh access tokens ourselves. In other
@@ -352,7 +348,7 @@ class BaseProtocol:
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
-        if not has_token:
+        if not session.token:
             # Fetch the token explicitly -- it doesn't occur implicitly
             token = session.fetch_token(
                 token_url=token_url,
