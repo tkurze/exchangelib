@@ -5,7 +5,7 @@ from unittest.mock import patch
 from exchangelib.account import Account
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import DELEGATE, Credentials
+from exchangelib.credentials import DELEGATE, Credentials, OAuth2Credentials
 from exchangelib.errors import (
     ErrorAccessDenied,
     ErrorDelegateNoUser,
@@ -78,9 +78,8 @@ class AccountTest(EWSTest):
             access_type=DELEGATE,
             config=Configuration(
                 service_endpoint=self.account.protocol.service_endpoint,
-                credentials=Credentials(self.account.protocol.credentials.username, "WRONG_PASSWORD"),
+                credentials=Credentials("john@example.com", "WRONG_PASSWORD"),
                 version=self.account.version,
-                auth_type=self.account.protocol.auth_type,
                 retry_policy=self.retry_policy,
             ),
             autodiscover=False,
@@ -94,9 +93,8 @@ class AccountTest(EWSTest):
             access_type=DELEGATE,
             config=Configuration(
                 service_endpoint=self.account.protocol.service_endpoint,
-                credentials=Credentials(self.account.protocol.credentials.username, "WRONG_PASSWORD"),
+                credentials=Credentials("john@example.com", "WRONG_PASSWORD"),
                 version=self.account.version,
-                auth_type=self.account.protocol.auth_type,
                 retry_policy=self.retry_policy,
             ),
             autodiscover=False,
@@ -164,7 +162,7 @@ class AccountTest(EWSTest):
 
     def test_mail_tips(self):
         # Test that mail tips work
-        self.assertEqual(self.account.mail_tips.recipient_address, self.account.primary_smtp_address)
+        self.assertEqual(self.account.mail_tips.recipient_address.email_address, self.account.primary_smtp_address)
         # recipients must not be empty
         list(
             GetMailTips(protocol=self.account.protocol).call(
@@ -292,9 +290,8 @@ class AccountTest(EWSTest):
             access_type=DELEGATE,
             config=Configuration(
                 service_endpoint=self.account.protocol.service_endpoint,
-                credentials=Credentials(self.account.protocol.credentials.username, "WRONG_PASSWORD"),
+                credentials=Credentials("john@example.com", "WRONG_PASSWORD"),
                 version=self.account.version,
-                auth_type=self.account.protocol.auth_type,
                 retry_policy=self.retry_policy,
             ),
             autodiscover=False,
@@ -324,34 +321,37 @@ class AccountTest(EWSTest):
         with self.assertRaises(AttributeError):
             account.protocol.config.credentials = self.account.protocol.credentials
         # Should succeed after credentials update
-        account.protocol.credentials = self.account.protocol.credentials
+        account.protocol.config.auth_type = self.account.protocol.config.auth_type
+        account.protocol.credentials = self.credentials()
         account.root.refresh()
 
     def test_protocol_default_values(self):
         # Test that retry_policy and auth_type always get a value regardless of how we create an Account
-        c = Credentials(self.settings["username"], self.settings["password"])
         a = Account(
             self.account.primary_smtp_address,
             autodiscover=False,
             config=Configuration(
                 server=self.settings["server"],
-                credentials=c,
+                credentials=self.credentials(),
             ),
         )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
+
+        if isinstance(self.account.protocol.credentials, OAuth2Credentials):
+            self.skipTest("OAuth authentication does not work with POX autodiscover")
 
         a = Account(
             self.account.primary_smtp_address,
             autodiscover=True,
             config=Configuration(
                 server=self.settings["server"],
-                credentials=c,
+                credentials=self.credentials(),
             ),
         )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
 
-        a = Account(self.account.primary_smtp_address, autodiscover=True, credentials=c)
+        a = Account(self.account.primary_smtp_address, autodiscover=True, credentials=self.credentials())
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)

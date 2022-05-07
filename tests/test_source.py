@@ -1,3 +1,4 @@
+from exchangelib.credentials import OAuth2Credentials
 from exchangelib.errors import (
     ErrorAccessDenied,
     ErrorFolderNotFound,
@@ -13,7 +14,10 @@ from .common import EWSTest
 class CommonTest(EWSTest):
     def test_magic(self):
         self.assertIn(self.account.protocol.version.api_version, str(self.account.protocol))
-        self.assertIn(self.account.protocol.credentials.username, str(self.account.protocol.credentials))
+        if isinstance(self.account.protocol.credentials, OAuth2Credentials):
+            self.assertIn(self.account.protocol.credentials.client_id, str(self.account.protocol.credentials))
+        else:
+            self.assertIn(self.account.protocol.credentials.username, str(self.account.protocol.credentials))
         self.assertIn(self.account.primary_smtp_address, str(self.account))
         self.assertIn(str(self.account.version.build.major_version), repr(self.account.version))
         for item in (

@@ -1,5 +1,5 @@
 from exchangelib.attachments import AttachmentId, FileAttachment, ItemAttachment
-from exchangelib.errors import ErrorInvalidIdMalformed, ErrorItemNotFound
+from exchangelib.errors import ErrorInvalidAttachmentId, ErrorInvalidIdMalformed
 from exchangelib.fields import FieldPath
 from exchangelib.folders import Inbox
 from exchangelib.items import Item, Message
@@ -169,9 +169,9 @@ class AttachmentsTest(BaseItemTest):
             additional_fields=[FieldPath(field=self.ITEM_CLASS.get_field_by_fieldname("body"))],
         )
         self.assertEqual(
-            attachment.item.body,
-            '<html>\r\n<head>\r\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\r\n'
-            "</head>\r\n<body>\r\nHello HTML\r\n</body>\r\n</html>\r\n",
+            attachment.item.body.replace("\r\n", ""),
+            '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
+            "</head><body>Hello HTML </body></html>",
         )
 
     def test_file_attachments(self):
@@ -238,9 +238,10 @@ class AttachmentsTest(BaseItemTest):
     def test_streaming_file_attachment_error(self):
         # Test that we can parse XML error responses in streaming mode.
 
-        # Try to stram an attachment with malformed ID
+        # Try to stream an attachment with malformed ID
+        item = self.get_test_item(folder=self.test_folder).save()
         att = FileAttachment(
-            parent_item=self.get_test_item(folder=self.test_folder),
+            parent_item=item,
             attachment_id=AttachmentId(id="AAMk="),
             name="dummy.txt",
             content=b"",
@@ -250,11 +251,13 @@ class AttachmentsTest(BaseItemTest):
                 fp.read()
 
         # Try to stream a non-existent attachment
-        att.attachment_id.id = (
-            "AAMkADQyYzZmYmUxLTJiYjItNDg2Ny1iMzNjLTIzYWE1NDgxNmZhNABGAAAAAADUebQDarW2Q7G2Ji8hKofPBwAl9iKCsfCfS"
-            "a9cmjh+JCrCAAPJcuhjAABioKiOUTCQRI6Q5sRzi0pJAAHnDV3CAAABEgAQAN0zlxDrzlxAteU+kt84qOM="
-        )
-        with self.assertRaises(ErrorItemNotFound):
+        att.attachment_id = None
+        att.attach()
+        att_id = att.attachment_id
+        att.detach()
+        att.parent_item = item
+        att.attachment_id = att_id
+        with self.assertRaises(ErrorInvalidAttachmentId):
             with att.fp as fp:
                 fp.read()
 

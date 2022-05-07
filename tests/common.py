@@ -16,10 +16,10 @@ try:
 except ImportError:
     from backports import zoneinfo
 
-from exchangelib.account import Account
+from exchangelib.account import Account, Identity
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import DELEGATE, Credentials
+from exchangelib.credentials import IMPERSONATION, Credentials, OAuth2Credentials
 from exchangelib.errors import UnknownTimeZone
 from exchangelib.ewsdatetime import EWSTimeZone
 from exchangelib.fields import (
@@ -124,10 +124,21 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         cls.retry_policy = FaultTolerance(max_wait=600)
         cls.config = Configuration(
             server=settings["server"],
-            credentials=Credentials(settings["username"], settings["password"]),
+            credentials=cls.credentials(),
             retry_policy=cls.retry_policy,
         )
         cls.account = cls.get_account()
+
+    @classmethod
+    def credentials(cls):
+        if cls.settings.get("client_id"):
+            return OAuth2Credentials(
+                client_id=cls.settings["client_id"],
+                client_secret=cls.settings["client_secret"],
+                tenant_id=cls.settings["tenant_id"],
+                identity=Identity(primary_smtp_address=cls.settings["account"]),
+            )
+        return Credentials(username=cls.settings["username"], password=cls.settings["password"])
 
     @classmethod
     def get_account(cls):
@@ -209,21 +220,14 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         if isinstance(field, MailboxListField):
             # email_address must be a real account on the server(?)
             # TODO: Mailbox has multiple optional args but vals must match server account, so we can't easily test
-            if get_random_bool():
-                return [Mailbox(email_address=self.account.primary_smtp_address)]
-            return [self.account.primary_smtp_address]
+            return [Mailbox(email_address=self.account.primary_smtp_address)]
         if isinstance(field, MailboxField):
             # email_address must be a real account on the server(?)
             # TODO: Mailbox has multiple optional args but vals must match server account, so we can't easily test
-            if get_random_bool():
-                return Mailbox(email_address=self.account.primary_smtp_address)
-            return self.account.primary_smtp_address
+            return Mailbox(email_address=self.account.primary_smtp_address)
         if isinstance(field, AttendeesField):
             # Attendee must refer to a real mailbox on the server(?). We're only sure to have one
-            if get_random_bool():
-                mbx = Mailbox(email_address=self.account.primary_smtp_address)
-            else:
-                mbx = self.account.primary_smtp_address
+            mbx = Mailbox(email_address=self.account.primary_smtp_address)
             with_last_response_time = get_random_bool()
             if with_last_response_time:
                 return [
@@ -233,9 +237,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
                         last_response_time=get_random_datetime(tz=self.account.default_timezone),
                     )
                 ]
-            if get_random_bool():
-                return [Attendee(mailbox=mbx, response_type="Accept")]
-            return [self.account.primary_smtp_address]
+            return [Attendee(mailbox=mbx, response_type="Accept")]
         if isinstance(field, EmailAddressesField):
             addrs = []
             for label in EmailAddress.get_field_by_fieldname("label").supported_choices(version=self.account.version):

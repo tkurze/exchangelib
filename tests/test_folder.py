@@ -8,6 +8,7 @@ from exchangelib.errors import (
     ErrorFolderNotFound,
     ErrorItemNotFound,
     ErrorItemSave,
+    ErrorNoPublicFolderReplicaAvailable,
     ErrorObjectTypeChanged,
     MultipleObjectsReturned,
 )
@@ -17,19 +18,24 @@ from exchangelib.folders import (
     SHALLOW,
     AllContacts,
     AllItems,
+    ApplicationData,
+    Birthdays,
     Calendar,
     Companies,
     Contacts,
     ConversationSettings,
+    CrawlerData,
     DefaultFoldersChangeHistory,
     DeletedItems,
     DistinguishedFolderId,
+    DlpPolicyEvaluation,
     Drafts,
     Favorites,
     Files,
     Folder,
     FolderCollection,
     FolderQuerySet,
+    FreeBusyCache,
     Friends,
     GALContacts,
     GraphAnalytics,
@@ -49,6 +55,7 @@ from exchangelib.folders import (
     PublicFoldersRoot,
     QuickContacts,
     RecipientCache,
+    RecoveryPoints,
     Reminders,
     RootOfHierarchy,
     RSSFeeds,
@@ -56,9 +63,10 @@ from exchangelib.folders import (
     Sharing,
     Signal,
     SingleFolderQuerySet,
+    SkypeTeamsMessages,
     SmsAndChatsSync,
+    SwssItems,
     SyncIssues,
-    System,
     Tasks,
     ToDoSearch,
     VoiceMail,
@@ -124,9 +132,12 @@ class FolderTest(EWSTest):
         with self.assertRaises(ValueError):
             self.account.root.get_default_folder(Folder)
 
-        with self.assertRaises(ValueError) as e:
-            Folder(root=self.account.public_folders_root, parent=self.account.inbox)
-        self.assertEqual(e.exception.args[0], "'parent.root' must match 'root'")
+        try:
+            with self.assertRaises(ValueError) as e:
+                Folder(root=self.account.public_folders_root, parent=self.account.inbox)
+            self.assertEqual(e.exception.args[0], "'parent.root' must match 'root'")
+        except ErrorFolderNotFound:
+            pass
         with self.assertRaises(ValueError) as e:
             Folder(parent=self.account.inbox, parent_folder_id="XXX")
         self.assertEqual(e.exception.args[0], "'parent_folder_id' must match 'parent' ID")
@@ -147,10 +158,17 @@ class FolderTest(EWSTest):
 
     def test_public_folders_root(self):
         # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
-        self.assertGreaterEqual(
-            len(list(PublicFoldersRoot(account=self.account, is_distinguished=True).get_children(self.account.inbox))),
-            0,
-        )
+        try:
+            self.assertGreaterEqual(
+                len(
+                    list(
+                        PublicFoldersRoot(account=self.account, is_distinguished=True).get_children(self.account.inbox)
+                    )
+                ),
+                0,
+            )
+        except ErrorNoPublicFolderReplicaAvailable:
+            pass
 
     def test_invalid_deletefolder_args(self):
         with self.assertRaises(ValueError) as e:
@@ -202,7 +220,10 @@ class FolderTest(EWSTest):
         self.assertGreater(len(folders), 40, sorted(f.name for f in folders))
 
     def test_find_folders_multiple_roots(self):
-        coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])
+        try:
+            coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])
+        except ErrorFolderNotFound as e:
+            self.skipTest(str(e))
         with self.assertRaises(ValueError) as e:
             list(coll.find_folders(depth="Shallow"))
         self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
@@ -219,9 +240,7 @@ class FolderTest(EWSTest):
         # Exact match
         tois_folder_name = self.account.root.tois.name
         folders = list(
-            FolderCollection(account=self.account, folders=[self.account.root]).find_folders(
-                q=Q(name=tois_folder_name)
-            )
+            FolderCollection(account=self.account, folders=[self.account.root]).find_folders(q=Q(name=tois_folder_name))
         )
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
         # Startswith
@@ -301,6 +320,26 @@ class FolderTest(EWSTest):
                     ),
                 ):
                     self.assertEqual(f.folder_class, "IPF.Note")
+                elif isinstance(f, ApplicationData):
+                    self.assertEqual(f.folder_class, "IPM.ApplicationData")
+                elif isinstance(f, CrawlerData):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.CrawlerData")
+                elif isinstance(f, DlpPolicyEvaluation):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.DlpPolicyEvaluation")
+                elif isinstance(f, FreeBusyCache):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.FreeBusyCache")
+                elif isinstance(f, RecoveryPoints):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.RecoveryPoints")
+                elif isinstance(f, SwssItems):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.SwssItems")
+                elif isinstance(f, PassThroughSearchResults):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.PassThroughSearchResults")
+                elif isinstance(f, GraphAnalytics):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.GraphAnalytics")
+                elif isinstance(f, Signal):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.Signal")
+                elif isinstance(f, PdpProfileV2Secured):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.PdpProfileSecured")
                 elif isinstance(f, Companies):
                     self.assertEqual(f.folder_class, "IPF.Contact.Company")
                 elif isinstance(f, OrganizationalContacts):
@@ -311,8 +350,14 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.Contact.GalContacts")
                 elif isinstance(f, RecipientCache):
                     self.assertEqual(f.folder_class, "IPF.Contact.RecipientCache")
+                elif isinstance(f, IMContactList):
+                    self.assertEqual(f.folder_class, "IPF.Contact.MOC.ImContactList")
+                elif isinstance(f, QuickContacts):
+                    self.assertEqual(f.folder_class, "IPF.Contact.MOC.QuickContacts")
                 elif isinstance(f, Contacts):
                     self.assertEqual(f.folder_class, "IPF.Contact")
+                elif isinstance(f, Birthdays):
+                    self.assertEqual(f.folder_class, "IPF.Appointment.Birthday")
                 elif isinstance(f, Calendar):
                     self.assertEqual(f.folder_class, "IPF.Appointment")
                 elif isinstance(f, (Tasks, ToDoSearch)):
@@ -325,32 +370,22 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.Configuration")
                 elif isinstance(f, Files):
                     self.assertEqual(f.folder_class, "IPF.Files")
-                elif isinstance(f, Friends):
-                    self.assertEqual(f.folder_class, "IPF.Note")
+                elif isinstance(f, VoiceMail):
+                    self.assertEqual(f.folder_class, "IPF.Note.Microsoft.Voicemail")
                 elif isinstance(f, RSSFeeds):
                     self.assertEqual(f.folder_class, "IPF.Note.OutlookHomepage")
-                elif isinstance(f, IMContactList):
-                    self.assertEqual(f.folder_class, "IPF.Contact.MOC.ImContactList")
-                elif isinstance(f, QuickContacts):
-                    self.assertEqual(f.folder_class, "IPF.Contact.MOC.QuickContacts")
+                elif isinstance(f, Friends):
+                    self.assertEqual(f.folder_class, "IPF.Note")
                 elif isinstance(f, Journal):
                     self.assertEqual(f.folder_class, "IPF.Journal")
                 elif isinstance(f, Notes):
                     self.assertEqual(f.folder_class, "IPF.StickyNote")
                 elif isinstance(f, DefaultFoldersChangeHistory):
                     self.assertEqual(f.folder_class, "IPM.DefaultFolderHistoryItem")
-                elif isinstance(f, PassThroughSearchResults):
-                    self.assertEqual(f.folder_class, "IPF.StoreItem.PassThroughSearchResults")
+                elif isinstance(f, SkypeTeamsMessages):
+                    self.assertEqual(f.folder_class, "IPF.SkypeTeams.Message")
                 elif isinstance(f, SmsAndChatsSync):
                     self.assertEqual(f.folder_class, "IPF.SmsAndChatsSync")
-                elif isinstance(f, GraphAnalytics):
-                    self.assertEqual(f.folder_class, "IPF.StoreItem.GraphAnalytics")
-                elif isinstance(f, Signal):
-                    self.assertEqual(f.folder_class, "IPF.StoreItem.Signal")
-                elif isinstance(f, PdpProfileV2Secured):
-                    self.assertEqual(f.folder_class, "IPF.StoreItem.PdpProfileSecured")
-                elif isinstance(f, VoiceMail):
-                    self.assertEqual(f.folder_class, "IPF.Note.Microsoft.Voicemail")
                 else:
                     self.assertIn(f.folder_class, (None, "IPF"), (f.name, f.__class__.__name__, f.folder_class))
                     self.assertIsInstance(f, Folder)
@@ -470,8 +505,7 @@ class FolderTest(EWSTest):
 
     def test_absolute(self):
         self.assertEqual(
-            self.account.calendar.absolute,
-            f"/root/{self.account.root.tois.name}/{self.account.calendar.name}"
+            self.account.calendar.absolute, f"/root/{self.account.root.tois.name}/{self.account.calendar.name}"
         )
 
     def test_walk(self):
@@ -488,7 +522,9 @@ class FolderTest(EWSTest):
         self.assertGreaterEqual(len(list(self.account.contacts.glob("/"))), 5)
         self.assertGreaterEqual(len(list(self.account.contacts.glob("../*"))), 5)
         self.assertEqual(len(list(self.account.root.glob(f"**/{self.account.contacts.name}"))), 1)
-        self.assertEqual(len(list(self.account.root.glob(f"{self.account.root.tois.name[:6]}*/{self.account.contacts.name}"))), 1)
+        self.assertEqual(
+            len(list(self.account.root.glob(f"{self.account.root.tois.name[:6]}*/{self.account.contacts.name}"))), 1
+        )
         with self.assertRaises(ValueError) as e:
             list(self.account.root.glob("../*"))
         self.assertEqual(e.exception.args[0], "Already at top")
@@ -524,7 +560,8 @@ class FolderTest(EWSTest):
 
         # Test normal navigation
         self.assertEqual(
-            (self.account.root // self.account.root.tois.name // self.account.calendar.name).id, self.account.calendar.id
+            (self.account.root // self.account.root.tois.name // self.account.calendar.name).id,
+            self.account.calendar.id,
         )
         self.assertIsNone(self.account.root._subfolders)
 

@@ -1,6 +1,11 @@
 import datetime
 
-from exchangelib.errors import ErrorInvalidOperation, ErrorItemNotFound, ErrorMissingInformationReferenceItemId
+from exchangelib.errors import (
+    ErrorInvalidOperation,
+    ErrorInvalidRecipients,
+    ErrorItemNotFound,
+    ErrorMissingInformationReferenceItemId,
+)
 from exchangelib.ewsdatetime import UTC
 from exchangelib.fields import MONDAY, NOVEMBER, THIRD, WEDNESDAY, WEEK_DAY, WEEKEND_DAY
 from exchangelib.folders import Calendar
@@ -37,11 +42,16 @@ class CalendarTest(CommonItemTest):
 
     def test_cancel(self):
         item = self.get_test_item().save()
-        res = item.cancel()  # Returns (id, changekey) of cancelled item
-        self.assertIsInstance(res, BulkCreateResult)
-        with self.assertRaises(ErrorItemNotFound):
-            # Item is already cancelled
-            item.cancel()
+        try:
+            res = item.cancel()  # Returns (id, changekey) of cancelled item
+        except ErrorInvalidRecipients:
+            # Does not always work in a single-account setup
+            pass
+        else:
+            self.assertIsInstance(res, BulkCreateResult)
+            with self.assertRaises(ErrorItemNotFound):
+                # Item is already cancelled
+                item.cancel()
 
     def test_updating_timestamps(self):
         # Test that we can update an item without changing anything, and maintain the hidden timezone fields as local

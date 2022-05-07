@@ -3,7 +3,15 @@ import time
 from exchangelib.errors import ErrorInvalidSubscription, ErrorSubscriptionNotFound, MalformedResponseError
 from exchangelib.folders import FolderCollection, Inbox
 from exchangelib.items import Message
-from exchangelib.properties import CreatedEvent, DeletedEvent, ItemId, ModifiedEvent, Notification, StatusEvent
+from exchangelib.properties import (
+    CreatedEvent,
+    DeletedEvent,
+    ItemId,
+    ModifiedEvent,
+    MovedEvent,
+    Notification,
+    StatusEvent,
+)
 from exchangelib.services import GetStreamingEvents, SendNotification, SubscribeToPull
 from exchangelib.util import PrettyXmlHandler
 
@@ -201,8 +209,11 @@ class SyncTest(BaseItemTest):
                 if item_id is None:
                     events.append(e)
                     continue
-                if e.event_type == event_cls.ITEM and e.item_id.id == item_id:
-                    events.append(e)
+                if e.event_type == event_cls.ITEM:
+                    if isinstance(e, MovedEvent) and e.old_item_id.id == item_id:
+                        events.append(e)
+                    elif e.item_id.id == item_id:
+                        events.append(e)
         self.assertEqual(len(events), 1)
         event = events[0]
         self.assertIsInstance(event, event_cls)
@@ -235,8 +246,13 @@ class SyncTest(BaseItemTest):
             i1.delete()
             time.sleep(5)  # For some reason, events do not trigger instantly
             notifications = list(test_folder.get_events(subscription_id, watermark))
-            deleted_event, watermark = self._filter_events(notifications, DeletedEvent, i1_id)
-            self.assertEqual(deleted_event.item_id.id, i1_id)
+            try:
+                # On some servers, items are moved to the Recoverable Items on delete
+                moved_event, watermark = self._filter_events(notifications, MovedEvent, i1_id)
+                self.assertEqual(moved_event.old_item_id.id, i1_id)
+            except AssertionError:
+                deleted_event, watermark = self._filter_events(notifications, DeletedEvent, i1_id)
+                self.assertEqual(deleted_event.item_id.id, i1_id)
 
     def test_streaming_notifications(self):
         # Test that we can create a streaming subscription, make changes and see the events by calling
@@ -272,8 +288,13 @@ class SyncTest(BaseItemTest):
             notifications = list(
                 test_folder.get_streaming_events(subscription_id, connection_timeout=1, max_notifications_returned=1)
             )
-            deleted_event, _ = self._filter_events(notifications, DeletedEvent, i1_id)
-            self.assertEqual(deleted_event.item_id.id, i1_id)
+            try:
+                # On some servers, items are moved to the Recoverable Items on delete
+                moved_event, _ = self._filter_events(notifications, MovedEvent, i1_id)
+                self.assertEqual(moved_event.old_item_id.id, i1_id)
+            except AssertionError:
+                deleted_event, _ = self._filter_events(notifications, DeletedEvent, i1_id)
+                self.assertEqual(deleted_event.item_id.id, i1_id)
 
     def test_streaming_with_other_calls(self):
         # Test that we can call other EWS operations while we have a streaming subscription open

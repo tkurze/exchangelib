@@ -778,10 +778,7 @@ EWS auth: NTLM""",
             ).clean(version=None)
 
     def test_convert_id(self):
-        i = (
-            "AAMkADQyYzZmYmUxLTJiYjItNDg2Ny1iMzNjLTIzYWE1NDgxNmZhNABGAAAAAADUebQDarW2Q7G2Ji8hKofPBwAl9iKCsfCfSa9cmjh"
-            "+JCrCAAPJcuhjAAB0l+JSKvzBRYP+FXGewReXAABj6DrMAAA="
-        )
+        i = self.account.root.id
         for fmt in ID_FORMATS:
             res = list(
                 self.account.protocol.convert_ids(
@@ -825,6 +822,9 @@ EWS auth: NTLM""",
         self.assertEqual(ids.count(), len(items))
 
     def test_disable_ssl_verification(self):
+        if isinstance(self.account.protocol.credentials, OAuth2Credentials):
+            self.skipTest("OAuth authentication ony works with SSL verification enabled")
+
         # Test that we can make requests when SSL verification is turned off. I don't know how to mock TLS responses
         if not self.verify_ssl:
             # We can only run this test if we haven't already disabled TLS

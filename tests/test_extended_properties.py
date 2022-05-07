@@ -342,7 +342,10 @@ class ExtendedPropertyTest(BaseItemTest):
             item = self.get_test_item(folder=self.test_folder).save()
             self.assertEqual(self.test_folder.filter(**{attr_name: getattr(item, attr_name)}).count(), 1)
             self.assertEqual(
-                self.test_folder.filter(**{f"{array_attr_name}__contains": getattr(item, array_attr_name)}).count(), 1
+                # Does not work in O365
+                # self.test_folder.filter(**{f"{array_attr_name}__contains": getattr(item, array_attr_name)}).count(), 1
+                self.test_folder.filter(**{f"{array_attr_name}__in": getattr(item, array_attr_name)}).count(),
+                1,
             )
         finally:
             self.ITEM_CLASS.deregister(attr_name=attr_name)

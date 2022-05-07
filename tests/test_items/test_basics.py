@@ -379,7 +379,9 @@ class CommonItemTest(BaseItemTest):
         for f in fields:
             val = getattr(item, f.name)
             # Filter multi-value fields with =, __in and __contains
-            filter_kwargs = [{f"{f.name}__in": val}, {f"{f.name}__contains": val}]
+            # Does not work in O365
+            # filter_kwargs = [{f"{f.name}__in": val}, {f"{f.name}__contains": val}]
+            filter_kwargs = [{f"{f.name}__in": val}]
             self._run_filter_tests(common_qs, f, filter_kwargs, val)
 
     def test_filter_on_single_field_index_fields(self):
@@ -626,7 +628,7 @@ class CommonItemTest(BaseItemTest):
                 if f.name == "mime_content":
                     # This will change depending on other contents fields
                     continue
-                old, new = getattr(item, f.name), insert_kwargs[f.name]
+                old, new = insert_kwargs[f.name], getattr(item, f.name)
                 if f.is_list:
                     old, new = set(old or ()), set(new or ())
                 self.assertEqual(old, new, (f.name, old, new))
