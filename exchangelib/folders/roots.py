@@ -8,6 +8,7 @@ from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
 from .base import BaseFolder
 from .collections import FolderCollection
 from .known_folders import (
+    MISC_FOLDERS,
     NON_DELETABLE_FOLDERS,
     WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT,
     WELLKNOWN_FOLDERS_IN_ROOT,
@@ -205,7 +206,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         :param folder_name:
         :param locale: a string, e.g. 'da_DK'
         """
-        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
+        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()

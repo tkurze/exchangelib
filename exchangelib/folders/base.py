@@ -229,27 +229,41 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         :return:
         """
         from .known_folders import (
+            ApplicationData,
             Calendar,
             Contacts,
             ConversationSettings,
+            CrawlerData,
+            DlpPolicyEvaluation,
+            FreeBusyCache,
             GALContacts,
             Messages,
             RecipientCache,
+            RecoveryPoints,
             Reminders,
             RSSFeeds,
+            Signal,
+            SwssItems,
             Tasks,
         )
 
         for folder_cls in (
-            Messages,
-            Tasks,
+            ApplicationData,
             Calendar,
-            ConversationSettings,
             Contacts,
+            ConversationSettings,
+            CrawlerData,
+            DlpPolicyEvaluation,
+            FreeBusyCache,
             GALContacts,
-            Reminders,
-            RecipientCache,
+            Messages,
             RSSFeeds,
+            RecipientCache,
+            RecoveryPoints,
+            Reminders,
+            Signal,
+            SwssItems,
+            Tasks,
         ):
             if folder_cls.CONTAINER_CLASS == container_class:
                 return folder_cls

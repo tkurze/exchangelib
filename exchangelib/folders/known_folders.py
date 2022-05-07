@@ -62,6 +62,45 @@ class Messages(Folder):
     supported_item_models = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)
 
 
+class ApplicationData(Folder):
+    CONTAINER_CLASS = "IPM.ApplicationData"
+
+
+class CrawlerData(Folder):
+    CONTAINER_CLASS = "IPF.StoreItem.CrawlerData"
+
+
+class DlpPolicyEvaluation(Folder):
+    CONTAINER_CLASS = "IPF.StoreItem.DlpPolicyEvaluation"
+
+
+class FreeBusyCache(Folder):
+    CONTAINER_CLASS = "IPF.StoreItem.FreeBusyCache"
+
+
+class RecoveryPoints(Folder):
+    CONTAINER_CLASS = "IPF.StoreItem.RecoveryPoints"
+
+
+class SwssItems(Folder):
+    CONTAINER_CLASS = "IPF.StoreItem.SwssItems"
+
+
+class SkypeTeamsMessages(Folder):
+    CONTAINER_CLASS = "IPF.SkypeTeams.Message"
+    LOCALIZED_NAMES = {
+        None: ("Team-chat",),
+    }
+
+
+class Birthdays(Folder):
+    CONTAINER_CLASS = "IPF.Appointment.Birthday"
+    LOCALIZED_NAMES = {
+        None: ("Birthdays",),
+        "da_DK": ("Fødselsdage",),
+    }
+
+
 class Drafts(Messages):
     DISTINGUISHED_FOLDER_ID = "drafts"
 
@@ -408,6 +447,7 @@ class Companies(NonDeletableFolderMixin, Contacts):
     CONTAINTER_CLASS = "IPF.Contact.Company"
     LOCALIZED_NAMES = {
         None: ("Companies",),
+        "da_DK": ("Firmaer",),
     }
 
 
@@ -700,4 +740,15 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
     ArchiveRecoverableItemsPurges,
     ArchiveRecoverableItemsRoot,
     ArchiveRecoverableItemsVersions,
+]
+
+MISC_FOLDERS = [
+    ApplicationData,
+    CrawlerData,
+    DlpPolicyEvaluation,
+    FreeBusyCache,
+    RecoveryPoints,
+    SwssItems,
+    SkypeTeamsMessages,
+    Birthdays,
 ]
