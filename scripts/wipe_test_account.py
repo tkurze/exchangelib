@@ -1,6 +1,6 @@
+from exchangelib.protocol import BaseProtocol
 from tests.common import EWSTest
 
-from exchangelib.protocol import BaseProtocol
 BaseProtocol.TIMEOUT = 300  # Seconds
 t = EWSTest()
 t.setUpClass()

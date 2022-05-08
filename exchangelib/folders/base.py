@@ -425,6 +425,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         from .known_folders import Audits
+
         _seen = _seen or set()
         if self.id in _seen:
             raise RecursionError(f"We already tried to wipe {self}")

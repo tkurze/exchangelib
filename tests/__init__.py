@@ -26,7 +26,7 @@ unittest.util._MAX_LENGTH = 2000
 
 if os.environ.get("DEBUG", "").lower() in ("1", "yes", "true"):
     logging.basicConfig(level=logging.DEBUG, handlers=[PrettyXmlHandler()])
-    logging.getLogger('requests').setLevel(level=logging.INFO)
-    logging.getLogger('requests_oauthlib').setLevel(level=logging.INFO)
+    logging.getLogger("requests").setLevel(level=logging.INFO)
+    logging.getLogger("requests_oauthlib").setLevel(level=logging.INFO)
 else:
     logging.basicConfig(level=logging.CRITICAL)
