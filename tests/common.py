@@ -19,7 +19,7 @@ except ImportError:
 from exchangelib.account import Account, Identity
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import IMPERSONATION, Credentials, OAuth2Credentials
+from exchangelib.credentials import DELEGATE, IMPERSONATION, Credentials, OAuth2Credentials
 from exchangelib.errors import UnknownTimeZone
 from exchangelib.ewsdatetime import EWSTimeZone
 from exchangelib.fields import (
@@ -144,7 +144,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
     def get_account(cls):
         return Account(
             primary_smtp_address=cls.settings["account"],
-            access_type=DELEGATE,
+            access_type=IMPERSONATION if cls.settings.get("client_id") else DELEGATE,
             config=cls.config,
             locale="da_DK",
             default_timezone=cls.tz,
