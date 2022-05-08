@@ -50,7 +50,7 @@ jobs:
       # Only repo owners have access to the secret. PRs will run only the unit tests
       if: env.AES_256_CBC_PASS != ''
       run: |
-        openssl aes-256-cbc -d -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
+        openssl aes-256-cbc -d -md sha256 -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
 
     - name: Upgrade pip
       run: |
@@ -102,7 +102,7 @@ jobs:
       # Only repo owners have access to the secret. PRs will run only the unit tests
       if: env.AES_256_CBC_PASS != ''
       run: |
-        openssl aes-256-cbc -d -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
+        openssl aes-256-cbc -d -md sha256 -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
 
     - name: Upgrade pip
       run: |
