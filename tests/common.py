@@ -144,7 +144,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
     def get_account(cls):
         return Account(
             primary_smtp_address=cls.settings["account"],
-            access_type=IMPERSONATION if cls.settings.get("client_id") else DELEGATE,
+            access_type=IMPERSONATION if isinstance(cls.config.credentials, OAuth2Credentials) else DELEGATE,
             config=cls.config,
             locale="da_DK",
             default_timezone=cls.tz,

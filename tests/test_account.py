@@ -322,7 +322,7 @@ class AccountTest(EWSTest):
             account.protocol.config.credentials = self.account.protocol.credentials
         # Should succeed after credentials update
         account.protocol.config.auth_type = self.account.protocol.config.auth_type
-        account.protocol.credentials = self.credentials()
+        account.protocol.credentials = self.account.protocol.credentials
         account.root.refresh()
 
     def test_protocol_default_values(self):
@@ -332,7 +332,7 @@ class AccountTest(EWSTest):
             autodiscover=False,
             config=Configuration(
                 server=self.settings["server"],
-                credentials=self.credentials(),
+                credentials=self.account.protocol.credentials,
             ),
         )
         self.assertIsNotNone(a.protocol.auth_type)
@@ -341,17 +341,19 @@ class AccountTest(EWSTest):
         if isinstance(self.account.protocol.credentials, OAuth2Credentials):
             self.skipTest("OAuth authentication does not work with POX autodiscover")
 
+        pox_credentials = Credentials(username=self.settings["username"], password=self.settings["password"])
+
         a = Account(
-            self.account.primary_smtp_address,
+            self.settings["alias"],
             autodiscover=True,
             config=Configuration(
                 server=self.settings["server"],
-                credentials=self.credentials(),
+                credentials=pox_credentials,
             ),
         )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
 
-        a = Account(self.account.primary_smtp_address, autodiscover=True, credentials=self.credentials())
+        a = Account(self.settings["alias"], autodiscover=True, credentials=pox_credentials)
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
