@@ -9,6 +9,7 @@
 build
 dist
 __pycache__
+venv
 
 settings.yml
 scratch*.py
