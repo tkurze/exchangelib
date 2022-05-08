@@ -1,6 +1,14 @@
 server: 'example.com'
 autodiscover_server: 'example.com'
+
 username: 'MYWINDOMAIN\myusername'
 password: 'topsecret'
+
+# Or, for OAuth:
+tenant_id:
+client_id:
+client_secret:
+
 account: 'john.doe@example.com'  # Don't use an account containing valuable data! We're polite, but things may go wrong.
-verify_ssl: True
+alias: 'john.doe@example.com'  # For autodiscover lookups with an alias. Can be the same as 'account'.
+verify_ssl: True  # Must be True for OAuth
