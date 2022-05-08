@@ -10,6 +10,7 @@ from ..errors import (
     ErrorDeleteDistinguishedFolder,
     ErrorFolderNotFound,
     ErrorItemNotFound,
+    ErrorRecoverableItemsAccessDenied,
     InvalidTypeError,
 )
 from ..fields import (
@@ -46,6 +47,13 @@ from .queryset import SHALLOW as SHALLOW_FOLDERS
 from .queryset import SingleFolderQuerySet
 
 log = logging.getLogger(__name__)
+
+DELETE_FOLDER_ERRORS = (
+    ErrorAccessDenied,
+    ErrorCannotDeleteObject,
+    ErrorCannotEmptyFolder,
+    ErrorItemNotFound,
+)
 
 
 class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
@@ -416,12 +424,20 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
         # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
+        from .known_folders import Audits
         _seen = _seen or set()
         if self.id in _seen:
             raise RecursionError(f"We already tried to wipe {self}")
         if _level > 16:
             raise RecursionError(f"Max recursion level reached: {_level}")
         _seen.add(self.id)
+        if isinstance(self, Audits):
+            # Shortcircuit because this folder can have many items that are all non-deletable
+            log.warning("Cannot wipe audits folder %s", self)
+            return
+        if self.is_distinguished and "recoverableitems" in self.DISTINGUISHED_FOLDER_ID:
+            log.warning("Cannot wipe recoverable items folder %s", self)
+            return
         log.warning("Wiping %s", self)
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
         try:
@@ -429,12 +445,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 self.empty(delete_sub_folders=False)
             else:
                 self.empty(delete_sub_folders=True)
-        except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
+        except ErrorRecoverableItemsAccessDenied:
+            log.warning("Access denied to %s. Skipping", self)
+            return
+        except DELETE_FOLDER_ERRORS:
             try:
                 if has_distinguished_subfolders:
                     raise  # We already tried this
                 self.empty(delete_sub_folders=False)
-            except (ErrorAccessDenied, ErrorCannotEmptyFolder, ErrorItemNotFound):
+            except DELETE_FOLDER_ERRORS as e:
                 log.warning("Not allowed to empty %s. Trying to delete items instead", self)
                 kwargs = {}
                 if page_size is not None:
@@ -443,7 +462,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                     kwargs["chunk_size"] = chunk_size
                 try:
                     self.all().delete(**kwargs)
-                except (ErrorAccessDenied, ErrorCannotDeleteObject, ErrorItemNotFound):
+                except DELETE_FOLDER_ERRORS:
                     log.warning("Not allowed to delete items in %s", self)
         _level += 1
         for f in self.children:

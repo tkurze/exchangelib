@@ -62,10 +62,6 @@ class Messages(Folder):
     supported_item_models = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)
 
 
-class ApplicationData(Folder):
-    CONTAINER_CLASS = "IPM.ApplicationData"
-
-
 class CrawlerData(Folder):
     CONTAINER_CLASS = "IPF.StoreItem.CrawlerData"
 
@@ -422,6 +418,10 @@ class AllItems(NonDeletableFolderMixin, Folder):
     }
 
 
+class ApplicationData(NonDeletableFolderMixin, Folder):
+    CONTAINER_CLASS = "IPM.ApplicationData"
+
+
 class Audits(NonDeletableFolderMixin, Folder):
     LOCALIZED_NAMES = {
         None: ("Audits",),
@@ -661,6 +661,7 @@ class WorkingSet(NonDeletableFolderMixin, Folder):
 NON_DELETABLE_FOLDERS = [
     AllContacts,
     AllItems,
+    ApplicationData,
     Audits,
     CalendarLogging,
     CommonViews,
@@ -743,7 +744,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 ]
 
 MISC_FOLDERS = [
-    ApplicationData,
     CrawlerData,
     DlpPolicyEvaluation,
     FreeBusyCache,

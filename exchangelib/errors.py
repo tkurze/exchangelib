@@ -1413,6 +1413,10 @@ class ErrorReadReceiptNotPending(ResponseMessageError):
     pass
 
 
+class ErrorRecoverableItemsAccessDenied(ResponseMessageError):
+    pass
+
+
 class ErrorRecurrenceEndDateTooBig(ResponseMessageError):
     pass
 
