@@ -37,24 +37,26 @@ do
 done
 
 """
-from datetime import timedelta, datetime
-from netrc import netrc
 import sys
 import warnings
+from datetime import datetime, timedelta
+from netrc import netrc
 
-from exchangelib import DELEGATE, Credentials, Account, EWSTimeZone
 import sh
 
-if '--insecure' in sys.argv:
+from exchangelib import DELEGATE, Account, Credentials, EWSTimeZone
+
+if "--insecure" in sys.argv:
     # Disable TLS when Office365 can't get their certificate act together
     from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
+
     BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
     # Disable insecure TLS warnings
     warnings.filterwarnings("ignore")
 
 # Use notify-send for email notifications and zenity for calendar notifications
-notify = sh.Command('/usr/bin/notify-send')
-zenity = sh.Command('/usr/bin/zenity')
+notify = sh.Command("/usr/bin/notify-send")
+zenity = sh.Command("/usr/bin/zenity")
 
 # Get the local timezone
 tz = EWSTimeZone.localzone()
@@ -63,24 +65,30 @@ sleep = int(sys.argv[1])  # 1st arg to this script is the number of seconds to l
 now = datetime.now(tz=tz)
 emails_since = now - timedelta(seconds=sleep)
 cal_items_before = now + timedelta(seconds=sleep * 4)  # Longer notice of upcoming appointments than new emails
-username, _, password = netrc().authenticators('office365')
+username, _, password = netrc().authenticators("office365")
 c = Credentials(username, password)
 a = Account(primary_smtp_address=c.username, credentials=c, access_type=DELEGATE, autodiscover=True)
 
-for msg in a.calendar.view(start=now, end=cal_items_before)\
-        .only('start', 'end', 'subject', 'location')\
-        .order_by('start', 'end'):
+for msg in (
+    a.calendar.view(start=now, end=cal_items_before)
+    .only("start", "end", "subject", "location")
+    .order_by("start", "end")
+):
     if msg.start < now:
         continue
     minutes_to_appointment = int((msg.start - now).total_seconds() / 60)
-    subj = f'You have a meeting in {minutes_to_appointment} minutes'
-    body = f"{msg.start.astimezone(tz).strftime('%H:%M')}-{msg.end.astimezone(tz).strftime('%H:%M')}: " \
-           f"{msg.subject[:150]}\n{msg.location}"
-    zenity(**{'info': None, 'no-markup': None, 'title': subj, 'text': body})
+    subj = f"You have a meeting in {minutes_to_appointment} minutes"
+    body = (
+        f"{msg.start.astimezone(tz).strftime('%H:%M')}-{msg.end.astimezone(tz).strftime('%H:%M')}: "
+        f"{msg.subject[:150]}\n{msg.location}"
+    )
+    zenity(**{"info": None, "no-markup": None, "title": subj, "text": body})
 
-for msg in a.inbox.filter(datetime_received__gt=emails_since, is_read=False)\
-        .only('datetime_received', 'subject', 'text_body')\
-        .order_by('datetime_received')[:10]:
-    subj = f'New mail: {msg.subject}'
-    clean_body = '\n'.join(line for line in msg.text_body.split('\n') if line)
+for msg in (
+    a.inbox.filter(datetime_received__gt=emails_since, is_read=False)
+    .only("datetime_received", "subject", "text_body")
+    .order_by("datetime_received")[:10]
+):
+    subj = f"New mail: {msg.subject}"
+    clean_body = "\n".join(line for line in msg.text_body.split("\n") if line)
     notify(subj, clean_body[:200])
