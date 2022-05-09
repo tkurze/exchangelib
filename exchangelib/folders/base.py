@@ -454,7 +454,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 if has_distinguished_subfolders:
                     raise  # We already tried this
                 self.empty(delete_sub_folders=False)
-            except DELETE_FOLDER_ERRORS as e:
+            except DELETE_FOLDER_ERRORS:
                 log.warning("Not allowed to empty %s. Trying to delete items instead", self)
                 kwargs = {}
                 if page_size is not None:

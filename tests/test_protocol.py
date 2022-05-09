@@ -278,7 +278,13 @@ EWS auth: NTLM""",
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Header xmlns="http://schemas.xmlsoap.org/soap/envelope/">
-    <ServerVersionInfo xmlns="http://schemas.microsoft.com/exchange/services/2006/types" MajorVersion="14" MinorVersion="2" MajorBuildNumber="390" MinorBuildNumber="3" Version="Exchange2010_SP2"/>
+    <ServerVersionInfo
+        xmlns="http://schemas.microsoft.com/exchange/services/2006/types"
+        MajorVersion="14"
+        MinorVersion="2"
+        MajorBuildNumber="390"
+        MinorBuildNumber="3"
+        Version="Exchange2010_SP2"/>
   </Header>
   <soap:Body>
     <m:GetServerTimeZonesResponse
@@ -288,7 +294,9 @@ EWS auth: NTLM""",
         <m:GetServerTimeZonesResponseMessage ResponseClass="Success">
           <m:ResponseCode>NoError</m:ResponseCode>
           <m:TimeZoneDefinitions>
-            <t:TimeZoneDefinition Id="W. Europe Standard Time" Name="(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna">
+            <t:TimeZoneDefinition
+                Id="W. Europe Standard Time"
+                Name="(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna">
               <t:Periods>
                 <t:Period Bias="-PT60M" Name="Standard" Id="std"/>
                 <t:Period Bias="-PT120M" Name="Daylight" Id="dlt"/>
@@ -596,8 +604,11 @@ EWS auth: NTLM""",
             self.account.protocol.get_searchable_mailboxes(search_filter="non_existent_distro@example.com")
         with self.assertRaises(ErrorAccessDenied):
             self.account.protocol.get_searchable_mailboxes(expand_group_membership=True)
-
-        xml = b"""\
+        guid = "33a408fe-2574-4e3b-49f5-5e1e000a3035"
+        email = "LOLgroup@example.com"
+        display_name = "LOLgroup"
+        reference_id = "/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup"
+        xml = f"""\
 <?xml version="1.0" encoding="utf-8"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
    <s:Body xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
@@ -606,13 +617,13 @@ EWS auth: NTLM""",
          <m:ResponseCode>NoError</m:ResponseCode>
          <m:SearchableMailboxes>
             <t:SearchableMailbox>
-               <t:Guid>33a408fe-2574-4e3b-49f5-5e1e000a3035</t:Guid>
-               <t:PrimarySmtpAddress>LOLgroup@example.com</t:PrimarySmtpAddress>
+               <t:Guid>{guid}</t:Guid>
+               <t:PrimarySmtpAddress>{email}</t:PrimarySmtpAddress>
                <t:IsExternalMailbox>false</t:IsExternalMailbox>
                <t:ExternalEmailAddress/>
-               <t:DisplayName>LOLgroup</t:DisplayName>
+               <t:DisplayName>{display_name}</t:DisplayName>
                <t:IsMembershipGroup>true</t:IsMembershipGroup>
-               <t:ReferenceId>/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup</t:ReferenceId>
+               <t:ReferenceId>{reference_id}</t:ReferenceId>
             </t:SearchableMailbox>
             <t:FailedMailbox>
                <t:Mailbox>FAILgroup@example.com</t:Mailbox>
@@ -623,19 +634,19 @@ EWS auth: NTLM""",
          </m:SearchableMailboxes>
       </m:GetSearchableMailboxesResponse>
    </s:Body>
-</s:Envelope>"""
+</s:Envelope>""".encode()
         ws = GetSearchableMailboxes(protocol=self.account.protocol)
         self.assertListEqual(
             list(ws.parse(xml)),
             [
                 SearchableMailbox(
-                    guid="33a408fe-2574-4e3b-49f5-5e1e000a3035",
-                    primary_smtp_address="LOLgroup@example.com",
+                    guid=guid,
+                    primary_smtp_address=email,
                     is_external=False,
                     external_email=None,
-                    display_name="LOLgroup",
+                    display_name=display_name,
                     is_membership_group=True,
-                    reference_id="/o=First/ou=Exchange(FYLT)/cn=Recipients/cn=81213b958a0b5295b13b3f02b812bf1bc-LOLgroup",
+                    reference_id=reference_id,
                 ),
                 FailedMailbox(
                     mailbox="FAILgroup@example.com",
