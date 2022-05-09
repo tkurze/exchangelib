@@ -5,6 +5,11 @@ HEAD
 ----
 
 
+4.7.3
+-----
+- Bugfix release
+
+
 4.7.2
 -----
 - Fixed field name to match API: `BaseReplyItem.received_by_representing` to
