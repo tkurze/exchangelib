@@ -28,55 +28,29 @@
 </summary>
 <pre><code class="python">import abc
 import logging
-import traceback
 from itertools import chain
 
 from .. import errors
 from ..attachments import AttachmentId
 from ..credentials import IMPERSONATION, OAuth2Credentials
 from ..errors import (
-    ErrorAccessDenied,
-    ErrorADUnavailable,
     ErrorBatchProcessingStopped,
     ErrorCannotDeleteObject,
     ErrorCannotDeleteTaskOccurrence,
-    ErrorCannotEmptyFolder,
-    ErrorConnectionFailed,
-    ErrorConnectionFailedTransientError,
     ErrorCorruptData,
-    ErrorCreateItemAccessDenied,
-    ErrorDelegateNoUser,
-    ErrorDeleteDistinguishedFolder,
     ErrorExceededConnectionCount,
-    ErrorFolderNotFound,
-    ErrorImpersonateUserDenied,
-    ErrorImpersonationFailed,
     ErrorIncorrectSchemaVersion,
-    ErrorInternalServerError,
-    ErrorInternalServerTransientError,
     ErrorInvalidChangeKey,
     ErrorInvalidIdMalformed,
-    ErrorInvalidLicense,
     ErrorInvalidRequest,
     ErrorInvalidSchemaVersionForMailboxVersion,
     ErrorInvalidServerVersion,
-    ErrorInvalidSubscription,
-    ErrorInvalidSyncStateData,
-    ErrorInvalidWatermark,
     ErrorItemCorrupt,
     ErrorItemNotFound,
     ErrorItemSave,
-    ErrorMailboxMoveInProgress,
-    ErrorMailboxStoreUnavailable,
+    ErrorMailRecipientNotFound,
     ErrorMessageSizeExceeded,
     ErrorMimeContentConversionFailed,
-    ErrorNameResolutionMultipleResults,
-    ErrorNameResolutionNoResults,
-    ErrorNonExistentMailbox,
-    ErrorNoPublicFolderReplicaAvailable,
-    ErrorNoRespondingCASInDestinationSite,
-    ErrorNotDelegate,
-    ErrorQuotaExceeded,
     ErrorRecurrenceHasNoOccurrence,
     ErrorServerBusy,
     ErrorTimeoutExpired,
@@ -84,11 +58,9 @@ from ..errors import (
     EWSWarning,
     InvalidTypeError,
     MalformedResponseError,
-    RateLimitError,
     SessionPoolMinSizeReached,
     SOAPError,
     TransportError,
-    UnauthorizedError,
 )
 from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
@@ -126,44 +98,6 @@ log = logging.getLogger(__name__)
 PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
 CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
-KNOWN_EXCEPTIONS = (
-    ErrorAccessDenied,
-    ErrorADUnavailable,
-    ErrorBatchProcessingStopped,
-    ErrorCannotDeleteObject,
-    ErrorCannotEmptyFolder,
-    ErrorConnectionFailed,
-    ErrorConnectionFailedTransientError,
-    ErrorCreateItemAccessDenied,
-    ErrorDelegateNoUser,
-    ErrorDeleteDistinguishedFolder,
-    ErrorExceededConnectionCount,
-    ErrorFolderNotFound,
-    ErrorImpersonateUserDenied,
-    ErrorImpersonationFailed,
-    ErrorInternalServerError,
-    ErrorInternalServerTransientError,
-    ErrorInvalidChangeKey,
-    ErrorInvalidLicense,
-    ErrorInvalidSubscription,
-    ErrorInvalidSyncStateData,
-    ErrorInvalidWatermark,
-    ErrorItemCorrupt,
-    ErrorItemNotFound,
-    ErrorMailboxMoveInProgress,
-    ErrorMailboxStoreUnavailable,
-    ErrorNameResolutionMultipleResults,
-    ErrorNameResolutionNoResults,
-    ErrorNonExistentMailbox,
-    ErrorNoPublicFolderReplicaAvailable,
-    ErrorNoRespondingCASInDestinationSite,
-    ErrorNotDelegate,
-    ErrorQuotaExceeded,
-    ErrorTimeoutExpired,
-    RateLimitError,
-    UnauthorizedError,
-)
-
 
 class EWSService(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
@@ -186,6 +120,7 @@ class EWSService(metaclass=abc.ABCMeta):
         ErrorRecurrenceHasNoOccurrence,
         ErrorCorruptData,
         ErrorItemCorrupt,
+        ErrorMailRecipientNotFound,
     )
     # Similarly, define the warnings we want to return unraised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
@@ -360,9 +295,6 @@ class EWSService(metaclass=abc.ABCMeta):
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except KNOWN_EXCEPTIONS:
-                # These are known and understood, and don&#39;t require a backtrace.
-                raise
             except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
@@ -377,11 +309,6 @@ class EWSService(metaclass=abc.ABCMeta):
 
                 # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
                 raise ErrorServerBusy(f&#34;Reraised from {e.__class__.__name__}({e})&#34;)
-            except Exception:
-                # This may run in a thread, which obfuscates the stack trace. Print trace immediately.
-                account = self.account if isinstance(self, EWSAccountService) else None
-                log.warning(&#34;Account %s: Exception in _get_elements: %s&#34;, account, traceback.format_exc(20))
-                raise
             finally:
                 if self.streaming:
                     self.stop_streaming()
@@ -809,7 +736,7 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
     def _account_to_impersonate(self):
         if self.account.access_type == IMPERSONATION:
             return self.account.identity
-        return None
+        return super()._account_to_impersonate
 
     @property
     def _timezone(self):
@@ -1232,7 +1159,7 @@ def parse_folder_elem(elem, folder, account):
     def _account_to_impersonate(self):
         if self.account.access_type == IMPERSONATION:
             return self.account.identity
-        return None
+        return super()._account_to_impersonate
 
     @property
     def _timezone(self):
@@ -1504,6 +1431,7 @@ def parse_folder_elem(elem, folder, account):
         ErrorRecurrenceHasNoOccurrence,
         ErrorCorruptData,
         ErrorItemCorrupt,
+        ErrorMailRecipientNotFound,
     )
     # Similarly, define the warnings we want to return unraised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
@@ -1678,9 +1606,6 @@ def parse_folder_elem(elem, folder, account):
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except KNOWN_EXCEPTIONS:
-                # These are known and understood, and don&#39;t require a backtrace.
-                raise
             except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
@@ -1695,11 +1620,6 @@ def parse_folder_elem(elem, folder, account):
 
                 # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
                 raise ErrorServerBusy(f&#34;Reraised from {e.__class__.__name__}({e})&#34;)
-            except Exception:
-                # This may run in a thread, which obfuscates the stack trace. Print trace immediately.
-                account = self.account if isinstance(self, EWSAccountService) else None
-                log.warning(&#34;Account %s: Exception in _get_elements: %s&#34;, account, traceback.format_exc(20))
-                raise
             finally:
                 if self.streaming:
                     self.stop_streaming()

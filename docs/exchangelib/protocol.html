@@ -340,38 +340,29 @@ class BaseProtocol:
         return session
 
     def create_oauth2_session(self):
-        has_token = False
         scope = [&#34;https://outlook.office365.com/.default&#34;]
-        session_params = {}
+        session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
         token_params = {}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             # Ask for a refresh token
             scope.append(&#34;offline_access&#34;)
 
-            # We don&#39;t know (or need) the Microsoft tenant ID. Use
-            # common/ to let Microsoft select the appropriate tenant
-            # for the provided authorization code or refresh token.
+            # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+            # tenant for the provided authorization code or refresh token.
             #
             # Suppress looks-like-password warning from Bandit.
             token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
 
             client_params = {}
-            has_token = self.credentials.access_token is not None
-            if has_token:
-                session_params[&#34;token&#34;] = self.credentials.access_token
-            elif self.credentials.authorization_code is not None:
-                token_params[&#34;code&#34;] = self.credentials.authorization_code
-                self.credentials.authorization_code = None
+            token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
+            self.credentials.authorization_code = None  # We can only use the code once
 
             if self.credentials.client_id is not None and self.credentials.client_secret is not None:
-                # If we&#39;re given a client ID and secret, we have enough
-                # to refresh access tokens ourselves. In other cases the
-                # session will raise TokenExpiredError and we&#39;ll need to
-                # ask the calling application to refresh the token (that
-                # covers cases where the caller doesn&#39;t have access to
-                # the client secret but is working with a service that
-                # can provide it refreshed tokens on a limited basis).
+                # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+                # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
+                # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
+                # is working with a service that can provide it refreshed tokens on a limited basis).
                 session_params.update(
                     {
                         &#34;auto_refresh_kwargs&#34;: {
@@ -388,7 +379,7 @@ class BaseProtocol:
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
-        if not has_token:
+        if not session.token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(
                 token_url=token_url,
@@ -398,8 +389,8 @@ class BaseProtocol:
                 timeout=self.TIMEOUT,
                 **token_params,
             )
-            # Allow the credentials object to update its copy of the new
-            # token, and give the application an opportunity to cache it
+            # Allow the credentials object to update its copy of the new token, and give the application an opportunity
+            # to cache it.
             self.credentials.on_token_auto_refreshed(token)
         session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
 
@@ -1139,38 +1130,29 @@ class FaultTolerance(RetryPolicy):
         return session
 
     def create_oauth2_session(self):
-        has_token = False
         scope = [&#34;https://outlook.office365.com/.default&#34;]
-        session_params = {}
+        session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
         token_params = {}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             # Ask for a refresh token
             scope.append(&#34;offline_access&#34;)
 
-            # We don&#39;t know (or need) the Microsoft tenant ID. Use
-            # common/ to let Microsoft select the appropriate tenant
-            # for the provided authorization code or refresh token.
+            # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+            # tenant for the provided authorization code or refresh token.
             #
             # Suppress looks-like-password warning from Bandit.
             token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
 
             client_params = {}
-            has_token = self.credentials.access_token is not None
-            if has_token:
-                session_params[&#34;token&#34;] = self.credentials.access_token
-            elif self.credentials.authorization_code is not None:
-                token_params[&#34;code&#34;] = self.credentials.authorization_code
-                self.credentials.authorization_code = None
+            token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
+            self.credentials.authorization_code = None  # We can only use the code once
 
             if self.credentials.client_id is not None and self.credentials.client_secret is not None:
-                # If we&#39;re given a client ID and secret, we have enough
-                # to refresh access tokens ourselves. In other cases the
-                # session will raise TokenExpiredError and we&#39;ll need to
-                # ask the calling application to refresh the token (that
-                # covers cases where the caller doesn&#39;t have access to
-                # the client secret but is working with a service that
-                # can provide it refreshed tokens on a limited basis).
+                # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+                # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
+                # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
+                # is working with a service that can provide it refreshed tokens on a limited basis).
                 session_params.update(
                     {
                         &#34;auto_refresh_kwargs&#34;: {
@@ -1187,7 +1169,7 @@ class FaultTolerance(RetryPolicy):
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
-        if not has_token:
+        if not session.token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(
                 token_url=token_url,
@@ -1197,8 +1179,8 @@ class FaultTolerance(RetryPolicy):
                 timeout=self.TIMEOUT,
                 **token_params,
             )
-            # Allow the credentials object to update its copy of the new
-            # token, and give the application an opportunity to cache it
+            # Allow the credentials object to update its copy of the new token, and give the application an opportunity
+            # to cache it.
             self.credentials.on_token_auto_refreshed(token)
         session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
 
@@ -1444,38 +1426,29 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
-    has_token = False
     scope = [&#34;https://outlook.office365.com/.default&#34;]
-    session_params = {}
+    session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
     token_params = {}
 
     if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
         # Ask for a refresh token
         scope.append(&#34;offline_access&#34;)
 
-        # We don&#39;t know (or need) the Microsoft tenant ID. Use
-        # common/ to let Microsoft select the appropriate tenant
-        # for the provided authorization code or refresh token.
+        # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+        # tenant for the provided authorization code or refresh token.
         #
         # Suppress looks-like-password warning from Bandit.
         token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
 
         client_params = {}
-        has_token = self.credentials.access_token is not None
-        if has_token:
-            session_params[&#34;token&#34;] = self.credentials.access_token
-        elif self.credentials.authorization_code is not None:
-            token_params[&#34;code&#34;] = self.credentials.authorization_code
-            self.credentials.authorization_code = None
+        token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
+        self.credentials.authorization_code = None  # We can only use the code once
 
         if self.credentials.client_id is not None and self.credentials.client_secret is not None:
-            # If we&#39;re given a client ID and secret, we have enough
-            # to refresh access tokens ourselves. In other cases the
-            # session will raise TokenExpiredError and we&#39;ll need to
-            # ask the calling application to refresh the token (that
-            # covers cases where the caller doesn&#39;t have access to
-            # the client secret but is working with a service that
-            # can provide it refreshed tokens on a limited basis).
+            # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+            # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
+            # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
+            # is working with a service that can provide it refreshed tokens on a limited basis).
             session_params.update(
                 {
                     &#34;auto_refresh_kwargs&#34;: {
@@ -1492,7 +1465,7 @@ def session_pool_size(self):
         client = BackendApplicationClient(client_id=self.credentials.client_id)
 
     session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
-    if not has_token:
+    if not session.token:
         # Fetch the token explicitly -- it doesn&#39;t occur implicitly
         token = session.fetch_token(
             token_url=token_url,
@@ -1502,8 +1475,8 @@ def session_pool_size(self):
             timeout=self.TIMEOUT,
             **token_params,
         )
-        # Allow the credentials object to update its copy of the new
-        # token, and give the application an opportunity to cache it
+        # Allow the credentials object to update its copy of the new token, and give the application an opportunity
+        # to cache it.
         self.credentials.on_token_auto_refreshed(token)
     session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
 

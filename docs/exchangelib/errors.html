@@ -149,10 +149,6 @@ class UnknownTimeZone(EWSError):
     pass
 
 
-class TimezoneDefinitionInvalidForYear(EWSError):
-    pass
-
-
 class SessionPoolMinSizeReached(EWSError):
     pass
 
@@ -1446,6 +1442,10 @@ class ErrorReadReceiptNotPending(ResponseMessageError):
     pass
 
 
+class ErrorRecoverableItemsAccessDenied(ResponseMessageError):
+    pass
+
+
 class ErrorRecurrenceEndDateTooBig(ResponseMessageError):
     pass
 
@@ -1720,7 +1720,7 @@ class ErrorWrongServerVersionDelegate(ResponseMessageError):
     pass
 
 
-# Microsoft recommends to cache the autodiscover data around 24 hours and perform autodiscover
+# Microsoft recommends caching the autodiscover data around 24 hours and perform autodiscover
 # immediately following certain error responses from EWS. See more at
 # http://blogs.msdn.com/b/mstehle/archive/2010/11/09/ews-best-practices-use-autodiscover.aspx
 
@@ -1903,7 +1903,6 @@ This exception is for those cases. The caller may want to do something with the 
 <li><a title="exchangelib.errors.EWSWarning" href="#exchangelib.errors.EWSWarning">EWSWarning</a></li>
 <li><a title="exchangelib.errors.SessionPoolMaxSizeReached" href="#exchangelib.errors.SessionPoolMaxSizeReached">SessionPoolMaxSizeReached</a></li>
 <li><a title="exchangelib.errors.SessionPoolMinSizeReached" href="#exchangelib.errors.SessionPoolMinSizeReached">SessionPoolMinSizeReached</a></li>
-<li><a title="exchangelib.errors.TimezoneDefinitionInvalidForYear" href="#exchangelib.errors.TimezoneDefinitionInvalidForYear">TimezoneDefinitionInvalidForYear</a></li>
 <li><a title="exchangelib.errors.TransportError" href="#exchangelib.errors.TransportError">TransportError</a></li>
 <li><a title="exchangelib.errors.UnauthorizedError" href="#exchangelib.errors.UnauthorizedError">UnauthorizedError</a></li>
 <li><a title="exchangelib.errors.UnknownTimeZone" href="#exchangelib.errors.UnknownTimeZone">UnknownTimeZone</a></li>
@@ -8881,6 +8880,28 @@ This exception is for those cases. The caller may want to do something with the 
 <li>builtins.BaseException</li>
 </ul>
 </dd>
+<dt id="exchangelib.errors.ErrorRecoverableItemsAccessDenied"><code class="flex name class">
+<span>class <span class="ident">ErrorRecoverableItemsAccessDenied</span></span>
+<span>(</span><span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Global error type within this module.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ErrorRecoverableItemsAccessDenied(ResponseMessageError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.errors.ResponseMessageError" href="#exchangelib.errors.ResponseMessageError">ResponseMessageError</a></li>
+<li><a title="exchangelib.errors.TransportError" href="#exchangelib.errors.TransportError">TransportError</a></li>
+<li><a title="exchangelib.errors.EWSError" href="#exchangelib.errors.EWSError">EWSError</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="exchangelib.errors.ErrorRecurrenceEndDateTooBig"><code class="flex name class">
 <span>class <span class="ident">ErrorRecurrenceEndDateTooBig</span></span>
 <span>(</span><span>value)</span>
@@ -10914,6 +10935,7 @@ This exception is for those cases. The caller may want to do something with the 
 <li><a title="exchangelib.errors.ErrorQuotaExceeded" href="#exchangelib.errors.ErrorQuotaExceeded">ErrorQuotaExceeded</a></li>
 <li><a title="exchangelib.errors.ErrorReadEventsFailed" href="#exchangelib.errors.ErrorReadEventsFailed">ErrorReadEventsFailed</a></li>
 <li><a title="exchangelib.errors.ErrorReadReceiptNotPending" href="#exchangelib.errors.ErrorReadReceiptNotPending">ErrorReadReceiptNotPending</a></li>
+<li><a title="exchangelib.errors.ErrorRecoverableItemsAccessDenied" href="#exchangelib.errors.ErrorRecoverableItemsAccessDenied">ErrorRecoverableItemsAccessDenied</a></li>
 <li><a title="exchangelib.errors.ErrorRecurrenceEndDateTooBig" href="#exchangelib.errors.ErrorRecurrenceEndDateTooBig">ErrorRecurrenceEndDateTooBig</a></li>
 <li><a title="exchangelib.errors.ErrorRecurrenceHasNoOccurrence" href="#exchangelib.errors.ErrorRecurrenceHasNoOccurrence">ErrorRecurrenceHasNoOccurrence</a></li>
 <li><a title="exchangelib.errors.ErrorRemoveDelegatesFailed" href="#exchangelib.errors.ErrorRemoveDelegatesFailed">ErrorRemoveDelegatesFailed</a></li>
@@ -11036,26 +11058,6 @@ This exception is for those cases. The caller may want to do something with the 
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SessionPoolMinSizeReached(EWSError):
-    pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="exchangelib.errors.EWSError" href="#exchangelib.errors.EWSError">EWSError</a></li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-</dd>
-<dt id="exchangelib.errors.TimezoneDefinitionInvalidForYear"><code class="flex name class">
-<span>class <span class="ident">TimezoneDefinitionInvalidForYear</span></span>
-<span>(</span><span>value)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Global error type within this module.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class TimezoneDefinitionInvalidForYear(EWSError):
     pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -12121,6 +12123,9 @@ This exception is for those cases. The caller may want to do something with the 
 <h4><code><a title="exchangelib.errors.ErrorReadReceiptNotPending" href="#exchangelib.errors.ErrorReadReceiptNotPending">ErrorReadReceiptNotPending</a></code></h4>
 </li>
 <li>
+<h4><code><a title="exchangelib.errors.ErrorRecoverableItemsAccessDenied" href="#exchangelib.errors.ErrorRecoverableItemsAccessDenied">ErrorRecoverableItemsAccessDenied</a></code></h4>
+</li>
+<li>
 <h4><code><a title="exchangelib.errors.ErrorRecurrenceEndDateTooBig" href="#exchangelib.errors.ErrorRecurrenceEndDateTooBig">ErrorRecurrenceEndDateTooBig</a></code></h4>
 </li>
 <li>
@@ -12359,9 +12364,6 @@ This exception is for those cases. The caller may want to do something with the 
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.SessionPoolMinSizeReached" href="#exchangelib.errors.SessionPoolMinSizeReached">SessionPoolMinSizeReached</a></code></h4>
-</li>
-<li>
-<h4><code><a title="exchangelib.errors.TimezoneDefinitionInvalidForYear" href="#exchangelib.errors.TimezoneDefinitionInvalidForYear">TimezoneDefinitionInvalidForYear</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.errors.TransportError" href="#exchangelib.errors.TransportError">TransportError</a></code></h4>

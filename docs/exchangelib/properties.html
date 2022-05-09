@@ -35,7 +35,7 @@ import struct
 from inspect import getmro
 from threading import Lock
 
-from .errors import InvalidTypeError, TimezoneDefinitionInvalidForYear
+from .errors import InvalidTypeError
 from .fields import (
     WEEKDAY_NAMES,
     AssociatedCalendarItemIdField,
@@ -247,15 +247,15 @@ class EWSMeta(type, metaclass=abc.ABCMeta):
         # Folder class, making the custom field available for subclasses).
         if local_fields:
             kwargs[&#34;FIELDS&#34;] = fields
-        cls = super().__new__(mcs, name, bases, kwargs)
-        cls._slots_keys = mcs._get_slots_keys(cls)
-        return cls
+        klass = super().__new__(mcs, name, bases, kwargs)
+        klass._slots_keys = mcs._get_slots_keys(klass)
+        return klass
 
     @staticmethod
-    def _get_slots_keys(cls):
+    def _get_slots_keys(klass):
         seen = set()
         keys = []
-        for c in reversed(getmro(cls)):
+        for c in reversed(getmro(klass)):
             if not hasattr(c, &#34;__slots__&#34;):
                 continue
             for k in c.__slots__:
@@ -608,6 +608,24 @@ class MovedItemId(ItemId):
     def id_from_xml(cls, elem):
         item = cls.from_xml(elem=elem, account=None)
         return item.id, item.changekey
+
+
+class OldItemId(ItemId):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldfolderid&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;OldItemId&#34;
+
+
+class OldFolderId(FolderId):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/olditemid&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;OldFolderId&#34;
+
+
+class OldParentFolderId(ParentFolderId):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldparentfolderid&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;OldParentFolderId&#34;
 
 
 class Mailbox(EWSElement):
@@ -1733,9 +1751,9 @@ class TimestampEvent(Event, metaclass=EWSMeta):
     ITEM = &#34;item&#34;
 
     timestamp = DateTimeField(field_uri=&#34;TimeStamp&#34;)
-    item_id = EWSElementField(field_uri=&#34;ItemId&#34;, value_cls=ItemId)
-    folder_id = EWSElementField(field_uri=&#34;FolderId&#34;, value_cls=FolderId)
-    parent_folder_id = EWSElementField(field_uri=&#34;ParentFolderId&#34;, value_cls=ParentFolderId)
+    item_id = EWSElementField(value_cls=ItemId)
+    folder_id = EWSElementField(value_cls=FolderId)
+    parent_folder_id = EWSElementField(value_cls=ParentFolderId)
 
     @property
     def event_type(self):
@@ -1749,9 +1767,9 @@ class TimestampEvent(Event, metaclass=EWSMeta):
 class OldTimestampEvent(TimestampEvent, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for both item and folder copy/move events.&#34;&#34;&#34;
 
-    old_item_id = EWSElementField(field_uri=&#34;OldItemId&#34;, value_cls=ItemId)
-    old_folder_id = EWSElementField(field_uri=&#34;OldFolderId&#34;, value_cls=FolderId)
-    old_parent_folder_id = EWSElementField(field_uri=&#34;OldParentFolderId&#34;, value_cls=ParentFolderId)
+    old_item_id = EWSElementField(value_cls=OldItemId)
+    old_folder_id = EWSElementField(value_cls=OldFolderId)
+    old_parent_folder_id = EWSElementField(value_cls=OldParentFolderId)
 
 
 class CopiedEvent(OldTimestampEvent):
@@ -1892,18 +1910,6 @@ class Period(EWSElement):
     name = CharField(field_uri=&#34;Name&#34;, is_attribute=True)
     bias = TimeDeltaField(field_uri=&#34;Bias&#34;, is_attribute=True)
 
-    def _split_id(self):
-        to_year, to_type = self.id.rsplit(&#34;/&#34;, 1)[1].split(&#34;-&#34;)
-        return int(to_year), to_type
-
-    @property
-    def year(self):
-        return self._split_id()[0]
-
-    @property
-    def type(self):
-        return self._split_id()[1]
-
     @property
     def bias_in_minutes(self):
         return int(self.bias.total_seconds()) // 60  # Convert to minutes
@@ -1934,18 +1940,15 @@ class TimeZoneDefinition(EWSElement):
     def from_xml(cls, elem, account):
         return super().from_xml(elem, account)
 
-    def _get_standard_period(self, for_year):
-        # Look through periods and pick a relevant period according to the &#39;for_year&#39; value
-        valid_period = None
-        for period in sorted(self.periods, key=lambda p: (p.year, p.type)):
-            if period.year &gt; for_year:
-                break
-            if period.type != &#34;Standard&#34;:
+    def _get_standard_period(self, transitions_group):
+        # Find the first standard period referenced from transitions_group
+        standard_periods_map = {p.id: p for p in self.periods if p.name == &#34;Standard&#34;}
+        for transition in transitions_group.transitions:
+            try:
+                return standard_periods_map[transition.to]
+            except KeyError:
                 continue
-            valid_period = period
-        if valid_period is None:
-            raise TimezoneDefinitionInvalidForYear(f&#34;Year {for_year} not included in periods {self.periods}&#34;)
-        return valid_period
+        raise ValueError(f&#34;No standard period matching any transition in {transitions_group}&#34;)
 
     def _get_transitions_group(self, for_year):
         # Look through the transitions, and pick the relevant transition group according to the &#39;for_year&#39; value
@@ -1967,7 +1970,7 @@ class TimeZoneDefinition(EWSElement):
         if not 0 &lt;= len(transitions_group.transitions) &lt;= 2:
             raise ValueError(f&#34;Expected 0-2 transitions in transitions group {transitions_group}&#34;)
 
-        standard_period = self._get_standard_period(for_year)
+        standard_period = self._get_standard_period(transitions_group)
         periods_map = {p.id: p for p in self.periods}
         standard_time, daylight_time = None, None
         if len(transitions_group.transitions) == 1:
@@ -3535,7 +3538,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <pre><code class="python">class ConversationId(ItemId):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/conversationid&#34;&#34;&#34;
 
-    ELEMENT_NAME = &#34;ConversationId&#34;</code></pre>
+    ELEMENT_NAME = &#34;ConversationId&#34;
+
+    # ChangeKey attribute is sometimes required, see MSDN link</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4615,9 +4620,8 @@ def validate_field(cls, field, version):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>type(object_or_name, bases, dict)
-type(object) -&gt; the object's type
-type(name, bases, dict) -&gt; a new type</p></div>
+<div class="desc"><p>type(object) -&gt; the object's type
+type(name, bases, dict, **kwds) -&gt; a new type</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -4653,15 +4657,15 @@ type(name, bases, dict) -&gt; a new type</p></div>
         # Folder class, making the custom field available for subclasses).
         if local_fields:
             kwargs[&#34;FIELDS&#34;] = fields
-        cls = super().__new__(mcs, name, bases, kwargs)
-        cls._slots_keys = mcs._get_slots_keys(cls)
-        return cls
+        klass = super().__new__(mcs, name, bases, kwargs)
+        klass._slots_keys = mcs._get_slots_keys(klass)
+        return klass
 
     @staticmethod
-    def _get_slots_keys(cls):
+    def _get_slots_keys(klass):
         seen = set()
         keys = []
-        for c in reversed(getmro(cls)):
+        for c in reversed(getmro(klass)):
             if not hasattr(c, &#34;__slots__&#34;):
                 continue
             for k in c.__slots__:
@@ -5435,6 +5439,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.properties.DistinguishedFolderId" href="#exchangelib.properties.DistinguishedFolderId">DistinguishedFolderId</a></li>
+<li><a title="exchangelib.properties.OldFolderId" href="#exchangelib.properties.OldFolderId">OldFolderId</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6023,6 +6028,7 @@ def id(self):
 <li><a title="exchangelib.properties.ConversationId" href="#exchangelib.properties.ConversationId">ConversationId</a></li>
 <li><a title="exchangelib.properties.FolderId" href="#exchangelib.properties.FolderId">FolderId</a></li>
 <li><a title="exchangelib.properties.MovedItemId" href="#exchangelib.properties.MovedItemId">MovedItemId</a></li>
+<li><a title="exchangelib.properties.OldItemId" href="#exchangelib.properties.OldItemId">OldItemId</a></li>
 <li><a title="exchangelib.properties.ParentFolderId" href="#exchangelib.properties.ParentFolderId">ParentFolderId</a></li>
 <li><a title="exchangelib.properties.ParentItemId" href="#exchangelib.properties.ParentItemId">ParentItemId</a></li>
 <li><a title="exchangelib.properties.PersonaId" href="#exchangelib.properties.PersonaId">PersonaId</a></li>
@@ -6859,6 +6865,128 @@ def id_from_xml(cls, elem):
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.properties.OldFolderId"><code class="flex name class">
+<span>class <span class="ident">OldFolderId</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/olditemid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/olditemid</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OldFolderId(FolderId):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/olditemid&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;OldFolderId&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.FolderId" href="#exchangelib.properties.FolderId">FolderId</a></li>
+<li><a title="exchangelib.properties.ItemId" href="#exchangelib.properties.ItemId">ItemId</a></li>
+<li><a title="exchangelib.properties.BaseItemId" href="#exchangelib.properties.BaseItemId">BaseItemId</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.OldFolderId.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.FolderId" href="#exchangelib.properties.FolderId">FolderId</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.FolderId.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.FolderId.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.FolderId.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.FolderId.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.OldItemId"><code class="flex name class">
+<span>class <span class="ident">OldItemId</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldfolderid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldfolderid</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OldItemId(ItemId):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldfolderid&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;OldItemId&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.ItemId" href="#exchangelib.properties.ItemId">ItemId</a></li>
+<li><a title="exchangelib.properties.BaseItemId" href="#exchangelib.properties.BaseItemId">BaseItemId</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.OldItemId.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.ItemId" href="#exchangelib.properties.ItemId">ItemId</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.ItemId.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.ItemId.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.ItemId.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.ItemId.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.OldParentFolderId"><code class="flex name class">
+<span>class <span class="ident">OldParentFolderId</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldparentfolderid">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldparentfolderid</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OldParentFolderId(ParentFolderId):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldparentfolderid&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;OldParentFolderId&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.ParentFolderId" href="#exchangelib.properties.ParentFolderId">ParentFolderId</a></li>
+<li><a title="exchangelib.properties.ItemId" href="#exchangelib.properties.ItemId">ItemId</a></li>
+<li><a title="exchangelib.properties.BaseItemId" href="#exchangelib.properties.BaseItemId">BaseItemId</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.OldParentFolderId.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.ParentFolderId" href="#exchangelib.properties.ParentFolderId">ParentFolderId</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.ParentFolderId.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.ParentFolderId.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.ParentFolderId.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.ParentFolderId.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.properties.OldTimestampEvent"><code class="flex name class">
 <span>class <span class="ident">OldTimestampEvent</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -6872,9 +7000,9 @@ def id_from_xml(cls, elem):
 <pre><code class="python">class OldTimestampEvent(TimestampEvent, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for both item and folder copy/move events.&#34;&#34;&#34;
 
-    old_item_id = EWSElementField(field_uri=&#34;OldItemId&#34;, value_cls=ItemId)
-    old_folder_id = EWSElementField(field_uri=&#34;OldFolderId&#34;, value_cls=FolderId)
-    old_parent_folder_id = EWSElementField(field_uri=&#34;OldParentFolderId&#34;, value_cls=ParentFolderId)</code></pre>
+    old_item_id = EWSElementField(value_cls=OldItemId)
+    old_folder_id = EWSElementField(value_cls=OldFolderId)
+    old_parent_folder_id = EWSElementField(value_cls=OldParentFolderId)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7066,6 +7194,10 @@ def from_xml(cls, elem, account):
 <li><a title="exchangelib.properties.BaseItemId" href="#exchangelib.properties.BaseItemId">BaseItemId</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.OldParentFolderId" href="#exchangelib.properties.OldParentFolderId">OldParentFolderId</a></li>
+</ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.properties.ParentFolderId.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
@@ -7149,18 +7281,6 @@ def from_xml(cls, elem, account):
     name = CharField(field_uri=&#34;Name&#34;, is_attribute=True)
     bias = TimeDeltaField(field_uri=&#34;Bias&#34;, is_attribute=True)
 
-    def _split_id(self):
-        to_year, to_type = self.id.rsplit(&#34;/&#34;, 1)[1].split(&#34;-&#34;)
-        return int(to_year), to_type
-
-    @property
-    def year(self):
-        return self._split_id()[0]
-
-    @property
-    def type(self):
-        return self._split_id()[1]
-
     @property
     def bias_in_minutes(self):
         return int(self.bias.total_seconds()) // 60  # Convert to minutes</code></pre>
@@ -7205,30 +7325,6 @@ def bias_in_minutes(self):
 <dt id="exchangelib.properties.Period.name"><code class="name">var <span class="ident">name</span></code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.Period.type"><code class="name">var <span class="ident">type</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def type(self):
-    return self._split_id()[1]</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.properties.Period.year"><code class="name">var <span class="ident">year</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def year(self):
-    return self._split_id()[0]</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -9236,18 +9332,15 @@ Protocol.get_timezones(return_full_timezone_data=True)
     def from_xml(cls, elem, account):
         return super().from_xml(elem, account)
 
-    def _get_standard_period(self, for_year):
-        # Look through periods and pick a relevant period according to the &#39;for_year&#39; value
-        valid_period = None
-        for period in sorted(self.periods, key=lambda p: (p.year, p.type)):
-            if period.year &gt; for_year:
-                break
-            if period.type != &#34;Standard&#34;:
+    def _get_standard_period(self, transitions_group):
+        # Find the first standard period referenced from transitions_group
+        standard_periods_map = {p.id: p for p in self.periods if p.name == &#34;Standard&#34;}
+        for transition in transitions_group.transitions:
+            try:
+                return standard_periods_map[transition.to]
+            except KeyError:
                 continue
-            valid_period = period
-        if valid_period is None:
-            raise TimezoneDefinitionInvalidForYear(f&#34;Year {for_year} not included in periods {self.periods}&#34;)
-        return valid_period
+        raise ValueError(f&#34;No standard period matching any transition in {transitions_group}&#34;)
 
     def _get_transitions_group(self, for_year):
         # Look through the transitions, and pick the relevant transition group according to the &#39;for_year&#39; value
@@ -9269,7 +9362,7 @@ Protocol.get_timezones(return_full_timezone_data=True)
         if not 0 &lt;= len(transitions_group.transitions) &lt;= 2:
             raise ValueError(f&#34;Expected 0-2 transitions in transitions group {transitions_group}&#34;)
 
-        standard_period = self._get_standard_period(for_year)
+        standard_period = self._get_standard_period(transitions_group)
         periods_map = {p.id: p for p in self.periods}
         standard_time, daylight_time = None, None
         if len(transitions_group.transitions) == 1:
@@ -9373,7 +9466,7 @@ def from_xml(cls, elem, account):
     if not 0 &lt;= len(transitions_group.transitions) &lt;= 2:
         raise ValueError(f&#34;Expected 0-2 transitions in transitions group {transitions_group}&#34;)
 
-    standard_period = self._get_standard_period(for_year)
+    standard_period = self._get_standard_period(transitions_group)
     periods_map = {p.id: p for p in self.periods}
     standard_time, daylight_time = None, None
     if len(transitions_group.transitions) == 1:
@@ -9563,9 +9656,9 @@ def from_xml(cls, elem, account):
     ITEM = &#34;item&#34;
 
     timestamp = DateTimeField(field_uri=&#34;TimeStamp&#34;)
-    item_id = EWSElementField(field_uri=&#34;ItemId&#34;, value_cls=ItemId)
-    folder_id = EWSElementField(field_uri=&#34;FolderId&#34;, value_cls=FolderId)
-    parent_folder_id = EWSElementField(field_uri=&#34;ParentFolderId&#34;, value_cls=ParentFolderId)
+    item_id = EWSElementField(value_cls=ItemId)
+    folder_id = EWSElementField(value_cls=FolderId)
+    parent_folder_id = EWSElementField(value_cls=ParentFolderId)
 
     @property
     def event_type(self):
@@ -10830,6 +10923,24 @@ def from_xml(cls, elem, account):
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.properties.OldFolderId" href="#exchangelib.properties.OldFolderId">OldFolderId</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.OldFolderId.ELEMENT_NAME" href="#exchangelib.properties.OldFolderId.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.OldItemId" href="#exchangelib.properties.OldItemId">OldItemId</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.OldItemId.ELEMENT_NAME" href="#exchangelib.properties.OldItemId.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.OldParentFolderId" href="#exchangelib.properties.OldParentFolderId">OldParentFolderId</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.OldParentFolderId.ELEMENT_NAME" href="#exchangelib.properties.OldParentFolderId.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.properties.OldTimestampEvent" href="#exchangelib.properties.OldTimestampEvent">OldTimestampEvent</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.properties.OldTimestampEvent.FIELDS" href="#exchangelib.properties.OldTimestampEvent.FIELDS">FIELDS</a></code></li>
@@ -10872,8 +10983,6 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.Period.bias_in_minutes" href="#exchangelib.properties.Period.bias_in_minutes">bias_in_minutes</a></code></li>
 <li><code><a title="exchangelib.properties.Period.id" href="#exchangelib.properties.Period.id">id</a></code></li>
 <li><code><a title="exchangelib.properties.Period.name" href="#exchangelib.properties.Period.name">name</a></code></li>
-<li><code><a title="exchangelib.properties.Period.type" href="#exchangelib.properties.Period.type">type</a></code></li>
-<li><code><a title="exchangelib.properties.Period.year" href="#exchangelib.properties.Period.year">year</a></code></li>
 </ul>
 </li>
 <li>

@@ -89,12 +89,12 @@ class Configuration:
         if auth_type is None:
             # Set a default auth type for the credentials where this makes sense
             auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
-        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
+            raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
+        if credentials is None and auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(f&#34;Auth type {auth_type!r} was detected but no credentials were provided&#34;)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
-        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
@@ -212,12 +212,12 @@ policies on the Exchange server.</p></div>
         if auth_type is None:
             # Set a default auth type for the credentials where this makes sense
             auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
-        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
+            raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
+        if credentials is None and auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(f&#34;Auth type {auth_type!r} was detected but no credentials were provided&#34;)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
-        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):

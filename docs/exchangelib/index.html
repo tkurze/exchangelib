@@ -56,7 +56,7 @@ from .settings import OofSettings
 from .transport import BASIC, CBA, DIGEST, GSSAPI, NTLM, OAUTH2, SSPI
 from .version import Build, Version
 
-__version__ = &#34;4.7.2&#34;
+__version__ = &#34;4.7.3&#34;
 
 __all__ = [
     &#34;__version__&#34;,
@@ -2932,38 +2932,29 @@ account.upload([
         return session
 
     def create_oauth2_session(self):
-        has_token = False
         scope = [&#34;https://outlook.office365.com/.default&#34;]
-        session_params = {}
+        session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
         token_params = {}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             # Ask for a refresh token
             scope.append(&#34;offline_access&#34;)
 
-            # We don&#39;t know (or need) the Microsoft tenant ID. Use
-            # common/ to let Microsoft select the appropriate tenant
-            # for the provided authorization code or refresh token.
+            # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+            # tenant for the provided authorization code or refresh token.
             #
             # Suppress looks-like-password warning from Bandit.
             token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
 
             client_params = {}
-            has_token = self.credentials.access_token is not None
-            if has_token:
-                session_params[&#34;token&#34;] = self.credentials.access_token
-            elif self.credentials.authorization_code is not None:
-                token_params[&#34;code&#34;] = self.credentials.authorization_code
-                self.credentials.authorization_code = None
+            token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
+            self.credentials.authorization_code = None  # We can only use the code once
 
             if self.credentials.client_id is not None and self.credentials.client_secret is not None:
-                # If we&#39;re given a client ID and secret, we have enough
-                # to refresh access tokens ourselves. In other cases the
-                # session will raise TokenExpiredError and we&#39;ll need to
-                # ask the calling application to refresh the token (that
-                # covers cases where the caller doesn&#39;t have access to
-                # the client secret but is working with a service that
-                # can provide it refreshed tokens on a limited basis).
+                # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+                # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
+                # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
+                # is working with a service that can provide it refreshed tokens on a limited basis).
                 session_params.update(
                     {
                         &#34;auto_refresh_kwargs&#34;: {
@@ -2980,7 +2971,7 @@ account.upload([
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
-        if not has_token:
+        if not session.token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(
                 token_url=token_url,
@@ -2990,8 +2981,8 @@ account.upload([
                 timeout=self.TIMEOUT,
                 **token_params,
             )
-            # Allow the credentials object to update its copy of the new
-            # token, and give the application an opportunity to cache it
+            # Allow the credentials object to update its copy of the new token, and give the application an opportunity
+            # to cache it.
             self.credentials.on_token_auto_refreshed(token)
         session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
 
@@ -3237,38 +3228,29 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
-    has_token = False
     scope = [&#34;https://outlook.office365.com/.default&#34;]
-    session_params = {}
+    session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
     token_params = {}
 
     if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
         # Ask for a refresh token
         scope.append(&#34;offline_access&#34;)
 
-        # We don&#39;t know (or need) the Microsoft tenant ID. Use
-        # common/ to let Microsoft select the appropriate tenant
-        # for the provided authorization code or refresh token.
+        # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+        # tenant for the provided authorization code or refresh token.
         #
         # Suppress looks-like-password warning from Bandit.
         token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
 
         client_params = {}
-        has_token = self.credentials.access_token is not None
-        if has_token:
-            session_params[&#34;token&#34;] = self.credentials.access_token
-        elif self.credentials.authorization_code is not None:
-            token_params[&#34;code&#34;] = self.credentials.authorization_code
-            self.credentials.authorization_code = None
+        token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
+        self.credentials.authorization_code = None  # We can only use the code once
 
         if self.credentials.client_id is not None and self.credentials.client_secret is not None:
-            # If we&#39;re given a client ID and secret, we have enough
-            # to refresh access tokens ourselves. In other cases the
-            # session will raise TokenExpiredError and we&#39;ll need to
-            # ask the calling application to refresh the token (that
-            # covers cases where the caller doesn&#39;t have access to
-            # the client secret but is working with a service that
-            # can provide it refreshed tokens on a limited basis).
+            # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+            # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
+            # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
+            # is working with a service that can provide it refreshed tokens on a limited basis).
             session_params.update(
                 {
                     &#34;auto_refresh_kwargs&#34;: {
@@ -3285,7 +3267,7 @@ def session_pool_size(self):
         client = BackendApplicationClient(client_id=self.credentials.client_id)
 
     session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
-    if not has_token:
+    if not session.token:
         # Fetch the token explicitly -- it doesn&#39;t occur implicitly
         token = session.fetch_token(
             token_url=token_url,
@@ -3295,8 +3277,8 @@ def session_pool_size(self):
             timeout=self.TIMEOUT,
             **token_params,
         )
-        # Allow the credentials object to update its copy of the new
-        # token, and give the application an opportunity to cache it
+        # Allow the credentials object to update its copy of the new token, and give the application an opportunity
+        # to cache it.
         self.credentials.on_token_auto_refreshed(token)
     session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
 
@@ -4668,12 +4650,12 @@ policies on the Exchange server.</p></div>
         if auth_type is None:
             # Set a default auth type for the credentials where this makes sense
             auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
-        elif credentials is None and auth_type in CREDENTIALS_REQUIRED:
+        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
+            raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
+        if credentials is None and auth_type in CREDENTIALS_REQUIRED:
             raise ValueError(f&#34;Auth type {auth_type!r} was detected but no credentials were provided&#34;)
         if server and service_endpoint:
             raise AttributeError(&#34;Only one of &#39;server&#39; or &#39;service_endpoint&#39; must be provided&#34;)
-        if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
-            raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
         if not retry_policy:
             retry_policy = FailFast()
         if not isinstance(version, (Version, type(None))):
@@ -5918,7 +5900,7 @@ services.GetServerTimeZones.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>backports.zoneinfo.ZoneInfo</li>
+<li>zoneinfo.ZoneInfo</li>
 <li>datetime.tzinfo</li>
 </ul>
 <h3>Class variables</h3>
@@ -7193,17 +7175,22 @@ def fp(self):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.folders.known_folders.AllItems" href="folders/known_folders.html#exchangelib.folders.known_folders.AllItems">AllItems</a></li>
+<li><a title="exchangelib.folders.known_folders.ApplicationData" href="folders/known_folders.html#exchangelib.folders.known_folders.ApplicationData">ApplicationData</a></li>
 <li><a title="exchangelib.folders.known_folders.Audits" href="folders/known_folders.html#exchangelib.folders.known_folders.Audits">Audits</a></li>
+<li><a title="exchangelib.folders.known_folders.Birthdays" href="folders/known_folders.html#exchangelib.folders.known_folders.Birthdays">Birthdays</a></li>
 <li><a title="exchangelib.folders.known_folders.Calendar" href="folders/known_folders.html#exchangelib.folders.known_folders.Calendar">Calendar</a></li>
 <li><a title="exchangelib.folders.known_folders.CalendarLogging" href="folders/known_folders.html#exchangelib.folders.known_folders.CalendarLogging">CalendarLogging</a></li>
 <li><a title="exchangelib.folders.known_folders.CommonViews" href="folders/known_folders.html#exchangelib.folders.known_folders.CommonViews">CommonViews</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="folders/known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.known_folders.ConversationSettings" href="folders/known_folders.html#exchangelib.folders.known_folders.ConversationSettings">ConversationSettings</a></li>
+<li><a title="exchangelib.folders.known_folders.CrawlerData" href="folders/known_folders.html#exchangelib.folders.known_folders.CrawlerData">CrawlerData</a></li>
 <li><a title="exchangelib.folders.known_folders.DefaultFoldersChangeHistory" href="folders/known_folders.html#exchangelib.folders.known_folders.DefaultFoldersChangeHistory">DefaultFoldersChangeHistory</a></li>
 <li><a title="exchangelib.folders.known_folders.DeferredAction" href="folders/known_folders.html#exchangelib.folders.known_folders.DeferredAction">DeferredAction</a></li>
 <li><a title="exchangelib.folders.known_folders.DeletedItems" href="folders/known_folders.html#exchangelib.folders.known_folders.DeletedItems">DeletedItems</a></li>
+<li><a title="exchangelib.folders.known_folders.DlpPolicyEvaluation" href="folders/known_folders.html#exchangelib.folders.known_folders.DlpPolicyEvaluation">DlpPolicyEvaluation</a></li>
 <li><a title="exchangelib.folders.known_folders.ExchangeSyncData" href="folders/known_folders.html#exchangelib.folders.known_folders.ExchangeSyncData">ExchangeSyncData</a></li>
 <li><a title="exchangelib.folders.known_folders.Files" href="folders/known_folders.html#exchangelib.folders.known_folders.Files">Files</a></li>
+<li><a title="exchangelib.folders.known_folders.FreeBusyCache" href="folders/known_folders.html#exchangelib.folders.known_folders.FreeBusyCache">FreeBusyCache</a></li>
 <li><a title="exchangelib.folders.known_folders.FreebusyData" href="folders/known_folders.html#exchangelib.folders.known_folders.FreebusyData">FreebusyData</a></li>
 <li><a title="exchangelib.folders.known_folders.GraphAnalytics" href="folders/known_folders.html#exchangelib.folders.known_folders.GraphAnalytics">GraphAnalytics</a></li>
 <li><a title="exchangelib.folders.known_folders.Location" href="folders/known_folders.html#exchangelib.folders.known_folders.Location">Location</a></li>
@@ -7213,13 +7200,16 @@ def fp(self):
 <li><a title="exchangelib.folders.known_folders.PassThroughSearchResults" href="folders/known_folders.html#exchangelib.folders.known_folders.PassThroughSearchResults">PassThroughSearchResults</a></li>
 <li><a title="exchangelib.folders.known_folders.PdpProfileV2Secured" href="folders/known_folders.html#exchangelib.folders.known_folders.PdpProfileV2Secured">PdpProfileV2Secured</a></li>
 <li><a title="exchangelib.folders.known_folders.RSSFeeds" href="folders/known_folders.html#exchangelib.folders.known_folders.RSSFeeds">RSSFeeds</a></li>
+<li><a title="exchangelib.folders.known_folders.RecoveryPoints" href="folders/known_folders.html#exchangelib.folders.known_folders.RecoveryPoints">RecoveryPoints</a></li>
 <li><a title="exchangelib.folders.known_folders.Reminders" href="folders/known_folders.html#exchangelib.folders.known_folders.Reminders">Reminders</a></li>
 <li><a title="exchangelib.folders.known_folders.Schedule" href="folders/known_folders.html#exchangelib.folders.known_folders.Schedule">Schedule</a></li>
 <li><a title="exchangelib.folders.known_folders.Sharing" href="folders/known_folders.html#exchangelib.folders.known_folders.Sharing">Sharing</a></li>
 <li><a title="exchangelib.folders.known_folders.Shortcuts" href="folders/known_folders.html#exchangelib.folders.known_folders.Shortcuts">Shortcuts</a></li>
 <li><a title="exchangelib.folders.known_folders.Signal" href="folders/known_folders.html#exchangelib.folders.known_folders.Signal">Signal</a></li>
+<li><a title="exchangelib.folders.known_folders.SkypeTeamsMessages" href="folders/known_folders.html#exchangelib.folders.known_folders.SkypeTeamsMessages">SkypeTeamsMessages</a></li>
 <li><a title="exchangelib.folders.known_folders.SmsAndChatsSync" href="folders/known_folders.html#exchangelib.folders.known_folders.SmsAndChatsSync">SmsAndChatsSync</a></li>
 <li><a title="exchangelib.folders.known_folders.SpoolerQueue" href="folders/known_folders.html#exchangelib.folders.known_folders.SpoolerQueue">SpoolerQueue</a></li>
+<li><a title="exchangelib.folders.known_folders.SwssItems" href="folders/known_folders.html#exchangelib.folders.known_folders.SwssItems">SwssItems</a></li>
 <li><a title="exchangelib.folders.known_folders.System" href="folders/known_folders.html#exchangelib.folders.known_folders.System">System</a></li>
 <li><a title="exchangelib.folders.known_folders.System1" href="folders/known_folders.html#exchangelib.folders.known_folders.System1">System1</a></li>
 <li><a title="exchangelib.folders.known_folders.Tasks" href="folders/known_folders.html#exchangelib.folders.known_folders.Tasks">Tasks</a></li>
@@ -8931,6 +8921,7 @@ def item(self):
 <li><a title="exchangelib.properties.ConversationId" href="properties.html#exchangelib.properties.ConversationId">ConversationId</a></li>
 <li><a title="exchangelib.properties.FolderId" href="properties.html#exchangelib.properties.FolderId">FolderId</a></li>
 <li><a title="exchangelib.properties.MovedItemId" href="properties.html#exchangelib.properties.MovedItemId">MovedItemId</a></li>
+<li><a title="exchangelib.properties.OldItemId" href="properties.html#exchangelib.properties.OldItemId">OldItemId</a></li>
 <li><a title="exchangelib.properties.ParentFolderId" href="properties.html#exchangelib.properties.ParentFolderId">ParentFolderId</a></li>
 <li><a title="exchangelib.properties.ParentItemId" href="properties.html#exchangelib.properties.ParentItemId">ParentItemId</a></li>
 <li><a title="exchangelib.properties.PersonaId" href="properties.html#exchangelib.properties.PersonaId">PersonaId</a></li>
@@ -9170,7 +9161,7 @@ we use folder.account.</p></div>
     conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
     # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
     author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
-    message_id = CharField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
+    message_id = TextField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
     is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
     is_response_requested = BooleanField(field_uri=&#34;message:IsResponseRequested&#34;, default=False, is_required=True)
     references = TextField(field_uri=&#34;message:References&#34;)
@@ -9302,7 +9293,7 @@ we use folder.account.</p></div>
         from ..services import MarkAsJunk
 
         res = MarkAsJunk(account=self.account).get(
-            items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+            items=[self], is_junk=is_junk, move_item=move_item, expect_result=None
         )
         if res is None:
             return
@@ -9476,7 +9467,7 @@ removed.
     from ..services import MarkAsJunk
 
     res = MarkAsJunk(account=self.account).get(
-        items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+        items=[self], is_junk=is_junk, move_item=move_item, expect_result=None
     )
     if res is None:
         return
@@ -9672,15 +9663,15 @@ to a CA bundle to use
 </dd>
 <dt id="exchangelib.OAuth2AuthorizationCodeCredentials"><code class="flex name class">
 <span>class <span class="ident">OAuth2AuthorizationCodeCredentials</span></span>
-<span>(</span><span>authorization_code=None, access_token=None, **kwargs)</span>
+<span>(</span><span>authorization_code=None, access_token=None, client_id=None, client_secret=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Login info for OAuth 2.0 authentication using the authorization code grant type. This can be used in one of
 several ways:
 * Given an authorization code, client ID, and client secret, fetch a token ourselves and refresh it as needed if
 supplied with a refresh token.
-* Given an existing access token, refresh token, client ID, and client secret, use the access token until it
-expires and then refresh it as needed.
+* Given an existing access token, client ID, and client secret, use the access token until it expires and then
+refresh it as needed.
 * Given only an existing access token, use it until it expires. This can be used to let the calling application
 refresh tokens itself by subclassing and implementing refresh().</p>
 <p>Unlike the base (client credentials) grant, authorization code credentials don't require a Microsoft tenant ID
@@ -9703,8 +9694,8 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
     several ways:
     * Given an authorization code, client ID, and client secret, fetch a token ourselves and refresh it as needed if
       supplied with a refresh token.
-    * Given an existing access token, refresh token, client ID, and client secret, use the access token until it
-      expires and then refresh it as needed.
+    * Given an existing access token, client ID, and client secret, use the access token until it expires and then
+      refresh it as needed.
     * Given only an existing access token, use it until it expires. This can be used to let the calling application
       refresh tokens itself by subclassing and implementing refresh().
 
@@ -9713,7 +9704,7 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
     tenant.
     &#34;&#34;&#34;
 
-    def __init__(self, authorization_code=None, access_token=None, **kwargs):
+    def __init__(self, authorization_code=None, access_token=None, client_id=None, client_secret=None, **kwargs):
         &#34;&#34;&#34;
 
         :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
@@ -9725,7 +9716,7 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
         :param access_token: Previously-obtained access token. If a token exists and the application will handle
           refreshing by itself (or opts not to handle it), this parameter alone is sufficient.
         &#34;&#34;&#34;
-        super().__init__(**kwargs)
+        super().__init__(client_id=client_id, client_secret=client_secret, **kwargs)
         self.authorization_code = authorization_code
         if access_token is not None and not isinstance(access_token, dict):
             raise InvalidTypeError(&#34;access_token&#34;, access_token, OAuth2Token)
@@ -9763,7 +9754,7 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
 </dd>
 <dt id="exchangelib.OAuth2Credentials"><code class="flex name class">
 <span>class <span class="ident">OAuth2Credentials</span></span>
-<span>(</span><span>client_id, client_secret, tenant_id=None, identity=None)</span>
+<span>(</span><span>client_id, client_secret, tenant_id=None, identity=None, access_token=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Login info for OAuth 2.0 client credentials authentication, as well as a base for other OAuth 2.0 grant types.</p>
@@ -9774,7 +9765,8 @@ the associated auth code grant type for multi-tenant applications.</p>
 <p>:param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
 :param client_secret: Secret associated with the OAuth application
 :param tenant_id: Microsoft tenant ID of the account to access
-:param identity: An Identity object representing the account that these credentials are connected to.</p></div>
+:param identity: An Identity object representing the account that these credentials are connected to.
+:param access_token: Previously-obtained access token, as a dict or an oauthlib.oauth2.OAuth2Token</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -9788,21 +9780,21 @@ the associated auth code grant type for multi-tenant applications.</p>
     the associated auth code grant type for multi-tenant applications.
     &#34;&#34;&#34;
 
-    def __init__(self, client_id, client_secret, tenant_id=None, identity=None):
+    def __init__(self, client_id, client_secret, tenant_id=None, identity=None, access_token=None):
         &#34;&#34;&#34;
 
         :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
         :param client_secret: Secret associated with the OAuth application
         :param tenant_id: Microsoft tenant ID of the account to access
         :param identity: An Identity object representing the account that these credentials are connected to.
+        :param access_token: Previously-obtained access token, as a dict or an oauthlib.oauth2.OAuth2Token
         &#34;&#34;&#34;
         super().__init__()
         self.client_id = client_id
         self.client_secret = client_secret
         self.tenant_id = tenant_id
         self.identity = identity
-        # When set, access_token is a dict (or an oauthlib.oauth2.OAuth2Token, which is also a dict)
-        self.access_token = None
+        self.access_token = access_token
 
     def refresh(self, session):
         # Creating a new session gets a new access token, so there&#39;s no work here to refresh the credentials. This
@@ -11597,7 +11589,7 @@ def response_tag(cls):
         :param folder_name:
         :param locale: a string, e.g. &#39;da_DK&#39;
         &#34;&#34;&#34;
-        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
+        for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
             if folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
@@ -11663,7 +11655,7 @@ def folder_cls_from_folder_name(cls, folder_name, locale):
     :param folder_name:
     :param locale: a string, e.g. &#39;da_DK&#39;
     &#34;&#34;&#34;
-    for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS:
+    for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
         if folder_name.lower() in folder_cls.localized_names(locale):
             return folder_cls
     raise KeyError()</code></pre>

@@ -65,7 +65,7 @@ class Message(Item):
     conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
     # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
     author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
-    message_id = CharField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
+    message_id = TextField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
     is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
     is_response_requested = BooleanField(field_uri=&#34;message:IsResponseRequested&#34;, default=False, is_required=True)
     references = TextField(field_uri=&#34;message:References&#34;)
@@ -197,7 +197,7 @@ class Message(Item):
         from ..services import MarkAsJunk
 
         res = MarkAsJunk(account=self.account).get(
-            items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+            items=[self], is_junk=is_junk, move_item=move_item, expect_result=None
         )
         if res is None:
             return
@@ -316,7 +316,7 @@ we use folder.account.</p></div>
     conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
     # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
     author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
-    message_id = CharField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
+    message_id = TextField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
     is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
     is_response_requested = BooleanField(field_uri=&#34;message:IsResponseRequested&#34;, default=False, is_required=True)
     references = TextField(field_uri=&#34;message:References&#34;)
@@ -448,7 +448,7 @@ we use folder.account.</p></div>
         from ..services import MarkAsJunk
 
         res = MarkAsJunk(account=self.account).get(
-            items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+            items=[self], is_junk=is_junk, move_item=move_item, expect_result=None
         )
         if res is None:
             return
@@ -622,7 +622,7 @@ removed.
     from ..services import MarkAsJunk
 
     res = MarkAsJunk(account=self.account).get(
-        items=[self], is_junk=is_junk, move_item=move_item, expect_result=move_item
+        items=[self], is_junk=is_junk, move_item=move_item, expect_result=None
     )
     if res is None:
         return

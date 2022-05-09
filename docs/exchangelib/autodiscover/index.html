@@ -665,8 +665,9 @@ implementation, start by doing an official test at <a href="https://testconnecti
     def _is_valid_hostname(self, hostname):
         log.debug(&#34;Checking if %s can be looked up in DNS&#34;, hostname)
         try:
-            self.resolver.resolve(hostname)
-        except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.name.EmptyLabel):
+            self.resolver.resolve(f&#34;{hostname}.&#34;, &#34;A&#34;, lifetime=self.DNS_RESOLVER_ATTRS.get(&#34;timeout&#34;))
+        except DNS_LOOKUP_ERRORS as e:
+            log.debug(&#34;DNS A lookup failure: %s&#34;, e)
             return False
         return True
 
@@ -686,9 +687,9 @@ implementation, start by doing an official test at <a href="https://testconnecti
         log.debug(&#34;Attempting to get SRV records for %s&#34;, hostname)
         records = []
         try:
-            answers = self.resolver.resolve(f&#34;{hostname}.&#34;, &#34;SRV&#34;)
-        except (dns.resolver.NoNameservers, dns.resolver.NoAnswer, dns.resolver.NXDOMAIN) as e:
-            log.debug(&#34;DNS lookup failure: %s&#34;, e)
+            answers = self.resolver.resolve(f&#34;{hostname}.&#34;, &#34;SRV&#34;, lifetime=self.DNS_RESOLVER_ATTRS.get(&#34;timeout&#34;))
+        except DNS_LOOKUP_ERRORS as e:
+            log.debug(&#34;DNS SRV lookup failure: %s&#34;, e)
             return records
         for rdata in answers:
             try:
