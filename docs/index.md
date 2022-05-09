@@ -325,18 +325,18 @@ from exchangelib import Configuration, OAuth2Credentials, \
 from oauthlib.oauth2 import OAuth2Token
 
 credentials = OAuth2Credentials(
-  ..., identity=Identity(primary_smtp_address='svc_acct@example.com')
+    ..., identity=Identity(primary_smtp_address='svc_acct@example.com')
 )
 credentials = OAuth2AuthorizationCodeCredentials(
-  ..., identity=Identity(upn='svc_acct@subdomain.example.com')
+    ..., identity=Identity(upn='svc_acct@subdomain.example.com')
 )
 
 credentials = OAuth2AuthorizationCodeCredentials(
-  client_id='MY_ID', client_secret='MY_SECRET', authorization_code='AUTH_CODE'
+    client_id='MY_ID', client_secret='MY_SECRET', authorization_code='AUTH_CODE'
 )
 credentials = OAuth2AuthorizationCodeCredentials(
     client_id='MY_ID', client_secret='MY_SECRET',
-  access_token=OAuth2Token(access_token='EXISTING_TOKEN')
+    access_token=OAuth2Token(access_token='EXISTING_TOKEN')
 )
 config = Configuration(credentials=credentials, auth_type=OAUTH2)
 ```
@@ -364,6 +364,28 @@ class MyCredentials(OAuth2AuthorizationCodeCredentials):
     def refresh(self):
         self.access_token = ...
 ```
+
+### OAuth on Office 365
+Office 365 is deprecating Basic authentication and switching to MFA for end
+users and OAuth for everything else. Here's one way to set up an app that can
+access accounts in your organization. First, log into the
+[https://admin.microsoft.com](Microsoft 365 Administration) page. Find the link
+to `Azure Active Directory`. Register a new app, and note down the Directory
+(tenant) ID, Application (client) ID, and the secret:
+![App registration](/exchangelib/assets/img/app_registration.png)
+
+Continue to the `API permissions` page, and add the `full_access_as_app`
+permission:
+![API permissions](/exchangelib/assets/img/api_permissions.png)
+
+Finally, continue to the `Enterprise applications` page, select your app,
+continue to the `Permissions` page, and check that your app has the
+`full_access_as_app` permission:
+![API permissions](/exchangelib/assets/img/api_permissions.png)
+
+You should now be able to connect to an account using the `OAuth2Credentials`
+class as shown above.
+
 
 ### Caching autodiscover results
 If you're connecting to the same account very often, you can cache the
