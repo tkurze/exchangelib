@@ -219,15 +219,15 @@ class EWSMeta(type, metaclass=abc.ABCMeta):
         # Folder class, making the custom field available for subclasses).
         if local_fields:
             kwargs["FIELDS"] = fields
-        cls = super().__new__(mcs, name, bases, kwargs)
-        cls._slots_keys = mcs._get_slots_keys(cls)
-        return cls
+        klass = super().__new__(mcs, name, bases, kwargs)
+        klass._slots_keys = mcs._get_slots_keys(klass)
+        return klass
 
     @staticmethod
-    def _get_slots_keys(cls):
+    def _get_slots_keys(klass):
         seen = set()
         keys = []
-        for c in reversed(getmro(cls)):
+        for c in reversed(getmro(klass)):
             if not hasattr(c, "__slots__"):
                 continue
             for k in c.__slots__:
@@ -1920,7 +1920,7 @@ class TimeZoneDefinition(EWSElement):
                 return standard_periods_map[transition.to]
             except KeyError:
                 continue
-        raise ValueError(f"No standard period matching transition reference {transition.to}")
+        raise ValueError(f"No standard period matching any transition in {transitions_group}")
 
     def _get_transitions_group(self, for_year):
         # Look through the transitions, and pick the relevant transition group according to the 'for_year' value
