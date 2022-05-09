@@ -24,6 +24,7 @@ Apart from this documentation, we also provide online
     * [Kerberos and SSPI authentication](#kerberos-and-sspi-authentication)
     * [Certificate Based Authentication (CBA)](#certificate-based-authentication-cba)
     * [OAuth authentication](#oauth-authentication)
+    * [OAuth on Office 365](#oauth-on-office-365)
     * [Caching autodiscover results](#caching-autodiscover-results)
     * [Proxies and custom TLS validation](#proxies-and-custom-tls-validation)
     * [User-Agent](#user-agent)
