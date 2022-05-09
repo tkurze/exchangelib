@@ -1,56 +1,28 @@
 import abc
 import logging
-import traceback
 from itertools import chain
 
 from .. import errors
 from ..attachments import AttachmentId
 from ..credentials import IMPERSONATION, OAuth2Credentials
 from ..errors import (
-    ErrorAccessDenied,
-    ErrorADUnavailable,
     ErrorBatchProcessingStopped,
     ErrorCannotDeleteObject,
     ErrorCannotDeleteTaskOccurrence,
-    ErrorCannotEmptyFolder,
-    ErrorConnectionFailed,
-    ErrorConnectionFailedTransientError,
     ErrorCorruptData,
-    ErrorCreateItemAccessDenied,
-    ErrorDelegateNoUser,
-    ErrorDeleteDistinguishedFolder,
     ErrorExceededConnectionCount,
-    ErrorFolderNotFound,
-    ErrorImpersonateUserDenied,
-    ErrorImpersonationFailed,
     ErrorIncorrectSchemaVersion,
-    ErrorInternalServerError,
-    ErrorInternalServerTransientError,
     ErrorInvalidChangeKey,
     ErrorInvalidIdMalformed,
-    ErrorInvalidLicense,
     ErrorInvalidRequest,
     ErrorInvalidSchemaVersionForMailboxVersion,
     ErrorInvalidServerVersion,
-    ErrorInvalidSubscription,
-    ErrorInvalidSyncStateData,
-    ErrorInvalidWatermark,
     ErrorItemCorrupt,
     ErrorItemNotFound,
     ErrorItemSave,
-    ErrorMailboxMoveInProgress,
-    ErrorMailboxStoreUnavailable,
     ErrorMailRecipientNotFound,
     ErrorMessageSizeExceeded,
     ErrorMimeContentConversionFailed,
-    ErrorNameResolutionMultipleResults,
-    ErrorNameResolutionNoResults,
-    ErrorNonExistentMailbox,
-    ErrorNoPublicFolderReplicaAvailable,
-    ErrorNoRespondingCASInDestinationSite,
-    ErrorNotDelegate,
-    ErrorQuotaExceeded,
-    ErrorRecoverableItemsAccessDenied,
     ErrorRecurrenceHasNoOccurrence,
     ErrorServerBusy,
     ErrorTimeoutExpired,
@@ -58,11 +30,9 @@ from ..errors import (
     EWSWarning,
     InvalidTypeError,
     MalformedResponseError,
-    RateLimitError,
     SessionPoolMinSizeReached,
     SOAPError,
     TransportError,
-    UnauthorizedError,
 )
 from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
@@ -99,45 +69,6 @@ log = logging.getLogger(__name__)
 
 PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
 CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
-
-KNOWN_EXCEPTIONS = (
-    ErrorAccessDenied,
-    ErrorADUnavailable,
-    ErrorBatchProcessingStopped,
-    ErrorCannotDeleteObject,
-    ErrorCannotEmptyFolder,
-    ErrorConnectionFailed,
-    ErrorConnectionFailedTransientError,
-    ErrorCreateItemAccessDenied,
-    ErrorDelegateNoUser,
-    ErrorDeleteDistinguishedFolder,
-    ErrorExceededConnectionCount,
-    ErrorFolderNotFound,
-    ErrorImpersonateUserDenied,
-    ErrorImpersonationFailed,
-    ErrorInternalServerError,
-    ErrorInternalServerTransientError,
-    ErrorInvalidChangeKey,
-    ErrorInvalidLicense,
-    ErrorInvalidSubscription,
-    ErrorInvalidSyncStateData,
-    ErrorInvalidWatermark,
-    ErrorItemCorrupt,
-    ErrorItemNotFound,
-    ErrorMailboxMoveInProgress,
-    ErrorMailboxStoreUnavailable,
-    ErrorNameResolutionMultipleResults,
-    ErrorNameResolutionNoResults,
-    ErrorNonExistentMailbox,
-    ErrorNoPublicFolderReplicaAvailable,
-    ErrorNoRespondingCASInDestinationSite,
-    ErrorNotDelegate,
-    ErrorRecoverableItemsAccessDenied,
-    ErrorQuotaExceeded,
-    ErrorTimeoutExpired,
-    RateLimitError,
-    UnauthorizedError,
-)
 
 
 class EWSService(metaclass=abc.ABCMeta):
@@ -336,9 +267,6 @@ class EWSService(metaclass=abc.ABCMeta):
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except KNOWN_EXCEPTIONS:
-                # These are known and understood, and don't require a backtrace.
-                raise
             except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
@@ -353,11 +281,6 @@ class EWSService(metaclass=abc.ABCMeta):
 
                 # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
                 raise ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})")
-            except Exception:
-                # This may run in a thread, which obfuscates the stack trace. Print trace immediately.
-                account = self.account if isinstance(self, EWSAccountService) else None
-                log.warning("Account %s: Exception in _get_elements: %s", account, traceback.format_exc(20))
-                raise
             finally:
                 if self.streaming:
                     self.stop_streaming()
