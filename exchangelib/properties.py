@@ -582,6 +582,24 @@ class MovedItemId(ItemId):
         return item.id, item.changekey
 
 
+class OldItemId(ItemId):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldfolderid"""
+
+    ELEMENT_NAME = "OldItemId"
+
+
+class OldFolderId(FolderId):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/olditemid"""
+
+    ELEMENT_NAME = "OldFolderId"
+
+
+class OldParentFolderId(ParentFolderId):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/oldparentfolderid"""
+
+    ELEMENT_NAME = "OldParentFolderId"
+
+
 class Mailbox(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/mailbox"""
 
@@ -1705,9 +1723,9 @@ class TimestampEvent(Event, metaclass=EWSMeta):
     ITEM = "item"
 
     timestamp = DateTimeField(field_uri="TimeStamp")
-    item_id = EWSElementField(field_uri="ItemId", value_cls=ItemId)
-    folder_id = EWSElementField(field_uri="FolderId", value_cls=FolderId)
-    parent_folder_id = EWSElementField(field_uri="ParentFolderId", value_cls=ParentFolderId)
+    item_id = EWSElementField(value_cls=ItemId)
+    folder_id = EWSElementField(value_cls=FolderId)
+    parent_folder_id = EWSElementField(value_cls=ParentFolderId)
 
     @property
     def event_type(self):
@@ -1721,9 +1739,9 @@ class TimestampEvent(Event, metaclass=EWSMeta):
 class OldTimestampEvent(TimestampEvent, metaclass=EWSMeta):
     """Base class for both item and folder copy/move events."""
 
-    old_item_id = EWSElementField(field_uri="OldItemId", value_cls=ItemId)
-    old_folder_id = EWSElementField(field_uri="OldFolderId", value_cls=FolderId)
-    old_parent_folder_id = EWSElementField(field_uri="OldParentFolderId", value_cls=ParentFolderId)
+    old_item_id = EWSElementField(value_cls=OldItemId)
+    old_folder_id = EWSElementField(value_cls=OldFolderId)
+    old_parent_folder_id = EWSElementField(value_cls=OldParentFolderId)
 
 
 class CopiedEvent(OldTimestampEvent):
