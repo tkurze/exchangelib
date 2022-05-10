@@ -382,7 +382,7 @@ permission:
 Finally, continue to the `Enterprise applications` page, select your app,
 continue to the `Permissions` page, and check that your app has the
 `full_access_as_app` permission:
-![API permissions](/exchangelib/assets/img/api_permissions.png)
+![API permissions](/exchangelib/assets/img/permissions.png)
 
 You should now be able to connect to an account using the `OAuth2Credentials`
 class as shown above.
