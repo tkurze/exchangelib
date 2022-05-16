@@ -162,6 +162,14 @@ class OAuth2Credentials(BaseCredentials):
             res.append(getattr(self, k))
         return hash(tuple(res))
 
+    @property
+    def token_url(self):
+        return f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
+
+    @property
+    def scope(self):
+        return ["https://outlook.office365.com/.default"]
+
     def __repr__(self):
         return self.__class__.__name__ + repr((self.client_id, "********"))
 
@@ -201,6 +209,18 @@ class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
         if access_token is not None and not isinstance(access_token, dict):
             raise InvalidTypeError("access_token", access_token, OAuth2Token)
         self.access_token = access_token
+
+    @property
+    def token_url(self):
+        # We don't know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+        # tenant for the provided authorization code or refresh token.
+        return "https://login.microsoftonline.com/common/oauth2/v2.0/token"  # nosec
+
+    @property
+    def scope(self):
+        res = super().scope
+        res.append("offline_access")
+        return res
 
     def __repr__(self):
         return self.__class__.__name__ + repr(

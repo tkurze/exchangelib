@@ -309,25 +309,14 @@ class BaseProtocol:
         return session
 
     def create_oauth2_session(self):
-        scope = ["https://outlook.office365.com/.default"]
         session_params = {"token": self.credentials.access_token}  # Token may be None
         token_params = {}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-            # Ask for a refresh token
-            scope.append("offline_access")
-
-            # We don't know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
-            # tenant for the provided authorization code or refresh token.
-            #
-            # Suppress looks-like-password warning from Bandit.
-            token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"  # nosec
-
-            client_params = {}
             token_params["code"] = self.credentials.authorization_code  # Auth code may be None
             self.credentials.authorization_code = None  # We can only use the code once
 
-            if self.credentials.client_id is not None and self.credentials.client_secret is not None:
+            if self.credentials.client_id and self.credentials.client_secret:
                 # If we're given a client ID and secret, we have enough to refresh access tokens ourselves. In other
                 # cases the session will raise TokenExpiredError, and we'll need to ask the calling application to
                 # refresh the token (that covers cases where the caller doesn't have access to the client secret but
@@ -338,23 +327,22 @@ class BaseProtocol:
                             "client_id": self.credentials.client_id,
                             "client_secret": self.credentials.client_secret,
                         },
-                        "auto_refresh_url": token_url,
+                        "auto_refresh_url": self.credentials.token_url,
                         "token_updater": self.credentials.on_token_auto_refreshed,
                     }
                 )
-            client = WebApplicationClient(self.credentials.client_id, **client_params)
+            client = WebApplicationClient(client_id=self.credentials.client_id)
         else:
-            token_url = f"https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token"
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not session.token:
             # Fetch the token explicitly -- it doesn't occur implicitly
             token = session.fetch_token(
-                token_url=token_url,
+                token_url=self.credentials.token_url,
                 client_id=self.credentials.client_id,
                 client_secret=self.credentials.client_secret,
-                scope=scope,
+                scope=self.credentials.scope,
                 timeout=self.TIMEOUT,
                 **token_params,
             )
