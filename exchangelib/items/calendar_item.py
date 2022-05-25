@@ -412,12 +412,14 @@ class BaseMeetingReplyItem(BaseItem, metaclass=EWSMeta):
     def send(self, message_disposition=SEND_AND_SAVE_COPY):
         from ..services import CreateItem
 
-        res = list(CreateItem(account=self.account).call(
-            items=[self],
-            folder=self.folder,
-            message_disposition=message_disposition,
-            send_meeting_invitations=SEND_TO_NONE,
-        ))
+        res = list(
+            CreateItem(account=self.account).call(
+                items=[self],
+                folder=self.folder,
+                message_disposition=message_disposition,
+                send_meeting_invitations=SEND_TO_NONE,
+            )
+        )
         for r in res:
             if isinstance(r, Exception):
                 raise r
