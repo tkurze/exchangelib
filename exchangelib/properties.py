@@ -1427,23 +1427,20 @@ class ResponseObjects(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects"""
 
     ELEMENT_NAME = "ResponseObjects"
-    NAMESPACE = EWSElement.NAMESPACE
 
-    accept_item = EWSElementField(field_uri="AcceptItem", value_cls="AcceptItem", namespace=NAMESPACE)
+    accept_item = EWSElementField(field_uri="AcceptItem", value_cls="AcceptItem", namespace=TNS)
     tentatively_accept_item = EWSElementField(
-        field_uri="TentativelyAcceptItem", value_cls="TentativelyAcceptItem", namespace=NAMESPACE
+        field_uri="TentativelyAcceptItem", value_cls="TentativelyAcceptItem", namespace=TNS
     )
-    decline_item = EWSElementField(field_uri="DeclineItem", value_cls="DeclineItem", namespace=NAMESPACE)
-    reply_to_item = EWSElementField(field_uri="ReplyToItem", value_cls="ReplyToItem", namespace=NAMESPACE)
-    forward_item = EWSElementField(field_uri="ForwardItem", value_cls="ForwardItem", namespace=NAMESPACE)
-    reply_all_to_item = EWSElementField(field_uri="ReplyAllToItem", value_cls="ReplyAllToItem", namespace=NAMESPACE)
+    decline_item = EWSElementField(field_uri="DeclineItem", value_cls="DeclineItem", namespace=TNS)
+    reply_to_item = EWSElementField(field_uri="ReplyToItem", value_cls="ReplyToItem", namespace=TNS)
+    forward_item = EWSElementField(field_uri="ForwardItem", value_cls="ForwardItem", namespace=TNS)
+    reply_all_to_item = EWSElementField(field_uri="ReplyAllToItem", value_cls="ReplyAllToItem", namespace=TNS)
     cancel_calendar_item = EWSElementField(
-        field_uri="CancelCalendarItem", value_cls="CancelCalendarItem", namespace=NAMESPACE
+        field_uri="CancelCalendarItem", value_cls="CancelCalendarItem", namespace=TNS
     )
     remove_item = EWSElementField(field_uri="RemoveItem", value_cls=RemoveItem)
-    post_reply_item = EWSElementField(
-        field_uri="PostReplyItem", value_cls="PostReplyItem", namespace=EWSElement.NAMESPACE
-    )
+    post_reply_item = EWSElementField(field_uri="PostReplyItem", value_cls="PostReplyItem", namespace=TNS)
     success_read_receipt = EWSElementField(field_uri="SuppressReadReceipt", value_cls=SuppressReadReceipt)
     accept_sharing_invitation = EWSElementField(field_uri="AcceptSharingInvitation", value_cls=AcceptSharingInvitation)
 
