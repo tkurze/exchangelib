@@ -2,7 +2,7 @@ from inspect import isclass
 from itertools import chain
 
 from exchangelib.extended_properties import ExternId, Flag
-from exchangelib.fields import InvalidField, InvalidFieldForVersion, TextField
+from exchangelib.fields import GenericEventListField, InvalidField, InvalidFieldForVersion, TextField, TypeValueField
 from exchangelib.folders import Folder, RootOfHierarchy
 from exchangelib.indexed_properties import PhysicalAddress
 from exchangelib.items import BulkCreateResult, Item
@@ -60,6 +60,10 @@ class PropertiesTest(TimedTestCase):
                             self.assertIn(
                                 f.name, all_slots, f"Field name {f.name!r} is not in __slots__ on model {cls.__name__}"
                             )
+                            value_cls = f.value_cls  # Make sure lazy imports work
+                            if not isinstance(f, (TypeValueField, GenericEventListField)):
+                                # All other fields must define a value type
+                                self.assertIsNotNone(value_cls)
                             field_names.add(f.name)
                     # Finally, test that all models have a link to MSDN documentation
                     if issubclass(cls, Folder):
