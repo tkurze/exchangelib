@@ -446,7 +446,6 @@ class CommonItemTest(BaseItemTest):
 
     def test_text_field_settings(self):
         # Test that the max_length and is_complex field settings are correctly set for text fields
-        item = self.get_test_item().save()
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 if not f.supports_version(self.account.version):
@@ -465,6 +464,7 @@ class CommonItemTest(BaseItemTest):
                 if f.name == "categories":
                     # We're filtering on this one, so leave it alone
                     continue
+                item = self.get_test_item().save()
                 old_max_length = getattr(f, "max_length", None)
                 old_is_complex = f.is_complex
                 try:
@@ -499,7 +499,10 @@ class CommonItemTest(BaseItemTest):
 
                     # is_complex=False forces the query to use FindItems which will only get the short value
                     f.is_complex = False
-                    new_short_item = self.test_folder.all().only(f.name).get(categories__contains=self.categories)
+                    new_short_item = {
+                        i.id: i
+                        for i in self.test_folder.all().only(f.name).filter(categories__contains=self.categories)
+                    }[item.id]
                     new_short = getattr(new_short_item, f.name)
 
                     if not old_is_complex:
