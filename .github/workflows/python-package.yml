@@ -77,9 +77,9 @@ jobs:
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        black --check --diff exchangelib tests scripts
-        isort --check --diff exchangelib tests scripts
-        flake8 exchangelib tests scripts
+        black --check --diff exchangelib tests scripts setup.py
+        isort --check --diff exchangelib tests scripts setup.py
+        flake8 exchangelib tests scripts setup.py
         unittest-parallel -j 4 --class-fixtures --coverage --coverage-source exchangelib
         coveralls --service=github
 
