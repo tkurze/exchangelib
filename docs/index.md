@@ -1978,13 +1978,18 @@ existing data in the account, but accidents happen.
 You can run either the entire test suite or individual tests.
 
 ```bash
+# Install dependencies
+python -m pip install -r test-requirements.txt
+
 # Full test suite
 python -m unittest
 
 # Single test class or test case
 python -m unittest -k test_folder.FolderTest.test_refresh
+
 # If you want extreme levels of debug output:
 DEBUG=1 python -m unittest -k test_folder.FolderTest.test_refresh
-# Tests can be run in parallel if you install the 'unittest-parallel' package
+
+# Running tests in parallel using the 'unittest-parallel' dependency
 unittest-parallel -j 4 --class-fixtures
 ```
