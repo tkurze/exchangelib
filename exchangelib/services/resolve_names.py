@@ -67,8 +67,8 @@ class ResolveNames(EWSService):
         log.debug("Includes last item in range: %s", is_last_page)
         if not is_last_page:
             warnings.warn(
-                f"The {self.__class__.__name__} service returns at most {self.candidates_limit} candidates and does"
-                f"not support paging. You have reached this limit and have not received the exhaustive list of"
+                f"The {self.__class__.__name__} service returns at most {self.candidates_limit} candidates and does "
+                f"not support paging. You have reached this limit and have not received the exhaustive list of "
                 f"candidates."
             )
         return container_or_exc
