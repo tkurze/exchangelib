@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 from ..errors import ErrorNameResolutionMultipleResults, ErrorNameResolutionNoResults, InvalidEnumValue
 from ..items import SEARCH_SCOPE_CHOICES, SHAPE_CHOICES, Contact
@@ -18,13 +19,16 @@ class ResolveNames(EWSService):
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
     # Note: paging information is returned as attrs on the 'ResolutionSet' element, but this service does not
-    # support the 'IndexedPageItemView' element, so it's not really a paging service. According to docs, at most
-    # 100 candidates are returned for a lookup.
+    # support the 'IndexedPageItemView' element, so it's not really a paging service.
     supports_paging = False
+    # According to the 'Remarks' section of the MSDN documentation referenced above, at most 100 candidates are
+    # returned for a lookup.
+    candidates_limit = 100
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.return_full_contact_data = False  # A hack to communicate parsing args to _elems_to_objs()
+        self.includes_last_item_in_range = None
 
     def call(
         self,
@@ -54,6 +58,20 @@ class ResolveNames(EWSService):
                 contact_data_shape=contact_data_shape,
             )
         )
+
+    def _get_element_container(self, message, name=None):
+        container_or_exc = super()._get_element_container(message=message, name=name)
+        if isinstance(container_or_exc, Exception):
+            return container_or_exc
+        is_last_page = container_or_exc.get("IncludesLastItemInRange").lower() in ("true", "0")
+        log.debug("Includes last item in range: %s", is_last_page)
+        if not is_last_page:
+            warnings.warn(
+                f"The {self.__class__.__name__} service returns at most {self.candidates_limit} candidates and does"
+                f"not support paging. You have reached this limit and have not received the exhaustive list of"
+                f"candidates."
+            )
+        return container_or_exc
 
     def _elem_to_obj(self, elem):
         if self.return_full_contact_data:

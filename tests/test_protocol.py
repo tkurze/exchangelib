@@ -598,6 +598,53 @@ EWS auth: NTLM""",
         ws.return_full_contact_data = False
         self.assertSetEqual({m.email_address for m in ws.parse(xml)}, {"anne@example.com", "john@example.com"})
 
+    def test_resolvenames_warning(self):
+        # Test warning that the returned candidate list is non-exchaustive
+        xml = b"""\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:ResolveNamesResponse
+            xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+            xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:ResolveNamesResponseMessage ResponseClass="Warning">
+          <m:MessageText>Multiple results were found.</m:MessageText>
+          <m:ResponseCode>ErrorNameResolutionMultipleResults</m:ResponseCode>
+          <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+          <m:ResolutionSet TotalItemsInView="2" IncludesLastItemInRange="false">
+            <t:Resolution>
+              <t:Mailbox>
+                <t:Name>John Doe</t:Name>
+                <t:EmailAddress>anne@example.com</t:EmailAddress>
+                <t:RoutingType>SMTP</t:RoutingType>
+                <t:MailboxType>Mailbox</t:MailboxType>
+              </t:Mailbox>
+            </t:Resolution>
+            <t:Resolution>
+              <t:Mailbox>
+                <t:Name>John Deer</t:Name>
+                <t:EmailAddress>john@example.com</t:EmailAddress>
+                <t:RoutingType>SMTP</t:RoutingType>
+                <t:MailboxType>Mailbox</t:MailboxType>
+              </t:Mailbox>
+            </t:Resolution>
+          </m:ResolutionSet>
+        </m:ResolveNamesResponseMessage>
+      </m:ResponseMessages>
+    </m:ResolveNamesResponse>
+  </s:Body>
+</s:Envelope>"""
+        ws = ResolveNames(self.account.protocol)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            list(ws.parse(xml))
+        self.assertEqual(
+            str(w[0].message),
+            "The ResolveNames service returns at most 100 candidates and does not support paging. You have reached "
+            "this limit and have not received the exhaustive list of candidates.",
+        )
+
     def test_get_searchable_mailboxes(self):
         # Insufficient privileges for the test account, so let's just test the exception
         with self.assertRaises(ErrorAccessDenied):
