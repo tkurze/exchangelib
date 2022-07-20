@@ -165,14 +165,14 @@ my_account.ad_response
 
 # Set up a target account and do an autodiscover lookup to find the EWS endpoint
 account = Account(
-  primary_smtp_address='john@example.com', credentials=credentials, 
+  primary_smtp_address='john@example.com', credentials=credentials,
   autodiscover=True, access_type=DELEGATE
 )
 
 # If your credentials have been given impersonation access to the target
 # account, set a different 'access_type':
 johns_account = Account(
-  primary_smtp_address='john@example.com', credentials=credentials, 
+  primary_smtp_address='john@example.com', credentials=credentials,
   autodiscover=True, access_type=IMPERSONATION
 )
 ```
@@ -410,8 +410,8 @@ config = Configuration(
   version=version
 )
 account = Account(
-    primary_smtp_address=primary_smtp_address, 
-    config=config, autodiscover=False, 
+    primary_smtp_address=primary_smtp_address,
+    config=config, autodiscover=False,
     access_type=DELEGATE,
 )
 ```
@@ -773,7 +773,7 @@ m.reply(
 m.reply_all(subject='Re: Daily motivation', body='I agree')
 m.forward(
     subject='Fwd: Daily motivation',
-    body='Hey, look at this!', 
+    body='Hey, look at this!',
     to_recipients=['carl@example.com', 'denice@example.com']
 )
 ```
@@ -1017,7 +1017,7 @@ qs = a.calendar.all()
 # Returns items where subject is exactly 'foo'. Case-sensitive
 qs.filter(subject='foo')
 # Returns items within range
-qs.filter(start__range=(start, end)) 
+qs.filter(start__range=(start, end))
 # Return items where subject is either 'foo' or 'bar'
 qs.filter(subject__in=('foo', 'bar'))
 # Returns items where subject is not 'foo'
@@ -1375,7 +1375,7 @@ class VoteResponse(ExtendedProperty):
     property_id = 0x00008524
     property_type = 'String'
 ```
-    
+
 Extended properties also work with folders. For folders, it's only possible to
 register custom fields on all folder types at once. This is because it's
 difficult to provide a consistent API when some folders have custom fields and
@@ -1722,7 +1722,7 @@ for change_type, item in a.inbox.sync_items():
     # SyncFolderItems.CHANGE_TYPES
     pass
 # The next time you call a.inbox.sync_items(), you will only get item changes
-# since the last .sync_items() call. The sync status is stored in 
+# since the last .sync_items() call. The sync status is stored in
 # a.inbox.item_sync_state.
 ```
 
