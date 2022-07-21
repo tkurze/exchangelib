@@ -1455,23 +1455,20 @@ class ResponseObjects(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;ResponseObjects&#34;
-    NAMESPACE = EWSElement.NAMESPACE
 
-    accept_item = EWSElementField(field_uri=&#34;AcceptItem&#34;, value_cls=&#34;AcceptItem&#34;, namespace=NAMESPACE)
+    accept_item = EWSElementField(field_uri=&#34;AcceptItem&#34;, value_cls=&#34;AcceptItem&#34;, namespace=TNS)
     tentatively_accept_item = EWSElementField(
-        field_uri=&#34;TentativelyAcceptItem&#34;, value_cls=&#34;TentativelyAcceptItem&#34;, namespace=NAMESPACE
+        field_uri=&#34;TentativelyAcceptItem&#34;, value_cls=&#34;TentativelyAcceptItem&#34;, namespace=TNS
     )
-    decline_item = EWSElementField(field_uri=&#34;DeclineItem&#34;, value_cls=&#34;DeclineItem&#34;, namespace=NAMESPACE)
-    reply_to_item = EWSElementField(field_uri=&#34;ReplyToItem&#34;, value_cls=&#34;ReplyToItem&#34;, namespace=NAMESPACE)
-    forward_item = EWSElementField(field_uri=&#34;ForwardItem&#34;, value_cls=&#34;ForwardItem&#34;, namespace=NAMESPACE)
-    reply_all_to_item = EWSElementField(field_uri=&#34;ReplyAllToItem&#34;, value_cls=&#34;ReplyAllToItem&#34;, namespace=NAMESPACE)
+    decline_item = EWSElementField(field_uri=&#34;DeclineItem&#34;, value_cls=&#34;DeclineItem&#34;, namespace=TNS)
+    reply_to_item = EWSElementField(field_uri=&#34;ReplyToItem&#34;, value_cls=&#34;ReplyToItem&#34;, namespace=TNS)
+    forward_item = EWSElementField(field_uri=&#34;ForwardItem&#34;, value_cls=&#34;ForwardItem&#34;, namespace=TNS)
+    reply_all_to_item = EWSElementField(field_uri=&#34;ReplyAllToItem&#34;, value_cls=&#34;ReplyAllToItem&#34;, namespace=TNS)
     cancel_calendar_item = EWSElementField(
-        field_uri=&#34;CancelCalendarItem&#34;, value_cls=&#34;CancelCalendarItem&#34;, namespace=NAMESPACE
+        field_uri=&#34;CancelCalendarItem&#34;, value_cls=&#34;CancelCalendarItem&#34;, namespace=TNS
     )
     remove_item = EWSElementField(field_uri=&#34;RemoveItem&#34;, value_cls=RemoveItem)
-    post_reply_item = EWSElementField(
-        field_uri=&#34;PostReplyItem&#34;, value_cls=&#34;PostReplyItem&#34;, namespace=EWSElement.NAMESPACE
-    )
+    post_reply_item = EWSElementField(field_uri=&#34;PostReplyItem&#34;, value_cls=&#34;PostReplyItem&#34;, namespace=TNS)
     success_read_receipt = EWSElementField(field_uri=&#34;SuppressReadReceipt&#34;, value_cls=SuppressReadReceipt)
     accept_sharing_invitation = EWSElementField(field_uri=&#34;AcceptSharingInvitation&#34;, value_cls=AcceptSharingInvitation)
 
@@ -8351,23 +8348,20 @@ def from_xml(cls, elem, account):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responseobjects&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;ResponseObjects&#34;
-    NAMESPACE = EWSElement.NAMESPACE
 
-    accept_item = EWSElementField(field_uri=&#34;AcceptItem&#34;, value_cls=&#34;AcceptItem&#34;, namespace=NAMESPACE)
+    accept_item = EWSElementField(field_uri=&#34;AcceptItem&#34;, value_cls=&#34;AcceptItem&#34;, namespace=TNS)
     tentatively_accept_item = EWSElementField(
-        field_uri=&#34;TentativelyAcceptItem&#34;, value_cls=&#34;TentativelyAcceptItem&#34;, namespace=NAMESPACE
+        field_uri=&#34;TentativelyAcceptItem&#34;, value_cls=&#34;TentativelyAcceptItem&#34;, namespace=TNS
     )
-    decline_item = EWSElementField(field_uri=&#34;DeclineItem&#34;, value_cls=&#34;DeclineItem&#34;, namespace=NAMESPACE)
-    reply_to_item = EWSElementField(field_uri=&#34;ReplyToItem&#34;, value_cls=&#34;ReplyToItem&#34;, namespace=NAMESPACE)
-    forward_item = EWSElementField(field_uri=&#34;ForwardItem&#34;, value_cls=&#34;ForwardItem&#34;, namespace=NAMESPACE)
-    reply_all_to_item = EWSElementField(field_uri=&#34;ReplyAllToItem&#34;, value_cls=&#34;ReplyAllToItem&#34;, namespace=NAMESPACE)
+    decline_item = EWSElementField(field_uri=&#34;DeclineItem&#34;, value_cls=&#34;DeclineItem&#34;, namespace=TNS)
+    reply_to_item = EWSElementField(field_uri=&#34;ReplyToItem&#34;, value_cls=&#34;ReplyToItem&#34;, namespace=TNS)
+    forward_item = EWSElementField(field_uri=&#34;ForwardItem&#34;, value_cls=&#34;ForwardItem&#34;, namespace=TNS)
+    reply_all_to_item = EWSElementField(field_uri=&#34;ReplyAllToItem&#34;, value_cls=&#34;ReplyAllToItem&#34;, namespace=TNS)
     cancel_calendar_item = EWSElementField(
-        field_uri=&#34;CancelCalendarItem&#34;, value_cls=&#34;CancelCalendarItem&#34;, namespace=NAMESPACE
+        field_uri=&#34;CancelCalendarItem&#34;, value_cls=&#34;CancelCalendarItem&#34;, namespace=TNS
     )
     remove_item = EWSElementField(field_uri=&#34;RemoveItem&#34;, value_cls=RemoveItem)
-    post_reply_item = EWSElementField(
-        field_uri=&#34;PostReplyItem&#34;, value_cls=&#34;PostReplyItem&#34;, namespace=EWSElement.NAMESPACE
-    )
+    post_reply_item = EWSElementField(field_uri=&#34;PostReplyItem&#34;, value_cls=&#34;PostReplyItem&#34;, namespace=TNS)
     success_read_receipt = EWSElementField(field_uri=&#34;SuppressReadReceipt&#34;, value_cls=SuppressReadReceipt)
     accept_sharing_invitation = EWSElementField(field_uri=&#34;AcceptSharingInvitation&#34;, value_cls=AcceptSharingInvitation)</code></pre>
 </details>
@@ -8382,10 +8376,6 @@ def from_xml(cls, elem, account):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.ResponseObjects.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.ResponseObjects.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -11140,7 +11130,6 @@ def from_xml(cls, elem, account):
 <ul class="">
 <li><code><a title="exchangelib.properties.ResponseObjects.ELEMENT_NAME" href="#exchangelib.properties.ResponseObjects.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.ResponseObjects.FIELDS" href="#exchangelib.properties.ResponseObjects.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.ResponseObjects.NAMESPACE" href="#exchangelib.properties.ResponseObjects.NAMESPACE">NAMESPACE</a></code></li>
 <li><code><a title="exchangelib.properties.ResponseObjects.accept_item" href="#exchangelib.properties.ResponseObjects.accept_item">accept_item</a></code></li>
 <li><code><a title="exchangelib.properties.ResponseObjects.accept_sharing_invitation" href="#exchangelib.properties.ResponseObjects.accept_sharing_invitation">accept_sharing_invitation</a></code></li>
 <li><code><a title="exchangelib.properties.ResponseObjects.cancel_calendar_item" href="#exchangelib.properties.ResponseObjects.cancel_calendar_item">cancel_calendar_item</a></code></li>

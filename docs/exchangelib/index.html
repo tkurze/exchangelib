@@ -44,6 +44,7 @@ from .items import (
     ForwardItem,
     Message,
     PostItem,
+    PostReplyItem,
     ReplyAllToItem,
     ReplyToItem,
     Task,
@@ -56,71 +57,72 @@ from .settings import OofSettings
 from .transport import BASIC, CBA, DIGEST, GSSAPI, NTLM, OAUTH2, SSPI
 from .version import Build, Version
 
-__version__ = &#34;4.7.3&#34;
+__version__ = &#34;4.7.4&#34;
 
 __all__ = [
     &#34;__version__&#34;,
+    &#34;AcceptItem&#34;,
     &#34;Account&#34;,
-    &#34;Identity&#34;,
-    &#34;FileAttachment&#34;,
-    &#34;ItemAttachment&#34;,
-    &#34;discover&#34;,
+    &#34;Attendee&#34;,
+    &#34;BASIC&#34;,
+    &#34;BaseProtocol&#34;,
+    &#34;Body&#34;,
+    &#34;Build&#34;,
+    &#34;CBA&#34;,
+    &#34;CalendarItem&#34;,
+    &#34;CancelCalendarItem&#34;,
     &#34;Configuration&#34;,
-    &#34;DELEGATE&#34;,
-    &#34;IMPERSONATION&#34;,
+    &#34;Contact&#34;,
     &#34;Credentials&#34;,
-    &#34;OAuth2AuthorizationCodeCredentials&#34;,
-    &#34;OAuth2Credentials&#34;,
+    &#34;DEEP&#34;,
+    &#34;DELEGATE&#34;,
+    &#34;DIGEST&#34;,
+    &#34;DLMailbox&#34;,
+    &#34;DeclineItem&#34;,
+    &#34;DistributionList&#34;,
     &#34;EWSDate&#34;,
     &#34;EWSDateTime&#34;,
     &#34;EWSTimeZone&#34;,
-    &#34;UTC&#34;,
-    &#34;UTC_NOW&#34;,
     &#34;ExtendedProperty&#34;,
-    &#34;Folder&#34;,
-    &#34;RootOfHierarchy&#34;,
-    &#34;FolderCollection&#34;,
-    &#34;SHALLOW&#34;,
-    &#34;DEEP&#34;,
-    &#34;AcceptItem&#34;,
-    &#34;TentativelyAcceptItem&#34;,
-    &#34;DeclineItem&#34;,
-    &#34;CalendarItem&#34;,
-    &#34;CancelCalendarItem&#34;,
-    &#34;Contact&#34;,
-    &#34;DistributionList&#34;,
-    &#34;Message&#34;,
-    &#34;PostItem&#34;,
-    &#34;Task&#34;,
-    &#34;ForwardItem&#34;,
-    &#34;ReplyToItem&#34;,
-    &#34;ReplyAllToItem&#34;,
-    &#34;ItemId&#34;,
-    &#34;Mailbox&#34;,
-    &#34;DLMailbox&#34;,
-    &#34;Attendee&#34;,
-    &#34;Room&#34;,
-    &#34;RoomList&#34;,
-    &#34;Body&#34;,
-    &#34;HTMLBody&#34;,
-    &#34;UID&#34;,
     &#34;FailFast&#34;,
     &#34;FaultTolerance&#34;,
-    &#34;BaseProtocol&#34;,
-    &#34;NoVerifyHTTPAdapter&#34;,
-    &#34;TLSClientAuth&#34;,
-    &#34;OofSettings&#34;,
-    &#34;Q&#34;,
-    &#34;BASIC&#34;,
-    &#34;DIGEST&#34;,
-    &#34;NTLM&#34;,
+    &#34;FileAttachment&#34;,
+    &#34;Folder&#34;,
+    &#34;FolderCollection&#34;,
+    &#34;ForwardItem&#34;,
     &#34;GSSAPI&#34;,
-    &#34;SSPI&#34;,
+    &#34;HTMLBody&#34;,
+    &#34;IMPERSONATION&#34;,
+    &#34;Identity&#34;,
+    &#34;ItemAttachment&#34;,
+    &#34;ItemId&#34;,
+    &#34;Mailbox&#34;,
+    &#34;Message&#34;,
+    &#34;NTLM&#34;,
+    &#34;NoVerifyHTTPAdapter&#34;,
     &#34;OAUTH2&#34;,
-    &#34;CBA&#34;,
-    &#34;Build&#34;,
+    &#34;OAuth2AuthorizationCodeCredentials&#34;,
+    &#34;OAuth2Credentials&#34;,
+    &#34;OofSettings&#34;,
+    &#34;PostItem&#34;,
+    &#34;PostReplyItem&#34;,
+    &#34;Q&#34;,
+    &#34;ReplyAllToItem&#34;,
+    &#34;ReplyToItem&#34;,
+    &#34;Room&#34;,
+    &#34;RoomList&#34;,
+    &#34;RootOfHierarchy&#34;,
+    &#34;SHALLOW&#34;,
+    &#34;SSPI&#34;,
+    &#34;TLSClientAuth&#34;,
+    &#34;Task&#34;,
+    &#34;TentativelyAcceptItem&#34;,
+    &#34;UID&#34;,
+    &#34;UTC&#34;,
+    &#34;UTC_NOW&#34;,
     &#34;Version&#34;,
     &#34;close_connections&#34;,
+    &#34;discover&#34;,
 ]
 
 # Set a default user agent, e.g. &#34;exchangelib/3.1.1 (python-requests/2.22.0)&#34;
@@ -2932,25 +2934,14 @@ account.upload([
         return session
 
     def create_oauth2_session(self):
-        scope = [&#34;https://outlook.office365.com/.default&#34;]
         session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
         token_params = {}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-            # Ask for a refresh token
-            scope.append(&#34;offline_access&#34;)
-
-            # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
-            # tenant for the provided authorization code or refresh token.
-            #
-            # Suppress looks-like-password warning from Bandit.
-            token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
-
-            client_params = {}
             token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
             self.credentials.authorization_code = None  # We can only use the code once
 
-            if self.credentials.client_id is not None and self.credentials.client_secret is not None:
+            if self.credentials.client_id and self.credentials.client_secret:
                 # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
                 # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
                 # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
@@ -2961,23 +2952,22 @@ account.upload([
                             &#34;client_id&#34;: self.credentials.client_id,
                             &#34;client_secret&#34;: self.credentials.client_secret,
                         },
-                        &#34;auto_refresh_url&#34;: token_url,
+                        &#34;auto_refresh_url&#34;: self.credentials.token_url,
                         &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
                     }
                 )
-            client = WebApplicationClient(self.credentials.client_id, **client_params)
+            client = WebApplicationClient(client_id=self.credentials.client_id)
         else:
-            token_url = f&#34;https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token&#34;
             client = BackendApplicationClient(client_id=self.credentials.client_id)
 
         session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
         if not session.token:
             # Fetch the token explicitly -- it doesn&#39;t occur implicitly
             token = session.fetch_token(
-                token_url=token_url,
+                token_url=self.credentials.token_url,
                 client_id=self.credentials.client_id,
                 client_secret=self.credentials.client_secret,
-                scope=scope,
+                scope=self.credentials.scope,
                 timeout=self.TIMEOUT,
                 **token_params,
             )
@@ -3228,25 +3218,14 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
-    scope = [&#34;https://outlook.office365.com/.default&#34;]
     session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
     token_params = {}
 
     if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-        # Ask for a refresh token
-        scope.append(&#34;offline_access&#34;)
-
-        # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
-        # tenant for the provided authorization code or refresh token.
-        #
-        # Suppress looks-like-password warning from Bandit.
-        token_url = &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
-
-        client_params = {}
         token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
         self.credentials.authorization_code = None  # We can only use the code once
 
-        if self.credentials.client_id is not None and self.credentials.client_secret is not None:
+        if self.credentials.client_id and self.credentials.client_secret:
             # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
             # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
             # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
@@ -3257,23 +3236,22 @@ def session_pool_size(self):
                         &#34;client_id&#34;: self.credentials.client_id,
                         &#34;client_secret&#34;: self.credentials.client_secret,
                     },
-                    &#34;auto_refresh_url&#34;: token_url,
+                    &#34;auto_refresh_url&#34;: self.credentials.token_url,
                     &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
                 }
             )
-        client = WebApplicationClient(self.credentials.client_id, **client_params)
+        client = WebApplicationClient(client_id=self.credentials.client_id)
     else:
-        token_url = f&#34;https://login.microsoftonline.com/{self.credentials.tenant_id}/oauth2/v2.0/token&#34;
         client = BackendApplicationClient(client_id=self.credentials.client_id)
 
     session = self.raw_session(self.service_endpoint, oauth2_client=client, oauth2_session_params=session_params)
     if not session.token:
         # Fetch the token explicitly -- it doesn&#39;t occur implicitly
         token = session.fetch_token(
-            token_url=token_url,
+            token_url=self.credentials.token_url,
             client_id=self.credentials.client_id,
             client_secret=self.credentials.client_secret,
-            scope=scope,
+            scope=self.credentials.scope,
             timeout=self.TIMEOUT,
             **token_params,
         )
@@ -9722,6 +9700,18 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
             raise InvalidTypeError(&#34;access_token&#34;, access_token, OAuth2Token)
         self.access_token = access_token
 
+    @property
+    def token_url(self):
+        # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+        # tenant for the provided authorization code or refresh token.
+        return &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec
+
+    @property
+    def scope(self):
+        res = super().scope
+        res.append(&#34;offline_access&#34;)
+        return res
+
     def __repr__(self):
         return self.__class__.__name__ + repr(
             (self.client_id, &#34;[client_secret]&#34;, &#34;[authorization_code]&#34;, &#34;[access_token]&#34;)
@@ -9742,6 +9732,37 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
 <li><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></li>
 <li><a title="exchangelib.credentials.BaseCredentials" href="credentials.html#exchangelib.credentials.BaseCredentials">BaseCredentials</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.OAuth2AuthorizationCodeCredentials.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def scope(self):
+    res = super().scope
+    res.append(&#34;offline_access&#34;)
+    return res</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.OAuth2AuthorizationCodeCredentials.token_url"><code class="name">var <span class="ident">token_url</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def token_url(self):
+    # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
+    # tenant for the provided authorization code or refresh token.
+    return &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></b></code>:
@@ -9834,6 +9855,14 @@ the associated auth code grant type for multi-tenant applications.</p>
             res.append(getattr(self, k))
         return hash(tuple(res))
 
+    @property
+    def token_url(self):
+        return f&#34;https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token&#34;
+
+    @property
+    def scope(self):
+        return [&#34;https://outlook.office365.com/.default&#34;]
+
     def __repr__(self):
         return self.__class__.__name__ + repr((self.client_id, &#34;********&#34;))
 
@@ -9848,6 +9877,33 @@ the associated auth code grant type for multi-tenant applications.</p>
 <ul class="hlist">
 <li><a title="exchangelib.credentials.OAuth2AuthorizationCodeCredentials" href="credentials.html#exchangelib.credentials.OAuth2AuthorizationCodeCredentials">OAuth2AuthorizationCodeCredentials</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.OAuth2Credentials.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def scope(self):
+    return [&#34;https://outlook.office365.com/.default&#34;]</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.OAuth2Credentials.token_url"><code class="name">var <span class="ident">token_url</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def token_url(self):
+    return f&#34;https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token&#34;</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.OAuth2Credentials.on_token_auto_refreshed"><code class="name flex">
@@ -10237,6 +10293,155 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.PostItem.sender"><code class="name">var <span class="ident">sender</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.items.item.Item" href="items/item.html#exchangelib.items.item.Item">Item</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.items.item.Item.ID_ELEMENT_CLS" href="items/base.html#exchangelib.items.base.BaseItem.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.account" href="items/base.html#exchangelib.items.base.BaseItem.account">account</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.attach" href="items/item.html#exchangelib.items.item.Item.attach">attach</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.deregister" href="items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.detach" href="items/item.html#exchangelib.items.item.Item.detach">detach</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.folder" href="items/base.html#exchangelib.items.base.BaseItem.folder">folder</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.register" href="items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.items.item.Item.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.PostReplyItem"><code class="flex name class">
+<span>class <span class="ident">PostReplyItem</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postreplyitem">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postreplyitem</a></p>
+<p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'
+'folder' is optional but allows calling 'save()'. If 'folder' has an account, and 'account' is not set,
+we use folder.account.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PostReplyItem(Item):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/postreplyitem&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;PostReplyItem&#34;
+
+    # This element only has Item fields up to, and including, &#39;culture&#39;
+    # TDO: Plus all message fields
+    new_body = BodyField(field_uri=&#34;NewBodyContent&#34;)  # Accepts and returns Body or HTMLBody instances
+
+    culture_idx = Item.FIELDS.index_by_name(&#34;culture&#34;)
+    sender_idx = Message.FIELDS.index_by_name(&#34;sender&#34;)
+    FIELDS = Item.FIELDS[: culture_idx + 1] + Message.FIELDS[sender_idx:]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.items.item.Item" href="items/item.html#exchangelib.items.item.Item">Item</a></li>
+<li><a title="exchangelib.items.base.BaseItem" href="items/base.html#exchangelib.items.base.BaseItem">BaseItem</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.PostReplyItem.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.culture_idx"><code class="name">var <span class="ident">culture_idx</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.sender_idx"><code class="name">var <span class="ident">sender_idx</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.PostReplyItem.author"><code class="name">var <span class="ident">author</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.bcc_recipients"><code class="name">var <span class="ident">bcc_recipients</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.cc_recipients"><code class="name">var <span class="ident">cc_recipients</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.conversation_index"><code class="name">var <span class="ident">conversation_index</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.conversation_topic"><code class="name">var <span class="ident">conversation_topic</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.is_delivery_receipt_requested"><code class="name">var <span class="ident">is_delivery_receipt_requested</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.is_read"><code class="name">var <span class="ident">is_read</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.is_read_receipt_requested"><code class="name">var <span class="ident">is_read_receipt_requested</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.is_response_requested"><code class="name">var <span class="ident">is_response_requested</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.message_id"><code class="name">var <span class="ident">message_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.new_body"><code class="name">var <span class="ident">new_body</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.received_by"><code class="name">var <span class="ident">received_by</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.received_representing"><code class="name">var <span class="ident">received_representing</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.references"><code class="name">var <span class="ident">references</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.reminder_message_data"><code class="name">var <span class="ident">reminder_message_data</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.reply_to"><code class="name">var <span class="ident">reply_to</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.sender"><code class="name">var <span class="ident">sender</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.PostReplyItem.to_recipients"><code class="name">var <span class="ident">to_recipients</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -13212,12 +13417,18 @@ def fullname(self):
 </li>
 <li>
 <h4><code><a title="exchangelib.OAuth2AuthorizationCodeCredentials" href="#exchangelib.OAuth2AuthorizationCodeCredentials">OAuth2AuthorizationCodeCredentials</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.OAuth2AuthorizationCodeCredentials.scope" href="#exchangelib.OAuth2AuthorizationCodeCredentials.scope">scope</a></code></li>
+<li><code><a title="exchangelib.OAuth2AuthorizationCodeCredentials.token_url" href="#exchangelib.OAuth2AuthorizationCodeCredentials.token_url">token_url</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.OAuth2Credentials" href="#exchangelib.OAuth2Credentials">OAuth2Credentials</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.OAuth2Credentials.on_token_auto_refreshed" href="#exchangelib.OAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
+<li><code><a title="exchangelib.OAuth2Credentials.scope" href="#exchangelib.OAuth2Credentials.scope">scope</a></code></li>
 <li><code><a title="exchangelib.OAuth2Credentials.sig" href="#exchangelib.OAuth2Credentials.sig">sig</a></code></li>
+<li><code><a title="exchangelib.OAuth2Credentials.token_url" href="#exchangelib.OAuth2Credentials.token_url">token_url</a></code></li>
 </ul>
 </li>
 <li>
@@ -13254,6 +13465,33 @@ def fullname(self):
 <li><code><a title="exchangelib.PostItem.posted_time" href="#exchangelib.PostItem.posted_time">posted_time</a></code></li>
 <li><code><a title="exchangelib.PostItem.references" href="#exchangelib.PostItem.references">references</a></code></li>
 <li><code><a title="exchangelib.PostItem.sender" href="#exchangelib.PostItem.sender">sender</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.PostReplyItem" href="#exchangelib.PostReplyItem">PostReplyItem</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.PostReplyItem.ELEMENT_NAME" href="#exchangelib.PostReplyItem.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.FIELDS" href="#exchangelib.PostReplyItem.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.author" href="#exchangelib.PostReplyItem.author">author</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.bcc_recipients" href="#exchangelib.PostReplyItem.bcc_recipients">bcc_recipients</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.cc_recipients" href="#exchangelib.PostReplyItem.cc_recipients">cc_recipients</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.conversation_index" href="#exchangelib.PostReplyItem.conversation_index">conversation_index</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.conversation_topic" href="#exchangelib.PostReplyItem.conversation_topic">conversation_topic</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.culture_idx" href="#exchangelib.PostReplyItem.culture_idx">culture_idx</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.is_delivery_receipt_requested" href="#exchangelib.PostReplyItem.is_delivery_receipt_requested">is_delivery_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.is_read" href="#exchangelib.PostReplyItem.is_read">is_read</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.is_read_receipt_requested" href="#exchangelib.PostReplyItem.is_read_receipt_requested">is_read_receipt_requested</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.is_response_requested" href="#exchangelib.PostReplyItem.is_response_requested">is_response_requested</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.message_id" href="#exchangelib.PostReplyItem.message_id">message_id</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.new_body" href="#exchangelib.PostReplyItem.new_body">new_body</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.received_by" href="#exchangelib.PostReplyItem.received_by">received_by</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.received_representing" href="#exchangelib.PostReplyItem.received_representing">received_representing</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.references" href="#exchangelib.PostReplyItem.references">references</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.reminder_message_data" href="#exchangelib.PostReplyItem.reminder_message_data">reminder_message_data</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.reply_to" href="#exchangelib.PostReplyItem.reply_to">reply_to</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.sender" href="#exchangelib.PostReplyItem.sender">sender</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.sender_idx" href="#exchangelib.PostReplyItem.sender_idx">sender_idx</a></code></li>
+<li><code><a title="exchangelib.PostReplyItem.to_recipients" href="#exchangelib.PostReplyItem.to_recipients">to_recipients</a></code></li>
 </ul>
 </li>
 <li>

@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import logging
+import warnings
 
 from ..errors import ErrorNameResolutionMultipleResults, ErrorNameResolutionNoResults, InvalidEnumValue
 from ..items import SEARCH_SCOPE_CHOICES, SHAPE_CHOICES, Contact
@@ -46,9 +47,11 @@ class ResolveNames(EWSService):
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
     # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
-    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service. According to docs, at most
-    # 100 candidates are returned for a lookup.
+    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service.
     supports_paging = False
+    # According to the &#39;Remarks&#39; section of the MSDN documentation referenced above, at most 100 candidates are
+    # returned for a lookup.
+    candidates_limit = 100
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,6 +85,20 @@ class ResolveNames(EWSService):
                 contact_data_shape=contact_data_shape,
             )
         )
+
+    def _get_element_container(self, message, name=None):
+        container_or_exc = super()._get_element_container(message=message, name=name)
+        if isinstance(container_or_exc, Exception):
+            return container_or_exc
+        is_last_page = container_or_exc.get(&#34;IncludesLastItemInRange&#34;).lower() in (&#34;true&#34;, &#34;0&#34;)
+        log.debug(&#34;Includes last item in range: %s&#34;, is_last_page)
+        if not is_last_page:
+            warnings.warn(
+                f&#34;The {self.__class__.__name__} service returns at most {self.candidates_limit} candidates and does &#34;
+                f&#34;not support paging. You have reached this limit and have not received the exhaustive list of &#34;
+                f&#34;candidates.&#34;
+            )
+        return container_or_exc
 
     def _elem_to_obj(self, elem):
         if self.return_full_contact_data:
@@ -142,9 +159,11 @@ class ResolveNames(EWSService):
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
     # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
-    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service. According to docs, at most
-    # 100 candidates are returned for a lookup.
+    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service.
     supports_paging = False
+    # According to the &#39;Remarks&#39; section of the MSDN documentation referenced above, at most 100 candidates are
+    # returned for a lookup.
+    candidates_limit = 100
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -178,6 +197,20 @@ class ResolveNames(EWSService):
                 contact_data_shape=contact_data_shape,
             )
         )
+
+    def _get_element_container(self, message, name=None):
+        container_or_exc = super()._get_element_container(message=message, name=name)
+        if isinstance(container_or_exc, Exception):
+            return container_or_exc
+        is_last_page = container_or_exc.get(&#34;IncludesLastItemInRange&#34;).lower() in (&#34;true&#34;, &#34;0&#34;)
+        log.debug(&#34;Includes last item in range: %s&#34;, is_last_page)
+        if not is_last_page:
+            warnings.warn(
+                f&#34;The {self.__class__.__name__} service returns at most {self.candidates_limit} candidates and does &#34;
+                f&#34;not support paging. You have reached this limit and have not received the exhaustive list of &#34;
+                f&#34;candidates.&#34;
+            )
+        return container_or_exc
 
     def _elem_to_obj(self, elem):
         if self.return_full_contact_data:
@@ -227,6 +260,10 @@ class ResolveNames(EWSService):
 <dt id="exchangelib.services.resolve_names.ResolveNames.WARNINGS_TO_IGNORE_IN_RESPONSE"><code class="name">var <span class="ident">WARNINGS_TO_IGNORE_IN_RESPONSE</span></code></dt>
 <dd>
 <div class="desc"><p>Global error type within this module.</p></div>
+</dd>
+<dt id="exchangelib.services.resolve_names.ResolveNames.candidates_limit"><code class="name">var <span class="ident">candidates_limit</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.resolve_names.ResolveNames.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
 <dd>
@@ -345,6 +382,7 @@ class ResolveNames(EWSService):
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.SERVICE_NAME" href="#exchangelib.services.resolve_names.ResolveNames.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.WARNINGS_TO_IGNORE_IN_RESPONSE" href="#exchangelib.services.resolve_names.ResolveNames.WARNINGS_TO_IGNORE_IN_RESPONSE">WARNINGS_TO_IGNORE_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.call" href="#exchangelib.services.resolve_names.ResolveNames.call">call</a></code></li>
+<li><code><a title="exchangelib.services.resolve_names.ResolveNames.candidates_limit" href="#exchangelib.services.resolve_names.ResolveNames.candidates_limit">candidates_limit</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.element_container_name" href="#exchangelib.services.resolve_names.ResolveNames.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.get_payload" href="#exchangelib.services.resolve_names.ResolveNames.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.resolve_names.ResolveNames.supports_paging" href="#exchangelib.services.resolve_names.ResolveNames.supports_paging">supports_paging</a></code></li>
