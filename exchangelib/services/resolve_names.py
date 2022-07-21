@@ -28,7 +28,6 @@ class ResolveNames(EWSService):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.return_full_contact_data = False  # A hack to communicate parsing args to _elems_to_objs()
-        self.includes_last_item_in_range = None
 
     def call(
         self,
