@@ -5,6 +5,11 @@ HEAD
 ----
 
 
+4.7.4
+-----
+- Bugfix release
+
+
 4.7.3
 -----
 - Bugfix release
@@ -841,4 +846,3 @@ shared_calendar = SingleFolderQuerySet(account=account, folder=DistinguishedFold
 ---
 
 - Initial import
-
