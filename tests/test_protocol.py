@@ -356,31 +356,41 @@ EWS auth: NTLM""",
         accounts = [(self.account, "Organizer", False)]
 
         with self.assertRaises(TypeError) as e:
-            self.account.protocol.get_free_busy_info(accounts=[(123, "XXX", "XXX")], start=start, end=end)
+            list(self.account.protocol.get_free_busy_info(accounts=[(123, "XXX", "XXX")], start=start, end=end))
         self.assertEqual(
             e.exception.args[0], "Field 'email' value 123 must be of type <class 'exchangelib.properties.Email'>"
         )
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.get_free_busy_info(accounts=[(self.account, "XXX", "XXX")], start=start, end=end)
+            list(
+                self.account.protocol.get_free_busy_info(accounts=[(self.account, "XXX", "XXX")], start=start, end=end)
+            )
         self.assertEqual(
             e.exception.args[0],
             f"Invalid choice 'XXX' for field 'attendee_type'. Valid choices are {sorted(MailboxData.ATTENDEE_TYPES)}",
         )
         with self.assertRaises(TypeError) as e:
-            self.account.protocol.get_free_busy_info(accounts=[(self.account, "Organizer", "X")], start=start, end=end)
+            list(
+                self.account.protocol.get_free_busy_info(
+                    accounts=[(self.account, "Organizer", "X")], start=start, end=end
+                )
+            )
         self.assertEqual(e.exception.args[0], "Field 'exclude_conflicts' value 'X' must be of type <class 'bool'>")
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.get_free_busy_info(accounts=accounts, start=end, end=start)
+            list(self.account.protocol.get_free_busy_info(accounts=accounts, start=end, end=start))
         self.assertIn("'start' must be less than 'end'", e.exception.args[0])
         with self.assertRaises(TypeError) as e:
-            self.account.protocol.get_free_busy_info(
-                accounts=accounts, start=start, end=end, merged_free_busy_interval="XXX"
+            list(
+                self.account.protocol.get_free_busy_info(
+                    accounts=accounts, start=start, end=end, merged_free_busy_interval="XXX"
+                )
             )
         self.assertEqual(
             e.exception.args[0], "Field 'merged_free_busy_interval' value 'XXX' must be of type <class 'int'>"
         )
         with self.assertRaises(ValueError) as e:
-            self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end, requested_view="XXX")
+            list(
+                self.account.protocol.get_free_busy_info(accounts=accounts, start=start, end=end, requested_view="XXX")
+            )
         self.assertEqual(
             e.exception.args[0],
             f"Invalid choice 'XXX' for field 'requested_view'. Valid choices are "
@@ -402,6 +412,14 @@ EWS auth: NTLM""",
         # Test non-existing address
         for view_info in self.account.protocol.get_free_busy_info(
             accounts=[(f"unlikely-to-exist-{self.account.primary_smtp_address}", "Organizer", False)],
+            start=start,
+            end=end,
+        ):
+            self.assertIsInstance(view_info, ErrorMailRecipientNotFound)
+
+        # Test +100 addresses
+        for view_info in self.account.protocol.get_free_busy_info(
+            accounts=[(f"unknown-{i}-{self.account.primary_smtp_address}", "Organizer", False) for i in range(101)],
             start=start,
             end=end,
         ):

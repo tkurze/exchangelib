@@ -502,7 +502,6 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
         return GetUserAvailability(self).call(
-            timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
             mailbox_data=[
                 MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
@@ -511,6 +510,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
                 )
                 for account, attendee_type, exclude_conflicts in accounts
             ],
+            timezone=TimeZone.from_server_timezone(tz_definition=tz_definition, for_year=start.year),
             free_busy_view_options=FreeBusyViewOptions(
                 time_window=TimeWindow(start=start, end=end),
                 merged_free_busy_interval=merged_free_busy_interval,

@@ -3,6 +3,7 @@ Change Log
 
 HEAD
 ----
+- Fixed `Protocol.get_free_busy_info()` when called with +100 accounts.
 
 
 4.7.4

@@ -11,21 +11,22 @@ class GetUserAvailability(EWSService):
 
     SERVICE_NAME = "GetUserAvailability"
 
-    def call(self, timezone, mailbox_data, free_busy_view_options):
+    def call(self, mailbox_data, timezone, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
         #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
         return self._elems_to_objs(
-            self._get_elements(
-                payload=self.get_payload(
-                    timezone=timezone, mailbox_data=mailbox_data, free_busy_view_options=free_busy_view_options
-                )
+            self._chunked_get_elements(
+                self.get_payload,
+                items=mailbox_data,
+                timezone=timezone,
+                free_busy_view_options=free_busy_view_options,
             )
         )
 
     def _elem_to_obj(self, elem):
         return FreeBusyView.from_xml(elem=elem, account=None)
 
-    def get_payload(self, timezone, mailbox_data, free_busy_view_options):
+    def get_payload(self, mailbox_data, timezone, free_busy_view_options):
         payload = create_element(f"m:{self.SERVICE_NAME}Request")
         set_xml_value(payload, timezone, version=self.protocol.version)
         mailbox_data_array = create_element("m:MailboxDataArray")
