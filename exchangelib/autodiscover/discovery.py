@@ -88,8 +88,9 @@ class Autodiscovery:
     MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
     DNS_RESOLVER_KWARGS = {}
     DNS_RESOLVER_ATTRS = {
-        "timeout": AutodiscoverProtocol.TIMEOUT,
+        "timeout": AutodiscoverProtocol.TIMEOUT / 2.5,  # Timeout for query to a single nameserver
     }
+    DNS_RESOLVER_LIFETIME = AutodiscoverProtocol.TIMEOUT  # Total timeout for a query in case of multiple nameservers
 
     def __init__(self, email, credentials=None):
         """
@@ -364,7 +365,7 @@ class Autodiscovery:
     def _is_valid_hostname(self, hostname):
         log.debug("Checking if %s can be looked up in DNS", hostname)
         try:
-            self.resolver.resolve(f"{hostname}.", "A", lifetime=self.DNS_RESOLVER_ATTRS.get("timeout"))
+            self.resolver.resolve(f"{hostname}.", "A", lifetime=self.DNS_RESOLVER_LIFETIME)
         except DNS_LOOKUP_ERRORS as e:
             log.debug("DNS A lookup failure: %s", e)
             return False
@@ -386,7 +387,7 @@ class Autodiscovery:
         log.debug("Attempting to get SRV records for %s", hostname)
         records = []
         try:
-            answers = self.resolver.resolve(f"{hostname}.", "SRV", lifetime=self.DNS_RESOLVER_ATTRS.get("timeout"))
+            answers = self.resolver.resolve(f"{hostname}.", "SRV", lifetime=self.DNS_RESOLVER_LIFETIME)
         except DNS_LOOKUP_ERRORS as e:
             log.debug("DNS SRV lookup failure: %s", e)
             return records
