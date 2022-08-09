@@ -573,8 +573,7 @@ def is_xml(text, expected_prefix=b"<?xml"):
 class PrettyXmlHandler(logging.StreamHandler):
     """A steaming log handler that prettifies log statements containing XML when output is a terminal."""
 
-    @staticmethod
-    def parse_bytes(xml_bytes):
+    def parse_bytes(self, xml_bytes):
         return to_xml(xml_bytes)
 
     @classmethod
