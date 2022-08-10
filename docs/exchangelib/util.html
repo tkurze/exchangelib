@@ -50,6 +50,7 @@ from oauthlib.oauth2 import TokenExpiredError
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
+from requests_oauthlib import OAuth2Session
 
 from .errors import (
     InvalidTypeError,
@@ -604,11 +605,10 @@ class PrettyXmlHandler(logging.StreamHandler):
     def parse_bytes(self, xml_bytes):
         return to_xml(xml_bytes)
 
-    @classmethod
-    def prettify_xml(cls, xml_bytes):
+    def prettify_xml(self, xml_bytes):
         &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
         return (
-            lxml.etree.tostring(cls.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
+            lxml.etree.tostring(self.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
             .replace(b&#34;\t&#34;, b&#34;    &#34;)
             .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
         )
@@ -866,10 +866,12 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, request_headers=headers)
+            kwargs = dict(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream)
+            if isinstance(session, OAuth2Session):
+                # Fix token refreshing bug. Reported as https://github.com/requests/requests-oauthlib/issues/498
+                kwargs.update(session.auto_refresh_kwargs)
             try:
-                r = session.post(
-                    url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream
-                )
+                r = session.post(**kwargs)
             except TLS_ERRORS as e:
                 # Don&#39;t retry on TLS errors. They will most likely be persistent.
                 raise TransportError(str(e))
@@ -1390,10 +1392,12 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
             d_start = time.monotonic()
             # Always create a dummy response for logging purposes, in case we fail in the following
             r = DummyResponse(url=url, request_headers=headers)
+            kwargs = dict(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream)
+            if isinstance(session, OAuth2Session):
+                # Fix token refreshing bug. Reported as https://github.com/requests/requests-oauthlib/issues/498
+                kwargs.update(session.auto_refresh_kwargs)
             try:
-                r = session.post(
-                    url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream
-                )
+                r = session.post(**kwargs)
             except TLS_ERRORS as e:
                 # Don&#39;t retry on TLS errors. They will most likely be persistent.
                 raise TransportError(str(e))
@@ -2226,11 +2230,10 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
     def parse_bytes(self, xml_bytes):
         return to_xml(xml_bytes)
 
-    @classmethod
-    def prettify_xml(cls, xml_bytes):
+    def prettify_xml(self, xml_bytes):
         &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
         return (
-            lxml.etree.tostring(cls.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
+            lxml.etree.tostring(self.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
             .replace(b&#34;\t&#34;, b&#34;    &#34;)
             .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
         )
@@ -2295,25 +2298,6 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 def highlight_xml(xml_str):
     &#34;&#34;&#34;Highlight a string containing XML, using terminal color codes.&#34;&#34;&#34;
     return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.util.PrettyXmlHandler.prettify_xml"><code class="name flex">
-<span>def <span class="ident">prettify_xml</span></span>(<span>xml_bytes)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Re-format an XML document to a consistent style.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def prettify_xml(cls, xml_bytes):
-    &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
-    return (
-        lxml.etree.tostring(cls.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
-        .replace(b&#34;\t&#34;, b&#34;    &#34;)
-        .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
-    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -2384,6 +2368,24 @@ def prettify_xml(cls, xml_bytes):
 </summary>
 <pre><code class="python">def parse_bytes(self, xml_bytes):
     return to_xml(xml_bytes)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.util.PrettyXmlHandler.prettify_xml"><code class="name flex">
+<span>def <span class="ident">prettify_xml</span></span>(<span>self, xml_bytes)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Re-format an XML document to a consistent style.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prettify_xml(self, xml_bytes):
+    &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
+    return (
+        lxml.etree.tostring(self.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
+        .replace(b&#34;\t&#34;, b&#34;    &#34;)
+        .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+    )</code></pre>
 </details>
 </dd>
 </dl>
