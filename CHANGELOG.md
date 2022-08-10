@@ -5,6 +5,11 @@ HEAD
 ----
 
 
+4.7.6
+-----
+- Fixed token refresh bug with OAuth2 authentication, again
+
+
 4.7.5
 -----
 - Fixed `Protocol.get_free_busy_info()` when called with +100 accounts.
