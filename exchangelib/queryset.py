@@ -305,7 +305,7 @@ class QuerySet(SearchableMixIn):
         raise IndexError()
 
     def _getitem_slice(self, s):
-        from .services import PAGE_SIZE
+        from .services import FindItem
 
         if ((s.start or 0) < 0) or ((s.stop or 0) < 0) or ((s.step or 0) < 0):
             # islice() does not support negative start, stop and step. Make sure cache is full by iterating the full
@@ -320,7 +320,7 @@ class QuerySet(SearchableMixIn):
             new_qs.offset = s.start
         elif s.stop is not None:
             new_qs.max_items = s.stop
-        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items < PAGE_SIZE:
+        if new_qs.page_size is None and new_qs.max_items is not None and new_qs.max_items < FindItem.PAGE_SIZE:
             new_qs.page_size = new_qs.max_items
         return islice(new_qs.__iter__(), None, None, s.step)
 

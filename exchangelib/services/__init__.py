@@ -8,7 +8,7 @@ Exchange EWS operations overview:
 """
 
 from .archive_item import ArchiveItem
-from .common import CHUNK_SIZE, PAGE_SIZE
+from .common import EWSService
 from .convert_id import ConvertId
 from .copy_item import CopyItem
 from .create_attachment import CreateAttachment
@@ -57,8 +57,6 @@ from .update_user_configuration import UpdateUserConfiguration
 from .upload_items import UploadItems
 
 __all__ = [
-    "CHUNK_SIZE",
-    "PAGE_SIZE",
     "ArchiveItem",
     "ConvertId",
     "CopyItem",
@@ -71,6 +69,7 @@ __all__ = [
     "DeleteUserConfiguration",
     "DeleteItem",
     "EmptyFolder",
+    "EWSService",
     "ExpandDL",
     "ExportItems",
     "FindFolder",

@@ -1142,7 +1142,7 @@ number of items fetched per page when paging is requested. You can change this v
 
 ```python
 import exchangelib.services
-exchangelib.services.PAGE_SIZE = 25
+exchangelib.services.EWSService.PAGE_SIZE = 25
 ```
 
 Other EWS services like `GetItem` and `GetFolder`, have a default chunk size of 100. This value is
@@ -1151,7 +1151,7 @@ requests. You can change this value globally:
 
 ```python
 import exchangelib.services
-exchangelib.services.CHUNK_SIZE = 25
+exchangelib.services.EWSService.CHUNK_SIZE = 25
 ```
 
 If you are working with very small or very large items, these may not be a reasonable

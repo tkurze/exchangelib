@@ -67,12 +67,12 @@ from ..version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
 
-PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
-CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
-
 
 class EWSService(metaclass=abc.ABCMeta):
     """Base class for all EWS services."""
+
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+    CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
@@ -106,7 +106,7 @@ class EWSService(metaclass=abc.ABCMeta):
     supports_paging = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
-        self.chunk_size = chunk_size or CHUNK_SIZE
+        self.chunk_size = chunk_size or self.CHUNK_SIZE
         if not isinstance(self.chunk_size, int):
             raise InvalidTypeError("chunk_size", chunk_size, int)
         if self.chunk_size < 1:
@@ -717,7 +717,7 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
 
 class EWSPagingService(EWSAccountService):
     def __init__(self, *args, **kwargs):
-        self.page_size = kwargs.pop("page_size", None) or PAGE_SIZE
+        self.page_size = kwargs.pop("page_size", None) or self.PAGE_SIZE
         if not isinstance(self.page_size, int):
             raise InvalidTypeError("page_size", self.page_size, int)
         if self.page_size < 1:
