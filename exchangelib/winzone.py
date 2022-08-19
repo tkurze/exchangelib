@@ -585,6 +585,7 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
         "Etc/Universal": CLDR_TO_MS_TIMEZONE_MAP["Etc/UTC"],
         "Etc/Zulu": CLDR_TO_MS_TIMEZONE_MAP["Etc/UTC"],
         "Europe/Belfast": CLDR_TO_MS_TIMEZONE_MAP["Europe/London"],
+        "Europe/Kyiv": CLDR_TO_MS_TIMEZONE_MAP["Europe/Kiev"],
         "Europe/Nicosia": CLDR_TO_MS_TIMEZONE_MAP["Asia/Nicosia"],
         "Europe/Tiraspol": CLDR_TO_MS_TIMEZONE_MAP["Europe/Chisinau"],
         "Factory": CLDR_TO_MS_TIMEZONE_MAP["Etc/UTC"],
