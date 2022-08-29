@@ -130,6 +130,10 @@ class EWSDateTime(datetime.datetime):
             return t
         return self.from_datetime(t)  # We want to return EWSDateTime objects
 
+    @classmethod
+    def fromisoformat(cls, date_string):
+        return cls.from_string(date_string)
+
     def __add__(self, other):
         t = super().__add__(other)
         if isinstance(t, self.__class__):

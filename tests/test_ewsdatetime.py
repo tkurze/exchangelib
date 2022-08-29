@@ -191,6 +191,13 @@ class EWSDateTimeTest(TimedTestCase):
         with self.assertRaises(TypeError):
             EWSDateTime.from_datetime(EWSDateTime(2000, 1, 2, 3, 4, 5))
 
+        # Test isoformat
+        dt = EWSDateTime(2000, 1, 2, 3, 4, 5, tzinfo=tz)
+        fmt = dt.isoformat()
+        self.assertEqual(fmt, "2000-01-02T03:04:05+01:00")
+        dt = EWSDateTime.fromisoformat(fmt)
+        self.assertEqual(dt, EWSDateTime(2000, 1, 2, 3, 4, 5, tzinfo=tz))
+
     def test_generate(self):
         try:
             type_version, other_version, tz_map = generate_map()
@@ -232,3 +239,10 @@ class EWSDateTimeTest(TimedTestCase):
             EWSDate.from_date(EWSDate(2000, 1, 2))
 
         self.assertEqual(EWSDate.fromordinal(730120), EWSDate(2000, 1, 1))
+
+        # Test isoformat
+        dt = EWSDate(2000, 1, 2)
+        fmt = dt.isoformat()
+        self.assertEqual(fmt, "2000-01-02")
+        dt = EWSDate.fromisoformat(fmt)
+        self.assertEqual(dt, EWSDate(2000, 1, 2))
