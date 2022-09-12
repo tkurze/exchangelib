@@ -314,7 +314,7 @@ class BaseProtocol:
 
     def create_oauth2_session(self):
         session_params = {"token": self.credentials.access_token}  # Token may be None
-        token_params = {}
+        token_params = {"include_client_id": True}
 
         if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
             token_params["code"] = self.credentials.authorization_code  # Auth code may be None
