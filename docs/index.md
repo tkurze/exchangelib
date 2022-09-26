@@ -1291,6 +1291,43 @@ all_addresses = [
 ]
 ```
 
+Contacts have some special "indexed property" fields that require extra attention. Here's an
+example of creating a new contact with multiple phone numbers and addresses. Each indexed property
+class has a `LABEL_CHOICES` class attribute listing all valid label values:
+
+```python
+from exchangelib import Contact
+from exchangelib.indexed_properties import PhoneNumber, EmailAddress, PhysicalAddress
+
+contact = Contact(
+    account=a,
+    folder=a.contacts,
+    given_name="Test",
+    surname="Lockt",
+    display_name="Test Lockt",
+    phone_numbers=[
+        PhoneNumber(label="MobilePhone", phone_number="123456"),
+        PhoneNumber(label="BusinessPhone", phone_number="123456"),
+        PhoneNumber(label="OtherTelephone", phone_number="123456"),
+    ],
+    email_addresses=[
+        EmailAddress(label="EmailAddress1", email="test@test.si"),
+        EmailAddress(label="EmailAddress2", email="test2@test.si"),
+    ],
+    physical_addresses=[
+        PhysicalAddress(
+            label="Home",
+            street="Test 30",
+            city="TestCity",
+            country="TestCountry",
+            zipcode="8237",
+        )
+    ],
+    company_name="Blue Anon Airlines",
+)
+contact.save()
+```
+
 Contact items have `photo` and `notes` fields, but they are apparently unused. Instead, you can
 add a contact photo and notes like this:
 
