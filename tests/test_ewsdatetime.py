@@ -1,4 +1,5 @@
 import datetime
+import unittest
 
 import dateutil.tz
 import pytz
@@ -20,7 +21,7 @@ from exchangelib.winzone import (
     generate_map,
 )
 
-from .common import TimedTestCase
+from .common import TimedTestCase, get_settings
 
 
 class EWSDateTimeTest(TimedTestCase):
@@ -164,20 +165,20 @@ class EWSTimeZoneTest(TimedTestCase):
             self.assertEqual(len(v), 2)
             self.assertIsInstance(v[0], str)
 
-        # Test IANA exceptions
-        sanitized = list(t for t in zoneinfo.available_timezones() if not t.startswith("SystemV/") and t != "localtime")
-        self.assertEqual(set(sanitized) - set(EWSTimeZone.IANA_TO_MS_MAP), set())
-
         # Test timezone unknown by ZoneInfo
         with self.assertRaises(UnknownTimeZone) as e:
             EWSTimeZone("UNKNOWN")
         self.assertEqual(e.exception.args[0], "No time zone found with key UNKNOWN")
 
         # Test timezone known by IANA but with no Winzone mapping
-        with self.assertRaises(UnknownTimeZone) as e:
-            del EWSTimeZone.IANA_TO_MS_MAP["Africa/Tripoli"]
-            EWSTimeZone("Africa/Tripoli")
-        self.assertEqual(e.exception.args[0], "No Windows timezone name found for timezone 'Africa/Tripoli'")
+        orig = EWSTimeZone.IANA_TO_MS_MAP["Africa/Tripoli"]
+        try:
+            with self.assertRaises(UnknownTimeZone) as e:
+                del EWSTimeZone.IANA_TO_MS_MAP["Africa/Tripoli"]
+                EWSTimeZone("Africa/Tripoli")
+            self.assertEqual(e.exception.args[0], "No Windows timezone name found for timezone 'Africa/Tripoli'")
+        finally:
+            EWSTimeZone.IANA_TO_MS_MAP["Africa/Tripoli"] = orig
 
         # Test __eq__ with non-EWSTimeZone compare
         self.assertFalse(EWSTimeZone("GMT") == zoneinfo.ZoneInfo("UTC"))
@@ -202,6 +203,14 @@ class EWSTimeZoneTest(TimedTestCase):
 
     def test_generate(self):
         try:
+            get_settings()
+        except FileNotFoundError:
+            # We don't actually need settings here, but it's a convenient way to separate unit and integration tests.
+            # This test pulls in timezone maps from the Internet, which may cause the test case to break in the future.
+            # Let's leave the unit test suite as stable as possible. Unit tests are what is run if you don't create a
+            # settings.yml file.
+            raise unittest.SkipTest(f"Skipping {self.__class__.__name__} - this is an integration test")
+        try:
             type_version, other_version, tz_map = generate_map()
         except CONNECTION_ERRORS:
             # generate_map() requires access to unicode.org, which may be unavailable. Don't fail test, since this is
@@ -210,6 +219,10 @@ class EWSTimeZoneTest(TimedTestCase):
         self.assertEqual(type_version, CLDR_WINZONE_TYPE_VERSION)
         self.assertEqual(other_version, CLDR_WINZONE_OTHER_VERSION)
         self.assertDictEqual(tz_map, CLDR_TO_MS_TIMEZONE_MAP)
+
+        # Test IANA exceptions. This fails if available_timezones() returns timezones that we have not yet implemented.
+        sanitized = list(t for t in zoneinfo.available_timezones() if not t.startswith("SystemV/") and t != "localtime")
+        self.assertEqual(set(sanitized) - set(EWSTimeZone.IANA_TO_MS_MAP), set())
 
     @requests_mock.mock()
     def test_generate_failure(self, m):

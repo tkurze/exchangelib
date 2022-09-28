@@ -71,6 +71,11 @@ mock_protocol = namedtuple("mock_protocol", ("version", "service_endpoint"))
 mock_version = namedtuple("mock_version", ("build",))
 
 
+def get_settings():
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "settings.yml")) as f:
+        return safe_load(f)
+
+
 def mock_post(url, status_code, headers, text=""):
     return lambda **kwargs: DummyResponse(
         url=url, headers=headers, request_headers={}, content=text.encode("utf-8"), status_code=status_code
@@ -101,20 +106,18 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
     @classmethod
     def setUpClass(cls):
         # There's no official Exchange server we can test against, and we can't really provide credentials for our
-        # own test server to everyone on the Internet. Travis-CI uses the encrypted settings.yml.enc for testing.
+        # own test server to everyone on the Internet. GitHub Actions use the encrypted settings.yml.ghenc for testing.
         #
         # If you want to test against your own server and account, create your own settings.yml with credentials for
         # that server. 'settings.yml.sample' is provided as a template.
         try:
-            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "settings.yml")) as f:
-                settings = safe_load(f)
+            cls.settings = get_settings()
         except FileNotFoundError:
             print(f"Skipping {cls.__name__} - no settings.yml file found")
             print("Copy settings.yml.sample to settings.yml and enter values for your test server")
             raise unittest.SkipTest(f"Skipping {cls.__name__} - no settings.yml file found")
 
-        cls.settings = settings
-        cls.verify_ssl = settings.get("verify_ssl", True)
+        cls.verify_ssl = cls.settings.get("verify_ssl", True)
         if not cls.verify_ssl:
             # Allow unverified TLS if requested in settings file
             BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
@@ -123,7 +126,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         cls.tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
         cls.retry_policy = FaultTolerance(max_wait=600)
         cls.config = Configuration(
-            server=settings["server"],
+            server=cls.settings["server"],
             credentials=cls.credentials(),
             retry_policy=cls.retry_policy,
         )
