@@ -5,6 +5,12 @@ HEAD
 ----
 
 
+4.8.0
+-----
+- Added new `OAuth2LegacyCredentials` class  to support username/password auth
+  over OAuth.
+
+
 4.7.6
 -----
 - Fixed token refresh bug with OAuth2 authentication, again
