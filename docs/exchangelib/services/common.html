@@ -28,6 +28,7 @@
 </summary>
 <pre><code class="python">import abc
 import logging
+from contextlib import suppress
 from itertools import chain
 
 from .. import errors
@@ -95,12 +96,12 @@ from ..version import API_VERSIONS, Version
 
 log = logging.getLogger(__name__)
 
-PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
-CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
-
 
 class EWSService(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
+
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+    CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
@@ -134,7 +135,7 @@ class EWSService(metaclass=abc.ABCMeta):
     supports_paging = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
-        self.chunk_size = chunk_size or CHUNK_SIZE
+        self.chunk_size = chunk_size or self.CHUNK_SIZE
         if not isinstance(self.chunk_size, int):
             raise InvalidTypeError(&#34;chunk_size&#34;, chunk_size, int)
         if self.chunk_size &lt; 1:
@@ -333,7 +334,6 @@ class EWSService(metaclass=abc.ABCMeta):
                 account_to_impersonate=self._account_to_impersonate,
                 timezone=self._timezone,
             ),
-            allow_redirects=False,
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
@@ -416,10 +416,8 @@ class EWSService(metaclass=abc.ABCMeta):
         &#34;&#34;&#34;
         log.debug(&#34;Got ErrorServerBusy (back off %s seconds)&#34;, e.back_off)
         # ErrorServerBusy is very often a symptom of sending too many requests. Scale back connections if possible.
-        try:
+        with suppress(SessionPoolMinSizeReached):
             self.protocol.decrease_poolsize()
-        except SessionPoolMinSizeReached:
-            pass
         if self.protocol.retry_policy.fail_fast:
             raise e
         self.protocol.retry_policy.back_off(e.back_off)
@@ -505,12 +503,10 @@ class EWSService(metaclass=abc.ABCMeta):
             msg_xml = detail.find(f&#34;{{{TNS}}}MessageXml&#34;)  # Crazy. Here, it&#39;s in the TNS namespace
             if code == &#34;ErrorServerBusy&#34;:
                 back_off = None
-                try:
+                with suppress(TypeError, AttributeError):
                     value = msg_xml.find(f&#34;{{{TNS}}}Value&#34;)
                     if value.get(&#34;Name&#34;) == &#34;BackOffMilliseconds&#34;:
                         back_off = int(value.text) / 1000.0  # Convert to seconds
-                except (TypeError, AttributeError):
-                    pass
                 raise ErrorServerBusy(msg, back_off=back_off)
             if code == &#34;ErrorSchemaValidation&#34; and msg_xml is not None:
                 line_number = get_xml_attr(msg_xml, f&#34;{{{TNS}}}LineNumber&#34;)
@@ -524,10 +520,8 @@ class EWSService(metaclass=abc.ABCMeta):
                 raise vars(errors)[code](msg)
             except KeyError:
                 detail = f&#34;{cls.SERVICE_NAME}: code: {code} msg: {msg} ({xml_to_str(detail)})&#34;
-        try:
+        with suppress(KeyError):
             raise vars(errors)[fault_code](fault_string)
-        except KeyError:
-            pass
         raise SOAPError(f&#34;SOAP error code: {fault_code} string: {fault_string} actor: {fault_actor} detail: {detail}&#34;)
 
     def _get_element_container(self, message, name=None):
@@ -745,7 +739,7 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
 
 class EWSPagingService(EWSAccountService):
     def __init__(self, *args, **kwargs):
-        self.page_size = kwargs.pop(&#34;page_size&#34;, None) or PAGE_SIZE
+        self.page_size = kwargs.pop(&#34;page_size&#34;, None) or self.PAGE_SIZE
         if not isinstance(self.page_size, int):
             raise InvalidTypeError(&#34;page_size&#34;, self.page_size, int)
         if self.page_size &lt; 1:
@@ -1234,7 +1228,7 @@ def parse_folder_elem(elem, folder, account):
 </summary>
 <pre><code class="python">class EWSPagingService(EWSAccountService):
     def __init__(self, *args, **kwargs):
-        self.page_size = kwargs.pop(&#34;page_size&#34;, None) or PAGE_SIZE
+        self.page_size = kwargs.pop(&#34;page_size&#34;, None) or self.PAGE_SIZE
         if not isinstance(self.page_size, int):
             raise InvalidTypeError(&#34;page_size&#34;, self.page_size, int)
         if self.page_size &lt; 1:
@@ -1413,6 +1407,9 @@ def parse_folder_elem(elem, folder, account):
 <pre><code class="python">class EWSService(metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
 
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+    CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
+
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
     paging_container_name = None  # The name of the element that contains paging information and the paged results
@@ -1445,7 +1442,7 @@ def parse_folder_elem(elem, folder, account):
     supports_paging = False
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
-        self.chunk_size = chunk_size or CHUNK_SIZE
+        self.chunk_size = chunk_size or self.CHUNK_SIZE
         if not isinstance(self.chunk_size, int):
             raise InvalidTypeError(&#34;chunk_size&#34;, chunk_size, int)
         if self.chunk_size &lt; 1:
@@ -1644,7 +1641,6 @@ def parse_folder_elem(elem, folder, account):
                 account_to_impersonate=self._account_to_impersonate,
                 timezone=self._timezone,
             ),
-            allow_redirects=False,
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
         )
@@ -1727,10 +1723,8 @@ def parse_folder_elem(elem, folder, account):
         &#34;&#34;&#34;
         log.debug(&#34;Got ErrorServerBusy (back off %s seconds)&#34;, e.back_off)
         # ErrorServerBusy is very often a symptom of sending too many requests. Scale back connections if possible.
-        try:
+        with suppress(SessionPoolMinSizeReached):
             self.protocol.decrease_poolsize()
-        except SessionPoolMinSizeReached:
-            pass
         if self.protocol.retry_policy.fail_fast:
             raise e
         self.protocol.retry_policy.back_off(e.back_off)
@@ -1816,12 +1810,10 @@ def parse_folder_elem(elem, folder, account):
             msg_xml = detail.find(f&#34;{{{TNS}}}MessageXml&#34;)  # Crazy. Here, it&#39;s in the TNS namespace
             if code == &#34;ErrorServerBusy&#34;:
                 back_off = None
-                try:
+                with suppress(TypeError, AttributeError):
                     value = msg_xml.find(f&#34;{{{TNS}}}Value&#34;)
                     if value.get(&#34;Name&#34;) == &#34;BackOffMilliseconds&#34;:
                         back_off = int(value.text) / 1000.0  # Convert to seconds
-                except (TypeError, AttributeError):
-                    pass
                 raise ErrorServerBusy(msg, back_off=back_off)
             if code == &#34;ErrorSchemaValidation&#34; and msg_xml is not None:
                 line_number = get_xml_attr(msg_xml, f&#34;{{{TNS}}}LineNumber&#34;)
@@ -1835,10 +1827,8 @@ def parse_folder_elem(elem, folder, account):
                 raise vars(errors)[code](msg)
             except KeyError:
                 detail = f&#34;{cls.SERVICE_NAME}: code: {code} msg: {msg} ({xml_to_str(detail)})&#34;
-        try:
+        with suppress(KeyError):
             raise vars(errors)[fault_code](fault_string)
-        except KeyError:
-            pass
         raise SOAPError(f&#34;SOAP error code: {fault_code} string: {fault_string} actor: {fault_actor} detail: {detail}&#34;)
 
     def _get_element_container(self, message, name=None):
@@ -2014,6 +2004,10 @@ def parse_folder_elem(elem, folder, account):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="exchangelib.services.common.EWSService.CHUNK_SIZE"><code class="name">var <span class="ident">CHUNK_SIZE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="exchangelib.services.common.EWSService.ERRORS_TO_CATCH_IN_RESPONSE"><code class="name">var <span class="ident">ERRORS_TO_CATCH_IN_RESPONSE</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -2021,6 +2015,10 @@ def parse_folder_elem(elem, folder, account):
 <dt id="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS"><code class="name">var <span class="ident">NO_VALID_SERVER_VERSIONS</span></code></dt>
 <dd>
 <div class="desc"><p>Global error type within this module.</p></div>
+</dd>
+<dt id="exchangelib.services.common.EWSService.PAGE_SIZE"><code class="name">var <span class="ident">PAGE_SIZE</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.common.EWSService.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
 <dd>
@@ -2171,8 +2169,10 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li>
 <h4><code><a title="exchangelib.services.common.EWSService" href="#exchangelib.services.common.EWSService">EWSService</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.services.common.EWSService.CHUNK_SIZE" href="#exchangelib.services.common.EWSService.CHUNK_SIZE">CHUNK_SIZE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.PAGE_SIZE" href="#exchangelib.services.common.EWSService.PAGE_SIZE">PAGE_SIZE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.SERVICE_NAME" href="#exchangelib.services.common.EWSService.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE">WARNINGS_TO_IGNORE_IN_RESPONSE</a></code></li>

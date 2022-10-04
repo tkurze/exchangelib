@@ -33,7 +33,7 @@ import os
 import shelve
 import sys
 import tempfile
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from threading import RLock
 
 from ..configuration import Configuration
@@ -67,13 +67,10 @@ def shelve_open_with_failover(filename):
     # We don&#39;t know which file caused the error, so just delete them all.
     try:
         shelve_handle = shelve.open(filename)
-        # Try to actually use the shelve. Some implementations may allow opening the file but then throw
+        # Try to actually use the file. Some implementations may allow opening the file but then throw
         # errors on access.
-        try:
+        with suppress(KeyError):
             _ = shelve_handle[&#34;&#34;]
-        except KeyError:
-            # The entry doesn&#39;t exist. This is expected.
-            pass
     except Exception as e:
         for f in glob.glob(filename + &#34;*&#34;):
             log.warning(&#34;Deleting invalid cache file %s (%r)&#34;, f, e)
@@ -149,14 +146,10 @@ class AutodiscoverCache:
         # multiple times due to race conditions.
         domain = key[0]
         with shelve_open_with_failover(self._storage_file) as db:
-            try:
+            with suppress(KeyError):
                 del db[str(domain)]
-            except KeyError:
-                pass
-        try:
+        with suppress(KeyError):
             del self._protocols[key]
-        except KeyError:
-            pass
 
     def close(self):
         # Close all open connections
@@ -234,13 +227,10 @@ def shelve_open_with_failover(filename):
     # We don&#39;t know which file caused the error, so just delete them all.
     try:
         shelve_handle = shelve.open(filename)
-        # Try to actually use the shelve. Some implementations may allow opening the file but then throw
+        # Try to actually use the file. Some implementations may allow opening the file but then throw
         # errors on access.
-        try:
+        with suppress(KeyError):
             _ = shelve_handle[&#34;&#34;]
-        except KeyError:
-            # The entry doesn&#39;t exist. This is expected.
-            pass
     except Exception as e:
         for f in glob.glob(filename + &#34;*&#34;):
             log.warning(&#34;Deleting invalid cache file %s (%r)&#34;, f, e)
@@ -340,14 +330,10 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
         # multiple times due to race conditions.
         domain = key[0]
         with shelve_open_with_failover(self._storage_file) as db:
-            try:
+            with suppress(KeyError):
                 del db[str(domain)]
-            except KeyError:
-                pass
-        try:
+        with suppress(KeyError):
             del self._protocols[key]
-        except KeyError:
-            pass
 
     def close(self):
         # Close all open connections

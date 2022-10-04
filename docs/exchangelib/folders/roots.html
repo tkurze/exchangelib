@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import logging
+from contextlib import suppress
 from threading import Lock
 
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
@@ -115,10 +116,8 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     def remove_folder(self, folder):
         if not folder.id:
             raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-        try:
+        with suppress(KeyError):
             del self._folders_map[folder.id]
-        except KeyError:
-            pass
 
     def clear_cache(self):
         with self._subfolders_lock:
@@ -269,10 +268,8 @@ class Root(RootOfHierarchy):
         return self.get_default_folder(MsgFolderRoot)
 
     def get_default_folder(self, folder_cls):
-        try:
+        with suppress(MISSING_FOLDER_ERRORS):
             return super().get_default_folder(folder_cls)
-        except MISSING_FOLDER_ERRORS:
-            pass
 
         # Try to pick a suitable default folder. we do this by:
         #  1. Searching the full folder list for a folder with the distinguished folder name
@@ -290,11 +287,9 @@ class Root(RootOfHierarchy):
 
         # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
         if folder_cls != MsgFolderRoot:
-            try:
+            with suppress(MISSING_FOLDER_ERRORS):
                 return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-            except MISSING_FOLDER_ERRORS:
-                # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
-                pass
+            # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
 
         # Finally, try direct children of root
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
@@ -342,7 +337,7 @@ class PublicFoldersRoot(RootOfHierarchy):
             return
 
         children_map = {}
-        try:
+        with suppress(ErrorAccessDenied):
             for f in (
                 SingleFolderQuerySet(account=self.account, folder=folder)
                 .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
@@ -354,9 +349,6 @@ class PublicFoldersRoot(RootOfHierarchy):
                 if isinstance(f, Exception):
                     raise f
                 children_map[f.id] = f
-        except ErrorAccessDenied:
-            # No access to this folder
-            pass
 
         # Let&#39;s update the cache atomically, to avoid partial reads of the cache.
         with self._subfolders_lock:
@@ -498,7 +490,7 @@ class ArchiveRoot(RootOfHierarchy):
             return
 
         children_map = {}
-        try:
+        with suppress(ErrorAccessDenied):
             for f in (
                 SingleFolderQuerySet(account=self.account, folder=folder)
                 .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
@@ -510,9 +502,6 @@ class ArchiveRoot(RootOfHierarchy):
                 if isinstance(f, Exception):
                     raise f
                 children_map[f.id] = f
-        except ErrorAccessDenied:
-            # No access to this folder
-            pass
 
         # Let&#39;s update the cache atomically, to avoid partial reads of the cache.
         with self._subfolders_lock:
@@ -572,7 +561,7 @@ class ArchiveRoot(RootOfHierarchy):
         return
 
     children_map = {}
-    try:
+    with suppress(ErrorAccessDenied):
         for f in (
             SingleFolderQuerySet(account=self.account, folder=folder)
             .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
@@ -584,9 +573,6 @@ class ArchiveRoot(RootOfHierarchy):
             if isinstance(f, Exception):
                 raise f
             children_map[f.id] = f
-    except ErrorAccessDenied:
-        # No access to this folder
-        pass
 
     # Let&#39;s update the cache atomically, to avoid partial reads of the cache.
     with self._subfolders_lock:
@@ -661,10 +647,8 @@ class ArchiveRoot(RootOfHierarchy):
         return self.get_default_folder(MsgFolderRoot)
 
     def get_default_folder(self, folder_cls):
-        try:
+        with suppress(MISSING_FOLDER_ERRORS):
             return super().get_default_folder(folder_cls)
-        except MISSING_FOLDER_ERRORS:
-            pass
 
         # Try to pick a suitable default folder. we do this by:
         #  1. Searching the full folder list for a folder with the distinguished folder name
@@ -682,11 +666,9 @@ class ArchiveRoot(RootOfHierarchy):
 
         # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
         if folder_cls != MsgFolderRoot:
-            try:
+            with suppress(MISSING_FOLDER_ERRORS):
                 return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-            except MISSING_FOLDER_ERRORS:
-                # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
-                pass
+            # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
 
         # Finally, try direct children of root
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
@@ -866,10 +848,8 @@ def tois(self):
     def remove_folder(self, folder):
         if not folder.id:
             raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-        try:
+        with suppress(KeyError):
             del self._folders_map[folder.id]
-        except KeyError:
-            pass
 
     def clear_cache(self):
         with self._subfolders_lock:
@@ -1221,10 +1201,8 @@ folder was found, try as best we can to return the default folder of type 'folde
 <pre><code class="python">def remove_folder(self, folder):
     if not folder.id:
         raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-    try:
-        del self._folders_map[folder.id]
-    except KeyError:
-        pass</code></pre>
+    with suppress(KeyError):
+        del self._folders_map[folder.id]</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.update_folder"><code class="name flex">

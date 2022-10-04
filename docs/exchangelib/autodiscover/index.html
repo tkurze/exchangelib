@@ -213,14 +213,10 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
         # multiple times due to race conditions.
         domain = key[0]
         with shelve_open_with_failover(self._storage_file) as db:
-            try:
+            with suppress(KeyError):
                 del db[str(domain)]
-            except KeyError:
-                pass
-        try:
+        with suppress(KeyError):
             del self._protocols[key]
-        except KeyError:
-            pass
 
     def close(self):
         # Close all open connections
@@ -608,8 +604,6 @@ implementation, start by doing an official test at <a href="https://testconnecti
                 url=protocol.service_endpoint,
                 headers=headers,
                 data=data,
-                allow_redirects=False,
-                stream=False,
             )
             protocol.release_session(session)
         except UnauthorizedError as e:

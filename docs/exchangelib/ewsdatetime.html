@@ -158,6 +158,10 @@ class EWSDateTime(datetime.datetime):
             return t
         return self.from_datetime(t)  # We want to return EWSDateTime objects
 
+    @classmethod
+    def fromisoformat(cls, date_string):
+        return cls.from_string(date_string)
+
     def __add__(self, other):
         t = super().__add__(other)
         if isinstance(t, self.__class__):
@@ -579,6 +583,10 @@ def fromordinal(cls, n):
             return t
         return self.from_datetime(t)  # We want to return EWSDateTime objects
 
+    @classmethod
+    def fromisoformat(cls, date_string):
+        return cls.from_string(date_string)
+
     def __add__(self, other):
         t = super().__add__(other)
         if isinstance(t, self.__class__):
@@ -702,6 +710,20 @@ def from_string(cls, date_string):
     if isinstance(aware_dt, cls):
         return aware_dt
     return cls.from_datetime(aware_dt)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.ewsdatetime.EWSDateTime.fromisoformat"><code class="name flex">
+<span>def <span class="ident">fromisoformat</span></span>(<span>date_string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>string -&gt; datetime from datetime.isoformat() output</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def fromisoformat(cls, date_string):
+    return cls.from_string(date_string)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.ewsdatetime.EWSDateTime.fromtimestamp"><code class="name flex">
@@ -1161,6 +1183,7 @@ def localzone(cls):
 <li><code><a title="exchangelib.ewsdatetime.EWSDateTime.ewsformat" href="#exchangelib.ewsdatetime.EWSDateTime.ewsformat">ewsformat</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSDateTime.from_datetime" href="#exchangelib.ewsdatetime.EWSDateTime.from_datetime">from_datetime</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSDateTime.from_string" href="#exchangelib.ewsdatetime.EWSDateTime.from_string">from_string</a></code></li>
+<li><code><a title="exchangelib.ewsdatetime.EWSDateTime.fromisoformat" href="#exchangelib.ewsdatetime.EWSDateTime.fromisoformat">fromisoformat</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSDateTime.fromtimestamp" href="#exchangelib.ewsdatetime.EWSDateTime.fromtimestamp">fromtimestamp</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSDateTime.now" href="#exchangelib.ewsdatetime.EWSDateTime.now">now</a></code></li>
 <li><code><a title="exchangelib.ewsdatetime.EWSDateTime.utcfromtimestamp" href="#exchangelib.ewsdatetime.EWSDateTime.utcfromtimestamp">utcfromtimestamp</a></code></li>

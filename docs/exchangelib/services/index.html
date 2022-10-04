@@ -41,7 +41,7 @@ Exchange EWS operations overview:
 &#34;&#34;&#34;
 
 from .archive_item import ArchiveItem
-from .common import CHUNK_SIZE, PAGE_SIZE
+from .common import EWSService
 from .convert_id import ConvertId
 from .copy_item import CopyItem
 from .create_attachment import CreateAttachment
@@ -90,8 +90,6 @@ from .update_user_configuration import UpdateUserConfiguration
 from .upload_items import UploadItems
 
 __all__ = [
-    &#34;CHUNK_SIZE&#34;,
-    &#34;PAGE_SIZE&#34;,
     &#34;ArchiveItem&#34;,
     &#34;ConvertId&#34;,
     &#34;CopyItem&#34;,
@@ -104,6 +102,7 @@ __all__ = [
     &#34;DeleteUserConfiguration&#34;,
     &#34;DeleteItem&#34;,
     &#34;EmptyFolder&#34;,
+    &#34;EWSService&#34;,
     &#34;ExpandDL&#34;,
     &#34;ExportItems&#34;,
     &#34;FindFolder&#34;,
@@ -1576,6 +1575,743 @@ invitation accepts (see
 </ul>
 </li>
 </ul>
+</dd>
+<dt id="exchangelib.services.EWSService"><code class="flex name class">
+<span>class <span class="ident">EWSService</span></span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all EWS services.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EWSService(metaclass=abc.ABCMeta):
+    &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
+
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+    CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
+
+    SERVICE_NAME = None  # The name of the SOAP service
+    element_container_name = None  # The name of the XML element wrapping the collection of returned items
+    paging_container_name = None  # The name of the element that contains paging information and the paged results
+    returns_elements = True  # If False, the service does not return response elements, just the ResponseCode status
+    # Return exception instance instead of raising exceptions for the following errors when contained in an element
+    ERRORS_TO_CATCH_IN_RESPONSE = (
+        EWSWarning,
+        ErrorCannotDeleteObject,
+        ErrorInvalidChangeKey,
+        ErrorItemNotFound,
+        ErrorItemSave,
+        ErrorInvalidIdMalformed,
+        ErrorMessageSizeExceeded,
+        ErrorCannotDeleteTaskOccurrence,
+        ErrorMimeContentConversionFailed,
+        ErrorRecurrenceHasNoOccurrence,
+        ErrorCorruptData,
+        ErrorItemCorrupt,
+        ErrorMailRecipientNotFound,
+    )
+    # Similarly, define the warnings we want to return unraised
+    WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
+    # Define the warnings we want to ignore, to let response processing proceed
+    WARNINGS_TO_IGNORE_IN_RESPONSE = ()
+    # The exception type to raise when all attempted API versions failed
+    NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
+    # Marks the version from which the service was introduced
+    supported_from = None
+    # Marks services that support paging of requested items
+    supports_paging = False
+
+    def __init__(self, protocol, chunk_size=None, timeout=None):
+        self.chunk_size = chunk_size or self.CHUNK_SIZE
+        if not isinstance(self.chunk_size, int):
+            raise InvalidTypeError(&#34;chunk_size&#34;, chunk_size, int)
+        if self.chunk_size &lt; 1:
+            raise ValueError(f&#34;&#39;chunk_size&#39; {self.chunk_size} must be a positive number&#34;)
+        if self.supported_from and protocol.version.build &lt; self.supported_from:
+            raise NotImplementedError(
+                f&#34;{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later. &#34;
+                f&#34;Your current version is {protocol.version.build.fullname()!r}.&#34;
+            )
+        self.protocol = protocol
+        # Allow a service to override the default protocol timeout. Useful for streaming services
+        self.timeout = timeout
+        # Controls whether the HTTP request should be streaming or fetch everything at once
+        self.streaming = False
+        # Streaming connection variables
+        self._streaming_session = None
+        self._streaming_response = None
+
+    def __del__(self):
+        # pylint: disable=bare-except
+        try:
+            if self.streaming:
+                # Make sure to clean up lingering resources
+                self.stop_streaming()
+        except Exception:  # nosec
+            # __del__ should never fail
+            pass
+
+    # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
+    # kwargs differs between services. Therefore, we cannot make these methods abstract.
+
+    # @abc.abstractmethod
+    # def call(self, **kwargs):
+    #     &#34;&#34;&#34;Defines the arguments required by the service. Arguments are basic Python types or EWSElement objects.
+    #     Returns either XML objects or EWSElement objects.
+    #     &#34;&#34;&#34;&#34;
+    #     pass
+
+    # @abc.abstractmethod
+    # def get_payload(self, **kwargs):
+    #     &#34;&#34;&#34;Using the arguments from .call(), return the payload expected by the service, as an XML object. The XML
+    #     object should consist of a SERVICE_NAME element and everything within that.
+    #     &#34;&#34;&#34;
+    #     pass
+
+    def get(self, expect_result=True, **kwargs):
+        &#34;&#34;&#34;Like .call(), but expects exactly one result from the server, or zero when expect_result=False, or either
+        zero or one when expect_result=None. Returns either one object or None.
+
+        :param expect_result: None, True, or False
+        :param kwargs: Same as arguments for .call()
+        :return: Same as .call(), but returns either None or exactly one item
+        &#34;&#34;&#34;
+        res = list(self.call(**kwargs))
+        # Raise any errors
+        for r in res:
+            if isinstance(r, Exception):
+                raise r
+        if expect_result is None and not res:
+            # Allow empty result
+            return None
+        if expect_result is False:
+            if res:
+                raise ValueError(f&#34;Expected result length 0, but got {res}&#34;)
+            return None
+        if len(res) != 1:
+            raise ValueError(f&#34;Expected result length 1, but got {res}&#34;)
+        return res[0]
+
+    def parse(self, xml):
+        &#34;&#34;&#34;Used mostly for testing, when we want to parse static XML data.&#34;&#34;&#34;
+        resp = DummyResponse(content=xml, streaming=self.streaming)
+        _, body = self._get_soap_parts(response=resp)
+        return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
+
+    def _elems_to_objs(self, elems):
+        &#34;&#34;&#34;Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions).&#34;&#34;&#34;
+        for elem in elems:
+            # Allow None here. Some services don&#39;t return an ID if the target folder is outside the mailbox.
+            if isinstance(elem, (Exception, type(None))):
+                yield elem
+                continue
+            yield self._elem_to_obj(elem)
+
+    def _elem_to_obj(self, elem):
+        if not self.returns_elements:
+            raise RuntimeError(&#34;Incorrect call to method when &#39;returns_elements&#39; is False&#34;)
+        raise NotImplementedError()
+
+    @property
+    def _version_hint(self):
+        # We may be here due to version guessing in Protocol.version, so we can&#39;t use the self.protocol.version property
+        return self.protocol.config.version
+
+    @_version_hint.setter
+    def _version_hint(self, value):
+        self.protocol.config.version = value
+
+    def _extra_headers(self, session):
+        return {}
+
+    @property
+    def _account_to_impersonate(self):
+        if isinstance(self.protocol.credentials, OAuth2Credentials):
+            return self.protocol.credentials.identity
+        return None
+
+    @property
+    def _timezone(self):
+        return None
+
+    def _response_generator(self, payload):
+        &#34;&#34;&#34;Send the payload to the server, and return the response.
+
+        :param payload: payload as an XML object
+        :return: the response, as XML objects
+        &#34;&#34;&#34;
+        response = self._get_response_xml(payload=payload)
+        if self.supports_paging:
+            return (self._get_page(message) for message in response)
+        return self._get_elements_in_response(response=response)
+
+    def _chunked_get_elements(self, payload_func, items, **kwargs):
+        &#34;&#34;&#34;Yield elements in a response. Like ._get_elements(), but chop items into suitable chunks and send multiple
+        requests.
+
+        :param payload_func: A reference to .payload()
+        :param items: An iterable of items (messages, folders, etc.) to process
+        :param kwargs: Same as arguments for .call(), except for the &#39;items&#39; argument
+        :return: Same as ._get_elements()
+        &#34;&#34;&#34;
+        # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
+        filtered_items = filter(lambda i: not isinstance(i, Exception), items)
+        for i, chunk in enumerate(chunkify(filtered_items, self.chunk_size), start=1):
+            log.debug(&#34;Processing chunk %s containing %s items&#34;, i, len(chunk))
+            yield from self._get_elements(payload=payload_func(chunk, **kwargs))
+
+    def stop_streaming(self):
+        if not self.streaming:
+            raise RuntimeError(&#34;Attempt to stop a non-streaming service&#34;)
+        if self._streaming_response:
+            self._streaming_response.close()  # Release memory
+            self._streaming_response = None
+        if self._streaming_session:
+            self.protocol.release_session(self._streaming_session)
+            self._streaming_session = None
+
+    def _get_elements(self, payload):
+        &#34;&#34;&#34;Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
+        to the caller as exception objects. Retry the request according to the retry policy.
+        &#34;&#34;&#34;
+        while True:
+            try:
+                # Create a generator over the response elements so exceptions in response elements are also raised
+                # here and can be handled.
+                yield from self._response_generator(payload=payload)
+                return
+            except ErrorServerBusy as e:
+                self._handle_backoff(e)
+                continue
+            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
+                # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
+                # often a symptom of sending too many requests.
+                #
+                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests. Start by lowering the
+                # session count. This is done by downstream code.
+                if isinstance(e, ErrorTimeoutExpired) and self.protocol.session_pool_size &lt;= 1:
+                    # We&#39;re already as low as we can go, so downstream cannot limit the session count to put less load
+                    # on the server. We don&#39;t have a way of lowering the page size of requests from
+                    # this part of the code yet. Let the user handle this.
+                    raise e
+
+                # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
+                raise ErrorServerBusy(f&#34;Reraised from {e.__class__.__name__}({e})&#34;)
+            finally:
+                if self.streaming:
+                    self.stop_streaming()
+
+    def _handle_response_cookies(self, session):
+        pass
+
+    def _get_response(self, payload, api_version):
+        &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
+        if self.streaming:
+            # Make sure to clean up lingering resources
+            self.stop_streaming()
+        session = self.protocol.get_session()
+        r, session = post_ratelimited(
+            protocol=self.protocol,
+            session=session,
+            url=self.protocol.service_endpoint,
+            headers=self._extra_headers(session),
+            data=wrap(
+                content=payload,
+                api_version=api_version,
+                account_to_impersonate=self._account_to_impersonate,
+                timezone=self._timezone,
+            ),
+            stream=self.streaming,
+            timeout=self.timeout or self.protocol.TIMEOUT,
+        )
+        self._handle_response_cookies(session)
+        if self.streaming:
+            # We con only release the session when we have fully consumed the response. Save session and response
+            # objects for later.
+            self._streaming_session, self._streaming_response = session, r
+        else:
+            self.protocol.release_session(session)
+        return r
+
+    @property
+    def _api_versions_to_try(self):
+        # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
+        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
+
+    def _get_response_xml(self, payload, **parse_opts):
+        &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
+          * The payload is wrapped in SOAP headers and sent to the server
+          * The Exchange API version is negotiated and stored in the protocol object
+          * Connection errors are handled and possibly reraised as ErrorServerBusy
+          * SOAP errors are raised
+          * EWS errors are raised, or passed on to the caller
+
+        :param payload: The request payload, as an XML object
+        :return: A generator of XML objects or None if the service does not return a result
+        &#34;&#34;&#34;
+        # Microsoft really doesn&#39;t want to make our lives easy. The server may report one version in our initial version
+        # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
+        # the request for an account. Prepare to handle version-related errors and set the server version per-account.
+        log.debug(&#34;Calling service %s&#34;, self.SERVICE_NAME)
+        for api_version in self._api_versions_to_try:
+            log.debug(&#34;Trying API version %s&#34;, api_version)
+            r = self._get_response(payload=payload, api_version=api_version)
+            if self.streaming:
+                # Let &#39;requests&#39; decode raw data automatically
+                r.raw.decode_content = True
+            try:
+                header, body = self._get_soap_parts(response=r, **parse_opts)
+            except Exception:
+                r.close()  # Release memory
+                raise
+            # The body may contain error messages from Exchange, but we still want to collect version info
+            if header is not None:
+                self._update_api_version(api_version=api_version, header=header, **parse_opts)
+            try:
+                return self._get_soap_messages(body=body, **parse_opts)
+            except (
+                ErrorInvalidServerVersion,
+                ErrorIncorrectSchemaVersion,
+                ErrorInvalidRequest,
+                ErrorInvalidSchemaVersionForMailboxVersion,
+            ):
+                # The guessed server version is wrong. Try the next version
+                log.debug(&#34;API version %s was invalid&#34;, api_version)
+                continue
+            except ErrorExceededConnectionCount as e:
+                # This indicates that the connecting user has too many open TCP connections to the server. Decrease
+                # our session pool size.
+                try:
+                    self.protocol.decrease_poolsize()
+                    continue
+                except SessionPoolMinSizeReached:
+                    # We&#39;re already as low as we can go. Let the user handle this.
+                    raise e
+            finally:
+                if not self.streaming:
+                    # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
+                    r.close()  # Release memory
+
+        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try} but all were invalid&#34;)
+
+    def _handle_backoff(self, e):
+        &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
+        exception if conditions are not met.
+
+        :param e: An ErrorServerBusy instance
+        :return:
+        &#34;&#34;&#34;
+        log.debug(&#34;Got ErrorServerBusy (back off %s seconds)&#34;, e.back_off)
+        # ErrorServerBusy is very often a symptom of sending too many requests. Scale back connections if possible.
+        with suppress(SessionPoolMinSizeReached):
+            self.protocol.decrease_poolsize()
+        if self.protocol.retry_policy.fail_fast:
+            raise e
+        self.protocol.retry_policy.back_off(e.back_off)
+        # We&#39;ll warn about this later if we actually need to sleep
+
+    def _update_api_version(self, api_version, header, **parse_opts):
+        &#34;&#34;&#34;Parse the server version contained in SOAP headers and update the version hint stored by the caller, if
+        necessary.
+        &#34;&#34;&#34;
+        try:
+            head_version = Version.from_soap_header(requested_api_version=api_version, header=header)
+        except TransportError as te:
+            log.debug(&#34;Failed to update version info (%s)&#34;, te)
+            return
+        if self._version_hint == head_version:
+            # Nothing to do
+            return
+        log.debug(&#34;Found new version (%s -&gt; %s)&#34;, self._version_hint, head_version)
+        # The api_version that worked was different than our hint, or we never got a build version. Store the working
+        # version.
+        self._version_hint = head_version
+
+    @classmethod
+    def _response_tag(cls):
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
+        return f&#34;{{{MNS}}}{cls.SERVICE_NAME}Response&#34;
+
+    @staticmethod
+    def _response_messages_tag():
+        &#34;&#34;&#34;Return the name of the element containing service response messages.&#34;&#34;&#34;
+        return f&#34;{{{MNS}}}ResponseMessages&#34;
+
+    @classmethod
+    def _response_message_tag(cls):
+        &#34;&#34;&#34;Return the name of the element of a single response message.&#34;&#34;&#34;
+        return f&#34;{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage&#34;
+
+    @classmethod
+    def _get_soap_parts(cls, response, **parse_opts):
+        &#34;&#34;&#34;Split the SOAP response into its headers an body elements.&#34;&#34;&#34;
+        try:
+            root = to_xml(response.iter_content())
+        except ParseError as e:
+            raise SOAPError(f&#34;Bad SOAP response: {e}&#34;)
+        header = root.find(f&#34;{{{SOAPNS}}}Header&#34;)
+        if header is None:
+            # This is normal when the response contains SOAP-level errors
+            log.debug(&#34;No header in XML response&#34;)
+        body = root.find(f&#34;{{{SOAPNS}}}Body&#34;)
+        if body is None:
+            raise MalformedResponseError(&#34;No Body element in SOAP response&#34;)
+        return header, body
+
+    def _get_soap_messages(self, body, **parse_opts):
+        &#34;&#34;&#34;Return the elements in the response containing the response messages. Raises any SOAP exceptions.&#34;&#34;&#34;
+        response = body.find(self._response_tag())
+        if response is None:
+            fault = body.find(f&#34;{{{SOAPNS}}}Fault&#34;)
+            if fault is None:
+                raise SOAPError(f&#34;Unknown SOAP response (expected {self._response_tag()} or Fault): {xml_to_str(body)}&#34;)
+            self._raise_soap_errors(fault=fault)  # Will throw SOAPError or custom EWS error
+        response_messages = response.find(self._response_messages_tag())
+        if response_messages is None:
+            # Result isn&#39;t delivered in a list of FooResponseMessages, but directly in the FooResponse. Consumers expect
+            # a list, so return a list
+            return [response]
+        return response_messages.findall(self._response_message_tag())
+
+    @classmethod
+    def _raise_soap_errors(cls, fault):
+        &#34;&#34;&#34;Parse error messages contained in SOAP headers and raise as exceptions defined in this package.&#34;&#34;&#34;
+        # Fault: See http://www.w3.org/TR/2000/NOTE-SOAP-20000508/#_Toc478383507
+        fault_code = get_xml_attr(fault, &#34;faultcode&#34;)
+        fault_string = get_xml_attr(fault, &#34;faultstring&#34;)
+        fault_actor = get_xml_attr(fault, &#34;faultactor&#34;)
+        detail = fault.find(&#34;detail&#34;)
+        if detail is not None:
+            code, msg = None, &#34;&#34;
+            if detail.find(f&#34;{{{ENS}}}ResponseCode&#34;) is not None:
+                code = get_xml_attr(detail, f&#34;{{{ENS}}}ResponseCode&#34;).strip()
+            if detail.find(f&#34;{{{ENS}}}Message&#34;) is not None:
+                msg = get_xml_attr(detail, f&#34;{{{ENS}}}Message&#34;).strip()
+            msg_xml = detail.find(f&#34;{{{TNS}}}MessageXml&#34;)  # Crazy. Here, it&#39;s in the TNS namespace
+            if code == &#34;ErrorServerBusy&#34;:
+                back_off = None
+                with suppress(TypeError, AttributeError):
+                    value = msg_xml.find(f&#34;{{{TNS}}}Value&#34;)
+                    if value.get(&#34;Name&#34;) == &#34;BackOffMilliseconds&#34;:
+                        back_off = int(value.text) / 1000.0  # Convert to seconds
+                raise ErrorServerBusy(msg, back_off=back_off)
+            if code == &#34;ErrorSchemaValidation&#34; and msg_xml is not None:
+                line_number = get_xml_attr(msg_xml, f&#34;{{{TNS}}}LineNumber&#34;)
+                line_position = get_xml_attr(msg_xml, f&#34;{{{TNS}}}LinePosition&#34;)
+                violation = get_xml_attr(msg_xml, f&#34;{{{TNS}}}Violation&#34;)
+                if violation:
+                    msg = f&#34;{msg} {violation}&#34;
+                if line_number or line_position:
+                    msg = f&#34;{msg} (line: {line_number} position: {line_position})&#34;
+            try:
+                raise vars(errors)[code](msg)
+            except KeyError:
+                detail = f&#34;{cls.SERVICE_NAME}: code: {code} msg: {msg} ({xml_to_str(detail)})&#34;
+        with suppress(KeyError):
+            raise vars(errors)[fault_code](fault_string)
+        raise SOAPError(f&#34;SOAP error code: {fault_code} string: {fault_string} actor: {fault_actor} detail: {detail}&#34;)
+
+    def _get_element_container(self, message, name=None):
+        &#34;&#34;&#34;Return the XML element in a response element that contains the elements we want the service to return. For
+        example, in a GetFolder response, &#39;message&#39; is the GetFolderResponseMessage element, and we return the &#39;Folders&#39;
+        element:
+
+        &lt;m:GetFolderResponseMessage ResponseClass=&#34;Success&#34;&gt;
+          &lt;m:ResponseCode&gt;NoError&lt;/m:ResponseCode&gt;
+          &lt;m:Folders&gt;
+            &lt;t:Folder&gt;
+              &lt;t:FolderId Id=&#34;AQApA=&#34; ChangeKey=&#34;AQAAAB&#34; /&gt;
+              [...]
+            &lt;/t:Folder&gt;
+          &lt;/m:Folders&gt;
+        &lt;/m:GetFolderResponseMessage&gt;
+
+        Some service responses don&#39;t have a containing element for the returned elements (&#39;name&#39; is None). In
+        that case, we return the &#39;SomeServiceResponseMessage&#39; element.
+
+        If the response contains a warning or an error message, we raise the relevant exception, unless the error class
+        is contained in WARNINGS_TO_CATCH_IN_RESPONSE or ERRORS_TO_CATCH_IN_RESPONSE, in which case we return the
+        exception instance.
+        &#34;&#34;&#34;
+        # ResponseClass is an XML attribute of various SomeServiceResponseMessage elements: Possible values are:
+        # Success, Warning, Error. See e.g.
+        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/finditemresponsemessage
+        response_class = message.get(&#34;ResponseClass&#34;)
+        # ResponseCode, MessageText: See
+        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode
+        response_code = get_xml_attr(message, f&#34;{{{MNS}}}ResponseCode&#34;)
+        if response_class == &#34;Success&#34; and response_code == &#34;NoError&#34;:
+            if not name:
+                return message
+            container = message.find(name)
+            if container is None:
+                raise MalformedResponseError(f&#34;No {name} elements in ResponseMessage ({xml_to_str(message)})&#34;)
+            return container
+        if response_code == &#34;NoError&#34;:
+            return True
+        # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
+        msg_text = get_xml_attr(message, f&#34;{{{MNS}}}MessageText&#34;)
+        msg_xml = message.find(f&#34;{{{MNS}}}MessageXml&#34;)
+        if response_class == &#34;Warning&#34;:
+            try:
+                raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
+            except self.WARNINGS_TO_CATCH_IN_RESPONSE as e:
+                return e
+            except self.WARNINGS_TO_IGNORE_IN_RESPONSE as e:
+                log.warning(str(e))
+                container = message.find(name)
+                if container is None:
+                    raise MalformedResponseError(f&#34;No {name} elements in ResponseMessage ({xml_to_str(message)})&#34;)
+                return container
+        # rspclass == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
+        try:
+            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
+        except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
+            return e
+
+    @staticmethod
+    def _get_exception(code, text, msg_xml):
+        &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package.&#34;&#34;&#34;
+        if not code:
+            return TransportError(f&#34;Empty ResponseCode in ResponseMessage (MessageText: {text}, MessageXml: {msg_xml})&#34;)
+        if msg_xml is not None:
+            # If this is an ErrorInvalidPropertyRequest error, the xml may contain a specific FieldURI
+            for elem_cls in (FieldURI, IndexedFieldURI, ExtendedFieldURI, ExceptionFieldURI):
+                elem = msg_xml.find(elem_cls.response_tag())
+                if elem is not None:
+                    field_uri = elem_cls.from_xml(elem, account=None)
+                    text += f&#34; (field: {field_uri})&#34;
+                    break
+
+            # If this is an ErrorInvalidValueForProperty error, the xml may contain the name and value of the property
+            if code == &#34;ErrorInvalidValueForProperty&#34;:
+                msg_parts = {}
+                for elem in msg_xml.findall(f&#34;{{{TNS}}}Value&#34;):
+                    key, val = elem.get(&#34;Name&#34;), elem.text
+                    if key:
+                        msg_parts[key] = val
+                if msg_parts:
+                    text += f&#34; ({&#39;, &#39;.join(f&#39;{k}: {v}&#39; for k, v in msg_parts.items())})&#34;
+
+            # If this is an ErrorInternalServerError error, the xml may contain a more specific error code
+            inner_code, inner_text = None, None
+            for value_elem in msg_xml.findall(f&#34;{{{TNS}}}Value&#34;):
+                name = value_elem.get(&#34;Name&#34;)
+                if name == &#34;InnerErrorResponseCode&#34;:
+                    inner_code = value_elem.text
+                elif name == &#34;InnerErrorMessageText&#34;:
+                    inner_text = value_elem.text
+            if inner_code:
+                try:
+                    # Raise the error as the inner error code
+                    return vars(errors)[inner_code](f&#34;{inner_text} (raised from: {code}({text!r}))&#34;)
+                except KeyError:
+                    # Inner code is unknown to us. Just append to the original text
+                    text += f&#34; (inner error: {inner_code}({inner_text!r}))&#34;
+        try:
+            # Raise the error corresponding to the ResponseCode
+            return vars(errors)[code](text)
+        except KeyError:
+            # Should not happen
+            return TransportError(
+                f&#34;Unknown ResponseCode in ResponseMessage: {code} (MessageText: {text}, MessageXml: {msg_xml})&#34;
+            )
+
+    def _get_elements_in_response(self, response):
+        &#34;&#34;&#34;Take a list of &#39;SomeServiceResponseMessage&#39; elements and return the elements in each response message that
+        we want the service to return. With e.g. &#39;CreateItem&#39;, we get a list of &#39;CreateItemResponseMessage&#39; elements
+        and return the &#39;Message&#39; elements.
+
+        &lt;m:CreateItemResponseMessage ResponseClass=&#34;Success&#34;&gt;
+          &lt;m:ResponseCode&gt;NoError&lt;/m:ResponseCode&gt;
+          &lt;m:Items&gt;
+            &lt;t:Message&gt;
+              &lt;t:ItemId Id=&#34;AQApA=&#34; ChangeKey=&#34;AQAAAB&#34;/&gt;
+            &lt;/t:Message&gt;
+          &lt;/m:Items&gt;
+        &lt;/m:CreateItemResponseMessage&gt;
+        &lt;m:CreateItemResponseMessage ResponseClass=&#34;Success&#34;&gt;
+          &lt;m:ResponseCode&gt;NoError&lt;/m:ResponseCode&gt;
+          &lt;m:Items&gt;
+            &lt;t:Message&gt;
+              &lt;t:ItemId Id=&#34;AQApB=&#34; ChangeKey=&#34;AQAAAC&#34;/&gt;
+            &lt;/t:Message&gt;
+          &lt;/m:Items&gt;
+        &lt;/m:CreateItemResponseMessage&gt;
+
+        :param response: a list of &#39;SomeServiceResponseMessage&#39; XML objects
+        :return: a generator of items as returned by &#39;_get_elements_in_container()
+        &#34;&#34;&#34;
+        for msg in response:
+            container_or_exc = self._get_element_container(message=msg, name=self.element_container_name)
+            if isinstance(container_or_exc, (bool, Exception)):
+                yield container_or_exc
+            else:
+                for c in self._get_elements_in_container(container=container_or_exc):
+                    yield c
+
+    @classmethod
+    def _get_elements_in_container(cls, container):
+        &#34;&#34;&#34;Return a list of response elements from an XML response element container. With e.g.
+        &#39;CreateItem&#39;, &#39;Items&#39; is the container element and we return the &#39;Message&#39; child elements:
+
+          &lt;m:Items&gt;
+            &lt;t:Message&gt;
+              &lt;t:ItemId Id=&#34;AQApA=&#34; ChangeKey=&#34;AQAAAB&#34;/&gt;
+            &lt;/t:Message&gt;
+          &lt;/m:Items&gt;
+
+        If the service does not return response elements, return True to indicate the status. Errors have already been
+        raised.
+        &#34;&#34;&#34;
+        if cls.returns_elements:
+            return list(container)
+        return [True]</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
+<li><a title="exchangelib.services.convert_id.ConvertId" href="convert_id.html#exchangelib.services.convert_id.ConvertId">ConvertId</a></li>
+<li><a title="exchangelib.services.expand_dl.ExpandDL" href="expand_dl.html#exchangelib.services.expand_dl.ExpandDL">ExpandDL</a></li>
+<li><a title="exchangelib.services.get_mail_tips.GetMailTips" href="get_mail_tips.html#exchangelib.services.get_mail_tips.GetMailTips">GetMailTips</a></li>
+<li><a title="exchangelib.services.get_room_lists.GetRoomLists" href="get_room_lists.html#exchangelib.services.get_room_lists.GetRoomLists">GetRoomLists</a></li>
+<li><a title="exchangelib.services.get_rooms.GetRooms" href="get_rooms.html#exchangelib.services.get_rooms.GetRooms">GetRooms</a></li>
+<li><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes" href="get_searchable_mailboxes.html#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes">GetSearchableMailboxes</a></li>
+<li><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones" href="get_server_time_zones.html#exchangelib.services.get_server_time_zones.GetServerTimeZones">GetServerTimeZones</a></li>
+<li><a title="exchangelib.services.get_user_availability.GetUserAvailability" href="get_user_availability.html#exchangelib.services.get_user_availability.GetUserAvailability">GetUserAvailability</a></li>
+<li><a title="exchangelib.services.resolve_names.ResolveNames" href="resolve_names.html#exchangelib.services.resolve_names.ResolveNames">ResolveNames</a></li>
+<li><a title="exchangelib.services.send_notification.SendNotification" href="send_notification.html#exchangelib.services.send_notification.SendNotification">SendNotification</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.EWSService.CHUNK_SIZE"><code class="name">var <span class="ident">CHUNK_SIZE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.ERRORS_TO_CATCH_IN_RESPONSE"><code class="name">var <span class="ident">ERRORS_TO_CATCH_IN_RESPONSE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.NO_VALID_SERVER_VERSIONS"><code class="name">var <span class="ident">NO_VALID_SERVER_VERSIONS</span></code></dt>
+<dd>
+<div class="desc"><p>Global error type within this module.</p></div>
+</dd>
+<dt id="exchangelib.services.EWSService.PAGE_SIZE"><code class="name">var <span class="ident">PAGE_SIZE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE"><code class="name">var <span class="ident">WARNINGS_TO_CATCH_IN_RESPONSE</span></code></dt>
+<dd>
+<div class="desc"><p>Global error type within this module.</p></div>
+</dd>
+<dt id="exchangelib.services.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE"><code class="name">var <span class="ident">WARNINGS_TO_IGNORE_IN_RESPONSE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.paging_container_name"><code class="name">var <span class="ident">paging_container_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.EWSService.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.EWSService.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, expect_result=True, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Like .call(), but expects exactly one result from the server, or zero when expect_result=False, or either
+zero or one when expect_result=None. Returns either one object or None.</p>
+<p>:param expect_result: None, True, or False
+:param kwargs: Same as arguments for .call()
+:return: Same as .call(), but returns either None or exactly one item</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, expect_result=True, **kwargs):
+    &#34;&#34;&#34;Like .call(), but expects exactly one result from the server, or zero when expect_result=False, or either
+    zero or one when expect_result=None. Returns either one object or None.
+
+    :param expect_result: None, True, or False
+    :param kwargs: Same as arguments for .call()
+    :return: Same as .call(), but returns either None or exactly one item
+    &#34;&#34;&#34;
+    res = list(self.call(**kwargs))
+    # Raise any errors
+    for r in res:
+        if isinstance(r, Exception):
+            raise r
+    if expect_result is None and not res:
+        # Allow empty result
+        return None
+    if expect_result is False:
+        if res:
+            raise ValueError(f&#34;Expected result length 0, but got {res}&#34;)
+        return None
+    if len(res) != 1:
+        raise ValueError(f&#34;Expected result length 1, but got {res}&#34;)
+    return res[0]</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.EWSService.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>self, xml)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Used mostly for testing, when we want to parse static XML data.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse(self, xml):
+    &#34;&#34;&#34;Used mostly for testing, when we want to parse static XML data.&#34;&#34;&#34;
+    resp = DummyResponse(content=xml, streaming=self.streaming)
+    _, body = self._get_soap_parts(response=resp)
+    return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.EWSService.stop_streaming"><code class="name flex">
+<span>def <span class="ident">stop_streaming</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop_streaming(self):
+    if not self.streaming:
+        raise RuntimeError(&#34;Attempt to stop a non-streaming service&#34;)
+    if self._streaming_response:
+        self._streaming_response.close()  # Release memory
+        self._streaming_response = None
+    if self._streaming_session:
+        self.protocol.release_session(self._streaming_session)
+        self._streaming_session = None</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="exchangelib.services.EmptyFolder"><code class="flex name class">
 <span>class <span class="ident">EmptyFolder</span></span>
@@ -6789,6 +7525,26 @@ call.</p>
 <li><code><a title="exchangelib.services.DeleteUserConfiguration.call" href="#exchangelib.services.DeleteUserConfiguration.call">call</a></code></li>
 <li><code><a title="exchangelib.services.DeleteUserConfiguration.get_payload" href="#exchangelib.services.DeleteUserConfiguration.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.DeleteUserConfiguration.returns_elements" href="#exchangelib.services.DeleteUserConfiguration.returns_elements">returns_elements</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.services.EWSService" href="#exchangelib.services.EWSService">EWSService</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.EWSService.CHUNK_SIZE" href="#exchangelib.services.EWSService.CHUNK_SIZE">CHUNK_SIZE</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.EWSService.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.NO_VALID_SERVER_VERSIONS" href="#exchangelib.services.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.PAGE_SIZE" href="#exchangelib.services.EWSService.PAGE_SIZE">PAGE_SIZE</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.SERVICE_NAME" href="#exchangelib.services.EWSService.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE" href="#exchangelib.services.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE">WARNINGS_TO_IGNORE_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.element_container_name" href="#exchangelib.services.EWSService.element_container_name">element_container_name</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.get" href="#exchangelib.services.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.paging_container_name" href="#exchangelib.services.EWSService.paging_container_name">paging_container_name</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.parse" href="#exchangelib.services.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.returns_elements" href="#exchangelib.services.EWSService.returns_elements">returns_elements</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.stop_streaming" href="#exchangelib.services.EWSService.stop_streaming">stop_streaming</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.supported_from" href="#exchangelib.services.EWSService.supported_from">supported_from</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.supports_paging" href="#exchangelib.services.EWSService.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 <li>

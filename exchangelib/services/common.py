@@ -128,11 +128,13 @@ class EWSService(metaclass=abc.ABCMeta):
 
     def __del__(self):
         # pylint: disable=bare-except
-        with suppress(Exception):
-            # __del__ should never fail
+        try:
             if self.streaming:
                 # Make sure to clean up lingering resources
                 self.stop_streaming()
+        except Exception:  # nosec
+            # __del__ should never fail
+            pass
 
     # The following two methods are the minimum required to be implemented by subclasses, but the name and number of
     # kwargs differs between services. Therefore, we cannot make these methods abstract.

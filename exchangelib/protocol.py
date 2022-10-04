@@ -143,9 +143,11 @@ class BaseProtocol:
 
     def __del__(self):
         # pylint: disable=bare-except
-        with suppress(Exception):
-            # __del__ should never fail
+        try:
             self.close()
+        except Exception:  # nosec
+            # __del__ should never fail
+            pass
 
     def close(self):
         log.debug("Server %s: Closing sessions", self.server)

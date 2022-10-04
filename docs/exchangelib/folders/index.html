@@ -1519,10 +1519,8 @@ __all__ = [
     @classmethod
     def get_item_field_by_fieldname(cls, fieldname):
         for item_model in cls.supported_item_models:
-            try:
+            with suppress(InvalidField):
                 return item_model.get_field_by_fieldname(fieldname)
-            except InvalidField:
-                pass
         raise InvalidField(f&#34;{fieldname!r} is not a valid field name on {cls.supported_item_models}&#34;)
 
     def get(self, *args, **kwargs):
@@ -1633,7 +1631,7 @@ __all__ = [
         has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
         try:
             if has_distinguished_subfolders:
-                self.empty(delete_sub_folders=False)
+                self.empty()
             else:
                 self.empty(delete_sub_folders=True)
         except ErrorRecoverableItemsAccessDenied:
@@ -1643,7 +1641,7 @@ __all__ = [
             try:
                 if has_distinguished_subfolders:
                     raise  # We already tried this
-                self.empty(delete_sub_folders=False)
+                self.empty()
             except DELETE_FOLDER_ERRORS:
                 log.warning(&#34;Not allowed to empty %s. Trying to delete items instead&#34;, self)
                 kwargs = {}
@@ -2156,10 +2154,8 @@ def folder_cls_from_container_class(container_class):
 <pre><code class="python">@classmethod
 def get_item_field_by_fieldname(cls, fieldname):
     for item_model in cls.supported_item_models:
-        try:
+        with suppress(InvalidField):
             return item_model.get_field_by_fieldname(fieldname)
-        except InvalidField:
-            pass
     raise InvalidField(f&#34;{fieldname!r} is not a valid field name on {cls.supported_item_models}&#34;)</code></pre>
 </details>
 </dd>
@@ -3147,7 +3143,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
     has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
     try:
         if has_distinguished_subfolders:
-            self.empty(delete_sub_folders=False)
+            self.empty()
         else:
             self.empty(delete_sub_folders=True)
     except ErrorRecoverableItemsAccessDenied:
@@ -3157,7 +3153,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         try:
             if has_distinguished_subfolders:
                 raise  # We already tried this
-            self.empty(delete_sub_folders=False)
+            self.empty()
         except DELETE_FOLDER_ERRORS:
             log.warning(&#34;Not allowed to empty %s. Trying to delete items instead&#34;, self)
             kwargs = {}
@@ -4924,20 +4920,16 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
             if folder.name:
-                try:
+                with suppress(KeyError):
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
                     folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
                     log.debug(&#34;Folder class %s matches localized folder name %s&#34;, folder_cls, folder.name)
-                except KeyError:
-                    pass
             if folder.folder_class and folder_cls == Folder:
-                try:
+                with suppress(KeyError):
                     folder_cls = cls.folder_cls_from_container_class(container_class=folder.folder_class)
                     log.debug(
                         &#34;Folder class %s matches container class %s (%s)&#34;, folder_cls, folder.folder_class, folder.name
                     )
-                except KeyError:
-                    pass
             if folder_cls == Folder:
                 log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
@@ -5036,20 +5028,16 @@ def from_xml_with_root(cls, elem, root):
         # The returned XML may contain neither folder class nor name. In that case, we default to the generic
         # Folder class.
         if folder.name:
-            try:
+            with suppress(KeyError):
                 # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
                 folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
                 log.debug(&#34;Folder class %s matches localized folder name %s&#34;, folder_cls, folder.name)
-            except KeyError:
-                pass
         if folder.folder_class and folder_cls == Folder:
-            try:
+            with suppress(KeyError):
                 folder_cls = cls.folder_cls_from_container_class(container_class=folder.folder_class)
                 log.debug(
                     &#34;Folder class %s matches container class %s (%s)&#34;, folder_cls, folder.folder_class, folder.name
                 )
-            except KeyError:
-                pass
         if folder_cls == Folder:
             log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
     return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
@@ -5473,7 +5461,7 @@ def get_distinguished(cls, root):
             else:
                 resolveable_folders.append(f)
         # Fetch all properties for the remaining folders of folder IDs
-        additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
+        additional_fields = self.get_folder_fields(target_cls=self._get_target_cls())
         yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
             additional_fields=additional_fields
         )
@@ -6109,7 +6097,7 @@ non-null, we always return Persona objects. (Default value = ID_ONLY)
         else:
             resolveable_folders.append(f)
     # Fetch all properties for the remaining folders of folder IDs
-    additional_fields = self.get_folder_fields(target_cls=self._get_target_cls(), is_complex=None)
+    additional_fields = self.get_folder_fields(target_cls=self._get_target_cls())
     yield from self.__class__(account=self.account, folders=resolveable_folders).get_folders(
         additional_fields=additional_fields
     )</code></pre>
@@ -8682,7 +8670,7 @@ def is_deletable(self):
             return
 
         children_map = {}
-        try:
+        with suppress(ErrorAccessDenied):
             for f in (
                 SingleFolderQuerySet(account=self.account, folder=folder)
                 .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
@@ -8694,9 +8682,6 @@ def is_deletable(self):
                 if isinstance(f, Exception):
                     raise f
                 children_map[f.id] = f
-        except ErrorAccessDenied:
-            # No access to this folder
-            pass
 
         # Let&#39;s update the cache atomically, to avoid partial reads of the cache.
         with self._subfolders_lock:
@@ -8756,7 +8741,7 @@ def is_deletable(self):
         return
 
     children_map = {}
-    try:
+    with suppress(ErrorAccessDenied):
         for f in (
             SingleFolderQuerySet(account=self.account, folder=folder)
             .depth(self.DEFAULT_FOLDER_TRAVERSAL_DEPTH)
@@ -8768,9 +8753,6 @@ def is_deletable(self):
             if isinstance(f, Exception):
                 raise f
             children_map[f.id] = f
-    except ErrorAccessDenied:
-        # No access to this folder
-        pass
 
     # Let&#39;s update the cache atomically, to avoid partial reads of the cache.
     with self._subfolders_lock:
@@ -9525,10 +9507,8 @@ def is_deletable(self):
         return self.get_default_folder(MsgFolderRoot)
 
     def get_default_folder(self, folder_cls):
-        try:
+        with suppress(MISSING_FOLDER_ERRORS):
             return super().get_default_folder(folder_cls)
-        except MISSING_FOLDER_ERRORS:
-            pass
 
         # Try to pick a suitable default folder. we do this by:
         #  1. Searching the full folder list for a folder with the distinguished folder name
@@ -9546,11 +9526,9 @@ def is_deletable(self):
 
         # Try direct children of TOIS first, unless we&#39;re trying to get the TOIS folder
         if folder_cls != MsgFolderRoot:
-            try:
+            with suppress(MISSING_FOLDER_ERRORS):
                 return self._get_candidate(folder_cls=folder_cls, folder_coll=self.tois.children)
-            except MISSING_FOLDER_ERRORS:
-                # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
-                pass
+            # No candidates, or TOIS does not exist, or we don&#39;t have access to TOIS
 
         # Finally, try direct children of root
         return self._get_candidate(folder_cls=folder_cls, folder_coll=self.children)
@@ -9730,10 +9708,8 @@ def tois(self):
     def remove_folder(self, folder):
         if not folder.id:
             raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-        try:
+        with suppress(KeyError):
             del self._folders_map[folder.id]
-        except KeyError:
-            pass
 
     def clear_cache(self):
         with self._subfolders_lock:
@@ -10085,10 +10061,8 @@ folder was found, try as best we can to return the default folder of type 'folde
 <pre><code class="python">def remove_folder(self, folder):
     if not folder.id:
         raise ValueError(&#34;&#39;folder&#39; must have an ID&#34;)
-    try:
-        del self._folders_map[folder.id]
-    except KeyError:
-        pass</code></pre>
+    with suppress(KeyError):
+        del self._folders_map[folder.id]</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.RootOfHierarchy.update_folder"><code class="name flex">

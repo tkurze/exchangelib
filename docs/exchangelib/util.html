@@ -36,6 +36,7 @@ import time
 import xml.sax.handler  # nosec
 from base64 import b64decode, b64encode
 from codecs import BOM_UTF8
+from contextlib import suppress
 from decimal import Decimal
 from functools import wraps
 from threading import get_ident
@@ -566,10 +567,8 @@ def to_xml(bytes_content):
             msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
             raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
     except TypeError:
-        try:
+        with suppress(IndexError, io.UnsupportedOperation):
             stream.seek(0)
-        except (IndexError, io.UnsupportedOperation):
-            pass
         raise ParseError(f&#34;This is not XML: {stream.read()!r}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
 
     if res.getroot() is None:
@@ -609,8 +608,8 @@ class PrettyXmlHandler(logging.StreamHandler):
         &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
         return (
             lxml.etree.tostring(self.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
-            .replace(b&#34;\t&#34;, b&#34;    &#34;)
             .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+            .expandtabs()
         )
 
     @staticmethod
@@ -758,13 +757,11 @@ CONNECTION_ERRORS = (
 
 # A collection of error classes we want to handle as TLS verification errors
 TLS_ERRORS = (requests.exceptions.SSLError,)
-try:
+with suppress(ImportError):
     # If pyOpenSSL is installed, requests will use it and throw this class on TLS errors
     import OpenSSL.SSL
 
     TLS_ERRORS += (OpenSSL.SSL.Error,)
-except ImportError:
-    pass
 
 
 def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
@@ -1652,10 +1649,8 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
             msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
             raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
     except TypeError:
-        try:
+        with suppress(IndexError, io.UnsupportedOperation):
             stream.seek(0)
-        except (IndexError, io.UnsupportedOperation):
-            pass
         raise ParseError(f&#34;This is not XML: {stream.read()!r}&#34;, &#34;&lt;not from file&gt;&#34;, -1, 0)
 
     if res.getroot() is None:
@@ -2234,8 +2229,8 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
         return (
             lxml.etree.tostring(self.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
-            .replace(b&#34;\t&#34;, b&#34;    &#34;)
             .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+            .expandtabs()
         )
 
     @staticmethod
@@ -2383,8 +2378,8 @@ def highlight_xml(xml_str):
     &#34;&#34;&#34;Re-format an XML document to a consistent style.&#34;&#34;&#34;
     return (
         lxml.etree.tostring(self.parse_bytes(xml_bytes), xml_declaration=True, encoding=&#34;utf-8&#34;, pretty_print=True)
-        .replace(b&#34;\t&#34;, b&#34;    &#34;)
         .replace(b&#34; xmlns:&#34;, b&#34;\n    xmlns:&#34;)
+        .expandtabs()
     )</code></pre>
 </details>
 </dd>
