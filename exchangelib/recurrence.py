@@ -45,10 +45,10 @@ class AbsoluteYearlyPattern(Pattern):
 
     ELEMENT_NAME = "AbsoluteYearlyRecurrence"
 
-    # The day of month of an occurrence, in range 1 -> 31. If a particular month has less days than the day_of_month
+    # The day of month of an occurrence, in range 1 -> 31. If a particular month has fewer days than the day_of_month
     # value, the last day in the month is assumed
     day_of_month = IntegerField(field_uri="DayOfMonth", min=1, max=31, is_required=True)
-    # The month of the year, from 1 - 12
+    # The month of the year, from 1 to 12
     month = EnumField(field_uri="Month", enum=MONTHS, is_required=True)
 
     def __str__(self):
@@ -69,7 +69,7 @@ class RelativeYearlyPattern(Pattern):
     # Week number of the month, in range 1 -> 5. If 5 is specified, this assumes the last week of the month for
     # months that have only 4 weeks
     week_number = EnumField(field_uri="DayOfWeekIndex", enum=WEEK_NUMBERS, is_required=True)
-    # The month of the year, from 1 - 12
+    # The month of the year, from 1 to 12
     month = EnumField(field_uri="Month", enum=MONTHS, is_required=True)
 
     def __str__(self):
@@ -88,7 +88,7 @@ class AbsoluteMonthlyPattern(Pattern):
 
     # Interval, in months, in range 1 -> 99
     interval = IntegerField(field_uri="Interval", min=1, max=99, is_required=True)
-    # The day of month of an occurrence, in range 1 -> 31. If a particular month has less days than the day_of_month
+    # The day of month of an occurrence, in range 1 -> 31. If a particular month has fewer days than the day_of_month
     # value, the last day in the month is assumed
     day_of_month = IntegerField(field_uri="DayOfMonth", min=1, max=31, is_required=True)
 

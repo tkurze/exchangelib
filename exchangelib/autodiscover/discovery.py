@@ -230,7 +230,7 @@ class Autodiscovery:
         return True
 
     def _get_unauthenticated_response(self, url, method="post"):
-        """Get auth type by tasting headers from the server. Do POST requests be default. HEAD is too error prone, and
+        """Get auth type by tasting headers from the server. Do POST requests be default. HEAD is too error-prone, and
         some servers are set up to redirect to OWA on all requests except POST to the autodiscover endpoint.
 
         :param url:
@@ -434,7 +434,7 @@ class Autodiscovery:
         return self._step_3(hostname=hostname)
 
     def _step_3(self, hostname):
-        """Perform step 3, where the client sends an unauth'ed GET method request to
+        """Perform step 3, where the client sends an unauthenticated GET method request to
         http://autodiscover.example.com/autodiscover/autodiscover.xml (Note that this is a non-HTTPS endpoint). The
         client then does one of the following:
             * If the GET request returns a 302 redirect response, it gets the redirection URL from the 'Location' HTTP

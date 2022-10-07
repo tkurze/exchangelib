@@ -134,7 +134,7 @@ class FileAttachment(Attachment):
         return self._fp
 
     def _init_fp(self):
-        # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
+        # Create a file-like object for the attachment content. We try hard to reduce memory consumption, so we never
         # store the full attachment content in-memory.
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(f"{self.__class__.__name__} must have an account")

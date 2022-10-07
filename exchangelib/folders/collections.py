@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class SyncCompleted(Exception):
-    """This is a really ugly way of returning the sync state."""
+    """This is really misusing an exception to return the sync state."""
 
     def __init__(self, sync_state):
         super().__init__(sync_state)
@@ -285,7 +285,7 @@ class FolderCollection(SearchableMixIn):
 
     def _get_target_cls(self):
         # We may have root folders that don't support the same set of fields as normal folders. If there is a mix of
-        # both folder types in self.folders, raise an error so we don't risk losing some fields in the query.
+        # both folder types in self.folders, raise an error, so we don't risk losing some fields in the query.
         from .base import Folder
         from .roots import RootOfHierarchy
 
@@ -360,7 +360,7 @@ class FolderCollection(SearchableMixIn):
         if depth is None:
             depth = self._get_default_folder_traversal_depth()
         if additional_fields is None:
-            # Default to all non-complex properties. Subfolders will always be of class Folder
+            # Default to all non-complex properties. Sub-folders will always be of class Folder
             additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
         else:
             for f in additional_fields:

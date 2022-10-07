@@ -144,7 +144,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
     def occurrence(self, index):
         """Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on a recurring master.
 
@@ -160,7 +160,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
     def recurring_master(self):
         """Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on an occurrence of a recurring master.
 
@@ -294,7 +294,7 @@ class BaseMeetingItem(Item, metaclass=EWSMeta):
         Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
         when you send a calendar item to attendees; they are not explicitly created.
 
-    Therefore BaseMeetingItem inherits from  EWSElement has no save() or send() method
+    Therefore, BaseMeetingItem inherits from  EWSElement has no save() or send() method
     """
 
     associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri="meeting:AssociatedCalendarItemId")

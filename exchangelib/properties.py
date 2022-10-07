@@ -208,7 +208,7 @@ class EWSMeta(type, metaclass=abc.ABCMeta):
         # FIELDS defined on a model overrides the base class fields
         fields = kwargs.get("FIELDS", base_fields) + local_fields
 
-        # Include all fields as class attributes so we can use them as instance attributes
+        # Include all fields as class attributes, so we can use them as instance attributes
         kwargs.update({_mangle(f.name): f for f in fields})
 
         # Calculate __slots__ so we don't have to hard-code it on the model
@@ -404,7 +404,7 @@ class EWSElement(metaclass=EWSMeta):
 
     @classmethod
     def remove_field(cls, field):
-        """Remove the given field and and update the slots cache.
+        """Remove the given field and update the slots cache.
 
         :param field:
         """
@@ -1456,7 +1456,7 @@ class PhoneNumber(EWSElement):
 
 class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
     """Base class for classes that have a concept of 'id' and 'changekey' values. The values are actually stored on
-    a separate element but we add convenience methods to hide that fact.
+    a separate element, but we add convenience methods to hide that fact.
     """
 
     ID_ELEMENT_CLS = None
@@ -1944,7 +1944,7 @@ class TimeZoneDefinition(EWSElement):
         standard_time, daylight_time = None, None
         if len(transitions_group.transitions) == 1:
             # This is a simple transition group representing a timezone with no DST. Some servers don't accept
-            # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+            # TimeZone elements without an STD and DST element (see issue #488). Return StandardTime and DaylightTime
             # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn't break
             # the well-behaving servers.
             standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)

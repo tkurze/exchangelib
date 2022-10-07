@@ -58,7 +58,7 @@ class EWSDate(datetime.date):
 
     @classmethod
     def from_string(cls, date_string):
-        # Sometimes, we'll receive a date string with timezone information. Not very useful.
+        # Sometimes, we'll receive a date string with time zone information. Not very useful.
         if date_string.endswith("Z"):
             date_fmt = "%Y-%m-%dZ"
         elif ":" in date_string:
@@ -156,7 +156,7 @@ class EWSDateTime(datetime.datetime):
 
     @classmethod
     def from_string(cls, date_string):
-        # Parses several common datetime formats and returns timezone-aware EWSDateTime objects
+        # Parses several common datetime formats and returns time zone aware EWSDateTime objects
         if date_string.endswith("Z"):
             # UTC datetime
             return super().strptime(date_string, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
@@ -164,7 +164,7 @@ class EWSDateTime(datetime.datetime):
             # This is probably a naive datetime. Don't allow this, but signal caller with an appropriate error
             local_dt = super().strptime(date_string, "%Y-%m-%dT%H:%M:%S")
             raise NaiveDateTimeNotAllowed(local_dt)
-        # This is probably a datetime value with timezone information. This comes in the form '+/-HH:MM'.
+        # This is probably a datetime value with time zone information. This comes in the form '+/-HH:MM'.
         aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
         if isinstance(aware_dt, cls):
             return aware_dt
@@ -206,7 +206,7 @@ class EWSDateTime(datetime.datetime):
 
 
 class EWSTimeZone(zoneinfo.ZoneInfo):
-    """Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
+    """Represents a time zone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
     services.GetServerTimeZones.
     """
 
@@ -223,24 +223,24 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
         except KeyError:
             raise UnknownTimeZone(f"No Windows timezone name found for timezone {instance.key!r}")
 
-        # We don't need the Windows long-format timezone name in long format. It's used in timezone XML elements, but
-        # EWS happily accepts empty strings. For a full list of timezones supported by the target server, including
+        # We don't need the Windows long-format time zone name in long format. It's used in time zone XML elements, but
+        # EWS happily accepts empty strings. For a full list of time zones supported by the target server, including
         # long-format names, see output of services.GetServerTimeZones(account.protocol).call()
         instance.ms_name = ""
         return instance
 
     def __eq__(self, other):
-        # Microsoft timezones are less granular than IANA, so an EWSTimeZone created from 'Europe/Copenhagen' may return
-        # from the server as 'Europe/Copenhagen'. We're catering for Microsoft here, so base equality on the Microsoft
-        # timezone ID.
+        # Microsoft time zones are less granular than IANA, so an EWSTimeZone created from 'Europe/Copenhagen' may
+        # return from the server as 'Europe/Copenhagen'. We're catering for Microsoft here, so base equality on the
+        # Microsoft time zone ID.
         if not isinstance(other, self.__class__):
             return NotImplemented
         return self.ms_id == other.ms_id
 
     @classmethod
     def from_ms_id(cls, ms_id):
-        # Create a timezone instance from a Microsoft timezone ID. This is lossy because there is not a 1:1 translation
-        # from MS timezone ID to IANA timezone.
+        # Create a time zone instance from a Microsoft time zone ID. This is lossy because there is not a 1:1
+        # translation from MS time zone ID to IANA time zone.
         try:
             return cls(cls.MS_TO_IANA_MAP[ms_id])
         except KeyError:
@@ -262,7 +262,7 @@ class EWSTimeZone(zoneinfo.ZoneInfo):
     @classmethod
     def from_dateutil(cls, tz):
         # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
-        # don't contain enough information to reliably match them with a CLDR timezone.
+        # don't contain enough information to reliably match them with a CLDR time zone.
         if hasattr(tz, "_filename"):
             key = "/".join(tz._filename.split("/")[-2:])
             return cls(key)

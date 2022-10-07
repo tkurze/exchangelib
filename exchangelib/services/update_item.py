@@ -98,7 +98,7 @@ class UpdateItem(BaseUpdateService):
         send_meeting_invitations_or_cancellations,
         suppress_read_receipts,
     ):
-        # Takes a list of (Item, fieldnames) tuples where 'Item' is a instance of a subclass of Item and 'fieldnames'
+        # Takes a list of (Item, fieldnames) tuples where 'Item' is an instance of a subclass of Item and 'fieldnames'
         # are the attribute names that were updated.
         attrs = dict(
             ConflictResolution=conflict_resolution,

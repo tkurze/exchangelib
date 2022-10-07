@@ -32,7 +32,7 @@ VERSIONS = {
     "Exchange2019": ("Exchange2019", "Microsoft Exchange Server 2019"),
 }
 
-# Build a list of unique API versions, used when guessing API version supported by the server. Use reverse order so we
+# Build a list of unique API versions, used when guessing API version supported by the server. Use reverse order, so we
 # get the newest API version supported by the server.
 API_VERSIONS = sorted({v[0] for v in VERSIONS.values()}, reverse=True)
 
@@ -219,7 +219,7 @@ class Version:
         """
         from .services import ResolveNames
 
-        # The protocol doesn't have a version yet, so default to latest supported version if we don't have a hint.
+        # The protocol doesn't have a version yet, so default to the latest supported version if we don't have a hint.
         api_version = api_version_hint or API_VERSIONS[0]
         log.debug("Asking server for version info using API version %s", api_version)
         # We don't know the build version yet. Hopefully, the server will report it in the SOAP header. Lots of
@@ -258,7 +258,7 @@ class Version:
         if api_version_from_server != requested_api_version:
             if cls._is_invalid_version_string(api_version_from_server):
                 # For unknown reasons, Office 365 may respond with an API version strings that is invalid in a request.
-                # Detect these so we can fallback to a valid version string.
+                # Detect these, so we can fall back to a valid version string.
                 log.debug(
                     'API version "%s" worked but server reports version "%s". Using "%s"',
                     requested_api_version,

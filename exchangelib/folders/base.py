@@ -162,7 +162,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 raise ValueError("Already at top")
             yield from self.parent.glob(tail or "*")
         elif head == "**":
-            # Match anything here or in any subfolder at arbitrary depth
+            # Match anything here or in any sub-folder at arbitrary depth
             for c in self.walk():
                 # fnmatch() may be case-sensitive depending on operating system:
                 # force a case-insensitive match since case appears not to
@@ -208,7 +208,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
                     tree += f"└── {node}\n"
-                else:  # Last child, and not name of child
+                else:  # Last child and not name of child
                     tree += f"    {node}\n"
         return tree.strip()
 
@@ -421,7 +421,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             self.root.clear_cache()
 
     def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
-        # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
+        # Recursively deletes all items in this folder, and all sub-folders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         from .known_folders import Audits
 
@@ -467,7 +467,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         _level += 1
         for f in self.children:
             f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
-            # Remove non-distinguished children that are empty and have no subfolders
+            # Remove non-distinguished children that are empty and have no sub-folders
             if f.is_deletable and not f.children:
                 log.warning("Deleting folder %s", f)
                 try:
@@ -484,7 +484,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @classmethod
     def _kwargs_from_elem(cls, elem, account):
-        # Check for 'DisplayName' element before collecting kwargs because because that clears the elements
+        # Check for 'DisplayName' element before collecting kwargs because that clears the elements
         has_name_elem = elem.find(cls.get_field_by_fieldname("name").response_tag()) is not None
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
         if has_name_elem and not kwargs["name"]:
@@ -704,7 +704,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         """Get events since the given watermark. Non-blocking.
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
-        :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+        :param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
         :return: A Notification object containing a list of events
 
         This method doesn't need the current folder instance, but it makes sense to keep the method along the other
@@ -753,7 +753,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
         Works like as __truediv__ but does not touch the folder cache.
 
-        This is useful if the folder hierarchy contains a huge number of folders and you don't want to fetch them all
+        This is useful if the folder hierarchy contains a huge number of folders, and you don't want to fetch them all
 
         :param other:
         :return:

@@ -21,8 +21,7 @@ class ExportItems(EWSAccountService):
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
-    # We need to override this since ExportItemsResponseMessage is formatted a
-    # little bit differently. .
+    # We need to override this since ExportItemsResponseMessage is formatted a bit differently.
     @classmethod
     def _get_elements_in_container(cls, container):
         return [container]

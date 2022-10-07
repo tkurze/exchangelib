@@ -40,7 +40,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
 
     __slots__ = "_account", "_subfolders"
 
-    # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
+    # A special folder that acts as the top of a folder hierarchy. Finds and caches sub-folders at arbitrary depth.
     def __init__(self, **kwargs):
         self._account = kwargs.pop("account", None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
@@ -151,8 +151,8 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             return self._subfolders
 
         with self._subfolders_lock:
-            # Map root, and all subfolders of root, at arbitrary depth by folder ID. First get distinguished folders,
-            # so we are sure to apply the correct Folder class, then fetch all subfolders of this root.
+            # Map root, and all sub-folders of root, at arbitrary depth by folder ID. First get distinguished folders,
+            # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
                 cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
@@ -287,7 +287,7 @@ class Root(RootOfHierarchy):
 
 
 class PublicFoldersRoot(RootOfHierarchy):
-    """The root of the public folders hierarchy. Not available on all mailboxes."""
+    """The root of the public folder hierarchy. Not available on all mailboxes."""
 
     DISTINGUISHED_FOLDER_ID = "publicfoldersroot"
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW

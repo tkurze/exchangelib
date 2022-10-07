@@ -35,7 +35,7 @@ class Message(Item):
     )
     conversation_index = Base64Field(field_uri="message:ConversationIndex", is_read_only=True)
     conversation_topic = CharField(field_uri="message:ConversationTopic", is_read_only=True)
-    # Rename 'From' to 'author'. We can't use fieldname 'from' since it's a Python keyword.
+    # Rename 'From' to 'author'. We can't use field name 'from' since it's a Python keyword.
     author = MailboxField(field_uri="message:From", is_read_only_after_send=True)
     message_id = TextField(field_uri="message:InternetMessageId", is_read_only_after_send=True)
     is_read = BooleanField(field_uri="message:IsRead", is_required=True, default=False)
@@ -76,7 +76,7 @@ class Message(Item):
 
         # New message
         if copy_to_folder:
-            # This would better be done via send_and_save() but lets just support it here
+            # This would better be done via send_and_save() but let's just support it here
             self.folder = copy_to_folder
             return self.send_and_save(
                 conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations

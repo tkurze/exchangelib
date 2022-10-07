@@ -111,7 +111,7 @@ class ExtendedProperty(EWSElement):
 
     @classmethod
     def validate_cls(cls):
-        # Validate values of class attributes and their inter-dependencies
+        # Validate values of class attributes and their interdependencies
         cls._validate_distinguished_property_set_id()
         cls._validate_property_set_id()
         cls._validate_property_tag()
@@ -210,7 +210,7 @@ class ExtendedProperty(EWSElement):
         do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
         field in the response.
         """
-        # We can't use ExtendedFieldURI.from_xml(). It clears the XML element but we may not want to consume it here.
+        # We can't use ExtendedFieldURI.from_xml(). It clears the XML element, but we may not want to consume it here.
         kwargs = {
             f.name: f.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
             for f in ExtendedFieldURI.FIELDS

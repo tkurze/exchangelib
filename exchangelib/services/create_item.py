@@ -62,7 +62,7 @@ class CreateItem(EWSAccountService):
         return res or [True]
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        """Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        """Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
         convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.

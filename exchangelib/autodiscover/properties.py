@@ -163,7 +163,7 @@ class Protocol(SimpleProtocol):
             # Missing in list are DIGEST and OAUTH2
             "basic": BASIC,
             "kerb": GSSAPI,
-            "kerbntlm": NTLM,  # Means client can chose between NTLM and GSSAPI
+            "kerbntlm": NTLM,  # Means client can choose between NTLM and GSSAPI
             "ntlm": NTLM,
             "certificate": CBA,
             "negotiate": SSPI,  # Unsure about this one
@@ -258,7 +258,7 @@ class Response(AutodiscoverBase):
 
     @property
     def version(self):
-        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+        # Get the server version. Not all protocol entries have a server version, so we cheat a bit and also look at the
         # other ones that point to the same endpoint.
         ews_url = self.protocol.ews_url
         for protocol in self.account.protocols:
@@ -331,11 +331,11 @@ class Autodiscover(EWSElement):
     def raise_errors(self):
         # Find an error message in the response and raise the relevant exception
         try:
-            errorcode = self.error_response.error.code
+            error_code = self.error_response.error.code
             message = self.error_response.error.message
             if message in ("The e-mail address cannot be found.", "The email address can't be found."):
                 raise ErrorNonExistentMailbox("The SMTP address has no mailbox associated with it")
-            raise AutoDiscoverFailed(f"Unknown error {errorcode}: {message}")
+            raise AutoDiscoverFailed(f"Unknown error {error_code}: {message}")
         except AttributeError:
             raise AutoDiscoverFailed(f"Unknown autodiscover error response: {self.error_response}")
 

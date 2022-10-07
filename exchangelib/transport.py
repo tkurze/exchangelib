@@ -129,7 +129,7 @@ def get_auth_instance(auth_type, **kwargs):
 
 
 def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
-    # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error prone, and some servers
+    # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error-prone, and some servers
     # are set up to redirect to OWA on all requests except POST to /EWS/Exchange.asmx
     #
     # We don't know the API version yet, but we need it to create a valid request because some Exchange servers only

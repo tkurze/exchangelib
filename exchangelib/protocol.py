@@ -415,7 +415,7 @@ class CachingProtocol(type):
             return protocol
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
-        # probably overkill although it would reduce lock contention.
+        # probably overkill, although it would reduce lock contention.
         log.debug("Waiting for _protocol_cache_lock")
         with cls._protocol_cache_lock:
             try:
@@ -560,7 +560,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         )
 
     def expand_dl(self, distribution_list):
-        """Expand distribution list into it's members.
+        """Expand distribution list into its members.
 
         :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
@@ -629,7 +629,7 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We're overriding a method so we have to keep the signature
+        # We're overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
 
 

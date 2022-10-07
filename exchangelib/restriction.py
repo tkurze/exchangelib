@@ -156,7 +156,7 @@ class Q:
                 return (self.__class__(*children, conn_type=self.OR),)
 
             if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
-                # A '__contains' lookup with an list as the value ony makes sense for list fields, since exact match
+                # A '__contains' lookup with a list as the value ony makes sense for list fields, since exact match
                 # on multiple distinct values will always fail for single-value fields.
                 #
                 # An empty list as value is allowed. We interpret it to mean "are all values in the empty set contained
@@ -223,7 +223,7 @@ class Q:
         self.children = q.children
 
     def clean(self, version):
-        """Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        """Do some basic checks on the attributes, using a generic folder. to_xml() does a good job of
         validating. There's no reason to replicate much of that here.
         """
         from .folders import Folder
@@ -329,7 +329,7 @@ class Q:
         if self.is_leaf():
             expr = f"{self.field_path} {self.op} {self.value!r}"
         else:
-            # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
+            # Sort children by field name, so we get stable output (for easier testing). Children should never be empty.
             expr = f" {self.AND if self.conn_type == self.NOT else self.conn_type} ".join(
                 (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f"({c.expr()})")
                 for c in sorted(self.children, key=lambda i: i.field_path or "")
@@ -449,7 +449,7 @@ class Q:
             clean_value = self._get_clean_value(field_path=field_path, version=version)
             if issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
                 # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label='Foo', ...) instead of
-                # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
+                # email_addresses__Foo_email_address=.... Set FieldPath label now, so we can generate the field_uri.
                 field_path.label = clean_value.label
             elif isinstance(field_path.field, DateTimeBackedDateField):
                 # We need to convert to datetime
@@ -469,7 +469,7 @@ class Q:
         else:
             # We have multiple children. If conn_type is NOT, then group children with AND. We'll add the NOT later
             elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
-            # Sort children by field name so we get stable output (for easier testing). Children should never be empty
+            # Sort children by field name, so we get stable output (for easier testing). Children should never be empty
             for c in sorted(self.children, key=lambda i: i.field_path or ""):
                 elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
         if elem is None:
@@ -492,7 +492,7 @@ class Q:
     def __invert__(self):
         # ~ operator. If op has an inverse, change op. Else return a new Q with conn_type NOT
         if self.conn_type == self.NOT:
-            # This is NOT NOT. Change to AND
+            # This is 'NOT NOT'. Change to 'AND'
             new = copy(self)
             new.conn_type = self.AND
             new.reduce()

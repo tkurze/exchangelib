@@ -52,7 +52,7 @@ def shelve_open_with_failover(filename):
 
 
 class AutodiscoverCache:
-    """Stores the translation from (email domain, credentials) -> AutodiscoverProtocol object so we can re-use TCP
+    """Stores the translation from (email domain, credentials) -> AutodiscoverProtocol object, so we can re-use TCP
     connections to an autodiscover server within the same process. Also persists the email domain -> (autodiscover
     endpoint URL, auth_type) translation to the filesystem so the cache can be shared between multiple processes.
 
@@ -61,7 +61,7 @@ class AutodiscoverCache:
     advice. But it could save some valuable seconds every time we start a new connection to a known server. In any
     case, the persistent storage must not contain any sensitive information since the cache could be readable by
     unprivileged users. Domain, endpoint and auth_type are OK to cache since this info is make publicly available on
-    HTTP and DNS servers via the autodiscover protocol. Just don't persist any credentials info.
+    HTTP and DNS servers via the autodiscover protocol. Just don't persist any credential info.
 
     If an autodiscover lookup fails for any reason, the corresponding cache entry must be purged.
 

@@ -1553,7 +1553,7 @@ class IdElementField(EWSElementField):
 
 
 class TypeValueField(FieldURIField):
-    """This field type has no value_cls because values may have many different types."""
+    """This field type has no value_cls because values may have many types."""
 
     TYPES_MAP = {
         "Boolean": bool,

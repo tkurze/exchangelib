@@ -95,7 +95,7 @@ class EWSService(metaclass=abc.ABCMeta):
         ErrorItemCorrupt,
         ErrorMailRecipientNotFound,
     )
-    # Similarly, define the warnings we want to return unraised
+    # Similarly, define the warnings we want to return un-raised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
     # Define the warnings we want to ignore, to let response processing proceed
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
@@ -408,7 +408,7 @@ class EWSService(metaclass=abc.ABCMeta):
             # Nothing to do
             return
         log.debug("Found new version (%s -> %s)", self._version_hint, head_version)
-        # The api_version that worked was different than our hint, or we never got a build version. Store the working
+        # The api_version that worked was different from our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
 
@@ -429,7 +429,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        """Split the SOAP response into its headers an body elements."""
+        """Split the SOAP response into its headers and body elements."""
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
@@ -638,7 +638,7 @@ class EWSService(metaclass=abc.ABCMeta):
     @classmethod
     def _get_elements_in_container(cls, container):
         """Return a list of response elements from an XML response element container. With e.g.
-        'CreateItem', 'Items' is the container element and we return the 'Message' child elements:
+        'CreateItem', 'Items' is the container element, and we return the 'Message' child elements:
 
           <m:Items>
             <t:Message>
@@ -843,7 +843,7 @@ class EWSPagingService(EWSAccountService):
             # Paging is done for all messages
             return None
         # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-        # because the collections that we are iterating may change while iterating. We'll do our best but we cannot
+        # because the collections that we are iterating may change while iterating. We'll do our best, but we cannot
         # guarantee 100% consistency when large collections are simultaneously being changed on the server.
         #
         # It's not possible to supply a per-folder offset when iterating multiple folders, so we'll just have to

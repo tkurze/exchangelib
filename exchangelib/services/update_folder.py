@@ -149,7 +149,7 @@ class UpdateFolder(BaseUpdateService):
         return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
-        # Takes a list of (Folder, fieldnames) tuples where 'Folder' is a instance of a subclass of Folder and
+        # Takes a list of (Folder, fieldnames) tuples where 'Folder' is an instance of a subclass of Folder and
         # 'fieldnames' are the attribute names that were updated.
         payload = create_element(f"m:{self.SERVICE_NAME}")
         payload.append(self._changes_elem(target_changes=folders))

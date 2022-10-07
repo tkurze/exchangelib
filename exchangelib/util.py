@@ -332,7 +332,7 @@ def prepare_input_source(source):
 
 
 def safe_b64decode(data):
-    # Incoming base64-encoded data is not always padded to a multiple of 4. Python's parser is more strict and requires
+    # Incoming base64-encoded data is not always padded to a multiple of 4. Python's parser is stricter and requires
     # padding. Add padding if it's needed.
     overflow = len(data) % 4
     if overflow:
@@ -461,7 +461,7 @@ class DocumentYielder:
 
     def _get_tag(self):
         """Iterate over the bytes until we have a full tag in the buffer. If there's a '>' in an attr value, then we'll
-        exit on that, but it's OK becaus wejust need the plain tag name later.
+        exit on that, but it's OK because we just need the plain tag name later.
         """
         tag_buffer = [b"<"]
         while True:
@@ -560,7 +560,7 @@ def is_xml(text, expected_prefix=b"<?xml"):
     :param expected_prefix: What to search for in the start if the string
     :return:
     """
-    # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
+    # BOM_UTF8 is a UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
     prefix_len = len(expected_prefix)
     if text[:bom_len] == BOM_UTF8:

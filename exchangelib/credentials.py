@@ -36,7 +36,7 @@ class BaseCredentials(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def refresh(self, session):
         """Obtain a new set of valid credentials. This is mostly intended to support OAuth token refreshing, which can
-        happen in long- running applications or those that cache access tokens and so might start with a token close to
+        happen in long-running applications or those that cache access tokens and so might start with a token close to
         expiration.
 
         :param session: requests session asking for refreshed credentials

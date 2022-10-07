@@ -20,7 +20,7 @@ class FindFolder(EWSPagingService):
         self.root = None  # A hack to communicate parsing args to _elems_to_objs()
 
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
-        """Find subfolders of a folder.
+        """Find sub-folders of a folder.
 
         :param folders: the folders to act on
         :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects

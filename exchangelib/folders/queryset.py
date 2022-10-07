@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class FolderQuerySet:
-    """A QuerySet-like class for finding subfolders of a folder collection."""
+    """A QuerySet-like class for finding sub-folders of a folder collection."""
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
@@ -46,7 +46,7 @@ class FolderQuerySet:
         """Restrict the fields returned. 'name' and 'folder_class' are always returned."""
         from .base import Folder
 
-        # Subfolders will always be of class Folder
+        # Sub-folders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
         all_fields.update(Folder.attribute_fields())
         only_fields = []
@@ -113,7 +113,7 @@ class FolderQuerySet:
         from .collections import FolderCollection
 
         if self.only_fields is None:
-            # Subfolders will always be of class Folder
+            # Sub-folders will always be of class Folder
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
             complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=True)
         else:
@@ -121,7 +121,7 @@ class FolderQuerySet:
             complex_fields = {f for f in self.only_fields if f.field.is_complex}
 
         # First, fetch all non-complex fields using FindFolder. We do this because some folders do not support
-        # GetFolder but we still want to get as much information as possible.
+        # GetFolder, but we still want to get as much information as possible.
         folders = self.folder_collection.find_folders(q=self.q, depth=self._depth, additional_fields=non_complex_fields)
         if not complex_fields:
             yield from folders
