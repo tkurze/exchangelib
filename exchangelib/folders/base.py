@@ -40,7 +40,7 @@ from ..properties import (
 )
 from ..queryset import DoesNotExist, SearchableMixIn
 from ..util import TNS, is_iterable, require_id
-from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010
+from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010, SupportedVersionClassMixIn
 from .collections import FolderCollection, PullSubscription, PushSubscription, StreamingSubscription, SyncCompleted
 from .queryset import DEEP as DEEP_FOLDERS
 from .queryset import MISSING_FOLDER_ERRORS
@@ -57,7 +57,7 @@ DELETE_FOLDER_ERRORS = (
 )
 
 
-class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
+class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, metaclass=EWSMeta):
     """Base class for all classes that implement a folder."""
 
     ELEMENT_NAME = "Folder"
@@ -68,9 +68,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     # https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxosfld/68a85898-84fe-43c4-b166-4711c13cdd61
     CONTAINER_CLASS = None
     supported_item_models = ITEM_CLASSES  # The Item types that this folder can contain. Default is all
-    # Marks the version from which a distinguished folder was introduced. A possibly authoritative source is:
-    # https://github.com/OfficeDev/ews-managed-api/blob/master/Enumerations/WellKnownFolderName.cs
-    supported_from = None
     # Whether this folder type is allowed with the GetFolder service
     get_folder_allowed = True
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = DEEP_FOLDERS
@@ -211,13 +208,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 else:  # Last child and not name of child
                     tree += f"    {node}\n"
         return tree.strip()
-
-    @classmethod
-    def supports_version(cls, version):
-        # 'version' is a Version instance, for convenience by callers
-        if not cls.supported_from:
-            return True
-        return version.build >= cls.supported_from
 
     @property
     def has_distinguished_name(self):

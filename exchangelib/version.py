@@ -293,3 +293,51 @@ class Version:
 
     def __str__(self):
         return f"Build={self.build}, API={self.api_version}, Fullname={self.fullname}"
+
+
+class SupportedVersionClassMixIn:
+    """Supports specifying the supported versions of services, fields, folders etc.
+
+    For distinguished folders, a possibly authoritative source is:
+    # https://github.com/OfficeDev/ews-managed-api/blob/master/Enumerations/WellKnownFolderName.cs
+    """
+
+    supported_from = None  # The Exchange build when this element was introduced
+    deprecated_from = None  # The Exchange build when this element was deprecated
+
+    @classmethod
+    def __new__(cls, *args, **kwargs):
+        _check(cls.supported_from, cls.deprecated_from)
+        return super().__new__(cls)
+
+    @classmethod
+    def supports_version(cls, version):
+        return _supports_version(cls.supported_from, cls.deprecated_from, version)
+
+
+class SupportedVersionInstanceMixIn:
+    """Like SupportedVersionClassMixIn but for class instances"""
+
+    def __init__(self, supported_from=None, deprecated_from=None):
+        _check(supported_from, deprecated_from)
+        self.supported_from = supported_from
+        self.deprecated_from = deprecated_from
+
+    def supports_version(self, version):
+        return _supports_version(self.supported_from, self.deprecated_from, version)
+
+
+def _check(supported_from, deprecated_from):
+    if supported_from is not None and not isinstance(supported_from, Build):
+        raise InvalidTypeError("supported_from", supported_from, Build)
+    if deprecated_from is not None and not isinstance(deprecated_from, Build):
+        raise InvalidTypeError("deprecated_from", deprecated_from, Build)
+
+
+def _supports_version(supported_from, deprecated_from, version):
+    # 'version' is a Version instance, for convenience by callers
+    if supported_from and version.build < supported_from:
+        return False
+    if deprecated_from and version.build >= deprecated_from:
+        return False
+    return True

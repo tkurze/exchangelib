@@ -17,7 +17,7 @@ from .util import (
     value_to_xml_text,
     xml_text_to_value,
 )
-from .version import EXCHANGE_2013, Build
+from .version import EXCHANGE_2013, Build, SupportedVersionInstanceMixIn
 
 log = logging.getLogger(__name__)
 
@@ -269,7 +269,7 @@ class FieldOrder:
         return field_order
 
 
-class Field(metaclass=abc.ABCMeta):
+class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
     """Holds information related to an item field."""
 
     value_cls = None
@@ -292,8 +292,8 @@ class Field(metaclass=abc.ABCMeta):
         is_searchable=True,
         is_attribute=False,
         default=None,
-        supported_from=None,
-        deprecated_from=None,
+        *args,
+        **kwargs,
     ):
         self.name = name  # Usually set by the EWSMeta metaclass
         self.default = default  # Default value if none is given
@@ -309,16 +309,7 @@ class Field(metaclass=abc.ABCMeta):
         self.is_searchable = is_searchable
         # When true, this field is treated as an XML attribute instead of an element
         self.is_attribute = is_attribute
-        # The Exchange build when this field was introduced. When talking with versions prior to this version,
-        # we will ignore this field.
-        if supported_from is not None and not isinstance(supported_from, Build):
-            raise InvalidTypeError("supported_from", supported_from, Build)
-        self.supported_from = supported_from
-        # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
-        # we will ignore this field.
-        if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise InvalidTypeError("deprecated_from", deprecated_from, Build)
-        self.deprecated_from = deprecated_from
+        super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
@@ -351,14 +342,6 @@ class Field(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def to_xml(self, value, version):
         """Convert this field to an XML element"""
-
-    def supports_version(self, version):
-        # 'version' is a Version instance, for convenience by callers
-        if self.supported_from and version.build < self.supported_from:
-            return False
-        if self.deprecated_from and version.build >= self.deprecated_from:
-            return False
-        return True
 
     def __eq__(self, other):
         return hash(self) == hash(other)
@@ -902,18 +885,12 @@ class CultureField(CharField):
     """Helper to mark strings that are # RFC 1766 culture values."""
 
 
-class Choice:
+class Choice(SupportedVersionInstanceMixIn):
     """Implement versioned choices for the ChoiceField field."""
 
-    def __init__(self, value, supported_from=None):
+    def __init__(self, value, *args, **kwargs):
         self.value = value
-        self.supported_from = supported_from
-
-    def supports_version(self, version):
-        # 'version' is a Version instance, for convenience by callers
-        if not self.supported_from:
-            return True
-        return version.build >= self.supported_from
+        super().__init__(*args, **kwargs)
 
 
 class ChoiceField(CharField):
@@ -934,7 +911,7 @@ class ChoiceField(CharField):
                 return value
             if value in valid_choices:
                 raise InvalidChoiceForVersion(
-                    f"Choice {self.name!r} only supports EWS builds from {self.supported_from or '*'} to "
+                    f"Choice {self.name!r} only supports server versions from {self.supported_from or '*'} to "
                     f"{self.deprecated_from or '*'} (server has {version})"
                 )
         else:

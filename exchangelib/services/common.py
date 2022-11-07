@@ -64,12 +64,12 @@ from ..util import (
     to_xml,
     xml_to_str,
 )
-from ..version import API_VERSIONS, Version
+from ..version import API_VERSIONS, SupportedVersionClassMixIn, Version
 
 log = logging.getLogger(__name__)
 
 
-class EWSService(metaclass=abc.ABCMeta):
+class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     """Base class for all EWS services."""
 
     PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
@@ -101,8 +101,6 @@ class EWSService(metaclass=abc.ABCMeta):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Marks the version from which the service was introduced
-    supported_from = None
     # Marks services that support paging of requested items
     supports_paging = False
 
@@ -114,8 +112,8 @@ class EWSService(metaclass=abc.ABCMeta):
             raise ValueError(f"'chunk_size' {self.chunk_size} must be a positive number")
         if self.supported_from and protocol.version.build < self.supported_from:
             raise NotImplementedError(
-                f"{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later. "
-                f"Your current version is {protocol.version.build.fullname()!r}."
+                f"Service {self.SERVICE_NAME!r} only supports server versions from {self.supported_from or '*'} to "
+                f"{self.deprecated_from or '*'} (server has {protocol.version})"
             )
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services

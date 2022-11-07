@@ -448,6 +448,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def version(self):
         # Make sure only one thread does the guessing.
         if not self.config.version or not self.config.version.build:
+            log.debug("Waiting for _version_lock")
             with self._version_lock:
                 if not self.config.version or not self.config.version.build:
                     # Version.guess() needs auth objects and a working session pool

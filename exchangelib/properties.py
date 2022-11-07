@@ -384,8 +384,8 @@ class EWSElement(metaclass=EWSMeta):
         if not field.supports_version(version):
             # The field exists but is not valid for this version
             raise InvalidFieldForVersion(
-                f"Field {field.name!r} is not supported on server version {version} "
-                f"(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})"
+                f"Field {field.name!r} only supports server versions from {field.supported_from or '*'} to "
+                f"{field.deprecated_from or '*'} (server has {version})"
             )
 
     @classmethod

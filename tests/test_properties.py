@@ -156,8 +156,8 @@ class PropertiesTest(TimedTestCase):
             Item.validate_field(field=test_field, version=Version(build=EXCHANGE_2010))
         self.assertEqual(
             e.exception.args[0],
-            "Field 'text_body' is not supported on server version Build=14.0.0.0, API=Exchange2010, Fullname=Microsoft "
-            "Exchange Server 2010 (supported from: 15.0.0.0, deprecated from: None)",
+            "Field 'text_body' only supports server versions from 15.0.0.0 to * (server has Build=14.0.0.0, "
+            "API=Exchange2010, Fullname=Microsoft Exchange Server 2010)",
         )
 
     def test_add_field(self):

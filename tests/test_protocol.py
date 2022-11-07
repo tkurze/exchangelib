@@ -1022,24 +1022,26 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
   <s:Header>
   </s:Header>
   <s:Body>
-    <m:ResolveNamesResponse
+    <m:ConvertIdResponse
     xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
     xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
       <m:ResponseMessages>
-        <m:ResolveNamesResponseMessage ResponseClass="Error">
-          <m:MessageText>.</m:MessageText>
-          <m:ResponseCode>ErrorNameResolutionMultipleResults</m:ResponseCode>
+        <m:ConvertIdResponseMessage ResponseClass="Error">
+          <m:MessageText>The SMTP address format is invalid.</m:MessageText>
+          <m:ResponseCode>ErrorInvalidSmtpAddress</m:ResponseCode>
           <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
-        </m:ResolveNamesResponseMessage>
+        </m:ConvertIdResponseMessage>
       </m:ResponseMessages>
-    </m:ResolveNamesResponse>
+    </m:ConvertIdResponse>
   </s:Body>
 </s:Envelope>""",
         )
         with self.assertRaises(TransportError) as e:
             Version.guess(protocol)
         self.assertEqual(
-            e.exception.args[0], "No valid version headers found in response (ErrorNameResolutionMultipleResults('.'))"
+            e.exception.args[0],
+            "No valid version headers found in response "
+            "(ErrorInvalidSmtpAddress('The SMTP address format is invalid.'))",
         )
 
     @patch("requests.sessions.Session.post", side_effect=ConnectionResetError("XXX"))
