@@ -13,6 +13,7 @@ from ..errors import (
     ErrorCorruptData,
     ErrorExceededConnectionCount,
     ErrorIncorrectSchemaVersion,
+    ErrorInternalServerTransientError,
     ErrorInvalidChangeKey,
     ErrorInvalidIdMalformed,
     ErrorInvalidRequest,
@@ -266,7 +267,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
+            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired, ErrorInternalServerTransientError) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
                 #
