@@ -25,14 +25,7 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 from requests_oauthlib import OAuth2Session
 
-from .errors import (
-    InvalidTypeError,
-    MalformedResponseError,
-    RateLimitError,
-    RedirectError,
-    RelativeRedirect,
-    TransportError,
-)
+from .errors import MalformedResponseError, RateLimitError, RedirectError, RelativeRedirect, TransportError
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger(f"{__name__}.xml")
@@ -247,7 +240,6 @@ def set_xml_value(elem, value, version=None):
     from .ewsdatetime import EWSDate, EWSDateTime
     from .fields import FieldOrder, FieldPath
     from .properties import EWSElement
-    from .version import Version
 
     if isinstance(value, (str, bool, bytes, int, Decimal, datetime.time, EWSDate, EWSDateTime)):
         elem.text = value_to_xml_text(value)
@@ -256,8 +248,6 @@ def set_xml_value(elem, value, version=None):
     elif isinstance(value, (FieldPath, FieldOrder)):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
-        if not isinstance(version, Version):
-            raise InvalidTypeError("version", version, Version)
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:

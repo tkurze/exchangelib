@@ -1,7 +1,6 @@
 from ..errors import InvalidEnumValue, InvalidTypeError
 from ..properties import ID_FORMATS, AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId
 from ..util import create_element, set_xml_value
-from ..version import EXCHANGE_2007_SP1
 from .common import EWSService
 
 
@@ -13,7 +12,6 @@ class ConvertId(EWSService):
     """
 
     SERVICE_NAME = "ConvertId"
-    supported_from = EXCHANGE_2007_SP1
     cls_map = {cls.response_tag(): cls for cls in (AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId)}
 
     def call(self, items, destination_format):
@@ -33,7 +31,7 @@ class ConvertId(EWSService):
         for item in items:
             if not isinstance(item, supported_item_classes):
                 raise InvalidTypeError("item", item, supported_item_classes)
-            set_xml_value(item_ids, item, version=self.protocol.version)
+            set_xml_value(item_ids, item, version=None)
         payload.append(item_ids)
         return payload
 

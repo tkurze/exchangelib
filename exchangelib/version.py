@@ -217,20 +217,20 @@ class Version:
         :param protocol:
         :param api_version_hint:  (Default value = None)
         """
-        from .services import ResolveNames
+        from .properties import ENTRY_ID, EWS_ID, AlternateId
+        from .services import ConvertId
 
         # The protocol doesn't have a version yet, so default to the latest supported version if we don't have a hint.
         api_version = api_version_hint or API_VERSIONS[0]
         log.debug("Asking server for version info using API version %s", api_version)
         # We don't know the build version yet. Hopefully, the server will report it in the SOAP header. Lots of
         # places expect a version to have a build, so this is a bit dangerous, but passing a fake build around is also
-        # dangerous. Make sure the call to ResolveNames does not require a version build.
+        # dangerous.
         protocol.config.version = Version(build=None, api_version=api_version)
-        # Use ResolveNames as a minimal request to the server to test if the version is correct. If not, ResolveNames
-        # will try to guess the version automatically.
-        name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else "DUMMY"
+        # Use ConvertId as a minimal request to the server to test if the version is correct. If not, ConvertId will
+        # try to guess the version automatically. Make sure the call to ConvertId does not require a version build.
         try:
-            list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
+            list(ConvertId(protocol=protocol).call([AlternateId(id="DUMMY", format=EWS_ID, mailbox="DUMMY")], ENTRY_ID))
         except ResponseMessageError as e:
             # We may have survived long enough to get a new version
             if not protocol.config.version.build:
