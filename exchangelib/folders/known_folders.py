@@ -394,7 +394,7 @@ class VoiceMail(WellknownFolder):
     }
 
 
-class NonDeletableFolderMixin:
+class NonDeletableFolderMixIn:
     """A mixin for non-wellknown folders than that are not deletable."""
 
     @property
@@ -402,7 +402,7 @@ class NonDeletableFolderMixin:
         return False
 
 
-class AllContacts(NonDeletableFolderMixin, Contacts):
+class AllContacts(NonDeletableFolderMixIn, Contacts):
     CONTAINER_CLASS = "IPF.Note"
 
     LOCALIZED_NAMES = {
@@ -410,7 +410,7 @@ class AllContacts(NonDeletableFolderMixin, Contacts):
     }
 
 
-class AllItems(NonDeletableFolderMixin, Folder):
+class AllItems(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF"
 
     LOCALIZED_NAMES = {
@@ -418,31 +418,31 @@ class AllItems(NonDeletableFolderMixin, Folder):
     }
 
 
-class ApplicationData(NonDeletableFolderMixin, Folder):
+class ApplicationData(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPM.ApplicationData"
 
 
-class Audits(NonDeletableFolderMixin, Folder):
+class Audits(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Audits",),
     }
     get_folder_allowed = False
 
 
-class CalendarLogging(NonDeletableFolderMixin, Folder):
+class CalendarLogging(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Calendar Logging",),
     }
 
 
-class CommonViews(NonDeletableFolderMixin, Folder):
+class CommonViews(NonDeletableFolderMixIn, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
         None: ("Common Views",),
     }
 
 
-class Companies(NonDeletableFolderMixin, Contacts):
+class Companies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = "IPF.Contact.Company"
     LOCALIZED_NAMES = {
@@ -451,33 +451,33 @@ class Companies(NonDeletableFolderMixin, Contacts):
     }
 
 
-class ConversationSettings(NonDeletableFolderMixin, Folder):
+class ConversationSettings(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.Configuration"
     LOCALIZED_NAMES = {
         "da_DK": ("Indstillinger for samtalehandlinger",),
     }
 
 
-class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
+class DefaultFoldersChangeHistory(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPM.DefaultFolderHistoryItem"
     LOCALIZED_NAMES = {
         None: ("DefaultFoldersChangeHistory",),
     }
 
 
-class DeferredAction(NonDeletableFolderMixin, Folder):
+class DeferredAction(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Deferred Action",),
     }
 
 
-class ExchangeSyncData(NonDeletableFolderMixin, Folder):
+class ExchangeSyncData(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("ExchangeSyncData",),
     }
 
 
-class Files(NonDeletableFolderMixin, Folder):
+class Files(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.Files"
 
     LOCALIZED_NAMES = {
@@ -485,13 +485,13 @@ class Files(NonDeletableFolderMixin, Folder):
     }
 
 
-class FreebusyData(NonDeletableFolderMixin, Folder):
+class FreebusyData(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Freebusy Data",),
     }
 
 
-class Friends(NonDeletableFolderMixin, Contacts):
+class Friends(NonDeletableFolderMixIn, Contacts):
     CONTAINER_CLASS = "IPF.Note"
 
     LOCALIZED_NAMES = {
@@ -499,7 +499,7 @@ class Friends(NonDeletableFolderMixin, Contacts):
     }
 
 
-class GALContacts(NonDeletableFolderMixin, Contacts):
+class GALContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINER_CLASS = "IPF.Contact.GalContacts"
 
@@ -508,33 +508,33 @@ class GALContacts(NonDeletableFolderMixin, Contacts):
     }
 
 
-class GraphAnalytics(NonDeletableFolderMixin, Folder):
+class GraphAnalytics(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.StoreItem.GraphAnalytics"
     LOCALIZED_NAMES = {
         None: ("GraphAnalytics",),
     }
 
 
-class Location(NonDeletableFolderMixin, Folder):
+class Location(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Location",),
     }
 
 
-class MailboxAssociations(NonDeletableFolderMixin, Folder):
+class MailboxAssociations(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("MailboxAssociations",),
     }
 
 
-class MyContactsExtended(NonDeletableFolderMixin, Contacts):
+class MyContactsExtended(NonDeletableFolderMixIn, Contacts):
     CONTAINER_CLASS = "IPF.Note"
     LOCALIZED_NAMES = {
         None: ("MyContactsExtended",),
     }
 
 
-class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
+class OrganizationalContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = "IPF.Contact.OrganizationalContacts"
     LOCALIZED_NAMES = {
@@ -542,21 +542,21 @@ class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
     }
 
 
-class ParkedMessages(NonDeletableFolderMixin, Folder):
+class ParkedMessages(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
         None: ("ParkedMessages",),
     }
 
 
-class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
+class PassThroughSearchResults(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.StoreItem.PassThroughSearchResults"
     LOCALIZED_NAMES = {
         None: ("Pass-Through Search Results",),
     }
 
 
-class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
+class PeopleCentricConversationBuddies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = "IPF.Contact.PeopleCentricConversationBuddies"
     LOCALIZED_NAMES = {
@@ -564,93 +564,93 @@ class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
     }
 
 
-class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
+class PdpProfileV2Secured(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.StoreItem.PdpProfileSecured"
     LOCALIZED_NAMES = {
         None: ("PdpProfileV2Secured",),
     }
 
 
-class Reminders(NonDeletableFolderMixin, Folder):
+class Reminders(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "Outlook.Reminder"
     LOCALIZED_NAMES = {
         "da_DK": ("Påmindelser",),
     }
 
 
-class RSSFeeds(NonDeletableFolderMixin, Folder):
+class RSSFeeds(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.Note.OutlookHomepage"
     LOCALIZED_NAMES = {
         None: ("RSS Feeds",),
     }
 
 
-class Schedule(NonDeletableFolderMixin, Folder):
+class Schedule(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Schedule",),
     }
 
 
-class Sharing(NonDeletableFolderMixin, Folder):
+class Sharing(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.Note"
     LOCALIZED_NAMES = {
         None: ("Sharing",),
     }
 
 
-class Shortcuts(NonDeletableFolderMixin, Folder):
+class Shortcuts(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Shortcuts",),
     }
 
 
-class Signal(NonDeletableFolderMixin, Folder):
+class Signal(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.StoreItem.Signal"
     LOCALIZED_NAMES = {
         None: ("Signal",),
     }
 
 
-class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
+class SmsAndChatsSync(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = "IPF.SmsAndChatsSync"
     LOCALIZED_NAMES = {
         None: ("SmsAndChatsSync",),
     }
 
 
-class SpoolerQueue(NonDeletableFolderMixin, Folder):
+class SpoolerQueue(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Spooler Queue",),
     }
 
 
-class System(NonDeletableFolderMixin, Folder):
+class System(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("System",),
     }
     get_folder_allowed = False
 
 
-class System1(NonDeletableFolderMixin, Folder):
+class System1(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("System1",),
     }
     get_folder_allowed = False
 
 
-class TemporarySaves(NonDeletableFolderMixin, Folder):
+class TemporarySaves(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("TemporarySaves",),
     }
 
 
-class Views(NonDeletableFolderMixin, Folder):
+class Views(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Views",),
     }
 
 
-class WorkingSet(NonDeletableFolderMixin, Folder):
+class WorkingSet(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: ("Working Set",),
     }
