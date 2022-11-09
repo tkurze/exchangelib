@@ -65,8 +65,9 @@ class ElementNotFound(Exception):
         self.data = data
 
 
-# Regex of UTF-8 control characters that are illegal in XML 1.0 (and XML 1.1)
-_ILLEGAL_XML_CHARS_RE = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]")
+# Regex of UTF-8 control characters that are illegal in XML 1.0 (and XML 1.1).
+# See https://stackoverflow.com/a/22273639/219640
+_ILLEGAL_XML_CHARS_RE = re.compile("[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFDD0-\uFDDF\uFFFE\uFFFF]")
 
 # XML namespaces
 SOAPNS = "http://schemas.xmlsoap.org/soap/envelope/"
