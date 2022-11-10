@@ -121,9 +121,8 @@ class BaseProtocol:
 
     def get_auth_type(self):
         # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else "DUMMY"
         auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
+            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS
         )
         self._api_version_hint = api_version_hint
         return auth_type
