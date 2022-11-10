@@ -7,17 +7,7 @@ import requests_ntlm
 import requests_oauthlib
 
 from .errors import TransportError, UnauthorizedError
-from .util import (
-    CONNECTION_ERRORS,
-    RETRY_WAIT,
-    DummyResponse,
-    _back_off_if_needed,
-    _retry_after,
-    add_xml_child,
-    create_element,
-    ns_translation,
-    xml_to_str,
-)
+from .util import CONNECTION_ERRORS, RETRY_WAIT, DummyResponse, _back_off_if_needed, _retry_after
 
 log = logging.getLogger(__name__)
 
@@ -55,59 +45,6 @@ with suppress(ImportError):
 
 DEFAULT_ENCODING = "utf-8"
 DEFAULT_HEADERS = {"Content-Type": f"text/xml; charset={DEFAULT_ENCODING}", "Accept-Encoding": "gzip, deflate"}
-
-
-def wrap(content, api_version=None, account_to_impersonate=None, timezone=None):
-    """Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
-    ExchangeImpersonation allows to act as the user we want to impersonate.
-
-    RequestServerVersion element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
-
-    ExchangeImpersonation element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
-
-    TimeZoneContent element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
-
-    :param content:
-    :param api_version:
-    :param account_to_impersonate:  (Default value = None)
-    :param timezone:  (Default value = None)
-    """
-    envelope = create_element("s:Envelope", nsmap=ns_translation)
-    header = create_element("s:Header")
-    if api_version:
-        request_server_version = create_element("t:RequestServerVersion", attrs=dict(Version=api_version))
-        header.append(request_server_version)
-    if account_to_impersonate:
-        exchange_impersonation = create_element("t:ExchangeImpersonation")
-        connecting_sid = create_element("t:ConnectingSID")
-        # We have multiple options for uniquely identifying the user. Here's a prioritized list in accordance with
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
-        for attr, tag in (
-            ("sid", "SID"),
-            ("upn", "PrincipalName"),
-            ("smtp_address", "SmtpAddress"),
-            ("primary_smtp_address", "PrimarySmtpAddress"),
-        ):
-            val = getattr(account_to_impersonate, attr)
-            if val:
-                add_xml_child(connecting_sid, f"t:{tag}", val)
-                break
-        exchange_impersonation.append(connecting_sid)
-        header.append(exchange_impersonation)
-    if timezone:
-        timezone_context = create_element("t:TimeZoneContext")
-        timezone_definition = create_element("t:TimeZoneDefinition", attrs=dict(Id=timezone.ms_id))
-        timezone_context.append(timezone_definition)
-        header.append(timezone_context)
-    if len(header):
-        envelope.append(header)
-    body = create_element("s:Body")
-    body.append(content)
-    envelope.append(body)
-    return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
 
 
 def get_auth_instance(auth_type, **kwargs):
@@ -240,8 +177,9 @@ def dummy_xml(api_version):
     from .properties import ENTRY_ID, EWS_ID, AlternateId
     from .services import ConvertId  # Avoid circular import
 
-    return wrap(
-        content=ConvertId(protocol=None).get_payload(
+    svc = ConvertId(protocol=None)
+    return svc.wrap(
+        content=svc.get_payload(
             items=[AlternateId(id="DUMMY", format=EWS_ID, mailbox="DUMMY")],
             destination_format=ENTRY_ID,
         ),

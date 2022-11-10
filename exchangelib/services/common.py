@@ -48,7 +48,7 @@ from ..properties import (
     IndexedFieldURI,
     ItemId,
 )
-from ..transport import wrap
+from ..transport import DEFAULT_ENCODING
 from ..util import (
     ENS,
     MNS,
@@ -60,6 +60,7 @@ from ..util import (
     chunkify,
     create_element,
     get_xml_attr,
+    ns_translation,
     post_ratelimited,
     set_xml_value,
     to_xml,
@@ -182,6 +183,58 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         _, body = self._get_soap_parts(response=resp)
         return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
 
+    def wrap(self, content, api_version=None):
+        """Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+        ExchangeImpersonation allows to act as the user we want to impersonate.
+
+        RequestServerVersion element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+
+        ExchangeImpersonation element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
+
+        TimeZoneContent element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
+
+        :param content:
+        :param api_version:
+        """
+        envelope = create_element("s:Envelope", nsmap=ns_translation)
+        header = create_element("s:Header")
+        if api_version:
+            request_server_version = create_element("t:RequestServerVersion", attrs=dict(Version=api_version))
+            header.append(request_server_version)
+        account_to_impersonate = self._account_to_impersonate
+        if account_to_impersonate:
+            exchange_impersonation = create_element("t:ExchangeImpersonation")
+            connecting_sid = create_element("t:ConnectingSID")
+            # We have multiple options for uniquely identifying the user. Here's a prioritized list in accordance with
+            # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
+            for attr, tag in (
+                ("sid", "SID"),
+                ("upn", "PrincipalName"),
+                ("smtp_address", "SmtpAddress"),
+                ("primary_smtp_address", "PrimarySmtpAddress"),
+            ):
+                val = getattr(account_to_impersonate, attr)
+                if val:
+                    add_xml_child(connecting_sid, f"t:{tag}", val)
+                    break
+            exchange_impersonation.append(connecting_sid)
+            header.append(exchange_impersonation)
+        timezone = self._timezone
+        if timezone:
+            timezone_context = create_element("t:TimeZoneContext")
+            timezone_definition = create_element("t:TimeZoneDefinition", attrs=dict(Id=timezone.ms_id))
+            timezone_context.append(timezone_definition)
+            header.append(timezone_context)
+        if len(header):
+            envelope.append(header)
+        body = create_element("s:Body")
+        body.append(content)
+        envelope.append(body)
+        return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
+
     def _elems_to_objs(self, elems):
         """Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions)."""
         for elem in elems:
@@ -210,7 +263,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
 
     @property
     def _account_to_impersonate(self):
-        if isinstance(self.protocol.credentials, OAuth2Credentials):
+        if self.protocol and isinstance(self.protocol.credentials, OAuth2Credentials):
             return self.protocol.credentials.identity
         return None
 
@@ -299,11 +352,9 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             session=session,
             url=self.protocol.service_endpoint,
             headers=self._extra_headers(session),
-            data=wrap(
+            data=self.wrap(
                 content=payload,
                 api_version=api_version,
-                account_to_impersonate=self._account_to_impersonate,
-                timezone=self._timezone,
             ),
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,

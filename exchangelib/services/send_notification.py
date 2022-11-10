@@ -1,6 +1,5 @@
 from ..errors import InvalidEnumValue
 from ..properties import Notification
-from ..transport import wrap
 from ..util import MNS, create_element
 from .common import EWSService, add_xml_child
 
@@ -19,10 +18,10 @@ class SendNotification(EWSService):
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
-        return wrap(content=self.get_payload(status=self.OK))
+        return self.wrap(content=self.get_payload(status=self.OK))
 
     def unsubscribe_payload(self):
-        return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
+        return self.wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)

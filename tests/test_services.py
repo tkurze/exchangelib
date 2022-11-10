@@ -1,7 +1,10 @@
+from collections import namedtuple
 from unittest.mock import Mock
 
 import requests_mock
 
+from exchangelib.account import DELEGATE, Identity
+from exchangelib.credentials import OAuth2Credentials
 from exchangelib.errors import (
     ErrorExceededConnectionCount,
     ErrorInternalServerError,
@@ -18,7 +21,8 @@ from exchangelib.errors import (
 from exchangelib.folders import FolderCollection
 from exchangelib.protocol import FailFast, FaultTolerance
 from exchangelib.services import DeleteItem, FindFolder, GetRoomLists, GetRooms, GetServerTimeZones, ResolveNames
-from exchangelib.util import create_element
+from exchangelib.services.common import EWSAccountService, EWSService
+from exchangelib.util import PrettyXmlHandler, create_element
 from exchangelib.version import EXCHANGE_2007, EXCHANGE_2010
 
 from .common import EWSTest, get_random_string, mock_account, mock_protocol, mock_version
@@ -340,3 +344,70 @@ class ServicesTest(EWSTest):
             self.assertEqual(old_version, self.account.version.api_version)
         finally:
             self.account.version.api_version = old_version
+
+    def test_wrap(self):
+        # Test payload wrapper with both delegation, impersonation and timezones
+        svc = EWSService(protocol=None)
+        wrapped = svc.wrap(content=create_element("AAA"), api_version="BBB")
+        self.assertEqual(
+            PrettyXmlHandler().prettify_xml(wrapped),
+            """\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+  <s:Header>
+    <t:RequestServerVersion Version="BBB"/>
+  </s:Header>
+  <s:Body>
+    <AAA/>
+  </s:Body>
+</s:Envelope>
+""".encode(),
+        )
+
+        MockTZ = namedtuple("EWSTimeZone", ["ms_id"])
+        MockProtocol = namedtuple("Protocol", ["credentials"])
+        MockAccount = namedtuple("Account", ["access_type", "default_timezone", "protocol"])
+        for attr, tag in (
+            ("primary_smtp_address", "PrimarySmtpAddress"),
+            ("upn", "PrincipalName"),
+            ("sid", "SID"),
+            ("smtp_address", "SmtpAddress"),
+        ):
+            val = f"{attr}@example.com"
+            protocol = MockProtocol(
+                credentials=OAuth2Credentials(identity=Identity(**{attr: val}), client_id=None, client_secret=None)
+            )
+            account = MockAccount(access_type=DELEGATE, default_timezone=MockTZ("XXX"), protocol=protocol)
+            svc = EWSAccountService(account=account)
+            wrapped = svc.wrap(
+                content=create_element("AAA"),
+                api_version="BBB",
+            )
+            self.assertEqual(
+                PrettyXmlHandler().prettify_xml(wrapped),
+                f"""\
+<?xml version='1.0' encoding='utf-8'?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+    xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+  <s:Header>
+    <t:RequestServerVersion Version="BBB"/>
+    <t:ExchangeImpersonation>
+      <t:ConnectingSID>
+        <t:{tag}>{val}</t:{tag}>
+      </t:ConnectingSID>
+    </t:ExchangeImpersonation>
+    <t:TimeZoneContext>
+      <t:TimeZoneDefinition Id="XXX"/>
+    </t:TimeZoneContext>
+  </s:Header>
+  <s:Body>
+    <AAA/>
+  </s:Body>
+</s:Envelope>
+""".encode(),
+            )
