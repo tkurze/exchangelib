@@ -11,7 +11,6 @@ class FindItem(EWSPagingService):
     SERVICE_NAME = "FindItem"
     element_container_name = f"{{{TNS}}}Items"
     paging_container_name = f"{{{MNS}}}RootFolder"
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

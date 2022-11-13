@@ -15,7 +15,6 @@ class FindPeople(EWSPagingService):
     SERVICE_NAME = "FindPeople"
     element_container_name = f"{{{MNS}}}People"
     supported_from = EXCHANGE_2013
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

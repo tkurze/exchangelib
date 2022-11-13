@@ -27,7 +27,7 @@ class SyncFolderItems(SyncFolder):
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
         if max_changes_returned is None:
-            max_changes_returned = self.page_size
+            max_changes_returned = 100
         if not isinstance(max_changes_returned, int):
             raise InvalidTypeError("max_changes_returned", max_changes_returned, int)
         if max_changes_returned <= 0:

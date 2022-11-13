@@ -13,7 +13,6 @@ class FindFolder(EWSPagingService):
     SERVICE_NAME = "FindFolder"
     element_container_name = f"{{{TNS}}}Folders"
     paging_container_name = f"{{{MNS}}}RootFolder"
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

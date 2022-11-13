@@ -74,12 +74,10 @@ log = logging.getLogger(__name__)
 class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     """Base class for all EWS services."""
 
-    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
     CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
-    paging_container_name = None  # The name of the element that contains paging information and the paged results
     returns_elements = True  # If False, the service does not return response elements, just the ResponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
@@ -103,8 +101,8 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Marks services that support paging of requested items
-    supports_paging = False
+
+    NS_MAP = {k: v for k, v in ns_translation.items() if k in ("s", "m", "t")}
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or self.CHUNK_SIZE
@@ -199,7 +197,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         :param content:
         :param api_version:
         """
-        envelope = create_element("s:Envelope", nsmap=ns_translation)
+        envelope = create_element("s:Envelope", nsmap=self.NS_MAP)
         header = create_element("s:Header")
         if api_version:
             request_server_version = create_element("t:RequestServerVersion", attrs=dict(Version=api_version))
@@ -278,8 +276,6 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         :return: the response, as XML objects
         """
         response = self._get_response_xml(payload=payload)
-        if self.supports_paging:
-            return (self._get_page(message) for message in response)
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
@@ -292,7 +288,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         :return: Same as ._get_elements()
         """
         # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
-        filtered_items = filter(lambda i: not isinstance(i, Exception), items)
+        filtered_items = filter(lambda item: not isinstance(item, Exception), items)
         for i, chunk in enumerate(chunkify(filtered_items, self.chunk_size), start=1):
             log.debug("Processing chunk %s containing %s items", i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
@@ -598,7 +594,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 if container is None:
                     raise MalformedResponseError(f"No {name} elements in ResponseMessage ({xml_to_str(message)})")
                 return container
-        # rspclass == 'Error', or 'Success' and not 'NoError'
+        # response_class == 'Error', or 'Success' and not 'NoError'
         try:
             raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
@@ -760,6 +756,10 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
 
 
 class EWSPagingService(EWSAccountService):
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+
+    paging_container_name = None  # The name of the element that contains paging information and the paged results
+
     def __init__(self, *args, **kwargs):
         self.page_size = kwargs.pop("page_size", None) or self.PAGE_SIZE
         if not isinstance(self.page_size, int):
@@ -767,6 +767,15 @@ class EWSPagingService(EWSAccountService):
         if self.page_size < 1:
             raise ValueError(f"'page_size' {self.page_size} must be a positive number")
         super().__init__(*args, **kwargs)
+
+    def _response_generator(self, payload):
+        """Send the payload to the server, and return the response.
+
+        :param payload: payload as an XML object
+        :return: the response, as XML objects
+        """
+        response = self._get_response_xml(payload=payload)
+        return (self._get_page(message) for message in response)
 
     def _paged_call(self, payload_func, max_items, folders, **kwargs):
         """Call a service that supports paging requests. Return a generator over all response items. Keeps track of

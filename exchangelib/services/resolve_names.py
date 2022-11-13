@@ -18,11 +18,11 @@ class ResolveNames(EWSService):
     element_container_name = f"{{{MNS}}}ResolutionSet"
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
-    # Note: paging information is returned as attrs on the 'ResolutionSet' element, but this service does not
-    # support the 'IndexedPageItemView' element, so it's not really a paging service.
-    supports_paging = False
+
     # According to the 'Remarks' section of the MSDN documentation referenced above, at most 100 candidates are
     # returned for a lookup.
+    # Note: paging information is returned as attrs on the 'ResolutionSet' element, but this service does not
+    # support the 'IndexedPageItemView' element, so it's not really a paging service.
     candidates_limit = 100
 
     def __init__(self, *args, **kwargs):
