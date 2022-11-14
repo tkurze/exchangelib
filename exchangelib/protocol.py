@@ -77,7 +77,6 @@ class BaseProtocol:
 
     def __init__(self, config):
         self.config = config
-        self._api_version_hint = None
 
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
@@ -91,6 +90,10 @@ class BaseProtocol:
     @property
     def service_endpoint(self):
         return self.config.service_endpoint
+
+    @abc.abstractmethod
+    def get_auth_type(self):
+        """Autodetect authentication type"""
 
     @property
     def auth_type(self):
@@ -118,14 +121,6 @@ class BaseProtocol:
     @property
     def server(self):
         return self.config.server
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -442,6 +437,15 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._version_lock = Lock()
+        self._api_version_hint = None
+
+    def get_auth_type(self):
+        # Autodetect authentication type. We also set version hint here.
+        auth_type, api_version_hint = get_service_authtype(
+            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS
+        )
+        self._api_version_hint = api_version_hint
+        return auth_type
 
     @property
     def version(self):
