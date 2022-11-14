@@ -230,7 +230,6 @@ class UtilTest(EWSTest):
         protocol = self.account.protocol
         orig_policy = protocol.config.retry_policy
         RETRY_WAIT = exchangelib.util.RETRY_WAIT
-        MAX_REDIRECTS = exchangelib.util.MAX_REDIRECTS
 
         session = protocol.get_session()
         try:
@@ -282,13 +281,6 @@ class UtilTest(EWSTest):
             session.post = mock_post(url, 302, {"location": "https://contoso.com"})
             with self.assertRaises(TransportError):
                 r, session = post_ratelimited(protocol=protocol, session=session, url=url, headers=None, data="")
-            # Redirect header to other location and allow_redirects=True
-            exchangelib.util.MAX_REDIRECTS = 0
-            session.post = mock_post(url, 302, {"location": "https://contoso.com"})
-            with self.assertRaises(TransportError):
-                r, session = post_ratelimited(
-                    protocol=protocol, session=session, url=url, headers=None, data="", allow_redirects=True
-                )
 
             # CAS error
             session.post = mock_post(url, 999, {"X-CasErrorCode": "AAARGH!"})
@@ -339,7 +331,6 @@ class UtilTest(EWSTest):
             # Restore patched attributes and functions
             protocol.config.retry_policy = orig_policy
             exchangelib.util.RETRY_WAIT = RETRY_WAIT
-            exchangelib.util.MAX_REDIRECTS = MAX_REDIRECTS
 
             with suppress(AttributeError):
                 delattr(protocol, "renew_session")

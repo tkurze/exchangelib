@@ -707,7 +707,6 @@ def get_redirect_url(response, allow_relative=True, require_relative=False):
 
 
 RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
-MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
 
 # A collection of error classes we want to handle as general connection errors
 CONNECTION_ERRORS = (
@@ -727,7 +726,7 @@ with suppress(ImportError):
     TLS_ERRORS += (OpenSSL.SSL.Error,)
 
 
-def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
+def post_ratelimited(protocol, session, url, headers, data, stream=False, timeout=None):
     """There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
     fails on all responses except HTTP 200. The other policy is intended for long-running tasks that need to respect
     rate-limiting errors from the server and paper over outages of up to 1 hour.
@@ -757,7 +756,6 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     :param url:
     :param headers:
     :param data:
-    :param allow_redirects:  (Default value = False)
     :param stream:  (Default value = False)
     :param timeout:
 
@@ -768,7 +766,6 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     thread_id = get_ident()
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
-    redirects = 0
     log_msg = """\
 Retry: %(retry)s
 Waited: %(wait)s
@@ -778,7 +775,6 @@ Thread: %(thread_id)s
 Auth type: %(auth)s
 URL: %(url)s
 HTTP adapter: %(adapter)s
-Allow redirects: %(allow_redirects)s
 Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
@@ -796,7 +792,6 @@ Response XML: %(xml_response)s"""
         auth=session.auth,
         url=url,
         adapter=session.get_adapter(url),
-        allow_redirects=allow_redirects,
         stream=stream,
         response_time=None,
         status_code=None,
@@ -885,7 +880,7 @@ Response XML: %(xml_response)s"""
                 continue
             if r.status_code in (301, 302):
                 r.close()  # Release memory
-                url, redirects = _redirect_or_fail(r, redirects, allow_redirects)
+                url = _fail_on_redirect(r)
                 continue
             break
     except (RateLimitError, RedirectError) as e:
@@ -926,7 +921,7 @@ def _need_new_credentials(response):
     return response.status_code == 401 and response.headers.get("TokenExpiredError")
 
 
-def _redirect_or_fail(response, redirects, allow_redirects):
+def _fail_on_redirect(response):
     # Retry with no delay. If we let requests handle redirects automatically, it would issue a GET to that
     # URL. We still want to POST.
     try:
@@ -934,13 +929,8 @@ def _redirect_or_fail(response, redirects, allow_redirects):
     except RelativeRedirect as e:
         log.debug("'allow_redirects' only supports relative redirects (%s -> %s)", response.url, e.value)
         raise RedirectError(url=e.value)
-    if not allow_redirects:
-        raise TransportError(f"Redirect not allowed but we were redirected ({response.url} -> {redirect_url})")
-    log.debug("HTTP redirected to %s", redirect_url)
-    redirects += 1
-    if redirects > MAX_REDIRECTS:
-        raise TransportError("Max redirect count exceeded")
-    return redirect_url, redirects
+    log.debug("Redirect not allowed but we were redirected ( (%s -> %s)", response.url, redirect_url)
+    raise RedirectError(url=redirect_url)
 
 
 def _retry_after(r, wait):
