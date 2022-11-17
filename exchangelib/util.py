@@ -544,21 +544,24 @@ def to_xml(bytes_content):
     return res
 
 
-def is_xml(text, expected_prefix=b"<?xml"):
+def is_xml(text):
     """Lightweight test if response is an XML doc. It's better to be fast than correct here.
 
     :param text: The string to check
-    :param expected_prefix: What to search for in the start if the string
     :return:
     """
     # BOM_UTF8 is a UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
-    prefix_len = len(expected_prefix)
+    expected_prefixes = (b"<?xml", b"<s:Envelope")
+    max_prefix_len = len(expected_prefixes[1])
     if text[:bom_len] == BOM_UTF8:
-        prefix = text[bom_len : bom_len + prefix_len]
+        prefix = text[bom_len : bom_len + max_prefix_len]
     else:
-        prefix = text[:prefix_len]
-    return prefix == expected_prefix
+        prefix = text[:max_prefix_len]
+    for expected_prefix in expected_prefixes:
+        if prefix[: len(expected_prefix)] == expected_prefix:
+            return True
+    return False
 
 
 class PrettyXmlHandler(logging.StreamHandler):

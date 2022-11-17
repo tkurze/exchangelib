@@ -158,6 +158,8 @@ class UtilTest(EWSTest):
     def test_is_xml(self):
         self.assertEqual(is_xml(b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
         self.assertEqual(is_xml(BOM_UTF8 + b'<?xml version="1.0" encoding="UTF-8"?><foo></foo>'), True)
+        self.assertEqual(is_xml(b"<s:Envelope><foo></foo></s:Envelope>"), True)
+        self.assertEqual(is_xml(BOM_UTF8 + b"<s:Envelope><foo></foo></s:Envelope>"), True)
         self.assertEqual(is_xml(b"XXX"), False)
 
     def test_xml_to_str(self):
