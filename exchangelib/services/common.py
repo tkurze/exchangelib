@@ -66,7 +66,7 @@ from ..util import (
     to_xml,
     xml_to_str,
 )
-from ..version import API_VERSIONS, SupportedVersionClassMixIn, Version
+from ..version import SupportedVersionClassMixIn, Version
 
 log = logging.getLogger(__name__)
 
@@ -364,10 +364,16 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             self.protocol.release_session(session)
         return r
 
-    @property
+    @classmethod
+    def supported_api_versions(cls):
+        """Return API versions supported by the service, sorted from newest to oldest"""
+        return sorted({v.api_version for v in Version.all_versions() if cls.supports_version(v)}, reverse=True)
+
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
+        return (self._version_hint.api_version,) + tuple(
+            v for v in self.supported_api_versions() if v != self._version_hint.api_version
+        )
 
     def _get_response_xml(self, payload, **parse_opts):
         """Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -384,7 +390,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
         log.debug("Calling service %s", self.SERVICE_NAME)
-        for api_version in self._api_versions_to_try:
+        for api_version in self._api_versions_to_try():
             log.debug("Trying API version %s", api_version)
             r = self._get_response(payload=payload, api_version=api_version)
             if self.streaming:
@@ -423,7 +429,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(f"Tried versions {self._api_versions_to_try} but all were invalid")
+        raise self.NO_VALID_SERVER_VERSIONS(f"Tried versions {self._api_versions_to_try()} but all were invalid")
 
     def _handle_backoff(self, e):
         """Take a request from the server to back off and checks the retry policy for what to do. Re-raise the

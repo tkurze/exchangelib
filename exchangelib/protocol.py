@@ -41,7 +41,7 @@ from .services import (
     ResolveNames,
 )
 from .transport import CREDENTIALS_REQUIRED, DEFAULT_HEADERS, NTLM, OAUTH2, get_auth_instance, get_service_authtype
-from .version import API_VERSIONS, Version
+from .version import Version
 
 log = logging.getLogger(__name__)
 
@@ -442,7 +442,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def get_auth_type(self):
         # Autodetect authentication type. We also set version hint here.
         auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS
+            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy
         )
         self._api_version_hint = api_version_hint
         return auth_type

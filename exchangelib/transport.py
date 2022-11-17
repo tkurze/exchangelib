@@ -65,18 +65,19 @@ def get_auth_instance(auth_type, **kwargs):
     return model(**kwargs)
 
 
-def get_service_authtype(service_endpoint, retry_policy, api_versions):
+def get_service_authtype(service_endpoint, retry_policy):
     # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error-prone, and some servers
     # are set up to redirect to OWA on all requests except POST to /EWS/Exchange.asmx
     #
     # We don't know the API version yet, but we need it to create a valid request because some Exchange servers only
     # respond when given a valid request. Try all known versions. Gross.
     from .protocol import BaseProtocol
+    from .services import ConvertId
 
     retry = 0
     t_start = time.monotonic()
     headers = DEFAULT_HEADERS.copy()
-    for api_version in api_versions:
+    for api_version in ConvertId.supported_api_versions():
         data = dummy_xml(api_version=api_version)
         log.debug("Requesting %s from %s", data, service_endpoint)
         while True:
@@ -175,7 +176,7 @@ def _tokenize(val):
 def dummy_xml(api_version):
     # Generate a minimal, valid EWS request
     from .properties import ENTRY_ID, EWS_ID, AlternateId
-    from .services import ConvertId  # Avoid circular import
+    from .services import ConvertId
 
     svc = ConvertId(protocol=None)
     return svc.wrap(

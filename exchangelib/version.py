@@ -6,61 +6,9 @@ from .util import TNS, xml_to_str
 
 log = logging.getLogger(__name__)
 
-# Legend for dict:
-#   Key: shortname
-#   Values: (EWS API version ID, full name)
-
-# 'shortname' comes from types.xsd and is the official version of the server, corresponding to the version numbers
-# supplied in SOAP headers. 'API version' is the version name supplied in the RequestServerVersion element in SOAP
-# headers and describes the EWS API version the server implements. Valid values for this element are described here:
-#    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
-
-VERSIONS = {
-    "Exchange2007": ("Exchange2007", "Microsoft Exchange Server 2007"),
-    "Exchange2007_SP1": ("Exchange2007_SP1", "Microsoft Exchange Server 2007 SP1"),
-    "Exchange2007_SP2": ("Exchange2007_SP1", "Microsoft Exchange Server 2007 SP2"),
-    "Exchange2007_SP3": ("Exchange2007_SP1", "Microsoft Exchange Server 2007 SP3"),
-    "Exchange2010": ("Exchange2010", "Microsoft Exchange Server 2010"),
-    "Exchange2010_SP1": ("Exchange2010_SP1", "Microsoft Exchange Server 2010 SP1"),
-    "Exchange2010_SP2": ("Exchange2010_SP2", "Microsoft Exchange Server 2010 SP2"),
-    "Exchange2010_SP3": ("Exchange2010_SP2", "Microsoft Exchange Server 2010 SP3"),
-    "Exchange2013": ("Exchange2013", "Microsoft Exchange Server 2013"),
-    "Exchange2013_SP1": ("Exchange2013_SP1", "Microsoft Exchange Server 2013 SP1"),
-    "Exchange2015": ("Exchange2015", "Microsoft Exchange Server 2015"),
-    "Exchange2015_SP1": ("Exchange2015_SP1", "Microsoft Exchange Server 2015 SP1"),
-    "Exchange2016": ("Exchange2016", "Microsoft Exchange Server 2016"),
-    "Exchange2019": ("Exchange2019", "Microsoft Exchange Server 2019"),
-}
-
-# Build a list of unique API versions, used when guessing API version supported by the server. Use reverse order, so we
-# get the newest API version supported by the server.
-API_VERSIONS = sorted({v[0] for v in VERSIONS.values()}, reverse=True)
-
 
 class Build:
     """Holds methods for working with build numbers."""
-
-    # List of build numbers here: https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
-    API_VERSION_MAP = {
-        8: {
-            0: "Exchange2007",
-            1: "Exchange2007_SP1",
-            2: "Exchange2007_SP1",
-            3: "Exchange2007_SP1",
-        },
-        14: {
-            0: "Exchange2010",
-            1: "Exchange2010_SP1",
-            2: "Exchange2010_SP2",
-            3: "Exchange2010_SP2",
-        },
-        15: {
-            0: "Exchange2013",  # Minor builds starting from 847 are Exchange2013_SP1, see api_version()
-            1: "Exchange2016",
-            2: "Exchange2019",
-            20: "Exchange2016",  # This is Office365. See issue #221
-        },
-    }
 
     __slots__ = "major_version", "minor_version", "major_build", "minor_build"
 
@@ -117,15 +65,12 @@ class Build:
         return cls(major_version=major_version, minor_version=minor_version, major_build=build_number)
 
     def api_version(self):
-        if EXCHANGE_2013_SP1 <= self < EXCHANGE_2016:
-            return "Exchange2013_SP1"
-        try:
-            return self.API_VERSION_MAP[self.major_version][self.minor_version]
-        except KeyError:
-            raise ValueError(f"API version for build {self} is unknown")
-
-    def fullname(self):
-        return VERSIONS[self.api_version()][1]
+        for build, api_version, _ in VERSIONS:
+            if self.major_version != build.major_version or self.minor_version != build.minor_version:
+                continue
+            if self >= build:
+                return api_version
+        raise ValueError(f"API version for build {self} is unknown")
 
     def __cmp__(self, other):
         # __cmp__ is not a magic method in Python3. We'll just use it here to implement comparison operators
@@ -173,14 +118,44 @@ class Build:
 # Helpers for comparison operations elsewhere in this package
 EXCHANGE_2007 = Build(8, 0)
 EXCHANGE_2007_SP1 = Build(8, 1)
+EXCHANGE_2007_SP2 = Build(8, 2)
+EXCHANGE_2007_SP3 = Build(8, 3)
 EXCHANGE_2010 = Build(14, 0)
 EXCHANGE_2010_SP1 = Build(14, 1)
 EXCHANGE_2010_SP2 = Build(14, 2)
+EXCHANGE_2010_SP3 = Build(14, 3)
 EXCHANGE_2013 = Build(15, 0)
-EXCHANGE_2013_SP1 = Build(15, 0, 847)
+EXCHANGE_2013_SP1 = Build(15, 0, 847)  # Major builds starting from 847 are Exchange2013_SP1
 EXCHANGE_2016 = Build(15, 1)
 EXCHANGE_2019 = Build(15, 2)
 EXCHANGE_O365 = Build(15, 20)
+
+# Legend for VERSIONS:
+#   (build, API version, full name)
+#
+# 'API version' is the version name supplied in the RequestServerVersion element in SOAP headers and describes the EWS
+# API version the server implements. Valid values for this element are described here:
+#   https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+#
+# A list of build numbers and full version names is available here:
+#   https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
+#
+# The list is sorted from newest to oldest build
+VERSIONS = (
+    (EXCHANGE_O365, "Exchange2016", "Microsoft Exchange Server Office365"),  # Not mentioned in list of build numbers
+    (EXCHANGE_2019, "Exchange2019", "Microsoft Exchange Server 2019"),
+    (EXCHANGE_2016, "Exchange2016", "Microsoft Exchange Server 2016"),
+    (EXCHANGE_2013_SP1, "Exchange2013_SP1", "Microsoft Exchange Server 2013 SP1"),
+    (EXCHANGE_2013, "Exchange2013", "Microsoft Exchange Server 2013"),
+    (EXCHANGE_2010_SP3, "Exchange2010_SP2", "Microsoft Exchange Server 2010 SP3"),
+    (EXCHANGE_2010_SP2, "Exchange2010_SP2", "Microsoft Exchange Server 2010 SP2"),
+    (EXCHANGE_2010_SP1, "Exchange2010_SP1", "Microsoft Exchange Server 2010 SP1"),
+    (EXCHANGE_2010, "Exchange2010", "Microsoft Exchange Server 2010"),
+    (EXCHANGE_2007_SP3, "Exchange2007_SP1", "Microsoft Exchange Server 2007 SP3"),
+    (EXCHANGE_2007_SP2, "Exchange2007_SP1", "Microsoft Exchange Server 2007 SP2"),
+    (EXCHANGE_2007_SP1, "Exchange2007_SP1", "Microsoft Exchange Server 2007 SP1"),
+    (EXCHANGE_2007, "Exchange2007", "Microsoft Exchange Server 2007"),
+)
 
 
 class Version:
@@ -203,7 +178,12 @@ class Version:
 
     @property
     def fullname(self):
-        return VERSIONS[self.api_version][1]
+        for build, _, full_name in VERSIONS:
+            if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
+                continue
+            if self.build >= build:
+                return full_name
+        raise ValueError(f"Full name for version {self} is unknown")
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
@@ -221,7 +201,7 @@ class Version:
         from .services import ConvertId
 
         # The protocol doesn't have a version yet, so default to the latest supported version if we don't have a hint.
-        api_version = api_version_hint or API_VERSIONS[0]
+        api_version = api_version_hint or ConvertId.supported_api_versions()[0]
         log.debug("Asking server for version info using API version %s", api_version)
         # We don't know the build version yet. Hopefully, the server will report it in the SOAP header. Lots of
         # places expect a version to have a build, so this is a bit dangerous, but passing a fake build around is also
@@ -278,6 +258,11 @@ class Version:
 
     def copy(self):
         return self.__class__(build=self.build, api_version=self.api_version)
+
+    @classmethod
+    def all_versions(cls):
+        # Return all supported versions, sorted newest to oldest
+        return [cls(build=build, api_version=api_version) for build, api_version, _ in VERSIONS]
 
     def __eq__(self, other):
         if self.api_version != other.api_version:
