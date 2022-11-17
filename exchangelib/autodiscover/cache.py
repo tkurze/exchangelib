@@ -37,7 +37,7 @@ def shelve_open_with_failover(file):
     # 'shelve' may add a backend-specific suffix to the file, so also delete all files with a suffix.
     # We don't know which file caused the error, so just delete them all.
     try:
-        shelve_handle = shelve.open(file)
+        shelve_handle = shelve.open(str(file))
         # Try to actually use the file. Some implementations may allow opening the file but then throw
         # errors on access.
         with suppress(KeyError):
@@ -46,7 +46,7 @@ def shelve_open_with_failover(file):
         for f in file.parent.glob(f"{file.name}*"):
             log.warning("Deleting invalid cache file %s (%r)", f, e)
             f.unlink()
-        shelve_handle = shelve.open(file)
+        shelve_handle = shelve.open(str(file))
     yield shelve_handle
 
 
