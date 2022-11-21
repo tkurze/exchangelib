@@ -5,7 +5,7 @@ from unittest.mock import patch
 from exchangelib.account import Account
 from exchangelib.attachments import FileAttachment
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import DELEGATE, Credentials, OAuth2Credentials
+from exchangelib.credentials import DELEGATE, Credentials
 from exchangelib.errors import (
     ErrorAccessDenied,
     ErrorDelegateNoUser,
@@ -326,7 +326,8 @@ class AccountTest(EWSTest):
         account.root.refresh()
 
     def test_protocol_default_values(self):
-        # Test that retry_policy and auth_type always get a value regardless of how we create an Account
+        # Test that retry_policy and auth_type always get a value regardless of how we create an Account. autodiscover
+        # args are tested in AutodiscoverTest.
         a = Account(
             self.account.primary_smtp_address,
             autodiscover=False,
@@ -335,25 +336,5 @@ class AccountTest(EWSTest):
                 credentials=self.account.protocol.credentials,
             ),
         )
-        self.assertIsNotNone(a.protocol.auth_type)
-        self.assertIsNotNone(a.protocol.retry_policy)
-
-        if isinstance(self.account.protocol.credentials, OAuth2Credentials):
-            self.skipTest("OAuth authentication does not work with POX autodiscover")
-
-        pox_credentials = Credentials(username=self.settings["username"], password=self.settings["password"])
-
-        a = Account(
-            self.settings["alias"],
-            autodiscover=True,
-            config=Configuration(
-                server=self.settings["server"],
-                credentials=pox_credentials,
-            ),
-        )
-        self.assertIsNotNone(a.protocol.auth_type)
-        self.assertIsNotNone(a.protocol.retry_policy)
-
-        a = Account(self.settings["alias"], autodiscover=True, credentials=pox_credentials)
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)

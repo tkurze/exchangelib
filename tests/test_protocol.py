@@ -18,7 +18,12 @@ from oauthlib.oauth2 import InvalidClientIdError
 
 from exchangelib import close_connections
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import Credentials, OAuth2AuthorizationCodeCredentials, OAuth2Credentials
+from exchangelib.credentials import (
+    BaseOAuth2Credentials,
+    Credentials,
+    OAuth2AuthorizationCodeCredentials,
+    OAuth2Credentials,
+)
 from exchangelib.errors import (
     ErrorAccessDenied,
     ErrorMailRecipientNotFound,
@@ -897,7 +902,7 @@ EWS auth: NTLM""",
         self.assertEqual(ids.count(), len(items))
 
     def test_disable_ssl_verification(self):
-        if isinstance(self.account.protocol.credentials, OAuth2Credentials):
+        if isinstance(self.account.protocol.credentials, BaseOAuth2Credentials):
             self.skipTest("OAuth authentication ony works with SSL verification enabled")
 
         # Test that we can make requests when SSL verification is turned off. I don't know how to mock TLS responses
