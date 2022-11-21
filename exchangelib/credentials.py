@@ -8,8 +8,8 @@ import abc
 import logging
 from threading import RLock
 
+import oauthlib.oauth2
 from cached_property import threaded_cached_property
-from oauthlib.oauth2 import BackendApplicationClient, LegacyApplicationClient, OAuth2Token, WebApplicationClient
 
 from .errors import InvalidTypeError
 
@@ -94,7 +94,7 @@ class BaseOAuth2Credentials(BaseCredentials):
     @access_token.setter
     def access_token(self, access_token):
         if access_token is not None and not isinstance(access_token, dict):
-            raise InvalidTypeError("access_token", access_token, OAuth2Token)
+            raise InvalidTypeError("access_token", access_token, oauthlib.oauth2.OAuth2Token)
         self._access_token = access_token
 
     def refresh(self, session):
@@ -201,7 +201,7 @@ class OAuth2Credentials(BaseOAuth2Credentials):
 
     @threaded_cached_property
     def client(self):
-        return BackendApplicationClient(client_id=self.client_id)
+        return oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
 
 
 class OAuth2LegacyCredentials(OAuth2Credentials):
@@ -232,7 +232,7 @@ class OAuth2LegacyCredentials(OAuth2Credentials):
 
     @threaded_cached_property
     def client(self):
-        return LegacyApplicationClient(client_id=self.client_id)
+        return oauthlib.oauth2.LegacyApplicationClient(client_id=self.client_id)
 
     @property
     def scope(self):
@@ -305,7 +305,7 @@ class OAuth2AuthorizationCodeCredentials(BaseOAuth2Credentials):
 
     @threaded_cached_property
     def client(self):
-        return WebApplicationClient(client_id=self.client_id)
+        return oauthlib.oauth2.WebApplicationClient(client_id=self.client_id)
 
     def __repr__(self):
         return self.__class__.__name__ + repr(

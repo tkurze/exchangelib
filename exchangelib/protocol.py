@@ -686,7 +686,7 @@ class FailFast(RetryPolicy):
         raise ValueError("Cannot back off with fail-fast policy")
 
     def may_retry_on_error(self, response, wait):
-        log.debug("No retry: no fail-fast policy")
+        log.debug("No retry with fail-fast policy")
         return False
 
 

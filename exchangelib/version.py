@@ -178,10 +178,11 @@ class Version:
 
     @property
     def fullname(self):
-        for build, _, full_name in VERSIONS:
-            if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
-                continue
-            if self.build >= build:
+        for build, api_version, full_name in VERSIONS:
+            if self.build:
+                if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
+                    continue
+            if self.api_version == api_version:
                 return full_name
         raise ValueError(f"Full name for version {self} is unknown")
 

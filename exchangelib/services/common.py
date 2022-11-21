@@ -5,7 +5,7 @@ from itertools import chain
 
 from .. import errors
 from ..attachments import AttachmentId
-from ..credentials import IMPERSONATION, OAuth2Credentials
+from ..credentials import IMPERSONATION, BaseOAuth2Credentials
 from ..errors import (
     ErrorBatchProcessingStopped,
     ErrorCannotDeleteObject,
@@ -261,7 +261,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
 
     @property
     def _account_to_impersonate(self):
-        if self.protocol and isinstance(self.protocol.credentials, OAuth2Credentials):
+        if self.protocol and isinstance(self.protocol.credentials, BaseOAuth2Credentials):
             return self.protocol.credentials.identity
         return None
 
