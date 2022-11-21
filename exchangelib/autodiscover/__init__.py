@@ -1,5 +1,5 @@
 from .cache import AutodiscoverCache, autodiscover_cache
-from .discovery import Autodiscovery, discover
+from .discovery_pox import Autodiscovery, discover
 from .protocol import AutodiscoverProtocol
 
 

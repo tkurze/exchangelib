@@ -437,15 +437,11 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._version_lock = Lock()
-        self._api_version_hint = None
+        self.api_version_hint = None
 
     def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
+        # Autodetect authentication type. We also set 'self.api_version_hint' here.
+        return get_service_authtype(protocol=self)
 
     @property
     def version(self):
@@ -455,7 +451,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
             with self._version_lock:
                 if not self.config.version or not self.config.version.build:
                     # Version.guess() needs auth objects and a working session pool
-                    self.config.version = Version.guess(self, api_version_hint=self._api_version_hint)
+                    self.config.version = Version.guess(self, api_version_hint=self.api_version_hint)
         return self.config.version
 
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
@@ -570,6 +566,20 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         :return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
         """
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
+
+    def dummy_xml(self):
+        # Generate a minimal, valid EWS request
+        from .properties import ENTRY_ID, EWS_ID, AlternateId
+        from .services import ConvertId
+
+        svc = ConvertId(protocol=None)
+        return svc.wrap(
+            content=svc.get_payload(
+                items=[AlternateId(id="DUMMY", format=EWS_ID, mailbox="DUMMY")],
+                destination_format=ENTRY_ID,
+            ),
+            api_version=self.api_version_hint,
+        )
 
     def __getstate__(self):
         # The lock cannot be pickled

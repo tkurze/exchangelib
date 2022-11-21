@@ -65,32 +65,34 @@ def get_auth_instance(auth_type, **kwargs):
     return model(**kwargs)
 
 
-def get_service_authtype(service_endpoint, retry_policy):
+def get_service_authtype(protocol):
     # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error-prone, and some servers
     # are set up to redirect to OWA on all requests except POST to /EWS/Exchange.asmx
     #
     # We don't know the API version yet, but we need it to create a valid request because some Exchange servers only
     # respond when given a valid request. Try all known versions. Gross.
-    from .protocol import BaseProtocol
     from .services import ConvertId
 
+    service_endpoint = protocol.service_endpoint
+    retry_policy = protocol.retry_policy
     retry = 0
     t_start = time.monotonic()
     headers = DEFAULT_HEADERS.copy()
     for api_version in ConvertId.supported_api_versions():
-        data = dummy_xml(api_version=api_version)
+        protocol.api_version_hint = api_version
+        data = protocol.dummy_xml()
         log.debug("Requesting %s from %s", data, service_endpoint)
         while True:
             _back_off_if_needed(retry_policy.back_off_until)
             log.debug("Trying to get service auth type for %s", service_endpoint)
-            with BaseProtocol.raw_session(service_endpoint) as s:
+            with protocol.raw_session(service_endpoint) as s:
                 try:
                     r = s.post(
                         url=service_endpoint,
                         headers=headers,
                         data=data,
                         allow_redirects=False,
-                        timeout=BaseProtocol.TIMEOUT,
+                        timeout=protocol.TIMEOUT,
                     )
                     r.close()  # Release memory
                     break
@@ -117,7 +119,7 @@ def get_service_authtype(service_endpoint, retry_policy):
         try:
             auth_type = get_auth_method_from_response(response=r)
             log.debug("Auth type is %s", auth_type)
-            return auth_type, api_version
+            return auth_type
         except UnauthorizedError:
             continue
     raise TransportError("Failed to get auth type from service")
@@ -171,18 +173,3 @@ def _tokenize(val):
     if auth_method:
         auth_methods.append(auth_method)
     return auth_methods
-
-
-def dummy_xml(api_version):
-    # Generate a minimal, valid EWS request
-    from .properties import ENTRY_ID, EWS_ID, AlternateId
-    from .services import ConvertId
-
-    svc = ConvertId(protocol=None)
-    return svc.wrap(
-        content=svc.get_payload(
-            items=[AlternateId(id="DUMMY", format=EWS_ID, mailbox="DUMMY")],
-            destination_format=ENTRY_ID,
-        ),
-        api_version=api_version,
-    )

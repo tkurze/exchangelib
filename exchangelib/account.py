@@ -3,7 +3,7 @@ from logging import getLogger
 
 from cached_property import threaded_cached_property
 
-from .autodiscover import Autodiscovery
+from .autodiscover.discovery_pox import Autodiscovery
 from .configuration import Configuration
 from .credentials import ACCESS_TYPES, DELEGATE, IMPERSONATION
 from .errors import InvalidEnumValue, InvalidTypeError, UnknownTimeZone
