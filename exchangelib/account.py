@@ -8,7 +8,7 @@ from .configuration import Configuration
 from .credentials import ACCESS_TYPES, DELEGATE, IMPERSONATION
 from .errors import InvalidEnumValue, InvalidTypeError, UnknownTimeZone
 from .ewsdatetime import UTC, EWSTimeZone
-from .fields import FieldPath
+from .fields import FieldPath, TextField
 from .folders import (
     AdminAuditLogs,
     ArchiveDeletedItems,
@@ -55,7 +55,7 @@ from .folders import (
     VoiceMail,
 )
 from .items import ALL_OCCURRENCES, AUTO_RESOLVE, HARD_DELETE, ID_ONLY, SAVE_ONLY, SEND_TO_NONE
-from .properties import Mailbox, SendingAs
+from .properties import EWSElement, Mailbox, SendingAs
 from .protocol import Protocol
 from .queryset import QuerySet
 from .services import (
@@ -81,31 +81,17 @@ from .util import get_domain, peek
 log = getLogger(__name__)
 
 
-class Identity:
+class Identity(EWSElement):
     """Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers."""
 
-    def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
-        """
+    ELEMENT_NAME = "ConnectingSID"
 
-        :param primary_smtp_address: The primary email address associated with the account (Default value = None)
-        :param smtp_address: The (non-)primary email address associated with the account (Default value = None)
-        :param upn: (Default value = None)
-        :param sid: (Default value = None)
-        :return:
-        """
-        self.primary_smtp_address = primary_smtp_address
-        self.smtp_address = smtp_address
-        self.upn = upn
-        self.sid = sid
-
-    def __eq__(self, other):
-        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__)
-
-    def __hash__(self):
-        return hash(repr(self))
-
-    def __repr__(self):
-        return self.__class__.__name__ + repr((self.primary_smtp_address, self.smtp_address, self.upn, self.sid))
+    # We have multiple options for uniquely identifying the user. Here's a prioritized list in accordance with
+    # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
+    sid = TextField(field_uri="SID")
+    upn = TextField(field_uri="PrincipalName")
+    smtp_address = TextField(field_uri="SmtpAddress")  # The (non-)primary email address for the account
+    primary_smtp_address = TextField(field_uri="PrimarySmtpAddress")  # The primary email address for the account
 
 
 class Account:

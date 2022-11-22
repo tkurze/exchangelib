@@ -31,10 +31,12 @@ class CredentialsTest(TimedTestCase):
     def test_pickle(self):
         # Test that we can pickle, hash, repr, str and compare various credentials types
         for o in (
-            Identity("XXX", "YYY", "ZZZ", "WWW"),
+            Identity(sid="XXX", upn="YYY", smtp_address="ZZZ", primary_smtp_address="WWW"),
             Credentials("XXX", "YYY"),
             OAuth2Credentials(client_id="XXX", client_secret="YYY", tenant_id="ZZZZ"),
-            OAuth2Credentials(client_id="XXX", client_secret="YYY", tenant_id="ZZZZ", identity=Identity("AAA")),
+            OAuth2Credentials(
+                client_id="XXX", client_secret="YYY", tenant_id="ZZZZ", identity=Identity(primary_smtp_address="AAA")
+            ),
             OAuth2LegacyCredentials(
                 client_id="XXX", client_secret="YYY", tenant_id="ZZZZ", username="AAA", password="BBB"
             ),
@@ -49,7 +51,7 @@ class CredentialsTest(TimedTestCase):
                 authorization_code="YYY",
                 access_token={"access_token": "ZZZ"},
                 tenant_id="ZZZ",
-                identity=Identity("AAA"),
+                identity=Identity(primary_smtp_address="AAA"),
             ),
         ):
             with self.subTest(o=o):

@@ -29,7 +29,17 @@ from .errors import (
     TransportError,
     UnauthorizedError,
 )
-from .properties import DLMailbox, FreeBusyViewOptions, MailboxData, RoomList, TimeWindow, TimeZone
+from .properties import (
+    ENTRY_ID,
+    EWS_ID,
+    AlternateId,
+    DLMailbox,
+    FreeBusyViewOptions,
+    MailboxData,
+    RoomList,
+    TimeWindow,
+    TimeZone,
+)
 from .services import (
     ConvertId,
     ExpandDL,
@@ -569,10 +579,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
     def dummy_xml(self):
         # Generate a minimal, valid EWS request
-        from .properties import ENTRY_ID, EWS_ID, AlternateId
-        from .services import ConvertId
-
-        svc = ConvertId(protocol=None)
+        svc = ConvertId(protocol=self)
         return svc.wrap(
             content=svc.get_payload(
                 items=[AlternateId(id="DUMMY", format=EWS_ID, mailbox="DUMMY")],

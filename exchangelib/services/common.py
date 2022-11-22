@@ -202,24 +202,9 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         if api_version:
             request_server_version = create_element("t:RequestServerVersion", attrs=dict(Version=api_version))
             header.append(request_server_version)
-        account_to_impersonate = self._account_to_impersonate
-        if account_to_impersonate:
-            exchange_impersonation = create_element("t:ExchangeImpersonation")
-            connecting_sid = create_element("t:ConnectingSID")
-            # We have multiple options for uniquely identifying the user. Here's a prioritized list in accordance with
-            # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
-            for attr, tag in (
-                ("sid", "SID"),
-                ("upn", "PrincipalName"),
-                ("smtp_address", "SmtpAddress"),
-                ("primary_smtp_address", "PrimarySmtpAddress"),
-            ):
-                val = getattr(account_to_impersonate, attr)
-                if val:
-                    add_xml_child(connecting_sid, f"t:{tag}", val)
-                    break
-            exchange_impersonation.append(connecting_sid)
-            header.append(exchange_impersonation)
+        identity = self._account_to_impersonate
+        if identity:
+            add_xml_child(header, "t:ExchangeImpersonation", identity)
         timezone = self._timezone
         if timezone:
             timezone_context = create_element("t:TimeZoneContext")
