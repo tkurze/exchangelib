@@ -241,8 +241,14 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    def _extra_headers(self, session):
-        return {}
+    def _extra_headers(self):
+        headers = {}
+        identity = self._account_to_impersonate
+        if identity and identity.primary_smtp_address:
+            # See
+            # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+            headers["X-AnchorMailbox"] = identity.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):
@@ -332,7 +338,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             protocol=self.protocol,
             session=session,
             url=self.protocol.service_endpoint,
-            headers=self._extra_headers(session),
+            headers=self._extra_headers(),
             data=self.wrap(
                 content=payload,
                 api_version=api_version,
@@ -721,8 +727,8 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
                     self.account.affinity_cookie = cookie.value
                     break
 
-    def _extra_headers(self, session):
-        headers = super()._extra_headers(session=session)
+    def _extra_headers(self):
+        headers = super()._extra_headers()
         # See
         # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
         headers["X-AnchorMailbox"] = self.account.primary_smtp_address

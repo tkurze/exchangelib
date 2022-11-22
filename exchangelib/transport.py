@@ -77,10 +77,10 @@ def get_service_authtype(protocol):
     retry_policy = protocol.retry_policy
     retry = 0
     t_start = time.monotonic()
-    headers = DEFAULT_HEADERS.copy()
     for api_version in ConvertId.supported_api_versions():
         protocol.api_version_hint = api_version
         data = protocol.dummy_xml()
+        headers = {}
         log.debug("Requesting %s from %s", data, service_endpoint)
         while True:
             _back_off_if_needed(retry_policy.back_off_until)
@@ -148,6 +148,8 @@ def get_auth_method_from_response(response):
                 return NTLM
             if "basic" in vals:
                 return BASIC
+        elif key.lower() == "ms-diagnostics-public" and "Modern Auth" in val:
+            return OAUTH2
     raise UnauthorizedError("No compatible auth type was reported by server")
 
 
