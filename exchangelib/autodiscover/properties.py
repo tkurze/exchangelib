@@ -329,6 +329,9 @@ class Autodiscover(EWSElement):
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
+        if self.response is not None:
+            return
+
         # Find an error message in the response and raise the relevant exception
         try:
             error_code = self.error_response.error.code

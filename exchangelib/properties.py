@@ -7,7 +7,13 @@ import struct
 from inspect import getmro
 from threading import Lock
 
-from .errors import InvalidTypeError
+from .errors import (
+    AutoDiscoverFailed,
+    ErrorInternalServerError,
+    ErrorNonExistentMailbox,
+    ErrorServerBusy,
+    InvalidTypeError,
+)
 from .fields import (
     WEEKDAY_NAMES,
     AssociatedCalendarItemIdField,
@@ -49,8 +55,8 @@ from .fields import (
     TypeValueField,
     UnknownEntriesField,
 )
-from .util import MNS, TNS, create_element, get_xml_attr, set_xml_value, value_to_xml_text
-from .version import EXCHANGE_2013, Build
+from .util import ANS, MNS, TNS, create_element, get_xml_attr, set_xml_value, value_to_xml_text
+from .version import EXCHANGE_2013, Build, Version
 
 log = logging.getLogger(__name__)
 
@@ -1970,3 +1976,161 @@ class TimeZoneDefinition(EWSElement):
                 continue
             raise ValueError(f"Unknown transition: {transition}")
         return standard_time, daylight_time, standard_period
+
+
+class UserResponse(EWSElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userresponse-soap"""
+
+    ELEMENT_NAME = "UserResponse"
+
+    # See https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/setting-soap
+    SETTINGS_MAP = {
+        "user_display_name": "UserDisplayName",
+        "user_dn": "UserDN",
+        "user_deployment_id": "UserDeploymentId",
+        "internal_mailbox_server": "InternalMailboxServer",
+        "internal_rpc_client_server": "InternalRpcClientServer",
+        "internal_mailbox_server_dn": "InternalMailboxServerDN",
+        "internal_ecp_url": "InternalEcpUrl",
+        "internal_ecp_voicemail_url": "InternalEcpVoicemailUrl",
+        "internal_ecp_email_subscriptions_url": "InternalEcpEmailSubscriptionsUrl",
+        "internal_ecp_text_messaging_url": "InternalEcpTextMessagingUrl",
+        "internal_ecp_delivery_report_url": "InternalEcpDeliveryReportUrl",
+        "internal_ecp_retention_policy_tags_url": "InternalEcpRetentionPolicyTagsUrl",
+        "internal_ecp_publishing_url": "InternalEcpPublishingUrl",
+        "internal_ews_url": "InternalEwsUrl",
+        "internal_oab_url": "InternalOABUrl",
+        "internal_um_url": "InternalUMUrl",
+        "internal_web_client_urls": "InternalWebClientUrls",
+        "mailbox_dn": "MailboxDN",
+        "public_folder_server": "PublicFolderServer",
+        "active_directory_server": "ActiveDirectoryServer",
+        "external_mailbox_server": "ExternalMailboxServer",
+        "external_mailbox_server_requires_ssl": "ExternalMailboxServerRequiresSSL",
+        "external_mailbox_server_authentication_methods": "ExternalMailboxServerAuthenticationMethods",
+        "ecp_voicemail_url_fragment,": "EcpVoicemailUrlFragment,",
+        "ecp_email_subscriptions_url_fragment": "EcpEmailSubscriptionsUrlFragment",
+        "ecp_text_messaging_url_fragment": "EcpTextMessagingUrlFragment",
+        "ecp_delivery_report_url_fragment": "EcpDeliveryReportUrlFragment",
+        "ecp_retention_policy_tags_url_fragment": "EcpRetentionPolicyTagsUrlFragment",
+        "ecp_publishing_url_fragment": "EcpPublishingUrlFragment",
+        "external_ecp_url": "ExternalEcpUrl",
+        "external_ecp_voicemail_url": "ExternalEcpVoicemailUrl",
+        "external_ecp_email_subscriptions_url": "ExternalEcpEmailSubscriptionsUrl",
+        "external_ecp_text_messaging_url": "ExternalEcpTextMessagingUrl",
+        "external_ecp_delivery_report_url": "ExternalEcpDeliveryReportUrl",
+        "external_ecp_retention_policy_tags_url": "ExternalEcpRetentionPolicyTagsUrl",
+        "external_ecp_publishing_url": "ExternalEcpPublishingUrl",
+        "external_ews_url": "ExternalEwsUrl",
+        "external_oab_url": "ExternalOABUrl",
+        "external_um_url": "ExternalUMUrl",
+        "external_web_client_urls": "ExternalWebClientUrls",
+        "cross_organization_sharing_enabled": "CrossOrganizationSharingEnabled",
+        "alternate_mailboxes": "AlternateMailboxes",
+        "cas_version": "CasVersion",
+        "ews_supported_schemas": "EwsSupportedSchemas",
+        "internal_pop3_connections": "InternalPop3Connections",
+        "external_pop3_connections": "ExternalPop3Connections",
+        "internal_imap4_connections": "InternalImap4Connections",
+        "external_imap4_connections": "ExternalImap4Connections",
+        "internal_smtp_connections": "InternalSmtpConnections",
+        "external_smtp_connections": "ExternalSmtpConnections",
+        "internal_server_exclusive_connect": "InternalServerExclusiveConnect",
+        "external_server_exclusive_connect": "ExternalServerExclusiveConnect",
+        "exchange_rpc_url": "ExchangeRpcUrl",
+        "show_gal_as_default_view": "ShowGalAsDefaultView",
+        "auto_discover_smtp_address": "AutoDiscoverSMTPAddress",
+        "interop_external_ews_url": "InteropExternalEwsUrl",
+        "external_ews_version": "ExternalEwsVersion",
+        "interop_external_ews_version": "InteropExternalEwsVersion",
+        "mobile_mailbox_policy_interop": "MobileMailboxPolicyInterop",
+        "grouping_information": "GroupingInformation",
+        "user_ms_online": "UserMSOnline",
+        "mapi_http_enabled": "MapiHttpEnabled",
+    }
+    REVERSE_SETTINGS_MAP = {v: k for k, v in SETTINGS_MAP.items()}
+
+    error_code = CharField()
+    error_message = CharField()
+    redirect_address = CharField()
+    redirect_url = CharField()
+    user_settings_errors = DictionaryField()
+    user_settings = DictionaryField()
+
+    @property
+    def autodiscover_smtp_address(self):
+        return self.user_settings.get("auto_discover_smtp_address")
+
+    @property
+    def ews_url(self):
+        return self.user_settings.get("external_ews_url")
+
+    @property
+    def version(self):
+        if not self.user_settings.get("ews_supported_schemas"):
+            return None
+        supported_schemas = [s.strip() for s in self.user_settings.get("ews_supported_schemas").split(",")]
+        newest_supported_schema = sorted(supported_schemas, reverse=True)[0]
+
+        for version in Version.all_versions():
+            if newest_supported_schema == version.api_version:
+                return version
+        raise ValueError(f"Unknown supported schemas: {supported_schemas}")
+
+    @staticmethod
+    def _is_url(s):
+        if not s:
+            return False
+        return s.startswith("http://") or s.startswith("https://")
+
+    def raise_errors(self):
+        if self.error_code == "InvalidUser":
+            raise ErrorNonExistentMailbox(self.error_message)
+        if self.error_code in (
+            "InvalidRequest",
+            "InvalidSetting",
+            "SettingIsNotAvailable",
+            "InvalidDomain",
+            "NotFederated",
+        ):
+            raise AutoDiscoverFailed(f"{self.error_code}: {self.error_message}")
+        if self.user_settings_errors:
+            raise AutoDiscoverFailed(f"User settings errors: {self.user_settings_errors}")
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        # Possible ErrorCode values:
+        #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
+        error_code = get_xml_attr(elem, f"{{{ANS}}}ErrorCode")
+        error_message = get_xml_attr(elem, f"{{{ANS}}}ErrorMessage")
+        if error_code == "InternalServerError":
+            raise ErrorInternalServerError(error_message)
+        if error_code == "ServerBusy":
+            raise ErrorServerBusy(error_message)
+        if error_code not in ("NoError", "RedirectAddress", "RedirectUrl"):
+            return cls(error_code=error_code, error_message=error_message)
+
+        redirect_target = get_xml_attr(elem, f"{{{ANS}}}RedirectTarget")
+        redirect_address = redirect_target if error_code == "RedirectAddress" else None
+        redirect_url = redirect_target if error_code == "RedirectUrl" else None
+        user_settings_errors = {}
+        settings_errors_elem = elem.find(f"{{{ANS}}}UserSettingErrors")
+        if settings_errors_elem is not None:
+            for setting_error in settings_errors_elem:
+                error_code = get_xml_attr(setting_error, f"{{{ANS}}}ErrorCode")
+                error_message = get_xml_attr(setting_error, f"{{{ANS}}}ErrorMessage")
+                name = get_xml_attr(setting_error, f"{{{ANS}}}SettingName")
+                user_settings_errors[cls.REVERSE_SETTINGS_MAP[name]] = (error_code, error_message)
+        user_settings = {}
+        settings_elem = elem.find(f"{{{ANS}}}UserSettings")
+        if settings_elem is not None:
+            for setting in settings_elem:
+                name = get_xml_attr(setting, f"{{{ANS}}}Name")
+                value = get_xml_attr(setting, f"{{{ANS}}}Value")
+                user_settings[cls.REVERSE_SETTINGS_MAP[name]] = value
+        return cls(
+            redirect_address=redirect_address,
+            redirect_url=redirect_url,
+            user_settings_errors=user_settings_errors,
+            user_settings=user_settings,
+        )

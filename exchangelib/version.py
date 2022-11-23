@@ -2,7 +2,7 @@ import logging
 import re
 
 from .errors import InvalidTypeError, ResponseMessageError, TransportError
-from .util import TNS, xml_to_str
+from .util import ANS, TNS, get_xml_attr, xml_to_str
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,9 @@ class Build:
         for k, xml_elem in xml_elems_map.items():
             v = elem.get(xml_elem)
             if v is None:
-                raise ValueError()
+                v = get_xml_attr(elem, f"{{{ANS}}}{xml_elem}")
+                if v is None:
+                    raise ValueError()
             kwargs[k] = int(v)  # Also raises ValueError
         return cls(**kwargs)
 
@@ -233,13 +235,15 @@ class Version:
     def from_soap_header(cls, requested_api_version, header):
         info = header.find(f"{{{TNS}}}ServerVersionInfo")
         if info is None:
-            raise TransportError(f"No ServerVersionInfo in header: {xml_to_str(header)!r}")
+            info = header.find(f"{{{ANS}}}ServerVersionInfo")
+            if info is None:
+                raise TransportError(f"No ServerVersionInfo in header: {xml_to_str(header)!r}")
         try:
             build = Build.from_xml(elem=info)
         except ValueError:
             raise TransportError(f"Bad ServerVersionInfo in response: {xml_to_str(header)!r}")
         # Not all Exchange servers send the Version element
-        api_version_from_server = info.get("Version") or build.api_version()
+        api_version_from_server = info.get("Version") or get_xml_attr(info, f"{{{ANS}}}Version") or build.api_version()
         if api_version_from_server != requested_api_version:
             if cls._is_invalid_version_string(api_version_from_server):
                 # For unknown reasons, Office 365 may respond with an API version strings that is invalid in a request.

@@ -74,6 +74,9 @@ SOAPNS = "http://schemas.xmlsoap.org/soap/envelope/"
 MNS = "http://schemas.microsoft.com/exchange/services/2006/messages"
 TNS = "http://schemas.microsoft.com/exchange/services/2006/types"
 ENS = "http://schemas.microsoft.com/exchange/services/2006/errors"
+ANS = "http://schemas.microsoft.com/exchange/2010/Autodiscover"
+INS = "http://www.w3.org/2001/XMLSchema-instance"
+WSA = "http://www.w3.org/2005/08/addressing"
 AUTODISCOVER_BASE_NS = "http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006"
 AUTODISCOVER_REQUEST_NS = "http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006"
 AUTODISCOVER_RESPONSE_NS = "http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a"
@@ -82,6 +85,9 @@ ns_translation = {
     "s": SOAPNS,
     "m": MNS,
     "t": TNS,
+    "a": ANS,
+    "wsa": WSA,
+    "xsi": INS,
 }
 for item in ns_translation.items():
     lxml.etree.register_namespace(*item)

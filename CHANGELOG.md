@@ -3,6 +3,11 @@ Change Log
 
 HEAD
 ----
+- Added support for SOAP-based autodiscovery, in addition to the existing POX
+  (plain old XML) implementation. You can specify the autodiscover
+  implementation explicitly using the `autodiscover` argument:
+  `Account(..., autodiscover="soap")` or `Account(..., autodiscover="pox")`. POX
+  is still the default.
 
 
 4.8.0

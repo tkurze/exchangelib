@@ -11,13 +11,12 @@ from exchangelib.account import Account
 from exchangelib.autodiscover import clear_cache, close_connections
 from exchangelib.autodiscover.cache import AutodiscoverCache, autodiscover_cache, shelve_filename
 from exchangelib.autodiscover.discovery.base import SrvRecord, _select_srv_host
-from exchangelib.autodiscover.discovery.pox import PoxAutodiscovery as Autodiscovery
-from exchangelib.autodiscover.discovery.pox import discover
+from exchangelib.autodiscover.discovery.soap import SoapAutodiscovery as Autodiscovery
 from exchangelib.autodiscover.properties import Account as ADAccount
 from exchangelib.autodiscover.properties import Autodiscover, Error, ErrorResponse, Response
 from exchangelib.autodiscover.protocol import AutodiscoverProtocol
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import DELEGATE, Credentials, OAuth2LegacyCredentials
+from exchangelib.credentials import DELEGATE, Credentials
 from exchangelib.errors import AutoDiscoverCircularRedirect, AutoDiscoverFailed, ErrorNonExistentMailbox
 from exchangelib.protocol import FailFast, FaultTolerance
 from exchangelib.transport import NTLM
@@ -27,10 +26,10 @@ from exchangelib.version import EXCHANGE_2013, Version
 from .common import EWSTest, get_random_hostname, get_random_string
 
 
-class AutodiscoverPoxTest(EWSTest):
+class AutodiscoverSoapTest(EWSTest):
     def setUp(self):
         if not self.account:
-            self.skipTest("POX autodiscover requires delegate credentials")
+            self.skipTest("SOAP autodiscover requires delegate credentials")
 
         super().setUp()
 
@@ -43,85 +42,135 @@ class AutodiscoverPoxTest(EWSTest):
 
         # Some mocking helpers
         self.domain = get_domain(self.account.primary_smtp_address)
-        self.dummy_ad_endpoint = f"https://{self.domain}/Autodiscover/Autodiscover.xml"
+        self.dummy_ad_endpoint = f"https://{self.domain}/autodiscover/autodiscover.svc"
         self.dummy_ews_endpoint = "https://expr.example.com/EWS/Exchange.asmx"
         self.dummy_ad_response = self.settings_xml(self.account.primary_smtp_address, self.dummy_ews_endpoint)
-
-    @classmethod
-    def get_account(cls):
-        if cls.settings.get("client_id") and cls.settings["username"]:
-            credentials = OAuth2LegacyCredentials(
-                client_id=cls.settings["client_id"],
-                client_secret=cls.settings["client_secret"],
-                tenant_id=cls.settings["tenant_id"],
-                username=cls.settings["username"],
-                password=cls.settings["password"],
-            )
-            config = Configuration(
-                server=cls.settings["server"],
-                credentials=credentials,
-                retry_policy=cls.retry_policy,
-            )
-            return Account(
-                primary_smtp_address=cls.settings["account"],
-                access_type=DELEGATE,
-                config=config,
-                locale="da_DK",
-                default_timezone=cls.tz,
-            )
-        return None
 
     @staticmethod
     def settings_xml(address, ews_url):
         return f"""\
 <?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <User>
-            <AutoDiscoverSMTPAddress>{address}</AutoDiscoverSMTPAddress>
-        </User>
-        <Account>
-            <AccountType>email</AccountType>
-            <Action>settings</Action>
-            <Protocol>
-                <Type>EXPR</Type>
-                <EwsUrl>{ews_url}</EwsUrl>
-            </Protocol>
-        </Account>
-    </Response>
-</Autodiscover>""".encode()
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:a="http://www.w3.org/2005/08/addressing">
+  <s:Header>
+    <h:ServerVersionInfo
+    xmlns:h="http://schemas.microsoft.com/exchange/2010/Autodiscover"
+    xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+      <h:MajorVersion>15</h:MajorVersion>
+      <h:MinorVersion>20</h:MinorVersion>
+      <h:MajorBuildNumber>5834</h:MajorBuildNumber>
+      <h:MinorBuildNumber>15</h:MinorBuildNumber>
+      <h:Version>Exchange2015</h:Version>
+    </h:ServerVersionInfo>
+  </s:Header>
+  <s:Body>
+    <GetUserSettingsResponseMessage xmlns="http://schemas.microsoft.com/exchange/2010/Autodiscover">
+      <Response>
+        <ErrorCode>NoError</ErrorCode>
+        <ErrorMessage/>
+        <UserResponses>
+          <UserResponse>
+            <ErrorCode>NoError</ErrorCode>
+            <ErrorMessage>No error.</ErrorMessage>
+            <RedirectTarget i:nil="true"/>
+            <UserSettingErrors/>
+            <UserSettings>
+              <UserSetting i:type="StringSetting">
+                <Name>AutoDiscoverSMTPAddress</Name>
+                <Value>{address}</Value>
+              </UserSetting>
+              <UserSetting i:type="StringSetting">
+                <Name>ExternalEwsUrl</Name>
+                <Value>{ews_url}</Value>
+              </UserSetting>
+            </UserSettings>
+          </UserResponse>
+        </UserResponses>
+      </Response>
+    </GetUserSettingsResponseMessage>
+  </s:Body>
+</s:Envelope>""".encode()
 
     @staticmethod
     def redirect_address_xml(address):
         return f"""\
 <?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <Account>
-            <Action>redirectAddr</Action>
-            <RedirectAddr>{address}</RedirectAddr>
-        </Account>
-    </Response>
-</Autodiscover>""".encode()
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:a="http://www.w3.org/2005/08/addressing">
+  <s:Header>
+    <h:ServerVersionInfo
+    xmlns:h="http://schemas.microsoft.com/exchange/2010/Autodiscover"
+    xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+      <h:MajorVersion>15</h:MajorVersion>
+      <h:MinorVersion>20</h:MinorVersion>
+      <h:MajorBuildNumber>5834</h:MajorBuildNumber>
+      <h:MinorBuildNumber>15</h:MinorBuildNumber>
+      <h:Version>Exchange2015</h:Version>
+    </h:ServerVersionInfo>
+  </s:Header>
+  <s:Body>
+    <GetUserSettingsResponseMessage xmlns="http://schemas.microsoft.com/exchange/2010/Autodiscover">
+      <Response>
+        <ErrorCode>NoError</ErrorCode>
+        <ErrorMessage/>
+        <UserResponses>
+          <UserResponse>
+            <ErrorCode>RedirectAddress</ErrorCode>
+            <ErrorMessage>Redirection address.</ErrorMessage>
+            <RedirectTarget>{address}</RedirectTarget>
+            <UserSettingErrors />
+            <UserSettings />
+          </UserResponse>
+        </UserResponses>
+      </Response>
+    </GetUserSettingsResponseMessage>
+  </s:Body>
+</s:Envelope>""".encode()
 
     @staticmethod
-    def redirect_url_xml(ews_url):
+    def redirect_url_xml(autodiscover_url):
         return f"""\
 <?xml version="1.0" encoding="utf-8"?>
-<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
-    <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a">
-        <Account>
-            <Action>redirectUrl</Action>
-            <RedirectURL>{ews_url}</RedirectURL>
-        </Account>
-    </Response>
-</Autodiscover>""".encode()
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:a="http://www.w3.org/2005/08/addressing">
+  <s:Header>
+    <h:ServerVersionInfo
+    xmlns:h="http://schemas.microsoft.com/exchange/2010/Autodiscover"
+    xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+      <h:MajorVersion>15</h:MajorVersion>
+      <h:MinorVersion>20</h:MinorVersion>
+      <h:MajorBuildNumber>5834</h:MajorBuildNumber>
+      <h:MinorBuildNumber>15</h:MinorBuildNumber>
+      <h:Version>Exchange2015</h:Version>
+    </h:ServerVersionInfo>
+  </s:Header>
+  <s:Body>
+    <GetUserSettingsResponseMessage xmlns="http://schemas.microsoft.com/exchange/2010/Autodiscover">
+      <Response>
+        <ErrorCode>NoError</ErrorCode>
+        <ErrorMessage/>
+        <UserResponses>
+          <UserResponse>
+            <ErrorCode>RedirectUrl</ErrorCode>
+            <ErrorMessage>Redirection URL.</ErrorMessage>
+            <RedirectTarget>{autodiscover_url}</RedirectTarget>
+            <UserSettingErrors />
+            <UserSettings />
+          </UserResponse>
+        </UserResponses>
+      </Response>
+    </GetUserSettingsResponseMessage>
+  </s:Body>
+</s:Envelope>""".encode()
 
     @staticmethod
     def get_test_protocol(**kwargs):
         return AutodiscoverProtocol(
             config=Configuration(
-                service_endpoint=kwargs.get("service_endpoint", "https://example.com/Autodiscover/Autodiscover.xml"),
+                service_endpoint=kwargs.get("service_endpoint", "https://example.com/autodiscover/autodiscover.svc"),
                 credentials=kwargs.get("credentials", Credentials(get_random_string(8), get_random_string(8))),
                 auth_type=kwargs.get("auth_type", NTLM),
                 retry_policy=kwargs.get("retry_policy", FailFast()),
@@ -151,11 +200,10 @@ class AutodiscoverPoxTest(EWSTest):
 
     def test_autodiscover_empty_cache(self):
         # A live test of the entire process with an empty cache
-        ad_response, protocol = discover(
+        ad_response, protocol = Autodiscovery(
             email=self.account.primary_smtp_address,
             credentials=self.account.protocol.credentials,
-            retry_policy=self.retry_policy,
-        )
+        ).discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, self.account.primary_smtp_address)
         self.assertEqual(protocol.service_endpoint.lower(), self.account.protocol.service_endpoint.lower())
 
@@ -164,7 +212,7 @@ class AutodiscoverPoxTest(EWSTest):
         if not self.settings.get("autodiscover_server"):
             self.skipTest(f"Skipping {self.__class__.__name__} - no 'autodiscover_server' entry in settings.yml")
         # Autodiscovery may take a long time. Prime the cache with the autodiscover server from the config file
-        ad_endpoint = f"https://{self.settings['autodiscover_server']}/Autodiscover/Autodiscover.xml"
+        ad_endpoint = f"https://{self.settings['autodiscover_server']}/autodiscover/autodiscover.svc"
         cache_key = (self.domain, self.account.protocol.credentials)
         autodiscover_cache[cache_key] = self.get_test_protocol(
             service_endpoint=ad_endpoint,
@@ -172,11 +220,10 @@ class AutodiscoverPoxTest(EWSTest):
             retry_policy=self.retry_policy,
         )
         with self.assertRaises(ErrorNonExistentMailbox):
-            discover(
+            Autodiscovery(
                 email="XXX." + self.account.primary_smtp_address,
                 credentials=self.account.protocol.credentials,
-                retry_policy=self.retry_policy,
-            )
+            ).discover()
 
     def test_failed_login_via_account(self):
         with self.assertRaises(AutoDiscoverFailed):
@@ -184,7 +231,7 @@ class AutodiscoverPoxTest(EWSTest):
                 primary_smtp_address=self.account.primary_smtp_address,
                 access_type=DELEGATE,
                 credentials=Credentials("john@example.com", "WRONG_PASSWORD"),
-                autodiscover="pox",
+                autodiscover="soap",
                 locale="da_DK",
             )
 
@@ -230,7 +277,7 @@ class AutodiscoverPoxTest(EWSTest):
         # Poison the cache with a failing autodiscover endpoint. discover() must handle this and rebuild the cache
         p = self.get_test_protocol()
         autodiscover_cache[discovery._cache_key] = p
-        m.post("https://example.com/Autodiscover/Autodiscover.xml", status_code=404)
+        m.post("https://example.com/autodiscover/autodiscover.svc", status_code=404)
         discovery.discover()
         self.assertIn(discovery._cache_key, autodiscover_cache)
 
@@ -288,7 +335,7 @@ class AutodiscoverPoxTest(EWSTest):
                 retry_policy=self.retry_policy,
                 version=Version(build=EXCHANGE_2013),
             ),
-            autodiscover="pox",
+            autodiscover="soap",
             locale="da_DK",
         )
         self.assertEqual(account.primary_smtp_address, self.account.primary_smtp_address)
@@ -303,7 +350,7 @@ class AutodiscoverPoxTest(EWSTest):
                 credentials=self.account.protocol.credentials,
                 retry_policy=self.retry_policy,
             ),
-            autodiscover="pox",
+            autodiscover="soap",
             locale="da_DK",
         )
         self.assertEqual(account.primary_smtp_address, self.account.primary_smtp_address)
@@ -351,7 +398,7 @@ class AutodiscoverPoxTest(EWSTest):
         )
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, f"redirected@{self.domain}")
-        self.assertEqual(ad_response.protocol.ews_url, f"https://redirected.{self.domain}/EWS/Exchange.asmx")
+        self.assertEqual(ad_response.ews_url, f"https://redirected.{self.domain}/EWS/Exchange.asmx")
 
         # Test that we catch circular redirects on the same domain with a primed cache. Just mock the endpoint to
         # return the same redirect response on every request.
@@ -374,13 +421,13 @@ class AutodiscoverPoxTest(EWSTest):
         ews_url = f"https://{ews_hostname}/EWS/Exchange.asmx"
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.redirect_address_xml(f"john@{ews_hostname}"))
         m.post(
-            f"https://{ews_hostname}/Autodiscover/Autodiscover.xml",
+            f"https://{ews_hostname}/autodiscover/autodiscover.svc",
             status_code=200,
             content=self.settings_xml(redirect_email, ews_url),
         )
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, redirect_email)
-        self.assertEqual(ad_response.protocol.ews_url, ews_url)
+        self.assertEqual(ad_response.ews_url, ews_url)
 
         # Test redirect via HTTP 301
         clear_cache()
@@ -393,7 +440,7 @@ class AutodiscoverPoxTest(EWSTest):
         m.head(redirect_url, status_code=200)
         ad_response, _ = discovery.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, redirect_email)
-        self.assertEqual(ad_response.protocol.ews_url, ews_url)
+        self.assertEqual(ad_response.ews_url, ews_url)
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
@@ -405,13 +452,13 @@ class AutodiscoverPoxTest(EWSTest):
         email = f"xxxd@{self.domain}"
         m.post(self.dummy_ad_endpoint, status_code=501)
         m.post(
-            f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml",
+            f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc",
             status_code=200,
             content=self.settings_xml(email, ews_url),
         )
         ad_response, _ = d.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, email)
-        self.assertEqual(ad_response.protocol.ews_url, ews_url)
+        self.assertEqual(ad_response.ews_url, ews_url)
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
@@ -420,9 +467,9 @@ class AutodiscoverPoxTest(EWSTest):
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         m.post(self.dummy_ad_endpoint, status_code=501)
-        m.post(f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=501)
+        m.post(f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=501)
         m.get(
-            f"http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml",
+            f"http://autodiscover.{self.domain}/autodiscover/autodiscover.svc",
             status_code=301,
             headers=dict(location="XXX"),
         )
@@ -437,8 +484,8 @@ class AutodiscoverPoxTest(EWSTest):
         # Test steps 1 -> 2 -> 3 -> no 301 response -> 4
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         m.post(self.dummy_ad_endpoint, status_code=501)
-        m.post(f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=501)
-        m.get(f"http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=200)
+        m.post(f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=501)
+        m.get(f"http://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=200)
 
         with self.assertRaises(AutoDiscoverFailed):
             # Fails in step 4 with invalid SRV entry
@@ -451,10 +498,10 @@ class AutodiscoverPoxTest(EWSTest):
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         redirect_srv = "httpbin.org"
         m.post(self.dummy_ad_endpoint, status_code=501)
-        m.post(f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=501)
-        m.get(f"http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=200)
-        m.head(f"https://{redirect_srv}/Autodiscover/Autodiscover.xml", status_code=501)
-        m.post(f"https://{redirect_srv}/Autodiscover/Autodiscover.xml", status_code=501)
+        m.post(f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=501)
+        m.get(f"http://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=200)
+        m.head(f"https://{redirect_srv}/autodiscover/autodiscover.svc", status_code=501)
+        m.post(f"https://{redirect_srv}/autodiscover/autodiscover.svc", status_code=501)
 
         tmp = d._get_srv_records
         d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, redirect_srv)])
@@ -474,11 +521,11 @@ class AutodiscoverPoxTest(EWSTest):
         ews_url = f"https://{redirect_srv}/EWS/Exchange.asmx"
         redirect_email = f"john@redirected.{redirect_srv}"
         m.post(self.dummy_ad_endpoint, status_code=501)
-        m.post(f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=501)
-        m.get(f"http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=200)
-        m.head(f"https://{redirect_srv}/Autodiscover/Autodiscover.xml", status_code=200)
+        m.post(f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=501)
+        m.get(f"http://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=200)
+        m.head(f"https://{redirect_srv}/autodiscover/autodiscover.svc", status_code=200)
         m.post(
-            f"https://{redirect_srv}/Autodiscover/Autodiscover.xml",
+            f"https://{redirect_srv}/autodiscover/autodiscover.svc",
             status_code=200,
             content=self.settings_xml(redirect_email, ews_url),
         )
@@ -488,7 +535,7 @@ class AutodiscoverPoxTest(EWSTest):
         try:
             ad_response, _ = d.discover()
             self.assertEqual(ad_response.autodiscover_smtp_address, redirect_email)
-            self.assertEqual(ad_response.protocol.ews_url, ews_url)
+            self.assertEqual(ad_response.ews_url, ews_url)
         finally:
             d._get_srv_records = tmp
 
@@ -497,8 +544,8 @@ class AutodiscoverPoxTest(EWSTest):
         # Test steps 1 -> 2 -> 3 -> 4 -> invalid SRV URL
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         m.post(self.dummy_ad_endpoint, status_code=501)
-        m.post(f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=501)
-        m.get(f"http://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml", status_code=200)
+        m.post(f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=501)
+        m.get(f"http://autodiscover.{self.domain}/autodiscover/autodiscover.svc", status_code=200)
 
         tmp = d._get_srv_records
         d._get_srv_records = Mock(return_value=[SrvRecord(1, 1, 443, get_random_hostname())])
@@ -517,12 +564,12 @@ class AutodiscoverPoxTest(EWSTest):
         m.post(
             self.dummy_ad_endpoint,
             status_code=200,
-            content=self.redirect_url_xml(f"https://{get_random_hostname()}/EWS/Exchange.asmx"),
+            content=self.redirect_url_xml(f"https://{get_random_hostname()}/autodiscover/autodiscover.svc"),
         )
         m.post(
-            f"https://autodiscover.{self.domain}/Autodiscover/Autodiscover.xml",
+            f"https://autodiscover.{self.domain}/autodiscover/autodiscover.svc",
             status_code=200,
-            content=self.redirect_url_xml(f"https://{get_random_hostname()}/EWS/Exchange.asmx"),
+            content=self.redirect_url_xml(f"https://{get_random_hostname()}/autodiscover/autodiscover.svc"),
         )
 
         with self.assertRaises(AutoDiscoverFailed):
@@ -535,7 +582,7 @@ class AutodiscoverPoxTest(EWSTest):
         # Test steps 1 -> -> 5 -> Invalid response from redirect URL
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
-        redirect_url = "https://httpbin.org/Autodiscover/Autodiscover.xml"
+        redirect_url = "https://httpbin.org/autodiscover/autodiscover.svc"
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.redirect_url_xml(redirect_url))
         m.head(redirect_url, status_code=501)
         m.post(redirect_url, status_code=501)
@@ -547,11 +594,11 @@ class AutodiscoverPoxTest(EWSTest):
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
     def test_autodiscover_path_1_5_valid_redirect_url_valid_response(self, m, _):
-        # Test steps 1 -> -> 5 -> Valid response from redirect URL -> 5
+        # Test steps 1 -> 5 -> Valid response from redirect URL -> 5
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         redirect_hostname = "httpbin.org"
-        redirect_url = f"https://{redirect_hostname}/Autodiscover/Autodiscover.xml"
+        redirect_url = f"https://{redirect_hostname}/autodiscover/autodiscover.svc"
         ews_url = f"https://{redirect_hostname}/EWS/Exchange.asmx"
         email = f"john@redirected.{redirect_hostname}"
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.redirect_url_xml(redirect_url))
@@ -560,7 +607,7 @@ class AutodiscoverPoxTest(EWSTest):
 
         ad_response, _ = d.discover()
         self.assertEqual(ad_response.autodiscover_smtp_address, email)
-        self.assertEqual(ad_response.protocol.ews_url, ews_url)
+        self.assertEqual(ad_response.ews_url, ews_url)
 
     def test_get_srv_records(self):
         ad = Autodiscovery("foo@example.com")
@@ -823,14 +870,14 @@ class AutodiscoverPoxTest(EWSTest):
         self.get_account()
         a = Account(
             self.account.primary_smtp_address,
-            autodiscover="pox",
+            autodiscover="soap",
             config=self.account.protocol.config,
         )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
 
         a = Account(
-            self.account.primary_smtp_address, autodiscover="pox", credentials=self.account.protocol.credentials
+            self.account.primary_smtp_address, autodiscover="soap", credentials=self.account.protocol.credentials
         )
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)

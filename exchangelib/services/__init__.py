@@ -40,6 +40,7 @@ from .get_streaming_events import GetStreamingEvents
 from .get_user_availability import GetUserAvailability
 from .get_user_configuration import GetUserConfiguration
 from .get_user_oof_settings import GetUserOofSettings
+from .get_user_settings import GetUserSettings
 from .mark_as_junk import MarkAsJunk
 from .move_folder import MoveFolder
 from .move_item import MoveItem
@@ -90,6 +91,7 @@ __all__ = [
     "GetUserAvailability",
     "GetUserConfiguration",
     "GetUserOofSettings",
+    "GetUserSettings",
     "MarkAsJunk",
     "MoveFolder",
     "MoveItem",

@@ -3,7 +3,8 @@ from logging import getLogger
 
 from cached_property import threaded_cached_property
 
-from .autodiscover.discovery_pox import Autodiscovery
+from .autodiscover.discovery.pox import PoxAutodiscovery
+from .autodiscover.discovery.soap import SoapAutodiscovery
 from .configuration import Configuration
 from .credentials import ACCESS_TYPES, DELEGATE, IMPERSONATION
 from .errors import InvalidEnumValue, InvalidTypeError, UnknownTimeZone
@@ -97,6 +98,8 @@ class Identity(EWSElement):
 class Account:
     """Models an Exchange server user account."""
 
+    DEFAULT_DISCOVERY_CLS = PoxAutodiscovery
+
     def __init__(
         self,
         primary_smtp_address,
@@ -115,7 +118,7 @@ class Account:
         :param access_type: The access type granted to 'credentials' for this account. Valid options are 'delegate'
             and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.
         :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-            (Default value = False)
+            Can also be set to "pox" or "soap" to choose the autodiscover implementation (Default value = False)
         :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
         :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
@@ -162,7 +165,12 @@ class Account:
                     credentials = config.credentials
             else:
                 auth_type, retry_policy, version = None, None, None
-            self.ad_response, self.protocol = Autodiscovery(
+            discovery_cls = {
+                "pox": PoxAutodiscovery,
+                "soap": SoapAutodiscovery,
+                True: self.DEFAULT_DISCOVERY_CLS,
+            }[autodiscover]
+            self.ad_response, self.protocol = discovery_cls(
                 email=primary_smtp_address, credentials=credentials
             ).discover()
             # Let's not use the auth_package hint from the AD response. It could be incorrect and we can just guess.

@@ -7,7 +7,7 @@ import requests_ntlm
 import requests_oauthlib
 
 from .errors import TransportError, UnauthorizedError
-from .util import CONNECTION_ERRORS, RETRY_WAIT, DummyResponse, _back_off_if_needed, _retry_after
+from .util import CONNECTION_ERRORS, RETRY_WAIT, TLS_ERRORS, DummyResponse, _back_off_if_needed, _retry_after
 
 log = logging.getLogger(__name__)
 
@@ -123,6 +123,60 @@ def get_service_authtype(protocol):
         except UnauthorizedError:
             continue
     raise TransportError("Failed to get auth type from service")
+
+
+def get_autodiscover_authtype(protocol):
+    data = protocol.dummy_xml()
+    headers = {"X-AnchorMailbox": "DUMMY@example.com"}  # Required in case of OAuth
+    r = get_unauthenticated_autodiscover_response(protocol=protocol, method="post", headers=headers, data=data)
+    auth_type = get_auth_method_from_response(response=r)
+    log.debug("Auth type is %s", auth_type)
+    return auth_type
+
+
+def get_unauthenticated_autodiscover_response(protocol, method, headers=None, data=None):
+    from .autodiscover import Autodiscovery
+
+    service_endpoint = protocol.service_endpoint
+    retry_policy = protocol.retry_policy
+    retry = 0
+    t_start = time.monotonic()
+    while True:
+        _back_off_if_needed(retry_policy.back_off_until)
+        log.debug("Trying to get response from %s", service_endpoint)
+        with protocol.raw_session(service_endpoint) as s:
+            try:
+                r = getattr(s, method)(
+                    url=service_endpoint,
+                    headers=headers,
+                    data=data,
+                    allow_redirects=False,
+                    timeout=protocol.TIMEOUT,
+                )
+                r.close()  # Release memory
+                break
+            except TLS_ERRORS as e:
+                # Don't retry on TLS errors. But wrap, so we can catch later and continue with the next endpoint.
+                raise TransportError(str(e))
+            except CONNECTION_ERRORS as e:
+                r = DummyResponse(url=service_endpoint, request_headers=headers)
+                total_wait = time.monotonic() - t_start
+                if retry_policy.may_retry_on_error(response=r, wait=total_wait):
+                    log.debug(
+                        "Connection error on URL %s (retry %s, error: %s). Cool down %s secs",
+                        service_endpoint,
+                        retry,
+                        e,
+                        Autodiscovery.RETRY_WAIT,
+                    )
+                    # Don't respect the 'Retry-After' header. We don't know if this is a useful endpoint, and we
+                    # want autodiscover to be reasonably fast.
+                    retry_policy.back_off(Autodiscovery.RETRY_WAIT)
+                    retry += 1
+                    continue
+                log.debug("Connection error on URL %s: %s", service_endpoint, e)
+                raise TransportError(str(e))
+    return r
 
 
 def get_auth_method_from_response(response):
