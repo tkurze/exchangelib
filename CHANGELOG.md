@@ -3,6 +3,9 @@ Change Log
 
 HEAD
 ----
+- Make SOAP-based autodiscovery the default, and remove support for POX-based
+  discovery. This also removes support for autodiscovery on Exchange 2007.
+  Only `Account(..., autodiscover=True)` is supported again.
 
 
 4.9.0
