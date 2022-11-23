@@ -100,7 +100,9 @@ jobs:
     - name: Unencrypt secret file
       env:
           AES_256_CBC_PASS: ${{ secrets.AES_256_CBC_PASS }}
-      # Only repo owners have access to the secret. PRs will run only the unit tests
+      # Only repo owners have access to the secret. PRs will run only the unit tests.
+      # The encrypted file was created as:
+      #  openssl aes-256-cbc -e -md sha256 -in settings.yml -out settings.yml.ghenc
       if: env.AES_256_CBC_PASS != ''
       run: |
         openssl aes-256-cbc -d -md sha256 -in settings.yml.ghenc -out settings.yml -pass env:AES_256_CBC_PASS
