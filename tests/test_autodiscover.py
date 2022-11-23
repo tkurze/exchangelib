@@ -537,7 +537,8 @@ class AutodiscoverTest(EWSTest):
             d._get_srv_records = tmp
 
     @requests_mock.mock(real_http=False)
-    def test_autodiscover_path_1_2_3_4_invalid_srv(self, m):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token", return_value=None)
+    def test_autodiscover_path_1_2_3_4_invalid_srv(self, m, *args):
         # Test steps 1 -> 2 -> 3 -> 4 -> invalid SRV URL
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         m.post(self.dummy_ad_endpoint, status_code=501)
@@ -554,7 +555,8 @@ class AutodiscoverTest(EWSTest):
             d._get_srv_records = tmp
 
     @requests_mock.mock(real_http=False)
-    def test_autodiscover_path_1_5_invalid_redirect_url(self, m):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token", return_value=None)
+    def test_autodiscover_path_1_5_invalid_redirect_url(self, m, *args):
         # Test steps 1 -> -> 5 -> Invalid redirect URL
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
