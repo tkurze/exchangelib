@@ -3,6 +3,10 @@ Change Log
 
 HEAD
 ----
+
+
+4.9.0
+-----
 - Added support for SOAP-based autodiscovery, in addition to the existing POX
   (plain old XML) implementation. You can specify the autodiscover
   implementation explicitly using the `autodiscover` argument:
