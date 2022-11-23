@@ -242,7 +242,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_cache(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_cache(self, m, *args):
         # Mock the default endpoint that we test in step 1 of autodiscovery
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.dummy_ad_response)
         discovery = Autodiscovery(
@@ -312,7 +313,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_from_account(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_from_account(self, m, *args):
         # Test that autodiscovery via account creation works
         # Mock the default endpoint that we test in step 1 of autodiscovery
         m.post(self.dummy_ad_endpoint, status_code=200, content=self.dummy_ad_response)
@@ -351,7 +353,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_redirect(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_redirect(self, m, *args):
         # Test various aspects of autodiscover redirection. Mock all HTTP responses because we can't force a live server
         # to send us into the correct code paths.
         # Mock the default endpoint that we test in step 1 of autodiscovery
@@ -433,7 +436,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_2_5(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_2_5(self, m, *args):
         # Test steps 1 -> 2 -> 5
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
@@ -451,7 +455,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_2_3_invalid301_4(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_2_3_invalid301_4(self, m, *args):
         # Test steps 1 -> 2 -> 3 -> invalid 301 URL -> 4
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
@@ -469,7 +474,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_2_3_no301_4(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_2_3_no301_4(self, m, *args):
         # Test steps 1 -> 2 -> 3 -> no 301 response -> 4
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         m.post(self.dummy_ad_endpoint, status_code=501)
@@ -482,7 +488,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_2_3_4_valid_srv_invalid_response(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_2_3_4_valid_srv_invalid_response(self, m, *args):
         # Test steps 1 -> 2 -> 3 -> 4 -> invalid response from SRV URL
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         redirect_srv = "httpbin.org"
@@ -503,7 +510,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_2_3_4_valid_srv_valid_response(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_2_3_4_valid_srv_valid_response(self, m, *args):
         # Test steps 1 -> 2 -> 3 -> 4 -> 5
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
         redirect_srv = "httpbin.org"
@@ -567,7 +575,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_5_valid_redirect_url_invalid_response(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_5_valid_redirect_url_invalid_response(self, m, *args):
         # Test steps 1 -> -> 5 -> Invalid response from redirect URL
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
@@ -582,7 +591,8 @@ class AutodiscoverTest(EWSTest):
 
     @requests_mock.mock(real_http=False)
     @patch.object(Autodiscovery, "_ensure_valid_hostname")
-    def test_autodiscover_path_1_5_valid_redirect_url_valid_response(self, m, _):
+    @patch("requests_oauthlib.OAuth2Session.fetch_token")
+    def test_autodiscover_path_1_5_valid_redirect_url_valid_response(self, m, *args):
         # Test steps 1 -> 5 -> Valid response from redirect URL -> 5
         clear_cache()
         d = Autodiscovery(email=self.account.primary_smtp_address, credentials=self.account.protocol.credentials)
