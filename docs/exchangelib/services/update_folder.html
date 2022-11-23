@@ -177,7 +177,7 @@ class UpdateFolder(BaseUpdateService):
         return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
-        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is an instance of a subclass of Folder and
         # &#39;fieldnames&#39; are the attribute names that were updated.
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(self._changes_elem(target_changes=folders))
@@ -318,6 +318,7 @@ class UpdateFolder(BaseUpdateService):
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -351,6 +352,8 @@ class UpdateFolder(BaseUpdateService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -396,7 +399,7 @@ class UpdateFolder(BaseUpdateService):
         return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
-        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is an instance of a subclass of Folder and
         # &#39;fieldnames&#39; are the attribute names that were updated.
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(self._changes_elem(target_changes=folders))
@@ -407,6 +410,7 @@ class UpdateFolder(BaseUpdateService):
 <li><a title="exchangelib.services.update_folder.BaseUpdateService" href="#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -463,7 +467,7 @@ class UpdateFolder(BaseUpdateService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders):
-    # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+    # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is an instance of a subclass of Folder and
     # &#39;fieldnames&#39; are the attribute names that were updated.
     payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(self._changes_elem(target_changes=folders))
@@ -479,6 +483,8 @@ class UpdateFolder(BaseUpdateService):
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

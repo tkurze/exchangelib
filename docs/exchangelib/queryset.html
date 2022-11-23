@@ -73,7 +73,7 @@ class SearchableMixIn:
 
 
 class QuerySet(SearchableMixIn):
-    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers query until the QuerySet is consumed. Supports
     chaining to build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/
@@ -725,7 +725,7 @@ def _rinse_item(i, fields_to_nullify):
 <span>(</span><span>folder_collection, request_type='item')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+<div class="desc"><p>A Django QuerySet-like class for querying items. Defers query until the QuerySet is consumed. Supports
 chaining to build up complex queries.</p>
 <p>Django QuerySet documentation: <a href="https://docs.djangoproject.com/en/dev/ref/models/querysets/">https://docs.djangoproject.com/en/dev/ref/models/querysets/</a></p></div>
 <details class="source">
@@ -733,7 +733,7 @@ chaining to build up complex queries.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class QuerySet(SearchableMixIn):
-    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers queries until the QuerySet is consumed. Supports
+    &#34;&#34;&#34;A Django QuerySet-like class for querying items. Defers query until the QuerySet is consumed. Supports
     chaining to build up complex queries.
 
     Django QuerySet documentation: https://docs.djangoproject.com/en/dev/ref/models/querysets/

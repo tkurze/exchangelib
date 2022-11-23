@@ -35,17 +35,7 @@ import requests_ntlm
 import requests_oauthlib
 
 from .errors import TransportError, UnauthorizedError
-from .util import (
-    CONNECTION_ERRORS,
-    RETRY_WAIT,
-    DummyResponse,
-    _back_off_if_needed,
-    _retry_after,
-    add_xml_child,
-    create_element,
-    ns_translation,
-    xml_to_str,
-)
+from .util import CONNECTION_ERRORS, RETRY_WAIT, TLS_ERRORS, DummyResponse, _back_off_if_needed, _retry_after
 
 log = logging.getLogger(__name__)
 
@@ -85,59 +75,6 @@ DEFAULT_ENCODING = &#34;utf-8&#34;
 DEFAULT_HEADERS = {&#34;Content-Type&#34;: f&#34;text/xml; charset={DEFAULT_ENCODING}&#34;, &#34;Accept-Encoding&#34;: &#34;gzip, deflate&#34;}
 
 
-def wrap(content, api_version=None, account_to_impersonate=None, timezone=None):
-    &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
-    ExchangeImpersonation allows to act as the user we want to impersonate.
-
-    RequestServerVersion element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
-
-    ExchangeImpersonation element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
-
-    TimeZoneContent element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
-
-    :param content:
-    :param api_version:
-    :param account_to_impersonate:  (Default value = None)
-    :param timezone:  (Default value = None)
-    &#34;&#34;&#34;
-    envelope = create_element(&#34;s:Envelope&#34;, nsmap=ns_translation)
-    header = create_element(&#34;s:Header&#34;)
-    if api_version:
-        request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
-        header.append(request_server_version)
-    if account_to_impersonate:
-        exchange_impersonation = create_element(&#34;t:ExchangeImpersonation&#34;)
-        connecting_sid = create_element(&#34;t:ConnectingSID&#34;)
-        # We have multiple options for uniquely identifying the user. Here&#39;s a prioritized list in accordance with
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
-        for attr, tag in (
-            (&#34;sid&#34;, &#34;SID&#34;),
-            (&#34;upn&#34;, &#34;PrincipalName&#34;),
-            (&#34;smtp_address&#34;, &#34;SmtpAddress&#34;),
-            (&#34;primary_smtp_address&#34;, &#34;PrimarySmtpAddress&#34;),
-        ):
-            val = getattr(account_to_impersonate, attr)
-            if val:
-                add_xml_child(connecting_sid, f&#34;t:{tag}&#34;, val)
-                break
-        exchange_impersonation.append(connecting_sid)
-        header.append(exchange_impersonation)
-    if timezone:
-        timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
-        timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
-        timezone_context.append(timezone_definition)
-        header.append(timezone_context)
-    if len(header):
-        envelope.append(header)
-    body = create_element(&#34;s:Body&#34;)
-    body.append(content)
-    envelope.append(body)
-    return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
-
-
 def get_auth_instance(auth_type, **kwargs):
     &#34;&#34;&#34;Return an *Auth instance suitable for the requests package.
 
@@ -156,31 +93,34 @@ def get_auth_instance(auth_type, **kwargs):
     return model(**kwargs)
 
 
-def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
-    # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error prone, and some servers
+def get_service_authtype(protocol):
+    # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error-prone, and some servers
     # are set up to redirect to OWA on all requests except POST to /EWS/Exchange.asmx
     #
     # We don&#39;t know the API version yet, but we need it to create a valid request because some Exchange servers only
     # respond when given a valid request. Try all known versions. Gross.
-    from .protocol import BaseProtocol
+    from .services import ConvertId
 
+    service_endpoint = protocol.service_endpoint
+    retry_policy = protocol.retry_policy
     retry = 0
     t_start = time.monotonic()
-    headers = DEFAULT_HEADERS.copy()
-    for api_version in api_versions:
-        data = dummy_xml(api_version=api_version, name=name)
+    for api_version in ConvertId.supported_api_versions():
+        protocol.api_version_hint = api_version
+        data = protocol.dummy_xml()
+        headers = {}
         log.debug(&#34;Requesting %s from %s&#34;, data, service_endpoint)
         while True:
             _back_off_if_needed(retry_policy.back_off_until)
             log.debug(&#34;Trying to get service auth type for %s&#34;, service_endpoint)
-            with BaseProtocol.raw_session(service_endpoint) as s:
+            with protocol.raw_session(service_endpoint) as s:
                 try:
                     r = s.post(
                         url=service_endpoint,
                         headers=headers,
                         data=data,
                         allow_redirects=False,
-                        timeout=BaseProtocol.TIMEOUT,
+                        timeout=protocol.TIMEOUT,
                     )
                     r.close()  # Release memory
                     break
@@ -207,10 +147,64 @@ def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
         try:
             auth_type = get_auth_method_from_response(response=r)
             log.debug(&#34;Auth type is %s&#34;, auth_type)
-            return auth_type, api_version
+            return auth_type
         except UnauthorizedError:
             continue
     raise TransportError(&#34;Failed to get auth type from service&#34;)
+
+
+def get_autodiscover_authtype(protocol):
+    data = protocol.dummy_xml()
+    headers = {&#34;X-AnchorMailbox&#34;: &#34;DUMMY@example.com&#34;}  # Required in case of OAuth
+    r = get_unauthenticated_autodiscover_response(protocol=protocol, method=&#34;post&#34;, headers=headers, data=data)
+    auth_type = get_auth_method_from_response(response=r)
+    log.debug(&#34;Auth type is %s&#34;, auth_type)
+    return auth_type
+
+
+def get_unauthenticated_autodiscover_response(protocol, method, headers=None, data=None):
+    from .autodiscover import Autodiscovery
+
+    service_endpoint = protocol.service_endpoint
+    retry_policy = protocol.retry_policy
+    retry = 0
+    t_start = time.monotonic()
+    while True:
+        _back_off_if_needed(retry_policy.back_off_until)
+        log.debug(&#34;Trying to get response from %s&#34;, service_endpoint)
+        with protocol.raw_session(service_endpoint) as s:
+            try:
+                r = getattr(s, method)(
+                    url=service_endpoint,
+                    headers=headers,
+                    data=data,
+                    allow_redirects=False,
+                    timeout=protocol.TIMEOUT,
+                )
+                r.close()  # Release memory
+                break
+            except TLS_ERRORS as e:
+                # Don&#39;t retry on TLS errors. But wrap, so we can catch later and continue with the next endpoint.
+                raise TransportError(str(e))
+            except CONNECTION_ERRORS as e:
+                r = DummyResponse(url=service_endpoint, request_headers=headers)
+                total_wait = time.monotonic() - t_start
+                if retry_policy.may_retry_on_error(response=r, wait=total_wait):
+                    log.debug(
+                        &#34;Connection error on URL %s (retry %s, error: %s). Cool down %s secs&#34;,
+                        service_endpoint,
+                        retry,
+                        e,
+                        Autodiscovery.RETRY_WAIT,
+                    )
+                    # Don&#39;t respect the &#39;Retry-After&#39; header. We don&#39;t know if this is a useful endpoint, and we
+                    # want autodiscover to be reasonably fast.
+                    retry_policy.back_off(Autodiscovery.RETRY_WAIT)
+                    retry += 1
+                    continue
+                log.debug(&#34;Connection error on URL %s: %s&#34;, service_endpoint, e)
+                raise TransportError(str(e))
+    return r
 
 
 def get_auth_method_from_response(response):
@@ -236,6 +230,8 @@ def get_auth_method_from_response(response):
                 return NTLM
             if &#34;basic&#34; in vals:
                 return BASIC
+        elif key.lower() == &#34;ms-diagnostics-public&#34; and &#34;Modern Auth&#34; in val:
+            return OAUTH2
     raise UnauthorizedError(&#34;No compatible auth type was reported by server&#34;)
 
 
@@ -260,23 +256,7 @@ def _tokenize(val):
         auth_method += c
     if auth_method:
         auth_methods.append(auth_method)
-    return auth_methods
-
-
-def dummy_xml(api_version, name):
-    # Generate a minimal, valid EWS request
-    from .services import ResolveNames  # Avoid circular import
-
-    return wrap(
-        content=ResolveNames(protocol=None).get_payload(
-            unresolved_entries=[name],
-            parent_folders=None,
-            return_full_contact_data=False,
-            search_scope=None,
-            contact_data_shape=None,
-        ),
-        api_version=api_version,
-    )</code></pre>
+    return auth_methods</code></pre>
 </details>
 </section>
 <section>
@@ -286,31 +266,6 @@ def dummy_xml(api_version, name):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="exchangelib.transport.dummy_xml"><code class="name flex">
-<span>def <span class="ident">dummy_xml</span></span>(<span>api_version, name)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dummy_xml(api_version, name):
-    # Generate a minimal, valid EWS request
-    from .services import ResolveNames  # Avoid circular import
-
-    return wrap(
-        content=ResolveNames(protocol=None).get_payload(
-            unresolved_entries=[name],
-            parent_folders=None,
-            return_full_contact_data=False,
-            search_scope=None,
-            contact_data_shape=None,
-        ),
-        api_version=api_version,
-    )</code></pre>
-</details>
-</dd>
 <dt id="exchangelib.transport.get_auth_instance"><code class="name flex">
 <span>def <span class="ident">get_auth_instance</span></span>(<span>auth_type, **kwargs)</span>
 </code></dt>
@@ -372,11 +327,13 @@ def dummy_xml(api_version, name):
                 return NTLM
             if &#34;basic&#34; in vals:
                 return BASIC
+        elif key.lower() == &#34;ms-diagnostics-public&#34; and &#34;Modern Auth&#34; in val:
+            return OAUTH2
     raise UnauthorizedError(&#34;No compatible auth type was reported by server&#34;)</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.transport.get_service_authtype"><code class="name flex">
-<span>def <span class="ident">get_service_authtype</span></span>(<span>service_endpoint, retry_policy, api_versions, name)</span>
+<dt id="exchangelib.transport.get_autodiscover_authtype"><code class="name flex">
+<span>def <span class="ident">get_autodiscover_authtype</span></span>(<span>protocol)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -384,31 +341,52 @@ def dummy_xml(api_version, name):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_service_authtype(service_endpoint, retry_policy, api_versions, name):
-    # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error prone, and some servers
+<pre><code class="python">def get_autodiscover_authtype(protocol):
+    data = protocol.dummy_xml()
+    headers = {&#34;X-AnchorMailbox&#34;: &#34;DUMMY@example.com&#34;}  # Required in case of OAuth
+    r = get_unauthenticated_autodiscover_response(protocol=protocol, method=&#34;post&#34;, headers=headers, data=data)
+    auth_type = get_auth_method_from_response(response=r)
+    log.debug(&#34;Auth type is %s&#34;, auth_type)
+    return auth_type</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.transport.get_service_authtype"><code class="name flex">
+<span>def <span class="ident">get_service_authtype</span></span>(<span>protocol)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_service_authtype(protocol):
+    # Get auth type by tasting headers from the server. Only do POST requests. HEAD is too error-prone, and some servers
     # are set up to redirect to OWA on all requests except POST to /EWS/Exchange.asmx
     #
     # We don&#39;t know the API version yet, but we need it to create a valid request because some Exchange servers only
     # respond when given a valid request. Try all known versions. Gross.
-    from .protocol import BaseProtocol
+    from .services import ConvertId
 
+    service_endpoint = protocol.service_endpoint
+    retry_policy = protocol.retry_policy
     retry = 0
     t_start = time.monotonic()
-    headers = DEFAULT_HEADERS.copy()
-    for api_version in api_versions:
-        data = dummy_xml(api_version=api_version, name=name)
+    for api_version in ConvertId.supported_api_versions():
+        protocol.api_version_hint = api_version
+        data = protocol.dummy_xml()
+        headers = {}
         log.debug(&#34;Requesting %s from %s&#34;, data, service_endpoint)
         while True:
             _back_off_if_needed(retry_policy.back_off_until)
             log.debug(&#34;Trying to get service auth type for %s&#34;, service_endpoint)
-            with BaseProtocol.raw_session(service_endpoint) as s:
+            with protocol.raw_session(service_endpoint) as s:
                 try:
                     r = s.post(
                         url=service_endpoint,
                         headers=headers,
                         data=data,
                         allow_redirects=False,
-                        timeout=BaseProtocol.TIMEOUT,
+                        timeout=protocol.TIMEOUT,
                     )
                     r.close()  # Release memory
                     break
@@ -435,85 +413,64 @@ def dummy_xml(api_version, name):
         try:
             auth_type = get_auth_method_from_response(response=r)
             log.debug(&#34;Auth type is %s&#34;, auth_type)
-            return auth_type, api_version
+            return auth_type
         except UnauthorizedError:
             continue
     raise TransportError(&#34;Failed to get auth type from service&#34;)</code></pre>
 </details>
 </dd>
-<dt id="exchangelib.transport.wrap"><code class="name flex">
-<span>def <span class="ident">wrap</span></span>(<span>content, api_version=None, account_to_impersonate=None, timezone=None)</span>
+<dt id="exchangelib.transport.get_unauthenticated_autodiscover_response"><code class="name flex">
+<span>def <span class="ident">get_unauthenticated_autodiscover_response</span></span>(<span>protocol, method, headers=None, data=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
-ExchangeImpersonation allows to act as the user we want to impersonate.</p>
-<p>RequestServerVersion element on MSDN:
-<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion</a></p>
-<p>ExchangeImpersonation element on MSDN:
-<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation</a></p>
-<p>TimeZoneContent element on MSDN:
-<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext</a></p>
-<p>:param content:
-:param api_version:
-:param account_to_impersonate:
-(Default value = None)
-:param timezone:
-(Default value = None)</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def wrap(content, api_version=None, account_to_impersonate=None, timezone=None):
-    &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
-    ExchangeImpersonation allows to act as the user we want to impersonate.
+<pre><code class="python">def get_unauthenticated_autodiscover_response(protocol, method, headers=None, data=None):
+    from .autodiscover import Autodiscovery
 
-    RequestServerVersion element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
-
-    ExchangeImpersonation element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
-
-    TimeZoneContent element on MSDN:
-    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
-
-    :param content:
-    :param api_version:
-    :param account_to_impersonate:  (Default value = None)
-    :param timezone:  (Default value = None)
-    &#34;&#34;&#34;
-    envelope = create_element(&#34;s:Envelope&#34;, nsmap=ns_translation)
-    header = create_element(&#34;s:Header&#34;)
-    if api_version:
-        request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
-        header.append(request_server_version)
-    if account_to_impersonate:
-        exchange_impersonation = create_element(&#34;t:ExchangeImpersonation&#34;)
-        connecting_sid = create_element(&#34;t:ConnectingSID&#34;)
-        # We have multiple options for uniquely identifying the user. Here&#39;s a prioritized list in accordance with
-        # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
-        for attr, tag in (
-            (&#34;sid&#34;, &#34;SID&#34;),
-            (&#34;upn&#34;, &#34;PrincipalName&#34;),
-            (&#34;smtp_address&#34;, &#34;SmtpAddress&#34;),
-            (&#34;primary_smtp_address&#34;, &#34;PrimarySmtpAddress&#34;),
-        ):
-            val = getattr(account_to_impersonate, attr)
-            if val:
-                add_xml_child(connecting_sid, f&#34;t:{tag}&#34;, val)
+    service_endpoint = protocol.service_endpoint
+    retry_policy = protocol.retry_policy
+    retry = 0
+    t_start = time.monotonic()
+    while True:
+        _back_off_if_needed(retry_policy.back_off_until)
+        log.debug(&#34;Trying to get response from %s&#34;, service_endpoint)
+        with protocol.raw_session(service_endpoint) as s:
+            try:
+                r = getattr(s, method)(
+                    url=service_endpoint,
+                    headers=headers,
+                    data=data,
+                    allow_redirects=False,
+                    timeout=protocol.TIMEOUT,
+                )
+                r.close()  # Release memory
                 break
-        exchange_impersonation.append(connecting_sid)
-        header.append(exchange_impersonation)
-    if timezone:
-        timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
-        timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
-        timezone_context.append(timezone_definition)
-        header.append(timezone_context)
-    if len(header):
-        envelope.append(header)
-    body = create_element(&#34;s:Body&#34;)
-    body.append(content)
-    envelope.append(body)
-    return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)</code></pre>
+            except TLS_ERRORS as e:
+                # Don&#39;t retry on TLS errors. But wrap, so we can catch later and continue with the next endpoint.
+                raise TransportError(str(e))
+            except CONNECTION_ERRORS as e:
+                r = DummyResponse(url=service_endpoint, request_headers=headers)
+                total_wait = time.monotonic() - t_start
+                if retry_policy.may_retry_on_error(response=r, wait=total_wait):
+                    log.debug(
+                        &#34;Connection error on URL %s (retry %s, error: %s). Cool down %s secs&#34;,
+                        service_endpoint,
+                        retry,
+                        e,
+                        Autodiscovery.RETRY_WAIT,
+                    )
+                    # Don&#39;t respect the &#39;Retry-After&#39; header. We don&#39;t know if this is a useful endpoint, and we
+                    # want autodiscover to be reasonably fast.
+                    retry_policy.back_off(Autodiscovery.RETRY_WAIT)
+                    retry += 1
+                    continue
+                log.debug(&#34;Connection error on URL %s: %s&#34;, service_endpoint, e)
+                raise TransportError(str(e))
+    return r</code></pre>
 </details>
 </dd>
 </dl>
@@ -534,11 +491,11 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="exchangelib.transport.dummy_xml" href="#exchangelib.transport.dummy_xml">dummy_xml</a></code></li>
 <li><code><a title="exchangelib.transport.get_auth_instance" href="#exchangelib.transport.get_auth_instance">get_auth_instance</a></code></li>
 <li><code><a title="exchangelib.transport.get_auth_method_from_response" href="#exchangelib.transport.get_auth_method_from_response">get_auth_method_from_response</a></code></li>
+<li><code><a title="exchangelib.transport.get_autodiscover_authtype" href="#exchangelib.transport.get_autodiscover_authtype">get_autodiscover_authtype</a></code></li>
 <li><code><a title="exchangelib.transport.get_service_authtype" href="#exchangelib.transport.get_service_authtype">get_service_authtype</a></code></li>
-<li><code><a title="exchangelib.transport.wrap" href="#exchangelib.transport.wrap">wrap</a></code></li>
+<li><code><a title="exchangelib.transport.get_unauthenticated_autodiscover_response" href="#exchangelib.transport.get_unauthenticated_autodiscover_response">get_unauthenticated_autodiscover_response</a></code></li>
 </ul>
 </li>
 </ul>

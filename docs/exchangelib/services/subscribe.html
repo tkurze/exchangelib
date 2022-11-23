@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>exchangelib.services.subscribe API documentation</title>
-<meta name="description" content="The &#39;Subscribe&#39; service has two different modes, pull and push, with different signatures. Implement as two distinct
-classes." />
+<meta name="description" content="The &#39;Subscribe&#39; service has three different modes - pull, push and streaming - with different signatures. Implement
+as three distinct classes." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,14 +23,14 @@ classes." />
 <h1 class="title">Module <code>exchangelib.services.subscribe</code></h1>
 </header>
 <section id="section-intro">
-<p>The 'Subscribe' service has two different modes, pull and push, with different signatures. Implement as two distinct
-classes.</p>
+<p>The 'Subscribe' service has three different modes - pull, push and streaming - with different signatures. Implement
+as three distinct classes.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;The &#39;Subscribe&#39; service has two different modes, pull and push, with different signatures. Implement as two distinct
-classes.
+<pre><code class="python">&#34;&#34;&#34;The &#39;Subscribe&#39; service has three different modes - pull, push and streaming - with different signatures. Implement
+as three distinct classes.
 &#34;&#34;&#34;
 import abc
 
@@ -39,7 +39,9 @@ from .common import EWSAccountService, add_xml_child, folder_ids_element
 
 
 class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation&#34;&#34;&#34;
+    &#34;&#34;&#34;Base class for subscription classes.
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#34;Subscribe&#34;
     EVENT_TYPES = (
@@ -162,13 +164,16 @@ class SubscribeToStreaming(Subscribe):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
-    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation&#34;&#34;&#34;
+    &#34;&#34;&#34;Base class for subscription classes.
+
+    MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation&#34;&#34;&#34;
 
     SERVICE_NAME = &#34;Subscribe&#34;
     EVENT_TYPES = (
@@ -213,6 +218,7 @@ class SubscribeToStreaming(Subscribe):
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -243,6 +249,8 @@ class SubscribeToStreaming(Subscribe):
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -252,7 +260,8 @@ class SubscribeToStreaming(Subscribe):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -284,6 +293,7 @@ class SubscribeToStreaming(Subscribe):
 <li><a title="exchangelib.services.subscribe.Subscribe" href="#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -345,6 +355,8 @@ class SubscribeToStreaming(Subscribe):
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -354,7 +366,8 @@ class SubscribeToStreaming(Subscribe):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -387,6 +400,7 @@ class SubscribeToStreaming(Subscribe):
 <li><a title="exchangelib.services.subscribe.Subscribe" href="#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -446,6 +460,8 @@ class SubscribeToStreaming(Subscribe):
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -455,7 +471,8 @@ class SubscribeToStreaming(Subscribe):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -484,6 +501,7 @@ class SubscribeToStreaming(Subscribe):
 <li><a title="exchangelib.services.subscribe.Subscribe" href="#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -535,6 +553,8 @@ class SubscribeToStreaming(Subscribe):
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

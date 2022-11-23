@@ -90,7 +90,7 @@ class CreateItem(EWSAccountService):
         return res or [True]
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
         convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
@@ -195,7 +195,7 @@ errormessage), in the same order as the input list.</p>
         return res or [True]
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
         convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
@@ -233,6 +233,7 @@ errormessage), in the same order as the input list.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -289,7 +290,7 @@ errormessage), in the same order as the input list.</p>
 <span>def <span class="ident">get_payload</span></span>(<span>self, items, folder, message_disposition, send_meeting_invitations)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+<div class="desc"><p>Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
 convert items to XML Elements.</p>
 <p>MessageDisposition is only applicable to email messages, where it is required.</p>
 <p>SendMeetingInvitations is required for calendar items. It is also applicable to tasks, meeting request
@@ -308,7 +309,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-    &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+    &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
     convert items to XML Elements.
 
     MessageDisposition is only applicable to email messages, where it is required.
@@ -352,6 +353,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

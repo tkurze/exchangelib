@@ -78,7 +78,7 @@ from .known_folders import (
     MsgFolderRoot,
     MyContacts,
     MyContactsExtended,
-    NonDeletableFolderMixin,
+    NonDeletableFolderMixIn,
     Notes,
     OrganizationalContacts,
     Outbox,
@@ -178,7 +178,7 @@ __all__ = [
     &#34;MyContacts&#34;,
     &#34;MyContactsExtended&#34;,
     &#34;NON_DELETABLE_FOLDERS&#34;,
-    &#34;NonDeletableFolderMixin&#34;,
+    &#34;NonDeletableFolderMixIn&#34;,
     &#34;Notes&#34;,
     &#34;OrganizationalContacts&#34;,
     &#34;Outbox&#34;,
@@ -281,6 +281,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -346,7 +347,7 @@ __all__ = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AllContacts(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class AllContacts(NonDeletableFolderMixIn, Contacts):
     CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
@@ -355,7 +356,7 @@ __all__ = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -363,6 +364,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -424,7 +426,7 @@ __all__ = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AllItems(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class AllItems(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF&#34;
 
     LOCALIZED_NAMES = {
@@ -433,13 +435,14 @@ __all__ = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -501,18 +504,19 @@ __all__ = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ApplicationData(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class ApplicationData(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPM.ApplicationData&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -583,6 +587,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -657,6 +662,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -731,6 +737,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -805,6 +812,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -879,6 +887,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -953,6 +962,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1027,6 +1037,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1103,6 +1114,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1170,7 +1182,7 @@ __all__ = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Audits(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Audits(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Audits&#34;,),
     }
@@ -1178,13 +1190,14 @@ __all__ = [
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1246,7 +1259,7 @@ __all__ = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
+<pre><code class="python">class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement a folder.&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;Folder&#34;
@@ -1257,9 +1270,6 @@ __all__ = [
     # https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxosfld/68a85898-84fe-43c4-b166-4711c13cdd61
     CONTAINER_CLASS = None
     supported_item_models = ITEM_CLASSES  # The Item types that this folder can contain. Default is all
-    # Marks the version from which a distinguished folder was introduced. A possibly authoritative source is:
-    # https://github.com/OfficeDev/ews-managed-api/blob/master/Enumerations/WellKnownFolderName.cs
-    supported_from = None
     # Whether this folder type is allowed with the GetFolder service
     get_folder_allowed = True
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = DEEP_FOLDERS
@@ -1351,7 +1361,7 @@ __all__ = [
                 raise ValueError(&#34;Already at top&#34;)
             yield from self.parent.glob(tail or &#34;*&#34;)
         elif head == &#34;**&#34;:
-            # Match anything here or in any subfolder at arbitrary depth
+            # Match anything here or in any sub-folder at arbitrary depth
             for c in self.walk():
                 # fnmatch() may be case-sensitive depending on operating system:
                 # force a case-insensitive match since case appears not to
@@ -1397,16 +1407,9 @@ __all__ = [
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
                     tree += f&#34;└── {node}\n&#34;
-                else:  # Last child, and not name of child
+                else:  # Last child and not name of child
                     tree += f&#34;    {node}\n&#34;
         return tree.strip()
-
-    @classmethod
-    def supports_version(cls, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if not cls.supported_from:
-            return True
-        return version.build &gt;= cls.supported_from
 
     @property
     def has_distinguished_name(self):
@@ -1610,7 +1613,7 @@ __all__ = [
             self.root.clear_cache()
 
     def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
-        # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
+        # Recursively deletes all items in this folder, and all sub-folders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         from .known_folders import Audits
 
@@ -1656,7 +1659,7 @@ __all__ = [
         _level += 1
         for f in self.children:
             f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
-            # Remove non-distinguished children that are empty and have no subfolders
+            # Remove non-distinguished children that are empty and have no sub-folders
             if f.is_deletable and not f.children:
                 log.warning(&#34;Deleting folder %s&#34;, f)
                 try:
@@ -1673,7 +1676,7 @@ __all__ = [
 
     @classmethod
     def _kwargs_from_elem(cls, elem, account):
-        # Check for &#39;DisplayName&#39; element before collecting kwargs because because that clears the elements
+        # Check for &#39;DisplayName&#39; element before collecting kwargs because that clears the elements
         has_name_elem = elem.find(cls.get_field_by_fieldname(&#34;name&#34;).response_tag()) is not None
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
         if has_name_elem and not kwargs[&#34;name&#34;]:
@@ -1893,7 +1896,7 @@ __all__ = [
         &#34;&#34;&#34;Get events since the given watermark. Non-blocking.
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
-        :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+        :param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
         :return: A Notification object containing a list of events
 
         This method doesn&#39;t need the current folder instance, but it makes sense to keep the method along the other
@@ -1942,7 +1945,7 @@ __all__ = [
 
         Works like as __truediv__ but does not touch the folder cache.
 
-        This is useful if the folder hierarchy contains a huge number of folders and you don&#39;t want to fetch them all
+        This is useful if the folder hierarchy contains a huge number of folders, and you don&#39;t want to fetch them all
 
         :param other:
         :return:
@@ -1995,6 +1998,7 @@ __all__ = [
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2048,10 +2052,6 @@ __all__ = [
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.BaseFolder.get_folder_allowed"><code class="name">var <span class="ident">get_folder_allowed</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.folders.BaseFolder.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2215,23 +2215,6 @@ def resolve(cls, account, folder):
     if f.__class__ != cls:
         raise ValueError(f&#34;Expected folder {f!r} to be a {cls} instance&#34;)
     return f</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.folders.BaseFolder.supports_version"><code class="name flex">
-<span>def <span class="ident">supports_version</span></span>(<span>version)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def supports_version(cls, version):
-    # &#39;version&#39; is a Version instance, for convenience by callers
-    if not cls.supported_from:
-        return True
-    return version.build &gt;= cls.supported_from</code></pre>
 </details>
 </dd>
 </dl>
@@ -2494,7 +2477,7 @@ def delete_user_configuration(self, name):
 <dd>
 <div class="desc"><p>Get events since the given watermark. Non-blocking.</p>
 <p>:param subscription_id: A subscription ID as acquired by .subscribe_to_<a href="">pull|push</a>
-:param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+:param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
 :return: A Notification object containing a list of events</p>
 <p>This method doesn't need the current folder instance, but it makes sense to keep the method along the other
 sync methods.</p></div>
@@ -2506,7 +2489,7 @@ sync methods.</p></div>
     &#34;&#34;&#34;Get events since the given watermark. Non-blocking.
 
     :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
-    :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+    :param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
     :return: A Notification object containing a list of events
 
     This method doesn&#39;t need the current folder instance, but it makes sense to keep the method along the other
@@ -3032,7 +3015,7 @@ service user doesn't have access to the calendar. This will throw the most commo
             elif i == len(children) and j == 1:
                 # Not the last child, but the first node, which is the name of the child
                 tree += f&#34;└── {node}\n&#34;
-            else:  # Last child, and not name of child
+            else:  # Last child and not name of child
                 tree += f&#34;    {node}\n&#34;
     return tree.strip()</code></pre>
 </details>
@@ -3122,7 +3105,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
-    # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
+    # Recursively deletes all items in this folder, and all sub-folders and their content. Attempts to protect
     # distinguished folders from being deleted. Use with caution!
     from .known_folders import Audits
 
@@ -3168,7 +3151,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
     _level += 1
     for f in self.children:
         f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
-        # Remove non-distinguished children that are empty and have no subfolders
+        # Remove non-distinguished children that are empty and have no sub-folders
         if f.is_deletable and not f.children:
             log.warning(&#34;Deleting folder %s&#34;, f)
             try:
@@ -3227,6 +3210,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3318,6 +3302,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3403,20 +3388,21 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CalendarLogging(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class CalendarLogging(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Calendar Logging&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3474,7 +3460,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CommonViews(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class CommonViews(NonDeletableFolderMixIn, Folder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
         None: (&#34;Common Views&#34;,),
@@ -3482,13 +3468,14 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3550,7 +3537,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Companies(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class Companies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
@@ -3560,7 +3547,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -3568,6 +3555,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3646,6 +3634,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3732,6 +3721,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3825,6 +3815,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3886,7 +3877,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ConversationSettings(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class ConversationSettings(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.Configuration&#34;
     LOCALIZED_NAMES = {
         &#34;da_DK&#34;: (&#34;Indstillinger for samtalehandlinger&#34;,),
@@ -3894,13 +3885,14 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3973,6 +3965,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4030,7 +4023,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DefaultFoldersChangeHistory(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class DefaultFoldersChangeHistory(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPM.DefaultFolderHistoryItem&#34;
     LOCALIZED_NAMES = {
         None: (&#34;DefaultFoldersChangeHistory&#34;,),
@@ -4038,13 +4031,14 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4106,20 +4100,21 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DeferredAction(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class DeferredAction(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Deferred Action&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4202,6 +4197,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4284,6 +4280,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4439,6 +4436,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4520,6 +4518,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4581,20 +4580,21 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ExchangeSyncData(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class ExchangeSyncData(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;ExchangeSyncData&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4666,6 +4666,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4731,7 +4732,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Files(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Files(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.Files&#34;
 
     LOCALIZED_NAMES = {
@@ -4740,13 +4741,14 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4941,6 +4943,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -5415,7 +5418,7 @@ def get_distinguished(cls, root):
 
     def _get_target_cls(self):
         # We may have root folders that don&#39;t support the same set of fields as normal folders. If there is a mix of
-        # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
+        # both folder types in self.folders, raise an error, so we don&#39;t risk losing some fields in the query.
         from .base import Folder
         from .roots import RootOfHierarchy
 
@@ -5490,7 +5493,7 @@ def get_distinguished(cls, root):
         if depth is None:
             depth = self._get_default_folder_traversal_depth()
         if additional_fields is None:
-            # Default to all non-complex properties. Subfolders will always be of class Folder
+            # Default to all non-complex properties. Sub-folders will always be of class Folder
             additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
         else:
             for f in additional_fields:
@@ -5823,7 +5826,7 @@ def find_folders(
     if depth is None:
         depth = self._get_default_folder_traversal_depth()
     if additional_fields is None:
-        # Default to all non-complex properties. Subfolders will always be of class Folder
+        # Default to all non-complex properties. Sub-folders will always be of class Folder
         additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
     else:
         for f in additional_fields:
@@ -6433,13 +6436,13 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 <span>(</span><span>folder_collection)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A QuerySet-like class for finding subfolders of a folder collection.</p></div>
+<div class="desc"><p>A QuerySet-like class for finding sub-folders of a folder collection.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FolderQuerySet:
-    &#34;&#34;&#34;A QuerySet-like class for finding subfolders of a folder collection.&#34;&#34;&#34;
+    &#34;&#34;&#34;A QuerySet-like class for finding sub-folders of a folder collection.&#34;&#34;&#34;
 
     def __init__(self, folder_collection):
         from .collections import FolderCollection
@@ -6466,7 +6469,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
         from .base import Folder
 
-        # Subfolders will always be of class Folder
+        # Sub-folders will always be of class Folder
         all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
         all_fields.update(Folder.attribute_fields())
         only_fields = []
@@ -6533,7 +6536,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         from .collections import FolderCollection
 
         if self.only_fields is None:
-            # Subfolders will always be of class Folder
+            # Sub-folders will always be of class Folder
             non_complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=False)
             complex_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=True)
         else:
@@ -6541,7 +6544,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
             complex_fields = {f for f in self.only_fields if f.field.is_complex}
 
         # First, fetch all non-complex fields using FindFolder. We do this because some folders do not support
-        # GetFolder but we still want to get as much information as possible.
+        # GetFolder, but we still want to get as much information as possible.
         folders = self.folder_collection.find_folders(q=self.q, depth=self._depth, additional_fields=non_complex_fields)
         if not complex_fields:
             yield from folders
@@ -6683,7 +6686,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
     &#34;&#34;&#34;Restrict the fields returned. &#39;name&#39; and &#39;folder_class&#39; are always returned.&#34;&#34;&#34;
     from .base import Folder
 
-    # Subfolders will always be of class Folder
+    # Sub-folders will always be of class Folder
     all_fields = self.folder_collection.get_folder_fields(target_cls=Folder, is_complex=None)
     all_fields.update(Folder.attribute_fields())
     only_fields = []
@@ -6722,6 +6725,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6779,20 +6783,21 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FreebusyData(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class FreebusyData(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Freebusy Data&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6850,7 +6855,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Friends(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class Friends(NonDeletableFolderMixIn, Contacts):
     CONTAINER_CLASS = &#34;IPF.Note&#34;
 
     LOCALIZED_NAMES = {
@@ -6859,7 +6864,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -6867,6 +6872,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6928,7 +6934,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GALContacts(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class GALContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINER_CLASS = &#34;IPF.Contact.GalContacts&#34;
 
@@ -6938,7 +6944,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -6946,6 +6952,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7011,7 +7018,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GraphAnalytics(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class GraphAnalytics(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.StoreItem.GraphAnalytics&#34;
     LOCALIZED_NAMES = {
         None: (&#34;GraphAnalytics&#34;,),
@@ -7019,13 +7026,14 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7101,6 +7109,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7190,6 +7199,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7264,6 +7274,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7349,6 +7360,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7423,6 +7435,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7484,20 +7497,21 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Location(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Location(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Location&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7555,20 +7569,21 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MailboxAssociations(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class MailboxAssociations(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;MailboxAssociations&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7638,6 +7653,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -7726,6 +7742,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7801,6 +7818,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7866,7 +7884,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MyContactsExtended(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class MyContactsExtended(NonDeletableFolderMixIn, Contacts):
     CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
         None: (&#34;MyContactsExtended&#34;,),
@@ -7874,7 +7892,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -7882,6 +7900,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7933,8 +7952,8 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </li>
 </ul>
 </dd>
-<dt id="exchangelib.folders.NonDeletableFolderMixin"><code class="flex name class">
-<span>class <span class="ident">NonDeletableFolderMixin</span></span>
+<dt id="exchangelib.folders.NonDeletableFolderMixIn"><code class="flex name class">
+<span>class <span class="ident">NonDeletableFolderMixIn</span></span>
 </code></dt>
 <dd>
 <div class="desc"><p>A mixin for non-wellknown folders than that are not deletable.</p></div>
@@ -7942,7 +7961,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NonDeletableFolderMixin:
+<pre><code class="python">class NonDeletableFolderMixIn:
     &#34;&#34;&#34;A mixin for non-wellknown folders than that are not deletable.&#34;&#34;&#34;
 
     @property
@@ -7991,7 +8010,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="exchangelib.folders.NonDeletableFolderMixin.is_deletable"><code class="name">var <span class="ident">is_deletable</span></code></dt>
+<dt id="exchangelib.folders.NonDeletableFolderMixIn.is_deletable"><code class="name">var <span class="ident">is_deletable</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -8031,6 +8050,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8096,7 +8116,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
@@ -8105,7 +8125,7 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -8113,6 +8133,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8202,6 +8223,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8263,7 +8285,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ParkedMessages(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class ParkedMessages(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = None
     LOCALIZED_NAMES = {
         None: (&#34;ParkedMessages&#34;,),
@@ -8271,13 +8293,14 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8339,7 +8362,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PassThroughSearchResults(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class PassThroughSearchResults(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.StoreItem.PassThroughSearchResults&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Pass-Through Search Results&#34;,),
@@ -8347,13 +8370,14 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8415,7 +8439,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PdpProfileV2Secured(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class PdpProfileV2Secured(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.StoreItem.PdpProfileSecured&#34;
     LOCALIZED_NAMES = {
         None: (&#34;PdpProfileV2Secured&#34;,),
@@ -8423,13 +8447,14 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8491,7 +8516,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixin, Contacts):
+<pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
     CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
@@ -8500,7 +8525,7 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
@@ -8508,6 +8533,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8586,6 +8612,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8642,13 +8669,13 @@ def is_deletable(self):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The root of the public folders hierarchy. Not available on all mailboxes.</p></div>
+<div class="desc"><p>The root of the public folder hierarchy. Not available on all mailboxes.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PublicFoldersRoot(RootOfHierarchy):
-    &#34;&#34;&#34;The root of the public folders hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
+    &#34;&#34;&#34;The root of the public folder hierarchy. Not available on all mailboxes.&#34;&#34;&#34;
 
     DISTINGUISHED_FOLDER_ID = &#34;publicfoldersroot&#34;
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
@@ -8698,6 +8725,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8828,6 +8856,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8893,7 +8922,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RSSFeeds(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class RSSFeeds(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.Note.OutlookHomepage&#34;
     LOCALIZED_NAMES = {
         None: (&#34;RSS Feeds&#34;,),
@@ -8901,13 +8930,14 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -8985,6 +9015,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9067,6 +9098,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9141,6 +9173,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9215,6 +9248,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9289,6 +9323,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9361,6 +9396,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9418,7 +9454,7 @@ def is_deletable(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Reminders(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Reminders(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;Outlook.Reminder&#34;
     LOCALIZED_NAMES = {
         &#34;da_DK&#34;: (&#34;Påmindelser&#34;,),
@@ -9426,13 +9462,14 @@ def is_deletable(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9560,6 +9597,7 @@ def is_deletable(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -9660,7 +9698,7 @@ def tois(self):
 
     __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
 
-    # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
+    # A special folder that acts as the top of a folder hierarchy. Finds and caches sub-folders at arbitrary depth.
     def __init__(self, **kwargs):
         self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
@@ -9771,8 +9809,8 @@ def tois(self):
             return self._subfolders
 
         with self._subfolders_lock:
-            # Map root, and all subfolders of root, at arbitrary depth by folder ID. First get distinguished folders,
-            # so we are sure to apply the correct Folder class, then fetch all subfolders of this root.
+            # Map root, and all sub-folders of root, at arbitrary depth by folder ID. First get distinguished folders,
+            # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
                 cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
@@ -9853,6 +9891,7 @@ def tois(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -10129,20 +10168,21 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Schedule(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Schedule(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Schedule&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10212,6 +10252,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10293,6 +10334,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10367,6 +10409,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10428,7 +10471,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Sharing(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Sharing(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.Note&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Sharing&#34;,),
@@ -10436,13 +10479,14 @@ folder was found, try as best we can to return the default folder of type 'folde
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10504,20 +10548,21 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Shortcuts(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Shortcuts(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Shortcuts&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10575,7 +10620,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Signal(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Signal(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.StoreItem.Signal&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Signal&#34;,),
@@ -10583,13 +10628,14 @@ folder was found, try as best we can to return the default folder of type 'folde
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10722,6 +10768,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10783,7 +10830,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SmsAndChatsSync(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class SmsAndChatsSync(NonDeletableFolderMixIn, Folder):
     CONTAINER_CLASS = &#34;IPF.SmsAndChatsSync&#34;
     LOCALIZED_NAMES = {
         None: (&#34;SmsAndChatsSync&#34;,),
@@ -10791,13 +10838,14 @@ folder was found, try as best we can to return the default folder of type 'folde
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10859,20 +10907,21 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SpoolerQueue(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class SpoolerQueue(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Spooler Queue&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -10941,6 +10990,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11012,6 +11062,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11077,7 +11128,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class System(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class System(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;System&#34;,),
     }
@@ -11085,13 +11136,14 @@ folder was found, try as best we can to return the default folder of type 'folde
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11178,6 +11230,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11247,20 +11300,21 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TemporarySaves(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class TemporarySaves(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;TemporarySaves&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11336,6 +11390,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11405,20 +11460,21 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Views(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class Views(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Views&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11492,6 +11548,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11570,6 +11627,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -11659,20 +11717,21 @@ folder was found, try as best we can to return the default folder of type 'folde
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class WorkingSet(NonDeletableFolderMixin, Folder):
+<pre><code class="python">class WorkingSet(NonDeletableFolderMixIn, Folder):
     LOCALIZED_NAMES = {
         None: (&#34;Working Set&#34;,),
     }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixin" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolderMixIn" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></li>
 <li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
 <li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
 <li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -11893,9 +11952,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.BaseFolder.subscribe_to_pull" href="#exchangelib.folders.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.subscribe_to_push" href="#exchangelib.folders.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.subscribe_to_streaming" href="#exchangelib.folders.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
-<li><code><a title="exchangelib.folders.BaseFolder.supported_from" href="#exchangelib.folders.BaseFolder.supported_from">supported_from</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.supported_item_models" href="#exchangelib.folders.BaseFolder.supported_item_models">supported_item_models</a></code></li>
-<li><code><a title="exchangelib.folders.BaseFolder.supports_version" href="#exchangelib.folders.BaseFolder.supports_version">supports_version</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.sync_hierarchy" href="#exchangelib.folders.BaseFolder.sync_hierarchy">sync_hierarchy</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.sync_items" href="#exchangelib.folders.BaseFolder.sync_items">sync_items</a></code></li>
 <li><code><a title="exchangelib.folders.BaseFolder.test_access" href="#exchangelib.folders.BaseFolder.test_access">test_access</a></code></li>
@@ -12222,9 +12279,9 @@ folder was found, try as best we can to return the default folder of type 'folde
 </ul>
 </li>
 <li>
-<h4><code><a title="exchangelib.folders.NonDeletableFolderMixin" href="#exchangelib.folders.NonDeletableFolderMixin">NonDeletableFolderMixin</a></code></h4>
+<h4><code><a title="exchangelib.folders.NonDeletableFolderMixIn" href="#exchangelib.folders.NonDeletableFolderMixIn">NonDeletableFolderMixIn</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.NonDeletableFolderMixin.is_deletable" href="#exchangelib.folders.NonDeletableFolderMixin.is_deletable">is_deletable</a></code></li>
+<li><code><a title="exchangelib.folders.NonDeletableFolderMixIn.is_deletable" href="#exchangelib.folders.NonDeletableFolderMixIn.is_deletable">is_deletable</a></code></li>
 </ul>
 </li>
 <li>

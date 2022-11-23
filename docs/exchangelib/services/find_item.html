@@ -39,7 +39,6 @@ class FindItem(EWSPagingService):
     SERVICE_NAME = &#34;FindItem&#34;
     element_container_name = f&#34;{{{TNS}}}Items&#34;
     paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -166,7 +165,6 @@ class FindItem(EWSPagingService):
     SERVICE_NAME = &#34;FindItem&#34;
     element_container_name = f&#34;{{{TNS}}}Items&#34;
     paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -272,6 +270,7 @@ class FindItem(EWSPagingService):
 <li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -284,10 +283,6 @@ class FindItem(EWSPagingService):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.find_item.FindItem.paging_container_name"><code class="name">var <span class="ident">paging_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.find_item.FindItem.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -422,6 +417,8 @@ class FindItem(EWSPagingService):
 <li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -450,7 +447,6 @@ class FindItem(EWSPagingService):
 <li><code><a title="exchangelib.services.find_item.FindItem.element_container_name" href="#exchangelib.services.find_item.FindItem.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.find_item.FindItem.get_payload" href="#exchangelib.services.find_item.FindItem.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.find_item.FindItem.paging_container_name" href="#exchangelib.services.find_item.FindItem.paging_container_name">paging_container_name</a></code></li>
-<li><code><a title="exchangelib.services.find_item.FindItem.supports_paging" href="#exchangelib.services.find_item.FindItem.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 </ul>

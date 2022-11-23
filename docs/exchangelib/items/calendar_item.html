@@ -172,7 +172,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on a recurring master.
 
@@ -188,7 +188,7 @@ class CalendarItem(Item, AcceptDeclineMixIn):
 
     def recurring_master(self):
         &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on an occurrence of a recurring master.
 
@@ -322,7 +322,7 @@ class BaseMeetingItem(Item, metaclass=EWSMeta):
         Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
         when you send a calendar item to attendees; they are not explicitly created.
 
-    Therefore BaseMeetingItem inherits from  EWSElement has no save() or send() method
+    Therefore, BaseMeetingItem inherits from  EWSElement has no save() or send() method
     &#34;&#34;&#34;
 
     associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri=&#34;meeting:AssociatedCalendarItemId&#34;)
@@ -635,7 +635,7 @@ we use folder.account.</p></div>
 <p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/responsecode</a>
 Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
 when you send a calendar item to attendees; they are not explicitly created.</p>
-<p>Therefore BaseMeetingItem inherits from
+<p>Therefore, BaseMeetingItem inherits from
 EWSElement has no save() or send() method</p>
 <p>Pick out optional 'account' and 'folder' kwargs, and pass the rest to the parent class.</p>
 <p>:param kwargs:
@@ -653,7 +653,7 @@ we use folder.account.</p></div>
         Certain types are created as a side effect of doing something else. Meeting messages, for example, are created
         when you send a calendar item to attendees; they are not explicitly created.
 
-    Therefore BaseMeetingItem inherits from  EWSElement has no save() or send() method
+    Therefore, BaseMeetingItem inherits from  EWSElement has no save() or send() method
     &#34;&#34;&#34;
 
     associated_calendar_item_id = AssociatedCalendarItemIdField(field_uri=&#34;meeting:AssociatedCalendarItemId&#34;)
@@ -1114,7 +1114,7 @@ we use folder.account.</p></div>
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on a recurring master.
 
@@ -1130,7 +1130,7 @@ we use folder.account.</p></div>
 
     def recurring_master(self):
         &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on an occurrence of a recurring master.
 
@@ -1573,7 +1573,7 @@ def timezone_fields(cls):
 </code></dt>
 <dd>
 <div class="desc"><p>Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-Call refresh() on the item do do so.</p>
+Call refresh() on the item to do so.</p>
 <p>Only call this method on a recurring master.</p>
 <p>:param index: The index, which is 1-based</p>
 <p>:return The occurrence</p></div>
@@ -1583,7 +1583,7 @@ Call refresh() on the item do do so.</p>
 </summary>
 <pre><code class="python">def occurrence(self, index):
     &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-    Call refresh() on the item do do so.
+    Call refresh() on the item to do so.
 
     Only call this method on a recurring master.
 
@@ -1603,7 +1603,7 @@ Call refresh() on the item do do so.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-Call refresh() on the item do do so.</p>
+Call refresh() on the item to do so.</p>
 <p>Only call this method on an occurrence of a recurring master.</p>
 <p>:return: The master occurrence</p></div>
 <details class="source">
@@ -1612,7 +1612,7 @@ Call refresh() on the item do do so.</p>
 </summary>
 <pre><code class="python">def recurring_master(self):
     &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-    Call refresh() on the item do do so.
+    Call refresh() on the item to do so.
 
     Only call this method on an occurrence of a recurring master.
 

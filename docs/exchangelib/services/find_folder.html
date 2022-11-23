@@ -41,14 +41,13 @@ class FindFolder(EWSPagingService):
     SERVICE_NAME = &#34;FindFolder&#34;
     element_container_name = f&#34;{{{TNS}}}Folders&#34;
     paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.root = None  # A hack to communicate parsing args to _elems_to_objs()
 
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
-        &#34;&#34;&#34;Find subfolders of a folder.
+        &#34;&#34;&#34;Find sub-folders of a folder.
 
         :param folders: the folders to act on
         :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
@@ -134,14 +133,13 @@ class FindFolder(EWSPagingService):
     SERVICE_NAME = &#34;FindFolder&#34;
     element_container_name = f&#34;{{{TNS}}}Folders&#34;
     paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.root = None  # A hack to communicate parsing args to _elems_to_objs()
 
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
-        &#34;&#34;&#34;Find subfolders of a folder.
+        &#34;&#34;&#34;Find sub-folders of a folder.
 
         :param folders: the folders to act on
         :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
@@ -206,6 +204,7 @@ class FindFolder(EWSPagingService):
 <li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -221,10 +220,6 @@ class FindFolder(EWSPagingService):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.find_folder.FindFolder.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -232,7 +227,7 @@ class FindFolder(EWSPagingService):
 <span>def <span class="ident">call</span></span>(<span>self, folders, additional_fields, restriction, shape, depth, max_items, offset)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Find subfolders of a folder.</p>
+<div class="desc"><p>Find sub-folders of a folder.</p>
 <p>:param folders: the folders to act on
 :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
 :param restriction: Restriction object that defines the filters for the query
@@ -246,7 +241,7 @@ class FindFolder(EWSPagingService):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
-    &#34;&#34;&#34;Find subfolders of a folder.
+    &#34;&#34;&#34;Find sub-folders of a folder.
 
     :param folders: the folders to act on
     :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
@@ -323,6 +318,8 @@ class FindFolder(EWSPagingService):
 <li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -351,7 +348,6 @@ class FindFolder(EWSPagingService):
 <li><code><a title="exchangelib.services.find_folder.FindFolder.element_container_name" href="#exchangelib.services.find_folder.FindFolder.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.find_folder.FindFolder.get_payload" href="#exchangelib.services.find_folder.FindFolder.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.find_folder.FindFolder.paging_container_name" href="#exchangelib.services.find_folder.FindFolder.paging_container_name">paging_container_name</a></code></li>
-<li><code><a title="exchangelib.services.find_folder.FindFolder.supports_paging" href="#exchangelib.services.find_folder.FindFolder.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 </ul>

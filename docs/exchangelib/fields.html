@@ -45,7 +45,7 @@ from .util import (
     value_to_xml_text,
     xml_text_to_value,
 )
-from .version import EXCHANGE_2013, Build
+from .version import EXCHANGE_2013, Build, SupportedVersionInstanceMixIn
 
 log = logging.getLogger(__name__)
 
@@ -297,7 +297,7 @@ class FieldOrder:
         return field_order
 
 
-class Field(metaclass=abc.ABCMeta):
+class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Holds information related to an item field.&#34;&#34;&#34;
 
     value_cls = None
@@ -320,8 +320,8 @@ class Field(metaclass=abc.ABCMeta):
         is_searchable=True,
         is_attribute=False,
         default=None,
-        supported_from=None,
-        deprecated_from=None,
+        *args,
+        **kwargs,
     ):
         self.name = name  # Usually set by the EWSMeta metaclass
         self.default = default  # Default value if none is given
@@ -337,16 +337,7 @@ class Field(metaclass=abc.ABCMeta):
         self.is_searchable = is_searchable
         # When true, this field is treated as an XML attribute instead of an element
         self.is_attribute = is_attribute
-        # The Exchange build when this field was introduced. When talking with versions prior to this version,
-        # we will ignore this field.
-        if supported_from is not None and not isinstance(supported_from, Build):
-            raise InvalidTypeError(&#34;supported_from&#34;, supported_from, Build)
-        self.supported_from = supported_from
-        # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
-        # we will ignore this field.
-        if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise InvalidTypeError(&#34;deprecated_from&#34;, deprecated_from, Build)
-        self.deprecated_from = deprecated_from
+        super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
@@ -379,14 +370,6 @@ class Field(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def to_xml(self, value, version):
         &#34;&#34;&#34;Convert this field to an XML element&#34;&#34;&#34;
-
-    def supports_version(self, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if self.supported_from and version.build &lt; self.supported_from:
-            return False
-        if self.deprecated_from and version.build &gt;= self.deprecated_from:
-            return False
-        return True
 
     def __eq__(self, other):
         return hash(self) == hash(other)
@@ -930,18 +913,12 @@ class CultureField(CharField):
     &#34;&#34;&#34;Helper to mark strings that are # RFC 1766 culture values.&#34;&#34;&#34;
 
 
-class Choice:
+class Choice(SupportedVersionInstanceMixIn):
     &#34;&#34;&#34;Implement versioned choices for the ChoiceField field.&#34;&#34;&#34;
 
-    def __init__(self, value, supported_from=None):
+    def __init__(self, value, *args, **kwargs):
         self.value = value
-        self.supported_from = supported_from
-
-    def supports_version(self, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if not self.supported_from:
-            return True
-        return version.build &gt;= self.supported_from
+        super().__init__(*args, **kwargs)
 
 
 class ChoiceField(CharField):
@@ -962,7 +939,7 @@ class ChoiceField(CharField):
                 return value
             if value in valid_choices:
                 raise InvalidChoiceForVersion(
-                    f&#34;Choice {self.name!r} only supports EWS builds from {self.supported_from or &#39;*&#39;} to &#34;
+                    f&#34;Choice {self.name!r} only supports server versions from {self.supported_from or &#39;*&#39;} to &#34;
                     f&#34;{self.deprecated_from or &#39;*&#39;} (server has {version})&#34;
                 )
         else:
@@ -1581,7 +1558,7 @@ class IdElementField(EWSElementField):
 
 
 class TypeValueField(FieldURIField):
-    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.&#34;&#34;&#34;
+    &#34;&#34;&#34;This field type has no value_cls because values may have many types.&#34;&#34;&#34;
 
     TYPES_MAP = {
         &#34;Boolean&#34;: bool,
@@ -1946,6 +1923,7 @@ label and SubField object.</p></div>
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2008,6 +1986,7 @@ label and SubField object.</p></div>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2065,6 +2044,7 @@ label and SubField object.</p></div>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2109,6 +2089,7 @@ label and SubField object.</p></div>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -2168,6 +2149,7 @@ label and SubField object.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2245,6 +2227,7 @@ bytes() -&gt; empty bytes object</p>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2311,6 +2294,7 @@ bytes() -&gt; empty bytes object</p>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2378,6 +2362,7 @@ bytes() -&gt; empty bytes object</p>
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -2427,6 +2412,7 @@ bytes() -&gt; empty bytes object</p>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2482,6 +2468,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2527,6 +2514,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2607,6 +2595,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2646,7 +2635,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 </dd>
 <dt id="exchangelib.fields.Choice"><code class="flex name class">
 <span>class <span class="ident">Choice</span></span>
-<span>(</span><span>value, supported_from=None)</span>
+<span>(</span><span>value, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Implement versioned choices for the ChoiceField field.</p></div>
@@ -2654,38 +2643,17 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Choice:
+<pre><code class="python">class Choice(SupportedVersionInstanceMixIn):
     &#34;&#34;&#34;Implement versioned choices for the ChoiceField field.&#34;&#34;&#34;
 
-    def __init__(self, value, supported_from=None):
+    def __init__(self, value, *args, **kwargs):
         self.value = value
-        self.supported_from = supported_from
-
-    def supports_version(self, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if not self.supported_from:
-            return True
-        return version.build &gt;= self.supported_from</code></pre>
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.Choice.supports_version"><code class="name flex">
-<span>def <span class="ident">supports_version</span></span>(<span>self, version)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def supports_version(self, version):
-    # &#39;version&#39; is a Version instance, for convenience by callers
-    if not self.supported_from:
-        return True
-    return version.build &gt;= self.supported_from</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
+</ul>
 </dd>
 <dt id="exchangelib.fields.ChoiceField"><code class="flex name class">
 <span>class <span class="ident">ChoiceField</span></span>
@@ -2715,7 +2683,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
                 return value
             if value in valid_choices:
                 raise InvalidChoiceForVersion(
-                    f&#34;Choice {self.name!r} only supports EWS builds from {self.supported_from or &#39;*&#39;} to &#34;
+                    f&#34;Choice {self.name!r} only supports server versions from {self.supported_from or &#39;*&#39;} to &#34;
                     f&#34;{self.deprecated_from or &#39;*&#39;} (server has {version})&#34;
                 )
         else:
@@ -2732,6 +2700,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2761,7 +2730,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
             return value
         if value in valid_choices:
             raise InvalidChoiceForVersion(
-                f&#34;Choice {self.name!r} only supports EWS builds from {self.supported_from or &#39;*&#39;} to &#34;
+                f&#34;Choice {self.name!r} only supports server versions from {self.supported_from or &#39;*&#39;} to &#34;
                 f&#34;{self.deprecated_from or &#39;*&#39;} (server has {version})&#34;
             )
     else:
@@ -2814,6 +2783,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2851,6 +2821,7 @@ The class bool is a subclass of the class int, and cannot be subclassed.</p></di
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -2942,6 +2913,7 @@ the recurring item is a task or a calendar item.</p>
 <li><a title="exchangelib.fields.DateTimeField" href="#exchangelib.fields.DateTimeField">DateTimeField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -3021,6 +2993,7 @@ the recurring item is a task or a calendar item.</p>
 <li><a title="exchangelib.fields.DateField" href="#exchangelib.fields.DateField">DateField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -3096,6 +3069,7 @@ the recurring item is a task or a calendar item.</p>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3159,6 +3133,7 @@ the recurring item is a task or a calendar item.</p>
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3221,6 +3196,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3328,6 +3304,7 @@ dict(one=1, two=2)</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3396,6 +3373,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3454,6 +3432,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3488,6 +3467,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3518,6 +3498,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3572,6 +3553,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3648,6 +3630,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3661,7 +3644,7 @@ def value_cls(self):
 </dd>
 <dt id="exchangelib.fields.EmailSubField"><code class="flex name class">
 <span>class <span class="ident">EmailSubField</span></span>
-<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A field to hold the value on an SingleFieldIndexedElement.</p></div>
@@ -3681,6 +3664,7 @@ def value_cls(self):
 <ul class="hlist">
 <li><a title="exchangelib.fields.SubField" href="#exchangelib.fields.SubField">SubField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3719,6 +3703,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -3804,6 +3789,7 @@ stored internally as integers but output in XML as strings.</p></div>
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3890,6 +3876,7 @@ stored internally as integers but output in XML as strings.</p></div>
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3977,6 +3964,7 @@ stored internally as integers but output in XML as strings.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -4065,6 +4053,7 @@ stored internally as integers but output in XML as strings.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.ExtendedPropertyField" href="#exchangelib.fields.ExtendedPropertyField">ExtendedPropertyField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4085,7 +4074,7 @@ stored internally as integers but output in XML as strings.</p></div>
 </dd>
 <dt id="exchangelib.fields.Field"><code class="flex name class">
 <span>class <span class="ident">Field</span></span>
-<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Holds information related to an item field.</p></div>
@@ -4093,7 +4082,7 @@ stored internally as integers but output in XML as strings.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Field(metaclass=abc.ABCMeta):
+<pre><code class="python">class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Holds information related to an item field.&#34;&#34;&#34;
 
     value_cls = None
@@ -4116,8 +4105,8 @@ stored internally as integers but output in XML as strings.</p></div>
         is_searchable=True,
         is_attribute=False,
         default=None,
-        supported_from=None,
-        deprecated_from=None,
+        *args,
+        **kwargs,
     ):
         self.name = name  # Usually set by the EWSMeta metaclass
         self.default = default  # Default value if none is given
@@ -4133,16 +4122,7 @@ stored internally as integers but output in XML as strings.</p></div>
         self.is_searchable = is_searchable
         # When true, this field is treated as an XML attribute instead of an element
         self.is_attribute = is_attribute
-        # The Exchange build when this field was introduced. When talking with versions prior to this version,
-        # we will ignore this field.
-        if supported_from is not None and not isinstance(supported_from, Build):
-            raise InvalidTypeError(&#34;supported_from&#34;, supported_from, Build)
-        self.supported_from = supported_from
-        # The Exchange build when this field was deprecated. When talking with versions at or later than this version,
-        # we will ignore this field.
-        if deprecated_from is not None and not isinstance(deprecated_from, Build):
-            raise InvalidTypeError(&#34;deprecated_from&#34;, deprecated_from, Build)
-        self.deprecated_from = deprecated_from
+        super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
@@ -4176,14 +4156,6 @@ stored internally as integers but output in XML as strings.</p></div>
     def to_xml(self, value, version):
         &#34;&#34;&#34;Convert this field to an XML element&#34;&#34;&#34;
 
-    def supports_version(self, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if self.supported_from and version.build &lt; self.supported_from:
-            return False
-        if self.deprecated_from and version.build &gt;= self.deprecated_from:
-            return False
-        return True
-
     def __eq__(self, other):
         return hash(self) == hash(other)
 
@@ -4197,6 +4169,10 @@ stored internally as integers but output in XML as strings.</p></div>
         )
         return f&#34;{self.__class__.__name__}({args_str})&#34;</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.fields.ExtendedPropertyField" href="#exchangelib.fields.ExtendedPropertyField">ExtendedPropertyField</a></li>
@@ -4266,24 +4242,6 @@ stored internally as integers but output in XML as strings.</p></div>
 <pre><code class="python">@abc.abstractmethod
 def from_xml(self, elem, account):
     &#34;&#34;&#34;Read a value from the given element&#34;&#34;&#34;</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.fields.Field.supports_version"><code class="name flex">
-<span>def <span class="ident">supports_version</span></span>(<span>self, version)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def supports_version(self, version):
-    # &#39;version&#39; is a Version instance, for convenience by callers
-    if self.supported_from and version.build &lt; self.supported_from:
-        return False
-    if self.deprecated_from and version.build &gt;= self.deprecated_from:
-        return False
-    return True</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.fields.Field.to_xml"><code class="name flex">
@@ -4678,6 +4636,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -4779,6 +4738,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -4852,6 +4812,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4891,6 +4852,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -4932,6 +4894,7 @@ but we can assume 512 bytes in practice. See
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -4981,6 +4944,7 @@ but we can assume 512 bytes in practice. See
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -5061,6 +5025,7 @@ but we can assume 512 bytes in practice. See
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -5221,6 +5186,7 @@ may additionally be a label for searching, filtering and limiting fields. In tha
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -5276,6 +5242,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -5311,6 +5278,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -5350,6 +5318,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -5409,6 +5378,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -5475,6 +5445,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5517,6 +5488,7 @@ def value_cls(self):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -5551,6 +5523,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.Base64Field" href="#exchangelib.fields.Base64Field">Base64Field</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -5610,6 +5583,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <ul class="hlist">
 <li><a title="exchangelib.fields.SubField" href="#exchangelib.fields.SubField">SubField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -5684,6 +5658,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -5725,6 +5700,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5761,6 +5737,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.BooleanField" href="#exchangelib.fields.BooleanField">BooleanField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -5797,6 +5774,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5839,6 +5817,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5880,6 +5859,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -5919,6 +5899,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5973,6 +5954,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6022,6 +6004,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -6060,6 +6043,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -6094,6 +6078,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -6132,6 +6117,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6177,6 +6163,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6218,6 +6205,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -6253,6 +6241,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -6266,7 +6255,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 </dd>
 <dt id="exchangelib.fields.SubField"><code class="flex name class">
 <span>class <span class="ident">SubField</span></span>
-<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, supported_from=None, deprecated_from=None)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A field to hold the value on an IndexedElement.</p></div>
@@ -6304,6 +6293,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -6404,6 +6394,7 @@ def field_uri_xml(field_uri, label):
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6442,6 +6433,7 @@ def field_uri_xml(field_uri, label):
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -6522,6 +6514,7 @@ errors defaults to 'strict'.</p></div>
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -6605,6 +6598,7 @@ errors defaults to 'strict'.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6676,6 +6670,7 @@ Arguments may be integers or floats, and may be positive or negative.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6744,12 +6739,13 @@ a tzinfo subclass. The remaining arguments may be ints.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.fields.TimeZoneField.value_cls"><code class="name">var <span class="ident">value_cls</span></code></dt>
 <dd>
-<div class="desc"><p>Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
+<div class="desc"><p>Represents a time zone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
 services.GetServerTimeZones.</p></div>
 </dd>
 </dl>
@@ -6813,6 +6809,7 @@ services.GetServerTimeZones.</p></div>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -6829,13 +6826,13 @@ services.GetServerTimeZones.</p></div>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This field type has no value_cls because values may have many different types.</p></div>
+<div class="desc"><p>This field type has no value_cls because values may have many types.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TypeValueField(FieldURIField):
-    &#34;&#34;&#34;This field type has no value_cls because values may have many different types.&#34;&#34;&#34;
+    &#34;&#34;&#34;This field type has no value_cls because values may have many types.&#34;&#34;&#34;
 
     TYPES_MAP = {
         &#34;Boolean&#34;: bool,
@@ -6921,6 +6918,7 @@ services.GetServerTimeZones.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7028,6 +7026,7 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -7061,6 +7060,7 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <li><a title="exchangelib.fields.TextField" href="#exchangelib.fields.TextField">TextField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -7114,6 +7114,7 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <li><a title="exchangelib.fields.IntegerField" href="#exchangelib.fields.IntegerField">IntegerField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
 <li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -7241,9 +7242,6 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.Choice" href="#exchangelib.fields.Choice">Choice</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.fields.Choice.supports_version" href="#exchangelib.fields.Choice.supports_version">supports_version</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.ChoiceField" href="#exchangelib.fields.ChoiceField">ChoiceField</a></code></h4>
@@ -7365,7 +7363,6 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <li><code><a title="exchangelib.fields.Field.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.Field.is_complex" href="#exchangelib.fields.Field.is_complex">is_complex</a></code></li>
 <li><code><a title="exchangelib.fields.Field.is_list" href="#exchangelib.fields.Field.is_list">is_list</a></code></li>
-<li><code><a title="exchangelib.fields.Field.supports_version" href="#exchangelib.fields.Field.supports_version">supports_version</a></code></li>
 <li><code><a title="exchangelib.fields.Field.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.fields.Field.value_cls" href="#exchangelib.fields.Field.value_cls">value_cls</a></code></li>
 </ul>

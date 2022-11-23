@@ -31,12 +31,12 @@ import logging
 
 from ..properties import FolderId
 from ..util import MNS, TNS, create_element, xml_text_to_value
-from .common import EWSPagingService, add_xml_child, folder_ids_element, parse_folder_elem, shape_element
+from .common import EWSAccountService, add_xml_child, folder_ids_element, parse_folder_elem, shape_element
 
 log = logging.getLogger(__name__)
 
 
-class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
+class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for SyncFolderHierarchy and SyncFolderItems.&#34;&#34;&#34;
 
     element_container_name = f&#34;{{{MNS}}}Changes&#34;
@@ -142,7 +142,7 @@ class SyncFolderHierarchy(SyncFolder):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SyncFolder(EWSPagingService, metaclass=abc.ABCMeta):
+<pre><code class="python">class SyncFolder(EWSAccountService, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for SyncFolderHierarchy and SyncFolderItems.&#34;&#34;&#34;
 
     element_container_name = f&#34;{{{MNS}}}Changes&#34;
@@ -186,9 +186,9 @@ class SyncFolderHierarchy(SyncFolder):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -232,12 +232,14 @@ class SyncFolderHierarchy(SyncFolder):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></b></code>:
+<li><code><b><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.services.common.EWSPagingService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -299,9 +301,9 @@ class SyncFolderHierarchy(SyncFolder):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
-<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -368,6 +370,8 @@ class SyncFolderHierarchy(SyncFolder):
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

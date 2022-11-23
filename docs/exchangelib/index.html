@@ -64,7 +64,7 @@ from .settings import OofSettings
 from .transport import BASIC, CBA, DIGEST, GSSAPI, NTLM, OAUTH2, SSPI
 from .version import Build, Version
 
-__version__ = &#34;4.8.0&#34;
+__version__ = &#34;4.9.0&#34;
 
 __all__ = [
     &#34;__version__&#34;,
@@ -289,7 +289,7 @@ login to a specific account …</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def discover(email, credentials=None, auth_type=None, retry_policy=None):
-    ad_response, protocol = Autodiscovery(email=email, credentials=credentials).discover()
+    ad_response, protocol = PoxAutodiscovery(email=email, credentials=credentials).discover()
     protocol.config.auth_typ = auth_type
     protocol.config.retry_policy = retry_policy
     return ad_response, protocol</code></pre>
@@ -363,7 +363,7 @@ we use folder.account.</p></div>
 :param access_type: The access type granted to 'credentials' for this account. Valid options are 'delegate'
 and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.
 :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-(Default value = False)
+Can also be set to "pox" or "soap" to choose the autodiscover implementation (Default value = False)
 :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
 :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
 (Default value = None)
@@ -377,6 +377,8 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 </summary>
 <pre><code class="python">class Account:
     &#34;&#34;&#34;Models an Exchange server user account.&#34;&#34;&#34;
+
+    DEFAULT_DISCOVERY_CLS = PoxAutodiscovery
 
     def __init__(
         self,
@@ -396,7 +398,7 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         :param access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
             and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
         :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-            (Default value = False)
+            Can also be set to &#34;pox&#34; or &#34;soap&#34; to choose the autodiscover implementation (Default value = False)
         :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
         :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
@@ -443,7 +445,12 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                     credentials = config.credentials
             else:
                 auth_type, retry_policy, version = None, None, None
-            self.ad_response, self.protocol = Autodiscovery(
+            discovery_cls = {
+                &#34;pox&#34;: PoxAutodiscovery,
+                &#34;soap&#34;: SoapAutodiscovery,
+                True: self.DEFAULT_DISCOVERY_CLS,
+            }[autodiscover]
+            self.ad_response, self.protocol = discovery_cls(
                 email=primary_smtp_address, credentials=credentials
             ).discover()
             # Let&#39;s not use the auth_package hint from the AD response. It could be incorrect and we can just guess.
@@ -1028,6 +1035,28 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             return f&#34;{self.primary_smtp_address} ({self.fullname})&#34;
         return self.primary_smtp_address</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.Account.DEFAULT_DISCOVERY_CLS"><code class="name">var <span class="ident">DEFAULT_DISCOVERY_CLS</span></code></dt>
+<dd>
+<div class="desc"><p>Autodiscover is a Microsoft protocol for automatically getting the endpoint of the Exchange server and other
+connection-related settings holding the email address using only the email address, and username and password of the
+user.</p>
+<p>For a description of the protocol implemented, see "Autodiscover for Exchange ActiveSync developers":</p>
+<p><a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/exchange-server-interoperability-guidance/hh352638%28v%3dexchg.140%29">https://docs.microsoft.com/en-us/previous-versions/office/developer/exchange-server-interoperability-guidance/hh352638%28v%3dexchg.140%29</a></p>
+<p>Descriptions of the steps from the article are provided in their respective methods in this class.</p>
+<p>For a description of how to handle autodiscover error messages, see:</p>
+<p><a href="https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/handling-autodiscover-error-messages">https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/handling-autodiscover-error-messages</a></p>
+<p>A tip from the article:
+The client can perform steps 1 through 4 in any order or in parallel to expedite the process, but it must wait for
+responses to finish at each step before proceeding. Given that many organizations prefer to use the URL in step 2 to
+set up the Autodiscover service, the client might try this step first.</p>
+<p>Another possibly newer resource which has not yet been attempted is "Outlook 2016 Implementation of Autodiscover":
+<a href="https://support.microsoft.com/en-us/help/3211279/outlook-2016-implementation-of-autodiscover">https://support.microsoft.com/en-us/help/3211279/outlook-2016-implementation-of-autodiscover</a></p>
+<p>WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
+implementation, start by doing an official test at <a href="https://testconnectivity.microsoft.com">https://testconnectivity.microsoft.com</a></p></div>
+</dd>
+</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.Account.admin_audit_logs"><code class="name">var <span class="ident">admin_audit_logs</span></code></dt>
@@ -2709,7 +2738,6 @@ account.upload([
 
     def __init__(self, config):
         self.config = config
-        self._api_version_hint = None
 
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
@@ -2723,6 +2751,10 @@ account.upload([
     @property
     def service_endpoint(self):
         return self.config.service_endpoint
+
+    @abc.abstractmethod
+    def get_auth_type(self):
+        &#34;&#34;&#34;Autodetect authentication type&#34;&#34;&#34;
 
     @property
     def auth_type(self):
@@ -2750,15 +2782,6 @@ account.upload([
     @property
     def server(self):
         return self.config.server
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else &#34;DUMMY&#34;
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -2877,11 +2900,12 @@ account.upload([
         self._session_pool.put(session, block=False)
 
     def close_session(self, session):
-        if isinstance(self.credentials, OAuth2Credentials) and not isinstance(
-            self.credentials, OAuth2AuthorizationCodeCredentials
+        if isinstance(self.credentials, BaseOAuth2Credentials) and isinstance(
+            self.credentials.client, BackendApplicationClient
         ):
-            # Reset token if client is of type BackendApplicationClient
-            self.credentials.access_token = None
+            # Reset access token
+            with self.credentials.lock:
+                self.credentials.access_token = None
         session.close()
         del session
 
@@ -2918,24 +2942,22 @@ account.upload([
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
-            with self.credentials.lock:
-                if isinstance(self.credentials, OAuth2Credentials):
+            if isinstance(self.credentials, BaseOAuth2Credentials):
+                with self.credentials.lock:
                     session = self.create_oauth2_session()
-                    # Keep track of the credentials used to create this session. If
-                    # and when we need to renew credentials (for example, refreshing
-                    # an OAuth access token), this lets us easily determine whether
-                    # the credentials have already been refreshed in another thread
-                    # by the time this session tries.
+                    # Keep track of the credentials used to create this session. If and when we need to renew
+                    # credentials (for example, refreshing an OAuth access token), this lets us easily determine whether
+                    # the credentials have already been refreshed in another thread by the time this session tries.
                     session.credentials_sig = self.credentials.sig()
+            else:
+                if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
+                    username = &#34;\\&#34; + self.credentials.username
                 else:
-                    if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
-                        username = &#34;\\&#34; + self.credentials.username
-                    else:
-                        username = self.credentials.username
-                    session = self.raw_session(self.service_endpoint)
-                    session.auth = get_auth_instance(
-                        auth_type=self.auth_type, username=username, password=self.credentials.password
-                    )
+                    username = self.credentials.username
+                session = self.raw_session(self.service_endpoint)
+                session.auth = get_auth_instance(
+                    auth_type=self.auth_type, username=username, password=self.credentials.password
+                )
 
         # Add some extra info
         session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
@@ -2944,40 +2966,10 @@ account.upload([
         return session
 
     def create_oauth2_session(self):
-        session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
-        token_params = {&#34;include_client_id&#34;: True}
-
-        if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-            token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
-            self.credentials.authorization_code = None  # We can only use the code once
-
-            if self.credentials.client_id and self.credentials.client_secret:
-                # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
-                # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
-                # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
-                # is working with a service that can provide it refreshed tokens on a limited basis).
-                session_params.update(
-                    {
-                        &#34;auto_refresh_kwargs&#34;: {
-                            &#34;client_id&#34;: self.credentials.client_id,
-                            &#34;client_secret&#34;: self.credentials.client_secret,
-                        },
-                        &#34;auto_refresh_url&#34;: self.credentials.token_url,
-                        &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
-                    }
-                )
-            client = WebApplicationClient(client_id=self.credentials.client_id)
-        elif isinstance(self.credentials, OAuth2LegacyCredentials):
-            client = LegacyApplicationClient(client_id=self.credentials.client_id)
-            token_params[&#34;username&#34;] = self.credentials.username
-            token_params[&#34;password&#34;] = self.credentials.password
-        else:
-            client = BackendApplicationClient(client_id=self.credentials.client_id)
-
         session = self.raw_session(
             self.service_endpoint,
-            oauth2_client=client,
-            oauth2_session_params=session_params,
+            oauth2_client=self.credentials.client,
+            oauth2_session_params=self.credentials.session_params(),
             oauth2_token_endpoint=self.credentials.token_url,
         )
         if not session.token:
@@ -2988,12 +2980,12 @@ account.upload([
                 client_secret=self.credentials.client_secret,
                 scope=self.credentials.scope,
                 timeout=self.TIMEOUT,
-                **token_params,
+                **self.credentials.token_params(),
             )
             # Allow the credentials object to update its copy of the new token, and give the application an opportunity
             # to cache it.
             self.credentials.on_token_auto_refreshed(token)
-        session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
+        session.auth = get_auth_instance(auth_type=OAUTH2, client=self.credentials.client)
 
         return session
 
@@ -3226,11 +3218,12 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close_session(self, session):
-    if isinstance(self.credentials, OAuth2Credentials) and not isinstance(
-        self.credentials, OAuth2AuthorizationCodeCredentials
+    if isinstance(self.credentials, BaseOAuth2Credentials) and isinstance(
+        self.credentials.client, BackendApplicationClient
     ):
-        # Reset token if client is of type BackendApplicationClient
-        self.credentials.access_token = None
+        # Reset access token
+        with self.credentials.lock:
+            self.credentials.access_token = None
     session.close()
     del session</code></pre>
 </details>
@@ -3245,40 +3238,10 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
-    session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
-    token_params = {&#34;include_client_id&#34;: True}
-
-    if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-        token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
-        self.credentials.authorization_code = None  # We can only use the code once
-
-        if self.credentials.client_id and self.credentials.client_secret:
-            # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
-            # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
-            # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
-            # is working with a service that can provide it refreshed tokens on a limited basis).
-            session_params.update(
-                {
-                    &#34;auto_refresh_kwargs&#34;: {
-                        &#34;client_id&#34;: self.credentials.client_id,
-                        &#34;client_secret&#34;: self.credentials.client_secret,
-                    },
-                    &#34;auto_refresh_url&#34;: self.credentials.token_url,
-                    &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
-                }
-            )
-        client = WebApplicationClient(client_id=self.credentials.client_id)
-    elif isinstance(self.credentials, OAuth2LegacyCredentials):
-        client = LegacyApplicationClient(client_id=self.credentials.client_id)
-        token_params[&#34;username&#34;] = self.credentials.username
-        token_params[&#34;password&#34;] = self.credentials.password
-    else:
-        client = BackendApplicationClient(client_id=self.credentials.client_id)
-
     session = self.raw_session(
         self.service_endpoint,
-        oauth2_client=client,
-        oauth2_session_params=session_params,
+        oauth2_client=self.credentials.client,
+        oauth2_session_params=self.credentials.session_params(),
         oauth2_token_endpoint=self.credentials.token_url,
     )
     if not session.token:
@@ -3289,12 +3252,12 @@ def session_pool_size(self):
             client_secret=self.credentials.client_secret,
             scope=self.credentials.scope,
             timeout=self.TIMEOUT,
-            **token_params,
+            **self.credentials.token_params(),
         )
         # Allow the credentials object to update its copy of the new token, and give the application an opportunity
         # to cache it.
         self.credentials.on_token_auto_refreshed(token)
-    session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
+    session.auth = get_auth_instance(auth_type=OAUTH2, client=self.credentials.client)
 
     return session</code></pre>
 </details>
@@ -3315,24 +3278,22 @@ def session_pool_size(self):
         session = self.raw_session(self.service_endpoint)
         session.auth = get_auth_instance(auth_type=self.auth_type)
     else:
-        with self.credentials.lock:
-            if isinstance(self.credentials, OAuth2Credentials):
+        if isinstance(self.credentials, BaseOAuth2Credentials):
+            with self.credentials.lock:
                 session = self.create_oauth2_session()
-                # Keep track of the credentials used to create this session. If
-                # and when we need to renew credentials (for example, refreshing
-                # an OAuth access token), this lets us easily determine whether
-                # the credentials have already been refreshed in another thread
-                # by the time this session tries.
+                # Keep track of the credentials used to create this session. If and when we need to renew
+                # credentials (for example, refreshing an OAuth access token), this lets us easily determine whether
+                # the credentials have already been refreshed in another thread by the time this session tries.
                 session.credentials_sig = self.credentials.sig()
+        else:
+            if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
+                username = &#34;\\&#34; + self.credentials.username
             else:
-                if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
-                    username = &#34;\\&#34; + self.credentials.username
-                else:
-                    username = self.credentials.username
-                session = self.raw_session(self.service_endpoint)
-                session.auth = get_auth_instance(
-                    auth_type=self.auth_type, username=username, password=self.credentials.password
-                )
+                username = self.credentials.username
+            session = self.raw_session(self.service_endpoint)
+            session.auth = get_auth_instance(
+                auth_type=self.auth_type, username=username, password=self.credentials.password
+            )
 
     # Add some extra info
     session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
@@ -3378,19 +3339,14 @@ requests. We decrease by one session per call.</p></div>
 <span>def <span class="ident">get_auth_type</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Autodetect authentication type</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_auth_type(self):
-    # Autodetect authentication type. We also set version hint here.
-    name = str(self.credentials) if self.credentials and str(self.credentials) else &#34;DUMMY&#34;
-    auth_type, api_version_hint = get_service_authtype(
-        service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-    )
-    self._api_version_hint = api_version_hint
-    return auth_type</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def get_auth_type(self):
+    &#34;&#34;&#34;Autodetect authentication type&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.BaseProtocol.get_session"><code class="name flex">
@@ -3609,28 +3565,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <pre><code class="python">class Build:
     &#34;&#34;&#34;Holds methods for working with build numbers.&#34;&#34;&#34;
 
-    # List of build numbers here: https://docs.microsoft.com/en-us/exchange/new-features/build-numbers-and-release-dates
-    API_VERSION_MAP = {
-        8: {
-            0: &#34;Exchange2007&#34;,
-            1: &#34;Exchange2007_SP1&#34;,
-            2: &#34;Exchange2007_SP1&#34;,
-            3: &#34;Exchange2007_SP1&#34;,
-        },
-        14: {
-            0: &#34;Exchange2010&#34;,
-            1: &#34;Exchange2010_SP1&#34;,
-            2: &#34;Exchange2010_SP2&#34;,
-            3: &#34;Exchange2010_SP2&#34;,
-        },
-        15: {
-            0: &#34;Exchange2013&#34;,  # Minor builds starting from 847 are Exchange2013_SP1, see api_version()
-            1: &#34;Exchange2016&#34;,
-            2: &#34;Exchange2019&#34;,
-            20: &#34;Exchange2016&#34;,  # This is Office365. See issue #221
-        },
-    }
-
     __slots__ = &#34;major_version&#34;, &#34;minor_version&#34;, &#34;major_build&#34;, &#34;minor_build&#34;
 
     def __init__(self, major_version, minor_version, major_build=0, minor_build=0):
@@ -3661,7 +3595,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         for k, xml_elem in xml_elems_map.items():
             v = elem.get(xml_elem)
             if v is None:
-                raise ValueError()
+                v = get_xml_attr(elem, f&#34;{{{ANS}}}{xml_elem}&#34;)
+                if v is None:
+                    raise ValueError()
             kwargs[k] = int(v)  # Also raises ValueError
         return cls(**kwargs)
 
@@ -3686,15 +3622,12 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         return cls(major_version=major_version, minor_version=minor_version, major_build=build_number)
 
     def api_version(self):
-        if EXCHANGE_2013_SP1 &lt;= self &lt; EXCHANGE_2016:
-            return &#34;Exchange2013_SP1&#34;
-        try:
-            return self.API_VERSION_MAP[self.major_version][self.minor_version]
-        except KeyError:
-            raise ValueError(f&#34;API version for build {self} is unknown&#34;)
-
-    def fullname(self):
-        return VERSIONS[self.api_version()][1]
+        for build, api_version, _ in VERSIONS:
+            if self.major_version != build.major_version or self.minor_version != build.minor_version:
+                continue
+            if self &gt;= build:
+                return api_version
+        raise ValueError(f&#34;API version for build {self} is unknown&#34;)
 
     def __cmp__(self, other):
         # __cmp__ is not a magic method in Python3. We&#39;ll just use it here to implement comparison operators
@@ -3738,13 +3671,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
             (self.major_version, self.minor_version, self.major_build, self.minor_build)
         )</code></pre>
 </details>
-<h3>Class variables</h3>
-<dl>
-<dt id="exchangelib.Build.API_VERSION_MAP"><code class="name">var <span class="ident">API_VERSION_MAP</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="exchangelib.Build.from_hex_string"><code class="name flex">
@@ -3806,7 +3732,9 @@ def from_xml(cls, elem):
     for k, xml_elem in xml_elems_map.items():
         v = elem.get(xml_elem)
         if v is None:
-            raise ValueError()
+            v = get_xml_attr(elem, f&#34;{{{ANS}}}{xml_elem}&#34;)
+            if v is None:
+                raise ValueError()
         kwargs[k] = int(v)  # Also raises ValueError
     return cls(**kwargs)</code></pre>
 </details>
@@ -3843,25 +3771,12 @@ def from_xml(cls, elem):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def api_version(self):
-    if EXCHANGE_2013_SP1 &lt;= self &lt; EXCHANGE_2016:
-        return &#34;Exchange2013_SP1&#34;
-    try:
-        return self.API_VERSION_MAP[self.major_version][self.minor_version]
-    except KeyError:
-        raise ValueError(f&#34;API version for build {self} is unknown&#34;)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.Build.fullname"><code class="name flex">
-<span>def <span class="ident">fullname</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def fullname(self):
-    return VERSIONS[self.api_version()][1]</code></pre>
+    for build, api_version, _ in VERSIONS:
+        if self.major_version != build.major_version or self.minor_version != build.minor_version:
+            continue
+        if self &gt;= build:
+            return api_version
+    raise ValueError(f&#34;API version for build {self} is unknown&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3956,7 +3871,7 @@ we use folder.account.</p></div>
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on a recurring master.
 
@@ -3972,7 +3887,7 @@ we use folder.account.</p></div>
 
     def recurring_master(self):
         &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on an occurrence of a recurring master.
 
@@ -4415,7 +4330,7 @@ def timezone_fields(cls):
 </code></dt>
 <dd>
 <div class="desc"><p>Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-Call refresh() on the item do do so.</p>
+Call refresh() on the item to do so.</p>
 <p>Only call this method on a recurring master.</p>
 <p>:param index: The index, which is 1-based</p>
 <p>:return The occurrence</p></div>
@@ -4425,7 +4340,7 @@ Call refresh() on the item do do so.</p>
 </summary>
 <pre><code class="python">def occurrence(self, index):
     &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-    Call refresh() on the item do do so.
+    Call refresh() on the item to do so.
 
     Only call this method on a recurring master.
 
@@ -4445,7 +4360,7 @@ Call refresh() on the item do do so.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-Call refresh() on the item do do so.</p>
+Call refresh() on the item to do so.</p>
 <p>Only call this method on an occurrence of a recurring master.</p>
 <p>:return: The master occurrence</p></div>
 <details class="source">
@@ -4454,7 +4369,7 @@ Call refresh() on the item do do so.</p>
 </summary>
 <pre><code class="python">def recurring_master(self):
     &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-    Call refresh() on the item do do so.
+    Call refresh() on the item to do so.
 
     Only call this method on an occurrence of a recurring master.
 
@@ -4659,9 +4574,9 @@ policies on the Exchange server.</p></div>
     ):
         if not isinstance(credentials, (BaseCredentials, type(None))):
             raise InvalidTypeError(&#34;credentials&#34;, credentials, BaseCredentials)
-        if auth_type is None:
+        if auth_type is None and isinstance(credentials, BaseOAuth2Credentials):
             # Set a default auth type for the credentials where this makes sense
-            auth_type = DEFAULT_AUTH_TYPE.get(type(credentials))
+            auth_type = OAUTH2
         if auth_type is not None and auth_type not in AUTH_TYPE_MAP:
             raise InvalidEnumValue(&#34;auth_type&#34;, auth_type, AUTH_TYPE_MAP)
         if credentials is None and auth_type in CREDENTIALS_REQUIRED:
@@ -5106,9 +5021,6 @@ password: Clear-text password</p></div>
         self.username = username
         self.password = password
 
-    def refresh(self, session):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + repr((self.username, &#34;********&#34;))
 
@@ -5134,14 +5046,6 @@ password: Clear-text password</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="exchangelib.credentials.BaseCredentials" href="credentials.html#exchangelib.credentials.BaseCredentials">BaseCredentials</a></b></code>:
-<ul class="hlist">
-<li><code><a title="exchangelib.credentials.BaseCredentials.refresh" href="credentials.html#exchangelib.credentials.BaseCredentials.refresh">refresh</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="exchangelib.DLMailbox"><code class="flex name class">
 <span>class <span class="ident">DLMailbox</span></span>
@@ -5372,7 +5276,7 @@ we use folder.account.</p></div>
 
     @classmethod
     def from_string(cls, date_string):
-        # Sometimes, we&#39;ll receive a date string with timezone information. Not very useful.
+        # Sometimes, we&#39;ll receive a date string with time zone information. Not very useful.
         if date_string.endswith(&#34;Z&#34;):
             date_fmt = &#34;%Y-%m-%dZ&#34;
         elif &#34;:&#34; in date_string:
@@ -5420,7 +5324,7 @@ def from_date(cls, d):
 </summary>
 <pre><code class="python">@classmethod
 def from_string(cls, date_string):
-    # Sometimes, we&#39;ll receive a date string with timezone information. Not very useful.
+    # Sometimes, we&#39;ll receive a date string with time zone information. Not very useful.
     if date_string.endswith(&#34;Z&#34;):
         date_fmt = &#34;%Y-%m-%dZ&#34;
     elif &#34;:&#34; in date_string:
@@ -5564,7 +5468,7 @@ def fromordinal(cls, n):
 
     @classmethod
     def from_string(cls, date_string):
-        # Parses several common datetime formats and returns timezone-aware EWSDateTime objects
+        # Parses several common datetime formats and returns time zone aware EWSDateTime objects
         if date_string.endswith(&#34;Z&#34;):
             # UTC datetime
             return super().strptime(date_string, &#34;%Y-%m-%dT%H:%M:%SZ&#34;).replace(tzinfo=UTC)
@@ -5572,7 +5476,7 @@ def fromordinal(cls, n):
             # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
             local_dt = super().strptime(date_string, &#34;%Y-%m-%dT%H:%M:%S&#34;)
             raise NaiveDateTimeNotAllowed(local_dt)
-        # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+        # This is probably a datetime value with time zone information. This comes in the form &#39;+/-HH:MM&#39;.
         aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
         if isinstance(aware_dt, cls):
             return aware_dt
@@ -5652,7 +5556,7 @@ def from_datetime(cls, d):
 </summary>
 <pre><code class="python">@classmethod
 def from_string(cls, date_string):
-    # Parses several common datetime formats and returns timezone-aware EWSDateTime objects
+    # Parses several common datetime formats and returns time zone aware EWSDateTime objects
     if date_string.endswith(&#34;Z&#34;):
         # UTC datetime
         return super().strptime(date_string, &#34;%Y-%m-%dT%H:%M:%SZ&#34;).replace(tzinfo=UTC)
@@ -5660,7 +5564,7 @@ def from_string(cls, date_string):
         # This is probably a naive datetime. Don&#39;t allow this, but signal caller with an appropriate error
         local_dt = super().strptime(date_string, &#34;%Y-%m-%dT%H:%M:%S&#34;)
         raise NaiveDateTimeNotAllowed(local_dt)
-    # This is probably a datetime value with timezone information. This comes in the form &#39;+/-HH:MM&#39;.
+    # This is probably a datetime value with time zone information. This comes in the form &#39;+/-HH:MM&#39;.
     aware_dt = datetime.datetime.fromisoformat(date_string).astimezone(UTC).replace(tzinfo=UTC)
     if isinstance(aware_dt, cls):
         return aware_dt
@@ -5821,14 +5725,14 @@ def utcnow(cls):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
+<div class="desc"><p>Represents a time zone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
 services.GetServerTimeZones.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EWSTimeZone(zoneinfo.ZoneInfo):
-    &#34;&#34;&#34;Represents a timezone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
+    &#34;&#34;&#34;Represents a time zone as expected by the EWS TimezoneContext / TimezoneDefinition XML element, and returned by
     services.GetServerTimeZones.
     &#34;&#34;&#34;
 
@@ -5845,24 +5749,24 @@ services.GetServerTimeZones.</p></div>
         except KeyError:
             raise UnknownTimeZone(f&#34;No Windows timezone name found for timezone {instance.key!r}&#34;)
 
-        # We don&#39;t need the Windows long-format timezone name in long format. It&#39;s used in timezone XML elements, but
-        # EWS happily accepts empty strings. For a full list of timezones supported by the target server, including
+        # We don&#39;t need the Windows long-format time zone name in long format. It&#39;s used in time zone XML elements, but
+        # EWS happily accepts empty strings. For a full list of time zones supported by the target server, including
         # long-format names, see output of services.GetServerTimeZones(account.protocol).call()
         instance.ms_name = &#34;&#34;
         return instance
 
     def __eq__(self, other):
-        # Microsoft timezones are less granular than IANA, so an EWSTimeZone created from &#39;Europe/Copenhagen&#39; may return
-        # from the server as &#39;Europe/Copenhagen&#39;. We&#39;re catering for Microsoft here, so base equality on the Microsoft
-        # timezone ID.
+        # Microsoft time zones are less granular than IANA, so an EWSTimeZone created from &#39;Europe/Copenhagen&#39; may
+        # return from the server as &#39;Europe/Copenhagen&#39;. We&#39;re catering for Microsoft here, so base equality on the
+        # Microsoft time zone ID.
         if not isinstance(other, self.__class__):
             return NotImplemented
         return self.ms_id == other.ms_id
 
     @classmethod
     def from_ms_id(cls, ms_id):
-        # Create a timezone instance from a Microsoft timezone ID. This is lossy because there is not a 1:1 translation
-        # from MS timezone ID to IANA timezone.
+        # Create a time zone instance from a Microsoft time zone ID. This is lossy because there is not a 1:1
+        # translation from MS time zone ID to IANA time zone.
         try:
             return cls(cls.MS_TO_IANA_MAP[ms_id])
         except KeyError:
@@ -5884,7 +5788,7 @@ services.GetServerTimeZones.</p></div>
     @classmethod
     def from_dateutil(cls, tz):
         # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
-        # don&#39;t contain enough information to reliably match them with a CLDR timezone.
+        # don&#39;t contain enough information to reliably match them with a CLDR time zone.
         if hasattr(tz, &#34;_filename&#34;):
             key = &#34;/&#34;.join(tz._filename.split(&#34;/&#34;)[-2:])
             return cls(key)
@@ -5973,7 +5877,7 @@ def from_datetime(cls, tz):
 <pre><code class="python">@classmethod
 def from_dateutil(cls, tz):
     # Objects returned by dateutil.tz.tzlocal() and dateutil.tz.gettz() are not supported. They
-    # don&#39;t contain enough information to reliably match them with a CLDR timezone.
+    # don&#39;t contain enough information to reliably match them with a CLDR time zone.
     if hasattr(tz, &#34;_filename&#34;):
         key = &#34;/&#34;.join(tz._filename.split(&#34;/&#34;)[-2:])
         return cls(key)
@@ -5991,8 +5895,8 @@ def from_dateutil(cls, tz):
 </summary>
 <pre><code class="python">@classmethod
 def from_ms_id(cls, ms_id):
-    # Create a timezone instance from a Microsoft timezone ID. This is lossy because there is not a 1:1 translation
-    # from MS timezone ID to IANA timezone.
+    # Create a time zone instance from a Microsoft time zone ID. This is lossy because there is not a 1:1
+    # translation from MS time zone ID to IANA time zone.
     try:
         return cls(cls.MS_TO_IANA_MAP[ms_id])
     except KeyError:
@@ -6201,7 +6105,7 @@ def localzone(cls):
 
     @classmethod
     def validate_cls(cls):
-        # Validate values of class attributes and their inter-dependencies
+        # Validate values of class attributes and their interdependencies
         cls._validate_distinguished_property_set_id()
         cls._validate_property_set_id()
         cls._validate_property_tag()
@@ -6300,7 +6204,7 @@ def localzone(cls):
         do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
         field in the response.
         &#34;&#34;&#34;
-        # We can&#39;t use ExtendedFieldURI.from_xml(). It clears the XML element but we may not want to consume it here.
+        # We can&#39;t use ExtendedFieldURI.from_xml(). It clears the XML element, but we may not want to consume it here.
         kwargs = {
             f.name: f.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
             for f in ExtendedFieldURI.FIELDS
@@ -6517,7 +6421,7 @@ def is_property_instance(cls, elem):
     do not have a name, so we must match on the cls.property_* attributes to match a field in the request with a
     field in the response.
     &#34;&#34;&#34;
-    # We can&#39;t use ExtendedFieldURI.from_xml(). It clears the XML element but we may not want to consume it here.
+    # We can&#39;t use ExtendedFieldURI.from_xml(). It clears the XML element, but we may not want to consume it here.
     kwargs = {
         f.name: f.from_xml(elem=elem.find(ExtendedFieldURI.response_tag()), account=None)
         for f in ExtendedFieldURI.FIELDS
@@ -6597,7 +6501,7 @@ def python_type(cls):
 </summary>
 <pre><code class="python">@classmethod
 def validate_cls(cls):
-    # Validate values of class attributes and their inter-dependencies
+    # Validate values of class attributes and their interdependencies
     cls._validate_distinguished_property_set_id()
     cls._validate_property_set_id()
     cls._validate_property_tag()
@@ -6694,7 +6598,7 @@ def validate_cls(cls):
         raise ValueError(&#34;Cannot back off with fail-fast policy&#34;)
 
     def may_retry_on_error(self, response, wait):
-        log.debug(&#34;No retry: no fail-fast policy&#34;)
+        log.debug(&#34;No retry with fail-fast policy&#34;)
         return False</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -6891,7 +6795,7 @@ def back_off_until(self):
         return self._fp
 
     def _init_fp(self):
-        # Create a file-like object for the attachment content. We try hard to reduce memory consumption so we never
+        # Create a file-like object for the attachment content. We try hard to reduce memory consumption, so we never
         # store the full attachment content in-memory.
         if not self.parent_item or not self.parent_item.account:
             raise ValueError(f&#34;{self.__class__.__name__} must have an account&#34;)
@@ -7195,6 +7099,7 @@ def fp(self):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -7669,7 +7574,7 @@ def get_distinguished(cls, root):
 
     def _get_target_cls(self):
         # We may have root folders that don&#39;t support the same set of fields as normal folders. If there is a mix of
-        # both folder types in self.folders, raise an error so we don&#39;t risk losing some fields in the query.
+        # both folder types in self.folders, raise an error, so we don&#39;t risk losing some fields in the query.
         from .base import Folder
         from .roots import RootOfHierarchy
 
@@ -7744,7 +7649,7 @@ def get_distinguished(cls, root):
         if depth is None:
             depth = self._get_default_folder_traversal_depth()
         if additional_fields is None:
-            # Default to all non-complex properties. Subfolders will always be of class Folder
+            # Default to all non-complex properties. Sub-folders will always be of class Folder
             additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
         else:
             for f in additional_fields:
@@ -8077,7 +7982,7 @@ def find_folders(
     if depth is None:
         depth = self._get_default_folder_traversal_depth()
     if additional_fields is None:
-        # Default to all non-complex properties. Subfolders will always be of class Folder
+        # Default to all non-complex properties. Sub-folders will always be of class Folder
         additional_fields = self.get_folder_fields(target_cls=Folder, is_complex=False)
     else:
         for f in additional_fields:
@@ -8720,45 +8625,71 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 </dd>
 <dt id="exchangelib.Identity"><code class="flex name class">
 <span>class <span class="ident">Identity</span></span>
-<span>(</span><span>primary_smtp_address=None, smtp_address=None, upn=None, sid=None)</span>
+<span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.</p>
-<p>:param primary_smtp_address: The primary email address associated with the account (Default value = None)
-:param smtp_address: The (non-)primary email address associated with the account (Default value = None)
-:param upn: (Default value = None)
-:param sid: (Default value = None)
-:return:</p></div>
+<div class="desc"><p>Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Identity:
+<pre><code class="python">class Identity(EWSElement):
     &#34;&#34;&#34;Contains information that uniquely identifies an account. Currently only used for SOAP impersonation headers.&#34;&#34;&#34;
 
-    def __init__(self, primary_smtp_address=None, smtp_address=None, upn=None, sid=None):
-        &#34;&#34;&#34;
+    ELEMENT_NAME = &#34;ConnectingSID&#34;
 
-        :param primary_smtp_address: The primary email address associated with the account (Default value = None)
-        :param smtp_address: The (non-)primary email address associated with the account (Default value = None)
-        :param upn: (Default value = None)
-        :param sid: (Default value = None)
-        :return:
-        &#34;&#34;&#34;
-        self.primary_smtp_address = primary_smtp_address
-        self.smtp_address = smtp_address
-        self.upn = upn
-        self.sid = sid
-
-    def __eq__(self, other):
-        return all(getattr(self, k) == getattr(other, k) for k in self.__dict__)
-
-    def __hash__(self):
-        return hash(repr(self))
-
-    def __repr__(self):
-        return self.__class__.__name__ + repr((self.primary_smtp_address, self.smtp_address, self.upn, self.sid))</code></pre>
+    # We have multiple options for uniquely identifying the user. Here&#39;s a prioritized list in accordance with
+    # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/connectingsid
+    sid = TextField(field_uri=&#34;SID&#34;)
+    upn = TextField(field_uri=&#34;PrincipalName&#34;)
+    smtp_address = TextField(field_uri=&#34;SmtpAddress&#34;)  # The (non-)primary email address for the account
+    primary_smtp_address = TextField(field_uri=&#34;PrimarySmtpAddress&#34;)  # The primary email address for the account</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.Identity.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.Identity.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.Identity.primary_smtp_address"><code class="name">var <span class="ident">primary_smtp_address</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.Identity.sid"><code class="name">var <span class="ident">sid</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.Identity.smtp_address"><code class="name">var <span class="ident">smtp_address</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.Identity.upn"><code class="name">var <span class="ident">upn</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="exchangelib.ItemAttachment"><code class="flex name class">
 <span>class <span class="ident">ItemAttachment</span></span>
@@ -9179,7 +9110,7 @@ we use folder.account.</p></div>
     )
     conversation_index = Base64Field(field_uri=&#34;message:ConversationIndex&#34;, is_read_only=True)
     conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
-    # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
+    # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use field name &#39;from&#39; since it&#39;s a Python keyword.
     author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
     message_id = TextField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
     is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
@@ -9220,7 +9151,7 @@ we use folder.account.</p></div>
 
         # New message
         if copy_to_folder:
-            # This would better be done via send_and_save() but lets just support it here
+            # This would better be done via send_and_save() but let&#39;s just support it here
             self.folder = copy_to_folder
             return self.send_and_save(
                 conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
@@ -9555,7 +9486,7 @@ def send(
 
     # New message
     if copy_to_folder:
-        # This would better be done via send_and_save() but lets just support it here
+        # This would better be done via send_and_save() but let&#39;s just support it here
         self.folder = copy_to_folder
         return self.send_and_save(
             conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
@@ -9646,7 +9577,7 @@ def send(
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We&#39;re overriding a method so we have to keep the signature
+        # We&#39;re overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -9675,7 +9606,7 @@ to a CA bundle to use
 </summary>
 <pre><code class="python">def cert_verify(self, conn, url, verify, cert):
     # pylint: disable=unused-argument
-    # We&#39;re overriding a method so we have to keep the signature
+    # We&#39;re overriding a method, so we have to keep the signature
     super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 </dd>
@@ -9683,7 +9614,7 @@ to a CA bundle to use
 </dd>
 <dt id="exchangelib.OAuth2AuthorizationCodeCredentials"><code class="flex name class">
 <span>class <span class="ident">OAuth2AuthorizationCodeCredentials</span></span>
-<span>(</span><span>authorization_code=None, access_token=None, client_id=None, client_secret=None, **kwargs)</span>
+<span>(</span><span>authorization_code=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Login info for OAuth 2.0 authentication using the authorization code grant type. This can be used in one of
@@ -9697,19 +9628,13 @@ refresh tokens itself by subclassing and implementing refresh().</p>
 <p>Unlike the base (client credentials) grant, authorization code credentials don't require a Microsoft tenant ID
 because each access token (and the authorization code used to get the access token) is restricted to a single
 tenant.</p>
-<p>:param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
-:param client_secret: Secret associated with the OAuth application
-:param tenant_id: Microsoft tenant ID of the account to access
-:param identity: An Identity object representing the account that these credentials are connected to.
-:param authorization_code: Code obtained when authorizing the application to access an account. In combination
-with client_id and client_secret, will be used to obtain an access token.
-:param access_token: Previously-obtained access token. If a token exists and the application will handle
-refreshing by itself (or opts not to handle it), this parameter alone is sufficient.</p></div>
+<p>:param authorization_code: Code obtained when authorizing the application to access an account. In combination
+with client_id and client_secret, will be used to obtain an access token.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OAuth2AuthorizationCodeCredentials(OAuth2Credentials):
+<pre><code class="python">class OAuth2AuthorizationCodeCredentials(BaseOAuth2Credentials):
     &#34;&#34;&#34;Login info for OAuth 2.0 authentication using the authorization code grant type. This can be used in one of
     several ways:
     * Given an authorization code, client ID, and client secret, fetch a token ourselves and refresh it as needed if
@@ -9724,23 +9649,17 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
     tenant.
     &#34;&#34;&#34;
 
-    def __init__(self, authorization_code=None, access_token=None, client_id=None, client_secret=None, **kwargs):
+    def __init__(self, authorization_code=None, **kwargs):
         &#34;&#34;&#34;
 
-        :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
-        :param client_secret: Secret associated with the OAuth application
-        :param tenant_id: Microsoft tenant ID of the account to access
-        :param identity: An Identity object representing the account that these credentials are connected to.
         :param authorization_code: Code obtained when authorizing the application to access an account. In combination
           with client_id and client_secret, will be used to obtain an access token.
-        :param access_token: Previously-obtained access token. If a token exists and the application will handle
-          refreshing by itself (or opts not to handle it), this parameter alone is sufficient.
         &#34;&#34;&#34;
-        super().__init__(client_id=client_id, client_secret=client_secret, **kwargs)
+        for attr in (&#34;client_id&#34;, &#34;client_secret&#34;):
+            # Allow omitting these kwargs
+            kwargs[attr] = kwargs.pop(attr, None)
+        super().__init__(**kwargs)
         self.authorization_code = authorization_code
-        if access_token is not None and not isinstance(access_token, dict):
-            raise InvalidTypeError(&#34;access_token&#34;, access_token, OAuth2Token)
-        self.access_token = access_token
 
     @property
     def token_url(self):
@@ -9753,6 +9672,35 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
         res = super().scope
         res.append(&#34;offline_access&#34;)
         return res
+
+    def session_params(self):
+        res = super().session_params()
+        if self.client_id and self.client_secret:
+            # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
+            # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
+            # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
+            # is working with a service that can provide it refreshed tokens on a limited basis).
+            res.update(
+                {
+                    &#34;auto_refresh_kwargs&#34;: {
+                        &#34;client_id&#34;: self.client_id,
+                        &#34;client_secret&#34;: self.client_secret,
+                    },
+                    &#34;auto_refresh_url&#34;: self.token_url,
+                    &#34;token_updater&#34;: self.on_token_auto_refreshed,
+                }
+            )
+        return res
+
+    def token_params(self):
+        res = super().token_params()
+        res[&#34;code&#34;] = self.authorization_code  # Auth code may be None
+        self.authorization_code = None  # We can only use the code once
+        return res
+
+    @threaded_cached_property
+    def client(self):
+        return oauthlib.oauth2.WebApplicationClient(client_id=self.client_id)
 
     def __repr__(self):
         return self.__class__.__name__ + repr(
@@ -9771,46 +9719,20 @@ refreshing by itself (or opts not to handle it), this parameter alone is suffici
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></li>
+<li><a title="exchangelib.credentials.BaseOAuth2Credentials" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials">BaseOAuth2Credentials</a></li>
 <li><a title="exchangelib.credentials.BaseCredentials" href="credentials.html#exchangelib.credentials.BaseCredentials">BaseCredentials</a></li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="exchangelib.OAuth2AuthorizationCodeCredentials.scope"><code class="name">var <span class="ident">scope</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def scope(self):
-    res = super().scope
-    res.append(&#34;offline_access&#34;)
-    return res</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.OAuth2AuthorizationCodeCredentials.token_url"><code class="name">var <span class="ident">token_url</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def token_url(self):
-    # We don&#39;t know (or need) the Microsoft tenant ID. Use common/ to let Microsoft select the appropriate
-    # tenant for the provided authorization code or refresh token.
-    return &#34;https://login.microsoftonline.com/common/oauth2/v2.0/token&#34;  # nosec</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></b></code>:
+<li><code><b><a title="exchangelib.credentials.BaseOAuth2Credentials" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials">BaseOAuth2Credentials</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.credentials.OAuth2Credentials.on_token_auto_refreshed" href="credentials.html#exchangelib.credentials.OAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
-<li><code><a title="exchangelib.credentials.OAuth2Credentials.refresh" href="credentials.html#exchangelib.credentials.BaseCredentials.refresh">refresh</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.client" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.client">client</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.on_token_auto_refreshed" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.refresh" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.refresh">refresh</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.scope" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.scope">scope</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.session_params" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.session_params">session_params</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.token_params" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.token_params">token_params</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.token_url" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.token_url">token_url</a></code></li>
 </ul>
 </li>
 </ul>
@@ -9834,7 +9756,7 @@ the associated auth code grant type for multi-tenant applications.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OAuth2Credentials(BaseCredentials):
+<pre><code class="python">class OAuth2Credentials(BaseOAuth2Credentials):
     &#34;&#34;&#34;Login info for OAuth 2.0 client credentials authentication, as well as a base for other OAuth 2.0 grant types.
 
     This is primarily useful for in-house applications accessing data from a single Microsoft account. For applications
@@ -9842,60 +9764,6 @@ the associated auth code grant type for multi-tenant applications.</p>
     information to restrict end users&#39; access to the appropriate account. Use OAuth2AuthorizationCodeCredentials and
     the associated auth code grant type for multi-tenant applications.
     &#34;&#34;&#34;
-
-    def __init__(self, client_id, client_secret, tenant_id=None, identity=None, access_token=None):
-        &#34;&#34;&#34;
-
-        :param client_id: ID of an authorized OAuth application, required for automatic token fetching and refreshing
-        :param client_secret: Secret associated with the OAuth application
-        :param tenant_id: Microsoft tenant ID of the account to access
-        :param identity: An Identity object representing the account that these credentials are connected to.
-        :param access_token: Previously-obtained access token, as a dict or an oauthlib.oauth2.OAuth2Token
-        &#34;&#34;&#34;
-        super().__init__()
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.tenant_id = tenant_id
-        self.identity = identity
-        self.access_token = access_token
-
-    def refresh(self, session):
-        # Creating a new session gets a new access token, so there&#39;s no work here to refresh the credentials. This
-        # implementation just makes sure we don&#39;t raise a NotImplementedError.
-        pass
-
-    def on_token_auto_refreshed(self, access_token):
-        &#34;&#34;&#34;Set the access_token. Called after the access token is refreshed (requests-oauthlib can automatically
-        refresh tokens if given an OAuth client ID and secret, so this is how our copy of the token stays up-to-date).
-        Applications that cache access tokens can override this to store the new token - just remember to call the
-        super() method.
-
-        :param access_token: New token obtained by refreshing
-        &#34;&#34;&#34;
-        # Ensure we don&#39;t update the object in the middle of a new session being created, which could cause a race.
-        if not isinstance(access_token, dict):
-            raise InvalidTypeError(&#34;access_token&#34;, access_token, OAuth2Token)
-        with self.lock:
-            log.debug(&#34;%s auth token for %s&#34;, &#34;Refreshing&#34; if self.access_token else &#34;Setting&#34;, self.client_id)
-            self.access_token = access_token
-
-    def _get_hash_values(self):
-        # &#39;access_token&#39; may be refreshed once in a while. This should not affect the hash signature.
-        # &#39;identity&#39; is just informational and should also not affect the hash signature.
-        return (getattr(self, k) for k in self.__dict__ if k not in (&#34;_lock&#34;, &#34;identity&#34;, &#34;access_token&#34;))
-
-    def sig(self):
-        # Like hash(self), but pulls in the access token. Protocol.refresh_credentials() uses this to find out
-        # if the access_token needs to be refreshed.
-        res = []
-        for k in self.__dict__:
-            if k in (&#34;_lock&#34;, &#34;identity&#34;):
-                continue
-            if k == &#34;access_token&#34;:
-                res.append(self.access_token[&#34;access_token&#34;] if self.access_token else None)
-                continue
-            res.append(getattr(self, k))
-        return hash(tuple(res))
 
     @property
     def token_url(self):
@@ -9905,108 +9773,30 @@ the associated auth code grant type for multi-tenant applications.</p>
     def scope(self):
         return [&#34;https://outlook.office365.com/.default&#34;]
 
-    def __repr__(self):
-        return self.__class__.__name__ + repr((self.client_id, &#34;********&#34;))
-
-    def __str__(self):
-        return self.client_id</code></pre>
+    @threaded_cached_property
+    def client(self):
+        return oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.credentials.BaseOAuth2Credentials" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials">BaseOAuth2Credentials</a></li>
 <li><a title="exchangelib.credentials.BaseCredentials" href="credentials.html#exchangelib.credentials.BaseCredentials">BaseCredentials</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="exchangelib.credentials.OAuth2AuthorizationCodeCredentials" href="credentials.html#exchangelib.credentials.OAuth2AuthorizationCodeCredentials">OAuth2AuthorizationCodeCredentials</a></li>
 <li><a title="exchangelib.credentials.OAuth2LegacyCredentials" href="credentials.html#exchangelib.credentials.OAuth2LegacyCredentials">OAuth2LegacyCredentials</a></li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="exchangelib.OAuth2Credentials.scope"><code class="name">var <span class="ident">scope</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def scope(self):
-    return [&#34;https://outlook.office365.com/.default&#34;]</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.OAuth2Credentials.token_url"><code class="name">var <span class="ident">token_url</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def token_url(self):
-    return f&#34;https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token&#34;</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.OAuth2Credentials.on_token_auto_refreshed"><code class="name flex">
-<span>def <span class="ident">on_token_auto_refreshed</span></span>(<span>self, access_token)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Set the access_token. Called after the access token is refreshed (requests-oauthlib can automatically
-refresh tokens if given an OAuth client ID and secret, so this is how our copy of the token stays up-to-date).
-Applications that cache access tokens can override this to store the new token - just remember to call the
-super() method.</p>
-<p>:param access_token: New token obtained by refreshing</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def on_token_auto_refreshed(self, access_token):
-    &#34;&#34;&#34;Set the access_token. Called after the access token is refreshed (requests-oauthlib can automatically
-    refresh tokens if given an OAuth client ID and secret, so this is how our copy of the token stays up-to-date).
-    Applications that cache access tokens can override this to store the new token - just remember to call the
-    super() method.
-
-    :param access_token: New token obtained by refreshing
-    &#34;&#34;&#34;
-    # Ensure we don&#39;t update the object in the middle of a new session being created, which could cause a race.
-    if not isinstance(access_token, dict):
-        raise InvalidTypeError(&#34;access_token&#34;, access_token, OAuth2Token)
-    with self.lock:
-        log.debug(&#34;%s auth token for %s&#34;, &#34;Refreshing&#34; if self.access_token else &#34;Setting&#34;, self.client_id)
-        self.access_token = access_token</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.OAuth2Credentials.sig"><code class="name flex">
-<span>def <span class="ident">sig</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def sig(self):
-    # Like hash(self), but pulls in the access token. Protocol.refresh_credentials() uses this to find out
-    # if the access_token needs to be refreshed.
-    res = []
-    for k in self.__dict__:
-        if k in (&#34;_lock&#34;, &#34;identity&#34;):
-            continue
-        if k == &#34;access_token&#34;:
-            res.append(self.access_token[&#34;access_token&#34;] if self.access_token else None)
-            continue
-        res.append(getattr(self, k))
-    return hash(tuple(res))</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.credentials.BaseCredentials" href="credentials.html#exchangelib.credentials.BaseCredentials">BaseCredentials</a></b></code>:
+<li><code><b><a title="exchangelib.credentials.BaseOAuth2Credentials" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials">BaseOAuth2Credentials</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.credentials.BaseCredentials.refresh" href="credentials.html#exchangelib.credentials.BaseCredentials.refresh">refresh</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.client" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.client">client</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.on_token_auto_refreshed" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.refresh" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.refresh">refresh</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.scope" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.scope">scope</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.session_params" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.session_params">session_params</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.token_params" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.token_params">token_params</a></code></li>
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.token_url" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.token_url">token_url</a></code></li>
 </ul>
 </li>
 </ul>
@@ -10020,7 +9810,7 @@ super() method.</p>
 <p>This requires the app to acquire username and password from the user and pass that when requesting authentication
 tokens for the given user. This allows the app to act as the signed-in user.</p>
 <p>:param username: The username of the user to act as
-:poram password: The password of the user to act as</p></div>
+:param password: The password of the user to act as</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -10035,11 +9825,25 @@ tokens for the given user. This allows the app to act as the signed-in user.</p>
     def __init__(self, username, password, **kwargs):
         &#34;&#34;&#34;
         :param username: The username of the user to act as
-        :poram password: The password of the user to act as
+        :param password: The password of the user to act as
         &#34;&#34;&#34;
         super().__init__(**kwargs)
         self.username = username
         self.password = password
+
+    def token_params(self):
+        res = super().token_params()
+        res.update(
+            {
+                &#34;username&#34;: self.username,
+                &#34;password&#34;: self.password,
+            }
+        )
+        return res
+
+    @threaded_cached_property
+    def client(self):
+        return oauthlib.oauth2.LegacyApplicationClient(client_id=self.client_id)
 
     @property
     def scope(self):
@@ -10048,29 +9852,28 @@ tokens for the given user. This allows the app to act as the signed-in user.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></li>
+<li><a title="exchangelib.credentials.BaseOAuth2Credentials" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials">BaseOAuth2Credentials</a></li>
 <li><a title="exchangelib.credentials.BaseCredentials" href="credentials.html#exchangelib.credentials.BaseCredentials">BaseCredentials</a></li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="exchangelib.OAuth2LegacyCredentials.scope"><code class="name">var <span class="ident">scope</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def scope(self):
-    return [&#34;https://outlook.office365.com/EWS.AccessAsUser.All&#34;]</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.credentials.OAuth2Credentials.on_token_auto_refreshed" href="credentials.html#exchangelib.credentials.OAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
-<li><code><a title="exchangelib.credentials.OAuth2Credentials.refresh" href="credentials.html#exchangelib.credentials.BaseCredentials.refresh">refresh</a></code></li>
+<li><code><a title="exchangelib.credentials.OAuth2Credentials.token_params" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.token_params">token_params</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="exchangelib.credentials.OAuth2Credentials" href="credentials.html#exchangelib.credentials.OAuth2Credentials">OAuth2Credentials</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.credentials.OAuth2Credentials.on_token_auto_refreshed" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
+<li><code><a title="exchangelib.credentials.OAuth2Credentials.refresh" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.refresh">refresh</a></code></li>
+<li><code><a title="exchangelib.credentials.OAuth2Credentials.scope" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.scope">scope</a></code></li>
+<li><code><a title="exchangelib.credentials.OAuth2Credentials.session_params" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.session_params">session_params</a></code></li>
+<li><code><a title="exchangelib.credentials.OAuth2Credentials.token_url" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.token_url">token_url</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="exchangelib.credentials.BaseOAuth2Credentials" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials">BaseOAuth2Credentials</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.credentials.BaseOAuth2Credentials.client" href="credentials.html#exchangelib.credentials.BaseOAuth2Credentials.client">client</a></code></li>
 </ul>
 </li>
 </ul>
@@ -10728,7 +10531,7 @@ we use folder.account.</p></div>
                 return (self.__class__(*children, conn_type=self.OR),)
 
             if lookup == self.LOOKUP_CONTAINS and is_iterable(value, generators_allowed=True):
-                # A &#39;__contains&#39; lookup with an list as the value ony makes sense for list fields, since exact match
+                # A &#39;__contains&#39; lookup with a list as the value ony makes sense for list fields, since exact match
                 # on multiple distinct values will always fail for single-value fields.
                 #
                 # An empty list as value is allowed. We interpret it to mean &#34;are all values in the empty set contained
@@ -10795,7 +10598,7 @@ we use folder.account.</p></div>
         self.children = q.children
 
     def clean(self, version):
-        &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+        &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a good job of
         validating. There&#39;s no reason to replicate much of that here.
         &#34;&#34;&#34;
         from .folders import Folder
@@ -10901,7 +10704,7 @@ we use folder.account.</p></div>
         if self.is_leaf():
             expr = f&#34;{self.field_path} {self.op} {self.value!r}&#34;
         else:
-            # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
+            # Sort children by field name, so we get stable output (for easier testing). Children should never be empty.
             expr = f&#34; {self.AND if self.conn_type == self.NOT else self.conn_type} &#34;.join(
                 (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#34;({c.expr()})&#34;)
                 for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;)
@@ -11021,7 +10824,7 @@ we use folder.account.</p></div>
             clean_value = self._get_clean_value(field_path=field_path, version=version)
             if issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
                 # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
-                # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
+                # email_addresses__Foo_email_address=.... Set FieldPath label now, so we can generate the field_uri.
                 field_path.label = clean_value.label
             elif isinstance(field_path.field, DateTimeBackedDateField):
                 # We need to convert to datetime
@@ -11041,7 +10844,7 @@ we use folder.account.</p></div>
         else:
             # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
             elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
-            # Sort children by field name so we get stable output (for easier testing). Children should never be empty
+            # Sort children by field name, so we get stable output (for easier testing). Children should never be empty
             for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;):
                 elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
         if elem is None:
@@ -11064,7 +10867,7 @@ we use folder.account.</p></div>
     def __invert__(self):
         # ~ operator. If op has an inverse, change op. Else return a new Q with conn_type NOT
         if self.conn_type == self.NOT:
-            # This is NOT NOT. Change to AND
+            # This is &#39;NOT NOT&#39;. Change to &#39;AND&#39;
             new = copy(self)
             new.conn_type = self.AND
             new.reduce()
@@ -11282,14 +11085,14 @@ we use folder.account.</p></div>
 <span>def <span class="ident">clean</span></span>(<span>self, version)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+<div class="desc"><p>Do some basic checks on the attributes, using a generic folder. to_xml() does a good job of
 validating. There's no reason to replicate much of that here.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clean(self, version):
-    &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a really good job of
+    &#34;&#34;&#34;Do some basic checks on the attributes, using a generic folder. to_xml() does a good job of
     validating. There&#39;s no reason to replicate much of that here.
     &#34;&#34;&#34;
     from .folders import Folder
@@ -11316,7 +11119,7 @@ validating. There's no reason to replicate much of that here.</p></div>
     if self.is_leaf():
         expr = f&#34;{self.field_path} {self.op} {self.value!r}&#34;
     else:
-        # Sort children by field name so we get stable output (for easier testing). Children should never be empty.
+        # Sort children by field name, so we get stable output (for easier testing). Children should never be empty.
         expr = f&#34; {self.AND if self.conn_type == self.NOT else self.conn_type} &#34;.join(
             (c.expr() if c.is_leaf() or c.conn_type == self.NOT else f&#34;({c.expr()})&#34;)
             for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;)
@@ -11438,7 +11241,7 @@ validating. There's no reason to replicate much of that here.</p></div>
         clean_value = self._get_clean_value(field_path=field_path, version=version)
         if issubclass(field_path.field.value_cls, SingleFieldIndexedElement) and not field_path.label:
             # We allow a filter shortcut of e.g. email_addresses__contains=EmailAddress(label=&#39;Foo&#39;, ...) instead of
-            # email_addresses__Foo_email_address=.... Set FieldPath label now so we can generate the field_uri.
+            # email_addresses__Foo_email_address=.... Set FieldPath label now, so we can generate the field_uri.
             field_path.label = clean_value.label
         elif isinstance(field_path.field, DateTimeBackedDateField):
             # We need to convert to datetime
@@ -11458,7 +11261,7 @@ validating. There's no reason to replicate much of that here.</p></div>
     else:
         # We have multiple children. If conn_type is NOT, then group children with AND. We&#39;ll add the NOT later
         elem = self._conn_to_xml(self.AND if self.conn_type == self.NOT else self.conn_type)
-        # Sort children by field name so we get stable output (for easier testing). Children should never be empty
+        # Sort children by field name, so we get stable output (for easier testing). Children should never be empty
         for c in sorted(self.children, key=lambda i: i.field_path or &#34;&#34;):
             elem.append(c.xml_elem(folders=folders, version=version, applies_to=applies_to))
     if elem is None:
@@ -11732,7 +11535,7 @@ def response_tag(cls):
 
     __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
 
-    # A special folder that acts as the top of a folder hierarchy. Finds and caches subfolders at arbitrary depth.
+    # A special folder that acts as the top of a folder hierarchy. Finds and caches sub-folders at arbitrary depth.
     def __init__(self, **kwargs):
         self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
@@ -11843,8 +11646,8 @@ def response_tag(cls):
             return self._subfolders
 
         with self._subfolders_lock:
-            # Map root, and all subfolders of root, at arbitrary depth by folder ID. First get distinguished folders,
-            # so we are sure to apply the correct Folder class, then fetch all subfolders of this root.
+            # Map root, and all sub-folders of root, at arbitrary depth by folder ID. First get distinguished folders,
+            # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
                 cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
@@ -11925,6 +11728,7 @@ def response_tag(cls):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -12748,7 +12552,13 @@ def to_global_object_id(cls, uid):
 
     @property
     def fullname(self):
-        return VERSIONS[self.api_version][1]
+        for build, api_version, full_name in VERSIONS:
+            if self.build:
+                if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
+                    continue
+            if self.api_version == api_version:
+                return full_name
+        raise ValueError(f&#34;Full name for API version {self.api_version} build {self.build} is unknown&#34;)
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
@@ -12762,20 +12572,20 @@ def to_global_object_id(cls, uid):
         :param protocol:
         :param api_version_hint:  (Default value = None)
         &#34;&#34;&#34;
-        from .services import ResolveNames
+        from .properties import ENTRY_ID, EWS_ID, AlternateId
+        from .services import ConvertId
 
-        # The protocol doesn&#39;t have a version yet, so default to latest supported version if we don&#39;t have a hint.
-        api_version = api_version_hint or API_VERSIONS[0]
+        # The protocol doesn&#39;t have a version yet, so default to the latest supported version if we don&#39;t have a hint.
+        api_version = api_version_hint or ConvertId.supported_api_versions()[0]
         log.debug(&#34;Asking server for version info using API version %s&#34;, api_version)
         # We don&#39;t know the build version yet. Hopefully, the server will report it in the SOAP header. Lots of
         # places expect a version to have a build, so this is a bit dangerous, but passing a fake build around is also
-        # dangerous. Make sure the call to ResolveNames does not require a version build.
+        # dangerous.
         protocol.config.version = Version(build=None, api_version=api_version)
-        # Use ResolveNames as a minimal request to the server to test if the version is correct. If not, ResolveNames
-        # will try to guess the version automatically.
-        name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else &#34;DUMMY&#34;
+        # Use ConvertId as a minimal request to the server to test if the version is correct. If not, ConvertId will
+        # try to guess the version automatically. Make sure the call to ConvertId does not require a version build.
         try:
-            list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
+            list(ConvertId(protocol=protocol).call([AlternateId(id=&#34;DUMMY&#34;, format=EWS_ID, mailbox=&#34;DUMMY&#34;)], ENTRY_ID))
         except ResponseMessageError as e:
             # We may have survived long enough to get a new version
             if not protocol.config.version.build:
@@ -12793,17 +12603,19 @@ def to_global_object_id(cls, uid):
     def from_soap_header(cls, requested_api_version, header):
         info = header.find(f&#34;{{{TNS}}}ServerVersionInfo&#34;)
         if info is None:
-            raise TransportError(f&#34;No ServerVersionInfo in header: {xml_to_str(header)!r}&#34;)
+            info = header.find(f&#34;{{{ANS}}}ServerVersionInfo&#34;)
+            if info is None:
+                raise TransportError(f&#34;No ServerVersionInfo in header: {xml_to_str(header)!r}&#34;)
         try:
             build = Build.from_xml(elem=info)
         except ValueError:
             raise TransportError(f&#34;Bad ServerVersionInfo in response: {xml_to_str(header)!r}&#34;)
         # Not all Exchange servers send the Version element
-        api_version_from_server = info.get(&#34;Version&#34;) or build.api_version()
+        api_version_from_server = info.get(&#34;Version&#34;) or get_xml_attr(info, f&#34;{{{ANS}}}Version&#34;) or build.api_version()
         if api_version_from_server != requested_api_version:
             if cls._is_invalid_version_string(api_version_from_server):
                 # For unknown reasons, Office 365 may respond with an API version strings that is invalid in a request.
-                # Detect these so we can fallback to a valid version string.
+                # Detect these, so we can fall back to a valid version string.
                 log.debug(
                     &#39;API version &#34;%s&#34; worked but server reports version &#34;%s&#34;. Using &#34;%s&#34;&#39;,
                     requested_api_version,
@@ -12824,6 +12636,11 @@ def to_global_object_id(cls, uid):
     def copy(self):
         return self.__class__(build=self.build, api_version=self.api_version)
 
+    @classmethod
+    def all_versions(cls):
+        # Return all supported versions, sorted newest to oldest
+        return [cls(build=build, api_version=api_version) for build, api_version, _ in VERSIONS]
+
     def __eq__(self, other):
         if self.api_version != other.api_version:
             return False
@@ -12841,6 +12658,21 @@ def to_global_object_id(cls, uid):
 </details>
 <h3>Static methods</h3>
 <dl>
+<dt id="exchangelib.Version.all_versions"><code class="name flex">
+<span>def <span class="ident">all_versions</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def all_versions(cls):
+    # Return all supported versions, sorted newest to oldest
+    return [cls(build=build, api_version=api_version) for build, api_version, _ in VERSIONS]</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.Version.from_soap_header"><code class="name flex">
 <span>def <span class="ident">from_soap_header</span></span>(<span>requested_api_version, header)</span>
 </code></dt>
@@ -12854,17 +12686,19 @@ def to_global_object_id(cls, uid):
 def from_soap_header(cls, requested_api_version, header):
     info = header.find(f&#34;{{{TNS}}}ServerVersionInfo&#34;)
     if info is None:
-        raise TransportError(f&#34;No ServerVersionInfo in header: {xml_to_str(header)!r}&#34;)
+        info = header.find(f&#34;{{{ANS}}}ServerVersionInfo&#34;)
+        if info is None:
+            raise TransportError(f&#34;No ServerVersionInfo in header: {xml_to_str(header)!r}&#34;)
     try:
         build = Build.from_xml(elem=info)
     except ValueError:
         raise TransportError(f&#34;Bad ServerVersionInfo in response: {xml_to_str(header)!r}&#34;)
     # Not all Exchange servers send the Version element
-    api_version_from_server = info.get(&#34;Version&#34;) or build.api_version()
+    api_version_from_server = info.get(&#34;Version&#34;) or get_xml_attr(info, f&#34;{{{ANS}}}Version&#34;) or build.api_version()
     if api_version_from_server != requested_api_version:
         if cls._is_invalid_version_string(api_version_from_server):
             # For unknown reasons, Office 365 may respond with an API version strings that is invalid in a request.
-            # Detect these so we can fallback to a valid version string.
+            # Detect these, so we can fall back to a valid version string.
             log.debug(
                 &#39;API version &#34;%s&#34; worked but server reports version &#34;%s&#34;. Using &#34;%s&#34;&#39;,
                 requested_api_version,
@@ -12911,20 +12745,20 @@ def guess(cls, protocol, api_version_hint=None):
     :param protocol:
     :param api_version_hint:  (Default value = None)
     &#34;&#34;&#34;
-    from .services import ResolveNames
+    from .properties import ENTRY_ID, EWS_ID, AlternateId
+    from .services import ConvertId
 
-    # The protocol doesn&#39;t have a version yet, so default to latest supported version if we don&#39;t have a hint.
-    api_version = api_version_hint or API_VERSIONS[0]
+    # The protocol doesn&#39;t have a version yet, so default to the latest supported version if we don&#39;t have a hint.
+    api_version = api_version_hint or ConvertId.supported_api_versions()[0]
     log.debug(&#34;Asking server for version info using API version %s&#34;, api_version)
     # We don&#39;t know the build version yet. Hopefully, the server will report it in the SOAP header. Lots of
     # places expect a version to have a build, so this is a bit dangerous, but passing a fake build around is also
-    # dangerous. Make sure the call to ResolveNames does not require a version build.
+    # dangerous.
     protocol.config.version = Version(build=None, api_version=api_version)
-    # Use ResolveNames as a minimal request to the server to test if the version is correct. If not, ResolveNames
-    # will try to guess the version automatically.
-    name = str(protocol.credentials) if protocol.credentials and str(protocol.credentials) else &#34;DUMMY&#34;
+    # Use ConvertId as a minimal request to the server to test if the version is correct. If not, ConvertId will
+    # try to guess the version automatically. Make sure the call to ConvertId does not require a version build.
     try:
-        list(ResolveNames(protocol=protocol).call(unresolved_entries=[name]))
+        list(ConvertId(protocol=protocol).call([AlternateId(id=&#34;DUMMY&#34;, format=EWS_ID, mailbox=&#34;DUMMY&#34;)], ENTRY_ID))
     except ResponseMessageError as e:
         # We may have survived long enough to get a new version
         if not protocol.config.version.build:
@@ -12954,7 +12788,13 @@ def guess(cls, protocol, api_version_hint=None):
 </summary>
 <pre><code class="python">@property
 def fullname(self):
-    return VERSIONS[self.api_version][1]</code></pre>
+    for build, api_version, full_name in VERSIONS:
+        if self.build:
+            if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
+                continue
+        if self.api_version == api_version:
+            return full_name
+    raise ValueError(f&#34;Full name for API version {self.api_version} build {self.build} is unknown&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -13029,6 +12869,7 @@ def fullname(self):
 <li>
 <h4><code><a title="exchangelib.Account" href="#exchangelib.Account">Account</a></code></h4>
 <ul class="">
+<li><code><a title="exchangelib.Account.DEFAULT_DISCOVERY_CLS" href="#exchangelib.Account.DEFAULT_DISCOVERY_CLS">DEFAULT_DISCOVERY_CLS</a></code></li>
 <li><code><a title="exchangelib.Account.admin_audit_logs" href="#exchangelib.Account.admin_audit_logs">admin_audit_logs</a></code></li>
 <li><code><a title="exchangelib.Account.archive_deleted_items" href="#exchangelib.Account.archive_deleted_items">archive_deleted_items</a></code></li>
 <li><code><a title="exchangelib.Account.archive_inbox" href="#exchangelib.Account.archive_inbox">archive_inbox</a></code></li>
@@ -13142,11 +12983,9 @@ def fullname(self):
 <li>
 <h4><code><a title="exchangelib.Build" href="#exchangelib.Build">Build</a></code></h4>
 <ul class="two-column">
-<li><code><a title="exchangelib.Build.API_VERSION_MAP" href="#exchangelib.Build.API_VERSION_MAP">API_VERSION_MAP</a></code></li>
 <li><code><a title="exchangelib.Build.api_version" href="#exchangelib.Build.api_version">api_version</a></code></li>
 <li><code><a title="exchangelib.Build.from_hex_string" href="#exchangelib.Build.from_hex_string">from_hex_string</a></code></li>
 <li><code><a title="exchangelib.Build.from_xml" href="#exchangelib.Build.from_xml">from_xml</a></code></li>
-<li><code><a title="exchangelib.Build.fullname" href="#exchangelib.Build.fullname">fullname</a></code></li>
 <li><code><a title="exchangelib.Build.major_build" href="#exchangelib.Build.major_build">major_build</a></code></li>
 <li><code><a title="exchangelib.Build.major_version" href="#exchangelib.Build.major_version">major_version</a></code></li>
 <li><code><a title="exchangelib.Build.minor_build" href="#exchangelib.Build.minor_build">minor_build</a></code></li>
@@ -13443,6 +13282,14 @@ def fullname(self):
 </li>
 <li>
 <h4><code><a title="exchangelib.Identity" href="#exchangelib.Identity">Identity</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.Identity.ELEMENT_NAME" href="#exchangelib.Identity.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.Identity.FIELDS" href="#exchangelib.Identity.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.Identity.primary_smtp_address" href="#exchangelib.Identity.primary_smtp_address">primary_smtp_address</a></code></li>
+<li><code><a title="exchangelib.Identity.sid" href="#exchangelib.Identity.sid">sid</a></code></li>
+<li><code><a title="exchangelib.Identity.smtp_address" href="#exchangelib.Identity.smtp_address">smtp_address</a></code></li>
+<li><code><a title="exchangelib.Identity.upn" href="#exchangelib.Identity.upn">upn</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.ItemAttachment" href="#exchangelib.ItemAttachment">ItemAttachment</a></code></h4>
@@ -13519,25 +13366,12 @@ def fullname(self):
 </li>
 <li>
 <h4><code><a title="exchangelib.OAuth2AuthorizationCodeCredentials" href="#exchangelib.OAuth2AuthorizationCodeCredentials">OAuth2AuthorizationCodeCredentials</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.OAuth2AuthorizationCodeCredentials.scope" href="#exchangelib.OAuth2AuthorizationCodeCredentials.scope">scope</a></code></li>
-<li><code><a title="exchangelib.OAuth2AuthorizationCodeCredentials.token_url" href="#exchangelib.OAuth2AuthorizationCodeCredentials.token_url">token_url</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.OAuth2Credentials" href="#exchangelib.OAuth2Credentials">OAuth2Credentials</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.OAuth2Credentials.on_token_auto_refreshed" href="#exchangelib.OAuth2Credentials.on_token_auto_refreshed">on_token_auto_refreshed</a></code></li>
-<li><code><a title="exchangelib.OAuth2Credentials.scope" href="#exchangelib.OAuth2Credentials.scope">scope</a></code></li>
-<li><code><a title="exchangelib.OAuth2Credentials.sig" href="#exchangelib.OAuth2Credentials.sig">sig</a></code></li>
-<li><code><a title="exchangelib.OAuth2Credentials.token_url" href="#exchangelib.OAuth2Credentials.token_url">token_url</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.OAuth2LegacyCredentials" href="#exchangelib.OAuth2LegacyCredentials">OAuth2LegacyCredentials</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.OAuth2LegacyCredentials.scope" href="#exchangelib.OAuth2LegacyCredentials.scope">scope</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.OofSettings" href="#exchangelib.OofSettings">OofSettings</a></code></h4>
@@ -13756,6 +13590,7 @@ def fullname(self):
 <li>
 <h4><code><a title="exchangelib.Version" href="#exchangelib.Version">Version</a></code></h4>
 <ul class="two-column">
+<li><code><a title="exchangelib.Version.all_versions" href="#exchangelib.Version.all_versions">all_versions</a></code></li>
 <li><code><a title="exchangelib.Version.api_version" href="#exchangelib.Version.api_version">api_version</a></code></li>
 <li><code><a title="exchangelib.Version.build" href="#exchangelib.Version.build">build</a></code></li>
 <li><code><a title="exchangelib.Version.copy" href="#exchangelib.Version.copy">copy</a></code></li>

@@ -49,8 +49,7 @@ class ExportItems(EWSAccountService):
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
-    # We need to override this since ExportItemsResponseMessage is formatted a
-    # little bit differently. .
+    # We need to override this since ExportItemsResponseMessage is formatted a bit differently.
     @classmethod
     def _get_elements_in_container(cls, container):
         return [container]</code></pre>
@@ -93,8 +92,7 @@ class ExportItems(EWSAccountService):
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
-    # We need to override this since ExportItemsResponseMessage is formatted a
-    # little bit differently. .
+    # We need to override this since ExportItemsResponseMessage is formatted a bit differently.
     @classmethod
     def _get_elements_in_container(cls, container):
         return [container]</code></pre>
@@ -103,6 +101,7 @@ class ExportItems(EWSAccountService):
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -158,6 +157,8 @@ class ExportItems(EWSAccountService):
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

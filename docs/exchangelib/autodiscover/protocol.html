@@ -27,6 +27,9 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from ..protocol import BaseProtocol
+from ..services import GetUserSettings
+from ..transport import get_autodiscover_authtype
+from ..version import Version
 
 
 class AutodiscoverProtocol(BaseProtocol):
@@ -34,10 +37,55 @@ class AutodiscoverProtocol(BaseProtocol):
 
     TIMEOUT = 10  # Seconds
 
+    def __init__(self, config):
+        if not config.version:
+            # Default to the latest supported version
+            config.version = Version.all_versions()[0]
+        super().__init__(config=config)
+
     def __str__(self):
         return f&#34;&#34;&#34;\
 Autodiscover endpoint: {self.service_endpoint}
-Auth type: {self.auth_type}&#34;&#34;&#34;</code></pre>
+Auth type: {self.auth_type}&#34;&#34;&#34;
+
+    @property
+    def version(self):
+        return self.config.version
+
+    @property
+    def auth_type(self):
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
+        return self.config.auth_type
+
+    def get_auth_type(self):
+        # Autodetect authentication type.
+        return get_autodiscover_authtype(protocol=self)
+
+    def get_user_settings(self, user):
+        return GetUserSettings(protocol=self).get(
+            users=[user],
+            settings=[
+                &#34;user_dn&#34;,
+                &#34;mailbox_dn&#34;,
+                &#34;user_display_name&#34;,
+                &#34;auto_discover_smtp_address&#34;,
+                &#34;external_ews_url&#34;,
+                &#34;ews_supported_schemas&#34;,
+            ],
+        )
+
+    def dummy_xml(self):
+        # Generate a valid EWS request for SOAP autodiscovery
+        svc = GetUserSettings(protocol=self)
+        return svc.wrap(
+            content=svc.get_payload(
+                users=[&#34;DUMMY@example.com&#34;],
+                settings=[&#34;auto_discover_smtp_address&#34;],
+            ),
+            api_version=self.config.version.api_version,
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -64,10 +112,55 @@ Auth type: {self.auth_type}&#34;&#34;&#34;</code></pre>
 
     TIMEOUT = 10  # Seconds
 
+    def __init__(self, config):
+        if not config.version:
+            # Default to the latest supported version
+            config.version = Version.all_versions()[0]
+        super().__init__(config=config)
+
     def __str__(self):
         return f&#34;&#34;&#34;\
 Autodiscover endpoint: {self.service_endpoint}
-Auth type: {self.auth_type}&#34;&#34;&#34;</code></pre>
+Auth type: {self.auth_type}&#34;&#34;&#34;
+
+    @property
+    def version(self):
+        return self.config.version
+
+    @property
+    def auth_type(self):
+        # Autodetect authentication type if necessary
+        if self.config.auth_type is None:
+            self.config.auth_type = self.get_auth_type()
+        return self.config.auth_type
+
+    def get_auth_type(self):
+        # Autodetect authentication type.
+        return get_autodiscover_authtype(protocol=self)
+
+    def get_user_settings(self, user):
+        return GetUserSettings(protocol=self).get(
+            users=[user],
+            settings=[
+                &#34;user_dn&#34;,
+                &#34;mailbox_dn&#34;,
+                &#34;user_display_name&#34;,
+                &#34;auto_discover_smtp_address&#34;,
+                &#34;external_ews_url&#34;,
+                &#34;ews_supported_schemas&#34;,
+            ],
+        )
+
+    def dummy_xml(self):
+        # Generate a valid EWS request for SOAP autodiscovery
+        svc = GetUserSettings(protocol=self)
+        return svc.wrap(
+            content=svc.get_payload(
+                users=[&#34;DUMMY@example.com&#34;],
+                settings=[&#34;auto_discover_smtp_address&#34;],
+            ),
+            api_version=self.config.version.api_version,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -80,12 +173,90 @@ Auth type: {self.auth_type}&#34;&#34;&#34;</code></pre>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.autodiscover.protocol.AutodiscoverProtocol.auth_type"><code class="name">var <span class="ident">auth_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def auth_type(self):
+    # Autodetect authentication type if necessary
+    if self.config.auth_type is None:
+        self.config.auth_type = self.get_auth_type()
+    return self.config.auth_type</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.autodiscover.protocol.AutodiscoverProtocol.version"><code class="name">var <span class="ident">version</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def version(self):
+    return self.config.version</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.autodiscover.protocol.AutodiscoverProtocol.dummy_xml"><code class="name flex">
+<span>def <span class="ident">dummy_xml</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dummy_xml(self):
+    # Generate a valid EWS request for SOAP autodiscovery
+    svc = GetUserSettings(protocol=self)
+    return svc.wrap(
+        content=svc.get_payload(
+            users=[&#34;DUMMY@example.com&#34;],
+            settings=[&#34;auto_discover_smtp_address&#34;],
+        ),
+        api_version=self.config.version.api_version,
+    )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.autodiscover.protocol.AutodiscoverProtocol.get_user_settings"><code class="name flex">
+<span>def <span class="ident">get_user_settings</span></span>(<span>self, user)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_user_settings(self, user):
+    return GetUserSettings(protocol=self).get(
+        users=[user],
+        settings=[
+            &#34;user_dn&#34;,
+            &#34;mailbox_dn&#34;,
+            &#34;user_display_name&#34;,
+            &#34;auto_discover_smtp_address&#34;,
+            &#34;external_ews_url&#34;,
+            &#34;ews_supported_schemas&#34;,
+        ],
+    )</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.protocol.BaseProtocol" href="../protocol.html#exchangelib.protocol.BaseProtocol">BaseProtocol</a></b></code>:
 <ul class="hlist">
 <li><code><a title="exchangelib.protocol.BaseProtocol.HTTP_ADAPTER_CLS" href="../protocol.html#exchangelib.protocol.BaseProtocol.HTTP_ADAPTER_CLS">HTTP_ADAPTER_CLS</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.decrease_poolsize" href="../protocol.html#exchangelib.protocol.BaseProtocol.decrease_poolsize">decrease_poolsize</a></code></li>
+<li><code><a title="exchangelib.protocol.BaseProtocol.get_auth_type" href="../protocol.html#exchangelib.protocol.BaseProtocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.increase_poolsize" href="../protocol.html#exchangelib.protocol.BaseProtocol.increase_poolsize">increase_poolsize</a></code></li>
 </ul>
 </li>
@@ -111,6 +282,10 @@ Auth type: {self.auth_type}&#34;&#34;&#34;</code></pre>
 <h4><code><a title="exchangelib.autodiscover.protocol.AutodiscoverProtocol" href="#exchangelib.autodiscover.protocol.AutodiscoverProtocol">AutodiscoverProtocol</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.autodiscover.protocol.AutodiscoverProtocol.TIMEOUT" href="#exchangelib.autodiscover.protocol.AutodiscoverProtocol.TIMEOUT">TIMEOUT</a></code></li>
+<li><code><a title="exchangelib.autodiscover.protocol.AutodiscoverProtocol.auth_type" href="#exchangelib.autodiscover.protocol.AutodiscoverProtocol.auth_type">auth_type</a></code></li>
+<li><code><a title="exchangelib.autodiscover.protocol.AutodiscoverProtocol.dummy_xml" href="#exchangelib.autodiscover.protocol.AutodiscoverProtocol.dummy_xml">dummy_xml</a></code></li>
+<li><code><a title="exchangelib.autodiscover.protocol.AutodiscoverProtocol.get_user_settings" href="#exchangelib.autodiscover.protocol.AutodiscoverProtocol.get_user_settings">get_user_settings</a></code></li>
+<li><code><a title="exchangelib.autodiscover.protocol.AutodiscoverProtocol.version" href="#exchangelib.autodiscover.protocol.AutodiscoverProtocol.version">version</a></code></li>
 </ul>
 </li>
 </ul>

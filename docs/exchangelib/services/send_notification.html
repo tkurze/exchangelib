@@ -28,7 +28,6 @@
 </summary>
 <pre><code class="python">from ..errors import InvalidEnumValue
 from ..properties import Notification
-from ..transport import wrap
 from ..util import MNS, create_element
 from .common import EWSService, add_xml_child
 
@@ -47,10 +46,10 @@ class SendNotification(EWSService):
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
-        return wrap(content=self.get_payload(status=self.OK))
+        return self.wrap(content=self.get_payload(status=self.OK))
 
     def unsubscribe_payload(self):
-        return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
+        return self.wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -108,10 +107,10 @@ push notifications.</p></div>
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
-        return wrap(content=self.get_payload(status=self.OK))
+        return self.wrap(content=self.get_payload(status=self.OK))
 
     def unsubscribe_payload(self):
-        return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
+        return self.wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -135,6 +134,7 @@ push notifications.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -184,7 +184,7 @@ push notifications.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def ok_payload(self):
-    return wrap(content=self.get_payload(status=self.OK))</code></pre>
+    return self.wrap(content=self.get_payload(status=self.OK))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.send_notification.SendNotification.unsubscribe_payload"><code class="name flex">
@@ -197,7 +197,7 @@ push notifications.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def unsubscribe_payload(self):
-    return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))</code></pre>
+    return self.wrap(content=self.get_payload(status=self.UNSUBSCRIBE))</code></pre>
 </details>
 </dd>
 </dl>
@@ -209,6 +209,8 @@ push notifications.</p></div>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

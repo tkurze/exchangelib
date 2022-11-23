@@ -45,10 +45,10 @@ from threading import Lock
 
 import requests.adapters
 import requests.sessions
-from oauthlib.oauth2 import BackendApplicationClient, LegacyApplicationClient, WebApplicationClient
+from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 
-from .credentials import OAuth2AuthorizationCodeCredentials, OAuth2Credentials, OAuth2LegacyCredentials
+from .credentials import BaseOAuth2Credentials
 from .errors import (
     CASError,
     ErrorInvalidSchemaVersionForMailboxVersion,
@@ -60,7 +60,17 @@ from .errors import (
     TransportError,
     UnauthorizedError,
 )
-from .properties import DLMailbox, FreeBusyViewOptions, MailboxData, RoomList, TimeWindow, TimeZone
+from .properties import (
+    ENTRY_ID,
+    EWS_ID,
+    AlternateId,
+    DLMailbox,
+    FreeBusyViewOptions,
+    MailboxData,
+    RoomList,
+    TimeWindow,
+    TimeZone,
+)
 from .services import (
     ConvertId,
     ExpandDL,
@@ -72,7 +82,7 @@ from .services import (
     ResolveNames,
 )
 from .transport import CREDENTIALS_REQUIRED, DEFAULT_HEADERS, NTLM, OAUTH2, get_auth_instance, get_service_authtype
-from .version import API_VERSIONS, Version
+from .version import Version
 
 log = logging.getLogger(__name__)
 
@@ -108,7 +118,6 @@ class BaseProtocol:
 
     def __init__(self, config):
         self.config = config
-        self._api_version_hint = None
 
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
@@ -122,6 +131,10 @@ class BaseProtocol:
     @property
     def service_endpoint(self):
         return self.config.service_endpoint
+
+    @abc.abstractmethod
+    def get_auth_type(self):
+        &#34;&#34;&#34;Autodetect authentication type&#34;&#34;&#34;
 
     @property
     def auth_type(self):
@@ -149,15 +162,6 @@ class BaseProtocol:
     @property
     def server(self):
         return self.config.server
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else &#34;DUMMY&#34;
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -276,11 +280,12 @@ class BaseProtocol:
         self._session_pool.put(session, block=False)
 
     def close_session(self, session):
-        if isinstance(self.credentials, OAuth2Credentials) and not isinstance(
-            self.credentials, OAuth2AuthorizationCodeCredentials
+        if isinstance(self.credentials, BaseOAuth2Credentials) and isinstance(
+            self.credentials.client, BackendApplicationClient
         ):
-            # Reset token if client is of type BackendApplicationClient
-            self.credentials.access_token = None
+            # Reset access token
+            with self.credentials.lock:
+                self.credentials.access_token = None
         session.close()
         del session
 
@@ -317,24 +322,22 @@ class BaseProtocol:
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
-            with self.credentials.lock:
-                if isinstance(self.credentials, OAuth2Credentials):
+            if isinstance(self.credentials, BaseOAuth2Credentials):
+                with self.credentials.lock:
                     session = self.create_oauth2_session()
-                    # Keep track of the credentials used to create this session. If
-                    # and when we need to renew credentials (for example, refreshing
-                    # an OAuth access token), this lets us easily determine whether
-                    # the credentials have already been refreshed in another thread
-                    # by the time this session tries.
+                    # Keep track of the credentials used to create this session. If and when we need to renew
+                    # credentials (for example, refreshing an OAuth access token), this lets us easily determine whether
+                    # the credentials have already been refreshed in another thread by the time this session tries.
                     session.credentials_sig = self.credentials.sig()
+            else:
+                if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
+                    username = &#34;\\&#34; + self.credentials.username
                 else:
-                    if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
-                        username = &#34;\\&#34; + self.credentials.username
-                    else:
-                        username = self.credentials.username
-                    session = self.raw_session(self.service_endpoint)
-                    session.auth = get_auth_instance(
-                        auth_type=self.auth_type, username=username, password=self.credentials.password
-                    )
+                    username = self.credentials.username
+                session = self.raw_session(self.service_endpoint)
+                session.auth = get_auth_instance(
+                    auth_type=self.auth_type, username=username, password=self.credentials.password
+                )
 
         # Add some extra info
         session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
@@ -343,40 +346,10 @@ class BaseProtocol:
         return session
 
     def create_oauth2_session(self):
-        session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
-        token_params = {&#34;include_client_id&#34;: True}
-
-        if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-            token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
-            self.credentials.authorization_code = None  # We can only use the code once
-
-            if self.credentials.client_id and self.credentials.client_secret:
-                # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
-                # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
-                # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
-                # is working with a service that can provide it refreshed tokens on a limited basis).
-                session_params.update(
-                    {
-                        &#34;auto_refresh_kwargs&#34;: {
-                            &#34;client_id&#34;: self.credentials.client_id,
-                            &#34;client_secret&#34;: self.credentials.client_secret,
-                        },
-                        &#34;auto_refresh_url&#34;: self.credentials.token_url,
-                        &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
-                    }
-                )
-            client = WebApplicationClient(client_id=self.credentials.client_id)
-        elif isinstance(self.credentials, OAuth2LegacyCredentials):
-            client = LegacyApplicationClient(client_id=self.credentials.client_id)
-            token_params[&#34;username&#34;] = self.credentials.username
-            token_params[&#34;password&#34;] = self.credentials.password
-        else:
-            client = BackendApplicationClient(client_id=self.credentials.client_id)
-
         session = self.raw_session(
             self.service_endpoint,
-            oauth2_client=client,
-            oauth2_session_params=session_params,
+            oauth2_client=self.credentials.client,
+            oauth2_session_params=self.credentials.session_params(),
             oauth2_token_endpoint=self.credentials.token_url,
         )
         if not session.token:
@@ -387,12 +360,12 @@ class BaseProtocol:
                 client_secret=self.credentials.client_secret,
                 scope=self.credentials.scope,
                 timeout=self.TIMEOUT,
-                **token_params,
+                **self.credentials.token_params(),
             )
             # Allow the credentials object to update its copy of the new token, and give the application an opportunity
             # to cache it.
             self.credentials.on_token_auto_refreshed(token)
-        session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
+        session.auth = get_auth_instance(auth_type=OAUTH2, client=self.credentials.client)
 
         return session
 
@@ -446,7 +419,7 @@ class CachingProtocol(type):
             return protocol
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
-        # probably overkill although it would reduce lock contention.
+        # probably overkill, although it would reduce lock contention.
         log.debug(&#34;Waiting for _protocol_cache_lock&#34;)
         with cls._protocol_cache_lock:
             try:
@@ -505,15 +478,21 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._version_lock = Lock()
+        self.api_version_hint = None
+
+    def get_auth_type(self):
+        # Autodetect authentication type. We also set &#39;self.api_version_hint&#39; here.
+        return get_service_authtype(protocol=self)
 
     @property
     def version(self):
         # Make sure only one thread does the guessing.
         if not self.config.version or not self.config.version.build:
+            log.debug(&#34;Waiting for _version_lock&#34;)
             with self._version_lock:
                 if not self.config.version or not self.config.version.build:
                     # Version.guess() needs auth objects and a working session pool
-                    self.config.version = Version.guess(self, api_version_hint=self._api_version_hint)
+                    self.config.version = Version.guess(self, api_version_hint=self.api_version_hint)
         return self.config.version
 
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
@@ -591,7 +570,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         )
 
     def expand_dl(self, distribution_list):
-        &#34;&#34;&#34;Expand distribution list into it&#39;s members.
+        &#34;&#34;&#34;Expand distribution list into its members.
 
         :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
@@ -629,6 +608,17 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
         &#34;&#34;&#34;
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
 
+    def dummy_xml(self):
+        # Generate a minimal, valid EWS request
+        svc = ConvertId(protocol=self)
+        return svc.wrap(
+            content=svc.get_payload(
+                items=[AlternateId(id=&#34;DUMMY&#34;, format=EWS_ID, mailbox=&#34;DUMMY&#34;)],
+                destination_format=ENTRY_ID,
+            ),
+            api_version=self.api_version_hint,
+        )
+
     def __getstate__(self):
         # The lock cannot be pickled
         state = super().__getstate__()
@@ -660,7 +650,7 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We&#39;re overriding a method so we have to keep the signature
+        # We&#39;re overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
 
 
@@ -744,7 +734,7 @@ class FailFast(RetryPolicy):
         raise ValueError(&#34;Cannot back off with fail-fast policy&#34;)
 
     def may_retry_on_error(self, response, wait):
-        log.debug(&#34;No retry: no fail-fast policy&#34;)
+        log.debug(&#34;No retry with fail-fast policy&#34;)
         return False
 
 
@@ -899,7 +889,6 @@ class FaultTolerance(RetryPolicy):
 
     def __init__(self, config):
         self.config = config
-        self._api_version_hint = None
 
         self._session_pool_size = 0
         self._session_pool_maxsize = config.max_connections or self.SESSION_POOLSIZE
@@ -913,6 +902,10 @@ class FaultTolerance(RetryPolicy):
     @property
     def service_endpoint(self):
         return self.config.service_endpoint
+
+    @abc.abstractmethod
+    def get_auth_type(self):
+        &#34;&#34;&#34;Autodetect authentication type&#34;&#34;&#34;
 
     @property
     def auth_type(self):
@@ -940,15 +933,6 @@ class FaultTolerance(RetryPolicy):
     @property
     def server(self):
         return self.config.server
-
-    def get_auth_type(self):
-        # Autodetect authentication type. We also set version hint here.
-        name = str(self.credentials) if self.credentials and str(self.credentials) else &#34;DUMMY&#34;
-        auth_type, api_version_hint = get_service_authtype(
-            service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-        )
-        self._api_version_hint = api_version_hint
-        return auth_type
 
     def __getstate__(self):
         # The session pool and lock cannot be pickled
@@ -1067,11 +1051,12 @@ class FaultTolerance(RetryPolicy):
         self._session_pool.put(session, block=False)
 
     def close_session(self, session):
-        if isinstance(self.credentials, OAuth2Credentials) and not isinstance(
-            self.credentials, OAuth2AuthorizationCodeCredentials
+        if isinstance(self.credentials, BaseOAuth2Credentials) and isinstance(
+            self.credentials.client, BackendApplicationClient
         ):
-            # Reset token if client is of type BackendApplicationClient
-            self.credentials.access_token = None
+            # Reset access token
+            with self.credentials.lock:
+                self.credentials.access_token = None
         session.close()
         del session
 
@@ -1108,24 +1093,22 @@ class FaultTolerance(RetryPolicy):
             session = self.raw_session(self.service_endpoint)
             session.auth = get_auth_instance(auth_type=self.auth_type)
         else:
-            with self.credentials.lock:
-                if isinstance(self.credentials, OAuth2Credentials):
+            if isinstance(self.credentials, BaseOAuth2Credentials):
+                with self.credentials.lock:
                     session = self.create_oauth2_session()
-                    # Keep track of the credentials used to create this session. If
-                    # and when we need to renew credentials (for example, refreshing
-                    # an OAuth access token), this lets us easily determine whether
-                    # the credentials have already been refreshed in another thread
-                    # by the time this session tries.
+                    # Keep track of the credentials used to create this session. If and when we need to renew
+                    # credentials (for example, refreshing an OAuth access token), this lets us easily determine whether
+                    # the credentials have already been refreshed in another thread by the time this session tries.
                     session.credentials_sig = self.credentials.sig()
+            else:
+                if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
+                    username = &#34;\\&#34; + self.credentials.username
                 else:
-                    if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
-                        username = &#34;\\&#34; + self.credentials.username
-                    else:
-                        username = self.credentials.username
-                    session = self.raw_session(self.service_endpoint)
-                    session.auth = get_auth_instance(
-                        auth_type=self.auth_type, username=username, password=self.credentials.password
-                    )
+                    username = self.credentials.username
+                session = self.raw_session(self.service_endpoint)
+                session.auth = get_auth_instance(
+                    auth_type=self.auth_type, username=username, password=self.credentials.password
+                )
 
         # Add some extra info
         session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
@@ -1134,40 +1117,10 @@ class FaultTolerance(RetryPolicy):
         return session
 
     def create_oauth2_session(self):
-        session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
-        token_params = {&#34;include_client_id&#34;: True}
-
-        if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-            token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
-            self.credentials.authorization_code = None  # We can only use the code once
-
-            if self.credentials.client_id and self.credentials.client_secret:
-                # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
-                # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
-                # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
-                # is working with a service that can provide it refreshed tokens on a limited basis).
-                session_params.update(
-                    {
-                        &#34;auto_refresh_kwargs&#34;: {
-                            &#34;client_id&#34;: self.credentials.client_id,
-                            &#34;client_secret&#34;: self.credentials.client_secret,
-                        },
-                        &#34;auto_refresh_url&#34;: self.credentials.token_url,
-                        &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
-                    }
-                )
-            client = WebApplicationClient(client_id=self.credentials.client_id)
-        elif isinstance(self.credentials, OAuth2LegacyCredentials):
-            client = LegacyApplicationClient(client_id=self.credentials.client_id)
-            token_params[&#34;username&#34;] = self.credentials.username
-            token_params[&#34;password&#34;] = self.credentials.password
-        else:
-            client = BackendApplicationClient(client_id=self.credentials.client_id)
-
         session = self.raw_session(
             self.service_endpoint,
-            oauth2_client=client,
-            oauth2_session_params=session_params,
+            oauth2_client=self.credentials.client,
+            oauth2_session_params=self.credentials.session_params(),
             oauth2_token_endpoint=self.credentials.token_url,
         )
         if not session.token:
@@ -1178,12 +1131,12 @@ class FaultTolerance(RetryPolicy):
                 client_secret=self.credentials.client_secret,
                 scope=self.credentials.scope,
                 timeout=self.TIMEOUT,
-                **token_params,
+                **self.credentials.token_params(),
             )
             # Allow the credentials object to update its copy of the new token, and give the application an opportunity
             # to cache it.
             self.credentials.on_token_auto_refreshed(token)
-        session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
+        session.auth = get_auth_instance(auth_type=OAUTH2, client=self.credentials.client)
 
         return session
 
@@ -1416,11 +1369,12 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close_session(self, session):
-    if isinstance(self.credentials, OAuth2Credentials) and not isinstance(
-        self.credentials, OAuth2AuthorizationCodeCredentials
+    if isinstance(self.credentials, BaseOAuth2Credentials) and isinstance(
+        self.credentials.client, BackendApplicationClient
     ):
-        # Reset token if client is of type BackendApplicationClient
-        self.credentials.access_token = None
+        # Reset access token
+        with self.credentials.lock:
+            self.credentials.access_token = None
     session.close()
     del session</code></pre>
 </details>
@@ -1435,40 +1389,10 @@ def session_pool_size(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_oauth2_session(self):
-    session_params = {&#34;token&#34;: self.credentials.access_token}  # Token may be None
-    token_params = {&#34;include_client_id&#34;: True}
-
-    if isinstance(self.credentials, OAuth2AuthorizationCodeCredentials):
-        token_params[&#34;code&#34;] = self.credentials.authorization_code  # Auth code may be None
-        self.credentials.authorization_code = None  # We can only use the code once
-
-        if self.credentials.client_id and self.credentials.client_secret:
-            # If we&#39;re given a client ID and secret, we have enough to refresh access tokens ourselves. In other
-            # cases the session will raise TokenExpiredError, and we&#39;ll need to ask the calling application to
-            # refresh the token (that covers cases where the caller doesn&#39;t have access to the client secret but
-            # is working with a service that can provide it refreshed tokens on a limited basis).
-            session_params.update(
-                {
-                    &#34;auto_refresh_kwargs&#34;: {
-                        &#34;client_id&#34;: self.credentials.client_id,
-                        &#34;client_secret&#34;: self.credentials.client_secret,
-                    },
-                    &#34;auto_refresh_url&#34;: self.credentials.token_url,
-                    &#34;token_updater&#34;: self.credentials.on_token_auto_refreshed,
-                }
-            )
-        client = WebApplicationClient(client_id=self.credentials.client_id)
-    elif isinstance(self.credentials, OAuth2LegacyCredentials):
-        client = LegacyApplicationClient(client_id=self.credentials.client_id)
-        token_params[&#34;username&#34;] = self.credentials.username
-        token_params[&#34;password&#34;] = self.credentials.password
-    else:
-        client = BackendApplicationClient(client_id=self.credentials.client_id)
-
     session = self.raw_session(
         self.service_endpoint,
-        oauth2_client=client,
-        oauth2_session_params=session_params,
+        oauth2_client=self.credentials.client,
+        oauth2_session_params=self.credentials.session_params(),
         oauth2_token_endpoint=self.credentials.token_url,
     )
     if not session.token:
@@ -1479,12 +1403,12 @@ def session_pool_size(self):
             client_secret=self.credentials.client_secret,
             scope=self.credentials.scope,
             timeout=self.TIMEOUT,
-            **token_params,
+            **self.credentials.token_params(),
         )
         # Allow the credentials object to update its copy of the new token, and give the application an opportunity
         # to cache it.
         self.credentials.on_token_auto_refreshed(token)
-    session.auth = get_auth_instance(auth_type=OAUTH2, client=client)
+    session.auth = get_auth_instance(auth_type=OAUTH2, client=self.credentials.client)
 
     return session</code></pre>
 </details>
@@ -1505,24 +1429,22 @@ def session_pool_size(self):
         session = self.raw_session(self.service_endpoint)
         session.auth = get_auth_instance(auth_type=self.auth_type)
     else:
-        with self.credentials.lock:
-            if isinstance(self.credentials, OAuth2Credentials):
+        if isinstance(self.credentials, BaseOAuth2Credentials):
+            with self.credentials.lock:
                 session = self.create_oauth2_session()
-                # Keep track of the credentials used to create this session. If
-                # and when we need to renew credentials (for example, refreshing
-                # an OAuth access token), this lets us easily determine whether
-                # the credentials have already been refreshed in another thread
-                # by the time this session tries.
+                # Keep track of the credentials used to create this session. If and when we need to renew
+                # credentials (for example, refreshing an OAuth access token), this lets us easily determine whether
+                # the credentials have already been refreshed in another thread by the time this session tries.
                 session.credentials_sig = self.credentials.sig()
+        else:
+            if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
+                username = &#34;\\&#34; + self.credentials.username
             else:
-                if self.auth_type == NTLM and self.credentials.type == self.credentials.EMAIL:
-                    username = &#34;\\&#34; + self.credentials.username
-                else:
-                    username = self.credentials.username
-                session = self.raw_session(self.service_endpoint)
-                session.auth = get_auth_instance(
-                    auth_type=self.auth_type, username=username, password=self.credentials.password
-                )
+                username = self.credentials.username
+            session = self.raw_session(self.service_endpoint)
+            session.auth = get_auth_instance(
+                auth_type=self.auth_type, username=username, password=self.credentials.password
+            )
 
     # Add some extra info
     session.session_id = random.randint(10000, 99999)  # Used for debugging messages in services
@@ -1568,19 +1490,14 @@ requests. We decrease by one session per call.</p></div>
 <span>def <span class="ident">get_auth_type</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Autodetect authentication type</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_auth_type(self):
-    # Autodetect authentication type. We also set version hint here.
-    name = str(self.credentials) if self.credentials and str(self.credentials) else &#34;DUMMY&#34;
-    auth_type, api_version_hint = get_service_authtype(
-        service_endpoint=self.service_endpoint, retry_policy=self.retry_policy, api_versions=API_VERSIONS, name=name
-    )
-    self._api_version_hint = api_version_hint
-    return auth_type</code></pre>
+<pre><code class="python">@abc.abstractmethod
+def get_auth_type(self):
+    &#34;&#34;&#34;Autodetect authentication type&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.get_session"><code class="name flex">
@@ -1763,7 +1680,7 @@ requests. We decrease by one session per call.</p></div>
             return protocol
 
         # Acquire lock to guard against multiple threads competing to cache information. Having a per-server lock is
-        # probably overkill although it would reduce lock contention.
+        # probably overkill, although it would reduce lock contention.
         log.debug(&#34;Waiting for _protocol_cache_lock&#34;)
         with cls._protocol_cache_lock:
             try:
@@ -1866,7 +1783,7 @@ def clear_cache(mcs):
         raise ValueError(&#34;Cannot back off with fail-fast policy&#34;)
 
     def may_retry_on_error(self, response, wait):
-        log.debug(&#34;No retry: no fail-fast policy&#34;)
+        log.debug(&#34;No retry with fail-fast policy&#34;)
         return False</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2045,7 +1962,7 @@ def back_off_until(self):
 
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
-        # We&#39;re overriding a method so we have to keep the signature
+        # We&#39;re overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2074,7 +1991,7 @@ to a CA bundle to use
 </summary>
 <pre><code class="python">def cert_verify(self, conn, url, verify, cert):
     # pylint: disable=unused-argument
-    # We&#39;re overriding a method so we have to keep the signature
+    # We&#39;re overriding a method, so we have to keep the signature
     super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
 </details>
 </dd>
@@ -2101,15 +2018,21 @@ services that are not tied to an account.</p></div>
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._version_lock = Lock()
+        self.api_version_hint = None
+
+    def get_auth_type(self):
+        # Autodetect authentication type. We also set &#39;self.api_version_hint&#39; here.
+        return get_service_authtype(protocol=self)
 
     @property
     def version(self):
         # Make sure only one thread does the guessing.
         if not self.config.version or not self.config.version.build:
+            log.debug(&#34;Waiting for _version_lock&#34;)
             with self._version_lock:
                 if not self.config.version or not self.config.version.build:
                     # Version.guess() needs auth objects and a working session pool
-                    self.config.version = Version.guess(self, api_version_hint=self._api_version_hint)
+                    self.config.version = Version.guess(self, api_version_hint=self.api_version_hint)
         return self.config.version
 
     def get_timezones(self, timezones=None, return_full_timezone_data=False):
@@ -2187,7 +2110,7 @@ services that are not tied to an account.</p></div>
         )
 
     def expand_dl(self, distribution_list):
-        &#34;&#34;&#34;Expand distribution list into it&#39;s members.
+        &#34;&#34;&#34;Expand distribution list into its members.
 
         :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
@@ -2224,6 +2147,17 @@ services that are not tied to an account.</p></div>
         :return: a generator of AlternateId, AlternatePublicFolderId or AlternatePublicFolderItemId instances
         &#34;&#34;&#34;
         return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)
+
+    def dummy_xml(self):
+        # Generate a minimal, valid EWS request
+        svc = ConvertId(protocol=self)
+        return svc.wrap(
+            content=svc.get_payload(
+                items=[AlternateId(id=&#34;DUMMY&#34;, format=EWS_ID, mailbox=&#34;DUMMY&#34;)],
+                destination_format=ENTRY_ID,
+            ),
+            api_version=self.api_version_hint,
+        )
 
     def __getstate__(self):
         # The lock cannot be pickled
@@ -2267,10 +2201,11 @@ EWS auth: {self.auth_type}&#34;&#34;&#34;</code></pre>
 def version(self):
     # Make sure only one thread does the guessing.
     if not self.config.version or not self.config.version.build:
+        log.debug(&#34;Waiting for _version_lock&#34;)
         with self._version_lock:
             if not self.config.version or not self.config.version.build:
                 # Version.guess() needs auth objects and a working session pool
-                self.config.version = Version.guess(self, api_version_hint=self._api_version_hint)
+                self.config.version = Version.guess(self, api_version_hint=self.api_version_hint)
     return self.config.version</code></pre>
 </details>
 </dd>
@@ -2300,11 +2235,32 @@ def version(self):
     return ConvertId(protocol=self).call(items=ids, destination_format=destination_format)</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.protocol.Protocol.dummy_xml"><code class="name flex">
+<span>def <span class="ident">dummy_xml</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dummy_xml(self):
+    # Generate a minimal, valid EWS request
+    svc = ConvertId(protocol=self)
+    return svc.wrap(
+        content=svc.get_payload(
+            items=[AlternateId(id=&#34;DUMMY&#34;, format=EWS_ID, mailbox=&#34;DUMMY&#34;)],
+            destination_format=ENTRY_ID,
+        ),
+        api_version=self.api_version_hint,
+    )</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.protocol.Protocol.expand_dl"><code class="name flex">
 <span>def <span class="ident">expand_dl</span></span>(<span>self, distribution_list)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Expand distribution list into it's members.</p>
+<div class="desc"><p>Expand distribution list into its members.</p>
 <p>:param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list</p>
 <p>:return: List of Mailbox items that are members of the distribution list</p></div>
 <details class="source">
@@ -2312,7 +2268,7 @@ def version(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def expand_dl(self, distribution_list):
-    &#34;&#34;&#34;Expand distribution list into it&#39;s members.
+    &#34;&#34;&#34;Expand distribution list into its members.
 
     :param distribution_list: SMTP address of the distribution list to expand, or a DLMailbox representing the list
 
@@ -2506,6 +2462,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 <ul class="hlist">
 <li><code><a title="exchangelib.protocol.BaseProtocol.HTTP_ADAPTER_CLS" href="#exchangelib.protocol.BaseProtocol.HTTP_ADAPTER_CLS">HTTP_ADAPTER_CLS</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.decrease_poolsize" href="#exchangelib.protocol.BaseProtocol.decrease_poolsize">decrease_poolsize</a></code></li>
+<li><code><a title="exchangelib.protocol.BaseProtocol.get_auth_type" href="#exchangelib.protocol.BaseProtocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.increase_poolsize" href="#exchangelib.protocol.BaseProtocol.increase_poolsize">increase_poolsize</a></code></li>
 </ul>
 </li>
@@ -2813,6 +2770,7 @@ exposed for use when subclassing the
 <h4><code><a title="exchangelib.protocol.Protocol" href="#exchangelib.protocol.Protocol">Protocol</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.protocol.Protocol.convert_ids" href="#exchangelib.protocol.Protocol.convert_ids">convert_ids</a></code></li>
+<li><code><a title="exchangelib.protocol.Protocol.dummy_xml" href="#exchangelib.protocol.Protocol.dummy_xml">dummy_xml</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.expand_dl" href="#exchangelib.protocol.Protocol.expand_dl">expand_dl</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.get_free_busy_info" href="#exchangelib.protocol.Protocol.get_free_busy_info">get_free_busy_info</a></code></li>
 <li><code><a title="exchangelib.protocol.Protocol.get_roomlists" href="#exchangelib.protocol.Protocol.get_roomlists">get_roomlists</a></code></li>

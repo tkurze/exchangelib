@@ -53,14 +53,7 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 from requests_oauthlib import OAuth2Session
 
-from .errors import (
-    InvalidTypeError,
-    MalformedResponseError,
-    RateLimitError,
-    RedirectError,
-    RelativeRedirect,
-    TransportError,
-)
+from .errors import MalformedResponseError, RateLimitError, RedirectError, RelativeRedirect, TransportError
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger(f&#34;{__name__}.xml&#34;)
@@ -100,14 +93,18 @@ class ElementNotFound(Exception):
         self.data = data
 
 
-# Regex of UTF-8 control characters that are illegal in XML 1.0 (and XML 1.1)
-_ILLEGAL_XML_CHARS_RE = re.compile(&#34;[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]&#34;)
+# Regex of UTF-8 control characters that are illegal in XML 1.0 (and XML 1.1).
+# See https://stackoverflow.com/a/22273639/219640
+_ILLEGAL_XML_CHARS_RE = re.compile(&#34;[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFDD0-\uFDDF\uFFFE\uFFFF]&#34;)
 
 # XML namespaces
 SOAPNS = &#34;http://schemas.xmlsoap.org/soap/envelope/&#34;
 MNS = &#34;http://schemas.microsoft.com/exchange/services/2006/messages&#34;
 TNS = &#34;http://schemas.microsoft.com/exchange/services/2006/types&#34;
 ENS = &#34;http://schemas.microsoft.com/exchange/services/2006/errors&#34;
+ANS = &#34;http://schemas.microsoft.com/exchange/2010/Autodiscover&#34;
+INS = &#34;http://www.w3.org/2001/XMLSchema-instance&#34;
+WSA = &#34;http://www.w3.org/2005/08/addressing&#34;
 AUTODISCOVER_BASE_NS = &#34;http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006&#34;
 AUTODISCOVER_REQUEST_NS = &#34;http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006&#34;
 AUTODISCOVER_RESPONSE_NS = &#34;http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a&#34;
@@ -116,6 +113,9 @@ ns_translation = {
     &#34;s&#34;: SOAPNS,
     &#34;m&#34;: MNS,
     &#34;t&#34;: TNS,
+    &#34;a&#34;: ANS,
+    &#34;wsa&#34;: WSA,
+    &#34;xsi&#34;: INS,
 }
 for item in ns_translation.items():
     lxml.etree.register_namespace(*item)
@@ -275,7 +275,6 @@ def set_xml_value(elem, value, version=None):
     from .ewsdatetime import EWSDate, EWSDateTime
     from .fields import FieldOrder, FieldPath
     from .properties import EWSElement
-    from .version import Version
 
     if isinstance(value, (str, bool, bytes, int, Decimal, datetime.time, EWSDate, EWSDateTime)):
         elem.text = value_to_xml_text(value)
@@ -284,8 +283,6 @@ def set_xml_value(elem, value, version=None):
     elif isinstance(value, (FieldPath, FieldOrder)):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
-        if not isinstance(version, Version):
-            raise InvalidTypeError(&#34;version&#34;, version, Version)
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:
@@ -360,7 +357,7 @@ def prepare_input_source(source):
 
 
 def safe_b64decode(data):
-    # Incoming base64-encoded data is not always padded to a multiple of 4. Python&#39;s parser is more strict and requires
+    # Incoming base64-encoded data is not always padded to a multiple of 4. Python&#39;s parser is stricter and requires
     # padding. Add padding if it&#39;s needed.
     overflow = len(data) % 4
     if overflow:
@@ -489,7 +486,7 @@ class DocumentYielder:
 
     def _get_tag(self):
         &#34;&#34;&#34;Iterate over the bytes until we have a full tag in the buffer. If there&#39;s a &#39;&gt;&#39; in an attr value, then we&#39;ll
-        exit on that, but it&#39;s OK becaus wejust need the plain tag name later.
+        exit on that, but it&#39;s OK because we just need the plain tag name later.
         &#34;&#34;&#34;
         tag_buffer = [b&#34;&lt;&#34;]
         while True:
@@ -581,21 +578,24 @@ def to_xml(bytes_content):
     return res
 
 
-def is_xml(text, expected_prefix=b&#34;&lt;?xml&#34;):
+def is_xml(text):
     &#34;&#34;&#34;Lightweight test if response is an XML doc. It&#39;s better to be fast than correct here.
 
     :param text: The string to check
-    :param expected_prefix: What to search for in the start if the string
     :return:
     &#34;&#34;&#34;
-    # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
+    # BOM_UTF8 is a UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
-    prefix_len = len(expected_prefix)
+    expected_prefixes = (b&#34;&lt;?xml&#34;, b&#34;&lt;s:Envelope&#34;)
+    max_prefix_len = len(expected_prefixes[1])
     if text[:bom_len] == BOM_UTF8:
-        prefix = text[bom_len : bom_len + prefix_len]
+        prefix = text[bom_len : bom_len + max_prefix_len]
     else:
-        prefix = text[:prefix_len]
-    return prefix == expected_prefix
+        prefix = text[:max_prefix_len]
+    for expected_prefix in expected_prefixes:
+        if prefix[: len(expected_prefix)] == expected_prefix:
+            return True
+    return False
 
 
 class PrettyXmlHandler(logging.StreamHandler):
@@ -744,7 +744,6 @@ def get_redirect_url(response, allow_relative=True, require_relative=False):
 
 
 RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
-MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
 
 # A collection of error classes we want to handle as general connection errors
 CONNECTION_ERRORS = (
@@ -764,7 +763,7 @@ with suppress(ImportError):
     TLS_ERRORS += (OpenSSL.SSL.Error,)
 
 
-def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
+def post_ratelimited(protocol, session, url, headers, data, stream=False, timeout=None):
     &#34;&#34;&#34;There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
     fails on all responses except HTTP 200. The other policy is intended for long-running tasks that need to respect
     rate-limiting errors from the server and paper over outages of up to 1 hour.
@@ -794,7 +793,6 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     :param url:
     :param headers:
     :param data:
-    :param allow_redirects:  (Default value = False)
     :param stream:  (Default value = False)
     :param timeout:
 
@@ -805,7 +803,6 @@ def post_ratelimited(protocol, session, url, headers, data, allow_redirects=Fals
     thread_id = get_ident()
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
-    redirects = 0
     log_msg = &#34;&#34;&#34;\
 Retry: %(retry)s
 Waited: %(wait)s
@@ -815,7 +812,6 @@ Thread: %(thread_id)s
 Auth type: %(auth)s
 URL: %(url)s
 HTTP adapter: %(adapter)s
-Allow redirects: %(allow_redirects)s
 Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
@@ -833,7 +829,6 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
         auth=session.auth,
         url=url,
         adapter=session.get_adapter(url),
-        allow_redirects=allow_redirects,
         stream=stream,
         response_time=None,
         status_code=None,
@@ -922,7 +917,7 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
                 continue
             if r.status_code in (301, 302):
                 r.close()  # Release memory
-                url, redirects = _redirect_or_fail(r, redirects, allow_redirects)
+                url = _fail_on_redirect(r)
                 continue
             break
     except (RateLimitError, RedirectError) as e:
@@ -963,7 +958,7 @@ def _need_new_credentials(response):
     return response.status_code == 401 and response.headers.get(&#34;TokenExpiredError&#34;)
 
 
-def _redirect_or_fail(response, redirects, allow_redirects):
+def _fail_on_redirect(response):
     # Retry with no delay. If we let requests handle redirects automatically, it would issue a GET to that
     # URL. We still want to POST.
     try:
@@ -971,13 +966,8 @@ def _redirect_or_fail(response, redirects, allow_redirects):
     except RelativeRedirect as e:
         log.debug(&#34;&#39;allow_redirects&#39; only supports relative redirects (%s -&gt; %s)&#34;, response.url, e.value)
         raise RedirectError(url=e.value)
-    if not allow_redirects:
-        raise TransportError(f&#34;Redirect not allowed but we were redirected ({response.url} -&gt; {redirect_url})&#34;)
-    log.debug(&#34;HTTP redirected to %s&#34;, redirect_url)
-    redirects += 1
-    if redirects &gt; MAX_REDIRECTS:
-        raise TransportError(&#34;Max redirect count exceeded&#34;)
-    return redirect_url, redirects
+    log.debug(&#34;Redirect not allowed but we were redirected ( (%s -&gt; %s)&#34;, response.url, redirect_url)
+    raise RedirectError(url=redirect_url)
 
 
 def _retry_after(r, wait):
@@ -1196,32 +1186,34 @@ bytes.</p>
 </details>
 </dd>
 <dt id="exchangelib.util.is_xml"><code class="name flex">
-<span>def <span class="ident">is_xml</span></span>(<span>text, expected_prefix=b&#x27;&lt;?xml&#x27;)</span>
+<span>def <span class="ident">is_xml</span></span>(<span>text)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Lightweight test if response is an XML doc. It's better to be fast than correct here.</p>
 <p>:param text: The string to check
-:param expected_prefix: What to search for in the start if the string
 :return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_xml(text, expected_prefix=b&#34;&lt;?xml&#34;):
+<pre><code class="python">def is_xml(text):
     &#34;&#34;&#34;Lightweight test if response is an XML doc. It&#39;s better to be fast than correct here.
 
     :param text: The string to check
-    :param expected_prefix: What to search for in the start if the string
     :return:
     &#34;&#34;&#34;
-    # BOM_UTF8 is an UTF-8 byte order mark which may precede the XML from an Exchange server
+    # BOM_UTF8 is a UTF-8 byte order mark which may precede the XML from an Exchange server
     bom_len = len(BOM_UTF8)
-    prefix_len = len(expected_prefix)
+    expected_prefixes = (b&#34;&lt;?xml&#34;, b&#34;&lt;s:Envelope&#34;)
+    max_prefix_len = len(expected_prefixes[1])
     if text[:bom_len] == BOM_UTF8:
-        prefix = text[bom_len : bom_len + prefix_len]
+        prefix = text[bom_len : bom_len + max_prefix_len]
     else:
-        prefix = text[:prefix_len]
-    return prefix == expected_prefix</code></pre>
+        prefix = text[:max_prefix_len]
+    for expected_prefix in expected_prefixes:
+        if prefix[: len(expected_prefix)] == expected_prefix:
+            return True
+    return False</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.peek"><code class="name flex">
@@ -1254,7 +1246,7 @@ bytes.</p>
 </details>
 </dd>
 <dt id="exchangelib.util.post_ratelimited"><code class="name flex">
-<span>def <span class="ident">post_ratelimited</span></span>(<span>protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None)</span>
+<span>def <span class="ident">post_ratelimited</span></span>(<span>protocol, session, url, headers, data, stream=False, timeout=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
@@ -1280,8 +1272,6 @@ intend to raise an exception. We give up on max_wait timeout, not number of retr
 :param url:
 :param headers:
 :param data:
-:param allow_redirects:
-(Default value = False)
 :param stream:
 (Default value = False)
 :param timeout:</p>
@@ -1290,7 +1280,7 @@ intend to raise an exception. We give up on max_wait timeout, not number of retr
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def post_ratelimited(protocol, session, url, headers, data, allow_redirects=False, stream=False, timeout=None):
+<pre><code class="python">def post_ratelimited(protocol, session, url, headers, data, stream=False, timeout=None):
     &#34;&#34;&#34;There are two error-handling policies implemented here: a fail-fast policy intended for stand-alone scripts which
     fails on all responses except HTTP 200. The other policy is intended for long-running tasks that need to respect
     rate-limiting errors from the server and paper over outages of up to 1 hour.
@@ -1320,7 +1310,6 @@ intend to raise an exception. We give up on max_wait timeout, not number of retr
     :param url:
     :param headers:
     :param data:
-    :param allow_redirects:  (Default value = False)
     :param stream:  (Default value = False)
     :param timeout:
 
@@ -1331,7 +1320,6 @@ intend to raise an exception. We give up on max_wait timeout, not number of retr
     thread_id = get_ident()
     wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
     retry = 0
-    redirects = 0
     log_msg = &#34;&#34;&#34;\
 Retry: %(retry)s
 Waited: %(wait)s
@@ -1341,7 +1329,6 @@ Thread: %(thread_id)s
 Auth type: %(auth)s
 URL: %(url)s
 HTTP adapter: %(adapter)s
-Allow redirects: %(allow_redirects)s
 Streaming: %(stream)s
 Response time: %(response_time)s
 Status code: %(status_code)s
@@ -1359,7 +1346,6 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
         auth=session.auth,
         url=url,
         adapter=session.get_adapter(url),
-        allow_redirects=allow_redirects,
         stream=stream,
         response_time=None,
         status_code=None,
@@ -1448,7 +1434,7 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
                 continue
             if r.status_code in (301, 302):
                 r.close()  # Release memory
-                url, redirects = _redirect_or_fail(r, redirects, allow_redirects)
+                url = _fail_on_redirect(r)
                 continue
             break
     except (RateLimitError, RedirectError) as e:
@@ -1541,7 +1527,7 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def safe_b64decode(data):
-    # Incoming base64-encoded data is not always padded to a multiple of 4. Python&#39;s parser is more strict and requires
+    # Incoming base64-encoded data is not always padded to a multiple of 4. Python&#39;s parser is stricter and requires
     # padding. Add padding if it&#39;s needed.
     overflow = len(data) % 4
     if overflow:
@@ -1579,7 +1565,6 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
     from .ewsdatetime import EWSDate, EWSDateTime
     from .fields import FieldOrder, FieldPath
     from .properties import EWSElement
-    from .version import Version
 
     if isinstance(value, (str, bool, bytes, int, Decimal, datetime.time, EWSDate, EWSDateTime)):
         elem.text = value_to_xml_text(value)
@@ -1588,8 +1573,6 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
     elif isinstance(value, (FieldPath, FieldOrder)):
         elem.append(value.to_xml())
     elif isinstance(value, EWSElement):
-        if not isinstance(version, Version):
-            raise InvalidTypeError(&#34;version&#34;, version, Version)
         elem.append(value.to_xml(version=version))
     elif is_iterable(value, generators_allowed=True):
         for v in value:
@@ -2030,7 +2013,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 
     def _get_tag(self):
         &#34;&#34;&#34;Iterate over the bytes until we have a full tag in the buffer. If there&#39;s a &#39;&gt;&#39; in an attr value, then we&#39;ll
-        exit on that, but it&#39;s OK becaus wejust need the plain tag name later.
+        exit on that, but it&#39;s OK because we just need the plain tag name later.
         &#34;&#34;&#34;
         tag_buffer = [b&#34;&lt;&#34;]
         while True:

@@ -535,7 +535,7 @@ we use folder.account.</p></div>
 
     def occurrence(self, index):
         &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on a recurring master.
 
@@ -551,7 +551,7 @@ we use folder.account.</p></div>
 
     def recurring_master(self):
         &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-        Call refresh() on the item do do so.
+        Call refresh() on the item to do so.
 
         Only call this method on an occurrence of a recurring master.
 
@@ -994,7 +994,7 @@ def timezone_fields(cls):
 </code></dt>
 <dd>
 <div class="desc"><p>Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-Call refresh() on the item do do so.</p>
+Call refresh() on the item to do so.</p>
 <p>Only call this method on a recurring master.</p>
 <p>:param index: The index, which is 1-based</p>
 <p>:return The occurrence</p></div>
@@ -1004,7 +1004,7 @@ Call refresh() on the item do do so.</p>
 </summary>
 <pre><code class="python">def occurrence(self, index):
     &#34;&#34;&#34;Get an occurrence of a recurring master by index. No query is sent to the server to actually fetch the item.
-    Call refresh() on the item do do so.
+    Call refresh() on the item to do so.
 
     Only call this method on a recurring master.
 
@@ -1024,7 +1024,7 @@ Call refresh() on the item do do so.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-Call refresh() on the item do do so.</p>
+Call refresh() on the item to do so.</p>
 <p>Only call this method on an occurrence of a recurring master.</p>
 <p>:return: The master occurrence</p></div>
 <details class="source">
@@ -1033,7 +1033,7 @@ Call refresh() on the item do do so.</p>
 </summary>
 <pre><code class="python">def recurring_master(self):
     &#34;&#34;&#34;Get the recurring master of an occurrence. No query is sent to the server to actually fetch the item.
-    Call refresh() on the item do do so.
+    Call refresh() on the item to do so.
 
     Only call this method on an occurrence of a recurring master.
 
@@ -3013,7 +3013,7 @@ we use folder.account.</p></div>
     )
     conversation_index = Base64Field(field_uri=&#34;message:ConversationIndex&#34;, is_read_only=True)
     conversation_topic = CharField(field_uri=&#34;message:ConversationTopic&#34;, is_read_only=True)
-    # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use fieldname &#39;from&#39; since it&#39;s a Python keyword.
+    # Rename &#39;From&#39; to &#39;author&#39;. We can&#39;t use field name &#39;from&#39; since it&#39;s a Python keyword.
     author = MailboxField(field_uri=&#34;message:From&#34;, is_read_only_after_send=True)
     message_id = TextField(field_uri=&#34;message:InternetMessageId&#34;, is_read_only_after_send=True)
     is_read = BooleanField(field_uri=&#34;message:IsRead&#34;, is_required=True, default=False)
@@ -3054,7 +3054,7 @@ we use folder.account.</p></div>
 
         # New message
         if copy_to_folder:
-            # This would better be done via send_and_save() but lets just support it here
+            # This would better be done via send_and_save() but let&#39;s just support it here
             self.folder = copy_to_folder
             return self.send_and_save(
                 conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations
@@ -3389,7 +3389,7 @@ def send(
 
     # New message
     if copy_to_folder:
-        # This would better be done via send_and_save() but lets just support it here
+        # This would better be done via send_and_save() but let&#39;s just support it here
         self.folder = copy_to_folder
         return self.send_and_save(
             conflict_resolution=conflict_resolution, send_meeting_invitations=send_meeting_invitations

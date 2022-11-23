@@ -68,7 +68,7 @@ from ..properties import (
 )
 from ..queryset import DoesNotExist, SearchableMixIn
 from ..util import TNS, is_iterable, require_id
-from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010
+from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010, SupportedVersionClassMixIn
 from .collections import FolderCollection, PullSubscription, PushSubscription, StreamingSubscription, SyncCompleted
 from .queryset import DEEP as DEEP_FOLDERS
 from .queryset import MISSING_FOLDER_ERRORS
@@ -85,7 +85,7 @@ DELETE_FOLDER_ERRORS = (
 )
 
 
-class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
+class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement a folder.&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;Folder&#34;
@@ -96,9 +96,6 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
     # https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxosfld/68a85898-84fe-43c4-b166-4711c13cdd61
     CONTAINER_CLASS = None
     supported_item_models = ITEM_CLASSES  # The Item types that this folder can contain. Default is all
-    # Marks the version from which a distinguished folder was introduced. A possibly authoritative source is:
-    # https://github.com/OfficeDev/ews-managed-api/blob/master/Enumerations/WellKnownFolderName.cs
-    supported_from = None
     # Whether this folder type is allowed with the GetFolder service
     get_folder_allowed = True
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = DEEP_FOLDERS
@@ -190,7 +187,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 raise ValueError(&#34;Already at top&#34;)
             yield from self.parent.glob(tail or &#34;*&#34;)
         elif head == &#34;**&#34;:
-            # Match anything here or in any subfolder at arbitrary depth
+            # Match anything here or in any sub-folder at arbitrary depth
             for c in self.walk():
                 # fnmatch() may be case-sensitive depending on operating system:
                 # force a case-insensitive match since case appears not to
@@ -236,16 +233,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
                     tree += f&#34;└── {node}\n&#34;
-                else:  # Last child, and not name of child
+                else:  # Last child and not name of child
                     tree += f&#34;    {node}\n&#34;
         return tree.strip()
-
-    @classmethod
-    def supports_version(cls, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if not cls.supported_from:
-            return True
-        return version.build &gt;= cls.supported_from
 
     @property
     def has_distinguished_name(self):
@@ -449,7 +439,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
             self.root.clear_cache()
 
     def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
-        # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
+        # Recursively deletes all items in this folder, and all sub-folders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         from .known_folders import Audits
 
@@ -495,7 +485,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         _level += 1
         for f in self.children:
             f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
-            # Remove non-distinguished children that are empty and have no subfolders
+            # Remove non-distinguished children that are empty and have no sub-folders
             if f.is_deletable and not f.children:
                 log.warning(&#34;Deleting folder %s&#34;, f)
                 try:
@@ -512,7 +502,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
     @classmethod
     def _kwargs_from_elem(cls, elem, account):
-        # Check for &#39;DisplayName&#39; element before collecting kwargs because because that clears the elements
+        # Check for &#39;DisplayName&#39; element before collecting kwargs because that clears the elements
         has_name_elem = elem.find(cls.get_field_by_fieldname(&#34;name&#34;).response_tag()) is not None
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
         if has_name_elem and not kwargs[&#34;name&#34;]:
@@ -732,7 +722,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
         &#34;&#34;&#34;Get events since the given watermark. Non-blocking.
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
-        :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+        :param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
         :return: A Notification object containing a list of events
 
         This method doesn&#39;t need the current folder instance, but it makes sense to keep the method along the other
@@ -781,7 +771,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
 
         Works like as __truediv__ but does not touch the folder cache.
 
-        This is useful if the folder hierarchy contains a huge number of folders and you don&#39;t want to fetch them all
+        This is useful if the folder hierarchy contains a huge number of folders, and you don&#39;t want to fetch them all
 
         :param other:
         :return:
@@ -975,7 +965,7 @@ class Folder(BaseFolder):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseFolder(RegisterMixIn, SearchableMixIn, metaclass=EWSMeta):
+<pre><code class="python">class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for all classes that implement a folder.&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;Folder&#34;
@@ -986,9 +976,6 @@ class Folder(BaseFolder):
     # https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxosfld/68a85898-84fe-43c4-b166-4711c13cdd61
     CONTAINER_CLASS = None
     supported_item_models = ITEM_CLASSES  # The Item types that this folder can contain. Default is all
-    # Marks the version from which a distinguished folder was introduced. A possibly authoritative source is:
-    # https://github.com/OfficeDev/ews-managed-api/blob/master/Enumerations/WellKnownFolderName.cs
-    supported_from = None
     # Whether this folder type is allowed with the GetFolder service
     get_folder_allowed = True
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = DEEP_FOLDERS
@@ -1080,7 +1067,7 @@ class Folder(BaseFolder):
                 raise ValueError(&#34;Already at top&#34;)
             yield from self.parent.glob(tail or &#34;*&#34;)
         elif head == &#34;**&#34;:
-            # Match anything here or in any subfolder at arbitrary depth
+            # Match anything here or in any sub-folder at arbitrary depth
             for c in self.walk():
                 # fnmatch() may be case-sensitive depending on operating system:
                 # force a case-insensitive match since case appears not to
@@ -1126,16 +1113,9 @@ class Folder(BaseFolder):
                 elif i == len(children) and j == 1:
                     # Not the last child, but the first node, which is the name of the child
                     tree += f&#34;└── {node}\n&#34;
-                else:  # Last child, and not name of child
+                else:  # Last child and not name of child
                     tree += f&#34;    {node}\n&#34;
         return tree.strip()
-
-    @classmethod
-    def supports_version(cls, version):
-        # &#39;version&#39; is a Version instance, for convenience by callers
-        if not cls.supported_from:
-            return True
-        return version.build &gt;= cls.supported_from
 
     @property
     def has_distinguished_name(self):
@@ -1339,7 +1319,7 @@ class Folder(BaseFolder):
             self.root.clear_cache()
 
     def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
-        # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
+        # Recursively deletes all items in this folder, and all sub-folders and their content. Attempts to protect
         # distinguished folders from being deleted. Use with caution!
         from .known_folders import Audits
 
@@ -1385,7 +1365,7 @@ class Folder(BaseFolder):
         _level += 1
         for f in self.children:
             f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
-            # Remove non-distinguished children that are empty and have no subfolders
+            # Remove non-distinguished children that are empty and have no sub-folders
             if f.is_deletable and not f.children:
                 log.warning(&#34;Deleting folder %s&#34;, f)
                 try:
@@ -1402,7 +1382,7 @@ class Folder(BaseFolder):
 
     @classmethod
     def _kwargs_from_elem(cls, elem, account):
-        # Check for &#39;DisplayName&#39; element before collecting kwargs because because that clears the elements
+        # Check for &#39;DisplayName&#39; element before collecting kwargs because that clears the elements
         has_name_elem = elem.find(cls.get_field_by_fieldname(&#34;name&#34;).response_tag()) is not None
         kwargs = {f.name: f.from_xml(elem=elem, account=account) for f in cls.FIELDS}
         if has_name_elem and not kwargs[&#34;name&#34;]:
@@ -1622,7 +1602,7 @@ class Folder(BaseFolder):
         &#34;&#34;&#34;Get events since the given watermark. Non-blocking.
 
         :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
-        :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+        :param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
         :return: A Notification object containing a list of events
 
         This method doesn&#39;t need the current folder instance, but it makes sense to keep the method along the other
@@ -1671,7 +1651,7 @@ class Folder(BaseFolder):
 
         Works like as __truediv__ but does not touch the folder cache.
 
-        This is useful if the folder hierarchy contains a huge number of folders and you don&#39;t want to fetch them all
+        This is useful if the folder hierarchy contains a huge number of folders, and you don&#39;t want to fetch them all
 
         :param other:
         :return:
@@ -1724,6 +1704,7 @@ class Folder(BaseFolder):
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1777,10 +1758,6 @@ class Folder(BaseFolder):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.get_folder_allowed"><code class="name">var <span class="ident">get_folder_allowed</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.folders.base.BaseFolder.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1944,23 +1921,6 @@ def resolve(cls, account, folder):
     if f.__class__ != cls:
         raise ValueError(f&#34;Expected folder {f!r} to be a {cls} instance&#34;)
     return f</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.folders.base.BaseFolder.supports_version"><code class="name flex">
-<span>def <span class="ident">supports_version</span></span>(<span>version)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def supports_version(cls, version):
-    # &#39;version&#39; is a Version instance, for convenience by callers
-    if not cls.supported_from:
-        return True
-    return version.build &gt;= cls.supported_from</code></pre>
 </details>
 </dd>
 </dl>
@@ -2223,7 +2183,7 @@ def delete_user_configuration(self, name):
 <dd>
 <div class="desc"><p>Get events since the given watermark. Non-blocking.</p>
 <p>:param subscription_id: A subscription ID as acquired by .subscribe_to_<a href="">pull|push</a>
-:param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+:param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
 :return: A Notification object containing a list of events</p>
 <p>This method doesn't need the current folder instance, but it makes sense to keep the method along the other
 sync methods.</p></div>
@@ -2235,7 +2195,7 @@ sync methods.</p></div>
     &#34;&#34;&#34;Get events since the given watermark. Non-blocking.
 
     :param subscription_id: A subscription ID as acquired by .subscribe_to_[pull|push]()
-    :param watermark: Either the watermark from the subscription, or as returned in the last .get_events() call.
+    :param watermark: Either the watermark from the subscription, or as returned by the last .get_events() call.
     :return: A Notification object containing a list of events
 
     This method doesn&#39;t need the current folder instance, but it makes sense to keep the method along the other
@@ -2761,7 +2721,7 @@ service user doesn't have access to the calendar. This will throw the most commo
             elif i == len(children) and j == 1:
                 # Not the last child, but the first node, which is the name of the child
                 tree += f&#34;└── {node}\n&#34;
-            else:  # Last child, and not name of child
+            else:  # Last child and not name of child
                 tree += f&#34;    {node}\n&#34;
     return tree.strip()</code></pre>
 </details>
@@ -2851,7 +2811,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def wipe(self, page_size=None, chunk_size=None, _seen=None, _level=0):
-    # Recursively deletes all items in this folder, and all subfolders and their content. Attempts to protect
+    # Recursively deletes all items in this folder, and all sub-folders and their content. Attempts to protect
     # distinguished folders from being deleted. Use with caution!
     from .known_folders import Audits
 
@@ -2897,7 +2857,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
     _level += 1
     for f in self.children:
         f.wipe(page_size=page_size, chunk_size=chunk_size, _seen=_seen, _level=_level)
-        # Remove non-distinguished children that are empty and have no subfolders
+        # Remove non-distinguished children that are empty and have no sub-folders
         if f.is_deletable and not f.children:
             log.warning(&#34;Deleting folder %s&#34;, f)
             try:
@@ -3074,6 +3034,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
 <li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
 <li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3344,9 +3305,7 @@ def get_distinguished(cls, root):
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_pull" href="#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_push" href="#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.subscribe_to_streaming" href="#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
-<li><code><a title="exchangelib.folders.base.BaseFolder.supported_from" href="#exchangelib.folders.base.BaseFolder.supported_from">supported_from</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.supported_item_models" href="#exchangelib.folders.base.BaseFolder.supported_item_models">supported_item_models</a></code></li>
-<li><code><a title="exchangelib.folders.base.BaseFolder.supports_version" href="#exchangelib.folders.base.BaseFolder.supports_version">supports_version</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.sync_hierarchy" href="#exchangelib.folders.base.BaseFolder.sync_hierarchy">sync_hierarchy</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.sync_items" href="#exchangelib.folders.base.BaseFolder.sync_items">sync_items</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.test_access" href="#exchangelib.folders.base.BaseFolder.test_access">test_access</a></code></li>

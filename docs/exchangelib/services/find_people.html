@@ -43,7 +43,6 @@ class FindPeople(EWSPagingService):
     SERVICE_NAME = &#34;FindPeople&#34;
     element_container_name = f&#34;{{{MNS}}}People&#34;
     supported_from = EXCHANGE_2013
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -160,7 +159,6 @@ class FindPeople(EWSPagingService):
     SERVICE_NAME = &#34;FindPeople&#34;
     element_container_name = f&#34;{{{MNS}}}People&#34;
     supported_from = EXCHANGE_2013
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -256,6 +254,7 @@ class FindPeople(EWSPagingService):
 <li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -268,10 +267,6 @@ class FindPeople(EWSPagingService):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.find_people.FindPeople.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.find_people.FindPeople.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -380,6 +375,8 @@ class FindPeople(EWSPagingService):
 <li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -408,7 +405,6 @@ class FindPeople(EWSPagingService):
 <li><code><a title="exchangelib.services.find_people.FindPeople.element_container_name" href="#exchangelib.services.find_people.FindPeople.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.find_people.FindPeople.get_payload" href="#exchangelib.services.find_people.FindPeople.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.find_people.FindPeople.supported_from" href="#exchangelib.services.find_people.FindPeople.supported_from">supported_from</a></code></li>
-<li><code><a title="exchangelib.services.find_people.FindPeople.supports_paging" href="#exchangelib.services.find_people.FindPeople.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 </ul>

@@ -73,6 +73,7 @@ from .get_streaming_events import GetStreamingEvents
 from .get_user_availability import GetUserAvailability
 from .get_user_configuration import GetUserConfiguration
 from .get_user_oof_settings import GetUserOofSettings
+from .get_user_settings import GetUserSettings
 from .mark_as_junk import MarkAsJunk
 from .move_folder import MoveFolder
 from .move_item import MoveItem
@@ -123,6 +124,7 @@ __all__ = [
     &#34;GetUserAvailability&#34;,
     &#34;GetUserConfiguration&#34;,
     &#34;GetUserOofSettings&#34;,
+    &#34;GetUserSettings&#34;,
     &#34;MarkAsJunk&#34;,
     &#34;MoveFolder&#34;,
     &#34;MoveItem&#34;,
@@ -278,6 +280,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="exchangelib.services.get_user_settings" href="get_user_settings.html">exchangelib.services.get_user_settings</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="exchangelib.services.mark_as_junk" href="mark_as_junk.html">exchangelib.services.mark_as_junk</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -308,8 +314,8 @@ __all__ = [
 </dd>
 <dt><code class="name"><a title="exchangelib.services.subscribe" href="subscribe.html">exchangelib.services.subscribe</a></code></dt>
 <dd>
-<div class="desc"><p>The 'Subscribe' service has two different modes, pull and push, with different signatures. Implement as two distinct
-classes.</p></div>
+<div class="desc"><p>The 'Subscribe' service has three different modes - pull, push and streaming - with different signatures. Implement
+as three distinct classes.</p></div>
 </dd>
 <dt><code class="name"><a title="exchangelib.services.sync_folder_hierarchy" href="sync_folder_hierarchy.html">exchangelib.services.sync_folder_hierarchy</a></code></dt>
 <dd>
@@ -390,6 +396,7 @@ classes.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -458,6 +465,8 @@ classes.</p></div>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -482,7 +491,6 @@ input list.</p>
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#34;ConvertId&#34;
-    supported_from = EXCHANGE_2007_SP1
     cls_map = {cls.response_tag(): cls for cls in (AlternateId, AlternatePublicFolderId, AlternatePublicFolderItemId)}
 
     def call(self, items, destination_format):
@@ -502,7 +510,7 @@ input list.</p>
         for item in items:
             if not isinstance(item, supported_item_classes):
                 raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
-            set_xml_value(item_ids, item, version=self.protocol.version)
+            set_xml_value(item_ids, item, version=None)
         payload.append(item_ids)
         return payload
 
@@ -518,6 +526,7 @@ input list.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -526,10 +535,6 @@ input list.</p>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.ConvertId.cls_map"><code class="name">var <span class="ident">cls_map</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.ConvertId.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -569,7 +574,7 @@ input list.</p>
     for item in items:
         if not isinstance(item, supported_item_classes):
             raise InvalidTypeError(&#34;item&#34;, item, supported_item_classes)
-        set_xml_value(item_ids, item, version=self.protocol.version)
+        set_xml_value(item_ids, item, version=None)
     payload.append(item_ids)
     return payload</code></pre>
 </details>
@@ -583,6 +588,8 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -607,6 +614,7 @@ input list.</p>
 <li><a title="exchangelib.services.move_item.MoveItem" href="move_item.html#exchangelib.services.move_item.MoveItem">MoveItem</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -623,6 +631,8 @@ input list.</p>
 <li><code><a title="exchangelib.services.move_item.MoveItem.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.move_item.MoveItem.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.move_item.MoveItem.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.move_item.MoveItem.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.move_item.MoveItem.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -670,6 +680,7 @@ input list.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -733,6 +744,8 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -789,6 +802,7 @@ input list.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -856,6 +870,8 @@ input list.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -921,7 +937,7 @@ errormessage), in the same order as the input list.</p>
         return res or [True]
 
     def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+        &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
         convert items to XML Elements.
 
         MessageDisposition is only applicable to email messages, where it is required.
@@ -959,6 +975,7 @@ errormessage), in the same order as the input list.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1015,7 +1032,7 @@ errormessage), in the same order as the input list.</p>
 <span>def <span class="ident">get_payload</span></span>(<span>self, items, folder, message_disposition, send_meeting_invitations)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+<div class="desc"><p>Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
 convert items to XML Elements.</p>
 <p>MessageDisposition is only applicable to email messages, where it is required.</p>
 <p>SendMeetingInvitations is required for calendar items. It is also applicable to tasks, meeting request
@@ -1034,7 +1051,7 @@ invitation accepts (see
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, items, folder, message_disposition, send_meeting_invitations):
-    &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc) and return the XML for a CreateItem request.
+    &#34;&#34;&#34;Take a list of Item objects (CalendarItem, Message etc.) and return the XML for a CreateItem request.
     convert items to XML Elements.
 
     MessageDisposition is only applicable to email messages, where it is required.
@@ -1078,6 +1095,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1113,6 +1132,7 @@ invitation accepts (see
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1164,6 +1184,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1207,6 +1229,7 @@ invitation accepts (see
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1256,6 +1279,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1290,6 +1315,7 @@ invitation accepts (see
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1343,6 +1369,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1408,6 +1436,7 @@ invitation accepts (see
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1486,6 +1515,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1521,6 +1552,7 @@ invitation accepts (see
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1572,6 +1604,8 @@ invitation accepts (see
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1586,15 +1620,13 @@ invitation accepts (see
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class EWSService(metaclass=abc.ABCMeta):
+<pre><code class="python">class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
 
-    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
     CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
-    paging_container_name = None  # The name of the element that contains paging information and the paged results
     returns_elements = True  # If False, the service does not return response elements, just the ResponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
@@ -1612,16 +1644,14 @@ invitation accepts (see
         ErrorItemCorrupt,
         ErrorMailRecipientNotFound,
     )
-    # Similarly, define the warnings we want to return unraised
+    # Similarly, define the warnings we want to return un-raised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
     # Define the warnings we want to ignore, to let response processing proceed
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Marks the version from which the service was introduced
-    supported_from = None
-    # Marks services that support paging of requested items
-    supports_paging = False
+
+    NS_MAP = {k: v for k, v in ns_translation.items() if k in (&#34;s&#34;, &#34;m&#34;, &#34;t&#34;)}
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or self.CHUNK_SIZE
@@ -1631,8 +1661,8 @@ invitation accepts (see
             raise ValueError(f&#34;&#39;chunk_size&#39; {self.chunk_size} must be a positive number&#34;)
         if self.supported_from and protocol.version.build &lt; self.supported_from:
             raise NotImplementedError(
-                f&#34;{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later. &#34;
-                f&#34;Your current version is {protocol.version.build.fullname()!r}.&#34;
+                f&#34;Service {self.SERVICE_NAME!r} only supports server versions from {self.supported_from or &#39;*&#39;} to &#34;
+                f&#34;{self.deprecated_from or &#39;*&#39;} (server has {protocol.version})&#34;
             )
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
@@ -1700,6 +1730,43 @@ invitation accepts (see
         _, body = self._get_soap_parts(response=resp)
         return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
 
+    def wrap(self, content, api_version=None):
+        &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+        ExchangeImpersonation allows to act as the user we want to impersonate.
+
+        RequestServerVersion element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+
+        ExchangeImpersonation element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
+
+        TimeZoneContent element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
+
+        :param content:
+        :param api_version:
+        &#34;&#34;&#34;
+        envelope = create_element(&#34;s:Envelope&#34;, nsmap=self.NS_MAP)
+        header = create_element(&#34;s:Header&#34;)
+        if api_version:
+            request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
+            header.append(request_server_version)
+        identity = self._account_to_impersonate
+        if identity:
+            add_xml_child(header, &#34;t:ExchangeImpersonation&#34;, identity)
+        timezone = self._timezone
+        if timezone:
+            timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
+            timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
+            timezone_context.append(timezone_definition)
+            header.append(timezone_context)
+        if len(header):
+            envelope.append(header)
+        body = create_element(&#34;s:Body&#34;)
+        body.append(content)
+        envelope.append(body)
+        return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
+
     def _elems_to_objs(self, elems):
         &#34;&#34;&#34;Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions).&#34;&#34;&#34;
         for elem in elems:
@@ -1723,12 +1790,18 @@ invitation accepts (see
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    def _extra_headers(self, session):
-        return {}
+    def _extra_headers(self):
+        headers = {}
+        identity = self._account_to_impersonate
+        if identity and identity.primary_smtp_address:
+            # See
+            # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+            headers[&#34;X-AnchorMailbox&#34;] = identity.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):
-        if isinstance(self.protocol.credentials, OAuth2Credentials):
+        if self.protocol and isinstance(self.protocol.credentials, BaseOAuth2Credentials):
             return self.protocol.credentials.identity
         return None
 
@@ -1743,8 +1816,6 @@ invitation accepts (see
         :return: the response, as XML objects
         &#34;&#34;&#34;
         response = self._get_response_xml(payload=payload)
-        if self.supports_paging:
-            return (self._get_page(message) for message in response)
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
@@ -1757,7 +1828,7 @@ invitation accepts (see
         :return: Same as ._get_elements()
         &#34;&#34;&#34;
         # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
-        filtered_items = filter(lambda i: not isinstance(i, Exception), items)
+        filtered_items = filter(lambda item: not isinstance(item, Exception), items)
         for i, chunk in enumerate(chunkify(filtered_items, self.chunk_size), start=1):
             log.debug(&#34;Processing chunk %s containing %s items&#34;, i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
@@ -1785,7 +1856,7 @@ invitation accepts (see
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
+            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired, ErrorInternalServerTransientError) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
                 #
@@ -1816,12 +1887,10 @@ invitation accepts (see
             protocol=self.protocol,
             session=session,
             url=self.protocol.service_endpoint,
-            headers=self._extra_headers(session),
-            data=wrap(
+            headers=self._extra_headers(),
+            data=self.wrap(
                 content=payload,
                 api_version=api_version,
-                account_to_impersonate=self._account_to_impersonate,
-                timezone=self._timezone,
             ),
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
@@ -1835,10 +1904,16 @@ invitation accepts (see
             self.protocol.release_session(session)
         return r
 
-    @property
+    @classmethod
+    def supported_api_versions(cls):
+        &#34;&#34;&#34;Return API versions supported by the service, sorted from newest to oldest&#34;&#34;&#34;
+        return sorted({v.api_version for v in Version.all_versions() if cls.supports_version(v)}, reverse=True)
+
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
+        return (self._version_hint.api_version,) + tuple(
+            v for v in self.supported_api_versions() if v != self._version_hint.api_version
+        )
 
     def _get_response_xml(self, payload, **parse_opts):
         &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -1855,7 +1930,7 @@ invitation accepts (see
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
         log.debug(&#34;Calling service %s&#34;, self.SERVICE_NAME)
-        for api_version in self._api_versions_to_try:
+        for api_version in self._api_versions_to_try():
             log.debug(&#34;Trying API version %s&#34;, api_version)
             r = self._get_response(payload=payload, api_version=api_version)
             if self.streaming:
@@ -1894,7 +1969,7 @@ invitation accepts (see
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try} but all were invalid&#34;)
+        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try()} but all were invalid&#34;)
 
     def _handle_backoff(self, e):
         &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
@@ -1925,7 +2000,7 @@ invitation accepts (see
             # Nothing to do
             return
         log.debug(&#34;Found new version (%s -&gt; %s)&#34;, self._version_hint, head_version)
-        # The api_version that worked was different than our hint, or we never got a build version. Store the working
+        # The api_version that worked was different from our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
 
@@ -1946,7 +2021,7 @@ invitation accepts (see
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        &#34;&#34;&#34;Split the SOAP response into its headers an body elements.&#34;&#34;&#34;
+        &#34;&#34;&#34;Split the SOAP response into its headers and body elements.&#34;&#34;&#34;
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
@@ -2065,7 +2140,7 @@ invitation accepts (see
                 if container is None:
                     raise MalformedResponseError(f&#34;No {name} elements in ResponseMessage ({xml_to_str(message)})&#34;)
                 return container
-        # rspclass == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
+        # response_class == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
         try:
             raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
@@ -2155,7 +2230,7 @@ invitation accepts (see
     @classmethod
     def _get_elements_in_container(cls, container):
         &#34;&#34;&#34;Return a list of response elements from an XML response element container. With e.g.
-        &#39;CreateItem&#39;, &#39;Items&#39; is the container element and we return the &#39;Message&#39; child elements:
+        &#39;CreateItem&#39;, &#39;Items&#39; is the container element, and we return the &#39;Message&#39; child elements:
 
           &lt;m:Items&gt;
             &lt;t:Message&gt;
@@ -2170,6 +2245,10 @@ invitation accepts (see
             return list(container)
         return [True]</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
@@ -2181,6 +2260,7 @@ invitation accepts (see
 <li><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes" href="get_searchable_mailboxes.html#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes">GetSearchableMailboxes</a></li>
 <li><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones" href="get_server_time_zones.html#exchangelib.services.get_server_time_zones.GetServerTimeZones">GetServerTimeZones</a></li>
 <li><a title="exchangelib.services.get_user_availability.GetUserAvailability" href="get_user_availability.html#exchangelib.services.get_user_availability.GetUserAvailability">GetUserAvailability</a></li>
+<li><a title="exchangelib.services.get_user_settings.GetUserSettings" href="get_user_settings.html#exchangelib.services.get_user_settings.GetUserSettings">GetUserSettings</a></li>
 <li><a title="exchangelib.services.resolve_names.ResolveNames" href="resolve_names.html#exchangelib.services.resolve_names.ResolveNames">ResolveNames</a></li>
 <li><a title="exchangelib.services.send_notification.SendNotification" href="send_notification.html#exchangelib.services.send_notification.SendNotification">SendNotification</a></li>
 </ul>
@@ -2198,7 +2278,7 @@ invitation accepts (see
 <dd>
 <div class="desc"><p>Global error type within this module.</p></div>
 </dd>
-<dt id="exchangelib.services.EWSService.PAGE_SIZE"><code class="name">var <span class="ident">PAGE_SIZE</span></code></dt>
+<dt id="exchangelib.services.EWSService.NS_MAP"><code class="name">var <span class="ident">NS_MAP</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2218,21 +2298,27 @@ invitation accepts (see
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.EWSService.paging_container_name"><code class="name">var <span class="ident">paging_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="exchangelib.services.EWSService.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.EWSService.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.services.EWSService.supported_api_versions"><code class="name flex">
+<span>def <span class="ident">supported_api_versions</span></span>(<span>)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.EWSService.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Return API versions supported by the service, sorted from newest to oldest</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def supported_api_versions(cls):
+    &#34;&#34;&#34;Return API versions supported by the service, sorted from newest to oldest&#34;&#34;&#34;
+    return sorted({v.api_version for v in Version.all_versions() if cls.supports_version(v)}, reverse=True)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -2311,6 +2397,62 @@ zero or one when expect_result=None. Returns either one object or None.</p>
         self._streaming_session = None</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.services.EWSService.wrap"><code class="name flex">
+<span>def <span class="ident">wrap</span></span>(<span>self, content, api_version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+ExchangeImpersonation allows to act as the user we want to impersonate.</p>
+<p>RequestServerVersion element on MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion</a></p>
+<p>ExchangeImpersonation element on MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation</a></p>
+<p>TimeZoneContent element on MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext</a></p>
+<p>:param content:
+:param api_version:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wrap(self, content, api_version=None):
+    &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+    ExchangeImpersonation allows to act as the user we want to impersonate.
+
+    RequestServerVersion element on MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+
+    ExchangeImpersonation element on MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
+
+    TimeZoneContent element on MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
+
+    :param content:
+    :param api_version:
+    &#34;&#34;&#34;
+    envelope = create_element(&#34;s:Envelope&#34;, nsmap=self.NS_MAP)
+    header = create_element(&#34;s:Header&#34;)
+    if api_version:
+        request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
+        header.append(request_server_version)
+    identity = self._account_to_impersonate
+    if identity:
+        add_xml_child(header, &#34;t:ExchangeImpersonation&#34;, identity)
+    timezone = self._timezone
+    if timezone:
+        timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
+        timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
+        timezone_context.append(timezone_definition)
+        header.append(timezone_context)
+    if len(header):
+        envelope.append(header)
+    body = create_element(&#34;s:Body&#34;)
+    body.append(content)
+    envelope.append(body)
+    return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="exchangelib.services.EmptyFolder"><code class="flex name class">
@@ -2347,6 +2489,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2404,6 +2547,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2437,6 +2582,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2490,6 +2636,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2522,8 +2670,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
         payload.append(item_ids_element(items=items, version=self.account.version))
         return payload
 
-    # We need to override this since ExportItemsResponseMessage is formatted a
-    # little bit differently. .
+    # We need to override this since ExportItemsResponseMessage is formatted a bit differently.
     @classmethod
     def _get_elements_in_container(cls, container):
         return [container]</code></pre>
@@ -2532,6 +2679,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2587,6 +2735,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2607,14 +2757,13 @@ zero or one when expect_result=None. Returns either one object or None.</p>
     SERVICE_NAME = &#34;FindFolder&#34;
     element_container_name = f&#34;{{{TNS}}}Folders&#34;
     paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.root = None  # A hack to communicate parsing args to _elems_to_objs()
 
     def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
-        &#34;&#34;&#34;Find subfolders of a folder.
+        &#34;&#34;&#34;Find sub-folders of a folder.
 
         :param folders: the folders to act on
         :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
@@ -2679,6 +2828,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2694,10 +2844,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.FindFolder.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -2705,7 +2851,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <span>def <span class="ident">call</span></span>(<span>self, folders, additional_fields, restriction, shape, depth, max_items, offset)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Find subfolders of a folder.</p>
+<div class="desc"><p>Find sub-folders of a folder.</p>
 <p>:param folders: the folders to act on
 :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
 :param restriction: Restriction object that defines the filters for the query
@@ -2719,7 +2865,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def call(self, folders, additional_fields, restriction, shape, depth, max_items, offset):
-    &#34;&#34;&#34;Find subfolders of a folder.
+    &#34;&#34;&#34;Find sub-folders of a folder.
 
     :param folders: the folders to act on
     :param additional_fields: the extra fields that should be returned with the folder, as FieldPath objects
@@ -2796,6 +2942,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2816,7 +2964,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
     SERVICE_NAME = &#34;FindItem&#34;
     element_container_name = f&#34;{{{TNS}}}Items&#34;
     paging_container_name = f&#34;{{{MNS}}}RootFolder&#34;
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2922,6 +3069,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -2934,10 +3082,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.FindItem.paging_container_name"><code class="name">var <span class="ident">paging_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.FindItem.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3072,6 +3216,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3092,7 +3238,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
     SERVICE_NAME = &#34;FindPeople&#34;
     element_container_name = f&#34;{{{MNS}}}People&#34;
     supported_from = EXCHANGE_2013
-    supports_paging = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -3188,6 +3333,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3200,10 +3346,6 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.FindPeople.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.FindPeople.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -3312,6 +3454,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSPagingService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSPagingService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3430,6 +3574,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3552,6 +3697,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3610,6 +3757,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3679,6 +3827,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3729,6 +3879,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3788,6 +3939,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3859,6 +4012,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3941,6 +4095,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3996,6 +4152,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4071,6 +4228,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4127,6 +4286,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4189,6 +4349,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4233,6 +4395,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4282,6 +4445,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4315,6 +4480,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4368,6 +4534,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4401,6 +4569,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4454,6 +4623,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4514,6 +4685,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4587,6 +4759,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4639,6 +4813,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4708,6 +4883,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4822,6 +4999,7 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -4905,6 +5083,8 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4975,6 +5155,7 @@ MSDN:
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5034,6 +5215,8 @@ MSDN:
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5084,6 +5267,7 @@ MSDN:
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5140,6 +5324,8 @@ MSDN:
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5194,6 +5380,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5247,6 +5434,189 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.services.GetUserSettings"><code class="flex name class">
+<span>class <span class="ident">GetUserSettings</span></span>
+<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Take a list of users and requested Autodiscover settings for these users. Returns the requested settings values.</p>
+<p>MSDN:
+<a href="https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/getusersettings-operation-soap">https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/getusersettings-operation-soap</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GetUserSettings(EWSService):
+    &#34;&#34;&#34;Take a list of users and requested Autodiscover settings for these users. Returns the requested settings values.
+
+    MSDN:
+    https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/getusersettings-operation-soap
+    &#34;&#34;&#34;
+
+    SERVICE_NAME = &#34;GetUserSettings&#34;
+    NS_MAP = {k: v for k, v in ns_translation.items() if k in (&#34;s&#34;, &#34;t&#34;, &#34;a&#34;, &#34;wsa&#34;, &#34;xsi&#34;)}
+    element_container_name = f&#34;{{{ANS}}}UserResponses&#34;
+    supported_from = EXCHANGE_2010
+
+    def call(self, users, settings):
+        return self._elems_to_objs(self._get_elements(self.get_payload(users=users, settings=settings)))
+
+    def wrap(self, content, api_version=None):
+        envelope = create_element(&#34;s:Envelope&#34;, nsmap=self.NS_MAP)
+        header = create_element(&#34;s:Header&#34;)
+        if api_version:
+            add_xml_child(header, &#34;a:RequestedServerVersion&#34;, api_version)
+        action = f&#34;http://schemas.microsoft.com/exchange/2010/Autodiscover/Autodiscover/{self.SERVICE_NAME}&#34;
+        add_xml_child(header, &#34;wsa:Action&#34;, action)
+        add_xml_child(header, &#34;wsa:To&#34;, self.protocol.service_endpoint)
+        identity = self._account_to_impersonate
+        if identity:
+            add_xml_child(header, &#34;t:ExchangeImpersonation&#34;, identity)
+        envelope.append(header)
+        body = create_element(&#34;s:Body&#34;)
+        body.append(content)
+        envelope.append(body)
+        return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
+
+    def _elem_to_obj(self, elem):
+        return UserResponse.from_xml(elem=elem, account=None)
+
+    def get_payload(self, users, settings):
+        payload = create_element(f&#34;a:{self.SERVICE_NAME}RequestMessage&#34;)
+        request = create_element(&#34;a:Request&#34;)
+        users_elem = create_element(&#34;a:Users&#34;)
+        for user in users:
+            mailbox = create_element(&#34;a:Mailbox&#34;)
+            set_xml_value(mailbox, user)
+            add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
+        if not len(users_elem):
+            raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
+        request.append(users_elem)
+        requested_settings = create_element(&#34;a:RequestedSettings&#34;)
+        for setting in settings:
+            add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
+        if not len(requested_settings):
+            raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
+        request.append(requested_settings)
+        payload.append(request)
+        return payload
+
+    @classmethod
+    def _response_tag(cls):
+        &#34;&#34;&#34;Return the name of the element containing the service response.&#34;&#34;&#34;
+        return f&#34;{{{ANS}}}{cls.SERVICE_NAME}ResponseMessage&#34;
+
+    def _get_element_container(self, message, name=None):
+        response = message.find(f&#34;{{{ANS}}}Response&#34;)
+        # ErrorCode: See
+        # https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
+        error_code = get_xml_attr(response, f&#34;{{{ANS}}}ErrorCode&#34;)
+        if error_code == &#34;NoError&#34;:
+            container = response.find(name)
+            if container is None:
+                raise MalformedResponseError(f&#34;No {name} elements in ResponseMessage ({xml_to_str(response)})&#34;)
+            return container
+        # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
+        msg_text = get_xml_attr(response, f&#34;{{{ANS}}}ErrorMessage&#34;)
+        try:
+            raise self._get_exception(code=error_code, text=msg_text, msg_xml=None)
+        except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
+            return e
+
+    @classmethod
+    def _raise_soap_errors(cls, fault):
+        fault_code = get_xml_attr(fault, &#34;faultcode&#34;)
+        fault_string = get_xml_attr(fault, &#34;faultstring&#34;)
+        if fault_code == &#34;a:ActionNotSupported&#34; and &#34;ContractFilter mismatch&#34; in fault_string:
+            raise ErrorInvalidServerVersion(f&#34;SOAP error code: {fault_code} string: {fault_string}&#34;)
+        super()._raise_soap_errors(fault=fault)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.GetUserSettings.NS_MAP"><code class="name">var <span class="ident">NS_MAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetUserSettings.SERVICE_NAME"><code class="name">var <span class="ident">SERVICE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetUserSettings.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.GetUserSettings.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.services.GetUserSettings.call"><code class="name flex">
+<span>def <span class="ident">call</span></span>(<span>self, users, settings)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call(self, users, settings):
+    return self._elems_to_objs(self._get_elements(self.get_payload(users=users, settings=settings)))</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.services.GetUserSettings.get_payload"><code class="name flex">
+<span>def <span class="ident">get_payload</span></span>(<span>self, users, settings)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_payload(self, users, settings):
+    payload = create_element(f&#34;a:{self.SERVICE_NAME}RequestMessage&#34;)
+    request = create_element(&#34;a:Request&#34;)
+    users_elem = create_element(&#34;a:Users&#34;)
+    for user in users:
+        mailbox = create_element(&#34;a:Mailbox&#34;)
+        set_xml_value(mailbox, user)
+        add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
+    if not len(users_elem):
+        raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
+    request.append(users_elem)
+    requested_settings = create_element(&#34;a:RequestedSettings&#34;)
+    for setting in settings:
+        add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
+    if not len(requested_settings):
+        raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
+    request.append(requested_settings)
+    payload.append(request)
+    return payload</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="common.html#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5288,6 +5658,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5338,6 +5709,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5377,6 +5750,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5432,6 +5806,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5471,6 +5847,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -5530,6 +5907,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5551,11 +5930,11 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     element_container_name = f&#34;{{{MNS}}}ResolutionSet&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = ErrorNameResolutionNoResults
     WARNINGS_TO_IGNORE_IN_RESPONSE = ErrorNameResolutionMultipleResults
-    # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
-    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service.
-    supports_paging = False
+
     # According to the &#39;Remarks&#39; section of the MSDN documentation referenced above, at most 100 candidates are
     # returned for a lookup.
+    # Note: paging information is returned as attrs on the &#39;ResolutionSet&#39; element, but this service does not
+    # support the &#39;IndexedPageItemView&#39; element, so it&#39;s not really a paging service.
     candidates_limit = 100
 
     def __init__(self, *args, **kwargs):
@@ -5639,6 +6018,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5659,10 +6039,6 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.ResolveNames.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.ResolveNames.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -5748,6 +6124,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5786,6 +6164,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5843,6 +6222,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5874,10 +6255,10 @@ push notifications.</p></div>
     STATUS_CHOICES = (OK, UNSUBSCRIBE)
 
     def ok_payload(self):
-        return wrap(content=self.get_payload(status=self.OK))
+        return self.wrap(content=self.get_payload(status=self.OK))
 
     def unsubscribe_payload(self):
-        return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
+        return self.wrap(content=self.get_payload(status=self.UNSUBSCRIBE))
 
     def _elem_to_obj(self, elem):
         return Notification.from_xml(elem=elem, account=None)
@@ -5901,6 +6282,7 @@ push notifications.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -5950,7 +6332,7 @@ push notifications.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def ok_payload(self):
-    return wrap(content=self.get_payload(status=self.OK))</code></pre>
+    return self.wrap(content=self.get_payload(status=self.OK))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.SendNotification.unsubscribe_payload"><code class="name flex">
@@ -5963,7 +6345,7 @@ push notifications.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def unsubscribe_payload(self):
-    return wrap(content=self.get_payload(status=self.UNSUBSCRIBE))</code></pre>
+    return self.wrap(content=self.get_payload(status=self.UNSUBSCRIBE))</code></pre>
 </details>
 </dd>
 </dl>
@@ -5975,6 +6357,8 @@ push notifications.</p></div>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6022,6 +6406,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6077,6 +6462,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6086,7 +6473,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6118,6 +6506,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6179,6 +6568,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6188,7 +6579,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6221,6 +6613,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6280,6 +6673,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6289,7 +6684,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
+<div class="desc"><p>Base class for subscription classes.</p>
+<p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/subscribe-operation</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -6318,6 +6714,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6369,6 +6766,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.subscribe.Subscribe.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.subscribe.Subscribe.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.subscribe.Subscribe.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6430,9 +6829,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
-<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6499,6 +6898,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6535,7 +6936,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
         self.sync_state = sync_state
         if max_changes_returned is None:
-            max_changes_returned = self.page_size
+            max_changes_returned = 100
         if not isinstance(max_changes_returned, int):
             raise InvalidTypeError(&#34;max_changes_returned&#34;, max_changes_returned, int)
         if max_changes_returned &lt;= 0:
@@ -6587,9 +6988,9 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
-<li><a title="exchangelib.services.common.EWSPagingService" href="common.html#exchangelib.services.common.EWSPagingService">EWSPagingService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6636,7 +7037,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <pre><code class="python">def call(self, folder, shape, additional_fields, sync_state, ignore, max_changes_returned, sync_scope):
     self.sync_state = sync_state
     if max_changes_returned is None:
-        max_changes_returned = self.page_size
+        max_changes_returned = 100
     if not isinstance(max_changes_returned, int):
         raise InvalidTypeError(&#34;max_changes_returned&#34;, max_changes_returned, int)
     if max_changes_returned &lt;= 0:
@@ -6689,6 +7090,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6726,6 +7129,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6781,6 +7185,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6826,7 +7232,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         return to_item_id(target, FolderId)
 
     def get_payload(self, folders):
-        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+        # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is an instance of a subclass of Folder and
         # &#39;fieldnames&#39; are the attribute names that were updated.
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
         payload.append(self._changes_elem(target_changes=folders))
@@ -6837,6 +7243,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><a title="exchangelib.services.update_folder.BaseUpdateService" href="update_folder.html#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -6893,7 +7300,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_payload(self, folders):
-    # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is a instance of a subclass of Folder and
+    # Takes a list of (Folder, fieldnames) tuples where &#39;Folder&#39; is an instance of a subclass of Folder and
     # &#39;fieldnames&#39; are the attribute names that were updated.
     payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
     payload.append(self._changes_elem(target_changes=folders))
@@ -6909,6 +7316,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7006,7 +7415,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         send_meeting_invitations_or_cancellations,
         suppress_read_receipts,
     ):
-        # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
+        # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is an instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated.
         attrs = dict(
             ConflictResolution=conflict_resolution,
@@ -7024,6 +7433,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><a title="exchangelib.services.update_folder.BaseUpdateService" href="update_folder.html#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7112,7 +7522,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
     send_meeting_invitations_or_cancellations,
     suppress_read_receipts,
 ):
-    # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
+    # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is an instance of a subclass of Item and &#39;fieldnames&#39;
     # are the attribute names that were updated.
     attrs = dict(
         ConflictResolution=conflict_resolution,
@@ -7135,6 +7545,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7168,6 +7580,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7217,6 +7630,8 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7278,6 +7693,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -7356,6 +7772,8 @@ call.</p>
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7409,6 +7827,7 @@ call.</p>
 <li><code><a title="exchangelib.services.get_user_availability" href="get_user_availability.html">exchangelib.services.get_user_availability</a></code></li>
 <li><code><a title="exchangelib.services.get_user_configuration" href="get_user_configuration.html">exchangelib.services.get_user_configuration</a></code></li>
 <li><code><a title="exchangelib.services.get_user_oof_settings" href="get_user_oof_settings.html">exchangelib.services.get_user_oof_settings</a></code></li>
+<li><code><a title="exchangelib.services.get_user_settings" href="get_user_settings.html">exchangelib.services.get_user_settings</a></code></li>
 <li><code><a title="exchangelib.services.mark_as_junk" href="mark_as_junk.html">exchangelib.services.mark_as_junk</a></code></li>
 <li><code><a title="exchangelib.services.move_folder" href="move_folder.html">exchangelib.services.move_folder</a></code></li>
 <li><code><a title="exchangelib.services.move_item" href="move_item.html">exchangelib.services.move_item</a></code></li>
@@ -7445,7 +7864,6 @@ call.</p>
 <li><code><a title="exchangelib.services.ConvertId.call" href="#exchangelib.services.ConvertId.call">call</a></code></li>
 <li><code><a title="exchangelib.services.ConvertId.cls_map" href="#exchangelib.services.ConvertId.cls_map">cls_map</a></code></li>
 <li><code><a title="exchangelib.services.ConvertId.get_payload" href="#exchangelib.services.ConvertId.get_payload">get_payload</a></code></li>
-<li><code><a title="exchangelib.services.ConvertId.supported_from" href="#exchangelib.services.ConvertId.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -7533,18 +7951,17 @@ call.</p>
 <li><code><a title="exchangelib.services.EWSService.CHUNK_SIZE" href="#exchangelib.services.EWSService.CHUNK_SIZE">CHUNK_SIZE</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.EWSService.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.NO_VALID_SERVER_VERSIONS" href="#exchangelib.services.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.EWSService.PAGE_SIZE" href="#exchangelib.services.EWSService.PAGE_SIZE">PAGE_SIZE</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.NS_MAP" href="#exchangelib.services.EWSService.NS_MAP">NS_MAP</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.SERVICE_NAME" href="#exchangelib.services.EWSService.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE" href="#exchangelib.services.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE">WARNINGS_TO_IGNORE_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.element_container_name" href="#exchangelib.services.EWSService.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.get" href="#exchangelib.services.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.EWSService.paging_container_name" href="#exchangelib.services.EWSService.paging_container_name">paging_container_name</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.parse" href="#exchangelib.services.EWSService.parse">parse</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.returns_elements" href="#exchangelib.services.EWSService.returns_elements">returns_elements</a></code></li>
 <li><code><a title="exchangelib.services.EWSService.stop_streaming" href="#exchangelib.services.EWSService.stop_streaming">stop_streaming</a></code></li>
-<li><code><a title="exchangelib.services.EWSService.supported_from" href="#exchangelib.services.EWSService.supported_from">supported_from</a></code></li>
-<li><code><a title="exchangelib.services.EWSService.supports_paging" href="#exchangelib.services.EWSService.supports_paging">supports_paging</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.supported_api_versions" href="#exchangelib.services.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.EWSService.wrap" href="#exchangelib.services.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 <li>
@@ -7584,7 +8001,6 @@ call.</p>
 <li><code><a title="exchangelib.services.FindFolder.element_container_name" href="#exchangelib.services.FindFolder.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.FindFolder.get_payload" href="#exchangelib.services.FindFolder.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.FindFolder.paging_container_name" href="#exchangelib.services.FindFolder.paging_container_name">paging_container_name</a></code></li>
-<li><code><a title="exchangelib.services.FindFolder.supports_paging" href="#exchangelib.services.FindFolder.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 <li>
@@ -7595,7 +8011,6 @@ call.</p>
 <li><code><a title="exchangelib.services.FindItem.element_container_name" href="#exchangelib.services.FindItem.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.FindItem.get_payload" href="#exchangelib.services.FindItem.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.FindItem.paging_container_name" href="#exchangelib.services.FindItem.paging_container_name">paging_container_name</a></code></li>
-<li><code><a title="exchangelib.services.FindItem.supports_paging" href="#exchangelib.services.FindItem.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 <li>
@@ -7606,7 +8021,6 @@ call.</p>
 <li><code><a title="exchangelib.services.FindPeople.element_container_name" href="#exchangelib.services.FindPeople.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.FindPeople.get_payload" href="#exchangelib.services.FindPeople.get_payload">get_payload</a></code></li>
 <li><code><a title="exchangelib.services.FindPeople.supported_from" href="#exchangelib.services.FindPeople.supported_from">supported_from</a></code></li>
-<li><code><a title="exchangelib.services.FindPeople.supports_paging" href="#exchangelib.services.FindPeople.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 <li>
@@ -7754,6 +8168,17 @@ call.</p>
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.services.GetUserSettings" href="#exchangelib.services.GetUserSettings">GetUserSettings</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.GetUserSettings.NS_MAP" href="#exchangelib.services.GetUserSettings.NS_MAP">NS_MAP</a></code></li>
+<li><code><a title="exchangelib.services.GetUserSettings.SERVICE_NAME" href="#exchangelib.services.GetUserSettings.SERVICE_NAME">SERVICE_NAME</a></code></li>
+<li><code><a title="exchangelib.services.GetUserSettings.call" href="#exchangelib.services.GetUserSettings.call">call</a></code></li>
+<li><code><a title="exchangelib.services.GetUserSettings.element_container_name" href="#exchangelib.services.GetUserSettings.element_container_name">element_container_name</a></code></li>
+<li><code><a title="exchangelib.services.GetUserSettings.get_payload" href="#exchangelib.services.GetUserSettings.get_payload">get_payload</a></code></li>
+<li><code><a title="exchangelib.services.GetUserSettings.supported_from" href="#exchangelib.services.GetUserSettings.supported_from">supported_from</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.services.MarkAsJunk" href="#exchangelib.services.MarkAsJunk">MarkAsJunk</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.services.MarkAsJunk.SERVICE_NAME" href="#exchangelib.services.MarkAsJunk.SERVICE_NAME">SERVICE_NAME</a></code></li>
@@ -7789,7 +8214,6 @@ call.</p>
 <li><code><a title="exchangelib.services.ResolveNames.candidates_limit" href="#exchangelib.services.ResolveNames.candidates_limit">candidates_limit</a></code></li>
 <li><code><a title="exchangelib.services.ResolveNames.element_container_name" href="#exchangelib.services.ResolveNames.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.ResolveNames.get_payload" href="#exchangelib.services.ResolveNames.get_payload">get_payload</a></code></li>
-<li><code><a title="exchangelib.services.ResolveNames.supports_paging" href="#exchangelib.services.ResolveNames.supports_paging">supports_paging</a></code></li>
 </ul>
 </li>
 <li>

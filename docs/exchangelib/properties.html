@@ -35,7 +35,13 @@ import struct
 from inspect import getmro
 from threading import Lock
 
-from .errors import InvalidTypeError
+from .errors import (
+    AutoDiscoverFailed,
+    ErrorInternalServerError,
+    ErrorNonExistentMailbox,
+    ErrorServerBusy,
+    InvalidTypeError,
+)
 from .fields import (
     WEEKDAY_NAMES,
     AssociatedCalendarItemIdField,
@@ -77,8 +83,8 @@ from .fields import (
     TypeValueField,
     UnknownEntriesField,
 )
-from .util import MNS, TNS, create_element, get_xml_attr, set_xml_value, value_to_xml_text
-from .version import EXCHANGE_2013, Build
+from .util import ANS, MNS, TNS, create_element, get_xml_attr, set_xml_value, value_to_xml_text
+from .version import EXCHANGE_2013, Build, Version
 
 log = logging.getLogger(__name__)
 
@@ -236,7 +242,7 @@ class EWSMeta(type, metaclass=abc.ABCMeta):
         # FIELDS defined on a model overrides the base class fields
         fields = kwargs.get(&#34;FIELDS&#34;, base_fields) + local_fields
 
-        # Include all fields as class attributes so we can use them as instance attributes
+        # Include all fields as class attributes, so we can use them as instance attributes
         kwargs.update({_mangle(f.name): f for f in fields})
 
         # Calculate __slots__ so we don&#39;t have to hard-code it on the model
@@ -412,8 +418,8 @@ class EWSElement(metaclass=EWSMeta):
         if not field.supports_version(version):
             # The field exists but is not valid for this version
             raise InvalidFieldForVersion(
-                f&#34;Field {field.name!r} is not supported on server version {version} &#34;
-                f&#34;(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})&#34;
+                f&#34;Field {field.name!r} only supports server versions from {field.supported_from or &#39;*&#39;} to &#34;
+                f&#34;{field.deprecated_from or &#39;*&#39;} (server has {version})&#34;
             )
 
     @classmethod
@@ -432,7 +438,7 @@ class EWSElement(metaclass=EWSMeta):
 
     @classmethod
     def remove_field(cls, field):
-        &#34;&#34;&#34;Remove the given field and and update the slots cache.
+        &#34;&#34;&#34;Remove the given field and update the slots cache.
 
         :param field:
         &#34;&#34;&#34;
@@ -1484,7 +1490,7 @@ class PhoneNumber(EWSElement):
 
 class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for classes that have a concept of &#39;id&#39; and &#39;changekey&#39; values. The values are actually stored on
-    a separate element but we add convenience methods to hide that fact.
+    a separate element, but we add convenience methods to hide that fact.
     &#34;&#34;&#34;
 
     ID_ELEMENT_CLS = None
@@ -1972,7 +1978,7 @@ class TimeZoneDefinition(EWSElement):
         standard_time, daylight_time = None, None
         if len(transitions_group.transitions) == 1:
             # This is a simple transition group representing a timezone with no DST. Some servers don&#39;t accept
-            # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+            # TimeZone elements without an STD and DST element (see issue #488). Return StandardTime and DaylightTime
             # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break
             # the well-behaving servers.
             standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
@@ -1997,7 +2003,165 @@ class TimeZoneDefinition(EWSElement):
                 daylight_time = DaylightTime(**transition_kwargs)
                 continue
             raise ValueError(f&#34;Unknown transition: {transition}&#34;)
-        return standard_time, daylight_time, standard_period</code></pre>
+        return standard_time, daylight_time, standard_period
+
+
+class UserResponse(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userresponse-soap&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;UserResponse&#34;
+
+    # See https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/setting-soap
+    SETTINGS_MAP = {
+        &#34;user_display_name&#34;: &#34;UserDisplayName&#34;,
+        &#34;user_dn&#34;: &#34;UserDN&#34;,
+        &#34;user_deployment_id&#34;: &#34;UserDeploymentId&#34;,
+        &#34;internal_mailbox_server&#34;: &#34;InternalMailboxServer&#34;,
+        &#34;internal_rpc_client_server&#34;: &#34;InternalRpcClientServer&#34;,
+        &#34;internal_mailbox_server_dn&#34;: &#34;InternalMailboxServerDN&#34;,
+        &#34;internal_ecp_url&#34;: &#34;InternalEcpUrl&#34;,
+        &#34;internal_ecp_voicemail_url&#34;: &#34;InternalEcpVoicemailUrl&#34;,
+        &#34;internal_ecp_email_subscriptions_url&#34;: &#34;InternalEcpEmailSubscriptionsUrl&#34;,
+        &#34;internal_ecp_text_messaging_url&#34;: &#34;InternalEcpTextMessagingUrl&#34;,
+        &#34;internal_ecp_delivery_report_url&#34;: &#34;InternalEcpDeliveryReportUrl&#34;,
+        &#34;internal_ecp_retention_policy_tags_url&#34;: &#34;InternalEcpRetentionPolicyTagsUrl&#34;,
+        &#34;internal_ecp_publishing_url&#34;: &#34;InternalEcpPublishingUrl&#34;,
+        &#34;internal_ews_url&#34;: &#34;InternalEwsUrl&#34;,
+        &#34;internal_oab_url&#34;: &#34;InternalOABUrl&#34;,
+        &#34;internal_um_url&#34;: &#34;InternalUMUrl&#34;,
+        &#34;internal_web_client_urls&#34;: &#34;InternalWebClientUrls&#34;,
+        &#34;mailbox_dn&#34;: &#34;MailboxDN&#34;,
+        &#34;public_folder_server&#34;: &#34;PublicFolderServer&#34;,
+        &#34;active_directory_server&#34;: &#34;ActiveDirectoryServer&#34;,
+        &#34;external_mailbox_server&#34;: &#34;ExternalMailboxServer&#34;,
+        &#34;external_mailbox_server_requires_ssl&#34;: &#34;ExternalMailboxServerRequiresSSL&#34;,
+        &#34;external_mailbox_server_authentication_methods&#34;: &#34;ExternalMailboxServerAuthenticationMethods&#34;,
+        &#34;ecp_voicemail_url_fragment,&#34;: &#34;EcpVoicemailUrlFragment,&#34;,
+        &#34;ecp_email_subscriptions_url_fragment&#34;: &#34;EcpEmailSubscriptionsUrlFragment&#34;,
+        &#34;ecp_text_messaging_url_fragment&#34;: &#34;EcpTextMessagingUrlFragment&#34;,
+        &#34;ecp_delivery_report_url_fragment&#34;: &#34;EcpDeliveryReportUrlFragment&#34;,
+        &#34;ecp_retention_policy_tags_url_fragment&#34;: &#34;EcpRetentionPolicyTagsUrlFragment&#34;,
+        &#34;ecp_publishing_url_fragment&#34;: &#34;EcpPublishingUrlFragment&#34;,
+        &#34;external_ecp_url&#34;: &#34;ExternalEcpUrl&#34;,
+        &#34;external_ecp_voicemail_url&#34;: &#34;ExternalEcpVoicemailUrl&#34;,
+        &#34;external_ecp_email_subscriptions_url&#34;: &#34;ExternalEcpEmailSubscriptionsUrl&#34;,
+        &#34;external_ecp_text_messaging_url&#34;: &#34;ExternalEcpTextMessagingUrl&#34;,
+        &#34;external_ecp_delivery_report_url&#34;: &#34;ExternalEcpDeliveryReportUrl&#34;,
+        &#34;external_ecp_retention_policy_tags_url&#34;: &#34;ExternalEcpRetentionPolicyTagsUrl&#34;,
+        &#34;external_ecp_publishing_url&#34;: &#34;ExternalEcpPublishingUrl&#34;,
+        &#34;external_ews_url&#34;: &#34;ExternalEwsUrl&#34;,
+        &#34;external_oab_url&#34;: &#34;ExternalOABUrl&#34;,
+        &#34;external_um_url&#34;: &#34;ExternalUMUrl&#34;,
+        &#34;external_web_client_urls&#34;: &#34;ExternalWebClientUrls&#34;,
+        &#34;cross_organization_sharing_enabled&#34;: &#34;CrossOrganizationSharingEnabled&#34;,
+        &#34;alternate_mailboxes&#34;: &#34;AlternateMailboxes&#34;,
+        &#34;cas_version&#34;: &#34;CasVersion&#34;,
+        &#34;ews_supported_schemas&#34;: &#34;EwsSupportedSchemas&#34;,
+        &#34;internal_pop3_connections&#34;: &#34;InternalPop3Connections&#34;,
+        &#34;external_pop3_connections&#34;: &#34;ExternalPop3Connections&#34;,
+        &#34;internal_imap4_connections&#34;: &#34;InternalImap4Connections&#34;,
+        &#34;external_imap4_connections&#34;: &#34;ExternalImap4Connections&#34;,
+        &#34;internal_smtp_connections&#34;: &#34;InternalSmtpConnections&#34;,
+        &#34;external_smtp_connections&#34;: &#34;ExternalSmtpConnections&#34;,
+        &#34;internal_server_exclusive_connect&#34;: &#34;InternalServerExclusiveConnect&#34;,
+        &#34;external_server_exclusive_connect&#34;: &#34;ExternalServerExclusiveConnect&#34;,
+        &#34;exchange_rpc_url&#34;: &#34;ExchangeRpcUrl&#34;,
+        &#34;show_gal_as_default_view&#34;: &#34;ShowGalAsDefaultView&#34;,
+        &#34;auto_discover_smtp_address&#34;: &#34;AutoDiscoverSMTPAddress&#34;,
+        &#34;interop_external_ews_url&#34;: &#34;InteropExternalEwsUrl&#34;,
+        &#34;external_ews_version&#34;: &#34;ExternalEwsVersion&#34;,
+        &#34;interop_external_ews_version&#34;: &#34;InteropExternalEwsVersion&#34;,
+        &#34;mobile_mailbox_policy_interop&#34;: &#34;MobileMailboxPolicyInterop&#34;,
+        &#34;grouping_information&#34;: &#34;GroupingInformation&#34;,
+        &#34;user_ms_online&#34;: &#34;UserMSOnline&#34;,
+        &#34;mapi_http_enabled&#34;: &#34;MapiHttpEnabled&#34;,
+    }
+    REVERSE_SETTINGS_MAP = {v: k for k, v in SETTINGS_MAP.items()}
+
+    error_code = CharField()
+    error_message = CharField()
+    redirect_address = CharField()
+    redirect_url = CharField()
+    user_settings_errors = DictionaryField()
+    user_settings = DictionaryField()
+
+    @property
+    def autodiscover_smtp_address(self):
+        return self.user_settings.get(&#34;auto_discover_smtp_address&#34;)
+
+    @property
+    def ews_url(self):
+        return self.user_settings.get(&#34;external_ews_url&#34;)
+
+    @property
+    def version(self):
+        if not self.user_settings.get(&#34;ews_supported_schemas&#34;):
+            return None
+        supported_schemas = [s.strip() for s in self.user_settings.get(&#34;ews_supported_schemas&#34;).split(&#34;,&#34;)]
+        newest_supported_schema = sorted(supported_schemas, reverse=True)[0]
+
+        for version in Version.all_versions():
+            if newest_supported_schema == version.api_version:
+                return version
+        raise ValueError(f&#34;Unknown supported schemas: {supported_schemas}&#34;)
+
+    @staticmethod
+    def _is_url(s):
+        if not s:
+            return False
+        return s.startswith(&#34;http://&#34;) or s.startswith(&#34;https://&#34;)
+
+    def raise_errors(self):
+        if self.error_code == &#34;InvalidUser&#34;:
+            raise ErrorNonExistentMailbox(self.error_message)
+        if self.error_code in (
+            &#34;InvalidRequest&#34;,
+            &#34;InvalidSetting&#34;,
+            &#34;SettingIsNotAvailable&#34;,
+            &#34;InvalidDomain&#34;,
+            &#34;NotFederated&#34;,
+        ):
+            raise AutoDiscoverFailed(f&#34;{self.error_code}: {self.error_message}&#34;)
+        if self.user_settings_errors:
+            raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        # Possible ErrorCode values:
+        #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
+        error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
+        error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
+        if error_code == &#34;InternalServerError&#34;:
+            raise ErrorInternalServerError(error_message)
+        if error_code == &#34;ServerBusy&#34;:
+            raise ErrorServerBusy(error_message)
+        if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
+            return cls(error_code=error_code, error_message=error_message)
+
+        redirect_target = get_xml_attr(elem, f&#34;{{{ANS}}}RedirectTarget&#34;)
+        redirect_address = redirect_target if error_code == &#34;RedirectAddress&#34; else None
+        redirect_url = redirect_target if error_code == &#34;RedirectUrl&#34; else None
+        user_settings_errors = {}
+        settings_errors_elem = elem.find(f&#34;{{{ANS}}}UserSettingErrors&#34;)
+        if settings_errors_elem is not None:
+            for setting_error in settings_errors_elem:
+                error_code = get_xml_attr(setting_error, f&#34;{{{ANS}}}ErrorCode&#34;)
+                error_message = get_xml_attr(setting_error, f&#34;{{{ANS}}}ErrorMessage&#34;)
+                name = get_xml_attr(setting_error, f&#34;{{{ANS}}}SettingName&#34;)
+                user_settings_errors[cls.REVERSE_SETTINGS_MAP[name]] = (error_code, error_message)
+        user_settings = {}
+        settings_elem = elem.find(f&#34;{{{ANS}}}UserSettings&#34;)
+        if settings_elem is not None:
+            for setting in settings_elem:
+                name = get_xml_attr(setting, f&#34;{{{ANS}}}Name&#34;)
+                value = get_xml_attr(setting, f&#34;{{{ANS}}}Value&#34;)
+                user_settings[cls.REVERSE_SETTINGS_MAP[name]] = value
+        return cls(
+            redirect_address=redirect_address,
+            redirect_url=redirect_url,
+            user_settings_errors=user_settings_errors,
+            user_settings=user_settings,
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -4219,8 +4383,8 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         if not field.supports_version(version):
             # The field exists but is not valid for this version
             raise InvalidFieldForVersion(
-                f&#34;Field {field.name!r} is not supported on server version {version} &#34;
-                f&#34;(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})&#34;
+                f&#34;Field {field.name!r} only supports server versions from {field.supported_from or &#39;*&#39;} to &#34;
+                f&#34;{field.deprecated_from or &#39;*&#39;} (server has {version})&#34;
             )
 
     @classmethod
@@ -4239,7 +4403,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 
     @classmethod
     def remove_field(cls, field):
-        &#34;&#34;&#34;Remove the given field and and update the slots cache.
+        &#34;&#34;&#34;Remove the given field and update the slots cache.
 
         :param field:
         &#34;&#34;&#34;
@@ -4276,6 +4440,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="exchangelib.account.Identity" href="account.html#exchangelib.account.Identity">Identity</a></li>
 <li><a title="exchangelib.attachments.Attachment" href="attachments.html#exchangelib.attachments.Attachment">Attachment</a></li>
 <li><a title="exchangelib.attachments.AttachmentId" href="attachments.html#exchangelib.attachments.AttachmentId">AttachmentId</a></li>
 <li><a title="exchangelib.autodiscover.properties.Autodiscover" href="autodiscover/properties.html#exchangelib.autodiscover.properties.Autodiscover">Autodiscover</a></li>
@@ -4340,6 +4505,7 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <li><a title="exchangelib.properties.TransitionsGroup" href="#exchangelib.properties.TransitionsGroup">TransitionsGroup</a></li>
 <li><a title="exchangelib.properties.UserConfigurationName" href="#exchangelib.properties.UserConfigurationName">UserConfigurationName</a></li>
 <li><a title="exchangelib.properties.UserId" href="#exchangelib.properties.UserId">UserId</a></li>
+<li><a title="exchangelib.properties.UserResponse" href="#exchangelib.properties.UserResponse">UserResponse</a></li>
 <li><a title="exchangelib.properties.WorkingPeriod" href="#exchangelib.properties.WorkingPeriod">WorkingPeriod</a></li>
 <li><a title="exchangelib.recurrence.Boundary" href="recurrence.html#exchangelib.recurrence.Boundary">Boundary</a></li>
 <li><a title="exchangelib.recurrence.DeletedOccurrence" href="recurrence.html#exchangelib.recurrence.DeletedOccurrence">DeletedOccurrence</a></li>
@@ -4441,7 +4607,7 @@ def get_field_by_fieldname(cls, fieldname):
 <span>def <span class="ident">remove_field</span></span>(<span>field)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Remove the given field and and update the slots cache.</p>
+<div class="desc"><p>Remove the given field and update the slots cache.</p>
 <p>:param field:</p></div>
 <details class="source">
 <summary>
@@ -4449,7 +4615,7 @@ def get_field_by_fieldname(cls, fieldname):
 </summary>
 <pre><code class="python">@classmethod
 def remove_field(cls, field):
-    &#34;&#34;&#34;Remove the given field and and update the slots cache.
+    &#34;&#34;&#34;Remove the given field and update the slots cache.
 
     :param field:
     &#34;&#34;&#34;
@@ -4542,8 +4708,8 @@ def validate_field(cls, field, version):
     if not field.supports_version(version):
         # The field exists but is not valid for this version
         raise InvalidFieldForVersion(
-            f&#34;Field {field.name!r} is not supported on server version {version} &#34;
-            f&#34;(supported from: {field.supported_from}, deprecated from: {field.deprecated_from})&#34;
+            f&#34;Field {field.name!r} only supports server versions from {field.supported_from or &#39;*&#39;} to &#34;
+            f&#34;{field.deprecated_from or &#39;*&#39;} (server has {version})&#34;
         )</code></pre>
 </details>
 </dd>
@@ -4643,7 +4809,7 @@ type(name, bases, dict, **kwds) -&gt; a new type</p></div>
         # FIELDS defined on a model overrides the base class fields
         fields = kwargs.get(&#34;FIELDS&#34;, base_fields) + local_fields
 
-        # Include all fields as class attributes so we can use them as instance attributes
+        # Include all fields as class attributes, so we can use them as instance attributes
         kwargs.update({_mangle(f.name): f for f in fields})
 
         # Calculate __slots__ so we don&#39;t have to hard-code it on the model
@@ -5745,14 +5911,14 @@ def from_xml(cls, elem, account):
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes that have a concept of 'id' and 'changekey' values. The values are actually stored on
-a separate element but we add convenience methods to hide that fact.</p></div>
+a separate element, but we add convenience methods to hide that fact.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IdChangeKeyMixIn(EWSElement, metaclass=EWSMeta):
     &#34;&#34;&#34;Base class for classes that have a concept of &#39;id&#39; and &#39;changekey&#39; values. The values are actually stored on
-    a separate element but we add convenience methods to hide that fact.
+    a separate element, but we add convenience methods to hide that fact.
     &#34;&#34;&#34;
 
     ID_ELEMENT_CLS = None
@@ -9357,7 +9523,7 @@ Protocol.get_timezones(return_full_timezone_data=True)
         standard_time, daylight_time = None, None
         if len(transitions_group.transitions) == 1:
             # This is a simple transition group representing a timezone with no DST. Some servers don&#39;t accept
-            # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+            # TimeZone elements without an STD and DST element (see issue #488). Return StandardTime and DaylightTime
             # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break
             # the well-behaving servers.
             standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
@@ -9461,7 +9627,7 @@ def from_xml(cls, elem, account):
     standard_time, daylight_time = None, None
     if len(transitions_group.transitions) == 1:
         # This is a simple transition group representing a timezone with no DST. Some servers don&#39;t accept
-        # TimeZone elements without a STD and DST element (see issue #488). Return StandardTime and DaylightTime
+        # TimeZone elements without an STD and DST element (see issue #488). Return StandardTime and DaylightTime
         # objects with dummy values and 0 bias - this satisfies the broken servers and hopefully doesn&#39;t break
         # the well-behaving servers.
         standard_time = StandardTime(bias=0, time=datetime.time(0), occurrence=1, iso_month=1, weekday=1)
@@ -10212,6 +10378,357 @@ def from_xml(cls, elem, account):
 <dt id="exchangelib.properties.UserId.sid"><code class="name">var <span class="ident">sid</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.properties.EWSElement.add_field" href="#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.remove_field" href="#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.supported_fields" href="#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.properties.EWSElement.validate_field" href="#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.properties.UserResponse"><code class="flex name class">
+<span>class <span class="ident">UserResponse</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userresponse-soap">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userresponse-soap</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UserResponse(EWSElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/userresponse-soap&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;UserResponse&#34;
+
+    # See https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/setting-soap
+    SETTINGS_MAP = {
+        &#34;user_display_name&#34;: &#34;UserDisplayName&#34;,
+        &#34;user_dn&#34;: &#34;UserDN&#34;,
+        &#34;user_deployment_id&#34;: &#34;UserDeploymentId&#34;,
+        &#34;internal_mailbox_server&#34;: &#34;InternalMailboxServer&#34;,
+        &#34;internal_rpc_client_server&#34;: &#34;InternalRpcClientServer&#34;,
+        &#34;internal_mailbox_server_dn&#34;: &#34;InternalMailboxServerDN&#34;,
+        &#34;internal_ecp_url&#34;: &#34;InternalEcpUrl&#34;,
+        &#34;internal_ecp_voicemail_url&#34;: &#34;InternalEcpVoicemailUrl&#34;,
+        &#34;internal_ecp_email_subscriptions_url&#34;: &#34;InternalEcpEmailSubscriptionsUrl&#34;,
+        &#34;internal_ecp_text_messaging_url&#34;: &#34;InternalEcpTextMessagingUrl&#34;,
+        &#34;internal_ecp_delivery_report_url&#34;: &#34;InternalEcpDeliveryReportUrl&#34;,
+        &#34;internal_ecp_retention_policy_tags_url&#34;: &#34;InternalEcpRetentionPolicyTagsUrl&#34;,
+        &#34;internal_ecp_publishing_url&#34;: &#34;InternalEcpPublishingUrl&#34;,
+        &#34;internal_ews_url&#34;: &#34;InternalEwsUrl&#34;,
+        &#34;internal_oab_url&#34;: &#34;InternalOABUrl&#34;,
+        &#34;internal_um_url&#34;: &#34;InternalUMUrl&#34;,
+        &#34;internal_web_client_urls&#34;: &#34;InternalWebClientUrls&#34;,
+        &#34;mailbox_dn&#34;: &#34;MailboxDN&#34;,
+        &#34;public_folder_server&#34;: &#34;PublicFolderServer&#34;,
+        &#34;active_directory_server&#34;: &#34;ActiveDirectoryServer&#34;,
+        &#34;external_mailbox_server&#34;: &#34;ExternalMailboxServer&#34;,
+        &#34;external_mailbox_server_requires_ssl&#34;: &#34;ExternalMailboxServerRequiresSSL&#34;,
+        &#34;external_mailbox_server_authentication_methods&#34;: &#34;ExternalMailboxServerAuthenticationMethods&#34;,
+        &#34;ecp_voicemail_url_fragment,&#34;: &#34;EcpVoicemailUrlFragment,&#34;,
+        &#34;ecp_email_subscriptions_url_fragment&#34;: &#34;EcpEmailSubscriptionsUrlFragment&#34;,
+        &#34;ecp_text_messaging_url_fragment&#34;: &#34;EcpTextMessagingUrlFragment&#34;,
+        &#34;ecp_delivery_report_url_fragment&#34;: &#34;EcpDeliveryReportUrlFragment&#34;,
+        &#34;ecp_retention_policy_tags_url_fragment&#34;: &#34;EcpRetentionPolicyTagsUrlFragment&#34;,
+        &#34;ecp_publishing_url_fragment&#34;: &#34;EcpPublishingUrlFragment&#34;,
+        &#34;external_ecp_url&#34;: &#34;ExternalEcpUrl&#34;,
+        &#34;external_ecp_voicemail_url&#34;: &#34;ExternalEcpVoicemailUrl&#34;,
+        &#34;external_ecp_email_subscriptions_url&#34;: &#34;ExternalEcpEmailSubscriptionsUrl&#34;,
+        &#34;external_ecp_text_messaging_url&#34;: &#34;ExternalEcpTextMessagingUrl&#34;,
+        &#34;external_ecp_delivery_report_url&#34;: &#34;ExternalEcpDeliveryReportUrl&#34;,
+        &#34;external_ecp_retention_policy_tags_url&#34;: &#34;ExternalEcpRetentionPolicyTagsUrl&#34;,
+        &#34;external_ecp_publishing_url&#34;: &#34;ExternalEcpPublishingUrl&#34;,
+        &#34;external_ews_url&#34;: &#34;ExternalEwsUrl&#34;,
+        &#34;external_oab_url&#34;: &#34;ExternalOABUrl&#34;,
+        &#34;external_um_url&#34;: &#34;ExternalUMUrl&#34;,
+        &#34;external_web_client_urls&#34;: &#34;ExternalWebClientUrls&#34;,
+        &#34;cross_organization_sharing_enabled&#34;: &#34;CrossOrganizationSharingEnabled&#34;,
+        &#34;alternate_mailboxes&#34;: &#34;AlternateMailboxes&#34;,
+        &#34;cas_version&#34;: &#34;CasVersion&#34;,
+        &#34;ews_supported_schemas&#34;: &#34;EwsSupportedSchemas&#34;,
+        &#34;internal_pop3_connections&#34;: &#34;InternalPop3Connections&#34;,
+        &#34;external_pop3_connections&#34;: &#34;ExternalPop3Connections&#34;,
+        &#34;internal_imap4_connections&#34;: &#34;InternalImap4Connections&#34;,
+        &#34;external_imap4_connections&#34;: &#34;ExternalImap4Connections&#34;,
+        &#34;internal_smtp_connections&#34;: &#34;InternalSmtpConnections&#34;,
+        &#34;external_smtp_connections&#34;: &#34;ExternalSmtpConnections&#34;,
+        &#34;internal_server_exclusive_connect&#34;: &#34;InternalServerExclusiveConnect&#34;,
+        &#34;external_server_exclusive_connect&#34;: &#34;ExternalServerExclusiveConnect&#34;,
+        &#34;exchange_rpc_url&#34;: &#34;ExchangeRpcUrl&#34;,
+        &#34;show_gal_as_default_view&#34;: &#34;ShowGalAsDefaultView&#34;,
+        &#34;auto_discover_smtp_address&#34;: &#34;AutoDiscoverSMTPAddress&#34;,
+        &#34;interop_external_ews_url&#34;: &#34;InteropExternalEwsUrl&#34;,
+        &#34;external_ews_version&#34;: &#34;ExternalEwsVersion&#34;,
+        &#34;interop_external_ews_version&#34;: &#34;InteropExternalEwsVersion&#34;,
+        &#34;mobile_mailbox_policy_interop&#34;: &#34;MobileMailboxPolicyInterop&#34;,
+        &#34;grouping_information&#34;: &#34;GroupingInformation&#34;,
+        &#34;user_ms_online&#34;: &#34;UserMSOnline&#34;,
+        &#34;mapi_http_enabled&#34;: &#34;MapiHttpEnabled&#34;,
+    }
+    REVERSE_SETTINGS_MAP = {v: k for k, v in SETTINGS_MAP.items()}
+
+    error_code = CharField()
+    error_message = CharField()
+    redirect_address = CharField()
+    redirect_url = CharField()
+    user_settings_errors = DictionaryField()
+    user_settings = DictionaryField()
+
+    @property
+    def autodiscover_smtp_address(self):
+        return self.user_settings.get(&#34;auto_discover_smtp_address&#34;)
+
+    @property
+    def ews_url(self):
+        return self.user_settings.get(&#34;external_ews_url&#34;)
+
+    @property
+    def version(self):
+        if not self.user_settings.get(&#34;ews_supported_schemas&#34;):
+            return None
+        supported_schemas = [s.strip() for s in self.user_settings.get(&#34;ews_supported_schemas&#34;).split(&#34;,&#34;)]
+        newest_supported_schema = sorted(supported_schemas, reverse=True)[0]
+
+        for version in Version.all_versions():
+            if newest_supported_schema == version.api_version:
+                return version
+        raise ValueError(f&#34;Unknown supported schemas: {supported_schemas}&#34;)
+
+    @staticmethod
+    def _is_url(s):
+        if not s:
+            return False
+        return s.startswith(&#34;http://&#34;) or s.startswith(&#34;https://&#34;)
+
+    def raise_errors(self):
+        if self.error_code == &#34;InvalidUser&#34;:
+            raise ErrorNonExistentMailbox(self.error_message)
+        if self.error_code in (
+            &#34;InvalidRequest&#34;,
+            &#34;InvalidSetting&#34;,
+            &#34;SettingIsNotAvailable&#34;,
+            &#34;InvalidDomain&#34;,
+            &#34;NotFederated&#34;,
+        ):
+            raise AutoDiscoverFailed(f&#34;{self.error_code}: {self.error_message}&#34;)
+        if self.user_settings_errors:
+            raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        # Possible ErrorCode values:
+        #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
+        error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
+        error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
+        if error_code == &#34;InternalServerError&#34;:
+            raise ErrorInternalServerError(error_message)
+        if error_code == &#34;ServerBusy&#34;:
+            raise ErrorServerBusy(error_message)
+        if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
+            return cls(error_code=error_code, error_message=error_message)
+
+        redirect_target = get_xml_attr(elem, f&#34;{{{ANS}}}RedirectTarget&#34;)
+        redirect_address = redirect_target if error_code == &#34;RedirectAddress&#34; else None
+        redirect_url = redirect_target if error_code == &#34;RedirectUrl&#34; else None
+        user_settings_errors = {}
+        settings_errors_elem = elem.find(f&#34;{{{ANS}}}UserSettingErrors&#34;)
+        if settings_errors_elem is not None:
+            for setting_error in settings_errors_elem:
+                error_code = get_xml_attr(setting_error, f&#34;{{{ANS}}}ErrorCode&#34;)
+                error_message = get_xml_attr(setting_error, f&#34;{{{ANS}}}ErrorMessage&#34;)
+                name = get_xml_attr(setting_error, f&#34;{{{ANS}}}SettingName&#34;)
+                user_settings_errors[cls.REVERSE_SETTINGS_MAP[name]] = (error_code, error_message)
+        user_settings = {}
+        settings_elem = elem.find(f&#34;{{{ANS}}}UserSettings&#34;)
+        if settings_elem is not None:
+            for setting in settings_elem:
+                name = get_xml_attr(setting, f&#34;{{{ANS}}}Name&#34;)
+                value = get_xml_attr(setting, f&#34;{{{ANS}}}Value&#34;)
+                user_settings[cls.REVERSE_SETTINGS_MAP[name]] = value
+        return cls(
+            redirect_address=redirect_address,
+            redirect_url=redirect_url,
+            user_settings_errors=user_settings_errors,
+            user_settings=user_settings,
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.properties.EWSElement" href="#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.properties.UserResponse.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.REVERSE_SETTINGS_MAP"><code class="name">var <span class="ident">REVERSE_SETTINGS_MAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.SETTINGS_MAP"><code class="name">var <span class="ident">SETTINGS_MAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.properties.UserResponse.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    # Possible ErrorCode values:
+    #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
+    error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
+    error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
+    if error_code == &#34;InternalServerError&#34;:
+        raise ErrorInternalServerError(error_message)
+    if error_code == &#34;ServerBusy&#34;:
+        raise ErrorServerBusy(error_message)
+    if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
+        return cls(error_code=error_code, error_message=error_message)
+
+    redirect_target = get_xml_attr(elem, f&#34;{{{ANS}}}RedirectTarget&#34;)
+    redirect_address = redirect_target if error_code == &#34;RedirectAddress&#34; else None
+    redirect_url = redirect_target if error_code == &#34;RedirectUrl&#34; else None
+    user_settings_errors = {}
+    settings_errors_elem = elem.find(f&#34;{{{ANS}}}UserSettingErrors&#34;)
+    if settings_errors_elem is not None:
+        for setting_error in settings_errors_elem:
+            error_code = get_xml_attr(setting_error, f&#34;{{{ANS}}}ErrorCode&#34;)
+            error_message = get_xml_attr(setting_error, f&#34;{{{ANS}}}ErrorMessage&#34;)
+            name = get_xml_attr(setting_error, f&#34;{{{ANS}}}SettingName&#34;)
+            user_settings_errors[cls.REVERSE_SETTINGS_MAP[name]] = (error_code, error_message)
+    user_settings = {}
+    settings_elem = elem.find(f&#34;{{{ANS}}}UserSettings&#34;)
+    if settings_elem is not None:
+        for setting in settings_elem:
+            name = get_xml_attr(setting, f&#34;{{{ANS}}}Name&#34;)
+            value = get_xml_attr(setting, f&#34;{{{ANS}}}Value&#34;)
+            user_settings[cls.REVERSE_SETTINGS_MAP[name]] = value
+    return cls(
+        redirect_address=redirect_address,
+        redirect_url=redirect_url,
+        user_settings_errors=user_settings_errors,
+        user_settings=user_settings,
+    )</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.properties.UserResponse.autodiscover_smtp_address"><code class="name">var <span class="ident">autodiscover_smtp_address</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def autodiscover_smtp_address(self):
+    return self.user_settings.get(&#34;auto_discover_smtp_address&#34;)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.UserResponse.error_code"><code class="name">var <span class="ident">error_code</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.error_message"><code class="name">var <span class="ident">error_message</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.ews_url"><code class="name">var <span class="ident">ews_url</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def ews_url(self):
+    return self.user_settings.get(&#34;external_ews_url&#34;)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.UserResponse.redirect_address"><code class="name">var <span class="ident">redirect_address</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.redirect_url"><code class="name">var <span class="ident">redirect_url</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.user_settings"><code class="name">var <span class="ident">user_settings</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.user_settings_errors"><code class="name">var <span class="ident">user_settings_errors</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.properties.UserResponse.version"><code class="name">var <span class="ident">version</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def version(self):
+    if not self.user_settings.get(&#34;ews_supported_schemas&#34;):
+        return None
+    supported_schemas = [s.strip() for s in self.user_settings.get(&#34;ews_supported_schemas&#34;).split(&#34;,&#34;)]
+    newest_supported_schema = sorted(supported_schemas, reverse=True)[0]
+
+    for version in Version.all_versions():
+        if newest_supported_schema == version.api_version:
+            return version
+    raise ValueError(f&#34;Unknown supported schemas: {supported_schemas}&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.properties.UserResponse.raise_errors"><code class="name flex">
+<span>def <span class="ident">raise_errors</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def raise_errors(self):
+    if self.error_code == &#34;InvalidUser&#34;:
+        raise ErrorNonExistentMailbox(self.error_message)
+    if self.error_code in (
+        &#34;InvalidRequest&#34;,
+        &#34;InvalidSetting&#34;,
+        &#34;SettingIsNotAvailable&#34;,
+        &#34;InvalidDomain&#34;,
+        &#34;NotFederated&#34;,
+    ):
+        raise AutoDiscoverFailed(f&#34;{self.error_code}: {self.error_message}&#34;)
+    if self.user_settings_errors:
+        raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -11350,6 +11867,26 @@ def from_xml(cls, elem, account):
 <li><code><a title="exchangelib.properties.UserId.external_user_identity" href="#exchangelib.properties.UserId.external_user_identity">external_user_identity</a></code></li>
 <li><code><a title="exchangelib.properties.UserId.primary_smtp_address" href="#exchangelib.properties.UserId.primary_smtp_address">primary_smtp_address</a></code></li>
 <li><code><a title="exchangelib.properties.UserId.sid" href="#exchangelib.properties.UserId.sid">sid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.properties.UserResponse" href="#exchangelib.properties.UserResponse">UserResponse</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.properties.UserResponse.ELEMENT_NAME" href="#exchangelib.properties.UserResponse.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.FIELDS" href="#exchangelib.properties.UserResponse.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.REVERSE_SETTINGS_MAP" href="#exchangelib.properties.UserResponse.REVERSE_SETTINGS_MAP">REVERSE_SETTINGS_MAP</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.SETTINGS_MAP" href="#exchangelib.properties.UserResponse.SETTINGS_MAP">SETTINGS_MAP</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.autodiscover_smtp_address" href="#exchangelib.properties.UserResponse.autodiscover_smtp_address">autodiscover_smtp_address</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.error_code" href="#exchangelib.properties.UserResponse.error_code">error_code</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.error_message" href="#exchangelib.properties.UserResponse.error_message">error_message</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.ews_url" href="#exchangelib.properties.UserResponse.ews_url">ews_url</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.from_xml" href="#exchangelib.properties.UserResponse.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.raise_errors" href="#exchangelib.properties.UserResponse.raise_errors">raise_errors</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.redirect_address" href="#exchangelib.properties.UserResponse.redirect_address">redirect_address</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.redirect_url" href="#exchangelib.properties.UserResponse.redirect_url">redirect_url</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.user_settings" href="#exchangelib.properties.UserResponse.user_settings">user_settings</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.user_settings_errors" href="#exchangelib.properties.UserResponse.user_settings_errors">user_settings_errors</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.version" href="#exchangelib.properties.UserResponse.version">version</a></code></li>
 </ul>
 </li>
 <li>

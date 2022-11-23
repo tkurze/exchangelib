@@ -27,13 +27,12 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import getpass
-import glob
 import logging
-import os
 import shelve
 import sys
 import tempfile
 from contextlib import contextmanager, suppress
+from pathlib import Path
 from threading import RLock
 
 from ..configuration import Configuration
@@ -57,30 +56,30 @@ def shelve_filename():
     return f&#34;exchangelib.{version}.cache.{user}.py{major}{minor}&#34;
 
 
-AUTODISCOVER_PERSISTENT_STORAGE = os.path.join(tempfile.gettempdir(), shelve_filename())
+AUTODISCOVER_PERSISTENT_STORAGE = Path(tempfile.gettempdir(), shelve_filename())
 
 
 @contextmanager
-def shelve_open_with_failover(filename):
+def shelve_open_with_failover(file):
     # We can expect empty or corrupt files. Whatever happens, just delete the cache file and try again.
     # &#39;shelve&#39; may add a backend-specific suffix to the file, so also delete all files with a suffix.
     # We don&#39;t know which file caused the error, so just delete them all.
     try:
-        shelve_handle = shelve.open(filename)
+        shelve_handle = shelve.open(str(file))
         # Try to actually use the file. Some implementations may allow opening the file but then throw
         # errors on access.
         with suppress(KeyError):
             _ = shelve_handle[&#34;&#34;]
     except Exception as e:
-        for f in glob.glob(filename + &#34;*&#34;):
+        for f in file.parent.glob(f&#34;{file.name}*&#34;):
             log.warning(&#34;Deleting invalid cache file %s (%r)&#34;, f, e)
-            os.unlink(f)
-        shelve_handle = shelve.open(filename)
+            f.unlink()
+        shelve_handle = shelve.open(str(file))
     yield shelve_handle
 
 
 class AutodiscoverCache:
-    &#34;&#34;&#34;Stores the translation from (email domain, credentials) -&gt; AutodiscoverProtocol object so we can re-use TCP
+    &#34;&#34;&#34;Stores the translation from (email domain, credentials) -&gt; AutodiscoverProtocol object, so we can re-use TCP
     connections to an autodiscover server within the same process. Also persists the email domain -&gt; (autodiscover
     endpoint URL, auth_type) translation to the filesystem so the cache can be shared between multiple processes.
 
@@ -89,7 +88,7 @@ class AutodiscoverCache:
     advice. But it could save some valuable seconds every time we start a new connection to a known server. In any
     case, the persistent storage must not contain any sensitive information since the cache could be readable by
     unprivileged users. Domain, endpoint and auth_type are OK to cache since this info is make publicly available on
-    HTTP and DNS servers via the autodiscover protocol. Just don&#39;t persist any credentials info.
+    HTTP and DNS servers via the autodiscover protocol. Just don&#39;t persist any credential info.
 
     If an autodiscover lookup fails for any reason, the corresponding cache entry must be purged.
 
@@ -212,7 +211,7 @@ autodiscover_cache = AutodiscoverCache()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.autodiscover.cache.shelve_open_with_failover"><code class="name flex">
-<span>def <span class="ident">shelve_open_with_failover</span></span>(<span>filename)</span>
+<span>def <span class="ident">shelve_open_with_failover</span></span>(<span>file)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -221,21 +220,21 @@ autodiscover_cache = AutodiscoverCache()</code></pre>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@contextmanager
-def shelve_open_with_failover(filename):
+def shelve_open_with_failover(file):
     # We can expect empty or corrupt files. Whatever happens, just delete the cache file and try again.
     # &#39;shelve&#39; may add a backend-specific suffix to the file, so also delete all files with a suffix.
     # We don&#39;t know which file caused the error, so just delete them all.
     try:
-        shelve_handle = shelve.open(filename)
+        shelve_handle = shelve.open(str(file))
         # Try to actually use the file. Some implementations may allow opening the file but then throw
         # errors on access.
         with suppress(KeyError):
             _ = shelve_handle[&#34;&#34;]
     except Exception as e:
-        for f in glob.glob(filename + &#34;*&#34;):
+        for f in file.parent.glob(f&#34;{file.name}*&#34;):
             log.warning(&#34;Deleting invalid cache file %s (%r)&#34;, f, e)
-            os.unlink(f)
-        shelve_handle = shelve.open(filename)
+            f.unlink()
+        shelve_handle = shelve.open(str(file))
     yield shelve_handle</code></pre>
 </details>
 </dd>
@@ -248,7 +247,7 @@ def shelve_open_with_failover(filename):
 <span>class <span class="ident">AutodiscoverCache</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Stores the translation from (email domain, credentials) -&gt; AutodiscoverProtocol object so we can re-use TCP
+<div class="desc"><p>Stores the translation from (email domain, credentials) -&gt; AutodiscoverProtocol object, so we can re-use TCP
 connections to an autodiscover server within the same process. Also persists the email domain -&gt; (autodiscover
 endpoint URL, auth_type) translation to the filesystem so the cache can be shared between multiple processes.</p>
 <p>According to Microsoft, we may forever cache the (email domain -&gt; autodiscover endpoint URL) mapping, or until
@@ -256,7 +255,7 @@ it stops responding. My previous experience with Exchange products in mind, I'm 
 advice. But it could save some valuable seconds every time we start a new connection to a known server. In any
 case, the persistent storage must not contain any sensitive information since the cache could be readable by
 unprivileged users. Domain, endpoint and auth_type are OK to cache since this info is make publicly available on
-HTTP and DNS servers via the autodiscover protocol. Just don't persist any credentials info.</p>
+HTTP and DNS servers via the autodiscover protocol. Just don't persist any credential info.</p>
 <p>If an autodiscover lookup fails for any reason, the corresponding cache entry must be purged.</p>
 <p>'shelve' is supposedly thread-safe and process-safe, which suits our needs.</p></div>
 <details class="source">
@@ -264,7 +263,7 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AutodiscoverCache:
-    &#34;&#34;&#34;Stores the translation from (email domain, credentials) -&gt; AutodiscoverProtocol object so we can re-use TCP
+    &#34;&#34;&#34;Stores the translation from (email domain, credentials) -&gt; AutodiscoverProtocol object, so we can re-use TCP
     connections to an autodiscover server within the same process. Also persists the email domain -&gt; (autodiscover
     endpoint URL, auth_type) translation to the filesystem so the cache can be shared between multiple processes.
 
@@ -273,7 +272,7 @@ HTTP and DNS servers via the autodiscover protocol. Just don't persist any crede
     advice. But it could save some valuable seconds every time we start a new connection to a known server. In any
     case, the persistent storage must not contain any sensitive information since the cache could be readable by
     unprivileged users. Domain, endpoint and auth_type are OK to cache since this info is make publicly available on
-    HTTP and DNS servers via the autodiscover protocol. Just don&#39;t persist any credentials info.
+    HTTP and DNS servers via the autodiscover protocol. Just don&#39;t persist any credential info.
 
     If an autodiscover lookup fails for any reason, the corresponding cache entry must be purged.
 

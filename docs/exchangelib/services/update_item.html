@@ -126,7 +126,7 @@ class UpdateItem(BaseUpdateService):
         send_meeting_invitations_or_cancellations,
         suppress_read_receipts,
     ):
-        # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
+        # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is an instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated.
         attrs = dict(
             ConflictResolution=conflict_resolution,
@@ -242,7 +242,7 @@ class UpdateItem(BaseUpdateService):
         send_meeting_invitations_or_cancellations,
         suppress_read_receipts,
     ):
-        # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
+        # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is an instance of a subclass of Item and &#39;fieldnames&#39;
         # are the attribute names that were updated.
         attrs = dict(
             ConflictResolution=conflict_resolution,
@@ -260,6 +260,7 @@ class UpdateItem(BaseUpdateService):
 <li><a title="exchangelib.services.update_folder.BaseUpdateService" href="update_folder.html#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.common.EWSAccountService" href="common.html#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -348,7 +349,7 @@ class UpdateItem(BaseUpdateService):
     send_meeting_invitations_or_cancellations,
     suppress_read_receipts,
 ):
-    # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is a instance of a subclass of Item and &#39;fieldnames&#39;
+    # Takes a list of (Item, fieldnames) tuples where &#39;Item&#39; is an instance of a subclass of Item and &#39;fieldnames&#39;
     # are the attribute names that were updated.
     attrs = dict(
         ConflictResolution=conflict_resolution,
@@ -371,6 +372,8 @@ class UpdateItem(BaseUpdateService):
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.WARNINGS_TO_CATCH_IN_RESPONSE" href="common.html#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.get" href="common.html#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.update_folder.BaseUpdateService.parse" href="common.html#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.supported_api_versions" href="common.html#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.update_folder.BaseUpdateService.wrap" href="common.html#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

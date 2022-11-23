@@ -33,7 +33,7 @@ from itertools import chain
 
 from .. import errors
 from ..attachments import AttachmentId
-from ..credentials import IMPERSONATION, OAuth2Credentials
+from ..credentials import IMPERSONATION, BaseOAuth2Credentials
 from ..errors import (
     ErrorBatchProcessingStopped,
     ErrorCannotDeleteObject,
@@ -41,6 +41,7 @@ from ..errors import (
     ErrorCorruptData,
     ErrorExceededConnectionCount,
     ErrorIncorrectSchemaVersion,
+    ErrorInternalServerTransientError,
     ErrorInvalidChangeKey,
     ErrorInvalidIdMalformed,
     ErrorInvalidRequest,
@@ -75,7 +76,7 @@ from ..properties import (
     IndexedFieldURI,
     ItemId,
 )
-from ..transport import wrap
+from ..transport import DEFAULT_ENCODING
 from ..util import (
     ENS,
     MNS,
@@ -87,25 +88,24 @@ from ..util import (
     chunkify,
     create_element,
     get_xml_attr,
+    ns_translation,
     post_ratelimited,
     set_xml_value,
     to_xml,
     xml_to_str,
 )
-from ..version import API_VERSIONS, Version
+from ..version import SupportedVersionClassMixIn, Version
 
 log = logging.getLogger(__name__)
 
 
-class EWSService(metaclass=abc.ABCMeta):
+class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
 
-    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
     CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
-    paging_container_name = None  # The name of the element that contains paging information and the paged results
     returns_elements = True  # If False, the service does not return response elements, just the ResponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
@@ -123,16 +123,14 @@ class EWSService(metaclass=abc.ABCMeta):
         ErrorItemCorrupt,
         ErrorMailRecipientNotFound,
     )
-    # Similarly, define the warnings we want to return unraised
+    # Similarly, define the warnings we want to return un-raised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
     # Define the warnings we want to ignore, to let response processing proceed
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Marks the version from which the service was introduced
-    supported_from = None
-    # Marks services that support paging of requested items
-    supports_paging = False
+
+    NS_MAP = {k: v for k, v in ns_translation.items() if k in (&#34;s&#34;, &#34;m&#34;, &#34;t&#34;)}
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or self.CHUNK_SIZE
@@ -142,8 +140,8 @@ class EWSService(metaclass=abc.ABCMeta):
             raise ValueError(f&#34;&#39;chunk_size&#39; {self.chunk_size} must be a positive number&#34;)
         if self.supported_from and protocol.version.build &lt; self.supported_from:
             raise NotImplementedError(
-                f&#34;{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later. &#34;
-                f&#34;Your current version is {protocol.version.build.fullname()!r}.&#34;
+                f&#34;Service {self.SERVICE_NAME!r} only supports server versions from {self.supported_from or &#39;*&#39;} to &#34;
+                f&#34;{self.deprecated_from or &#39;*&#39;} (server has {protocol.version})&#34;
             )
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
@@ -211,6 +209,43 @@ class EWSService(metaclass=abc.ABCMeta):
         _, body = self._get_soap_parts(response=resp)
         return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
 
+    def wrap(self, content, api_version=None):
+        &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+        ExchangeImpersonation allows to act as the user we want to impersonate.
+
+        RequestServerVersion element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+
+        ExchangeImpersonation element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
+
+        TimeZoneContent element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
+
+        :param content:
+        :param api_version:
+        &#34;&#34;&#34;
+        envelope = create_element(&#34;s:Envelope&#34;, nsmap=self.NS_MAP)
+        header = create_element(&#34;s:Header&#34;)
+        if api_version:
+            request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
+            header.append(request_server_version)
+        identity = self._account_to_impersonate
+        if identity:
+            add_xml_child(header, &#34;t:ExchangeImpersonation&#34;, identity)
+        timezone = self._timezone
+        if timezone:
+            timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
+            timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
+            timezone_context.append(timezone_definition)
+            header.append(timezone_context)
+        if len(header):
+            envelope.append(header)
+        body = create_element(&#34;s:Body&#34;)
+        body.append(content)
+        envelope.append(body)
+        return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
+
     def _elems_to_objs(self, elems):
         &#34;&#34;&#34;Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions).&#34;&#34;&#34;
         for elem in elems:
@@ -234,12 +269,18 @@ class EWSService(metaclass=abc.ABCMeta):
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    def _extra_headers(self, session):
-        return {}
+    def _extra_headers(self):
+        headers = {}
+        identity = self._account_to_impersonate
+        if identity and identity.primary_smtp_address:
+            # See
+            # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+            headers[&#34;X-AnchorMailbox&#34;] = identity.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):
-        if isinstance(self.protocol.credentials, OAuth2Credentials):
+        if self.protocol and isinstance(self.protocol.credentials, BaseOAuth2Credentials):
             return self.protocol.credentials.identity
         return None
 
@@ -254,8 +295,6 @@ class EWSService(metaclass=abc.ABCMeta):
         :return: the response, as XML objects
         &#34;&#34;&#34;
         response = self._get_response_xml(payload=payload)
-        if self.supports_paging:
-            return (self._get_page(message) for message in response)
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
@@ -268,7 +307,7 @@ class EWSService(metaclass=abc.ABCMeta):
         :return: Same as ._get_elements()
         &#34;&#34;&#34;
         # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
-        filtered_items = filter(lambda i: not isinstance(i, Exception), items)
+        filtered_items = filter(lambda item: not isinstance(item, Exception), items)
         for i, chunk in enumerate(chunkify(filtered_items, self.chunk_size), start=1):
             log.debug(&#34;Processing chunk %s containing %s items&#34;, i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
@@ -296,7 +335,7 @@ class EWSService(metaclass=abc.ABCMeta):
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
+            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired, ErrorInternalServerTransientError) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
                 #
@@ -327,12 +366,10 @@ class EWSService(metaclass=abc.ABCMeta):
             protocol=self.protocol,
             session=session,
             url=self.protocol.service_endpoint,
-            headers=self._extra_headers(session),
-            data=wrap(
+            headers=self._extra_headers(),
+            data=self.wrap(
                 content=payload,
                 api_version=api_version,
-                account_to_impersonate=self._account_to_impersonate,
-                timezone=self._timezone,
             ),
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
@@ -346,10 +383,16 @@ class EWSService(metaclass=abc.ABCMeta):
             self.protocol.release_session(session)
         return r
 
-    @property
+    @classmethod
+    def supported_api_versions(cls):
+        &#34;&#34;&#34;Return API versions supported by the service, sorted from newest to oldest&#34;&#34;&#34;
+        return sorted({v.api_version for v in Version.all_versions() if cls.supports_version(v)}, reverse=True)
+
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
+        return (self._version_hint.api_version,) + tuple(
+            v for v in self.supported_api_versions() if v != self._version_hint.api_version
+        )
 
     def _get_response_xml(self, payload, **parse_opts):
         &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -366,7 +409,7 @@ class EWSService(metaclass=abc.ABCMeta):
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
         log.debug(&#34;Calling service %s&#34;, self.SERVICE_NAME)
-        for api_version in self._api_versions_to_try:
+        for api_version in self._api_versions_to_try():
             log.debug(&#34;Trying API version %s&#34;, api_version)
             r = self._get_response(payload=payload, api_version=api_version)
             if self.streaming:
@@ -405,7 +448,7 @@ class EWSService(metaclass=abc.ABCMeta):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try} but all were invalid&#34;)
+        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try()} but all were invalid&#34;)
 
     def _handle_backoff(self, e):
         &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
@@ -436,7 +479,7 @@ class EWSService(metaclass=abc.ABCMeta):
             # Nothing to do
             return
         log.debug(&#34;Found new version (%s -&gt; %s)&#34;, self._version_hint, head_version)
-        # The api_version that worked was different than our hint, or we never got a build version. Store the working
+        # The api_version that worked was different from our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
 
@@ -457,7 +500,7 @@ class EWSService(metaclass=abc.ABCMeta):
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        &#34;&#34;&#34;Split the SOAP response into its headers an body elements.&#34;&#34;&#34;
+        &#34;&#34;&#34;Split the SOAP response into its headers and body elements.&#34;&#34;&#34;
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
@@ -576,7 +619,7 @@ class EWSService(metaclass=abc.ABCMeta):
                 if container is None:
                     raise MalformedResponseError(f&#34;No {name} elements in ResponseMessage ({xml_to_str(message)})&#34;)
                 return container
-        # rspclass == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
+        # response_class == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
         try:
             raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
@@ -666,7 +709,7 @@ class EWSService(metaclass=abc.ABCMeta):
     @classmethod
     def _get_elements_in_container(cls, container):
         &#34;&#34;&#34;Return a list of response elements from an XML response element container. With e.g.
-        &#39;CreateItem&#39;, &#39;Items&#39; is the container element and we return the &#39;Message&#39; child elements:
+        &#39;CreateItem&#39;, &#39;Items&#39; is the container element, and we return the &#39;Message&#39; child elements:
 
           &lt;m:Items&gt;
             &lt;t:Message&gt;
@@ -712,8 +755,8 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
                     self.account.affinity_cookie = cookie.value
                     break
 
-    def _extra_headers(self, session):
-        headers = super()._extra_headers(session=session)
+    def _extra_headers(self):
+        headers = super()._extra_headers()
         # See
         # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
         headers[&#34;X-AnchorMailbox&#34;] = self.account.primary_smtp_address
@@ -738,6 +781,10 @@ class EWSAccountService(EWSService, metaclass=abc.ABCMeta):
 
 
 class EWSPagingService(EWSAccountService):
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+
+    paging_container_name = None  # The name of the element that contains paging information and the paged results
+
     def __init__(self, *args, **kwargs):
         self.page_size = kwargs.pop(&#34;page_size&#34;, None) or self.PAGE_SIZE
         if not isinstance(self.page_size, int):
@@ -745,6 +792,15 @@ class EWSPagingService(EWSAccountService):
         if self.page_size &lt; 1:
             raise ValueError(f&#34;&#39;page_size&#39; {self.page_size} must be a positive number&#34;)
         super().__init__(*args, **kwargs)
+
+    def _response_generator(self, payload):
+        &#34;&#34;&#34;Send the payload to the server, and return the response.
+
+        :param payload: payload as an XML object
+        :return: the response, as XML objects
+        &#34;&#34;&#34;
+        response = self._get_response_xml(payload=payload)
+        return (self._get_page(message) for message in response)
 
     def _paged_call(self, payload_func, max_items, folders, **kwargs):
         &#34;&#34;&#34;Call a service that supports paging requests. Return a generator over all response items. Keeps track of
@@ -871,7 +927,7 @@ class EWSPagingService(EWSAccountService):
             # Paging is done for all messages
             return None
         # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-        # because the collections that we are iterating may change while iterating. We&#39;ll do our best but we cannot
+        # because the collections that we are iterating may change while iterating. We&#39;ll do our best, but we cannot
         # guarantee 100% consistency when large collections are simultaneously being changed on the server.
         #
         # It&#39;s not possible to supply a per-folder offset when iterating multiple folders, so we&#39;ll just have to
@@ -1135,8 +1191,8 @@ def parse_folder_elem(elem, folder, account):
                     self.account.affinity_cookie = cookie.value
                     break
 
-    def _extra_headers(self, session):
-        headers = super()._extra_headers(session=session)
+    def _extra_headers(self):
+        headers = super()._extra_headers()
         # See
         # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
         headers[&#34;X-AnchorMailbox&#34;] = self.account.primary_smtp_address
@@ -1162,6 +1218,7 @@ def parse_folder_elem(elem, folder, account):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSService" href="#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1192,6 +1249,7 @@ def parse_folder_elem(elem, folder, account):
 <li><a title="exchangelib.services.send_item.SendItem" href="send_item.html#exchangelib.services.send_item.SendItem">SendItem</a></li>
 <li><a title="exchangelib.services.set_user_oof_settings.SetUserOofSettings" href="set_user_oof_settings.html#exchangelib.services.set_user_oof_settings.SetUserOofSettings">SetUserOofSettings</a></li>
 <li><a title="exchangelib.services.subscribe.Subscribe" href="subscribe.html#exchangelib.services.subscribe.Subscribe">Subscribe</a></li>
+<li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
 <li><a title="exchangelib.services.unsubscribe.Unsubscribe" href="unsubscribe.html#exchangelib.services.unsubscribe.Unsubscribe">Unsubscribe</a></li>
 <li><a title="exchangelib.services.update_folder.BaseUpdateService" href="update_folder.html#exchangelib.services.update_folder.BaseUpdateService">BaseUpdateService</a></li>
 <li><a title="exchangelib.services.update_user_configuration.UpdateUserConfiguration" href="update_user_configuration.html#exchangelib.services.update_user_configuration.UpdateUserConfiguration">UpdateUserConfiguration</a></li>
@@ -1212,6 +1270,8 @@ def parse_folder_elem(elem, folder, account):
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1227,6 +1287,10 @@ def parse_folder_elem(elem, folder, account):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EWSPagingService(EWSAccountService):
+    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
+
+    paging_container_name = None  # The name of the element that contains paging information and the paged results
+
     def __init__(self, *args, **kwargs):
         self.page_size = kwargs.pop(&#34;page_size&#34;, None) or self.PAGE_SIZE
         if not isinstance(self.page_size, int):
@@ -1234,6 +1298,15 @@ def parse_folder_elem(elem, folder, account):
         if self.page_size &lt; 1:
             raise ValueError(f&#34;&#39;page_size&#39; {self.page_size} must be a positive number&#34;)
         super().__init__(*args, **kwargs)
+
+    def _response_generator(self, payload):
+        &#34;&#34;&#34;Send the payload to the server, and return the response.
+
+        :param payload: payload as an XML object
+        :return: the response, as XML objects
+        &#34;&#34;&#34;
+        response = self._get_response_xml(payload=payload)
+        return (self._get_page(message) for message in response)
 
     def _paged_call(self, payload_func, max_items, folders, **kwargs):
         &#34;&#34;&#34;Call a service that supports paging requests. Return a generator over all response items. Keeps track of
@@ -1360,7 +1433,7 @@ def parse_folder_elem(elem, folder, account):
             # Paging is done for all messages
             return None
         # We cannot guarantee that all messages that have a next_offset also have the *same* next_offset. This is
-        # because the collections that we are iterating may change while iterating. We&#39;ll do our best but we cannot
+        # because the collections that we are iterating may change while iterating. We&#39;ll do our best, but we cannot
         # guarantee 100% consistency when large collections are simultaneously being changed on the server.
         #
         # It&#39;s not possible to supply a per-folder offset when iterating multiple folders, so we&#39;ll just have to
@@ -1374,14 +1447,25 @@ def parse_folder_elem(elem, folder, account):
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
 <li><a title="exchangelib.services.common.EWSService" href="#exchangelib.services.common.EWSService">EWSService</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.find_folder.FindFolder" href="find_folder.html#exchangelib.services.find_folder.FindFolder">FindFolder</a></li>
 <li><a title="exchangelib.services.find_item.FindItem" href="find_item.html#exchangelib.services.find_item.FindItem">FindItem</a></li>
 <li><a title="exchangelib.services.find_people.FindPeople" href="find_people.html#exchangelib.services.find_people.FindPeople">FindPeople</a></li>
-<li><a title="exchangelib.services.sync_folder_hierarchy.SyncFolder" href="sync_folder_hierarchy.html#exchangelib.services.sync_folder_hierarchy.SyncFolder">SyncFolder</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.services.common.EWSPagingService.PAGE_SIZE"><code class="name">var <span class="ident">PAGE_SIZE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.services.common.EWSPagingService.paging_container_name"><code class="name">var <span class="ident">paging_container_name</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.common.EWSAccountService" href="#exchangelib.services.common.EWSAccountService">EWSAccountService</a></b></code>:
@@ -1390,6 +1474,8 @@ def parse_folder_elem(elem, folder, account):
 <li><code><a title="exchangelib.services.common.EWSAccountService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSAccountService.parse" href="#exchangelib.services.common.EWSService.parse">parse</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.supported_api_versions" href="#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSAccountService.wrap" href="#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1404,15 +1490,13 @@ def parse_folder_elem(elem, folder, account):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class EWSService(metaclass=abc.ABCMeta):
+<pre><code class="python">class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;Base class for all EWS services.&#34;&#34;&#34;
 
-    PAGE_SIZE = 100  # A default page size for all paging services. This is the number of items we request per page
     CHUNK_SIZE = 100  # A default chunk size for all services. This is the number of items we send in a single request
 
     SERVICE_NAME = None  # The name of the SOAP service
     element_container_name = None  # The name of the XML element wrapping the collection of returned items
-    paging_container_name = None  # The name of the element that contains paging information and the paged results
     returns_elements = True  # If False, the service does not return response elements, just the ResponseCode status
     # Return exception instance instead of raising exceptions for the following errors when contained in an element
     ERRORS_TO_CATCH_IN_RESPONSE = (
@@ -1430,16 +1514,14 @@ def parse_folder_elem(elem, folder, account):
         ErrorItemCorrupt,
         ErrorMailRecipientNotFound,
     )
-    # Similarly, define the warnings we want to return unraised
+    # Similarly, define the warnings we want to return un-raised
     WARNINGS_TO_CATCH_IN_RESPONSE = ErrorBatchProcessingStopped
     # Define the warnings we want to ignore, to let response processing proceed
     WARNINGS_TO_IGNORE_IN_RESPONSE = ()
     # The exception type to raise when all attempted API versions failed
     NO_VALID_SERVER_VERSIONS = ErrorInvalidServerVersion
-    # Marks the version from which the service was introduced
-    supported_from = None
-    # Marks services that support paging of requested items
-    supports_paging = False
+
+    NS_MAP = {k: v for k, v in ns_translation.items() if k in (&#34;s&#34;, &#34;m&#34;, &#34;t&#34;)}
 
     def __init__(self, protocol, chunk_size=None, timeout=None):
         self.chunk_size = chunk_size or self.CHUNK_SIZE
@@ -1449,8 +1531,8 @@ def parse_folder_elem(elem, folder, account):
             raise ValueError(f&#34;&#39;chunk_size&#39; {self.chunk_size} must be a positive number&#34;)
         if self.supported_from and protocol.version.build &lt; self.supported_from:
             raise NotImplementedError(
-                f&#34;{self.SERVICE_NAME!r} is only supported on {self.supported_from.fullname()!r} and later. &#34;
-                f&#34;Your current version is {protocol.version.build.fullname()!r}.&#34;
+                f&#34;Service {self.SERVICE_NAME!r} only supports server versions from {self.supported_from or &#39;*&#39;} to &#34;
+                f&#34;{self.deprecated_from or &#39;*&#39;} (server has {protocol.version})&#34;
             )
         self.protocol = protocol
         # Allow a service to override the default protocol timeout. Useful for streaming services
@@ -1518,6 +1600,43 @@ def parse_folder_elem(elem, folder, account):
         _, body = self._get_soap_parts(response=resp)
         return self._elems_to_objs(self._get_elements_in_response(response=self._get_soap_messages(body=body)))
 
+    def wrap(self, content, api_version=None):
+        &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+        ExchangeImpersonation allows to act as the user we want to impersonate.
+
+        RequestServerVersion element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+
+        ExchangeImpersonation element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
+
+        TimeZoneContent element on MSDN:
+        https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
+
+        :param content:
+        :param api_version:
+        &#34;&#34;&#34;
+        envelope = create_element(&#34;s:Envelope&#34;, nsmap=self.NS_MAP)
+        header = create_element(&#34;s:Header&#34;)
+        if api_version:
+            request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
+            header.append(request_server_version)
+        identity = self._account_to_impersonate
+        if identity:
+            add_xml_child(header, &#34;t:ExchangeImpersonation&#34;, identity)
+        timezone = self._timezone
+        if timezone:
+            timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
+            timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
+            timezone_context.append(timezone_definition)
+            header.append(timezone_context)
+        if len(header):
+            envelope.append(header)
+        body = create_element(&#34;s:Body&#34;)
+        body.append(content)
+        envelope.append(body)
+        return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)
+
     def _elems_to_objs(self, elems):
         &#34;&#34;&#34;Takes a generator of XML elements and exceptions. Returns the equivalent Python objects (or exceptions).&#34;&#34;&#34;
         for elem in elems:
@@ -1541,12 +1660,18 @@ def parse_folder_elem(elem, folder, account):
     def _version_hint(self, value):
         self.protocol.config.version = value
 
-    def _extra_headers(self, session):
-        return {}
+    def _extra_headers(self):
+        headers = {}
+        identity = self._account_to_impersonate
+        if identity and identity.primary_smtp_address:
+            # See
+            # https://blogs.msdn.microsoft.com/webdav_101/2015/05/11/best-practices-ews-authentication-and-access-issues/
+            headers[&#34;X-AnchorMailbox&#34;] = identity.primary_smtp_address
+        return headers
 
     @property
     def _account_to_impersonate(self):
-        if isinstance(self.protocol.credentials, OAuth2Credentials):
+        if self.protocol and isinstance(self.protocol.credentials, BaseOAuth2Credentials):
             return self.protocol.credentials.identity
         return None
 
@@ -1561,8 +1686,6 @@ def parse_folder_elem(elem, folder, account):
         :return: the response, as XML objects
         &#34;&#34;&#34;
         response = self._get_response_xml(payload=payload)
-        if self.supports_paging:
-            return (self._get_page(message) for message in response)
         return self._get_elements_in_response(response=response)
 
     def _chunked_get_elements(self, payload_func, items, **kwargs):
@@ -1575,7 +1698,7 @@ def parse_folder_elem(elem, folder, account):
         :return: Same as ._get_elements()
         &#34;&#34;&#34;
         # If the input for a service is a QuerySet, it can be difficult to remove exceptions before now
-        filtered_items = filter(lambda i: not isinstance(i, Exception), items)
+        filtered_items = filter(lambda item: not isinstance(item, Exception), items)
         for i, chunk in enumerate(chunkify(filtered_items, self.chunk_size), start=1):
             log.debug(&#34;Processing chunk %s containing %s items&#34;, i, len(chunk))
             yield from self._get_elements(payload=payload_func(chunk, **kwargs))
@@ -1603,7 +1726,7 @@ def parse_folder_elem(elem, folder, account):
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
                 continue
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired) as e:
+            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired, ErrorInternalServerTransientError) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
                 #
@@ -1634,12 +1757,10 @@ def parse_folder_elem(elem, folder, account):
             protocol=self.protocol,
             session=session,
             url=self.protocol.service_endpoint,
-            headers=self._extra_headers(session),
-            data=wrap(
+            headers=self._extra_headers(),
+            data=self.wrap(
                 content=payload,
                 api_version=api_version,
-                account_to_impersonate=self._account_to_impersonate,
-                timezone=self._timezone,
             ),
             stream=self.streaming,
             timeout=self.timeout or self.protocol.TIMEOUT,
@@ -1653,10 +1774,16 @@ def parse_folder_elem(elem, folder, account):
             self.protocol.release_session(session)
         return r
 
-    @property
+    @classmethod
+    def supported_api_versions(cls):
+        &#34;&#34;&#34;Return API versions supported by the service, sorted from newest to oldest&#34;&#34;&#34;
+        return sorted({v.api_version for v in Version.all_versions() if cls.supports_version(v)}, reverse=True)
+
     def _api_versions_to_try(self):
         # Put the hint first in the list, and then all other versions except the hint, from newest to oldest
-        return (self._version_hint.api_version,) + tuple(v for v in API_VERSIONS if v != self._version_hint.api_version)
+        return (self._version_hint.api_version,) + tuple(
+            v for v in self.supported_api_versions() if v != self._version_hint.api_version
+        )
 
     def _get_response_xml(self, payload, **parse_opts):
         &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
@@ -1673,7 +1800,7 @@ def parse_folder_elem(elem, folder, account):
         # guessing tango, but then the server may decide that any arbitrary legacy backend server may actually process
         # the request for an account. Prepare to handle version-related errors and set the server version per-account.
         log.debug(&#34;Calling service %s&#34;, self.SERVICE_NAME)
-        for api_version in self._api_versions_to_try:
+        for api_version in self._api_versions_to_try():
             log.debug(&#34;Trying API version %s&#34;, api_version)
             r = self._get_response(payload=payload, api_version=api_version)
             if self.streaming:
@@ -1712,7 +1839,7 @@ def parse_folder_elem(elem, folder, account):
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
                     r.close()  # Release memory
 
-        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try} but all were invalid&#34;)
+        raise self.NO_VALID_SERVER_VERSIONS(f&#34;Tried versions {self._api_versions_to_try()} but all were invalid&#34;)
 
     def _handle_backoff(self, e):
         &#34;&#34;&#34;Take a request from the server to back off and checks the retry policy for what to do. Re-raise the
@@ -1743,7 +1870,7 @@ def parse_folder_elem(elem, folder, account):
             # Nothing to do
             return
         log.debug(&#34;Found new version (%s -&gt; %s)&#34;, self._version_hint, head_version)
-        # The api_version that worked was different than our hint, or we never got a build version. Store the working
+        # The api_version that worked was different from our hint, or we never got a build version. Store the working
         # version.
         self._version_hint = head_version
 
@@ -1764,7 +1891,7 @@ def parse_folder_elem(elem, folder, account):
 
     @classmethod
     def _get_soap_parts(cls, response, **parse_opts):
-        &#34;&#34;&#34;Split the SOAP response into its headers an body elements.&#34;&#34;&#34;
+        &#34;&#34;&#34;Split the SOAP response into its headers and body elements.&#34;&#34;&#34;
         try:
             root = to_xml(response.iter_content())
         except ParseError as e:
@@ -1883,7 +2010,7 @@ def parse_folder_elem(elem, folder, account):
                 if container is None:
                     raise MalformedResponseError(f&#34;No {name} elements in ResponseMessage ({xml_to_str(message)})&#34;)
                 return container
-        # rspclass == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
+        # response_class == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
         try:
             raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
@@ -1973,7 +2100,7 @@ def parse_folder_elem(elem, folder, account):
     @classmethod
     def _get_elements_in_container(cls, container):
         &#34;&#34;&#34;Return a list of response elements from an XML response element container. With e.g.
-        &#39;CreateItem&#39;, &#39;Items&#39; is the container element and we return the &#39;Message&#39; child elements:
+        &#39;CreateItem&#39;, &#39;Items&#39; is the container element, and we return the &#39;Message&#39; child elements:
 
           &lt;m:Items&gt;
             &lt;t:Message&gt;
@@ -1988,6 +2115,10 @@ def parse_folder_elem(elem, folder, account):
             return list(container)
         return [True]</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.services.common.EWSAccountService" href="#exchangelib.services.common.EWSAccountService">EWSAccountService</a></li>
@@ -1999,6 +2130,7 @@ def parse_folder_elem(elem, folder, account):
 <li><a title="exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes" href="get_searchable_mailboxes.html#exchangelib.services.get_searchable_mailboxes.GetSearchableMailboxes">GetSearchableMailboxes</a></li>
 <li><a title="exchangelib.services.get_server_time_zones.GetServerTimeZones" href="get_server_time_zones.html#exchangelib.services.get_server_time_zones.GetServerTimeZones">GetServerTimeZones</a></li>
 <li><a title="exchangelib.services.get_user_availability.GetUserAvailability" href="get_user_availability.html#exchangelib.services.get_user_availability.GetUserAvailability">GetUserAvailability</a></li>
+<li><a title="exchangelib.services.get_user_settings.GetUserSettings" href="get_user_settings.html#exchangelib.services.get_user_settings.GetUserSettings">GetUserSettings</a></li>
 <li><a title="exchangelib.services.resolve_names.ResolveNames" href="resolve_names.html#exchangelib.services.resolve_names.ResolveNames">ResolveNames</a></li>
 <li><a title="exchangelib.services.send_notification.SendNotification" href="send_notification.html#exchangelib.services.send_notification.SendNotification">SendNotification</a></li>
 </ul>
@@ -2016,7 +2148,7 @@ def parse_folder_elem(elem, folder, account):
 <dd>
 <div class="desc"><p>Global error type within this module.</p></div>
 </dd>
-<dt id="exchangelib.services.common.EWSService.PAGE_SIZE"><code class="name">var <span class="ident">PAGE_SIZE</span></code></dt>
+<dt id="exchangelib.services.common.EWSService.NS_MAP"><code class="name">var <span class="ident">NS_MAP</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2036,21 +2168,27 @@ def parse_folder_elem(elem, folder, account):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.common.EWSService.paging_container_name"><code class="name">var <span class="ident">paging_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="exchangelib.services.common.EWSService.returns_elements"><code class="name">var <span class="ident">returns_elements</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.services.common.EWSService.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.services.common.EWSService.supported_api_versions"><code class="name flex">
+<span>def <span class="ident">supported_api_versions</span></span>(<span>)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.common.EWSService.supports_paging"><code class="name">var <span class="ident">supports_paging</span></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Return API versions supported by the service, sorted from newest to oldest</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def supported_api_versions(cls):
+    &#34;&#34;&#34;Return API versions supported by the service, sorted from newest to oldest&#34;&#34;&#34;
+    return sorted({v.api_version for v in Version.all_versions() if cls.supports_version(v)}, reverse=True)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -2129,6 +2267,62 @@ zero or one when expect_result=None. Returns either one object or None.</p>
         self._streaming_session = None</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.services.common.EWSService.wrap"><code class="name flex">
+<span>def <span class="ident">wrap</span></span>(<span>self, content, api_version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+ExchangeImpersonation allows to act as the user we want to impersonate.</p>
+<p>RequestServerVersion element on MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion</a></p>
+<p>ExchangeImpersonation element on MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation</a></p>
+<p>TimeZoneContent element on MSDN:
+<a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext</a></p>
+<p>:param content:
+:param api_version:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wrap(self, content, api_version=None):
+    &#34;&#34;&#34;Generate the necessary boilerplate XML for a raw SOAP request. The XML is specific to the server version.
+    ExchangeImpersonation allows to act as the user we want to impersonate.
+
+    RequestServerVersion element on MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/requestserverversion
+
+    ExchangeImpersonation element on MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/exchangeimpersonation
+
+    TimeZoneContent element on MSDN:
+    https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/timezonecontext
+
+    :param content:
+    :param api_version:
+    &#34;&#34;&#34;
+    envelope = create_element(&#34;s:Envelope&#34;, nsmap=self.NS_MAP)
+    header = create_element(&#34;s:Header&#34;)
+    if api_version:
+        request_server_version = create_element(&#34;t:RequestServerVersion&#34;, attrs=dict(Version=api_version))
+        header.append(request_server_version)
+    identity = self._account_to_impersonate
+    if identity:
+        add_xml_child(header, &#34;t:ExchangeImpersonation&#34;, identity)
+    timezone = self._timezone
+    if timezone:
+        timezone_context = create_element(&#34;t:TimeZoneContext&#34;)
+        timezone_definition = create_element(&#34;t:TimeZoneDefinition&#34;, attrs=dict(Id=timezone.ms_id))
+        timezone_context.append(timezone_definition)
+        header.append(timezone_context)
+    if len(header):
+        envelope.append(header)
+    body = create_element(&#34;s:Body&#34;)
+    body.append(content)
+    envelope.append(body)
+    return xml_to_str(envelope, encoding=DEFAULT_ENCODING, xml_declaration=True)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -2165,6 +2359,10 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.common.EWSPagingService" href="#exchangelib.services.common.EWSPagingService">EWSPagingService</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.services.common.EWSPagingService.PAGE_SIZE" href="#exchangelib.services.common.EWSPagingService.PAGE_SIZE">PAGE_SIZE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSPagingService.paging_container_name" href="#exchangelib.services.common.EWSPagingService.paging_container_name">paging_container_name</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.common.EWSService" href="#exchangelib.services.common.EWSService">EWSService</a></code></h4>
@@ -2172,18 +2370,17 @@ zero or one when expect_result=None. Returns either one object or None.</p>
 <li><code><a title="exchangelib.services.common.EWSService.CHUNK_SIZE" href="#exchangelib.services.common.EWSService.CHUNK_SIZE">CHUNK_SIZE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.ERRORS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.ERRORS_TO_CATCH_IN_RESPONSE">ERRORS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS" href="#exchangelib.services.common.EWSService.NO_VALID_SERVER_VERSIONS">NO_VALID_SERVER_VERSIONS</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.PAGE_SIZE" href="#exchangelib.services.common.EWSService.PAGE_SIZE">PAGE_SIZE</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.NS_MAP" href="#exchangelib.services.common.EWSService.NS_MAP">NS_MAP</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.SERVICE_NAME" href="#exchangelib.services.common.EWSService.SERVICE_NAME">SERVICE_NAME</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_CATCH_IN_RESPONSE">WARNINGS_TO_CATCH_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE" href="#exchangelib.services.common.EWSService.WARNINGS_TO_IGNORE_IN_RESPONSE">WARNINGS_TO_IGNORE_IN_RESPONSE</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.element_container_name" href="#exchangelib.services.common.EWSService.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.get" href="#exchangelib.services.common.EWSService.get">get</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.paging_container_name" href="#exchangelib.services.common.EWSService.paging_container_name">paging_container_name</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.parse" href="#exchangelib.services.common.EWSService.parse">parse</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.returns_elements" href="#exchangelib.services.common.EWSService.returns_elements">returns_elements</a></code></li>
 <li><code><a title="exchangelib.services.common.EWSService.stop_streaming" href="#exchangelib.services.common.EWSService.stop_streaming">stop_streaming</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.supported_from" href="#exchangelib.services.common.EWSService.supported_from">supported_from</a></code></li>
-<li><code><a title="exchangelib.services.common.EWSService.supports_paging" href="#exchangelib.services.common.EWSService.supports_paging">supports_paging</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.supported_api_versions" href="#exchangelib.services.common.EWSService.supported_api_versions">supported_api_versions</a></code></li>
+<li><code><a title="exchangelib.services.common.EWSService.wrap" href="#exchangelib.services.common.EWSService.wrap">wrap</a></code></li>
 </ul>
 </li>
 </ul>

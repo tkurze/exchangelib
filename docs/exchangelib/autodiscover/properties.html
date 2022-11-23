@@ -109,7 +109,7 @@ class SimpleProtocol(AutodiscoverBase):
 
 class IntExtBase(AutodiscoverBase):
     # TODO: &#39;OWAUrl&#39; also has an AuthenticationMethod enum-style XML attribute with values:
-    #  WindowsIntegrated, FBA, NTLM, Digest, Basic
+    #  WindowsIntegrated, FBA, NTLM, Digest, Basic, LiveIdFba, OAuth
     owa_url = TextField(field_uri=&#34;OWAUrl&#34;, namespace=RNS)
     protocol = EWSElementField(value_cls=SimpleProtocol)
 
@@ -191,7 +191,7 @@ class Protocol(SimpleProtocol):
             # Missing in list are DIGEST and OAUTH2
             &#34;basic&#34;: BASIC,
             &#34;kerb&#34;: GSSAPI,
-            &#34;kerbntlm&#34;: NTLM,  # Means client can chose between NTLM and GSSAPI
+            &#34;kerbntlm&#34;: NTLM,  # Means client can choose between NTLM and GSSAPI
             &#34;ntlm&#34;: NTLM,
             &#34;certificate&#34;: CBA,
             &#34;negotiate&#34;: SSPI,  # Unsure about this one
@@ -286,7 +286,7 @@ class Response(AutodiscoverBase):
 
     @property
     def version(self):
-        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+        # Get the server version. Not all protocol entries have a server version, so we cheat a bit and also look at the
         # other ones that point to the same endpoint.
         ews_url = self.protocol.ews_url
         for protocol in self.account.protocols:
@@ -357,13 +357,16 @@ class Autodiscover(EWSElement):
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
+        if self.response is not None:
+            return
+
         # Find an error message in the response and raise the relevant exception
         try:
-            errorcode = self.error_response.error.code
+            error_code = self.error_response.error.code
             message = self.error_response.error.message
             if message in (&#34;The e-mail address cannot be found.&#34;, &#34;The email address can&#39;t be found.&#34;):
                 raise ErrorNonExistentMailbox(&#34;The SMTP address has no mailbox associated with it&#34;)
-            raise AutoDiscoverFailed(f&#34;Unknown error {errorcode}: {message}&#34;)
+            raise AutoDiscoverFailed(f&#34;Unknown error {error_code}: {message}&#34;)
         except AttributeError:
             raise AutoDiscoverFailed(f&#34;Unknown autodiscover error response: {self.error_response}&#34;)
 
@@ -619,13 +622,16 @@ def from_xml(cls, elem, account):
         return cls.from_xml(elem=root, account=None)
 
     def raise_errors(self):
+        if self.response is not None:
+            return
+
         # Find an error message in the response and raise the relevant exception
         try:
-            errorcode = self.error_response.error.code
+            error_code = self.error_response.error.code
             message = self.error_response.error.message
             if message in (&#34;The e-mail address cannot be found.&#34;, &#34;The email address can&#39;t be found.&#34;):
                 raise ErrorNonExistentMailbox(&#34;The SMTP address has no mailbox associated with it&#34;)
-            raise AutoDiscoverFailed(f&#34;Unknown error {errorcode}: {message}&#34;)
+            raise AutoDiscoverFailed(f&#34;Unknown error {error_code}: {message}&#34;)
         except AttributeError:
             raise AutoDiscoverFailed(f&#34;Unknown autodiscover error response: {self.error_response}&#34;)
 
@@ -732,13 +738,16 @@ def payload(email):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def raise_errors(self):
+    if self.response is not None:
+        return
+
     # Find an error message in the response and raise the relevant exception
     try:
-        errorcode = self.error_response.error.code
+        error_code = self.error_response.error.code
         message = self.error_response.error.message
         if message in (&#34;The e-mail address cannot be found.&#34;, &#34;The email address can&#39;t be found.&#34;):
             raise ErrorNonExistentMailbox(&#34;The SMTP address has no mailbox associated with it&#34;)
-        raise AutoDiscoverFailed(f&#34;Unknown error {errorcode}: {message}&#34;)
+        raise AutoDiscoverFailed(f&#34;Unknown error {error_code}: {message}&#34;)
     except AttributeError:
         raise AutoDiscoverFailed(f&#34;Unknown autodiscover error response: {self.error_response}&#34;)</code></pre>
 </details>
@@ -990,7 +999,7 @@ def payload(email):
 </summary>
 <pre><code class="python">class IntExtBase(AutodiscoverBase):
     # TODO: &#39;OWAUrl&#39; also has an AuthenticationMethod enum-style XML attribute with values:
-    #  WindowsIntegrated, FBA, NTLM, Digest, Basic
+    #  WindowsIntegrated, FBA, NTLM, Digest, Basic, LiveIdFba, OAuth
     owa_url = TextField(field_uri=&#34;OWAUrl&#34;, namespace=RNS)
     protocol = EWSElementField(value_cls=SimpleProtocol)</code></pre>
 </details>
@@ -1310,7 +1319,7 @@ def payload(email):
             # Missing in list are DIGEST and OAUTH2
             &#34;basic&#34;: BASIC,
             &#34;kerb&#34;: GSSAPI,
-            &#34;kerbntlm&#34;: NTLM,  # Means client can chose between NTLM and GSSAPI
+            &#34;kerbntlm&#34;: NTLM,  # Means client can choose between NTLM and GSSAPI
             &#34;ntlm&#34;: NTLM,
             &#34;certificate&#34;: CBA,
             &#34;negotiate&#34;: SSPI,  # Unsure about this one
@@ -1363,7 +1372,7 @@ def auth_type(self):
         # Missing in list are DIGEST and OAUTH2
         &#34;basic&#34;: BASIC,
         &#34;kerb&#34;: GSSAPI,
-        &#34;kerbntlm&#34;: NTLM,  # Means client can chose between NTLM and GSSAPI
+        &#34;kerbntlm&#34;: NTLM,  # Means client can choose between NTLM and GSSAPI
         &#34;ntlm&#34;: NTLM,
         &#34;certificate&#34;: CBA,
         &#34;negotiate&#34;: SSPI,  # Unsure about this one
@@ -1601,7 +1610,7 @@ def auth_type(self):
 
     @property
     def version(self):
-        # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+        # Get the server version. Not all protocol entries have a server version, so we cheat a bit and also look at the
         # other ones that point to the same endpoint.
         ews_url = self.protocol.ews_url
         for protocol in self.account.protocols:
@@ -1750,7 +1759,7 @@ def redirect_url(self):
 </summary>
 <pre><code class="python">@property
 def version(self):
-    # Get the server version. Not all protocol entries have a server version so we cheat a bit and also look at the
+    # Get the server version. Not all protocol entries have a server version, so we cheat a bit and also look at the
     # other ones that point to the same endpoint.
     ews_url = self.protocol.ews_url
     for protocol in self.account.protocols:
