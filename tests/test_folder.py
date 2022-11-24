@@ -7,6 +7,7 @@ from exchangelib.errors import (
     ErrorDeleteDistinguishedFolder,
     ErrorFolderExists,
     ErrorFolderNotFound,
+    ErrorInvalidIdMalformed,
     ErrorItemNotFound,
     ErrorItemSave,
     ErrorNoPublicFolderReplicaAvailable,
@@ -216,18 +217,10 @@ class FolderTest(EWSTest):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
         self.assertGreater(len(folders), 40, sorted(f.name for f in folders))
 
+    def test_find_folders_multiple_roots(self):
         # Test failure on different roots
         with self.assertRaises(ValueError) as e:
             list(FolderCollection(account=self.account, folders=[Folder(root="A"), Folder(root="B")]).find_folders())
-        self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
-
-    def test_find_folders_multiple_roots(self):
-        try:
-            coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])
-        except ErrorFolderNotFound as e:
-            self.skipTest(str(e))
-        with self.assertRaises(ValueError) as e:
-            list(coll.find_folders(depth="Shallow"))
         self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
 
     def test_find_folders_compat(self):
@@ -781,6 +774,9 @@ class FolderTest(EWSTest):
         with self.assertRaises(InvalidField) as e:
             list(fld_qs.filter(XXX="XXX"))
         self.assertIn("Unknown field path 'XXX' on folders", e.exception.args[0])
+        # Test some exception paths
+        with self.assertRaises(ErrorInvalidIdMalformed):
+            SingleFolderQuerySet(account=self.account, folder=Folder(root=self.account.root, id="XXX")).get()
 
     def test_user_configuration(self):
         """Test that we can do CRUD operations on user configuration data."""
