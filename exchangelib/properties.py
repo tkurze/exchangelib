@@ -2077,12 +2077,6 @@ class UserResponse(EWSElement):
                 return version
         raise ValueError(f"Unknown supported schemas: {supported_schemas}")
 
-    @staticmethod
-    def _is_url(s):
-        if not s:
-            return False
-        return s.startswith("http://") or s.startswith("https://")
-
     def raise_errors(self):
         if self.error_code == "InvalidUser":
             raise ErrorNonExistentMailbox(self.error_message)

@@ -1,6 +1,6 @@
 import logging
 
-from ..errors import ErrorInvalidServerVersion, MalformedResponseError
+from ..errors import MalformedResponseError
 from ..properties import UserResponse
 from ..transport import DEFAULT_ENCODING
 from ..util import ANS, add_xml_child, create_element, get_xml_attr, ns_translation, set_xml_value, xml_to_str
@@ -86,11 +86,3 @@ class GetUserSettings(EWSService):
             raise self._get_exception(code=error_code, text=msg_text, msg_xml=None)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e
-
-    @classmethod
-    def _raise_soap_errors(cls, fault):
-        fault_code = get_xml_attr(fault, "faultcode")
-        fault_string = get_xml_attr(fault, "faultstring")
-        if fault_code == "a:ActionNotSupported" and "ContractFilter mismatch" in fault_string:
-            raise ErrorInvalidServerVersion(f"SOAP error code: {fault_code} string: {fault_string}")
-        super()._raise_soap_errors(fault=fault)

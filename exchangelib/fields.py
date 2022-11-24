@@ -17,7 +17,7 @@ from .util import (
     value_to_xml_text,
     xml_text_to_value,
 )
-from .version import EXCHANGE_2013, Build, SupportedVersionInstanceMixIn
+from .version import EXCHANGE_2013, SupportedVersionInstanceMixIn
 
 log = logging.getLogger(__name__)
 
@@ -421,10 +421,6 @@ class BooleanField(FieldURIField):
     """A field that handles boolean values."""
 
     value_cls = bool
-
-
-class OnOffField(BooleanField):
-    """A field that handles boolean values that are On/Off instead of True/False."""
 
 
 class IntegerField(FieldURIField):
@@ -1486,33 +1482,6 @@ class EffectiveRightsField(EWSElementField):
 
         kwargs["value_cls"] = EffectiveRights
         super().__init__(*args, **kwargs)
-
-
-class BuildField(CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.value_cls = Build
-
-    def from_xml(self, elem, account):
-        val = self._get_val_from_elem(elem)
-        if val:
-            try:
-                return self.value_cls.from_hex_string(val)
-            except (TypeError, ValueError):
-                log.warning("Invalid server version string: %r", val)
-        return val
-
-
-class ProtocolListField(EWSElementListField):
-    # There is not containing element for this field. Just multiple 'Protocol' elements on the 'Account' element.
-    def __init__(self, *args, **kwargs):
-        from .autodiscover.properties import Protocol
-
-        kwargs["value_cls"] = Protocol
-        super().__init__(*args, **kwargs)
-
-    def from_xml(self, elem, account):
-        return [self.value_cls.from_xml(elem=e, account=account) for e in elem.findall(self.value_cls.response_tag())]
 
 
 class RoutingTypeField(ChoiceField):

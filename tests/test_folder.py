@@ -216,6 +216,11 @@ class FolderTest(EWSTest):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
         self.assertGreater(len(folders), 40, sorted(f.name for f in folders))
 
+        # Test failure on different roots
+        with self.assertRaises(ValueError) as e:
+            list(FolderCollection(account=self.account, folders=[Folder(root="A"), Folder(root="B")]).find_folders())
+        self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
+
     def test_find_folders_multiple_roots(self):
         try:
             coll = FolderCollection(account=self.account, folders=[self.account.root, self.account.public_folders_root])

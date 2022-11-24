@@ -2,6 +2,7 @@ from exchangelib.extended_properties import ExtendedProperty, Flag
 from exchangelib.folders import Inbox
 from exchangelib.items import BaseItem, CalendarItem, Message
 from exchangelib.properties import Mailbox
+from exchangelib.util import to_xml
 
 from .common import get_random_int, get_random_url
 from .test_items.test_basics import BaseItemTest
@@ -202,90 +203,129 @@ class ExtendedPropertyTest(BaseItemTest):
             distinguished_property_set_id = "XXX"
             property_set_id = "YYY"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp1.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            "When 'distinguished_property_set_id' is set, 'property_set_id' and 'property_tag' must be None",
+        )
 
         # Must have property_id or property_name
         class TestProp2(ExtendedProperty):
             distinguished_property_set_id = "XXX"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp2.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            "When 'distinguished_property_set_id' is set, 'property_id' or 'property_name' must also be set",
+        )
 
         # distinguished_property_set_id must have a valid value
         class TestProp3(ExtendedProperty):
             distinguished_property_set_id = "XXX"
             property_id = "YYY"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp3.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            f"'distinguished_property_set_id' 'XXX' must be one of {sorted(ExtendedProperty.DISTINGUISHED_SETS)}",
+        )
 
         # Must not have distinguished_property_set_id or property_tag
         class TestProp4(ExtendedProperty):
             property_set_id = "XXX"
             property_tag = "YYY"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp4.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            "When 'property_set_id' is set, 'distinguished_property_set_id' and 'property_tag' must be None",
+        )
 
         # Must have property_id or property_name
         class TestProp5(ExtendedProperty):
             property_set_id = "XXX"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp5.validate_cls()
+        self.assertEqual(
+            e.exception.args[0], "When 'property_set_id' is set, 'property_id' or 'property_name' must also be set"
+        )
 
         # property_tag is only compatible with property_type
         class TestProp6(ExtendedProperty):
             property_tag = "XXX"
             property_set_id = "YYY"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp6.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            "When 'property_set_id' is set, 'distinguished_property_set_id' and 'property_tag' must be None",
+        )
 
         # property_tag must be an integer or string that can be converted to int
         class TestProp7(ExtendedProperty):
             property_tag = "XXX"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp7.validate_cls()
+        self.assertEqual(e.exception.args[0], "invalid literal for int() with base 16: 'XXX'")
 
         # property_tag must not be in the reserved range
         class TestProp8(ExtendedProperty):
             property_tag = 0x8001
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp8.validate_cls()
+        self.assertEqual(e.exception.args[0], "'property_tag' value '0x8001' is reserved for custom properties")
 
         # Must not have property_id or property_tag
         class TestProp9(ExtendedProperty):
             property_name = "XXX"
             property_id = "YYY"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp9.validate_cls()
+        self.assertEqual(
+            e.exception.args[0], "When 'property_name' is set, 'property_id' and 'property_tag' must be None"
+        )
 
         # Must have distinguished_property_set_id or property_set_id
         class TestProp10(ExtendedProperty):
             property_name = "XXX"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp10.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            "When 'property_name' is set, 'distinguished_property_set_id' or 'property_set_id' must also be set",
+        )
 
         # Must not have property_name or property_tag
         class TestProp11(ExtendedProperty):
             property_id = "XXX"
             property_name = "YYY"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp11.validate_cls()  # This actually hits the check on property_name values
+        self.assertEqual(
+            e.exception.args[0], "When 'property_name' is set, 'property_id' and 'property_tag' must be None"
+        )
 
         # Must have distinguished_property_set_id or property_set_id
         class TestProp12(ExtendedProperty):
             property_id = "XXX"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp12.validate_cls()
+        self.assertEqual(
+            e.exception.args[0],
+            "When 'property_id' is set, 'distinguished_property_set_id' or 'property_set_id' must also be set",
+        )
 
         # property_type must be a valid value
         class TestProp13(ExtendedProperty):
@@ -293,8 +333,27 @@ class ExtendedPropertyTest(BaseItemTest):
             property_set_id = "YYY"
             property_type = "ZZZ"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             TestProp13.validate_cls()
+        self.assertEqual(
+            e.exception.args[0], f"'property_type' 'ZZZ' must be one of {sorted(ExtendedProperty.PROPERTY_TYPES)}"
+        )
+
+        # property_tag and property_id are mutually exclusive
+        class TestProp14(ExtendedProperty):
+            property_tag = "XXX"
+            property_id = "YYY"
+
+        with self.assertRaises(ValueError) as e:
+            # We cannot reach this exception directly with validate_cls()
+            TestProp14._validate_property_tag()
+        self.assertEqual(e.exception.args[0], "When 'property_tag' is set, only 'property_type' must be set")
+        with self.assertRaises(ValueError) as e:
+            # We cannot reach this exception directly with validate_cls()
+            TestProp14._validate_property_id()
+        self.assertEqual(
+            e.exception.args[0], "When 'property_id' is set, 'property_name' and 'property_tag' must be None"
+        )
 
     def test_multiple_extended_properties(self):
         class ExternalSharingUrl(ExtendedProperty):
@@ -350,3 +409,35 @@ class ExtendedPropertyTest(BaseItemTest):
         finally:
             self.ITEM_CLASS.deregister(attr_name=attr_name)
             self.ITEM_CLASS.deregister(attr_name=array_attr_name)
+
+    def test_from_xml(self):
+        # Test that empty and no-op XML Value elements for string props both return empty strings
+        class TestProp(ExtendedProperty):
+            property_set_id = "deadbeaf-cafe-cafe-cafe-deadbeefcafe"
+            property_name = "Test Property"
+            property_type = "String"
+
+        elem = to_xml(
+            b"""\
+<ExtendedProperty xmlns="http://schemas.microsoft.com/exchange/services/2006/types">
+    <ExtendedFieldURI/>
+    <Value>XXX</Value>
+</ExtendedProperty>"""
+        )
+        self.assertEqual(TestProp.from_xml(elem, account=None), "XXX")
+        elem = to_xml(
+            b"""\
+<ExtendedProperty xmlns="http://schemas.microsoft.com/exchange/services/2006/types">
+    <ExtendedFieldURI/>
+    <Value></Value>
+</ExtendedProperty>"""
+        )
+        self.assertEqual(TestProp.from_xml(elem, account=None), "")
+        elem = to_xml(
+            b"""\
+<ExtendedProperty xmlns="http://schemas.microsoft.com/exchange/services/2006/types">
+    <ExtendedFieldURI/>
+    <Value/>
+</ExtendedProperty>"""
+        )
+        self.assertEqual(TestProp.from_xml(elem, account=None), "")

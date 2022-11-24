@@ -7,13 +7,13 @@ from unittest.mock import Mock, patch
 import dns
 import requests_mock
 
-from exchangelib.account import Account
+from exchangelib.account import Account, Identity
 from exchangelib.autodiscover import clear_cache, close_connections
 from exchangelib.autodiscover.cache import AutodiscoverCache, autodiscover_cache, shelve_filename
 from exchangelib.autodiscover.discovery import Autodiscovery, SrvRecord, _select_srv_host
 from exchangelib.autodiscover.protocol import AutodiscoverProtocol
 from exchangelib.configuration import Configuration
-from exchangelib.credentials import DELEGATE, Credentials
+from exchangelib.credentials import DELEGATE, Credentials, OAuth2LegacyCredentials
 from exchangelib.errors import AutoDiscoverCircularRedirect, AutoDiscoverFailed, ErrorNonExistentMailbox
 from exchangelib.properties import UserResponse
 from exchangelib.protocol import FailFast, FaultTolerance
@@ -26,9 +26,6 @@ from .common import EWSTest, get_random_hostname, get_random_string
 
 class AutodiscoverTest(EWSTest):
     def setUp(self):
-        if not self.account:
-            self.skipTest("SOAP autodiscover requires delegate credentials")
-
         super().setUp()
 
         # Enable retries, to make tests more robust
@@ -223,6 +220,25 @@ class AutodiscoverTest(EWSTest):
                 autodiscover=True,
                 locale="da_DK",
             )
+
+    def test_autodiscover_with_delegate(self):
+        if not self.settings.get("client_id") or not self.settings.get("username"):
+            self.skipTest("This test requires delegate OAuth setup")
+
+        credentials = OAuth2LegacyCredentials(
+            client_id=self.settings["client_id"],
+            client_secret=self.settings["client_secret"],
+            tenant_id=self.settings["tenant_id"],
+            username=self.settings["username"],
+            password=self.settings["password"],
+            identity=Identity(smtp_address=self.settings["account"]),
+        )
+        ad_response, protocol = Autodiscovery(
+            email=self.account.primary_smtp_address,
+            credentials=credentials,
+        ).discover()
+        self.assertEqual(ad_response.autodiscover_smtp_address, self.account.primary_smtp_address)
+        self.assertEqual(protocol.service_endpoint.lower(), self.account.protocol.service_endpoint.lower())
 
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_close_autodiscover_connections(self, m):
