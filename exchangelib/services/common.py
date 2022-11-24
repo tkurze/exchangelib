@@ -306,21 +306,21 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 return
             except ErrorServerBusy as e:
                 self._handle_backoff(e)
-                continue
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired, ErrorInternalServerTransientError) as e:
-                # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
-                # often a symptom of sending too many requests.
-                #
-                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests. Start by lowering the
-                # session count. This is done by downstream code.
-                if isinstance(e, ErrorTimeoutExpired) and self.protocol.session_pool_size <= 1:
+            except ErrorTimeoutExpired as e:
+                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests
+                if self.protocol.session_pool_size <= 1:
                     # We're already as low as we can go, so downstream cannot limit the session count to put less load
                     # on the server. We don't have a way of lowering the page size of requests from
                     # this part of the code yet. Let the user handle this.
                     raise e
-
-                # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
-                raise ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})")
+                # Re-raise as an ErrorServerBusy with a default delay
+                self._handle_backoff(ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})"))
+            except (ErrorTooManyObjectsOpened, ErrorInternalServerTransientError) as e:
+                # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
+                # often a symptom of sending too many requests.
+                #
+                # Re-raise as an ErrorServerBusy with a default delay
+                self._handle_backoff(ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})"))
             finally:
                 if self.streaming:
                     self.stop_streaming()
