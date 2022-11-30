@@ -437,6 +437,24 @@ class FolderTest(EWSTest):
         self.assertEqual(f.child_folder_count, 0)
         f.delete()
 
+    def test_update(self):
+        # Test that we can update folder attributes
+        f = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
+        old_values = {}
+        for field in f.FIELDS:
+            if field.name in ("account", "id", "changekey", "folder_class", "parent_folder_id"):
+                # These are needed for a successful refresh()
+                continue
+            if field.is_read_only:
+                continue
+            old_values[field.name] = getattr(f, field.name)
+            new_val = self.random_val(field)
+            setattr(f, field.name, new_val)
+        f.save()
+        f.refresh()
+        for field_name, value in old_values.items():
+            self.assertNotEqual(value, getattr(f, field_name))
+
     def test_refresh(self):
         # Test that we can refresh folders
         f = Folder(parent=self.account.inbox, name=get_random_string(16)).save()

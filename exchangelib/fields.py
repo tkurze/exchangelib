@@ -1475,6 +1475,9 @@ class PermissionSetField(EWSElementField):
         kwargs["value_cls"] = PermissionSet
         super().__init__(*args, **kwargs)
 
+    def to_xml(self, value, version):
+        return value.to_xml(version=version)
+
 
 class EffectiveRightsField(EWSElementField):
     def __init__(self, *args, **kwargs):
