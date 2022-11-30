@@ -1,6 +1,6 @@
 import logging
 
-from ..errors import MalformedResponseError
+from ..errors import ErrorInternalServerError, ErrorOrganizationNotFederated, ErrorServerBusy, MalformedResponseError
 from ..properties import UserResponse
 from ..transport import DEFAULT_ENCODING
 from ..util import ANS, add_xml_child, create_element, get_xml_attr, ns_translation, set_xml_value, xml_to_str
@@ -82,6 +82,12 @@ class GetUserSettings(EWSService):
             return container
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
         msg_text = get_xml_attr(response, f"{{{ANS}}}ErrorMessage")
+        if error_code == "InternalServerError":
+            raise ErrorInternalServerError(msg_text)
+        if error_code == "ServerBusy":
+            raise ErrorServerBusy(msg_text)
+        if error_code == "NotFederated":
+            raise ErrorOrganizationNotFederated(msg_text)
         try:
             raise self._get_exception(code=error_code, text=msg_text, msg_xml=None)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:

@@ -25,7 +25,7 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.html import XmlLexer
 from requests_oauthlib import OAuth2Session
 
-from .errors import MalformedResponseError, RateLimitError, RedirectError, RelativeRedirect, TransportError
+from .errors import ErrorInternalServerTransientError, ErrorTimeoutExpired, RelativeRedirect, TransportError
 
 log = logging.getLogger(__name__)
 xml_log = logging.getLogger(f"{__name__}.xml")
@@ -715,8 +715,6 @@ def get_redirect_url(response, allow_relative=True, require_relative=False):
     return redirect_url
 
 
-RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
-
 # A collection of error classes we want to handle as general connection errors
 CONNECTION_ERRORS = (
     requests.exceptions.ChunkedEncodingError,
@@ -773,11 +771,7 @@ def post_ratelimited(protocol, session, url, headers, data, stream=False, timeou
     if not timeout:
         timeout = protocol.TIMEOUT
     thread_id = get_ident()
-    wait = RETRY_WAIT  # Initial retry wait. We double the value on each retry
-    retry = 0
     log_msg = """\
-Retry: %(retry)s
-Waited: %(wait)s
 Timeout: %(timeout)s
 Session: %(session_id)s
 Thread: %(thread_id)s
@@ -793,8 +787,6 @@ Response headers: %(response_headers)s"""
 Request XML: %(xml_request)s
 Response XML: %(xml_response)s"""
     log_vals = dict(
-        retry=retry,
-        wait=wait,
         timeout=timeout,
         session_id=session.session_id,
         thread_id=thread_id,
@@ -808,147 +800,94 @@ Response XML: %(xml_response)s"""
         response_headers=None,
     )
     xml_log_vals = dict(
-        xml_request=None,
+        xml_request=data,
         xml_response=None,
     )
-    t_start = time.monotonic()
+    sleep_secs = _back_off_if_needed(protocol.retry_policy.back_off_until)
+    if sleep_secs:
+        # We may have slept for a long time. Renew the session.
+        session = protocol.renew_session(session)
+    log.debug(
+        "Session %s thread %s timeout %s: POST'ing to %s after %ss sleep",
+        session.session_id,
+        thread_id,
+        timeout,
+        url,
+        sleep_secs,
+    )
+    kwargs = dict(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream)
+    if isinstance(session, OAuth2Session):
+        # Fix token refreshing bug. Reported as https://github.com/requests/requests-oauthlib/issues/498
+        kwargs.update(session.auto_refresh_kwargs)
+    d_start = time.monotonic()
     try:
-        while True:
-            backed_off = _back_off_if_needed(protocol.retry_policy.back_off_until)
-            if backed_off:
-                # We may have slept for a long time. Renew the session.
-                session = protocol.renew_session(session)
-            log.debug(
-                "Session %s thread %s: retry %s timeout %s POST'ing to %s after %ss wait",
-                session.session_id,
-                thread_id,
-                retry,
-                timeout,
-                url,
-                wait,
-            )
-            d_start = time.monotonic()
-            # Always create a dummy response for logging purposes, in case we fail in the following
-            r = DummyResponse(url=url, request_headers=headers)
-            kwargs = dict(url=url, headers=headers, data=data, allow_redirects=False, timeout=timeout, stream=stream)
-            if isinstance(session, OAuth2Session):
-                # Fix token refreshing bug. Reported as https://github.com/requests/requests-oauthlib/issues/498
-                kwargs.update(session.auto_refresh_kwargs)
-            try:
-                r = session.post(**kwargs)
-            except TLS_ERRORS as e:
-                # Don't retry on TLS errors. They will most likely be persistent.
-                raise TransportError(str(e))
-            except CONNECTION_ERRORS as e:
-                log.debug("Session %s thread %s: connection error POST'ing to %s", session.session_id, thread_id, url)
-                r = DummyResponse(url=url, headers={"TimeoutException": e}, request_headers=headers)
-            except TokenExpiredError as e:
-                log.debug("Session %s thread %s: OAuth token expired; refreshing", session.session_id, thread_id)
-                r = DummyResponse(url=url, headers={"TokenExpiredError": e}, request_headers=headers, status_code=401)
-            except KeyError as e:
-                if e.args[0] != "www-authenticate":
-                    raise
-                log.debug("Session %s thread %s: auth headers missing from %s", session.session_id, thread_id, url)
-                r = DummyResponse(url=url, headers={"KeyError": e}, request_headers=headers)
-            finally:
-                log_vals.update(
-                    retry=retry,
-                    wait=wait,
-                    session_id=session.session_id,
-                    url=str(r.url),
-                    response_time=time.monotonic() - d_start,
-                    status_code=r.status_code,
-                    request_headers=r.request.headers,
-                    response_headers=r.headers,
-                )
-                xml_log_vals.update(
-                    xml_request=data,
-                    xml_response="[STREAMING]" if stream else r.content,
-                )
-            log.debug(log_msg, log_vals)
-            xml_log.debug(xml_log_msg, xml_log_vals)
-            if _need_new_credentials(response=r):
-                r.close()  # Release memory
-                session = protocol.refresh_credentials(session)
-                continue
-            total_wait = time.monotonic() - t_start
-            if protocol.retry_policy.may_retry_on_error(response=r, wait=total_wait):
-                r.close()  # Release memory
-                log.info(
-                    "Session %s thread %s: Connection error on URL %s (code %s). Cool down %s secs",
-                    session.session_id,
-                    thread_id,
-                    r.url,
-                    r.status_code,
-                    wait,
-                )
-                wait = _retry_after(r, wait)
-                protocol.retry_policy.back_off(wait)
-                retry += 1
-                wait *= 2  # Increase delay for every retry
-                continue
-            if r.status_code in (301, 302):
-                r.close()  # Release memory
-                url = _fail_on_redirect(r)
-                continue
-            break
-    except (RateLimitError, RedirectError) as e:
-        log.warning(e.value)
+        r = session.post(**kwargs)
+    except TLS_ERRORS as e:
         protocol.retire_session(session)
+        # Don't retry on TLS errors. They will most likely be persistent.
+        raise TransportError(str(e))
+    except CONNECTION_ERRORS as e:
+        protocol.retire_session(session)
+        log.debug("Session %s thread %s: connection error POST'ing to %s", session.session_id, thread_id, url)
+        raise ErrorTimeoutExpired(f"Reraised from {e.__class__.__name__}({e})")
+    except TokenExpiredError:
+        log.debug("Session %s thread %s: OAuth token expired; refreshing", session.session_id, thread_id)
+        protocol.release_session(protocol.refresh_credentials(session))
         raise
+    except KeyError as e:
+        protocol.retire_session(session)
+        if e.args[0] != "www-authenticate":
+            raise
+        # Server returned an HTTP error code during the NTLM handshake. Re-raise as internal server error
+        log.debug("Session %s thread %s: auth headers missing from %s", session.session_id, thread_id, url)
+        raise ErrorInternalServerTransientError(f"Reraised from {e.__class__.__name__}({e})")
     except Exception as e:
         # Let higher layers handle this. Add full context for better debugging.
         log.error("%s: %s\n%s\n%s", e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
         protocol.retire_session(session)
         raise
-    if r.status_code == 500 and r.content and is_xml(r.content):
-        # Some genius at Microsoft thinks it's OK to send a valid SOAP response as an HTTP 500
-        log.debug("Got status code %s but trying to parse content anyway", r.status_code)
-    elif r.status_code != 200:
+    log_vals.update(
+        session_id=session.session_id,
+        url=r.url,
+        response_time=time.monotonic() - d_start,
+        status_code=r.status_code,
+        request_headers=r.request.headers,
+        response_headers=r.headers,
+    )
+    xml_log_vals.update(
+        xml_request=data,
+        xml_response="[STREAMING]" if stream else r.content,
+    )
+    log.debug(log_msg, log_vals)
+    xml_log.debug(xml_log_msg, xml_log_vals)
+
+    try:
+        protocol.retry_policy.raise_response_errors(r)
+    except Exception:
+        r.close()  # Release memory
         protocol.retire_session(session)
-        try:
-            protocol.retry_policy.raise_response_errors(r)  # Always raises an exception
-        except MalformedResponseError as e:
-            log.error("%s: %s\n%s\n%s", e.__class__.__name__, str(e), log_msg % log_vals, xml_log_msg % xml_log_vals)
-            raise
+        raise
+
     log.debug("Session %s thread %s: Useful response from %s", session.session_id, thread_id, url)
     return r, session
 
 
 def _back_off_if_needed(back_off_until):
+    # Returns the number of seconds we slept
     if back_off_until:
         sleep_secs = (back_off_until - datetime.datetime.now()).total_seconds()
         # The back off value may have expired within the last few milliseconds
         if sleep_secs > 0:
             log.warning("Server requested back off until %s. Sleeping %s seconds", back_off_until, sleep_secs)
             time.sleep(sleep_secs)
-            return True
-    return False
+            return sleep_secs
+    return 0
 
 
-def _need_new_credentials(response):
-    return response.status_code == 401 and response.headers.get("TokenExpiredError")
-
-
-def _fail_on_redirect(response):
-    # Retry with no delay. If we let requests handle redirects automatically, it would issue a GET to that
-    # URL. We still want to POST.
+def _get_retry_after(r):
+    """Get Retry-After header, if it exists. We interpret the value as seconds to wait before sending next request."""
     try:
-        redirect_url = get_redirect_url(response=response, allow_relative=False)
-    except RelativeRedirect as e:
-        log.debug("'allow_redirects' only supports relative redirects (%s -> %s)", response.url, e.value)
-        raise RedirectError(url=e.value)
-    log.debug("Redirect not allowed but we were redirected ( (%s -> %s)", response.url, redirect_url)
-    raise RedirectError(url=redirect_url)
-
-
-def _retry_after(r, wait):
-    """Either return the Retry-After header value or the default wait, whichever is larger."""
-    try:
-        retry_after = int(r.headers.get("Retry-After", "0"))
+        val = int(r.headers.get("Retry-After", "0"))
     except ValueError:
-        pass
-    else:
-        if retry_after > wait:
-            return retry_after
-    return wait
+        return None
+    return val if val > 0 else None

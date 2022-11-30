@@ -20,10 +20,14 @@ from requests_oauthlib import OAuth2Session
 from .credentials import BaseOAuth2Credentials
 from .errors import (
     CASError,
+    ErrorInternalServerTransientError,
     ErrorInvalidSchemaVersionForMailboxVersion,
+    ErrorServerBusy,
     InvalidTypeError,
     MalformedResponseError,
     RateLimitError,
+    RedirectError,
+    RelativeRedirect,
     SessionPoolMaxSizeReached,
     SessionPoolMinSizeReached,
     TransportError,
@@ -51,6 +55,7 @@ from .services import (
     ResolveNames,
 )
 from .transport import CREDENTIALS_REQUIRED, DEFAULT_HEADERS, NTLM, OAUTH2, get_auth_instance, get_service_authtype
+from .util import _get_retry_after, get_redirect_url, is_xml
 from .version import Version
 
 log = logging.getLogger(__name__)
@@ -78,6 +83,7 @@ class BaseProtocol:
     MAX_SESSION_USAGE_COUNT = None
     # Timeout for HTTP requests
     TIMEOUT = 120
+    RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
 
     # The adapter class to use for HTTP requests. Override this if you need e.g. proxy support or specific TLS versions
     HTTP_ADAPTER_CLS = requests.adapters.HTTPAdapter
@@ -656,11 +662,14 @@ class RetryPolicy(metaclass=abc.ABCMeta):
     def back_off(self, seconds):
         """Set a new back off until value"""
 
-    @abc.abstractmethod
-    def may_retry_on_error(self, response, wait):
-        """Return whether retries should still be attempted"""
-
     def raise_response_errors(self, response):
+        if response.status_code == 200:
+            # Response is OK
+            return
+        if response.status_code == 500 and response.content and is_xml(response.content):
+            # Some genius at Microsoft thinks it's OK to send a valid SOAP response as an HTTP 500
+            log.debug("Got status code %s but trying to parse content anyway", response.status_code)
+            return
         cas_error = response.headers.get("X-CasErrorCode")
         if cas_error:
             if cas_error.startswith("CAS error:"):
@@ -673,14 +682,41 @@ class RetryPolicy(metaclass=abc.ABCMeta):
         ):
             # Another way of communicating invalid schema versions
             raise ErrorInvalidSchemaVersionForMailboxVersion("Invalid server version")
+        if response.headers.get("connection") == "close":
+            # Connection closed. OK to retry.
+            raise ErrorServerBusy("Caused by closed connection")
+        if (
+            response.status_code == 302
+            and response.headers.get("location", "").lower()
+            == "/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx"
+        ):
+            # Redirect to genericerrorpage.htm is ridiculous behaviour for random outages. OK to retry.
+            #
+            # Redirect to '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS
+            # certificate f*ckups on the Exchange server. We should not retry those.
+            raise ErrorInternalServerTransientError(f"Caused by HTTP 302 redirect to {response.headers['location']}")
+        if response.status_code in (301, 302):
+            try:
+                redirect_url = get_redirect_url(response=response, allow_relative=False)
+            except RelativeRedirect as e:
+                log.debug("Redirect not allowed but we were relative redirected (%s -> %s)", response.url, e.value)
+                raise RedirectError(url=e.value)
+            log.debug("Redirect not allowed but we were redirected ( (%s -> %s)", response.url, redirect_url)
+            raise RedirectError(url=redirect_url)
         if b"The referenced account is currently locked out" in response.content:
             raise UnauthorizedError("The referenced account is currently locked out")
         if response.status_code == 401 and self.fail_fast:
             # This is a login failure
             raise UnauthorizedError(f"Invalid credentials for {response.url}")
-        if "TimeoutException" in response.headers:
-            # A header set by us on CONNECTION_ERRORS
-            raise response.headers["TimeoutException"]
+        if response.status_code == 401:
+            # EWS sometimes throws 401's when it wants us to throttle connections. OK to retry.
+            raise ErrorServerBusy("Caused by HTTP 401 response")
+        if response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content:
+            # "Server Error in '/EWS' Application" has been seen in highly concurrent settings. OK to retry.
+            raise ErrorInternalServerTransientError("Caused by \"Server Error in 'EWS' Application\"")
+        if response.status_code == 503:
+            # Internal server error. OK to retry.
+            raise ErrorInternalServerTransientError("Caused by HTTP 503 response")
         # This could be anything. Let higher layers handle this
         raise MalformedResponseError(
             f"Unknown failure in response. Code: {response.status_code} headers: {response.headers} "
@@ -701,10 +737,6 @@ class FailFast(RetryPolicy):
 
     def back_off(self, seconds):
         raise ValueError("Cannot back off with fail-fast policy")
-
-    def may_retry_on_error(self, response, wait):
-        log.debug("No retry with fail-fast policy")
-        return False
 
 
 class FaultTolerance(RetryPolicy):
@@ -756,41 +788,19 @@ class FaultTolerance(RetryPolicy):
     def back_off(self, seconds):
         if seconds is None:
             seconds = self.DEFAULT_BACKOFF
+        if seconds > self.max_wait:
+            # We lost patience. Session is cleaned up in outer loop
+            raise RateLimitError("Max timeout reached", wait=seconds)
         value = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
         with self._back_off_lock:
             self._back_off_until = value
 
-    def may_retry_on_error(self, response, wait):
-        if response.status_code not in (301, 302, 401, 500, 503):
-            # Don't retry if we didn't get a status code that we can hope to recover from
-            log.debug("No retry: wrong status code %s", response.status_code)
-            return False
-        if wait > self.max_wait:
-            # We lost patience. Session is cleaned up in outer loop
-            raise RateLimitError(
-                "Max timeout reached", url=response.url, status_code=response.status_code, total_wait=wait
-            )
-        if response.status_code == 401:
-            # EWS sometimes throws 401's when it wants us to throttle connections. OK to retry.
-            return True
-        if response.headers.get("connection") == "close":
-            # Connection closed. OK to retry.
-            return True
-        if (
-            response.status_code == 302
-            and response.headers.get("location", "").lower()
-            == "/ews/genericerrorpage.htm?aspxerrorpath=/ews/exchange.asmx"
-        ):
-            # The genericerrorpage.htm/internalerror.asp is ridiculous behaviour for random outages. OK to retry.
-            #
-            # Redirect to '/internalsite/internalerror.asp' or '/internalsite/initparams.aspx' is caused by e.g. TLS
-            # certificate f*ckups on the Exchange server. We should not retry those.
-            return True
-        if response.status_code == 503:
-            # Internal server error. OK to retry.
-            return True
-        if response.status_code == 500 and b"Server Error in '/EWS' Application" in response.content:
-            # "Server Error in '/EWS' Application" has been seen in highly concurrent settings. OK to retry.
-            log.debug("Retry allowed: conditions met")
-            return True
-        return False
+    def raise_response_errors(self, response):
+        try:
+            return super().raise_response_errors(response)
+        except (ErrorInternalServerTransientError, ErrorServerBusy) as e:
+            # Pass on the retry header value
+            retry_after = _get_retry_after(response)
+            if retry_after:
+                raise ErrorServerBusy(e.args[0], back_off=retry_after)
+            raise

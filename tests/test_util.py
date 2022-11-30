@@ -7,10 +7,10 @@ from unittest.mock import patch
 import requests
 import requests_mock
 
-import exchangelib.util
 from exchangelib.errors import (
     CASError,
-    RateLimitError,
+    ErrorServerBusy,
+    ErrorTimeoutExpired,
     RedirectError,
     RelativeRedirect,
     TransportError,
@@ -231,7 +231,7 @@ class UtilTest(EWSTest):
 
         protocol = self.account.protocol
         orig_policy = protocol.config.retry_policy
-        RETRY_WAIT = exchangelib.util.RETRY_WAIT
+        orig_wait = protocol.RETRY_WAIT
 
         session = protocol.get_session()
         try:
@@ -246,7 +246,7 @@ class UtilTest(EWSTest):
             # Test exceptions raises by the POST request
             for err_cls in CONNECTION_ERRORS:
                 session.post = mock_session_exception(err_cls)
-                with self.assertRaises(err_cls):
+                with self.assertRaises(ErrorTimeoutExpired):
                     r, session = post_ratelimited(
                         protocol=protocol, session=session, url="http://", headers=None, data=""
                     )
@@ -300,39 +300,19 @@ class UtilTest(EWSTest):
                 r, session = post_ratelimited(protocol=protocol, session=session, url=url, headers=None, data="")
 
             # Test rate limit exceeded
-            exchangelib.util.RETRY_WAIT = 1
-            protocol.config.retry_policy = FaultTolerance(max_wait=0.5)  # Fail after first RETRY_WAIT
+            protocol.RETRY_WAIT = 1
+            protocol.config.retry_policy = FaultTolerance(max_wait=0.5)
             session.post = mock_post(url, 503, {"connection": "close"})
             # Mock renew_session to return the same session so the session object's 'post' method is still mocked
             protocol.renew_session = lambda s: s
-            with self.assertRaises(RateLimitError) as rle:
+            with self.assertRaises(ErrorServerBusy) as rle:
                 r, session = post_ratelimited(protocol=protocol, session=session, url="http://", headers=None, data="")
-            self.assertEqual(rle.exception.status_code, 503)
-            self.assertEqual(rle.exception.url, url)
-            self.assertRegex(
-                str(rle.exception),
-                r"Max timeout reached \(gave up after .* seconds. URL https://example.com returned status code 503\)",
-            )
-            self.assertTrue(1 <= rle.exception.total_wait < 2)  # One RETRY_WAIT plus some overhead
-
-            # Test something larger than the default wait, so we retry at least once
-            protocol.retry_policy.max_wait = 3  # Fail after second RETRY_WAIT
-            session.post = mock_post(url, 503, {"connection": "close"})
-            with self.assertRaises(RateLimitError) as rle:
-                r, session = post_ratelimited(protocol=protocol, session=session, url="http://", headers=None, data="")
-            self.assertEqual(rle.exception.status_code, 503)
-            self.assertEqual(rle.exception.url, url)
-            self.assertRegex(
-                str(rle.exception),
-                r"Max timeout reached \(gave up after .* seconds. URL https://example.com returned status code 503\)",
-            )
-            # We double the wait for each retry, so this is RETRY_WAIT + 2*RETRY_WAIT plus some overhead
-            self.assertTrue(3 <= rle.exception.total_wait < 4, rle.exception.total_wait)
+            self.assertEqual(str(rle.exception), "Caused by closed connection")
         finally:
             protocol.retire_session(session)  # We have patched the session, so discard it
             # Restore patched attributes and functions
             protocol.config.retry_policy = orig_policy
-            exchangelib.util.RETRY_WAIT = RETRY_WAIT
+            protocol.RETRY_WAIT = orig_wait
 
             with suppress(AttributeError):
                 delattr(protocol, "renew_session")

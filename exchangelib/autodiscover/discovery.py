@@ -9,7 +9,7 @@ from ..configuration import Configuration
 from ..errors import AutoDiscoverCircularRedirect, AutoDiscoverFailed, RedirectError, TransportError
 from ..protocol import FailFast, Protocol
 from ..transport import get_unauthenticated_autodiscover_response
-from ..util import CONNECTION_ERRORS, DummyResponse, get_domain, get_redirect_url
+from ..util import CONNECTION_ERRORS, get_domain, get_redirect_url
 from .cache import autodiscover_cache
 from .protocol import AutodiscoverProtocol
 
@@ -73,7 +73,6 @@ class Autodiscovery:
     # When connecting to servers that may not be serving the correct endpoint, we should use a retry policy that does
     # not leave us hanging for a long time on each step in the protocol.
     INITIAL_RETRY_POLICY = FailFast()
-    RETRY_WAIT = 10  # Seconds to wait before retry on connection errors
     MAX_REDIRECTS = 10  # Maximum number of URL redirects before we give up
     DNS_RESOLVER_KWARGS = {}
     DNS_RESOLVER_ATTRS = {
@@ -369,17 +368,18 @@ class Autodiscovery:
         try:
             _, r = self._get_unauthenticated_response(url=url, method="get")
         except TransportError:
-            r = DummyResponse(url=url)
-        if r.status_code in (301, 302) and "location" in r.headers:
-            redirect_url = get_redirect_url(r)
-            if self._redirect_url_is_valid(url=redirect_url):
-                is_valid_response, ad = self._attempt_response(url=redirect_url)
-                if is_valid_response:
-                    return self._step_5(ad=ad)
-                log.debug("Got invalid response")
+            pass
+        else:
+            if r.status_code in (301, 302) and "location" in r.headers:
+                redirect_url = get_redirect_url(r)
+                if self._redirect_url_is_valid(url=redirect_url):
+                    is_valid_response, ad = self._attempt_response(url=redirect_url)
+                    if is_valid_response:
+                        return self._step_5(ad=ad)
+                    log.debug("Got invalid response")
+                    return self._step_4(hostname=hostname)
+                log.debug("Got invalid redirect URL")
                 return self._step_4(hostname=hostname)
-            log.debug("Got invalid redirect URL")
-            return self._step_4(hostname=hostname)
         log.debug("Got no redirect URL")
         return self._step_4(hostname=hostname)
 

@@ -1,13 +1,12 @@
 import logging
-import time
 from contextlib import suppress
 
 import requests.auth
 import requests_ntlm
 import requests_oauthlib
 
-from .errors import TransportError, UnauthorizedError
-from .util import CONNECTION_ERRORS, RETRY_WAIT, TLS_ERRORS, DummyResponse, _back_off_if_needed, _retry_after
+from .errors import RateLimitError, TransportError, UnauthorizedError
+from .util import CONNECTION_ERRORS, TLS_ERRORS, _back_off_if_needed
 
 log = logging.getLogger(__name__)
 
@@ -75,12 +74,10 @@ def get_service_authtype(protocol):
 
     service_endpoint = protocol.service_endpoint
     retry_policy = protocol.retry_policy
-    retry = 0
-    t_start = time.monotonic()
+    wait = protocol.RETRY_WAIT
     for api_version in ConvertId.supported_api_versions():
         protocol.api_version_hint = api_version
         data = protocol.dummy_xml()
-        headers = {}
         log.debug("Requesting %s from %s", data, service_endpoint)
         while True:
             _back_off_if_needed(retry_policy.back_off_until)
@@ -89,7 +86,6 @@ def get_service_authtype(protocol):
                 try:
                     r = s.post(
                         url=service_endpoint,
-                        headers=headers,
                         data=data,
                         allow_redirects=False,
                         timeout=protocol.TIMEOUT,
@@ -98,21 +94,13 @@ def get_service_authtype(protocol):
                     break
                 except CONNECTION_ERRORS as e:
                     # Don't retry on TLS errors. They will most likely be persistent.
-                    total_wait = time.monotonic() - t_start
-                    r = DummyResponse(url=service_endpoint, request_headers=headers)
-                    if retry_policy.may_retry_on_error(response=r, wait=total_wait):
-                        wait = _retry_after(r, RETRY_WAIT)
-                        log.info(
-                            "Connection error on URL %s (retry %s, error: %s). Cool down %s secs",
-                            service_endpoint,
-                            retry,
-                            e,
-                            wait,
-                        )
+                    log.info("Connection error on URL %s.", service_endpoint)
+                    if not retry_policy.fail_fast:
                         retry_policy.back_off(wait)
-                        retry += 1
                         continue
                     raise TransportError(str(e)) from e
+                finally:
+                    wait *= 2
         if r.status_code not in (200, 401):
             log.debug("Unexpected response: %s %s", r.status_code, r.reason)
             continue
@@ -135,12 +123,9 @@ def get_autodiscover_authtype(protocol):
 
 
 def get_unauthenticated_autodiscover_response(protocol, method, headers=None, data=None):
-    from .autodiscover import Autodiscovery
-
     service_endpoint = protocol.service_endpoint
     retry_policy = protocol.retry_policy
-    retry = 0
-    t_start = time.monotonic()
+    wait = protocol.RETRY_WAIT
     while True:
         _back_off_if_needed(retry_policy.back_off_until)
         log.debug("Trying to get response from %s", service_endpoint)
@@ -159,23 +144,16 @@ def get_unauthenticated_autodiscover_response(protocol, method, headers=None, da
                 # Don't retry on TLS errors. But wrap, so we can catch later and continue with the next endpoint.
                 raise TransportError(str(e))
             except CONNECTION_ERRORS as e:
-                r = DummyResponse(url=service_endpoint, request_headers=headers)
-                total_wait = time.monotonic() - t_start
-                if retry_policy.may_retry_on_error(response=r, wait=total_wait):
-                    log.debug(
-                        "Connection error on URL %s (retry %s, error: %s). Cool down %s secs",
-                        service_endpoint,
-                        retry,
-                        e,
-                        Autodiscovery.RETRY_WAIT,
-                    )
-                    # Don't respect the 'Retry-After' header. We don't know if this is a useful endpoint, and we
-                    # want autodiscover to be reasonably fast.
-                    retry_policy.back_off(Autodiscovery.RETRY_WAIT)
-                    retry += 1
-                    continue
                 log.debug("Connection error on URL %s: %s", service_endpoint, e)
-                raise TransportError(str(e))
+                if not retry_policy.fail_fast:
+                    try:
+                        retry_policy.back_off(wait)
+                        continue
+                    except RateLimitError:
+                        pass
+                raise TransportError(str(e)) from e
+            finally:
+                wait *= 2
     return r
 
 

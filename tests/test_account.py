@@ -300,11 +300,6 @@ class AccountTest(EWSTest):
 
         # Should fail when credentials are wrong, but UnauthorizedError is caught and retried. Mock the needed methods
         class Mock1(FaultTolerance):
-            def may_retry_on_error(self, response, wait):
-                if response.status_code == 401:
-                    return False
-                return super().may_retry_on_error(response, wait)
-
             def raise_response_errors(self, response):
                 if response.status_code == 401:
                     raise UnauthorizedError(f"Invalid credentials for {response.url}")

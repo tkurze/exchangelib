@@ -696,8 +696,8 @@ class GenericItemTest(CommonItemTest):
         item.subject = get_random_string(length=8, spaces=False, special=False)
         item.save()
         # For some reason, the querystring search doesn't work instantly. We may have to wait for up to 60 seconds.
-        # I'm too impatient for that, so also allow empty results. This makes the test almost worthless but I blame EWS.
-        # Also, some servers are misconfigured and don't support querystrings at all. Don't fail on that.
+        # I'm too impatient for that, so also allow empty results. This makes the test almost worthless, but I blame
+        # EWS. Also, some servers are misconfigured and don't support querystrings at all. Don't fail on that.
         try:
             self.assertIn(self.test_folder.filter(f"Subject:{item.subject}").count(), (0, 1))
         except ErrorInternalServerError as e:

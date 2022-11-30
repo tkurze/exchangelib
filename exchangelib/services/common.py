@@ -3,6 +3,8 @@ import logging
 from contextlib import suppress
 from itertools import chain
 
+from oauthlib.oauth2 import TokenExpiredError
+
 from .. import errors
 from ..attachments import AttachmentId
 from ..credentials import IMPERSONATION, BaseOAuth2Credentials
@@ -298,30 +300,46 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         """Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
         to the caller as exception objects. Retry the request according to the retry policy.
         """
+        wait = self.protocol.RETRY_WAIT
         while True:
             try:
                 # Create a generator over the response elements so exceptions in response elements are also raised
                 # here and can be handled.
                 yield from self._response_generator(payload=payload)
+                # TODO: Restore session pool size on succeeding request?
                 return
+            except TokenExpiredError:
+                # Retry immediately
+                continue
             except ErrorServerBusy as e:
+                if not e.back_off:
+                    e.back_off = wait
                 self._handle_backoff(e)
-            except ErrorTimeoutExpired as e:
-                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests
-                if self.protocol.session_pool_size <= 1:
-                    # We're already as low as we can go, so downstream cannot limit the session count to put less load
-                    # on the server. We don't have a way of lowering the page size of requests from
-                    # this part of the code yet. Let the user handle this.
+            except ErrorExceededConnectionCount as e:
+                # ErrorExceededConnectionCount indicates that the connecting user has too many open TCP connections to
+                # the server. Decrease our session pool size and retry immediately.
+                try:
+                    self.protocol.decrease_poolsize()
+                    continue
+                except SessionPoolMinSizeReached:
+                    # We're already as low as we can go. Let the user handle this.
                     raise e
-                # Re-raise as an ErrorServerBusy with a default delay
-                self._handle_backoff(ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})"))
+            except ErrorTimeoutExpired as e:
+                # ErrorTimeoutExpired can be caused by a busy server, or by an overly large request. If it's the latter,
+                # we don't want to continue hammering the server with this request indefinitely. Instead, lower the
+                # connection count, if possible, and retry the request.
+                if self.protocol.session_pool_size <= 1:
+                    # We're already as low as we can go. We can no longer use the session count to put less load
+                    # on the server. If this is a chunked request we could lower the chunk size, but we don't have a
+                    # way of doing that from this part of the code yet. Let the user handle this.
+                    raise e
+                self._handle_backoff(ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})", back_off=wait))
             except (ErrorTooManyObjectsOpened, ErrorInternalServerTransientError) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
-                #
-                # Re-raise as an ErrorServerBusy with a default delay
-                self._handle_backoff(ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})"))
+                self._handle_backoff(ErrorServerBusy(f"Reraised from {e.__class__.__name__}({e})", back_off=wait))
             finally:
+                wait *= 2  # Increase delay for every retry
                 if self.streaming:
                     self.stop_streaming()
 
@@ -406,15 +424,6 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 # The guessed server version is wrong. Try the next version
                 log.debug("API version %s was invalid", api_version)
                 continue
-            except ErrorExceededConnectionCount as e:
-                # This indicates that the connecting user has too many open TCP connections to the server. Decrease
-                # our session pool size.
-                try:
-                    self.protocol.decrease_poolsize()
-                    continue
-                except SessionPoolMinSizeReached:
-                    # We're already as low as we can go. Let the user handle this.
-                    raise e
             finally:
                 if not self.streaming:
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.

@@ -11,6 +11,7 @@ from .errors import (
     AutoDiscoverFailed,
     ErrorInternalServerError,
     ErrorNonExistentMailbox,
+    ErrorOrganizationNotFederated,
     ErrorServerBusy,
     InvalidTypeError,
 )
@@ -2101,6 +2102,8 @@ class UserResponse(EWSElement):
             raise ErrorInternalServerError(error_message)
         if error_code == "ServerBusy":
             raise ErrorServerBusy(error_message)
+        if error_code == "NotFederated":
+            raise ErrorOrganizationNotFederated(error_message)
         if error_code not in ("NoError", "RedirectAddress", "RedirectUrl"):
             return cls(error_code=error_code, error_message=error_message)
 

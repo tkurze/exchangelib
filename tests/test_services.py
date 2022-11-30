@@ -15,6 +15,7 @@ from exchangelib.errors import (
     ErrorServerBusy,
     ErrorTooManyObjectsOpened,
     MalformedResponseError,
+    RateLimitError,
     SOAPError,
     TransportError,
 )
@@ -190,16 +191,16 @@ class ServicesTest(EWSTest):
         with self.assertRaises(ErrorTooManyObjectsOpened):
             list(ws.parse(xml))
 
-        # Test that it gets converted to an ErrorServerBusy exception. This happens deep inside EWSService methods
-        # so it's easier to only mock the response.
+        # Test that it eventually gets converted to an RateLimitError exception. This happens deep inside EWSService
+        # methods, so it's easier to only mock the response.
         self.account.root  # Needed to get past the GetFolder request
         m.post(self.account.protocol.service_endpoint, content=xml)
         orig_policy = self.account.protocol.config.retry_policy
         try:
-            self.account.protocol.config.retry_policy = FaultTolerance(max_wait=0)
-            with self.assertRaises(ErrorServerBusy) as e:
+            self.account.protocol.config.retry_policy = FaultTolerance(max_wait=1)  # Set max_wait < RETRY_WAIT
+            with self.assertRaises(RateLimitError) as e:
                 list(FolderCollection(account=self.account, folders=[self.account.root]).find_folders())
-            self.assertEqual(e.exception.back_off, None)  # ErrorTooManyObjectsOpened has no BackOffMilliseconds value
+            self.assertEqual(e.exception.wait, self.account.protocol.RETRY_WAIT)
         finally:
             self.account.protocol.config.retry_policy = orig_policy
 

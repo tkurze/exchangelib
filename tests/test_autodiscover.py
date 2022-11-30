@@ -30,7 +30,7 @@ class AutodiscoverTest(EWSTest):
 
         # Enable retries, to make tests more robust
         Autodiscovery.INITIAL_RETRY_POLICY = FaultTolerance(max_wait=5)
-        Autodiscovery.RETRY_WAIT = 5
+        AutodiscoverProtocol.RETRY_WAIT = 5
 
         # Each test should start with a clean autodiscover cache
         clear_cache()

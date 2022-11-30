@@ -60,17 +60,12 @@ class TransportError(EWSError):
 
 
 class RateLimitError(TransportError):
-    def __init__(self, value, url, status_code, total_wait):
+    def __init__(self, value, wait):
         super().__init__(value)
-        self.url = url
-        self.status_code = status_code
-        self.total_wait = total_wait
+        self.wait = wait
 
     def __str__(self):
-        return (
-            f"{self.value} (gave up after {self.total_wait:.3f} seconds. "
-            f"URL {self.url} returned status code {self.status_code})"
-        )
+        return f"{self.value} (gave up when asked to back off {self.wait:.3f} seconds)"
 
 
 class SOAPError(TransportError):
