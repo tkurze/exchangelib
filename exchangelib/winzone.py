@@ -516,6 +516,7 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
         "America/Argentina/Mendoza": CLDR_TO_MS_TIMEZONE_MAP["America/Mendoza"],
         "America/Atikokan": CLDR_TO_MS_TIMEZONE_MAP["America/Coral_Harbour"],
         "America/Atka": CLDR_TO_MS_TIMEZONE_MAP["America/Adak"],
+        "America/Ciudad_Juarez": CLDR_TO_MS_TIMEZONE_MAP["America/Chihuahua"],
         "America/Ensenada": CLDR_TO_MS_TIMEZONE_MAP["America/Tijuana"],
         "America/Fort_Wayne": CLDR_TO_MS_TIMEZONE_MAP["America/Indianapolis"],
         "America/Indiana/Indianapolis": CLDR_TO_MS_TIMEZONE_MAP["America/Indianapolis"],

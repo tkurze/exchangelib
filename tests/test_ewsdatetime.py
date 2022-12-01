@@ -221,6 +221,7 @@ class EWSTimeZoneTest(TimedTestCase):
         self.assertDictEqual(tz_map, CLDR_TO_MS_TIMEZONE_MAP)
 
         # Test IANA exceptions. This fails if available_timezones() returns timezones that we have not yet implemented.
+        # If this fails in CI but not locally, you need to update the 'tzdata' package to the latest version.
         sanitized = list(t for t in zoneinfo.available_timezones() if not t.startswith("SystemV/") and t != "localtime")
         self.assertEqual(set(sanitized) - set(EWSTimeZone.IANA_TO_MS_MAP), set())
 
