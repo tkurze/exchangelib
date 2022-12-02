@@ -138,7 +138,7 @@ class Message(Item):
         )
 
     def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-        self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()
+        return self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()
 
     @require_id
     def create_reply_all(self, subject, body):
@@ -156,7 +156,7 @@ class Message(Item):
         )
 
     def reply_all(self, subject, body):
-        self.create_reply_all(subject, body).send()
+        return self.create_reply_all(subject, body).send()
 
     def mark_as_junk(self, is_junk=True, move_item=True):
         """Mark or un-marks items as junk email.

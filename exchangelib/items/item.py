@@ -407,7 +407,7 @@ class Item(BaseItem):
         )
 
     def forward(self, subject, body, to_recipients, cc_recipients=None, bcc_recipients=None):
-        self.create_forward(
+        return self.create_forward(
             subject,
             body,
             to_recipients,
