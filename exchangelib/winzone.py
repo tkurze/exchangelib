@@ -26,7 +26,7 @@ def generate_map(timeout=10):
     type_version = timezones_elem.get("typeVersion")
     other_version = timezones_elem.get("otherVersion")
     for e in timezones_elem.findall("mapZone"):
-        for location in re.split(r"\s+", e.get("type")):
+        for location in re.split(r"\s+", e.get("type").strip()):
             if e.get("territory") == DEFAULT_TERRITORY or location not in tz_map:
                 # Prefer default territory. This is so MS_TIMEZONE_TO_IANA_MAP maps from MS timezone ID back to the
                 # "preferred" region/location timezone name.
@@ -123,7 +123,8 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     "America/Cayenne": ("SA Eastern Standard Time", "001"),
     "America/Cayman": ("SA Pacific Standard Time", "KY"),
     "America/Chicago": ("Central Standard Time", "001"),
-    "America/Chihuahua": ("Mountain Standard Time (Mexico)", "001"),
+    "America/Chihuahua": ("Central Standard Time (Mexico)", "MX"),
+    "America/Ciudad_Juarez": ("Mountain Standard Time", "MX"),
     "America/Coral_Harbour": ("SA Pacific Standard Time", "CA"),
     "America/Cordoba": ("Argentina Standard Time", "AR"),
     "America/Costa_Rica": ("Central America Standard Time", "CR"),
@@ -179,7 +180,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     "America/Marigot": ("SA Western Standard Time", "MF"),
     "America/Martinique": ("SA Western Standard Time", "MQ"),
     "America/Matamoros": ("Central Standard Time", "MX"),
-    "America/Mazatlan": ("Mountain Standard Time (Mexico)", "MX"),
+    "America/Mazatlan": ("Mountain Standard Time (Mexico)", "001"),
     "America/Mendoza": ("Argentina Standard Time", "AR"),
     "America/Menominee": ("Central Standard Time", "US"),
     "America/Merida": ("Central Standard Time (Mexico)", "MX"),
@@ -199,7 +200,7 @@ CLDR_TO_MS_TIMEZONE_MAP = {
     "America/North_Dakota/Beulah": ("Central Standard Time", "US"),
     "America/North_Dakota/Center": ("Central Standard Time", "US"),
     "America/North_Dakota/New_Salem": ("Central Standard Time", "US"),
-    "America/Ojinaga": ("Mountain Standard Time", "MX"),
+    "America/Ojinaga": ("Central Standard Time", "MX"),
     "America/Panama": ("SA Pacific Standard Time", "PA"),
     "America/Pangnirtung": ("Eastern Standard Time", "CA"),
     "America/Paramaribo": ("SA Eastern Standard Time", "SR"),
@@ -516,7 +517,6 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
         "America/Argentina/Mendoza": CLDR_TO_MS_TIMEZONE_MAP["America/Mendoza"],
         "America/Atikokan": CLDR_TO_MS_TIMEZONE_MAP["America/Coral_Harbour"],
         "America/Atka": CLDR_TO_MS_TIMEZONE_MAP["America/Adak"],
-        "America/Ciudad_Juarez": CLDR_TO_MS_TIMEZONE_MAP["America/Chihuahua"],
         "America/Ensenada": CLDR_TO_MS_TIMEZONE_MAP["America/Tijuana"],
         "America/Fort_Wayne": CLDR_TO_MS_TIMEZONE_MAP["America/Indianapolis"],
         "America/Indiana/Indianapolis": CLDR_TO_MS_TIMEZONE_MAP["America/Indianapolis"],
