@@ -222,8 +222,8 @@ class UtilTest(EWSTest):
         h.stream.seek(0)
         self.assertEqual(
             h.stream.read(),
-            "hello \x1b[36m<?xml version='1.0' encoding='utf-8'?>\x1b[39;49;00m\n\x1b[94m"
-            "<foo\x1b[39;49;00m\x1b[94m>\x1b[39;49;00mbar\x1b[94m</foo>\x1b[39;49;00m\n",
+            "hello \x1b[36m<?xml version='1.0' encoding='utf-8'?>\x1b[39;49;00m\x1b[37m\x1b[39;49;00m\n\x1b[94m"
+            "<foo\x1b[39;49;00m\x1b[94m>\x1b[39;49;00mbar\x1b[94m</foo>\x1b[39;49;00m\x1b[37m\x1b[39;49;00m\n",
         )
 
     def test_post_ratelimited(self):
