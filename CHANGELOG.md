@@ -3,10 +3,14 @@ Change Log
 
 HEAD
 ----
+
+
+5.0.0
+-----
 - Make SOAP-based autodiscovery the default, and remove support for POX-based
   discovery. This also removes support for autodiscovery on Exchange 2007.
   Only `Account(..., autodiscover=True)` is supported again.
-- Deprecated `RetryPolicy.may_retry_on_error`. Instead, ad custom retry logic
+- Deprecated `RetryPolicy.may_retry_on_error`. Instead, add custom retry logic
   in `RetryPolicy.raise_response_errors`.
 - Moved `exchangelib.util.RETRY_WAIT` to `BaseProtocol.RETRY_WAIT`.
 
