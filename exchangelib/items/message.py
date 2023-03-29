@@ -98,7 +98,7 @@ class Message(Item):
     ):
         # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
         if self.id:
-            self._update(
+            return self._update(
                 update_fieldnames=update_fields,
                 message_disposition=SEND_AND_SAVE_COPY,
                 conflict_resolution=conflict_resolution,
@@ -113,13 +113,15 @@ class Message(Item):
                     conflict_resolution=conflict_resolution,
                     send_meeting_invitations=send_meeting_invitations,
                 )
-                self.send(
+                return self.send(
                     save_copy=False,
                     conflict_resolution=conflict_resolution,
                     send_meeting_invitations=send_meeting_invitations,
                 )
             else:
-                self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
+                return self._create(
+                    message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations
+                )
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):
