@@ -671,6 +671,24 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorDeleteDistinguishedFolder):
             self.account.inbox.delete()
 
+    def test_folder_type_guessing(self):
+        old_locale = self.account.locale
+        dk_locale = "da_DK"
+        try:
+            self.account.locale = dk_locale
+            # Create a folder to contain the test
+            f = Messages(parent=self.account.inbox, name=get_random_string(16)).save()
+            # Create a subfolder with a misleading name
+            misleading_name = Calendar.LOCALIZED_NAMES[dk_locale][0]
+            Messages(parent=f, name=misleading_name).save()
+            # Check that it's still detected as a Messages folder
+            self.account.root.clear_cache()
+            test_folder = f / misleading_name
+            self.assertEqual(type(test_folder), Messages)
+            self.assertEqual(test_folder.folder_class, Messages.CONTAINER_CLASS)
+        finally:
+            self.account.locale = old_locale
+
     def test_wipe_without_empty(self):
         name = get_random_string(16)
         f = Messages(parent=self.account.inbox, name=name).save()

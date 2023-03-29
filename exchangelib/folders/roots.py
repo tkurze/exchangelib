@@ -198,14 +198,17 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         return cls(account=account, **kwargs)
 
     @classmethod
-    def folder_cls_from_folder_name(cls, folder_name, locale):
-        """Return the folder class that matches a localized folder name.
+    def folder_cls_from_folder_name(cls, folder_name, folder_class, locale):
+        """Return the folder class that matches a localized folder name. Take into account the 'folder_class' of the
+        folder, to not identify an 'IPF.Note' folder as a 'Calendar' class just because it's called e.g. 'Kalender' and
+        the locale is 'da_DK'.
 
         :param folder_name:
+        :param folder_class:
         :param locale: a string, e.g. 'da_DK'
         """
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-            if folder_name.lower() in folder_cls.localized_names(locale):
+            if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
 

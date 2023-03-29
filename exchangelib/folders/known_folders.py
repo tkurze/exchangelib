@@ -444,7 +444,7 @@ class CommonViews(NonDeletableFolderMixIn, Folder):
 
 class Companies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = "IPF.Contact.Company"
+    CONTAINER_CLASS = "IPF.Contact.Company"
     LOCALIZED_NAMES = {
         None: ("Companies",),
         "da_DK": ("Firmaer",),
@@ -536,7 +536,7 @@ class MyContactsExtended(NonDeletableFolderMixIn, Contacts):
 
 class OrganizationalContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = "IPF.Contact.OrganizationalContacts"
+    CONTAINER_CLASS = "IPF.Contact.OrganizationalContacts"
     LOCALIZED_NAMES = {
         None: ("Organizational Contacts",),
     }
@@ -558,7 +558,7 @@ class PassThroughSearchResults(NonDeletableFolderMixIn, Folder):
 
 class PeopleCentricConversationBuddies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = "IPF.Contact.PeopleCentricConversationBuddies"
+    CONTAINER_CLASS = "IPF.Contact.PeopleCentricConversationBuddies"
     LOCALIZED_NAMES = {
         None: ("PeopleCentricConversation Buddies",),
     }

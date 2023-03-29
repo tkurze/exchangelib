@@ -230,6 +230,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         from .known_folders import (
             ApplicationData,
             Calendar,
+            Companies,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -237,6 +238,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             FreeBusyCache,
             GALContacts,
             Messages,
+            OrganizationalContacts,
+            PeopleCentricConversationBuddies,
             RecipientCache,
             RecoveryPoints,
             Reminders,
@@ -249,6 +252,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         for folder_cls in (
             ApplicationData,
             Calendar,
+            Companies,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -256,6 +260,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             FreeBusyCache,
             GALContacts,
             Messages,
+            OrganizationalContacts,
+            PeopleCentricConversationBuddies,
             RSSFeeds,
             RecipientCache,
             RecoveryPoints,
@@ -902,10 +908,14 @@ class Folder(BaseFolder):
             #
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
-            if folder.name:
+            if folder.name and folder.folder_class:
                 with suppress(KeyError):
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
+                    folder_cls = root.folder_cls_from_folder_name(
+                        folder_name=folder.name,
+                        folder_class=folder.folder_class,
+                        locale=root.account.locale,
+                    )
                     log.debug("Folder class %s matches localized folder name %s", folder_cls, folder.name)
             if folder.folder_class and folder_cls == Folder:
                 with suppress(KeyError):
