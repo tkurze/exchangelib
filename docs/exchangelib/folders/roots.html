@@ -57,8 +57,6 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
     # &#39;RootOfHierarchy&#39; subclasses must not be in this list.
     WELLKNOWN_FOLDERS = []
 
-    _subfolders_lock = Lock()
-
     # This folder type also has &#39;folder:PermissionSet&#39; on some server versions, but requesting it sometimes causes
     # &#39;ErrorAccessDenied&#39;, as reported by some users. Ignore it entirely for root folders - it&#39;s usefulness is
     # deemed minimal at best.
@@ -66,13 +64,14 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
     )
 
-    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
+    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;, &#34;_subfolders_lock&#34;
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches sub-folders at arbitrary depth.
     def __init__(self, **kwargs):
         self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
         self._subfolders = None  # See self._folders_map()
+        self._subfolders_lock = Lock()
 
     @property
     def account(self):
@@ -227,16 +226,31 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         return cls(account=account, **kwargs)
 
     @classmethod
-    def folder_cls_from_folder_name(cls, folder_name, locale):
-        &#34;&#34;&#34;Return the folder class that matches a localized folder name.
+    def folder_cls_from_folder_name(cls, folder_name, folder_class, locale):
+        &#34;&#34;&#34;Return the folder class that matches a localized folder name. Take into account the &#39;folder_class&#39; of the
+        folder, to not identify an &#39;IPF.Note&#39; folder as a &#39;Calendar&#39; class just because it&#39;s called e.g. &#39;Kalender&#39; and
+        the locale is &#39;da_DK&#39;.
 
         :param folder_name:
+        :param folder_class:
         :param locale: a string, e.g. &#39;da_DK&#39;
         &#34;&#34;&#34;
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-            if folder_name.lower() in folder_cls.localized_names(locale):
+            if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
+
+    def __getstate__(self):
+        # The lock cannot be pickled
+        state = {k: getattr(self, k) for k in self._slots_keys}
+        del state[&#34;_subfolders_lock&#34;]
+        return state
+
+    def __setstate__(self, state):
+        # Restore the lock
+        for k in self._slots_keys:
+            setattr(self, k, state.get(k))
+        self._subfolders_lock = Lock()
 
     def __repr__(self):
         # Let&#39;s not create an infinite loop when printing self.root
@@ -792,8 +806,6 @@ def tois(self):
     # &#39;RootOfHierarchy&#39; subclasses must not be in this list.
     WELLKNOWN_FOLDERS = []
 
-    _subfolders_lock = Lock()
-
     # This folder type also has &#39;folder:PermissionSet&#39; on some server versions, but requesting it sometimes causes
     # &#39;ErrorAccessDenied&#39;, as reported by some users. Ignore it entirely for root folders - it&#39;s usefulness is
     # deemed minimal at best.
@@ -801,13 +813,14 @@ def tois(self):
         field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
     )
 
-    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
+    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;, &#34;_subfolders_lock&#34;
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches sub-folders at arbitrary depth.
     def __init__(self, **kwargs):
         self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
         self._subfolders = None  # See self._folders_map()
+        self._subfolders_lock = Lock()
 
     @property
     def account(self):
@@ -962,16 +975,31 @@ def tois(self):
         return cls(account=account, **kwargs)
 
     @classmethod
-    def folder_cls_from_folder_name(cls, folder_name, locale):
-        &#34;&#34;&#34;Return the folder class that matches a localized folder name.
+    def folder_cls_from_folder_name(cls, folder_name, folder_class, locale):
+        &#34;&#34;&#34;Return the folder class that matches a localized folder name. Take into account the &#39;folder_class&#39; of the
+        folder, to not identify an &#39;IPF.Note&#39; folder as a &#39;Calendar&#39; class just because it&#39;s called e.g. &#39;Kalender&#39; and
+        the locale is &#39;da_DK&#39;.
 
         :param folder_name:
+        :param folder_class:
         :param locale: a string, e.g. &#39;da_DK&#39;
         &#34;&#34;&#34;
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-            if folder_name.lower() in folder_cls.localized_names(locale):
+            if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
+
+    def __getstate__(self):
+        # The lock cannot be pickled
+        state = {k: getattr(self, k) for k in self._slots_keys}
+        del state[&#34;_subfolders_lock&#34;]
+        return state
+
+    def __setstate__(self, state):
+        # Restore the lock
+        for k in self._slots_keys:
+            setattr(self, k, state.get(k))
+        self._subfolders_lock = Lock()
 
     def __repr__(self):
         # Let&#39;s not create an infinite loop when printing self.root
@@ -1018,25 +1046,31 @@ def tois(self):
 <h3>Static methods</h3>
 <dl>
 <dt id="exchangelib.folders.roots.RootOfHierarchy.folder_cls_from_folder_name"><code class="name flex">
-<span>def <span class="ident">folder_cls_from_folder_name</span></span>(<span>folder_name, locale)</span>
+<span>def <span class="ident">folder_cls_from_folder_name</span></span>(<span>folder_name, folder_class, locale)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the folder class that matches a localized folder name.</p>
+<div class="desc"><p>Return the folder class that matches a localized folder name. Take into account the 'folder_class' of the
+folder, to not identify an 'IPF.Note' folder as a 'Calendar' class just because it's called e.g. 'Kalender' and
+the locale is 'da_DK'.</p>
 <p>:param folder_name:
+:param folder_class:
 :param locale: a string, e.g. 'da_DK'</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def folder_cls_from_folder_name(cls, folder_name, locale):
-    &#34;&#34;&#34;Return the folder class that matches a localized folder name.
+def folder_cls_from_folder_name(cls, folder_name, folder_class, locale):
+    &#34;&#34;&#34;Return the folder class that matches a localized folder name. Take into account the &#39;folder_class&#39; of the
+    folder, to not identify an &#39;IPF.Note&#39; folder as a &#39;Calendar&#39; class just because it&#39;s called e.g. &#39;Kalender&#39; and
+    the locale is &#39;da_DK&#39;.
 
     :param folder_name:
+    :param folder_class:
     :param locale: a string, e.g. &#39;da_DK&#39;
     &#34;&#34;&#34;
     for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-        if folder_name.lower() in folder_cls.localized_names(locale):
+        if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
             return folder_cls
     raise KeyError()</code></pre>
 </details>

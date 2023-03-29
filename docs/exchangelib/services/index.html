@@ -1847,30 +1847,46 @@ invitation accepts (see
         &#34;&#34;&#34;Send the payload to be sent and parsed. Handles and re-raise exceptions that are not meant to be returned
         to the caller as exception objects. Retry the request according to the retry policy.
         &#34;&#34;&#34;
+        wait = self.protocol.RETRY_WAIT
         while True:
             try:
                 # Create a generator over the response elements so exceptions in response elements are also raised
                 # here and can be handled.
                 yield from self._response_generator(payload=payload)
+                # TODO: Restore session pool size on succeeding request?
                 return
-            except ErrorServerBusy as e:
-                self._handle_backoff(e)
+            except TokenExpiredError:
+                # Retry immediately
                 continue
-            except (ErrorTooManyObjectsOpened, ErrorTimeoutExpired, ErrorInternalServerTransientError) as e:
+            except ErrorServerBusy as e:
+                if not e.back_off:
+                    e.back_off = wait
+                self._handle_backoff(e)
+            except ErrorExceededConnectionCount as e:
+                # ErrorExceededConnectionCount indicates that the connecting user has too many open TCP connections to
+                # the server. Decrease our session pool size and retry immediately.
+                try:
+                    self.protocol.decrease_poolsize()
+                    continue
+                except SessionPoolMinSizeReached:
+                    # We&#39;re already as low as we can go. Let the user handle this.
+                    raise e
+            except ErrorTimeoutExpired as e:
+                # ErrorTimeoutExpired can be caused by a busy server, or by an overly large request. If it&#39;s the latter,
+                # we don&#39;t want to continue hammering the server with this request indefinitely. Instead, lower the
+                # connection count, if possible, and retry the request.
+                if self.protocol.session_pool_size &lt;= 1:
+                    # We&#39;re already as low as we can go. We can no longer use the session count to put less load
+                    # on the server. If this is a chunked request we could lower the chunk size, but we don&#39;t have a
+                    # way of doing that from this part of the code yet. Let the user handle this.
+                    raise e
+                self._handle_backoff(ErrorServerBusy(f&#34;Reraised from {e.__class__.__name__}({e})&#34;, back_off=wait))
+            except (ErrorTooManyObjectsOpened, ErrorInternalServerTransientError) as e:
                 # ErrorTooManyObjectsOpened means there are too many connections to the Exchange database. This is very
                 # often a symptom of sending too many requests.
-                #
-                # ErrorTimeoutExpired can be caused by a busy server, or by overly large requests. Start by lowering the
-                # session count. This is done by downstream code.
-                if isinstance(e, ErrorTimeoutExpired) and self.protocol.session_pool_size &lt;= 1:
-                    # We&#39;re already as low as we can go, so downstream cannot limit the session count to put less load
-                    # on the server. We don&#39;t have a way of lowering the page size of requests from
-                    # this part of the code yet. Let the user handle this.
-                    raise e
-
-                # Re-raise as an ErrorServerBusy with a default delay of 5 minutes
-                raise ErrorServerBusy(f&#34;Reraised from {e.__class__.__name__}({e})&#34;)
+                self._handle_backoff(ErrorServerBusy(f&#34;Reraised from {e.__class__.__name__}({e})&#34;, back_off=wait))
             finally:
+                wait *= 2  # Increase delay for every retry
                 if self.streaming:
                     self.stop_streaming()
 
@@ -1955,15 +1971,6 @@ invitation accepts (see
                 # The guessed server version is wrong. Try the next version
                 log.debug(&#34;API version %s was invalid&#34;, api_version)
                 continue
-            except ErrorExceededConnectionCount as e:
-                # This indicates that the connecting user has too many open TCP connections to the server. Decrease
-                # our session pool size.
-                try:
-                    self.protocol.decrease_poolsize()
-                    continue
-                except SessionPoolMinSizeReached:
-                    # We&#39;re already as low as we can go. Let the user handle this.
-                    raise e
             finally:
                 if not self.streaming:
                     # In streaming mode, we may not have accessed the raw stream yet. Caller must handle this.
@@ -2059,11 +2066,12 @@ invitation accepts (see
         fault_actor = get_xml_attr(fault, &#34;faultactor&#34;)
         detail = fault.find(&#34;detail&#34;)
         if detail is not None:
-            code, msg = None, &#34;&#34;
-            if detail.find(f&#34;{{{ENS}}}ResponseCode&#34;) is not None:
-                code = get_xml_attr(detail, f&#34;{{{ENS}}}ResponseCode&#34;).strip()
-            if detail.find(f&#34;{{{ENS}}}Message&#34;) is not None:
-                msg = get_xml_attr(detail, f&#34;{{{ENS}}}Message&#34;).strip()
+            code = get_xml_attr(detail, f&#34;{{{ENS}}}ResponseCode&#34;)
+            if code:
+                code = code.strip()
+            msg = get_xml_attr(detail, f&#34;{{{ENS}}}Message&#34;)
+            if msg:
+                msg = msg.strip()
             msg_xml = detail.find(f&#34;{{{TNS}}}MessageXml&#34;)  # Crazy. Here, it&#39;s in the TNS namespace
             if code == &#34;ErrorServerBusy&#34;:
                 back_off = None
@@ -5524,18 +5532,16 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             return container
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
         msg_text = get_xml_attr(response, f&#34;{{{ANS}}}ErrorMessage&#34;)
+        if error_code == &#34;InternalServerError&#34;:
+            raise ErrorInternalServerError(msg_text)
+        if error_code == &#34;ServerBusy&#34;:
+            raise ErrorServerBusy(msg_text)
+        if error_code == &#34;NotFederated&#34;:
+            raise ErrorOrganizationNotFederated(msg_text)
         try:
             raise self._get_exception(code=error_code, text=msg_text, msg_xml=None)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
-            return e
-
-    @classmethod
-    def _raise_soap_errors(cls, fault):
-        fault_code = get_xml_attr(fault, &#34;faultcode&#34;)
-        fault_string = get_xml_attr(fault, &#34;faultstring&#34;)
-        if fault_code == &#34;a:ActionNotSupported&#34; and &#34;ContractFilter mismatch&#34; in fault_string:
-            raise ErrorInvalidServerVersion(f&#34;SOAP error code: {fault_code} string: {fault_string}&#34;)
-        super()._raise_soap_errors(fault=fault)</code></pre>
+            return e</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

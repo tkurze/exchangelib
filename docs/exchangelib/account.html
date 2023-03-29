@@ -31,8 +31,7 @@ from logging import getLogger
 
 from cached_property import threaded_cached_property
 
-from .autodiscover.discovery.pox import PoxAutodiscovery
-from .autodiscover.discovery.soap import SoapAutodiscovery
+from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import ACCESS_TYPES, DELEGATE, IMPERSONATION
 from .errors import InvalidEnumValue, InvalidTypeError, UnknownTimeZone
@@ -126,8 +125,6 @@ class Identity(EWSElement):
 class Account:
     &#34;&#34;&#34;Models an Exchange server user account.&#34;&#34;&#34;
 
-    DEFAULT_DISCOVERY_CLS = PoxAutodiscovery
-
     def __init__(
         self,
         primary_smtp_address,
@@ -146,7 +143,7 @@ class Account:
         :param access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
             and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
         :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-            Can also be set to &#34;pox&#34; or &#34;soap&#34; to choose the autodiscover implementation (Default value = False)
+            (Default value = False)
         :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
         :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
@@ -193,12 +190,7 @@ class Account:
                     credentials = config.credentials
             else:
                 auth_type, retry_policy, version = None, None, None
-            discovery_cls = {
-                &#34;pox&#34;: PoxAutodiscovery,
-                &#34;soap&#34;: SoapAutodiscovery,
-                True: self.DEFAULT_DISCOVERY_CLS,
-            }[autodiscover]
-            self.ad_response, self.protocol = discovery_cls(
+            self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials
             ).discover()
             # Let&#39;s not use the auth_package hint from the AD response. It could be incorrect and we can just guess.
@@ -804,7 +796,7 @@ class Account:
 :param access_type: The access type granted to 'credentials' for this account. Valid options are 'delegate'
 and 'impersonation'. 'delegate' is default if 'credentials' is set. Otherwise, 'impersonation' is default.
 :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-Can also be set to "pox" or "soap" to choose the autodiscover implementation (Default value = False)
+(Default value = False)
 :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
 :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
 (Default value = None)
@@ -818,8 +810,6 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
 </summary>
 <pre><code class="python">class Account:
     &#34;&#34;&#34;Models an Exchange server user account.&#34;&#34;&#34;
-
-    DEFAULT_DISCOVERY_CLS = PoxAutodiscovery
 
     def __init__(
         self,
@@ -839,7 +829,7 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
         :param access_type: The access type granted to &#39;credentials&#39; for this account. Valid options are &#39;delegate&#39;
             and &#39;impersonation&#39;. &#39;delegate&#39; is default if &#39;credentials&#39; is set. Otherwise, &#39;impersonation&#39; is default.
         :param autodiscover: Whether to look up the EWS endpoint automatically using the autodiscover protocol.
-            Can also be set to &#34;pox&#34; or &#34;soap&#34; to choose the autodiscover implementation (Default value = False)
+            (Default value = False)
         :param credentials: A Credentials object containing valid credentials for this account. (Default value = None)
         :param config: A Configuration object containing EWS endpoint information. Required if autodiscover is disabled
             (Default value = None)
@@ -886,12 +876,7 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
                     credentials = config.credentials
             else:
                 auth_type, retry_policy, version = None, None, None
-            discovery_cls = {
-                &#34;pox&#34;: PoxAutodiscovery,
-                &#34;soap&#34;: SoapAutodiscovery,
-                True: self.DEFAULT_DISCOVERY_CLS,
-            }[autodiscover]
-            self.ad_response, self.protocol = discovery_cls(
+            self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials
             ).discover()
             # Let&#39;s not use the auth_package hint from the AD response. It could be incorrect and we can just guess.
@@ -1476,28 +1461,6 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
             return f&#34;{self.primary_smtp_address} ({self.fullname})&#34;
         return self.primary_smtp_address</code></pre>
 </details>
-<h3>Class variables</h3>
-<dl>
-<dt id="exchangelib.account.Account.DEFAULT_DISCOVERY_CLS"><code class="name">var <span class="ident">DEFAULT_DISCOVERY_CLS</span></code></dt>
-<dd>
-<div class="desc"><p>Autodiscover is a Microsoft protocol for automatically getting the endpoint of the Exchange server and other
-connection-related settings holding the email address using only the email address, and username and password of the
-user.</p>
-<p>For a description of the protocol implemented, see "Autodiscover for Exchange ActiveSync developers":</p>
-<p><a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/exchange-server-interoperability-guidance/hh352638%28v%3dexchg.140%29">https://docs.microsoft.com/en-us/previous-versions/office/developer/exchange-server-interoperability-guidance/hh352638%28v%3dexchg.140%29</a></p>
-<p>Descriptions of the steps from the article are provided in their respective methods in this class.</p>
-<p>For a description of how to handle autodiscover error messages, see:</p>
-<p><a href="https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/handling-autodiscover-error-messages">https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/handling-autodiscover-error-messages</a></p>
-<p>A tip from the article:
-The client can perform steps 1 through 4 in any order or in parallel to expedite the process, but it must wait for
-responses to finish at each step before proceeding. Given that many organizations prefer to use the URL in step 2 to
-set up the Autodiscover service, the client might try this step first.</p>
-<p>Another possibly newer resource which has not yet been attempted is "Outlook 2016 Implementation of Autodiscover":
-<a href="https://support.microsoft.com/en-us/help/3211279/outlook-2016-implementation-of-autodiscover">https://support.microsoft.com/en-us/help/3211279/outlook-2016-implementation-of-autodiscover</a></p>
-<p>WARNING: The autodiscover protocol is very complicated. If you have problems autodiscovering using this
-implementation, start by doing an official test at <a href="https://testconnectivity.microsoft.com">https://testconnectivity.microsoft.com</a></p></div>
-</dd>
-</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.account.Account.admin_audit_logs"><code class="name">var <span class="ident">admin_audit_logs</span></code></dt>
@@ -3158,7 +3121,6 @@ account.upload([
 <li>
 <h4><code><a title="exchangelib.account.Account" href="#exchangelib.account.Account">Account</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.account.Account.DEFAULT_DISCOVERY_CLS" href="#exchangelib.account.Account.DEFAULT_DISCOVERY_CLS">DEFAULT_DISCOVERY_CLS</a></code></li>
 <li><code><a title="exchangelib.account.Account.admin_audit_logs" href="#exchangelib.account.Account.admin_audit_logs">admin_audit_logs</a></code></li>
 <li><code><a title="exchangelib.account.Account.archive_deleted_items" href="#exchangelib.account.Account.archive_deleted_items">archive_deleted_items</a></code></li>
 <li><code><a title="exchangelib.account.Account.archive_inbox" href="#exchangelib.account.Account.archive_inbox">archive_inbox</a></code></li>

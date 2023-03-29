@@ -1432,6 +1432,7 @@ __all__ = [
         from .known_folders import (
             ApplicationData,
             Calendar,
+            Companies,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -1439,6 +1440,8 @@ __all__ = [
             FreeBusyCache,
             GALContacts,
             Messages,
+            OrganizationalContacts,
+            PeopleCentricConversationBuddies,
             RecipientCache,
             RecoveryPoints,
             Reminders,
@@ -1451,6 +1454,7 @@ __all__ = [
         for folder_cls in (
             ApplicationData,
             Calendar,
+            Companies,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -1458,6 +1462,8 @@ __all__ = [
             FreeBusyCache,
             GALContacts,
             Messages,
+            OrganizationalContacts,
+            PeopleCentricConversationBuddies,
             RSSFeeds,
             RecipientCache,
             RecoveryPoints,
@@ -2103,6 +2109,7 @@ def folder_cls_from_container_class(container_class):
     from .known_folders import (
         ApplicationData,
         Calendar,
+        Companies,
         Contacts,
         ConversationSettings,
         CrawlerData,
@@ -2110,6 +2117,8 @@ def folder_cls_from_container_class(container_class):
         FreeBusyCache,
         GALContacts,
         Messages,
+        OrganizationalContacts,
+        PeopleCentricConversationBuddies,
         RecipientCache,
         RecoveryPoints,
         Reminders,
@@ -2122,6 +2131,7 @@ def folder_cls_from_container_class(container_class):
     for folder_cls in (
         ApplicationData,
         Calendar,
+        Companies,
         Contacts,
         ConversationSettings,
         CrawlerData,
@@ -2129,6 +2139,8 @@ def folder_cls_from_container_class(container_class):
         FreeBusyCache,
         GALContacts,
         Messages,
+        OrganizationalContacts,
+        PeopleCentricConversationBuddies,
         RSSFeeds,
         RecipientCache,
         RecoveryPoints,
@@ -3539,7 +3551,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </summary>
 <pre><code class="python">class Companies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Companies&#34;,),
         &#34;da_DK&#34;: (&#34;Firmaer&#34;,),
@@ -3559,7 +3571,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.Companies.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.Companies.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4921,10 +4933,14 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
             #
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
-            if folder.name:
+            if folder.name and folder.folder_class:
                 with suppress(KeyError):
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                    folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
+                    folder_cls = root.folder_cls_from_folder_name(
+                        folder_name=folder.name,
+                        folder_class=folder.folder_class,
+                        locale=root.account.locale,
+                    )
                     log.debug(&#34;Folder class %s matches localized folder name %s&#34;, folder_cls, folder.name)
             if folder.folder_class and folder_cls == Folder:
                 with suppress(KeyError):
@@ -5030,10 +5046,14 @@ def from_xml_with_root(cls, elem, root):
         #
         # The returned XML may contain neither folder class nor name. In that case, we default to the generic
         # Folder class.
-        if folder.name:
+        if folder.name and folder.folder_class:
             with suppress(KeyError):
                 # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
-                folder_cls = root.folder_cls_from_folder_name(folder_name=folder.name, locale=root.account.locale)
+                folder_cls = root.folder_cls_from_folder_name(
+                    folder_name=folder.name,
+                    folder_class=folder.folder_class,
+                    locale=root.account.locale,
+                )
                 log.debug(&#34;Folder class %s matches localized folder name %s&#34;, folder_cls, folder.name)
         if folder.folder_class and folder_cls == Folder:
             with suppress(KeyError):
@@ -8118,7 +8138,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Organizational Contacts&#34;,),
     }</code></pre>
@@ -8137,7 +8157,7 @@ def is_deletable(self):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.OrganizationalContacts.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.OrganizationalContacts.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -8518,7 +8538,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
         None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }</code></pre>
@@ -8537,7 +8557,7 @@ def is_deletable(self):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.PeopleCentricConversationBuddies.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -9687,8 +9707,6 @@ def tois(self):
     # &#39;RootOfHierarchy&#39; subclasses must not be in this list.
     WELLKNOWN_FOLDERS = []
 
-    _subfolders_lock = Lock()
-
     # This folder type also has &#39;folder:PermissionSet&#39; on some server versions, but requesting it sometimes causes
     # &#39;ErrorAccessDenied&#39;, as reported by some users. Ignore it entirely for root folders - it&#39;s usefulness is
     # deemed minimal at best.
@@ -9696,13 +9714,14 @@ def tois(self):
         field_uri=&#34;folder:EffectiveRights&#34;, is_read_only=True, supported_from=EXCHANGE_2007_SP1
     )
 
-    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;
+    __slots__ = &#34;_account&#34;, &#34;_subfolders&#34;, &#34;_subfolders_lock&#34;
 
     # A special folder that acts as the top of a folder hierarchy. Finds and caches sub-folders at arbitrary depth.
     def __init__(self, **kwargs):
         self._account = kwargs.pop(&#34;account&#34;, None)  # A pointer back to the account holding the folder hierarchy
         super().__init__(**kwargs)
         self._subfolders = None  # See self._folders_map()
+        self._subfolders_lock = Lock()
 
     @property
     def account(self):
@@ -9857,16 +9876,31 @@ def tois(self):
         return cls(account=account, **kwargs)
 
     @classmethod
-    def folder_cls_from_folder_name(cls, folder_name, locale):
-        &#34;&#34;&#34;Return the folder class that matches a localized folder name.
+    def folder_cls_from_folder_name(cls, folder_name, folder_class, locale):
+        &#34;&#34;&#34;Return the folder class that matches a localized folder name. Take into account the &#39;folder_class&#39; of the
+        folder, to not identify an &#39;IPF.Note&#39; folder as a &#39;Calendar&#39; class just because it&#39;s called e.g. &#39;Kalender&#39; and
+        the locale is &#39;da_DK&#39;.
 
         :param folder_name:
+        :param folder_class:
         :param locale: a string, e.g. &#39;da_DK&#39;
         &#34;&#34;&#34;
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-            if folder_name.lower() in folder_cls.localized_names(locale):
+            if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
                 return folder_cls
         raise KeyError()
+
+    def __getstate__(self):
+        # The lock cannot be pickled
+        state = {k: getattr(self, k) for k in self._slots_keys}
+        del state[&#34;_subfolders_lock&#34;]
+        return state
+
+    def __setstate__(self, state):
+        # Restore the lock
+        for k in self._slots_keys:
+            setattr(self, k, state.get(k))
+        self._subfolders_lock = Lock()
 
     def __repr__(self):
         # Let&#39;s not create an infinite loop when printing self.root
@@ -9913,25 +9947,31 @@ def tois(self):
 <h3>Static methods</h3>
 <dl>
 <dt id="exchangelib.folders.RootOfHierarchy.folder_cls_from_folder_name"><code class="name flex">
-<span>def <span class="ident">folder_cls_from_folder_name</span></span>(<span>folder_name, locale)</span>
+<span>def <span class="ident">folder_cls_from_folder_name</span></span>(<span>folder_name, folder_class, locale)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the folder class that matches a localized folder name.</p>
+<div class="desc"><p>Return the folder class that matches a localized folder name. Take into account the 'folder_class' of the
+folder, to not identify an 'IPF.Note' folder as a 'Calendar' class just because it's called e.g. 'Kalender' and
+the locale is 'da_DK'.</p>
 <p>:param folder_name:
+:param folder_class:
 :param locale: a string, e.g. 'da_DK'</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def folder_cls_from_folder_name(cls, folder_name, locale):
-    &#34;&#34;&#34;Return the folder class that matches a localized folder name.
+def folder_cls_from_folder_name(cls, folder_name, folder_class, locale):
+    &#34;&#34;&#34;Return the folder class that matches a localized folder name. Take into account the &#39;folder_class&#39; of the
+    folder, to not identify an &#39;IPF.Note&#39; folder as a &#39;Calendar&#39; class just because it&#39;s called e.g. &#39;Kalender&#39; and
+    the locale is &#39;da_DK&#39;.
 
     :param folder_name:
+    :param folder_class:
     :param locale: a string, e.g. &#39;da_DK&#39;
     &#34;&#34;&#34;
     for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-        if folder_name.lower() in folder_cls.localized_names(locale):
+        if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
             return folder_cls
     raise KeyError()</code></pre>
 </details>
@@ -12000,7 +12040,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li>
 <h4><code><a title="exchangelib.folders.Companies" href="#exchangelib.folders.Companies">Companies</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.Companies.CONTAINTER_CLASS" href="#exchangelib.folders.Companies.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.Companies.CONTAINER_CLASS" href="#exchangelib.folders.Companies.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.Companies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.Companies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.Companies.LOCALIZED_NAMES" href="#exchangelib.folders.Companies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
@@ -12295,7 +12335,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li>
 <h4><code><a title="exchangelib.folders.OrganizationalContacts" href="#exchangelib.folders.OrganizationalContacts">OrganizationalContacts</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.OrganizationalContacts.CONTAINTER_CLASS" href="#exchangelib.folders.OrganizationalContacts.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.OrganizationalContacts.CONTAINER_CLASS" href="#exchangelib.folders.OrganizationalContacts.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.OrganizationalContacts.LOCALIZED_NAMES" href="#exchangelib.folders.OrganizationalContacts.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
@@ -12331,7 +12371,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li>
 <h4><code><a title="exchangelib.folders.PeopleCentricConversationBuddies" href="#exchangelib.folders.PeopleCentricConversationBuddies">PeopleCentricConversationBuddies</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS" href="#exchangelib.folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.CONTAINER_CLASS" href="#exchangelib.folders.PeopleCentricConversationBuddies.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES" href="#exchangelib.folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>

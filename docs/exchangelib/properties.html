@@ -39,6 +39,7 @@ from .errors import (
     AutoDiscoverFailed,
     ErrorInternalServerError,
     ErrorNonExistentMailbox,
+    ErrorOrganizationNotFederated,
     ErrorServerBusy,
     InvalidTypeError,
 )
@@ -2105,12 +2106,6 @@ class UserResponse(EWSElement):
                 return version
         raise ValueError(f&#34;Unknown supported schemas: {supported_schemas}&#34;)
 
-    @staticmethod
-    def _is_url(s):
-        if not s:
-            return False
-        return s.startswith(&#34;http://&#34;) or s.startswith(&#34;https://&#34;)
-
     def raise_errors(self):
         if self.error_code == &#34;InvalidUser&#34;:
             raise ErrorNonExistentMailbox(self.error_message)
@@ -2135,6 +2130,8 @@ class UserResponse(EWSElement):
             raise ErrorInternalServerError(error_message)
         if error_code == &#34;ServerBusy&#34;:
             raise ErrorServerBusy(error_message)
+        if error_code == &#34;NotFederated&#34;:
+            raise ErrorOrganizationNotFederated(error_message)
         if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
             return cls(error_code=error_code, error_message=error_message)
 
@@ -2861,6 +2858,7 @@ def from_mailbox(cls, mailbox):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="exchangelib.attachments.AttachmentId" href="attachments.html#exchangelib.attachments.AttachmentId">AttachmentId</a></li>
 <li><a title="exchangelib.properties.ItemId" href="#exchangelib.properties.ItemId">ItemId</a></li>
 <li><a title="exchangelib.properties.OccurrenceItemId" href="#exchangelib.properties.OccurrenceItemId">OccurrenceItemId</a></li>
 <li><a title="exchangelib.properties.RecurringMasterItemId" href="#exchangelib.properties.RecurringMasterItemId">RecurringMasterItemId</a></li>
@@ -4442,11 +4440,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.account.Identity" href="account.html#exchangelib.account.Identity">Identity</a></li>
 <li><a title="exchangelib.attachments.Attachment" href="attachments.html#exchangelib.attachments.Attachment">Attachment</a></li>
-<li><a title="exchangelib.attachments.AttachmentId" href="attachments.html#exchangelib.attachments.AttachmentId">AttachmentId</a></li>
-<li><a title="exchangelib.autodiscover.properties.Autodiscover" href="autodiscover/properties.html#exchangelib.autodiscover.properties.Autodiscover">Autodiscover</a></li>
-<li><a title="exchangelib.autodiscover.properties.AutodiscoverBase" href="autodiscover/properties.html#exchangelib.autodiscover.properties.AutodiscoverBase">AutodiscoverBase</a></li>
-<li><a title="exchangelib.autodiscover.properties.Error" href="autodiscover/properties.html#exchangelib.autodiscover.properties.Error">Error</a></li>
-<li><a title="exchangelib.autodiscover.properties.ErrorResponse" href="autodiscover/properties.html#exchangelib.autodiscover.properties.ErrorResponse">ErrorResponse</a></li>
 <li><a title="exchangelib.extended_properties.ExtendedProperty" href="extended_properties.html#exchangelib.extended_properties.ExtendedProperty">ExtendedProperty</a></li>
 <li><a title="exchangelib.indexed_properties.IndexedElement" href="indexed_properties.html#exchangelib.indexed_properties.IndexedElement">IndexedElement</a></li>
 <li><a title="exchangelib.items.base.BaseReplyItem" href="items/base.html#exchangelib.items.base.BaseReplyItem">BaseReplyItem</a></li>
@@ -10501,12 +10494,6 @@ def from_xml(cls, elem, account):
                 return version
         raise ValueError(f&#34;Unknown supported schemas: {supported_schemas}&#34;)
 
-    @staticmethod
-    def _is_url(s):
-        if not s:
-            return False
-        return s.startswith(&#34;http://&#34;) or s.startswith(&#34;https://&#34;)
-
     def raise_errors(self):
         if self.error_code == &#34;InvalidUser&#34;:
             raise ErrorNonExistentMailbox(self.error_message)
@@ -10531,6 +10518,8 @@ def from_xml(cls, elem, account):
             raise ErrorInternalServerError(error_message)
         if error_code == &#34;ServerBusy&#34;:
             raise ErrorServerBusy(error_message)
+        if error_code == &#34;NotFederated&#34;:
+            raise ErrorOrganizationNotFederated(error_message)
         if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
             return cls(error_code=error_code, error_message=error_message)
 
@@ -10603,6 +10592,8 @@ def from_xml(cls, elem, account):
         raise ErrorInternalServerError(error_message)
     if error_code == &#34;ServerBusy&#34;:
         raise ErrorServerBusy(error_message)
+    if error_code == &#34;NotFederated&#34;:
+        raise ErrorOrganizationNotFederated(error_message)
     if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
         return cls(error_code=error_code, error_message=error_message)
 

@@ -2045,7 +2045,7 @@ we use folder.account.</p></div>
         )
 
     def forward(self, subject, body, to_recipients, cc_recipients=None, bcc_recipients=None):
-        self.create_forward(
+        return self.create_forward(
             subject,
             body,
             to_recipients,
@@ -2406,7 +2406,7 @@ simply not be created on the server the item is saved.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def forward(self, subject, body, to_recipients, cc_recipients=None, bcc_recipients=None):
-    self.create_forward(
+    return self.create_forward(
         subject,
         body,
         to_recipients,
@@ -3076,7 +3076,7 @@ we use folder.account.</p></div>
     ):
         # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
         if self.id:
-            self._update(
+            return self._update(
                 update_fieldnames=update_fields,
                 message_disposition=SEND_AND_SAVE_COPY,
                 conflict_resolution=conflict_resolution,
@@ -3091,16 +3091,18 @@ we use folder.account.</p></div>
                     conflict_resolution=conflict_resolution,
                     send_meeting_invitations=send_meeting_invitations,
                 )
-                self.send(
+                return self.send(
                     save_copy=False,
                     conflict_resolution=conflict_resolution,
                     send_meeting_invitations=send_meeting_invitations,
                 )
             else:
-                self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
+                return self._create(
+                    message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations
+                )
 
     @require_id
-    def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
+    def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):
         if to_recipients is None:
             if not self.author:
                 raise ValueError(&#34;&#39;to_recipients&#39; must be set when message has no &#39;author&#39;&#34;)
@@ -3113,13 +3115,14 @@ we use folder.account.</p></div>
             to_recipients=to_recipients,
             cc_recipients=cc_recipients,
             bcc_recipients=bcc_recipients,
+            author=author,
         )
 
-    def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-        self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()
+    def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):
+        return self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients, author).send()
 
     @require_id
-    def create_reply_all(self, subject, body):
+    def create_reply_all(self, subject, body, author=None):
         to_recipients = list(self.to_recipients) if self.to_recipients else []
         if self.author:
             to_recipients.append(self.author)
@@ -3131,10 +3134,11 @@ we use folder.account.</p></div>
             to_recipients=to_recipients,
             cc_recipients=self.cc_recipients,
             bcc_recipients=self.bcc_recipients,
+            author=author,
         )
 
-    def reply_all(self, subject, body):
-        self.create_reply_all(subject, body).send()
+    def reply_all(self, subject, body, author=None):
+        return self.create_reply_all(subject, body, author).send()
 
     def mark_as_junk(self, is_junk=True, move_item=True):
         &#34;&#34;&#34;Mark or un-marks items as junk email.
@@ -3247,7 +3251,7 @@ we use folder.account.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.items.Message.create_reply"><code class="name flex">
-<span>def <span class="ident">create_reply</span></span>(<span>self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None)</span>
+<span>def <span class="ident">create_reply</span></span>(<span>self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3256,7 +3260,7 @@ we use folder.account.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_id
-def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
+def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):
     if to_recipients is None:
         if not self.author:
             raise ValueError(&#34;&#39;to_recipients&#39; must be set when message has no &#39;author&#39;&#34;)
@@ -3269,11 +3273,12 @@ def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bc
         to_recipients=to_recipients,
         cc_recipients=cc_recipients,
         bcc_recipients=bcc_recipients,
+        author=author,
     )</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.Message.create_reply_all"><code class="name flex">
-<span>def <span class="ident">create_reply_all</span></span>(<span>self, subject, body)</span>
+<span>def <span class="ident">create_reply_all</span></span>(<span>self, subject, body, author=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3282,7 +3287,7 @@ def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bc
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@require_id
-def create_reply_all(self, subject, body):
+def create_reply_all(self, subject, body, author=None):
     to_recipients = list(self.to_recipients) if self.to_recipients else []
     if self.author:
         to_recipients.append(self.author)
@@ -3294,6 +3299,7 @@ def create_reply_all(self, subject, body):
         to_recipients=to_recipients,
         cc_recipients=self.cc_recipients,
         bcc_recipients=self.bcc_recipients,
+        author=author,
     )</code></pre>
 </details>
 </dd>
@@ -3330,7 +3336,7 @@ removed.
 </details>
 </dd>
 <dt id="exchangelib.items.Message.reply"><code class="name flex">
-<span>def <span class="ident">reply</span></span>(<span>self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None)</span>
+<span>def <span class="ident">reply</span></span>(<span>self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3338,12 +3344,12 @@ removed.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None):
-    self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients).send()</code></pre>
+<pre><code class="python">def reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):
+    return self.create_reply(subject, body, to_recipients, cc_recipients, bcc_recipients, author).send()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.Message.reply_all"><code class="name flex">
-<span>def <span class="ident">reply_all</span></span>(<span>self, subject, body)</span>
+<span>def <span class="ident">reply_all</span></span>(<span>self, subject, body, author=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -3351,8 +3357,8 @@ removed.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def reply_all(self, subject, body):
-    self.create_reply_all(subject, body).send()</code></pre>
+<pre><code class="python">def reply_all(self, subject, body, author=None):
+    return self.create_reply_all(subject, body, author).send()</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.items.Message.send"><code class="name flex">
@@ -3421,7 +3427,7 @@ def send(
 ):
     # Sends Message and saves a copy in the parent folder. Does not return an ItemId.
     if self.id:
-        self._update(
+        return self._update(
             update_fieldnames=update_fields,
             message_disposition=SEND_AND_SAVE_COPY,
             conflict_resolution=conflict_resolution,
@@ -3436,13 +3442,15 @@ def send(
                 conflict_resolution=conflict_resolution,
                 send_meeting_invitations=send_meeting_invitations,
             )
-            self.send(
+            return self.send(
                 save_copy=False,
                 conflict_resolution=conflict_resolution,
                 send_meeting_invitations=send_meeting_invitations,
             )
         else:
-            self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)</code></pre>
+            return self._create(
+                message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations
+            )</code></pre>
 </details>
 </dd>
 </dl>

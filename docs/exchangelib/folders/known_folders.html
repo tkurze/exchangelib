@@ -472,7 +472,7 @@ class CommonViews(NonDeletableFolderMixIn, Folder):
 
 class Companies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Companies&#34;,),
         &#34;da_DK&#34;: (&#34;Firmaer&#34;,),
@@ -564,7 +564,7 @@ class MyContactsExtended(NonDeletableFolderMixIn, Contacts):
 
 class OrganizationalContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Organizational Contacts&#34;,),
     }
@@ -586,7 +586,7 @@ class PassThroughSearchResults(NonDeletableFolderMixIn, Folder):
 
 class PeopleCentricConversationBuddies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
         None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }
@@ -2054,7 +2054,7 @@ MISC_FOLDERS = [
 </summary>
 <pre><code class="python">class Companies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.Company&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.Company&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Companies&#34;,),
         &#34;da_DK&#34;: (&#34;Firmaer&#34;,),
@@ -2074,7 +2074,7 @@ MISC_FOLDERS = [
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.known_folders.Companies.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.known_folders.Companies.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4646,7 +4646,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class OrganizationalContacts(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.OrganizationalContacts&#34;
     LOCALIZED_NAMES = {
         None: (&#34;Organizational Contacts&#34;,),
     }</code></pre>
@@ -4665,7 +4665,7 @@ def is_deletable(self):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.known_folders.OrganizationalContacts.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.known_folders.OrganizationalContacts.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -5046,7 +5046,7 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class PeopleCentricConversationBuddies(NonDeletableFolderMixIn, Contacts):
     DISTINGUISHED_FOLDER_ID = None
-    CONTAINTER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
+    CONTAINER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
     LOCALIZED_NAMES = {
         None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }</code></pre>
@@ -5065,7 +5065,7 @@ def is_deletable(self):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS"><code class="name">var <span class="ident">CONTAINTER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -7655,7 +7655,7 @@ def is_deletable(self):
 <li>
 <h4><code><a title="exchangelib.folders.known_folders.Companies" href="#exchangelib.folders.known_folders.Companies">Companies</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.known_folders.Companies.CONTAINTER_CLASS" href="#exchangelib.folders.known_folders.Companies.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.Companies.CONTAINER_CLASS" href="#exchangelib.folders.known_folders.Companies.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Companies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.Companies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.Companies.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.Companies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
@@ -7887,7 +7887,7 @@ def is_deletable(self):
 <li>
 <h4><code><a title="exchangelib.folders.known_folders.OrganizationalContacts" href="#exchangelib.folders.known_folders.OrganizationalContacts">OrganizationalContacts</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.CONTAINTER_CLASS" href="#exchangelib.folders.known_folders.OrganizationalContacts.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.CONTAINER_CLASS" href="#exchangelib.folders.known_folders.OrganizationalContacts.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.OrganizationalContacts.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.OrganizationalContacts.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.OrganizationalContacts.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
@@ -7923,7 +7923,7 @@ def is_deletable(self):
 <li>
 <h4><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies">PeopleCentricConversationBuddies</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINTER_CLASS">CONTAINTER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINER_CLASS" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.known_folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES" href="#exchangelib.folders.known_folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
 </ul>
