@@ -6,7 +6,7 @@ Release notes:
 * Bump version in CHANGELOG.md
 * Generate documentation: pdoc3 --html exchangelib -o docs --force
 * Commit and push changes
-* Build package: rm -rf dist/* && python setup.py sdist bdist_wheel
+* Build package: rm -rf build dist && python setup.py sdist bdist_wheel
 * Push to PyPI: twine upload dist/*
 * Create release on GitHub
 """

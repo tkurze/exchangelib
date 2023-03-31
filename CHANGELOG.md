@@ -5,6 +5,11 @@ HEAD
 ----
 
 
+5.0.1
+-----
+- Fix PyPI package. No source code changes.
+
+
 5.0.0
 -----
 - Make SOAP-based autodiscovery the default, and remove support for POX-based
