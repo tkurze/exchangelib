@@ -4,7 +4,7 @@ Release notes:
 *  Install pdoc3, wheel, twine
 * Bump version in exchangelib/__init__.py
 * Bump version in CHANGELOG.md
-* Generate documentation: pdoc3 --html exchangelib -o docs --force
+* Generate documentation: pdoc3 --html exchangelib -o docs --force && pre-commit run end-of-file-fixer
 * Commit and push changes
 * Build package: rm -rf build dist && python setup.py sdist bdist_wheel
 * Push to PyPI: twine upload dist/*
