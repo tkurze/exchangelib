@@ -6,7 +6,7 @@ Release notes:
 * Bump version in CHANGELOG.md
 * Generate documentation: pdoc3 --html exchangelib -o docs --force && pre-commit run end-of-file-fixer
 * Commit and push changes
-* Build package: rm -rf build dist && python setup.py sdist bdist_wheel
+* Build package: rm -rf build dist exchangelib.egg-info && python setup.py sdist bdist_wheel
 * Push to PyPI: twine upload dist/*
 * Create release on GitHub
 """
