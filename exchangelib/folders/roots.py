@@ -208,8 +208,11 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         :param locale: a string, e.g. 'da_DK'
         """
         for folder_cls in cls.WELLKNOWN_FOLDERS + NON_DELETABLE_FOLDERS + MISC_FOLDERS:
-            if folder_cls.CONTAINER_CLASS == folder_class and folder_name.lower() in folder_cls.localized_names(locale):
-                return folder_cls
+            if folder_cls.CONTAINER_CLASS != folder_class:
+                continue
+            if folder_name.lower() not in folder_cls.localized_names(locale):
+                continue
+            return folder_cls
         raise KeyError()
 
     def __getstate__(self):
