@@ -908,7 +908,7 @@ class Folder(BaseFolder):
             #
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
-            if folder.name and folder.folder_class:
+            if folder.name:
                 with suppress(KeyError):
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
                     folder_cls = root.folder_cls_from_folder_name(

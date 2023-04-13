@@ -23,6 +23,7 @@ from exchangelib.folders import (
     ApplicationData,
     Birthdays,
     Calendar,
+    CommonViews,
     Companies,
     Contacts,
     ConversationSettings,
@@ -688,6 +689,10 @@ class FolderTest(EWSTest):
             self.assertEqual(test_folder.folder_class, Messages.CONTAINER_CLASS)
         finally:
             self.account.locale = old_locale
+
+        # Also test folders that don't have a CONTAINER_CLASS
+        f = self.account.root / "Common Views"
+        self.assertIsInstance(f, CommonViews)
 
     def test_wipe_without_empty(self):
         name = get_random_string(16)

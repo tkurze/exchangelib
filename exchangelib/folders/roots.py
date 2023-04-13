@@ -203,6 +203,9 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         folder, to not identify an 'IPF.Note' folder as a 'Calendar' class just because it's called e.g. 'Kalender' and
         the locale is 'da_DK'.
 
+        Some folders, e.g. `System`, don't define a `folder_class`. For these folders, we match on localized folder name
+        if the folder class does not have its 'CONTAINER_CLASS' set.
+
         :param folder_name:
         :param folder_class:
         :param locale: a string, e.g. 'da_DK'
