@@ -533,6 +533,7 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
         "Asia/Chongqing": CLDR_TO_MS_TIMEZONE_MAP["Asia/Shanghai"],
         "Asia/Chungking": CLDR_TO_MS_TIMEZONE_MAP["Asia/Shanghai"],
         "Asia/Dacca": CLDR_TO_MS_TIMEZONE_MAP["Asia/Dhaka"],
+        "Asia/Hanoi": CLDR_TO_MS_TIMEZONE_MAP["Asia/Saigon"],
         "Asia/Harbin": CLDR_TO_MS_TIMEZONE_MAP["Asia/Shanghai"],
         "Asia/Ho_Chi_Minh": CLDR_TO_MS_TIMEZONE_MAP["Asia/Saigon"],
         "Asia/Istanbul": CLDR_TO_MS_TIMEZONE_MAP["Europe/Istanbul"],
