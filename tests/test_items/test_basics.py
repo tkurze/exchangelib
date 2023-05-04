@@ -242,9 +242,9 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
     def get_test_folder(self, folder=None):
         return self.FOLDER_CLASS(parent=folder or self.test_folder, name=get_random_string(8))
 
-    def get_item_by_id(self, item):
+    def get_item_by_id(self, item, folder=None):
         _id, changekey = item if isinstance(item, tuple) else (item.id, item.changekey)
-        return self.account.root.get(id=_id, changekey=changekey)
+        return (folder or self.account.root).get(id=_id, changekey=changekey)
 
 
 class CommonItemTest(BaseItemTest):
@@ -530,7 +530,7 @@ class CommonItemTest(BaseItemTest):
         for k, v in insert_kwargs.items():
             self.assertEqual(getattr(item, k), v, (k, getattr(item, k), v))
         # Test that whatever we have locally also matches whatever is in the DB
-        fresh_item = self.get_item_by_id(item)
+        fresh_item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 old, new = getattr(item, f.name), getattr(fresh_item, f.name)
@@ -555,7 +555,7 @@ class CommonItemTest(BaseItemTest):
         for k, v in update_kwargs.items():
             self.assertEqual(getattr(item, k), v, (k, getattr(item, k), v))
         # Test that whatever we have locally also matches whatever is in the DB
-        fresh_item = self.get_item_by_id(item)
+        fresh_item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 old, new = getattr(item, f.name), getattr(fresh_item, f.name)
@@ -594,7 +594,7 @@ class CommonItemTest(BaseItemTest):
         # Hard delete
         item_id = (item.id, item.changekey)
         item.delete()
-        for e in self.account.fetch(ids=[item_id]):
+        for e in self.account.fetch(ids=[item_id], folder=self.test_folder):
             # It's gone from the account
             self.assertIsInstance(e, ErrorItemNotFound)
         # Really gone, not just changed ItemId
@@ -615,7 +615,7 @@ class CommonItemTest(BaseItemTest):
         self.assertEqual(len(find_ids[0]), 2, find_ids[0])
         self.assertEqual(insert_ids, find_ids)
         # Test with generator as argument
-        item = list(self.account.fetch(ids=(i for i in find_ids)))[0]
+        item = list(self.account.fetch(ids=(i for i in find_ids), folder=self.test_folder))[0]
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 if not f.supports_version(self.account.version):
@@ -655,7 +655,7 @@ class CommonItemTest(BaseItemTest):
         self.assertEqual(len(update_ids[0]), 2, update_ids)
         self.assertEqual(item.id, update_ids[0][0])  # ID should be the same
         self.assertNotEqual(item.changekey, update_ids[0][1])  # Changekey should change when item is updated
-        item = self.get_item_by_id(update_ids[0])
+        item = self.get_item_by_id(update_ids[0], folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 if not f.supports_version(self.account.version):
@@ -730,7 +730,7 @@ class CommonItemTest(BaseItemTest):
         self.assertEqual(len(wipe_ids[0]), 2, wipe_ids)
         self.assertEqual(item.id, wipe_ids[0][0])  # ID should be the same
         self.assertNotEqual(item.changekey, wipe_ids[0][1])  # Changekey should not be the same when item is updated
-        item = self.get_item_by_id(wipe_ids[0])
+        item = self.get_item_by_id(wipe_ids[0], folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 if not f.supports_version(self.account.version):
@@ -750,7 +750,7 @@ class CommonItemTest(BaseItemTest):
 
     def test_item_update_extended_properties(self):
         item = self.get_test_item().save()
-        item = self.get_item_by_id(item)  # An Item saved in Inbox becomes a Message
+        item = self.get_item_by_id(item, folder=self.test_folder)  # An Item saved in Inbox becomes a Message
         item.__class__.register("extern_id", ExternId)
 
         try:
@@ -762,7 +762,7 @@ class CommonItemTest(BaseItemTest):
             self.assertEqual(len(wipe2_ids[0]), 2, wipe2_ids)
             self.assertEqual(item.id, wipe2_ids[0][0])  # ID must be the same
             self.assertNotEqual(item.changekey, wipe2_ids[0][1])  # Changekey must change when item is updated
-            updated_item = self.get_item_by_id(wipe2_ids[0])
+            updated_item = self.get_item_by_id(wipe2_ids[0], folder=self.test_folder)
             self.assertEqual(updated_item.extern_id, extern_id)
         finally:
             item.__class__.deregister("extern_id")

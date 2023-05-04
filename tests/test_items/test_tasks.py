@@ -76,7 +76,7 @@ class TasksTest(CommonItemTest):
         self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 1)
 
         # Change the start date. We should see a new task appear.
-        master_item = self.get_item_by_id((master_item_id, None))
+        master_item = self.get_item_by_id((master_item_id, None), folder=self.test_folder)
         master_item.recurrence.boundary.start = datetime.date(2016, 2, 1)
         occurrence_item = master_item.save()
         occurrence_item.refresh()
@@ -84,7 +84,7 @@ class TasksTest(CommonItemTest):
         self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 2)
 
         # Check fields on the recurring item
-        master_item = self.get_item_by_id((master_item_id, None))
+        master_item = self.get_item_by_id((master_item_id, None), folder=self.test_folder)
         self.assertEqual(master_item.change_count, 2)
         self.assertEqual(master_item.due_date, datetime.date(2016, 1, 2))  # This is the next occurrence
         self.assertEqual(master_item.recurrence.boundary.number, 3)  # One less
@@ -97,7 +97,7 @@ class TasksTest(CommonItemTest):
         self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 3)
 
         # Check fields on the recurring item
-        master_item = self.get_item_by_id((master_item_id, None))
+        master_item = self.get_item_by_id((master_item_id, None), folder=self.test_folder)
         self.assertEqual(master_item.change_count, 3)
         self.assertEqual(master_item.due_date, datetime.date(2016, 2, 1))  # This is the next occurrence
         self.assertEqual(master_item.recurrence.boundary.number, 2)  # One less
@@ -118,7 +118,7 @@ class TasksTest(CommonItemTest):
         self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 1)
 
         # Change the start date. We should *not* see a new task appear.
-        master_item = self.get_item_by_id((master_item_id, None))
+        master_item = self.get_item_by_id((master_item_id, None), folder=self.test_folder)
         master_item.recurrence.boundary.start = datetime.date(2016, 1, 2)
         occurrence_item = master_item.save()
         occurrence_item.refresh()
@@ -133,7 +133,7 @@ class TasksTest(CommonItemTest):
         self.assertEqual(self.test_folder.filter(categories__contains=self.categories).count(), 2)
 
         # Check fields on the recurring item
-        master_item = self.get_item_by_id((master_item_id, None))
+        master_item = self.get_item_by_id((master_item_id, None), folder=self.test_folder)
         self.assertEqual(master_item.change_count, 2)
         # The due date is the next occurrence after today
         tz = self.account.default_timezone
