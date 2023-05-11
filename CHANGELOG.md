@@ -5,6 +5,11 @@ HEAD
 ----
 
 
+5.0.3
+-----
+- Bugfix release
+
+
 5.0.2
 -----
 - Fix bug where certain folders were being assigned the wrong Python class.
