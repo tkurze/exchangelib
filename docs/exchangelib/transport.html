@@ -145,9 +145,12 @@ def get_autodiscover_authtype(protocol):
     data = protocol.dummy_xml()
     headers = {&#34;X-AnchorMailbox&#34;: &#34;DUMMY@example.com&#34;}  # Required in case of OAuth
     r = get_unauthenticated_autodiscover_response(protocol=protocol, method=&#34;post&#34;, headers=headers, data=data)
-    auth_type = get_auth_method_from_response(response=r)
-    log.debug(&#34;Auth type is %s&#34;, auth_type)
-    return auth_type
+    try:
+        auth_type = get_auth_method_from_response(response=r)
+        log.debug(&#34;Auth type is %s&#34;, auth_type)
+        return auth_type
+    except UnauthorizedError:
+        raise TransportError(&#34;Failed to get autodiscover auth type from service&#34;)
 
 
 def get_unauthenticated_autodiscover_response(protocol, method, headers=None, data=None):
@@ -323,9 +326,12 @@ def _tokenize(val):
     data = protocol.dummy_xml()
     headers = {&#34;X-AnchorMailbox&#34;: &#34;DUMMY@example.com&#34;}  # Required in case of OAuth
     r = get_unauthenticated_autodiscover_response(protocol=protocol, method=&#34;post&#34;, headers=headers, data=data)
-    auth_type = get_auth_method_from_response(response=r)
-    log.debug(&#34;Auth type is %s&#34;, auth_type)
-    return auth_type</code></pre>
+    try:
+        auth_type = get_auth_method_from_response(response=r)
+        log.debug(&#34;Auth type is %s&#34;, auth_type)
+        return auth_type
+    except UnauthorizedError:
+        raise TransportError(&#34;Failed to get autodiscover auth type from service&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.transport.get_service_authtype"><code class="name flex">

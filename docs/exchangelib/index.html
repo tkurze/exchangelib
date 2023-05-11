@@ -64,7 +64,7 @@ from .settings import OofSettings
 from .transport import BASIC, CBA, DIGEST, GSSAPI, NTLM, OAUTH2, SSPI
 from .version import Build, Version
 
-__version__ = &#34;5.0.2&#34;
+__version__ = &#34;5.0.3&#34;
 
 __all__ = [
     &#34;__version__&#34;,
@@ -4688,7 +4688,10 @@ we use folder.account.</p></div>
     )
     direct_reports = MailboxListField(
         field_uri=&#34;contacts:DirectReports&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
-    )</code></pre>
+    )
+    # O365 throws ErrorInternalServerError &#34;[0x004f0102] MapiReplyToBlob&#34; if UniqueBody is requested
+    unique_body_idx = Item.FIELDS.index_by_name(&#34;unique_body&#34;)
+    FIELDS = Item.FIELDS[:unique_body_idx] + Item.FIELDS[unique_body_idx + 1 :]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4705,6 +4708,10 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.Contact.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.Contact.unique_body_idx"><code class="name">var <span class="ident">unique_body_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -5081,7 +5088,11 @@ we use folder.account.</p></div>
     contact_source = ChoiceField(
         field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
     )
-    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)</code></pre>
+    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)
+
+    # O365 throws ErrorInternalServerError &#34;[0x004f0102] MapiReplyToBlob&#34; if UniqueBody is requested
+    unique_body_idx = Item.FIELDS.index_by_name(&#34;unique_body&#34;)
+    FIELDS = Item.FIELDS[:unique_body_idx] + Item.FIELDS[unique_body_idx + 1 :]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5098,6 +5109,10 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.DistributionList.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.DistributionList.unique_body_idx"><code class="name">var <span class="ident">unique_body_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -12090,6 +12105,10 @@ we use folder.account.</p></div>
     status_description = CharField(field_uri=&#34;task:StatusDescription&#34;, is_read_only=True)
     total_work = IntegerField(field_uri=&#34;task:TotalWork&#34;, min=0)
 
+    # O365 throws ErrorInternalServerError &#34;[0x004f0102] MapiReplyToBlob&#34; if UniqueBody is requested
+    unique_body_idx = Item.FIELDS.index_by_name(&#34;unique_body&#34;)
+    FIELDS = Item.FIELDS[:unique_body_idx] + Item.FIELDS[unique_body_idx + 1 :]
+
     def clean(self, version=None):
         super().clean(version=version)
         if self.due_date and self.start_date and self.due_date &lt; self.start_date:
@@ -12165,6 +12184,10 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.Task.NOT_STARTED"><code class="name">var <span class="ident">NOT_STARTED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.Task.unique_body_idx"><code class="name">var <span class="ident">unique_body_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -13069,6 +13092,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Contact.profession" href="#exchangelib.Contact.profession">profession</a></code></li>
 <li><code><a title="exchangelib.Contact.spouse_name" href="#exchangelib.Contact.spouse_name">spouse_name</a></code></li>
 <li><code><a title="exchangelib.Contact.surname" href="#exchangelib.Contact.surname">surname</a></code></li>
+<li><code><a title="exchangelib.Contact.unique_body_idx" href="#exchangelib.Contact.unique_body_idx">unique_body_idx</a></code></li>
 <li><code><a title="exchangelib.Contact.user_smime_certificate" href="#exchangelib.Contact.user_smime_certificate">user_smime_certificate</a></code></li>
 <li><code><a title="exchangelib.Contact.wedding_anniversary" href="#exchangelib.Contact.wedding_anniversary">wedding_anniversary</a></code></li>
 </ul>
@@ -13102,6 +13126,7 @@ def fullname(self):
 <li><code><a title="exchangelib.DistributionList.display_name" href="#exchangelib.DistributionList.display_name">display_name</a></code></li>
 <li><code><a title="exchangelib.DistributionList.file_as" href="#exchangelib.DistributionList.file_as">file_as</a></code></li>
 <li><code><a title="exchangelib.DistributionList.members" href="#exchangelib.DistributionList.members">members</a></code></li>
+<li><code><a title="exchangelib.DistributionList.unique_body_idx" href="#exchangelib.DistributionList.unique_body_idx">unique_body_idx</a></code></li>
 </ul>
 </li>
 <li>
@@ -13536,6 +13561,7 @@ def fullname(self):
 <li><code><a title="exchangelib.Task.status" href="#exchangelib.Task.status">status</a></code></li>
 <li><code><a title="exchangelib.Task.status_description" href="#exchangelib.Task.status_description">status_description</a></code></li>
 <li><code><a title="exchangelib.Task.total_work" href="#exchangelib.Task.total_work">total_work</a></code></li>
+<li><code><a title="exchangelib.Task.unique_body_idx" href="#exchangelib.Task.unique_body_idx">unique_body_idx</a></code></li>
 </ul>
 </li>
 <li>

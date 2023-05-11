@@ -1281,7 +1281,10 @@ we use folder.account.</p></div>
     )
     direct_reports = MailboxListField(
         field_uri=&#34;contacts:DirectReports&#34;, supported_from=EXCHANGE_2010_SP2, is_read_only=True
-    )</code></pre>
+    )
+    # O365 throws ErrorInternalServerError &#34;[0x004f0102] MapiReplyToBlob&#34; if UniqueBody is requested
+    unique_body_idx = Item.FIELDS.index_by_name(&#34;unique_body&#34;)
+    FIELDS = Item.FIELDS[:unique_body_idx] + Item.FIELDS[unique_body_idx + 1 :]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1298,6 +1301,10 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.Contact.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.Contact.unique_body_idx"><code class="name">var <span class="ident">unique_body_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1569,7 +1576,11 @@ we use folder.account.</p></div>
     contact_source = ChoiceField(
         field_uri=&#34;contacts:ContactSource&#34;, choices={Choice(&#34;Store&#34;), Choice(&#34;ActiveDirectory&#34;)}, is_read_only=True
     )
-    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)</code></pre>
+    members = MemberListField(field_uri=&#34;distributionlist:Members&#34;)
+
+    # O365 throws ErrorInternalServerError &#34;[0x004f0102] MapiReplyToBlob&#34; if UniqueBody is requested
+    unique_body_idx = Item.FIELDS.index_by_name(&#34;unique_body&#34;)
+    FIELDS = Item.FIELDS[:unique_body_idx] + Item.FIELDS[unique_body_idx + 1 :]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1586,6 +1597,10 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.DistributionList.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.DistributionList.unique_body_idx"><code class="name">var <span class="ident">unique_body_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1877,12 +1892,9 @@ we use folder.account.</p></div>
     @require_id
     def refresh(self):
         # Updates the item based on fresh data from EWS
-        from ..folders import Folder
         from ..services import GetItem
 
-        additional_fields = {
-            FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
-        }
+        additional_fields = {FieldPath(field=f) for f in self.supported_fields(version=self.account.version)}
         res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
         if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
             # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -2479,12 +2491,9 @@ def move(self, to_folder):
 <pre><code class="python">@require_id
 def refresh(self):
     # Updates the item based on fresh data from EWS
-    from ..folders import Folder
     from ..services import GetItem
 
-    additional_fields = {
-        FieldPath(field=f) for f in Folder(root=self.account.root).allowed_item_fields(version=self.account.version)
-    }
+    additional_fields = {FieldPath(field=f) for f in self.supported_fields(version=self.account.version)}
     res = GetItem(account=self.account).get(items=[self], additional_fields=additional_fields, shape=ID_ONLY)
     if self.id != res.id and not isinstance(self._id, (OccurrenceItemId, RecurringMasterItemId)):
         # When we refresh an item with an OccurrenceItemId as ID, EWS returns the ID of the occurrence, so
@@ -4579,6 +4588,10 @@ we use folder.account.</p></div>
     status_description = CharField(field_uri=&#34;task:StatusDescription&#34;, is_read_only=True)
     total_work = IntegerField(field_uri=&#34;task:TotalWork&#34;, min=0)
 
+    # O365 throws ErrorInternalServerError &#34;[0x004f0102] MapiReplyToBlob&#34; if UniqueBody is requested
+    unique_body_idx = Item.FIELDS.index_by_name(&#34;unique_body&#34;)
+    FIELDS = Item.FIELDS[:unique_body_idx] + Item.FIELDS[unique_body_idx + 1 :]
+
     def clean(self, version=None):
         super().clean(version=version)
         if self.due_date and self.start_date and self.due_date &lt; self.start_date:
@@ -4654,6 +4667,10 @@ we use folder.account.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.items.Task.NOT_STARTED"><code class="name">var <span class="ident">NOT_STARTED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.items.Task.unique_body_idx"><code class="name">var <span class="ident">unique_body_idx</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -5053,6 +5070,7 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.Contact.profession" href="#exchangelib.items.Contact.profession">profession</a></code></li>
 <li><code><a title="exchangelib.items.Contact.spouse_name" href="#exchangelib.items.Contact.spouse_name">spouse_name</a></code></li>
 <li><code><a title="exchangelib.items.Contact.surname" href="#exchangelib.items.Contact.surname">surname</a></code></li>
+<li><code><a title="exchangelib.items.Contact.unique_body_idx" href="#exchangelib.items.Contact.unique_body_idx">unique_body_idx</a></code></li>
 <li><code><a title="exchangelib.items.Contact.user_smime_certificate" href="#exchangelib.items.Contact.user_smime_certificate">user_smime_certificate</a></code></li>
 <li><code><a title="exchangelib.items.Contact.wedding_anniversary" href="#exchangelib.items.Contact.wedding_anniversary">wedding_anniversary</a></code></li>
 </ul>
@@ -5072,6 +5090,7 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.DistributionList.display_name" href="#exchangelib.items.DistributionList.display_name">display_name</a></code></li>
 <li><code><a title="exchangelib.items.DistributionList.file_as" href="#exchangelib.items.DistributionList.file_as">file_as</a></code></li>
 <li><code><a title="exchangelib.items.DistributionList.members" href="#exchangelib.items.DistributionList.members">members</a></code></li>
+<li><code><a title="exchangelib.items.DistributionList.unique_body_idx" href="#exchangelib.items.DistributionList.unique_body_idx">unique_body_idx</a></code></li>
 </ul>
 </li>
 <li>
@@ -5425,6 +5444,7 @@ we use folder.account.</p></div>
 <li><code><a title="exchangelib.items.Task.status" href="#exchangelib.items.Task.status">status</a></code></li>
 <li><code><a title="exchangelib.items.Task.status_description" href="#exchangelib.items.Task.status_description">status_description</a></code></li>
 <li><code><a title="exchangelib.items.Task.total_work" href="#exchangelib.items.Task.total_work">total_work</a></code></li>
+<li><code><a title="exchangelib.items.Task.unique_body_idx" href="#exchangelib.items.Task.unique_body_idx">unique_body_idx</a></code></li>
 </ul>
 </li>
 <li>
