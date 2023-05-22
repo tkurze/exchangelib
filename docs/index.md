@@ -408,7 +408,7 @@ Finally, continue to the `Enterprise applications` page, select your new app,
 continue to the `Permissions` page, and check that your app has the
 `full_access_as_app` permission:
 ![API permissions](/exchangelib/assets/img/permissions.png)
-If not, press `Grant admin consent for testuiste_delegate` and grant access.
+If not, press `Grant admin consent for testsuite` and grant access.
 
 You should now be able to connect to an account using the `OAuth2Credentials`
 class as shown above.
@@ -438,7 +438,7 @@ Finally, continue to the `Enterprise applications` page, select your new app,
 continue to the `Permissions` page, and check that your app has the
 `full_access_as_app` permission:
 ![API permissions](/exchangelib/assets/img/delegate_app_permissions.png)
-If not, press "Grant admin consent for testuiste_delegate" and grant access.
+If not, press `Grant admin consent for testsuite_delegate` and grant access.
 
 You should now be able to connect to an account using the
 `OAuth2LegacyCredentials` class as shown above.
