@@ -21,7 +21,7 @@ from exchangelib.transport import NTLM
 from exchangelib.util import get_domain
 from exchangelib.version import EXCHANGE_2013, Version
 
-from .common import EWSTest, get_random_hostname, get_random_string
+from .common import EWSTest, get_random_email, get_random_hostname, get_random_string
 
 
 class AutodiscoverTest(EWSTest):
@@ -240,9 +240,25 @@ class AutodiscoverTest(EWSTest):
         self.assertEqual(ad_response.autodiscover_smtp_address, self.account.primary_smtp_address)
         self.assertEqual(protocol.service_endpoint.lower(), self.account.protocol.service_endpoint.lower())
 
+    def test_get_user_settings(self):
+        # Create a real Autodiscovery protocol instance
+        ad = Autodiscovery(
+            email=self.account.primary_smtp_address,
+            credentials=self.account.protocol.credentials,
+        )
+        ad.discover()
+        p = autodiscover_cache[ad._cache_key]
+
+        # Test invalid email
+        invalid_email = get_random_email()
+        r = p.get_user_settings(user=invalid_email)
+        self.assertIsInstance(r, UserResponse)
+        self.assertEqual(r.error_code, "InvalidUser")
+        self.assertIn(f"Invalid user '{invalid_email}'", r.error_message)
+
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_close_autodiscover_connections(self, m):
-        # A live test that we can close TCP connections
+        # Test that we can close TCP connections
         p = self.get_test_protocol()
         autodiscover_cache[(p.config.server, p.config.credentials)] = p
         self.assertEqual(len(autodiscover_cache), 1)
@@ -707,6 +723,7 @@ class AutodiscoverTest(EWSTest):
         UserResponse().raise_errors()
         with self.assertRaises(ErrorNonExistentMailbox) as e:
             UserResponse(error_code="InvalidUser", error_message="Foo").raise_errors()
+        self.assertEqual(e.exception.args[0], "Foo")
         with self.assertRaises(AutoDiscoverFailed) as e:
             UserResponse(error_code="InvalidRequest", error_message="FOO").raise_errors()
         self.assertEqual(e.exception.args[0], "InvalidRequest: FOO")

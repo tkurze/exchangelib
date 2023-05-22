@@ -35,18 +35,17 @@ Auth type: {self.auth_type}"""
         # Autodetect authentication type.
         return get_autodiscover_authtype(protocol=self)
 
-    def get_user_settings(self, user):
-        return GetUserSettings(protocol=self).get(
-            users=[user],
-            settings=[
+    def get_user_settings(self, user, settings=None):
+        if not settings:
+            settings = [
                 "user_dn",
                 "mailbox_dn",
                 "user_display_name",
                 "auto_discover_smtp_address",
                 "external_ews_url",
                 "ews_supported_schemas",
-            ],
-        )
+            ]
+        return GetUserSettings(protocol=self).get(users=[user], settings=settings)
 
     def dummy_xml(self):
         # Generate a valid EWS request for SOAP autodiscovery
