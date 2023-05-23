@@ -1,6 +1,8 @@
 from contextlib import suppress
 from unittest.mock import Mock
 
+import requests_mock
+
 from exchangelib.errors import (
     DoesNotExist,
     ErrorCannotEmptyFolder,
@@ -157,7 +159,8 @@ class FolderTest(EWSTest):
             Folder.item_model_from_tag("XXX")
         self.assertEqual(e.exception.args[0], "Item type XXX was unexpected in a Folder folder")
 
-    def test_public_folders_root(self):
+    @requests_mock.mock(real_http=True)
+    def test_public_folders_root(self, m):
         # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
         with suppress(ErrorNoPublicFolderReplicaAvailable):
             self.assertGreaterEqual(
@@ -168,6 +171,202 @@ class FolderTest(EWSTest):
                 ),
                 0,
             )
+        # Test public folders root with mocked responses
+        get_public_folder_xml = b"""\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:GetFolderResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                             xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:GetFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:Folders>
+                        <t:Folder>
+                            <t:FolderId Id="YAABdofPkAAA=" ChangeKey="AwAAABYAAABGDloItRzyTrAt+"/>
+                            <t:FolderClass>IPF.Note</t:FolderClass>
+                            <t:DisplayName>publicfoldersroot</t:DisplayName>
+                        </t:Folder>
+                    </m:Folders>
+                </m:GetFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:GetFolderResponse>
+    </s:Body>
+</s:Envelope>"""
+        find_public_folder_children_xml = b"""\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:FindFolderResponse
+                xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:FindFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:RootFolder IndexedPagingOffset="2" TotalItemsInView="2" IncludesLastItemInRange="true">
+                        <t:Folders>
+                            <t:Folder>
+                                <t:FolderId Id="2BBBBxEAAAA=" ChangeKey="AQBBBBYBBBAGDloItRzyTrAt+"/>
+                                <t:ParentFolderId Id="YAABdofPkAAA=" ChangeKey="AwAAABYAAABGDloItRzyTrAt+"/>
+                                <t:FolderClass>IPF.Contact</t:FolderClass>
+                                <t:DisplayName>Sample Contacts</t:DisplayName>
+                                <t:ChildFolderCount>2</t:ChildFolderCount>
+                                <t:TotalCount>0</t:TotalCount>
+                                <t:UnreadCount>0</t:UnreadCount>
+                            </t:Folder>
+                            <t:Folder>
+                                <t:FolderId Id="2AAAAxEAAAA=" ChangeKey="AQAAABYAAABGDloItRzyTrAt+"/>
+                                <t:ParentFolderId Id="YAABdofPkAAA=" ChangeKey="AwAAABYAAABGDloItRzyTrAt+"/>
+                                <t:FolderClass>IPF.Note</t:FolderClass>
+                                <t:DisplayName>Sample Folder</t:DisplayName>
+                                <t:ChildFolderCount>0</t:ChildFolderCount>
+                                <t:TotalCount>0</t:TotalCount>
+                                <t:UnreadCount>0</t:UnreadCount>
+                            </t:Folder>
+                        </t:Folders>
+                    </m:RootFolder>
+                </m:FindFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:FindFolderResponse>
+    </s:Body>
+</s:Envelope>"""
+        get_public_folder_children_xml = b"""\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:GetFolderResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                             xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:GetFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:Folders>
+                        <t:Folder>
+                            <t:FolderId Id="2BBBBxEAAAA=" ChangeKey="AQBBBBYBBBAGDloItRzyTrAt+"/>
+                            <t:FolderClass>IPF.Contact</t:FolderClass>
+                            <t:DisplayName>Sample Contacts</t:DisplayName>
+                        </t:Folder>
+                        <t:Folder>
+                            <t:FolderId Id="2AAAAxEAAAA=" ChangeKey="AQAAABYAAABGDloItRzyTrAt+"/>
+                            <t:FolderClass>IPF.Note</t:FolderClass>
+                            <t:DisplayName>Sample Folder</t:DisplayName>
+                        </t:Folder>
+                    </m:Folders>
+                </m:GetFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:GetFolderResponse>
+    </s:Body>
+</s:Envelope>"""
+        m.post(
+            self.account.protocol.service_endpoint,
+            [
+                dict(status_code=200, content=get_public_folder_xml),
+                dict(status_code=200, content=find_public_folder_children_xml),
+                dict(status_code=200, content=get_public_folder_children_xml),
+            ],
+        )
+        # Test top-level .children
+        self.assertListEqual(
+            [f.name for f in self.account.public_folders_root.children], ["Sample Contacts", "Sample Folder"]
+        )
+
+        find_public_subfolder1_children_xml = b"""\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:FindFolderResponse
+                xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:FindFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:RootFolder IndexedPagingOffset="2" TotalItemsInView="2" IncludesLastItemInRange="true">
+                        <t:Folders>
+                            <t:Folder>
+                                <t:FolderId Id="YCCBdofPkCCC=" ChangeKey="AwCCCBYAAABGDloItRzyTrAt+"/>
+                                <t:ParentFolderId Id="2BBBBxEAAAA=" ChangeKey="AQBBBBYBBBAGDloItRzyTrAt+"/>
+                                <t:FolderClass>IPF.Contact</t:FolderClass>
+                                <t:DisplayName>Sample Subfolder1</t:DisplayName>
+                                <t:ChildFolderCount>0</t:ChildFolderCount>
+                                <t:TotalCount>0</t:TotalCount>
+                                <t:UnreadCount>0</t:UnreadCount>
+                            </t:Folder>
+                            <t:Folder>
+                                <t:FolderId Id="2DDDDxEAAAA=" ChangeKey="AwDDDBYAAABGDloItRzyTrAt+"/>
+                                <t:ParentFolderId Id="2BBBBxEAAAA=" ChangeKey="AQBBBBYBBBAGDloItRzyTrAt+"/>
+                                <t:FolderClass>IPF.Note</t:FolderClass>
+                                <t:DisplayName>Sample Subfolder2</t:DisplayName>
+                                <t:ChildFolderCount>0</t:ChildFolderCount>
+                                <t:TotalCount>0</t:TotalCount>
+                                <t:UnreadCount>0</t:UnreadCount>
+                            </t:Folder>
+                        </t:Folders>
+                    </m:RootFolder>
+                </m:FindFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:FindFolderResponse>
+    </s:Body>
+</s:Envelope>"""
+        get_public_subfolder1_children_xml = b"""\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:GetFolderResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                             xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:GetFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:Folders>
+                        <t:Folder>
+                            <t:FolderId Id="YCCBdofPkCCC=" ChangeKey="AwCCCBYAAABGDloItRzyTrAt+"/>
+                            <t:FolderClass>IPF.Contact</t:FolderClass>
+                            <t:DisplayName>Sample Subfolder1</t:DisplayName>
+                        </t:Folder>
+                        <t:Folder>
+                            <t:FolderId Id="2DDDDxEAAAA=" ChangeKey="AwDDDBYAAABGDloItRzyTrAt+"/>
+                            <t:FolderClass>IPF.Note</t:FolderClass>
+                            <t:DisplayName>Sample Subfolder2</t:DisplayName>
+                        </t:Folder>
+                    </m:Folders>
+                </m:GetFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:GetFolderResponse>
+    </s:Body>
+</s:Envelope>"""
+        find_public_subfolder2_children_xml = b"""\
+<?xml version="1.0" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <m:FindFolderResponse
+                xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"
+                xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+            <m:ResponseMessages>
+                <m:FindFolderResponseMessage ResponseClass="Success">
+                    <m:ResponseCode>NoError</m:ResponseCode>
+                    <m:RootFolder IndexedPagingOffset="0" TotalItemsInView="0" IncludesLastItemInRange="true">
+                        <t:Folders>
+                        </t:Folders>
+                    </m:RootFolder>
+                </m:FindFolderResponseMessage>
+            </m:ResponseMessages>
+        </m:FindFolderResponse>
+    </s:Body>
+</s:Envelope>"""
+        m.post(
+            self.account.protocol.service_endpoint,
+            [
+                dict(status_code=200, content=find_public_subfolder1_children_xml),
+                dict(status_code=200, content=get_public_subfolder1_children_xml),
+                dict(status_code=200, content=find_public_subfolder2_children_xml),
+            ],
+        )
+        # Test .get_children() on subfolders
+        f_1 = self.account.public_folders_root / "Sample Contacts"
+        f_2 = self.account.public_folders_root / "Sample Folder"
+        self.assertListEqual(
+            [f.name for f in self.account.public_folders_root.get_children(f_1)],
+            ["Sample Subfolder1", "Sample Subfolder2"],
+        )
+        self.assertListEqual([f.name for f in self.account.public_folders_root.get_children(f_2)], [])
 
     def test_invalid_deletefolder_args(self):
         with self.assertRaises(ValueError) as e:
