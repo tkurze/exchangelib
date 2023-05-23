@@ -26,6 +26,7 @@ Apart from this documentation, we also provide online
     * [OAuth authentication](#oauth-authentication)
     * [Impersonation OAuth on Office 365](#impersonation-oauth-on-office-365)
     * [Delegate OAuth on Office 365](#delegate-oauth-on-office-365)
+    * [MSAL on Office 365](#msal-on-office-365)
     * [Caching autodiscover results](#caching-autodiscover-results)
     * [Proxies and custom TLS validation](#proxies-and-custom-tls-validation)
     * [User-Agent](#user-agent)
@@ -442,6 +443,54 @@ If not, press `Grant admin consent for testsuite_delegate` and grant access.
 
 You should now be able to connect to an account using the
 `OAuth2LegacyCredentials` class as shown above.
+
+
+### MSAL on Office 365
+The [Microsoft Authentication Library](https://github.com/AzureAD/microsoft-authentication-library-for-python)
+supports obtaining OAuth tokens via a range of different methods. You can use
+MSAL to fetch a token valid for EWS and then only provide the token to this
+library.
+
+In this example, we'll do an interactive login using a browser window, so you
+can use the login method supported by your organization, and take advantage of
+any SSO available to your browser. There are example scripts for other flows
+available at [https://github.com/AzureAD/microsoft-authentication-library-for-python/tree/dev/sample](https://github.com/AzureAD/microsoft-authentication-library-for-python/tree/dev/sample).
+
+First, create an app in Azure with `EWS.AccessAsUser.All` delegate permissions,
+as described in the section above, except you don't need to create a client
+secret, and you need to add a “Mobile and Desktop application”
+Redirect URI set to `http://localhost`. Note down the client ID. Then connect
+using the following code:
+
+```python
+# Script adapted from https://github.com/AzureAD/microsoft-authentication-library-for-python/blob/dev/sample/interactive_sample.py
+from exchangelib import Configuration, OAUTH2, Account, DELEGATE, OAuth2AuthorizationCodeCredentials
+import msal
+
+config = {
+    "authority": "https://login.microsoftonline.com/organizations",
+    "client_id": "MY_CLIENT_ID",
+    "scope": ["EWS.AccessAsUser.All"],
+    "username": "MY_ACCOUNT@example.com",
+    "endpoint": "https://graph.microsoft.com/v1.0/users",
+    "account": "MY_ACCOUNT@example.com",
+    "server": "outlook.office365.com",
+}
+app = msal.PublicClientApplication(config["client_id"], authority=config["authority"])
+print("A local browser window will be open for you to sign in. CTRL+C to cancel.")
+result = app.acquire_token_interactive(config["scope"], login_hint=config.get("username"))
+assert "access_token" in result
+
+creds = OAuth2AuthorizationCodeCredentials(access_token=result)
+conf = Configuration(server=config["server"], auth_type=OAUTH2, credentials=creds)
+a = Account(
+    primary_smtp_address=config["account"],
+    access_type=DELEGATE,
+    config=conf,
+    autodiscover=False,
+)
+print(a.root.tree())
+```
 
 
 ### Caching autodiscover results
