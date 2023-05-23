@@ -2093,23 +2093,30 @@ class UserResponse(EWSElement):
             raise AutoDiscoverFailed(f"User settings errors: {self.user_settings_errors}")
 
     @classmethod
-    def from_xml(cls, elem, account):
+    def parse_elem(cls, elem):
         # Possible ErrorCode values:
         #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
         error_code = get_xml_attr(elem, f"{{{ANS}}}ErrorCode")
         error_message = get_xml_attr(elem, f"{{{ANS}}}ErrorMessage")
         if error_code == "InternalServerError":
-            raise ErrorInternalServerError(error_message)
+            return ErrorInternalServerError(error_message)
         if error_code == "ServerBusy":
-            raise ErrorServerBusy(error_message)
+            return ErrorServerBusy(error_message)
         if error_code == "NotFederated":
-            raise ErrorOrganizationNotFederated(error_message)
-        if error_code not in ("NoError", "RedirectAddress", "RedirectUrl"):
-            return cls(error_code=error_code, error_message=error_message)
+            return ErrorOrganizationNotFederated(error_message)
+        return cls(error_code=error_code, error_message=error_message)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = cls.parse_elem(elem)
+        if isinstance(res, Exception):
+            raise res
+        if res.error_code not in ("NoError", "RedirectAddress", "RedirectUrl"):
+            return cls(error_code=res.error_code, error_message=res.error_message)
 
         redirect_target = get_xml_attr(elem, f"{{{ANS}}}RedirectTarget")
-        redirect_address = redirect_target if error_code == "RedirectAddress" else None
-        redirect_url = redirect_target if error_code == "RedirectUrl" else None
+        redirect_address = redirect_target if res.error_code == "RedirectAddress" else None
+        redirect_url = redirect_target if res.error_code == "RedirectUrl" else None
         user_settings_errors = {}
         settings_errors_elem = elem.find(f"{{{ANS}}}UserSettingErrors")
         if settings_errors_elem is not None:
