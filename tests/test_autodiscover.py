@@ -14,7 +14,13 @@ from exchangelib.autodiscover.discovery import Autodiscovery, SrvRecord, _select
 from exchangelib.autodiscover.protocol import AutodiscoverProtocol
 from exchangelib.configuration import Configuration
 from exchangelib.credentials import DELEGATE, Credentials, OAuth2LegacyCredentials
-from exchangelib.errors import AutoDiscoverCircularRedirect, AutoDiscoverFailed, ErrorNonExistentMailbox
+from exchangelib.errors import (
+    AutoDiscoverCircularRedirect,
+    AutoDiscoverFailed,
+    ErrorInternalServerError,
+    ErrorNonExistentMailbox,
+    TransportError,
+)
 from exchangelib.properties import UserResponse
 from exchangelib.protocol import FailFast, FaultTolerance
 from exchangelib.transport import NTLM
@@ -240,7 +246,8 @@ class AutodiscoverTest(EWSTest):
         self.assertEqual(ad_response.autodiscover_smtp_address, self.account.primary_smtp_address)
         self.assertEqual(protocol.service_endpoint.lower(), self.account.protocol.service_endpoint.lower())
 
-    def test_get_user_settings(self):
+    @requests_mock.mock(real_http=True)
+    def test_get_user_settings(self, m):
         # Create a real Autodiscovery protocol instance
         ad = Autodiscovery(
             email=self.account.primary_smtp_address,
@@ -255,6 +262,47 @@ class AutodiscoverTest(EWSTest):
         self.assertIsInstance(r, UserResponse)
         self.assertEqual(r.error_code, "InvalidUser")
         self.assertIn(f"Invalid user '{invalid_email}'", r.error_message)
+
+        # Test error response
+        xml = """\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:a="http://www.w3.org/2005/08/addressing">
+  <s:Body>
+    <GetUserSettingsResponseMessage xmlns="http://schemas.microsoft.com/exchange/2010/Autodiscover">
+      <Response>
+        <ErrorCode>InvalidSetting</ErrorCode>
+        <ErrorMessage>An error message</ErrorMessage>
+      </Response>
+    </GetUserSettingsResponseMessage>
+  </s:Body>
+</s:Envelope>""".encode()
+        m.post(p.service_endpoint, status_code=200, content=xml)
+        with self.assertRaises(TransportError) as e:
+            p.get_user_settings(user="foo")
+        self.assertEqual(
+            e.exception.args[0],
+            "Unknown ResponseCode in ResponseMessage: InvalidSetting (MessageText: An error message, MessageXml: None)",
+        )
+        xml = """\
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope
+    xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:a="http://www.w3.org/2005/08/addressing">
+  <s:Body>
+    <GetUserSettingsResponseMessage xmlns="http://schemas.microsoft.com/exchange/2010/Autodiscover">
+      <Response>
+        <ErrorCode>InternalServerError</ErrorCode>
+        <ErrorMessage>An internal error</ErrorMessage>
+      </Response>
+    </GetUserSettingsResponseMessage>
+  </s:Body>
+</s:Envelope>""".encode()
+        m.post(p.service_endpoint, status_code=200, content=xml)
+        with self.assertRaises(ErrorInternalServerError) as e:
+            p.get_user_settings(user="foo")
+        self.assertEqual(e.exception.args[0], "An internal error")
 
     @requests_mock.mock(real_http=False)  # Just make sure we don't issue any real HTTP here
     def test_close_autodiscover_connections(self, m):

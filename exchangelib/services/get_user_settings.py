@@ -77,6 +77,8 @@ class GetUserSettings(EWSService):
         # There are two 'ErrorCode' elements in the response; one is a child of the 'Response' element, the other is a
         # child of the 'UserResponse' element. Let's handle both with the same code.
         res = UserResponse.parse_elem(response)
+        if isinstance(res, Exception):
+            raise res
         if res.error_code == "NoError":
             container = response.find(name)
             if container is None:

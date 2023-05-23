@@ -1058,6 +1058,7 @@ r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
         with self.assertRaises(RateLimitError) as e:
             _ = self.get_test_protocol(auth_type=None, retry_policy=FaultTolerance(max_wait=0.5)).auth_type
         self.assertEqual(e.exception.args[0], "Max timeout reached")
+        self.assertEqual(str(e.exception), "Max timeout reached (gave up when asked to back off 10.000 seconds)")
 
     @patch("requests.sessions.Session.post", return_value=DummyResponse(status_code=401))
     def test_get_service_authtype_401(self, m):
