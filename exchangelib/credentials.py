@@ -141,9 +141,9 @@ class BaseOAuth2Credentials(BaseCredentials):
         return f"https://login.microsoftonline.com/{self.tenant_id or 'common'}/oauth2/v2.0/token"  # nosec
 
     @property
-    @abc.abstractmethod
     def scope(self):
         """The scope we ask for the token to have"""
+        return ["https://outlook.office365.com/.default"]
 
     def session_params(self):
         """Extra parameters to use when creating the session"""
@@ -208,10 +208,6 @@ class OAuth2Credentials(BaseOAuth2Credentials):
     information to restrict end users' access to the appropriate account. Use OAuth2AuthorizationCodeCredentials and
     the associated auth code grant type for multi-tenant applications.
     """
-
-    @property
-    def scope(self):
-        return ["https://outlook.office365.com/.default"]
 
     @threaded_cached_property
     def client(self):
