@@ -687,6 +687,9 @@ class AutodiscoverTest(EWSTest):
         dns.resolver.Resolver = _orig
         del ad.resolver
 
+    def test_srv_magic(self):
+        hash(SrvRecord(priority=1, weight=2, port=3, srv="example.com"))
+
     def test_select_srv_host(self):
         with self.assertRaises(ValueError):
             # Empty list

@@ -104,24 +104,20 @@ class Message(Item):
                 conflict_resolution=conflict_resolution,
                 send_meeting_invitations=send_meeting_invitations,
             )
-        else:
-            if self.account.version.build < EXCHANGE_2013 and self.attachments:
-                # At least some versions prior to Exchange 2013 can't send-and-save attachments immediately. You need
-                # to first save, then attach, then send. This is done in save().
-                self.save(
-                    update_fields=update_fields,
-                    conflict_resolution=conflict_resolution,
-                    send_meeting_invitations=send_meeting_invitations,
-                )
-                return self.send(
-                    save_copy=False,
-                    conflict_resolution=conflict_resolution,
-                    send_meeting_invitations=send_meeting_invitations,
-                )
-            else:
-                return self._create(
-                    message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations
-                )
+        if self.account.version.build < EXCHANGE_2013 and self.attachments:
+            # At least some versions prior to Exchange 2013 can't send-and-save attachments immediately. You need
+            # to first save, then attach, then send. This is done in save().
+            self.save(
+                update_fields=update_fields,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+            return self.send(
+                save_copy=False,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+        return self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):

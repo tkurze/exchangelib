@@ -165,9 +165,10 @@ class Version:
     @property
     def fullname(self):
         for build, api_version, full_name in VERSIONS:
-            if self.build:
-                if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
-                    continue
+            if self.build and (
+                self.build.major_version != build.major_version or self.build.minor_version != build.minor_version
+            ):
+                continue
             if self.api_version == api_version:
                 return full_name
         raise ValueError(f"Full name for API version {self.api_version} build {self.build} is unknown")
@@ -252,6 +253,9 @@ class Version:
     def all_versions(cls):
         # Return all supported versions, sorted newest to oldest
         return [cls(build=build, api_version=api_version) for build, api_version, _ in VERSIONS]
+
+    def __hash__(self):
+        return hash((self.build, self.api_version))
 
     def __eq__(self, other):
         if self.api_version != other.api_version:
