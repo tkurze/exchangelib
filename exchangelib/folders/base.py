@@ -775,7 +775,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         if other == ".":
             return self
         for c in self.children:
-            if c.name == other:
+            # Folders are case-insensitive server-side. Let's do that here as well.
+            if c.name.lower() == other.lower():
                 return c
         raise ErrorFolderNotFound(f"No subfolder with name {other!r}")
 

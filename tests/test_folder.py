@@ -637,6 +637,16 @@ class FolderTest(EWSTest):
         self.assertEqual(f.child_folder_count, 0)
         f.delete()
 
+    def test_case_sensitivity(self):
+        # Test that the server does not case about folder name case
+        upper_name = get_random_string(16).upper()
+        lower_name = upper_name.lower()
+        self.assertNotEqual(upper_name, lower_name)
+        Folder(parent=self.account.inbox, name=upper_name).save()
+        with self.assertRaises(ErrorFolderExists) as e:
+            Folder(parent=self.account.inbox, name=lower_name).save()
+        self.assertIn(f"Could not create folder '{lower_name}'", e.exception.args[0])
+
     def test_update(self):
         # Test that we can update folder attributes
         f = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
@@ -768,6 +778,10 @@ class FolderTest(EWSTest):
         with self.assertRaises(ErrorFolderNotFound):
             _ = self.account.root / "XXX"
 
+        # Test that we are case-insensitive
+        self.assertNotEqual(self.account.root.tois.name, self.account.root.tois.name.upper())
+        self.assertEqual((self.account.root / self.account.root.tois.name.upper()).id, self.account.root.tois.id)
+
     def test_double_div_navigation(self):
         self.account.root.clear_cache()  # Clear the cache
 
@@ -793,6 +807,10 @@ class FolderTest(EWSTest):
 
         # Check that this didn't trigger caching
         self.assertIsNone(self.account.root._subfolders)
+
+        # Test that we are case-insensitive
+        self.assertNotEqual(self.account.root.tois.name, self.account.root.tois.name.upper())
+        self.assertEqual((self.account.root // self.account.root.tois.name.upper()).id, self.account.root.tois.id)
 
     def test_extended_properties(self):
         # Test extended properties on folders and folder roots. This extended prop gets the size (in bytes) of a folder
