@@ -127,7 +127,7 @@ EXCHANGE_O365 = Build(15, 20)
 # The list is sorted from newest to oldest build
 VERSIONS = (
     (EXCHANGE_O365, "Exchange2016", "Microsoft Exchange Server Office365"),  # Not mentioned in list of build numbers
-    (EXCHANGE_2019, "Exchange2019", "Microsoft Exchange Server 2019"),
+    (EXCHANGE_2019, "Exchange2016", "Microsoft Exchange Server 2019"),
     (EXCHANGE_2016, "Exchange2016", "Microsoft Exchange Server 2016"),
     (EXCHANGE_2015_SP1, "Exchange2015_SP1", "Microsoft Exchange Server 2015 SP1"),
     (EXCHANGE_2015, "Exchange2015", "Microsoft Exchange Server 2015"),
@@ -171,7 +171,8 @@ class Version:
                 continue
             if self.api_version == api_version:
                 return full_name
-        raise ValueError(f"Full name for API version {self.api_version} build {self.build} is unknown")
+        log.warning(f"Full name for API version {self.api_version} build {self.build} is unknown")
+        return "UNKNOWN"
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):

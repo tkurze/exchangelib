@@ -437,7 +437,7 @@ permission under the `EWS` section:
 
 Finally, continue to the `Enterprise applications` page, select your new app,
 continue to the `Permissions` page, and check that your app has the
-`full_access_as_app` permission:
+`EWS.AccessAsUser.All` permission:
 ![API permissions](/exchangelib/assets/img/delegate_app_permissions.png)
 If not, press `Grant admin consent for testsuite_delegate` and grant access.
 
@@ -472,7 +472,6 @@ config = {
     "client_id": "MY_CLIENT_ID",
     "scope": ["EWS.AccessAsUser.All"],
     "username": "MY_ACCOUNT@example.com",
-    "endpoint": "https://graph.microsoft.com/v1.0/users",
     "account": "MY_ACCOUNT@example.com",
     "server": "outlook.office365.com",
 }
