@@ -435,9 +435,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             log.warning("Cannot wipe recoverable items folder %s", self)
             return
         log.warning("Wiping %s", self)
-        has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
+        has_non_deletable_subfolders = any(not f.is_deletable for f in self.children)
         try:
-            if has_distinguished_subfolders:
+            if has_non_deletable_subfolders:
                 self.empty()
             else:
                 self.empty(delete_sub_folders=True)
@@ -446,7 +446,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             return
         except DELETE_FOLDER_ERRORS:
             try:
-                if has_distinguished_subfolders:
+                if has_non_deletable_subfolders:
                     raise  # We already tried this
                 self.empty()
             except DELETE_FOLDER_ERRORS:
