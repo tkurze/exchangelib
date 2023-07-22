@@ -2132,5 +2132,5 @@ python -m unittest -k test_folder.FolderTest.test_refresh
 DEBUG=1 python -m unittest -k test_folder.FolderTest.test_refresh
 
 # Running tests in parallel using the 'unittest-parallel' dependency
-unittest-parallel -j 4 --class-fixtures
+unittest-parallel -j 4 --level=class
 ```
