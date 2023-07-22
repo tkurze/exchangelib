@@ -4,7 +4,7 @@ from threading import Lock
 
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
-from ..properties import EWSMeta
+from ..properties import DistinguishedFolderId, EWSMeta
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
 from .base import BaseFolder
 from .collections import FolderCollection
@@ -110,9 +110,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         if not cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f"Class {cls} must have a DISTINGUISHED_FOLDER_ID value")
         try:
-            return cls.resolve(
-                account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-            )
+            return cls.resolve(account=account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}")
 
@@ -134,9 +132,9 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             log.debug("Requesting distinguished %s folder explicitly", folder_cls)
             return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
-            # Maybe we just don't have GetFolder access? Try FindItems instead
+            # Maybe we just don't have GetFolder access? Try FindItem instead
             log.debug("Testing default %s folder with FindItem", folder_cls)
-            fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+            fld = folder_cls(root=self, _distinguished_id=DistinguishedFolderId(id=folder_cls.DISTINGUISHED_FOLDER_ID))
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
         except MISSING_FOLDER_ERRORS:
@@ -154,7 +152,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID)
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)
             ]

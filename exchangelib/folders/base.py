@@ -32,7 +32,6 @@ from ..properties import (
     DistinguishedFolderId,
     EWSMeta,
     FolderId,
-    Mailbox,
     ParentFolderId,
     UserConfiguration,
     UserConfigurationName,
@@ -77,6 +76,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri="folder:FolderId", value_cls=ID_ELEMENT_CLS)
+    _distinguished_id = IdElementField(field_uri="folder:FolderId", value_cls=DistinguishedFolderId)
     parent_folder_id = EWSElementField(field_uri="folder:ParentFolderId", value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri="folder:FolderClass", is_required_after_save=True)
     name = CharField(field_uri="folder:DisplayName")
@@ -84,13 +84,12 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     child_folder_count = IntegerField(field_uri="folder:ChildFolderCount", is_read_only=True)
     unread_count = IntegerField(field_uri="folder:UnreadCount", is_read_only=True)
 
-    __slots__ = "is_distinguished", "item_sync_state", "folder_sync_state"
+    __slots__ = "item_sync_state", "folder_sync_state"
 
     # Used to register extended properties
     INSERT_AFTER_FIELD = "child_folder_count"
 
     def __init__(self, **kwargs):
-        self.is_distinguished = kwargs.pop("is_distinguished", False)
         self.item_sync_state = kwargs.pop("item_sync_state", None)
         self.folder_sync_state = kwargs.pop("folder_sync_state", None)
         super().__init__(**kwargs)
@@ -109,6 +108,10 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     @abc.abstractmethod
     def parent(self):
         """Return the parent folder of this folder"""
+
+    @property
+    def is_distinguished(self):
+        return self._distinguished_id or (self.DISTINGUISHED_FOLDER_ID and not self._id)
 
     @property
     def is_deletable(self):
@@ -490,17 +493,16 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         return kwargs
 
     def to_id(self):
-        if self.is_distinguished:
-            # Don't add the changekey here. When modifying folder content, we usually don't care if others have changed
-            # the folder content since we fetched the changekey.
-            if self.account:
-                return DistinguishedFolderId(
-                    id=self.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
-                )
-            return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
-        if self.id:
-            return FolderId(id=self.id, changekey=self.changekey)
-        raise ValueError("Must be a distinguished folder or have an ID")
+        # Use self._distinguished_id as-is if we have it. This could be a DistinguishedFolderId with a mailbox pointing
+        # to a shared mailbox.
+        if self._distinguished_id:
+            return self._distinguished_id
+        if self._id:
+            return self._id
+        if not self.DISTINGUISHED_FOLDER_ID:
+            raise ValueError(f"{self} must be a distinguished folder or have an ID")
+        self._distinguished_id = DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
+        return self._distinguished_id
 
     @classmethod
     def resolve(cls, account, folder):
@@ -856,9 +858,7 @@ class Folder(BaseFolder):
         :return:
         """
         try:
-            return cls.resolve(
-                account=root.account, folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-            )
+            return cls.resolve(account=root.account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}")
 
@@ -890,7 +890,7 @@ class Folder(BaseFolder):
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
-        folder = cls.from_xml(elem=elem, account=root.account)
+        folder = cls.from_xml(elem=elem, account=root.account if root else None)
         folder_cls = cls
         if cls == Folder:
             # We were called on the generic Folder class. Try to find a more specific class to return objects as.
@@ -909,7 +909,7 @@ class Folder(BaseFolder):
             #
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
-            if folder.name:
+            if folder.name and root:
                 with suppress(KeyError):
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
                     folder_cls = root.folder_cls_from_folder_name(

@@ -164,11 +164,7 @@ class FolderTest(EWSTest):
         # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
         with suppress(ErrorNoPublicFolderReplicaAvailable):
             self.assertGreaterEqual(
-                len(
-                    list(
-                        PublicFoldersRoot(account=self.account, is_distinguished=True).get_children(self.account.inbox)
-                    )
-                ),
+                len(list(PublicFoldersRoot(account=self.account).get_children(self.account.inbox))),
                 0,
             )
         # Test public folders root with mocked responses
@@ -962,8 +958,8 @@ class FolderTest(EWSTest):
         self.assertEqual(Folder().has_distinguished_name, None)
         self.assertEqual(Inbox(name="XXX").has_distinguished_name, False)
         self.assertEqual(Inbox(name="Inbox").has_distinguished_name, True)
-        self.assertEqual(Inbox(is_distinguished=False).is_deletable, True)
-        self.assertEqual(Inbox(is_distinguished=True).is_deletable, False)
+        self.assertEqual(Folder().is_deletable, True)
+        self.assertEqual(Inbox().is_deletable, False)
 
     def test_non_deletable_folders(self):
         for f in self.account.root.walk():
@@ -1245,7 +1241,7 @@ class FolderTest(EWSTest):
 
     def test_get_candidate(self):
         # _get_candidate is a private method, but it's really difficult to recreate a situation where it's used.
-        f1 = Inbox(name="XXX", is_distinguished=True)
+        f1 = Inbox(name="XXX")
         f2 = Inbox(name=Inbox.LOCALIZED_NAMES[self.account.locale][0])
         with self.assertRaises(ErrorFolderNotFound) as e:
             self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[])

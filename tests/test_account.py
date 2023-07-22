@@ -106,6 +106,7 @@ class AccountTest(EWSTest):
         folder = self.account.root.get_default_folder(Calendar)
         self.assertIsInstance(folder, Calendar)
         self.assertNotEqual(folder.id, None)
+        self.assertEqual(folder.to_id().id, Calendar.DISTINGUISHED_FOLDER_ID)
         self.assertEqual(folder.name.lower(), Calendar.localized_names(self.account.locale)[0])
 
         class MockCalendar1(Calendar):
@@ -113,11 +114,14 @@ class AccountTest(EWSTest):
             def get_distinguished(cls, root):
                 raise ErrorAccessDenied("foo")
 
-        # Test an indirect folder lookup with FindItems
+        # Test an indirect folder lookup with FindItem, when we're not allowed to do a GetFolder. We don't get the
+        # folder element back from the server, just test for existence indirectly be asking for items in the folder.
+        # Therefore, we don't expect ID or name values.
         folder = self.account.root.get_default_folder(MockCalendar1)
         self.assertIsInstance(folder, MockCalendar1)
         self.assertEqual(folder.id, None)
-        self.assertEqual(folder.name, MockCalendar1.DISTINGUISHED_FOLDER_ID)
+        self.assertEqual(folder.to_id().id, Calendar.DISTINGUISHED_FOLDER_ID)
+        self.assertEqual(folder.name, None)
 
         class MockCalendar2(Calendar):
             @classmethod
