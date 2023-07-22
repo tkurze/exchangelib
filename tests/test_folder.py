@@ -421,7 +421,7 @@ class FolderTest(EWSTest):
         # Test failure on different roots
         with self.assertRaises(ValueError) as e:
             list(FolderCollection(account=self.account, folders=[Folder(root="A"), Folder(root="B")]).find_folders())
-        self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
+        self.assertIn("All folders must have the same root hierarchy", e.exception.args[0])
 
     def test_find_folders_compat(self):
         account = self.get_account()
