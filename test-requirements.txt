@@ -1,4 +1,5 @@
 black
+blacken-docs
 coverage
 coveralls
 flake8
