@@ -270,6 +270,9 @@ def safe_xml_value(value, replacement="?"):
 
 
 def sanitize_xml(data, replacement=b"?"):
+    if not isinstance(data, bytes):
+        # We may get data="" from some expatreader versions
+        return data
     return _ILLEGAL_XML_ESCAPE_CHARS_RE.sub(replacement, data)
 
 
