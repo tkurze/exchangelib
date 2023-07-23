@@ -29,7 +29,7 @@ jobs:
     needs: pre_job
     strategy:
       matrix:
-        python-version: ['3.7', '3.11']
+        python-version: ['3.8', '3.11']
         include:
           # Allow failure on Python dev - e.g. Cython install regularly fails
           - python-version: "3.12-dev"
