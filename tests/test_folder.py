@@ -748,6 +748,12 @@ class FolderTest(EWSTest):
             list(self.account.root.glob("../*"))
         self.assertEqual(e.exception.args[0], "Already at top")
 
+        # Test globbing with multiple levels of folders ('a/b/c')
+        f1 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
+        f2 = Folder(parent=f1, name=get_random_string(16)).save()
+        f3 = Folder(parent=f2, name=get_random_string(16)).save()
+        self.assertEqual(len(list(self.account.inbox.glob(f"{f1.name}/{f2.name}/{f3.name}"))), 1)
+
     def test_collection_filtering(self):
         self.assertGreaterEqual(self.account.root.tois.children.all().count(), 0)
         self.assertGreaterEqual(self.account.root.tois.walk().all().count(), 0)

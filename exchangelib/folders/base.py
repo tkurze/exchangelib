@@ -151,7 +151,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         return FolderCollection(account=self.account, folders=self._walk())
 
     def _glob(self, pattern):
-        split_pattern = pattern.rsplit("/", 1)
+        split_pattern = pattern.split("/", maxsplit=1)
         head, tail = (split_pattern[0], None) if len(split_pattern) == 1 else split_pattern
         if head == "":
             # We got an absolute path. Restart globbing at root
