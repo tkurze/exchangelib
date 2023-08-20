@@ -1,5 +1,4 @@
 import logging
-import time
 
 from ..fields import (
     AttachmentField,
@@ -154,23 +153,7 @@ class Item(BaseItem):
                 # When we update certain fields on a task, the ID may change. A full description is available at
                 # https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateitem-operation-task
                 raise ValueError("'id' mismatch in returned update response")
-            # Check that changekey is different on update. No-op saves will sometimes leave the changekey intact, so
-            # don't make this a requirement. The test suite has uncovered that item updates are not atomic WTR changekey
-            # updates, at least on O365. This results in 'ErrorIrresolvableConflict' when updating an item multiple
-            # times within a short timeframe. Try a couple of times to get a fresh changekey, to make the test more
-            # stable.
-            old_changekey = self._id.changekey
-            if changekey == old_changekey:
-                log.warning("'changekey' did not change on update")
-                for i in range(1, 4):
-                    time.sleep(i / 2)
-                    self._id.changekey = None
-                    self.refresh()
-                    if self._id.changekey != old_changekey:
-                        break
-                else:
-                    self._id.changekey = old_changekey
-                    log.warning("'changekey' still not updated after 3 refreshes")
+            # Don't check that changekeys are different. No-op saves will sometimes leave the changekey intact
             self._id = self.ID_ELEMENT_CLS(item_id, changekey)
         else:
             if update_fields:
