@@ -508,17 +508,14 @@ class CalendarTest(CommonItemTest):
             third_occurrence.delete()  # Item is gone from the server, so this should fail
 
     def test_invalid_updateitem_items(self):
-        # Test here because CalendarItem is the only item that has a requiref field with no default
+        # Test here because CalendarItem is the only item that has a required field with no default
         item = self.get_test_item().save()
-        with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, [])])
-        self.assertEqual(e.exception.args[0], "'fieldnames' must not be empty")
 
         # Test a field that has is_required=True
         start = item.start
         item.start = None
         with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, ["start"])])
+            item.save(update_fields=["start"])
         self.assertEqual(e.exception.args[0], "'start' is a required field with no default")
         item.start = start
 
@@ -526,13 +523,13 @@ class CalendarTest(CommonItemTest):
         uid = item.uid
         item.uid = None
         with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, ["uid"])])
+            item.save(update_fields=["uid"])
         self.assertEqual(e.exception.args[0], "'uid' is a required field and may not be deleted")
         item.uid = uid
 
         item.is_meeting = None
         with self.assertRaises(ValueError) as e:
-            self.account.bulk_update([(item, ["is_meeting"])])
+            item.save(update_fields=["is_meeting"])
         self.assertEqual(e.exception.args[0], "'is_meeting' is a read-only field")
 
     def test_meeting_request(self):

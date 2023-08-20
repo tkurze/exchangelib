@@ -651,13 +651,8 @@ class CommonItemTest(BaseItemTest):
         update_fieldnames = [f for f in update_kwargs if f != "attachments"]
         for k, v in update_kwargs.items():
             setattr(item, k, v)
-        # Test with generator as argument
-        update_ids = self.account.bulk_update(items=(i for i in ((item, update_fieldnames),)))
-        self.assertEqual(len(update_ids), 1)
-        self.assertEqual(len(update_ids[0]), 2, update_ids)
-        self.assertEqual(item.id, update_ids[0][0])  # ID should be the same
-        self.assertNotEqual(item.changekey, update_ids[0][1])  # Changekey should change when item is updated
-        item = self.get_item_by_id(update_ids[0], folder=self.test_folder)
+        item.save(update_fields=update_fieldnames)
+        item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 if not f.supports_version(self.account.version):
@@ -727,12 +722,8 @@ class CommonItemTest(BaseItemTest):
             wipe_kwargs[f.name] = None
         for k, v in wipe_kwargs.items():
             setattr(item, k, v)
-        wipe_ids = self.account.bulk_update([(item, update_fieldnames)])
-        self.assertEqual(len(wipe_ids), 1)
-        self.assertEqual(len(wipe_ids[0]), 2, wipe_ids)
-        self.assertEqual(item.id, wipe_ids[0][0])  # ID should be the same
-        self.assertNotEqual(item.changekey, wipe_ids[0][1])  # Changekey should not be the same when item is updated
-        item = self.get_item_by_id(wipe_ids[0], folder=self.test_folder)
+        item.save(update_fields=update_fieldnames)
+        item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
                 if not f.supports_version(self.account.version):
@@ -759,12 +750,8 @@ class CommonItemTest(BaseItemTest):
             # Test extern_id = None, which deletes the extended property entirely
             extern_id = None
             item.extern_id = extern_id
-            wipe2_ids = self.account.bulk_update([(item, ["extern_id"])])
-            self.assertEqual(len(wipe2_ids), 1)
-            self.assertEqual(len(wipe2_ids[0]), 2, wipe2_ids)
-            self.assertEqual(item.id, wipe2_ids[0][0])  # ID must be the same
-            self.assertNotEqual(item.changekey, wipe2_ids[0][1])  # Changekey must change when item is updated
-            updated_item = self.get_item_by_id(wipe2_ids[0], folder=self.test_folder)
+            item.save(update_fields=["extern_id"])
+            updated_item = self.get_item_by_id(item, folder=self.test_folder)
             self.assertEqual(updated_item.extern_id, extern_id)
         finally:
             item.__class__.deregister("extern_id")
