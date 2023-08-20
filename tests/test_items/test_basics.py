@@ -642,6 +642,8 @@ class CommonItemTest(BaseItemTest):
         insert_kwargs = self.get_random_insert_kwargs()
         insert_kwargs["categories"] = self.categories
         item = self.ITEM_CLASS(folder=self.test_folder, **insert_kwargs).save()
+        # Test no-op update
+        item.save()
         update_kwargs = self.get_random_update_kwargs(item=item, insert_kwargs=insert_kwargs)
         if self.ITEM_CLASS in (Contact, DistributionList):
             # Contact and DistributionList don't support mime_type updates at all
