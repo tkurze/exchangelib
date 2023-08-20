@@ -818,7 +818,7 @@ class FolderTest(EWSTest):
         # Test extended properties on folders and folder roots. This extended prop gets the size (in bytes) of a folder
         class FolderSize(ExtendedProperty):
             property_tag = 0x0E08
-            property_type = "Integer"
+            property_type = "Long"
 
         try:
             Folder.register("size", FolderSize)
