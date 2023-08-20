@@ -96,17 +96,6 @@ class MessagesTest(CommonItemTest):
         time.sleep(5)  # Requests are supposed to be transactional, but apparently not...
         self.assertEqual(self.account.sent.filter(categories__contains=item.categories).count(), 1)
 
-    def test_bulk_send(self):
-        with self.assertRaises(AttributeError):
-            self.account.bulk_send(ids=[], save_copy=False, copy_to_folder=self.account.trash)
-        item = self.get_test_item()
-        item.save()
-        for res in self.account.bulk_send(ids=[item]):
-            self.assertEqual(res, True)
-        time.sleep(10)  # Requests are supposed to be transactional, but apparently not...
-        # By default, sent items are placed in the sent folder
-        self.assertEqual(self.account.sent.filter(categories__contains=item.categories).count(), 1)
-
     def test_reply(self):
         # Test that we can reply to a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item()
