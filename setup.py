@@ -43,7 +43,7 @@ setup(
         'backports.zoneinfo;python_version<"3.9"',
         "cached_property",
         "defusedxml>=0.6.0",
-        "dnspython>=2.0.0",
+        "dnspython>=2.2.0",
         "isodate",
         "lxml>3.0",
         "oauthlib",

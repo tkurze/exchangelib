@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 DNS_LOOKUP_ERRORS = (
     dns.name.EmptyLabel,
+    dns.resolver.LifetimeTimeout,
     dns.resolver.NXDOMAIN,
     dns.resolver.NoAnswer,
     dns.resolver.NoNameservers,
