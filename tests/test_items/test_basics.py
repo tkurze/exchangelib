@@ -259,6 +259,16 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
             item.changekey = refreshed_item.changekey
             item.save(**kwargs)
 
+    def safe_cancel(self, item):
+        # See self.safe_save()
+        try:
+            item.cancel()
+        except ErrorIrresolvableConflict:
+            item.changekey = None
+            refreshed_item = self.get_item_by_id(item, item.folder)
+            item.changekey = refreshed_item.changekey
+            item.cancel()
+
 
 class CommonItemTest(BaseItemTest):
     @classmethod

@@ -43,7 +43,7 @@ class CalendarTest(CommonItemTest):
     def test_cancel(self):
         item = self.get_test_item().save()
         try:
-            res = item.cancel()  # Returns (id, changekey) of cancelled item
+            res = self.safe_cancel(item)  # Returns (id, changekey) of cancelled item
         except ErrorInvalidRecipients:
             # Does not always work in a single-account setup
             pass
@@ -51,7 +51,7 @@ class CalendarTest(CommonItemTest):
             self.assertIsInstance(res, BulkCreateResult)
             with self.assertRaises(ErrorItemNotFound):
                 # Item is already cancelled
-                item.cancel()
+                self.safe_cancel(item)
 
     def test_updating_timestamps(self):
         # Test that we can update an item without changing anything, and maintain the hidden timezone fields as local
