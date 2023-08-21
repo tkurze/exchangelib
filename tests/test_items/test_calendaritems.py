@@ -101,7 +101,7 @@ class CalendarTest(CommonItemTest):
         ]
         item.start, item.end = dt_start, dt_end
         item.recurrence.boundary.start = dt_start.date()
-        item.save()
+        self.safe_save(item)
         item.refresh()
         self.assertEqual(item.start, dt_start)
         self.assertEqual(item.end, dt_end)
@@ -122,7 +122,7 @@ class CalendarTest(CommonItemTest):
         self.assertEqual(item.is_all_day, True)
         self.assertEqual(item.start, start_dt.date())
         self.assertEqual(item.end, end_dt.date())
-        item.save()  # Make sure we can update
+        self.safe_save(item)  # Make sure we can update
         item.delete()
 
         # We are also allowed to assign plain dates as values for all-day items
@@ -139,7 +139,7 @@ class CalendarTest(CommonItemTest):
         self.assertEqual(item.is_all_day, True)
         self.assertEqual(item.start, start_dt.date())
         self.assertEqual(item.end, end_dt.date())
-        item.save()  # Make sure we can update
+        self.safe_save(item)  # Make sure we can update
 
     def test_view(self):
         item1 = self.ITEM_CLASS(

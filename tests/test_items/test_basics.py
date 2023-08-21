@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from exchangelib.errors import (
     ErrorInvalidPropertySet,
     ErrorInvalidValueForProperty,
+    ErrorIrresolvableConflict,
     ErrorItemNotFound,
     ErrorPropertyUpdate,
     ErrorUnsupportedPathForQuery,
@@ -246,6 +247,18 @@ class BaseItemTest(EWSTest, metaclass=abc.ABCMeta):
         _id, changekey = item if isinstance(item, tuple) else (item.id, item.changekey)
         return (folder or self.account.root).get(id=_id, changekey=changekey)
 
+    def safe_save(self, item, **kwargs):
+        # Sometimes, after somewhere between 2 and 20 updates, Exchange will decide to randomly update the changekey on
+        # its own. I cannot find any pattern to this, but tests that use the same item over and over to test updates on
+        # various fields become horribly unstable. This helper method hides that bug.
+        try:
+            item.save(**kwargs)
+        except ErrorIrresolvableConflict:
+            item.changekey = None
+            refreshed_item = self.get_item_by_id(item, item.folder)
+            item.changekey = refreshed_item.changekey
+            item.save(**kwargs)
+
 
 class CommonItemTest(BaseItemTest):
     @classmethod
@@ -478,7 +491,7 @@ class CommonItemTest(BaseItemTest):
                     else:
                         setattr(item, f.name, get_random_string(f.max_length))
                     try:
-                        item.save(update_fields=[f.name])
+                        self.safe_save(item, update_fields=[f.name])
                     except ErrorPropertyUpdate:
                         # Some fields throw this error when updated to a huge value
                         self.assertIn(f.name, ["given_name", "middle_name", "surname"])
@@ -551,9 +564,10 @@ class CommonItemTest(BaseItemTest):
         update_kwargs = self.get_random_update_kwargs(item=item, insert_kwargs=insert_kwargs)
         for k, v in update_kwargs.items():
             setattr(item, k, v)
-        item.save()
+        self.safe_save(item)
         for k, v in update_kwargs.items():
-            self.assertEqual(getattr(item, k), v, (k, getattr(item, k), v))
+            with self.subTest(k=k):
+                self.assertEqual(getattr(item, k), v, (k, getattr(item, k), v))
         # Test that whatever we have locally also matches whatever is in the DB
         fresh_item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
@@ -561,6 +575,9 @@ class CommonItemTest(BaseItemTest):
                 old, new = getattr(item, f.name), getattr(fresh_item, f.name)
                 if f.is_read_only and old is None:
                     # Some fields are automatically updated server-side
+                    continue
+                if f.name == "_id":
+                    # We test this elsewhere, and changekey is not guaranteed to be the same - see self.safe_save()
                     continue
                 if f.name == "mime_content":
                     # This will change depending on other contents fields
@@ -649,7 +666,7 @@ class CommonItemTest(BaseItemTest):
         update_fieldnames = [f for f in update_kwargs if f != "attachments"]
         for k, v in update_kwargs.items():
             setattr(item, k, v)
-        item.save(update_fields=update_fieldnames)
+        self.safe_save(item, update_fields=update_fieldnames)
         item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
@@ -720,7 +737,7 @@ class CommonItemTest(BaseItemTest):
             wipe_kwargs[f.name] = None
         for k, v in wipe_kwargs.items():
             setattr(item, k, v)
-        item.save(update_fields=update_fieldnames)
+        self.safe_save(item, update_fields=update_fieldnames)
         item = self.get_item_by_id(item, folder=self.test_folder)
         for f in self.ITEM_CLASS.FIELDS:
             with self.subTest(f=f):
@@ -748,7 +765,7 @@ class CommonItemTest(BaseItemTest):
             # Test extern_id = None, which deletes the extended property entirely
             extern_id = None
             item.extern_id = extern_id
-            item.save(update_fields=["extern_id"])
+            self.safe_save(item, update_fields=["extern_id"])
             updated_item = self.get_item_by_id(item, folder=self.test_folder)
             self.assertEqual(updated_item.extern_id, extern_id)
         finally:
