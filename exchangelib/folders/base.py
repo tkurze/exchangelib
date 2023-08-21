@@ -890,7 +890,7 @@ class Folder(BaseFolder):
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
-        folder = cls.from_xml(elem=elem, account=root.account if root else None)
+        folder = cls.from_xml(elem=elem, account=root.account)
         folder_cls = cls
         if cls == Folder:
             # We were called on the generic Folder class. Try to find a more specific class to return objects as.
@@ -909,7 +909,7 @@ class Folder(BaseFolder):
             #
             # The returned XML may contain neither folder class nor name. In that case, we default to the generic
             # Folder class.
-            if folder.name and root:
+            if folder.name:
                 with suppress(KeyError):
                     # TODO: fld_class.LOCALIZED_NAMES is most definitely neither complete nor authoritative
                     folder_cls = root.folder_cls_from_folder_name(

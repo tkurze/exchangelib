@@ -977,8 +977,9 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
         f._distinguished_id = folder._distinguished_id
     elif isinstance(folder, DistinguishedFolderId):
-        # We don't know the root, and we can't assume account.root because this may be a shared folder belonging to a
-        # different mailbox.
+        # We don't know the root or even account, but we need to attach the folder to something if we want to make
+        # future requests with this folder. Use 'account' but make sure to always use the distinguished folder ID going
+        # forward, instead of referencing anything connected to 'account'.
         roots = (Root, ArchiveRoot, PublicFoldersRoot)
         for cls in roots + tuple(chain(*(r.WELLKNOWN_FOLDERS for r in roots))):
             if cls.DISTINGUISHED_FOLDER_ID == folder.id:
@@ -986,15 +987,10 @@ def parse_folder_elem(elem, folder, account):
                 break
         else:
             raise ValueError(f"Unknown distinguished folder ID: {folder.id}")
-        if folder.mailbox and folder.mailbox.email_address != account.primary_smtp_address:
-            # Distinguished folder points to a different account. Don't attach the wrong account to the returned folder.
-            external_account = True
+        if folder_cls in roots:
+            f = folder_cls.from_xml(elem=elem, account=account)
         else:
-            external_account = False
-        if cls in roots:
-            f = folder_cls.from_xml(elem=elem, account=None if external_account else account)
-        else:
-            f = folder_cls.from_xml_with_root(elem=elem, root=None if external_account else account.root)
+            f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
         f._distinguished_id = folder
     else:
         # 'folder' is a generic FolderId instance. We don't know the root so assume account.root.
