@@ -96,6 +96,7 @@ class ElementNotFound(Exception):
 # Regex of UTF-8 control characters that are illegal in XML 1.0 (and XML 1.1).
 # See https://stackoverflow.com/a/22273639/219640
 _ILLEGAL_XML_CHARS_RE = re.compile(&#34;[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFDD0-\uFDDF\uFFFE\uFFFF]&#34;)
+_ILLEGAL_XML_ESCAPE_CHARS_RE = re.compile(rb&#34;&amp;(#[0-9]+;?|#[xX][0-9a-fA-F]+;?)&#34;)  # Could match the above better
 
 # XML namespaces
 SOAPNS = &#34;http://schemas.xmlsoap.org/soap/envelope/&#34;
@@ -296,6 +297,13 @@ def safe_xml_value(value, replacement=&#34;?&#34;):
     return _ILLEGAL_XML_CHARS_RE.sub(replacement, value)
 
 
+def sanitize_xml(data, replacement=b&#34;?&#34;):
+    if not isinstance(data, bytes):
+        # We may get data=&#34;&#34; from some expatreader versions
+        return data
+    return _ILLEGAL_XML_ESCAPE_CHARS_RE.sub(replacement, data)
+
+
 def create_element(name, attrs=None, nsmap=None):
     if &#34;:&#34; in name:
         ns, name = name.split(&#34;:&#34;)
@@ -390,19 +398,20 @@ class StreamingBase64Parser(DefusedExpatParser):
         collected_data = []
         while buffer:
             if not self.element_found:
-                collected_data += buffer
+                collected_data.extend(buffer)
             yield from self.feed(buffer)
             buffer = file.read(self._bufsize)
         # Any remaining data in self.buffer should be padding chars now
         self.buffer = None
         self.close()
         if not self.element_found:
-            data = bytes(collected_data)
-            raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(data))
+            raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(collected_data))
 
     def feed(self, data, isFinal=0):
-        &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
-        DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
+        &#34;&#34;&#34;Yield the current content of the character buffer. The input XML may contain illegal characters. The lxml
+        parser handles this gracefully with the &#39;recover&#39; option, but ExpatParser doesn&#39;t have this option. Remove
+        illegal characters before parsing.&#34;&#34;&#34;
+        DefusedExpatParser.feed(self, data=sanitize_xml(data), isFinal=isFinal)
         return self._decode_buffer()
 
     def _decode_buffer(self):
@@ -1450,6 +1459,22 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
     return _ILLEGAL_XML_CHARS_RE.sub(replacement, value)</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.util.sanitize_xml"><code class="name flex">
+<span>def <span class="ident">sanitize_xml</span></span>(<span>data, replacement=b'?')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sanitize_xml(data, replacement=b&#34;?&#34;):
+    if not isinstance(data, bytes):
+        # We may get data=&#34;&#34; from some expatreader versions
+        return data
+    return _ILLEGAL_XML_ESCAPE_CHARS_RE.sub(replacement, data)</code></pre>
+</details>
+</dd>
 <dt id="exchangelib.util.set_xml_value"><code class="name flex">
 <span>def <span class="ident">set_xml_value</span></span>(<span>elem, value, version=None)</span>
 </code></dt>
@@ -2297,19 +2322,20 @@ def highlight_xml(xml_str):
         collected_data = []
         while buffer:
             if not self.element_found:
-                collected_data += buffer
+                collected_data.extend(buffer)
             yield from self.feed(buffer)
             buffer = file.read(self._bufsize)
         # Any remaining data in self.buffer should be padding chars now
         self.buffer = None
         self.close()
         if not self.element_found:
-            data = bytes(collected_data)
-            raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(data))
+            raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(collected_data))
 
     def feed(self, data, isFinal=0):
-        &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
-        DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
+        &#34;&#34;&#34;Yield the current content of the character buffer. The input XML may contain illegal characters. The lxml
+        parser handles this gracefully with the &#39;recover&#39; option, but ExpatParser doesn&#39;t have this option. Remove
+        illegal characters before parsing.&#34;&#34;&#34;
+        DefusedExpatParser.feed(self, data=sanitize_xml(data), isFinal=isFinal)
         return self._decode_buffer()
 
     def _decode_buffer(self):
@@ -2340,14 +2366,18 @@ def highlight_xml(xml_str):
 <span>def <span class="ident">feed</span></span>(<span>self, data, isFinal=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Yield the current content of the character buffer.</p></div>
+<div class="desc"><p>Yield the current content of the character buffer. The input XML may contain illegal characters. The lxml
+parser handles this gracefully with the 'recover' option, but ExpatParser doesn't have this option. Remove
+illegal characters before parsing.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def feed(self, data, isFinal=0):
-    &#34;&#34;&#34;Yield the current content of the character buffer.&#34;&#34;&#34;
-    DefusedExpatParser.feed(self, data=data, isFinal=isFinal)
+    &#34;&#34;&#34;Yield the current content of the character buffer. The input XML may contain illegal characters. The lxml
+    parser handles this gracefully with the &#39;recover&#39; option, but ExpatParser doesn&#39;t have this option. Remove
+    illegal characters before parsing.&#34;&#34;&#34;
+    DefusedExpatParser.feed(self, data=sanitize_xml(data), isFinal=isFinal)
     return self._decode_buffer()</code></pre>
 </details>
 </dd>
@@ -2372,15 +2402,14 @@ def highlight_xml(xml_str):
     collected_data = []
     while buffer:
         if not self.element_found:
-            collected_data += buffer
+            collected_data.extend(buffer)
         yield from self.feed(buffer)
         buffer = file.read(self._bufsize)
     # Any remaining data in self.buffer should be padding chars now
     self.buffer = None
     self.close()
     if not self.element_found:
-        data = bytes(collected_data)
-        raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(data))</code></pre>
+        raise ElementNotFound(&#34;The element to be streamed from was not found&#34;, data=bytes(collected_data))</code></pre>
 </details>
 </dd>
 </dl>
@@ -2525,6 +2554,7 @@ no namespace.</p></div>
 <li><code><a title="exchangelib.util.require_id" href="#exchangelib.util.require_id">require_id</a></code></li>
 <li><code><a title="exchangelib.util.safe_b64decode" href="#exchangelib.util.safe_b64decode">safe_b64decode</a></code></li>
 <li><code><a title="exchangelib.util.safe_xml_value" href="#exchangelib.util.safe_xml_value">safe_xml_value</a></code></li>
+<li><code><a title="exchangelib.util.sanitize_xml" href="#exchangelib.util.sanitize_xml">sanitize_xml</a></code></li>
 <li><code><a title="exchangelib.util.set_xml_value" href="#exchangelib.util.set_xml_value">set_xml_value</a></code></li>
 <li><code><a title="exchangelib.util.split_url" href="#exchangelib.util.split_url">split_url</a></code></li>
 <li><code><a title="exchangelib.util.to_xml" href="#exchangelib.util.to_xml">to_xml</a></code></li>

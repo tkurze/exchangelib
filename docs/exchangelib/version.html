@@ -155,7 +155,7 @@ EXCHANGE_O365 = Build(15, 20)
 # The list is sorted from newest to oldest build
 VERSIONS = (
     (EXCHANGE_O365, &#34;Exchange2016&#34;, &#34;Microsoft Exchange Server Office365&#34;),  # Not mentioned in list of build numbers
-    (EXCHANGE_2019, &#34;Exchange2019&#34;, &#34;Microsoft Exchange Server 2019&#34;),
+    (EXCHANGE_2019, &#34;Exchange2016&#34;, &#34;Microsoft Exchange Server 2019&#34;),
     (EXCHANGE_2016, &#34;Exchange2016&#34;, &#34;Microsoft Exchange Server 2016&#34;),
     (EXCHANGE_2015_SP1, &#34;Exchange2015_SP1&#34;, &#34;Microsoft Exchange Server 2015 SP1&#34;),
     (EXCHANGE_2015, &#34;Exchange2015&#34;, &#34;Microsoft Exchange Server 2015&#34;),
@@ -193,12 +193,14 @@ class Version:
     @property
     def fullname(self):
         for build, api_version, full_name in VERSIONS:
-            if self.build:
-                if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
-                    continue
+            if self.build and (
+                self.build.major_version != build.major_version or self.build.minor_version != build.minor_version
+            ):
+                continue
             if self.api_version == api_version:
                 return full_name
-        raise ValueError(f&#34;Full name for API version {self.api_version} build {self.build} is unknown&#34;)
+        log.warning(&#34;Full name for API version %s build %s is unknown&#34;, self.api_version, self.build)
+        return &#34;UNKNOWN&#34;
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
@@ -280,6 +282,9 @@ class Version:
     def all_versions(cls):
         # Return all supported versions, sorted newest to oldest
         return [cls(build=build, api_version=api_version) for build, api_version, _ in VERSIONS]
+
+    def __hash__(self):
+        return hash((self.build, self.api_version))
 
     def __eq__(self, other):
         if self.api_version != other.api_version:
@@ -664,12 +669,14 @@ def supports_version(cls, version):
     @property
     def fullname(self):
         for build, api_version, full_name in VERSIONS:
-            if self.build:
-                if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
-                    continue
+            if self.build and (
+                self.build.major_version != build.major_version or self.build.minor_version != build.minor_version
+            ):
+                continue
             if self.api_version == api_version:
                 return full_name
-        raise ValueError(f&#34;Full name for API version {self.api_version} build {self.build} is unknown&#34;)
+        log.warning(&#34;Full name for API version %s build %s is unknown&#34;, self.api_version, self.build)
+        return &#34;UNKNOWN&#34;
 
     @classmethod
     def guess(cls, protocol, api_version_hint=None):
@@ -751,6 +758,9 @@ def supports_version(cls, version):
     def all_versions(cls):
         # Return all supported versions, sorted newest to oldest
         return [cls(build=build, api_version=api_version) for build, api_version, _ in VERSIONS]
+
+    def __hash__(self):
+        return hash((self.build, self.api_version))
 
     def __eq__(self, other):
         if self.api_version != other.api_version:
@@ -900,12 +910,14 @@ def guess(cls, protocol, api_version_hint=None):
 <pre><code class="python">@property
 def fullname(self):
     for build, api_version, full_name in VERSIONS:
-        if self.build:
-            if self.build.major_version != build.major_version or self.build.minor_version != build.minor_version:
-                continue
+        if self.build and (
+            self.build.major_version != build.major_version or self.build.minor_version != build.minor_version
+        ):
+            continue
         if self.api_version == api_version:
             return full_name
-    raise ValueError(f&#34;Full name for API version {self.api_version} build {self.build} is unknown&#34;)</code></pre>
+    log.warning(&#34;Full name for API version %s build %s is unknown&#34;, self.api_version, self.build)
+    return &#34;UNKNOWN&#34;</code></pre>
 </details>
 </dd>
 </dl>

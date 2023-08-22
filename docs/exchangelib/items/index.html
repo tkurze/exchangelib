@@ -68,6 +68,7 @@ from .calendar_item import (
     MeetingRequest,
     MeetingResponse,
     TentativelyAcceptItem,
+    _Booking,
 )
 from .contact import Contact, DistributionList, Persona
 from .item import BaseItem, Item
@@ -90,6 +91,7 @@ SEARCH_SCOPE_CHOICES = (ACTIVE_DIRECTORY, ACTIVE_DIRECTORY_CONTACTS, CONTACTS, C
 
 
 ITEM_CLASSES = (
+    _Booking,
     CalendarItem,
     Contact,
     DistributionList,
@@ -2076,6 +2078,7 @@ we use folder.account.</p></div>
 <ul class="hlist">
 <li><a title="exchangelib.items.calendar_item.BaseMeetingItem" href="calendar_item.html#exchangelib.items.calendar_item.BaseMeetingItem">BaseMeetingItem</a></li>
 <li><a title="exchangelib.items.calendar_item.CalendarItem" href="calendar_item.html#exchangelib.items.calendar_item.CalendarItem">CalendarItem</a></li>
+<li>exchangelib.items.calendar_item._Booking</li>
 <li><a title="exchangelib.items.contact.Contact" href="contact.html#exchangelib.items.contact.Contact">Contact</a></li>
 <li><a title="exchangelib.items.contact.DistributionList" href="contact.html#exchangelib.items.contact.DistributionList">DistributionList</a></li>
 <li><a title="exchangelib.items.message.Message" href="message.html#exchangelib.items.message.Message">Message</a></li>
@@ -3091,24 +3094,20 @@ we use folder.account.</p></div>
                 conflict_resolution=conflict_resolution,
                 send_meeting_invitations=send_meeting_invitations,
             )
-        else:
-            if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
-                # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
-                # to first save, then attach, then send. This is done in save().
-                self.save(
-                    update_fields=update_fields,
-                    conflict_resolution=conflict_resolution,
-                    send_meeting_invitations=send_meeting_invitations,
-                )
-                return self.send(
-                    save_copy=False,
-                    conflict_resolution=conflict_resolution,
-                    send_meeting_invitations=send_meeting_invitations,
-                )
-            else:
-                return self._create(
-                    message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations
-                )
+        if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
+            # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
+            # to first save, then attach, then send. This is done in save().
+            self.save(
+                update_fields=update_fields,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+            return self.send(
+                save_copy=False,
+                conflict_resolution=conflict_resolution,
+                send_meeting_invitations=send_meeting_invitations,
+            )
+        return self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)
 
     @require_id
     def create_reply(self, subject, body, to_recipients=None, cc_recipients=None, bcc_recipients=None, author=None):
@@ -3442,24 +3441,20 @@ def send(
             conflict_resolution=conflict_resolution,
             send_meeting_invitations=send_meeting_invitations,
         )
-    else:
-        if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
-            # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
-            # to first save, then attach, then send. This is done in save().
-            self.save(
-                update_fields=update_fields,
-                conflict_resolution=conflict_resolution,
-                send_meeting_invitations=send_meeting_invitations,
-            )
-            return self.send(
-                save_copy=False,
-                conflict_resolution=conflict_resolution,
-                send_meeting_invitations=send_meeting_invitations,
-            )
-        else:
-            return self._create(
-                message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations
-            )</code></pre>
+    if self.account.version.build &lt; EXCHANGE_2013 and self.attachments:
+        # At least some versions prior to Exchange 2013 can&#39;t send-and-save attachments immediately. You need
+        # to first save, then attach, then send. This is done in save().
+        self.save(
+            update_fields=update_fields,
+            conflict_resolution=conflict_resolution,
+            send_meeting_invitations=send_meeting_invitations,
+        )
+        return self.send(
+            save_copy=False,
+            conflict_resolution=conflict_resolution,
+            send_meeting_invitations=send_meeting_invitations,
+        )
+    return self._create(message_disposition=SEND_AND_SAVE_COPY, send_meeting_invitations=send_meeting_invitations)</code></pre>
 </details>
 </dd>
 </dl>
