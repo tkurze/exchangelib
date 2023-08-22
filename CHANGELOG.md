@@ -5,6 +5,14 @@ HEAD
 ----
 
 
+5.1.0
+-----
+- Fix QuerySet operations on shared folders
+- Fix globbing on patterns with more than two folder levels
+- Fix case sensitivity of "/" folder navigation
+- Multiple improvements related to consistency and graceful error handling
+
+
 5.0.3
 -----
 - Bugfix release

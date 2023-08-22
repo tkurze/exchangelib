@@ -36,7 +36,7 @@ from .settings import OofSettings
 from .transport import BASIC, CBA, DIGEST, GSSAPI, NTLM, OAUTH2, SSPI
 from .version import Build, Version
 
-__version__ = "5.0.3"
+__version__ = "5.1.0"
 
 __all__ = [
     "__version__",
