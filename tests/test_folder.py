@@ -35,6 +35,7 @@ from exchangelib.folders import (
     DistinguishedFolderId,
     DlpPolicyEvaluation,
     Drafts,
+    EventCheckPoints,
     Favorites,
     Files,
     Folder,
@@ -523,6 +524,8 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.RecoveryPoints")
                 elif isinstance(f, SwssItems):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.SwssItems")
+                elif isinstance(f, EventCheckPoints):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.EventCheckPoints")
                 elif isinstance(f, PassThroughSearchResults):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.PassThroughSearchResults")
                 elif isinstance(f, GraphAnalytics):

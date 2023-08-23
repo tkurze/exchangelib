@@ -82,6 +82,10 @@ class SwssItems(Folder):
     CONTAINER_CLASS = "IPF.StoreItem.SwssItems"
 
 
+class EventCheckPoints(Folder):
+    CONTAINER_CLASS = "IPF.StoreItem.EventCheckPoints"
+
+
 class SkypeTeamsMessages(Folder):
     CONTAINER_CLASS = "IPF.SkypeTeams.Message"
     LOCALIZED_NAMES = {
