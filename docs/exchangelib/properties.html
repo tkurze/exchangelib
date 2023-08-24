@@ -2121,23 +2121,30 @@ class UserResponse(EWSElement):
             raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)
 
     @classmethod
-    def from_xml(cls, elem, account):
+    def parse_elem(cls, elem):
         # Possible ErrorCode values:
         #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
         error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
         error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
         if error_code == &#34;InternalServerError&#34;:
-            raise ErrorInternalServerError(error_message)
+            return ErrorInternalServerError(error_message)
         if error_code == &#34;ServerBusy&#34;:
-            raise ErrorServerBusy(error_message)
+            return ErrorServerBusy(error_message)
         if error_code == &#34;NotFederated&#34;:
-            raise ErrorOrganizationNotFederated(error_message)
-        if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
-            return cls(error_code=error_code, error_message=error_message)
+            return ErrorOrganizationNotFederated(error_message)
+        return cls(error_code=error_code, error_message=error_message)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = cls.parse_elem(elem)
+        if isinstance(res, Exception):
+            raise res
+        if res.error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
+            return cls(error_code=res.error_code, error_message=res.error_message)
 
         redirect_target = get_xml_attr(elem, f&#34;{{{ANS}}}RedirectTarget&#34;)
-        redirect_address = redirect_target if error_code == &#34;RedirectAddress&#34; else None
-        redirect_url = redirect_target if error_code == &#34;RedirectUrl&#34; else None
+        redirect_address = redirect_target if res.error_code == &#34;RedirectAddress&#34; else None
+        redirect_url = redirect_target if res.error_code == &#34;RedirectUrl&#34; else None
         user_settings_errors = {}
         settings_errors_elem = elem.find(f&#34;{{{ANS}}}UserSettingErrors&#34;)
         if settings_errors_elem is not None:
@@ -10509,23 +10516,30 @@ def from_xml(cls, elem, account):
             raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)
 
     @classmethod
-    def from_xml(cls, elem, account):
+    def parse_elem(cls, elem):
         # Possible ErrorCode values:
         #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
         error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
         error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
         if error_code == &#34;InternalServerError&#34;:
-            raise ErrorInternalServerError(error_message)
+            return ErrorInternalServerError(error_message)
         if error_code == &#34;ServerBusy&#34;:
-            raise ErrorServerBusy(error_message)
+            return ErrorServerBusy(error_message)
         if error_code == &#34;NotFederated&#34;:
-            raise ErrorOrganizationNotFederated(error_message)
-        if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
-            return cls(error_code=error_code, error_message=error_message)
+            return ErrorOrganizationNotFederated(error_message)
+        return cls(error_code=error_code, error_message=error_message)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = cls.parse_elem(elem)
+        if isinstance(res, Exception):
+            raise res
+        if res.error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
+            return cls(error_code=res.error_code, error_message=res.error_message)
 
         redirect_target = get_xml_attr(elem, f&#34;{{{ANS}}}RedirectTarget&#34;)
-        redirect_address = redirect_target if error_code == &#34;RedirectAddress&#34; else None
-        redirect_url = redirect_target if error_code == &#34;RedirectUrl&#34; else None
+        redirect_address = redirect_target if res.error_code == &#34;RedirectAddress&#34; else None
+        redirect_url = redirect_target if res.error_code == &#34;RedirectUrl&#34; else None
         user_settings_errors = {}
         settings_errors_elem = elem.find(f&#34;{{{ANS}}}UserSettingErrors&#34;)
         if settings_errors_elem is not None:
@@ -10584,22 +10598,15 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
-    # Possible ErrorCode values:
-    #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
-    error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
-    error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
-    if error_code == &#34;InternalServerError&#34;:
-        raise ErrorInternalServerError(error_message)
-    if error_code == &#34;ServerBusy&#34;:
-        raise ErrorServerBusy(error_message)
-    if error_code == &#34;NotFederated&#34;:
-        raise ErrorOrganizationNotFederated(error_message)
-    if error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
-        return cls(error_code=error_code, error_message=error_message)
+    res = cls.parse_elem(elem)
+    if isinstance(res, Exception):
+        raise res
+    if res.error_code not in (&#34;NoError&#34;, &#34;RedirectAddress&#34;, &#34;RedirectUrl&#34;):
+        return cls(error_code=res.error_code, error_message=res.error_message)
 
     redirect_target = get_xml_attr(elem, f&#34;{{{ANS}}}RedirectTarget&#34;)
-    redirect_address = redirect_target if error_code == &#34;RedirectAddress&#34; else None
-    redirect_url = redirect_target if error_code == &#34;RedirectUrl&#34; else None
+    redirect_address = redirect_target if res.error_code == &#34;RedirectAddress&#34; else None
+    redirect_url = redirect_target if res.error_code == &#34;RedirectUrl&#34; else None
     user_settings_errors = {}
     settings_errors_elem = elem.find(f&#34;{{{ANS}}}UserSettingErrors&#34;)
     if settings_errors_elem is not None:
@@ -10621,6 +10628,30 @@ def from_xml(cls, elem, account):
         user_settings_errors=user_settings_errors,
         user_settings=user_settings,
     )</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.UserResponse.parse_elem"><code class="name flex">
+<span>def <span class="ident">parse_elem</span></span>(<span>elem)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def parse_elem(cls, elem):
+    # Possible ErrorCode values:
+    #   https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/errorcode-soap
+    error_code = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorCode&#34;)
+    error_message = get_xml_attr(elem, f&#34;{{{ANS}}}ErrorMessage&#34;)
+    if error_code == &#34;InternalServerError&#34;:
+        return ErrorInternalServerError(error_message)
+    if error_code == &#34;ServerBusy&#34;:
+        return ErrorServerBusy(error_message)
+    if error_code == &#34;NotFederated&#34;:
+        return ErrorOrganizationNotFederated(error_message)
+    return cls(error_code=error_code, error_message=error_message)</code></pre>
 </details>
 </dd>
 </dl>
@@ -11872,6 +11903,7 @@ def version(self):
 <li><code><a title="exchangelib.properties.UserResponse.error_message" href="#exchangelib.properties.UserResponse.error_message">error_message</a></code></li>
 <li><code><a title="exchangelib.properties.UserResponse.ews_url" href="#exchangelib.properties.UserResponse.ews_url">ews_url</a></code></li>
 <li><code><a title="exchangelib.properties.UserResponse.from_xml" href="#exchangelib.properties.UserResponse.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.properties.UserResponse.parse_elem" href="#exchangelib.properties.UserResponse.parse_elem">parse_elem</a></code></li>
 <li><code><a title="exchangelib.properties.UserResponse.raise_errors" href="#exchangelib.properties.UserResponse.raise_errors">raise_errors</a></code></li>
 <li><code><a title="exchangelib.properties.UserResponse.redirect_address" href="#exchangelib.properties.UserResponse.redirect_address">redirect_address</a></code></li>
 <li><code><a title="exchangelib.properties.UserResponse.redirect_url" href="#exchangelib.properties.UserResponse.redirect_url">redirect_url</a></code></li>

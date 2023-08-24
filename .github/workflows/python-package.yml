@@ -29,7 +29,7 @@ jobs:
     needs: pre_job
     strategy:
       matrix:
-        python-version: ['3.7', '3.11']
+        python-version: ['3.8', '3.11']
         include:
           # Allow failure on Python dev - e.g. Cython install regularly fails
           - python-version: "3.12-dev"
@@ -80,7 +80,8 @@ jobs:
         black --check --diff exchangelib tests scripts setup.py
         isort --check --diff exchangelib tests scripts setup.py
         flake8 exchangelib tests scripts setup.py
-        unittest-parallel -j 4 --class-fixtures --coverage --coverage-source exchangelib
+        blacken-docs *.md docs/*.md
+        unittest-parallel -j 4 --level=class --coverage --coverage-source exchangelib
         coveralls --service=github
 
   cleanup:

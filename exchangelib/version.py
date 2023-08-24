@@ -171,7 +171,7 @@ class Version:
                 continue
             if self.api_version == api_version:
                 return full_name
-        log.warning(f"Full name for API version {self.api_version} build {self.build} is unknown")
+        log.warning("Full name for API version %s build %s is unknown", self.api_version, self.build)
         return "UNKNOWN"
 
     @classmethod

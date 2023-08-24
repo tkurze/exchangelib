@@ -32,7 +32,6 @@ from ..properties import (
     DistinguishedFolderId,
     EWSMeta,
     FolderId,
-    Mailbox,
     ParentFolderId,
     UserConfiguration,
     UserConfigurationName,
@@ -77,6 +76,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri="folder:FolderId", value_cls=ID_ELEMENT_CLS)
+    _distinguished_id = IdElementField(field_uri="folder:FolderId", value_cls=DistinguishedFolderId)
     parent_folder_id = EWSElementField(field_uri="folder:ParentFolderId", value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri="folder:FolderClass", is_required_after_save=True)
     name = CharField(field_uri="folder:DisplayName")
@@ -84,13 +84,12 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     child_folder_count = IntegerField(field_uri="folder:ChildFolderCount", is_read_only=True)
     unread_count = IntegerField(field_uri="folder:UnreadCount", is_read_only=True)
 
-    __slots__ = "is_distinguished", "item_sync_state", "folder_sync_state"
+    __slots__ = "item_sync_state", "folder_sync_state"
 
     # Used to register extended properties
     INSERT_AFTER_FIELD = "child_folder_count"
 
     def __init__(self, **kwargs):
-        self.is_distinguished = kwargs.pop("is_distinguished", False)
         self.item_sync_state = kwargs.pop("item_sync_state", None)
         self.folder_sync_state = kwargs.pop("folder_sync_state", None)
         super().__init__(**kwargs)
@@ -109,6 +108,10 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     @abc.abstractmethod
     def parent(self):
         """Return the parent folder of this folder"""
+
+    @property
+    def is_distinguished(self):
+        return self._distinguished_id or (self.DISTINGUISHED_FOLDER_ID and not self._id)
 
     @property
     def is_deletable(self):
@@ -148,7 +151,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         return FolderCollection(account=self.account, folders=self._walk())
 
     def _glob(self, pattern):
-        split_pattern = pattern.rsplit("/", 1)
+        split_pattern = pattern.split("/", maxsplit=1)
         head, tail = (split_pattern[0], None) if len(split_pattern) == 1 else split_pattern
         if head == "":
             # We got an absolute path. Restart globbing at root
@@ -235,6 +238,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             ConversationSettings,
             CrawlerData,
             DlpPolicyEvaluation,
+            EventCheckPoints,
             FreeBusyCache,
             GALContacts,
             Messages,
@@ -257,6 +261,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             ConversationSettings,
             CrawlerData,
             DlpPolicyEvaluation,
+            EventCheckPoints,
             FreeBusyCache,
             GALContacts,
             Messages,
@@ -435,9 +440,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             log.warning("Cannot wipe recoverable items folder %s", self)
             return
         log.warning("Wiping %s", self)
-        has_distinguished_subfolders = any(f.is_distinguished for f in self.children)
+        has_non_deletable_subfolders = any(not f.is_deletable for f in self.children)
         try:
-            if has_distinguished_subfolders:
+            if has_non_deletable_subfolders:
                 self.empty()
             else:
                 self.empty(delete_sub_folders=True)
@@ -446,7 +451,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             return
         except DELETE_FOLDER_ERRORS:
             try:
-                if has_distinguished_subfolders:
+                if has_non_deletable_subfolders:
                     raise  # We already tried this
                 self.empty()
             except DELETE_FOLDER_ERRORS:
@@ -490,17 +495,16 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         return kwargs
 
     def to_id(self):
-        if self.is_distinguished:
-            # Don't add the changekey here. When modifying folder content, we usually don't care if others have changed
-            # the folder content since we fetched the changekey.
-            if self.account:
-                return DistinguishedFolderId(
-                    id=self.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
-                )
-            return DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
-        if self.id:
-            return FolderId(id=self.id, changekey=self.changekey)
-        raise ValueError("Must be a distinguished folder or have an ID")
+        # Use self._distinguished_id as-is if we have it. This could be a DistinguishedFolderId with a mailbox pointing
+        # to a shared mailbox.
+        if self._distinguished_id:
+            return self._distinguished_id
+        if self._id:
+            return self._id
+        if not self.DISTINGUISHED_FOLDER_ID:
+            raise ValueError(f"{self} must be a distinguished folder or have an ID")
+        self._distinguished_id = DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
+        return self._distinguished_id
 
     @classmethod
     def resolve(cls, account, folder):
@@ -856,9 +860,7 @@ class Folder(BaseFolder):
         :return:
         """
         try:
-            return cls.resolve(
-                account=root.account, folder=cls(root=root, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-            )
+            return cls.resolve(account=root.account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}")
 

@@ -43,7 +43,7 @@ setup(
         'backports.zoneinfo;python_version<"3.9"',
         "cached_property",
         "defusedxml>=0.6.0",
-        "dnspython>=2.0.0",
+        "dnspython>=2.2.0",
         "isodate",
         "lxml>3.0",
         "oauthlib",
@@ -60,7 +60,7 @@ setup(
         "complete": ["requests_gssapi", "requests_negotiate_sspi"],  # Only for Win32 environments
     },
     packages=find_packages(exclude=("tests", "tests.*")),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     test_suite="tests",
     zip_safe=False,
     url="https://github.com/ecederstrand/exchangelib",

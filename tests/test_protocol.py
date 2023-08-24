@@ -858,11 +858,14 @@ EWS auth: NTLM""",
             ).clean(version=None)
 
     def test_convert_id(self):
-        i = self.account.root.id
+        ews_id = (
+            "AAMkADIxNDdkMTI4LTMxNTgtNGYzYy1iMGFlLWQxOTIzYTVlNTAwMgAuAAAAAAC"
+            "QxfuhknwST6zPr7QuwK7BAQDtzmFCgwmzTq/6+pzfxPNiAAAAAAEBAAA="
+        )
         for fmt in ID_FORMATS:
             res = list(
                 self.account.protocol.convert_ids(
-                    [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
+                    [AlternateId(id=ews_id, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
                     destination_format=fmt,
                 )
             )
@@ -871,7 +874,8 @@ EWS auth: NTLM""",
         # Test bad format
         with self.assertRaises(ValueError) as e:
             self.account.protocol.convert_ids(
-                [AlternateId(id=i, format=EWS_ID, mailbox=self.account.primary_smtp_address)], destination_format="XXX"
+                [AlternateId(id=ews_id, format=EWS_ID, mailbox=self.account.primary_smtp_address)],
+                destination_format="XXX",
             )
         self.assertEqual(e.exception.args[0], f"'destination_format' 'XXX' must be one of {sorted(ID_FORMATS)}")
         # Test bad item type

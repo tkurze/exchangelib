@@ -32,7 +32,7 @@ from threading import Lock
 
 from ..errors import ErrorAccessDenied, ErrorFolderNotFound, ErrorInvalidOperation
 from ..fields import EffectiveRightsField
-from ..properties import EWSMeta
+from ..properties import DistinguishedFolderId, EWSMeta
 from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010_SP1
 from .base import BaseFolder
 from .collections import FolderCollection
@@ -138,9 +138,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
         if not cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         try:
-            return cls.resolve(
-                account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-            )
+            return cls.resolve(account=account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
 
@@ -162,9 +160,9 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
             return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
-            # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
+            # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
-            fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+            fld = folder_cls(root=self, _distinguished_id=DistinguishedFolderId(id=folder_cls.DISTINGUISHED_FOLDER_ID))
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
         except MISSING_FOLDER_ERRORS:
@@ -182,7 +180,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID)
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)
             ]
@@ -456,7 +454,6 @@ class ArchiveRoot(RootOfHierarchy):
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
@@ -624,7 +621,6 @@ class ArchiveRoot(RootOfHierarchy):
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
@@ -771,7 +767,6 @@ def tois(self):
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_distinguished" href="#exchangelib.folders.roots.RootOfHierarchy.get_distinguished">get_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
-<li><code><a title="exchangelib.folders.roots.RootOfHierarchy.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
 <li><code><a title="exchangelib.folders.roots.RootOfHierarchy.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
@@ -893,9 +888,7 @@ def tois(self):
         if not cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
         try:
-            return cls.resolve(
-                account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-            )
+            return cls.resolve(account=account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
 
@@ -917,9 +910,9 @@ def tois(self):
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
             return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
-            # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
+            # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
-            fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+            fld = folder_cls(root=self, _distinguished_id=DistinguishedFolderId(id=folder_cls.DISTINGUISHED_FOLDER_ID))
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
         except MISSING_FOLDER_ERRORS:
@@ -937,7 +930,7 @@ def tois(self):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                cls(root=self, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+                DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID)
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)
             ]
@@ -1130,9 +1123,7 @@ def get_distinguished(cls, account):
     if not cls.DISTINGUISHED_FOLDER_ID:
         raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
     try:
-        return cls.resolve(
-            account=account, folder=cls(account=account, name=cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
-        )
+        return cls.resolve(account=account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
     except MISSING_FOLDER_ERRORS:
         raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)</code></pre>
 </details>
@@ -1221,9 +1212,9 @@ folder was found, try as best we can to return the default folder of type 'folde
         log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
         return folder_cls.get_distinguished(root=self)
     except ErrorAccessDenied:
-        # Maybe we just don&#39;t have GetFolder access? Try FindItems instead
+        # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
         log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
-        fld = folder_cls(root=self, name=folder_cls.DISTINGUISHED_FOLDER_ID, is_distinguished=True)
+        fld = folder_cls(root=self, _distinguished_id=DistinguishedFolderId(id=folder_cls.DISTINGUISHED_FOLDER_ID))
         fld.test_access()
         return self._folders_map.get(fld.id, fld)  # Use cached instance if available
     except MISSING_FOLDER_ERRORS:
@@ -1295,7 +1286,6 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.base.BaseFolder.get" href="../queryset.html#exchangelib.queryset.SearchableMixIn.get">get</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
-<li><code><a title="exchangelib.folders.base.BaseFolder.is_distinguished" href="base.html#exchangelib.folders.base.BaseFolder.is_distinguished">is_distinguished</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
 <li><code><a title="exchangelib.folders.base.BaseFolder.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>

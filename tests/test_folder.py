@@ -35,6 +35,7 @@ from exchangelib.folders import (
     DistinguishedFolderId,
     DlpPolicyEvaluation,
     Drafts,
+    EventCheckPoints,
     Favorites,
     Files,
     Folder,
@@ -164,11 +165,7 @@ class FolderTest(EWSTest):
         # Test account does not have a public folders root. Make a dummy query just to hit .get_children()
         with suppress(ErrorNoPublicFolderReplicaAvailable):
             self.assertGreaterEqual(
-                len(
-                    list(
-                        PublicFoldersRoot(account=self.account, is_distinguished=True).get_children(self.account.inbox)
-                    )
-                ),
+                len(list(PublicFoldersRoot(account=self.account).get_children(self.account.inbox))),
                 0,
             )
         # Test public folders root with mocked responses
@@ -421,7 +418,7 @@ class FolderTest(EWSTest):
         # Test failure on different roots
         with self.assertRaises(ValueError) as e:
             list(FolderCollection(account=self.account, folders=[Folder(root="A"), Folder(root="B")]).find_folders())
-        self.assertIn("All folders in 'roots' must have the same root hierarchy", e.exception.args[0])
+        self.assertIn("All folders must have the same root hierarchy", e.exception.args[0])
 
     def test_find_folders_compat(self):
         account = self.get_account()
@@ -527,6 +524,8 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.RecoveryPoints")
                 elif isinstance(f, SwssItems):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.SwssItems")
+                elif isinstance(f, EventCheckPoints):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.EventCheckPoints")
                 elif isinstance(f, PassThroughSearchResults):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.PassThroughSearchResults")
                 elif isinstance(f, GraphAnalytics):
@@ -752,6 +751,12 @@ class FolderTest(EWSTest):
             list(self.account.root.glob("../*"))
         self.assertEqual(e.exception.args[0], "Already at top")
 
+        # Test globbing with multiple levels of folders ('a/b/c')
+        f1 = Folder(parent=self.account.inbox, name=get_random_string(16)).save()
+        f2 = Folder(parent=f1, name=get_random_string(16)).save()
+        f3 = Folder(parent=f2, name=get_random_string(16)).save()
+        self.assertEqual(len(list(self.account.inbox.glob(f"{f1.name}/{f2.name}/{f3.name}"))), 1)
+
     def test_collection_filtering(self):
         self.assertGreaterEqual(self.account.root.tois.children.all().count(), 0)
         self.assertGreaterEqual(self.account.root.tois.walk().all().count(), 0)
@@ -816,7 +821,7 @@ class FolderTest(EWSTest):
         # Test extended properties on folders and folder roots. This extended prop gets the size (in bytes) of a folder
         class FolderSize(ExtendedProperty):
             property_tag = 0x0E08
-            property_type = "Integer"
+            property_type = "Long"
 
         try:
             Folder.register("size", FolderSize)
@@ -962,8 +967,8 @@ class FolderTest(EWSTest):
         self.assertEqual(Folder().has_distinguished_name, None)
         self.assertEqual(Inbox(name="XXX").has_distinguished_name, False)
         self.assertEqual(Inbox(name="Inbox").has_distinguished_name, True)
-        self.assertEqual(Inbox(is_distinguished=False).is_deletable, True)
-        self.assertEqual(Inbox(is_distinguished=True).is_deletable, False)
+        self.assertEqual(Folder().is_deletable, True)
+        self.assertEqual(Inbox().is_deletable, False)
 
     def test_non_deletable_folders(self):
         for f in self.account.root.walk():
@@ -1245,7 +1250,7 @@ class FolderTest(EWSTest):
 
     def test_get_candidate(self):
         # _get_candidate is a private method, but it's really difficult to recreate a situation where it's used.
-        f1 = Inbox(name="XXX", is_distinguished=True)
+        f1 = Inbox(name="XXX")
         f2 = Inbox(name=Inbox.LOCALIZED_NAMES[self.account.locale][0])
         with self.assertRaises(ErrorFolderNotFound) as e:
             self.account.root._get_candidate(folder_cls=Inbox, folder_coll=[])
