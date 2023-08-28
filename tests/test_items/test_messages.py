@@ -133,6 +133,15 @@ class MessagesTest(CommonItemTest):
         with self.assertRaises(TypeError) as e:
             ReplyToItem(account="XXX")
         self.assertEqual(e.exception.args[0], "'account' 'XXX' must be of type <class 'exchangelib.account.Account'>")
+
+        # Test that to_recipients only has one entry even when we are both the sender and the receiver
+        item = self.get_test_item(folder=None)
+        item.id, item.changekey = 123, 456
+        reply_item = item.create_reply_all(subject="", body="")
+        self.assertEqual(reply_item.to_recipients, item.to_recipients)
+        self.assertEqual(reply_item.to_recipients, item.to_recipients)
+        self.assertEqual(reply_item.to_recipients, item.to_recipients)
+
         # Test that we can reply-all a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item(folder=None)
         item.folder = None
