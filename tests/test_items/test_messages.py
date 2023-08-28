@@ -33,8 +33,7 @@ class MessagesTest(CommonItemTest):
 
     def test_send(self):
         # Test that we can send (only) Message items
-        item = self.get_test_item()
-        item.folder = None
+        item = self.get_test_item(folder=None)
         item.send()
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
@@ -52,8 +51,7 @@ class MessagesTest(CommonItemTest):
         self.assertIsNone(item.changekey)
 
     def test_send_no_copy(self):
-        item = self.get_test_item()
-        item.folder = None
+        item = self.get_test_item(folder=None)
         item.send(save_copy=False)
         self.assertIsNone(item.id)
         self.assertIsNone(item.changekey)
@@ -98,8 +96,7 @@ class MessagesTest(CommonItemTest):
 
     def test_reply(self):
         # Test that we can reply to a Message item. EWS only allows items that have been sent to receive a reply
-        item = self.get_test_item()
-        item.folder = None
+        item = self.get_test_item(folder=None)
         item.send()  # get_test_item() sets the to_recipients to the test account
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f"Re: {sent_item.subject}")[:255]
@@ -109,7 +106,6 @@ class MessagesTest(CommonItemTest):
     def test_create_reply(self):
         # Test that we can save a reply without sending it
         item = self.get_test_item(folder=None)
-        item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f"Re: {sent_item.subject}")[:255]
@@ -144,17 +140,15 @@ class MessagesTest(CommonItemTest):
 
         # Test that we can reply-all a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item(folder=None)
-        item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
-        new_subject = (f"Re: {sent_item.subject}")[:255]
+        new_subject = f"Re: {sent_item.subject}"[:255]
         sent_item.reply_all(subject=new_subject, body="Hello reply")
         self.assertEqual(self.account.sent.filter(subject=new_subject).count(), 1)
 
     def test_forward(self):
         # Test that we can forward a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item(folder=None)
-        item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f"Re: {sent_item.subject}")[:255]
@@ -164,7 +158,6 @@ class MessagesTest(CommonItemTest):
     def test_create_forward(self):
         # Test that we can forward a Message item. EWS only allows items that have been sent to receive a reply
         item = self.get_test_item(folder=None)
-        item.folder = None
         item.send()
         sent_item = self.get_incoming_message(item.subject)
         new_subject = (f"Re: {sent_item.subject}")[:255]
