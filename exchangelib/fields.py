@@ -1,6 +1,7 @@
 import abc
 import datetime
 import logging
+import warnings
 from contextlib import suppress
 from decimal import Decimal, InvalidOperation
 from importlib import import_module
@@ -739,16 +740,21 @@ class TimeZoneField(FieldURIField):
     def from_xml(self, elem, account):
         field_elem = elem.find(self.response_tag())
         if field_elem is not None:
-            ms_id = field_elem.get("Id")
-            ms_name = field_elem.get("Name")
+            tz_id = field_elem.get("Id") or field_elem.get("Name")
             try:
-                return self.value_cls.from_ms_id(ms_id or ms_name)
+                return self.value_cls.from_ms_id(tz_id)
             except UnknownTimeZone:
-                log.warning(
-                    "Cannot convert value '%s' on field '%s' to type %s (unknown timezone ID)",
-                    (ms_id or ms_name),
-                    self.name,
-                    self.value_cls,
+                warnings.warn(
+                    f"""\
+Cannot convert value {tz_id!r} on field {self.name!r} to type {self.value_cls.__name__!r} (unknown timezone ID).
+You can fix this by adding a custom entry into the timezone translation map:
+
+from exchangelib.winzone import MS_TIMEZONE_TO_IANA_MAP, CLDR_TO_MS_TIMEZONE_MAP
+
+# Replace "Some_Region/Some_Location" with a reasonable value from CLDR_TO_MS_TIMEZONE_MAP.keys()
+MS_TIMEZONE_TO_IANA_MAP[{tz_id!r}] = "Some_Region/Some_Location"
+
+# Your code here"""
                 )
                 return None
         return self.default
