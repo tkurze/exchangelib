@@ -256,6 +256,14 @@ class AutodiscoverTest(EWSTest):
         ad.discover()
         p = autodiscover_cache[ad._cache_key]
 
+        # Test invalid settings
+        with self.assertRaises(ValueError) as e:
+            p.get_user_settings(user=None, settings=["XXX"])
+        self.assertIn(
+            "Setting 'XXX' is invalid. Valid options are:",
+            e.exception.args[0],
+        )
+
         # Test invalid email
         invalid_email = get_random_email()
         r = p.get_user_settings(user=invalid_email)

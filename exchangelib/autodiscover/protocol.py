@@ -1,3 +1,4 @@
+from ..properties import UserResponse
 from ..protocol import BaseProtocol
 from ..services import GetUserSettings
 from ..transport import get_autodiscover_authtype
@@ -45,6 +46,11 @@ Auth type: {self.auth_type}"""
                 "external_ews_url",
                 "ews_supported_schemas",
             ]
+        for setting in settings:
+            if setting not in UserResponse.SETTINGS_MAP:
+                raise ValueError(
+                    f"Setting {setting!r} is invalid. Valid options are: {sorted(UserResponse.SETTINGS_MAP.keys())}"
+                )
         return GetUserSettings(protocol=self).get(users=[user], settings=settings)
 
     def dummy_xml(self):
