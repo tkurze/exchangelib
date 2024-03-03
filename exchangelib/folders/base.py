@@ -32,6 +32,7 @@ from ..properties import (
     DistinguishedFolderId,
     EWSMeta,
     FolderId,
+    Mailbox,
     ParentFolderId,
     UserConfiguration,
     UserConfigurationName,
@@ -503,7 +504,10 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             return self._id
         if not self.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f"{self} must be a distinguished folder or have an ID")
-        self._distinguished_id = DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
+        self._distinguished_id = DistinguishedFolderId(
+            id=self.DISTINGUISHED_FOLDER_ID,
+            mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+        )
         return self._distinguished_id
 
     @classmethod
@@ -860,7 +864,13 @@ class Folder(BaseFolder):
         :return:
         """
         try:
-            return cls.resolve(account=root.account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
+            return cls.resolve(
+                account=root.account,
+                folder=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+            )
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}")
 

@@ -479,7 +479,8 @@ class FolderTest(EWSTest):
         # Test that we return an Inbox instance and not a generic Messages or Folder instance when we call GetFolder
         # with a DistinguishedFolderId instance with an ID of Inbox.DISTINGUISHED_FOLDER_ID.
         inbox_folder_id = DistinguishedFolderId(
-            id=Inbox.DISTINGUISHED_FOLDER_ID, mailbox=Mailbox(email_address=self.account.primary_smtp_address)
+            id=Inbox.DISTINGUISHED_FOLDER_ID,
+            mailbox=Mailbox(email_address=self.account.primary_smtp_address),
         )
         inbox = list(
             GetFolder(account=self.account).call(
