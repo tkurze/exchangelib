@@ -132,6 +132,15 @@ class BaseProtocol:
             self.close()
 
     @property
+    def max_connections(self):
+        return self._session_pool_maxsize
+
+    @max_connections.setter
+    def max_connections(self, value):
+        with self._session_pool_lock:
+            self._session_pool_maxsize = value or self.SESSION_POOLSIZE
+
+    @property
     def retry_policy(self):
         return self.config.retry_policy
 

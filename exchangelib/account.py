@@ -166,11 +166,16 @@ class Account:
             raise InvalidTypeError("config", config, Configuration)
         if autodiscover:
             if config:
-                auth_type, retry_policy, version = config.auth_type, config.retry_policy, config.version
+                auth_type, retry_policy, version, max_connections = (
+                    config.auth_type,
+                    config.retry_policy,
+                    config.version,
+                    config.max_connections,
+                )
                 if not credentials:
                     credentials = config.credentials
             else:
-                auth_type, retry_policy, version = None, None, None
+                auth_type, retry_policy, version, max_connections = None, None, None, None
             self.ad_response, self.protocol = Autodiscovery(
                 email=primary_smtp_address, credentials=credentials
             ).discover()
@@ -180,6 +185,7 @@ class Account:
                 self.protocol.config.retry_policy = retry_policy
             if version:
                 self.protocol.config.version = version
+            self.protocol.max_connections = max_connections
             primary_smtp_address = self.ad_response.autodiscover_smtp_address
         else:
             if not config:

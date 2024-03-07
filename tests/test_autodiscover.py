@@ -847,16 +847,22 @@ class AutodiscoverTest(EWSTest):
         self.assertTrue(a._redirect_url_is_valid(self.account.protocol.config.service_endpoint))
 
     def test_protocol_default_values(self):
-        # Test that retry_policy and auth_type always get a value regardless of how we create an Account
-        self.get_account()
-        a = Account(
-            self.account.primary_smtp_address,
-            autodiscover=True,
-            config=self.account.protocol.config,
-        )
-        self.assertIsNotNone(a.protocol.auth_type)
-        self.assertIsNotNone(a.protocol.retry_policy)
+        # Test that retry_policy, auth_type and max_connections always get values regardless of how we create an Account
+        _max_conn = self.account.protocol.config.max_connections
+        try:
+            self.account.protocol.config.max_connections = 3
+            a = Account(
+                self.account.primary_smtp_address,
+                autodiscover=True,
+                config=self.account.protocol.config,
+            )
+            self.assertIsNotNone(a.protocol.auth_type)
+            self.assertIsNotNone(a.protocol.retry_policy)
+            self.assertEqual(a.protocol._session_pool_maxsize, 3)
+        finally:
+            self.account.protocol.config.max_connections = _max_conn
 
         a = Account(self.account.primary_smtp_address, autodiscover=True, credentials=self.account.protocol.credentials)
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
+        self.assertEqual(a.protocol._session_pool_maxsize, a.protocol.SESSION_POOLSIZE)
