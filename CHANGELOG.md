@@ -5,6 +5,15 @@ HEAD
 ----
 
 
+5.2.0
+-----
+- Allow setting a custom `Configuration.max_conections` in autodiscover mode
+- Add support for inbox rules. See documentation for examples.
+- Fix shared folder access in delegate mode
+- Support subscribing to all folders instead of specific folders
+
+
+
 5.1.0
 -----
 - Fix QuerySet operations on shared folders
