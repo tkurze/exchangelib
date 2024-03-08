@@ -60,6 +60,7 @@ from ..properties import (
     DistinguishedFolderId,
     EWSMeta,
     FolderId,
+    Mailbox,
     ParentFolderId,
     UserConfiguration,
     UserConfigurationName,
@@ -266,6 +267,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             ConversationSettings,
             CrawlerData,
             DlpPolicyEvaluation,
+            EventCheckPoints,
             FreeBusyCache,
             GALContacts,
             Messages,
@@ -288,6 +290,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             ConversationSettings,
             CrawlerData,
             DlpPolicyEvaluation,
+            EventCheckPoints,
             FreeBusyCache,
             GALContacts,
             Messages,
@@ -529,7 +532,10 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
             return self._id
         if not self.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f&#34;{self} must be a distinguished folder or have an ID&#34;)
-        self._distinguished_id = DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
+        self._distinguished_id = DistinguishedFolderId(
+            id=self.DISTINGUISHED_FOLDER_ID,
+            mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+        )
         return self._distinguished_id
 
     @classmethod
@@ -657,15 +663,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
 
     @require_id
     def pull_subscription(self, **kwargs):
-        return PullSubscription(folder=self, **kwargs)
+        return PullSubscription(target=self, **kwargs)
 
     @require_id
     def push_subscription(self, **kwargs):
-        return PushSubscription(folder=self, **kwargs)
+        return PushSubscription(target=self, **kwargs)
 
     @require_id
     def streaming_subscription(self, **kwargs):
-        return StreamingSubscription(folder=self, **kwargs)
+        return StreamingSubscription(target=self, **kwargs)
 
     def unsubscribe(self, subscription_id):
         &#34;&#34;&#34;Unsubscribe. Only applies to pull and streaming notifications.
@@ -886,7 +892,13 @@ class Folder(BaseFolder):
         :return:
         &#34;&#34;&#34;
         try:
-            return cls.resolve(account=root.account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
+            return cls.resolve(
+                account=root.account,
+                folder=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+            )
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)
 
@@ -1158,6 +1170,7 @@ class Folder(BaseFolder):
             ConversationSettings,
             CrawlerData,
             DlpPolicyEvaluation,
+            EventCheckPoints,
             FreeBusyCache,
             GALContacts,
             Messages,
@@ -1180,6 +1193,7 @@ class Folder(BaseFolder):
             ConversationSettings,
             CrawlerData,
             DlpPolicyEvaluation,
+            EventCheckPoints,
             FreeBusyCache,
             GALContacts,
             Messages,
@@ -1421,7 +1435,10 @@ class Folder(BaseFolder):
             return self._id
         if not self.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f&#34;{self} must be a distinguished folder or have an ID&#34;)
-        self._distinguished_id = DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
+        self._distinguished_id = DistinguishedFolderId(
+            id=self.DISTINGUISHED_FOLDER_ID,
+            mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+        )
         return self._distinguished_id
 
     @classmethod
@@ -1549,15 +1566,15 @@ class Folder(BaseFolder):
 
     @require_id
     def pull_subscription(self, **kwargs):
-        return PullSubscription(folder=self, **kwargs)
+        return PullSubscription(target=self, **kwargs)
 
     @require_id
     def push_subscription(self, **kwargs):
-        return PushSubscription(folder=self, **kwargs)
+        return PushSubscription(target=self, **kwargs)
 
     @require_id
     def streaming_subscription(self, **kwargs):
-        return StreamingSubscription(folder=self, **kwargs)
+        return StreamingSubscription(target=self, **kwargs)
 
     def unsubscribe(self, subscription_id):
         &#34;&#34;&#34;Unsubscribe. Only applies to pull and streaming notifications.
@@ -1835,6 +1852,7 @@ def folder_cls_from_container_class(container_class):
         ConversationSettings,
         CrawlerData,
         DlpPolicyEvaluation,
+        EventCheckPoints,
         FreeBusyCache,
         GALContacts,
         Messages,
@@ -1857,6 +1875,7 @@ def folder_cls_from_container_class(container_class):
         ConversationSettings,
         CrawlerData,
         DlpPolicyEvaluation,
+        EventCheckPoints,
         FreeBusyCache,
         GALContacts,
         Messages,
@@ -2402,7 +2421,7 @@ def get_user_configuration(self, name, properties=None):
 </summary>
 <pre><code class="python">@require_id
 def pull_subscription(self, **kwargs):
-    return PullSubscription(folder=self, **kwargs)</code></pre>
+    return PullSubscription(target=self, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.push_subscription"><code class="name flex">
@@ -2416,7 +2435,7 @@ def pull_subscription(self, **kwargs):
 </summary>
 <pre><code class="python">@require_id
 def push_subscription(self, **kwargs):
-    return PushSubscription(folder=self, **kwargs)</code></pre>
+    return PushSubscription(target=self, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.refresh"><code class="name flex">
@@ -2495,7 +2514,7 @@ def refresh(self):
 </summary>
 <pre><code class="python">@require_id
 def streaming_subscription(self, **kwargs):
-    return StreamingSubscription(folder=self, **kwargs)</code></pre>
+    return StreamingSubscription(target=self, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.subscribe_to_pull"><code class="name flex">
@@ -2709,7 +2728,10 @@ service user doesn't have access to the calendar. This will throw the most commo
         return self._id
     if not self.DISTINGUISHED_FOLDER_ID:
         raise ValueError(f&#34;{self} must be a distinguished folder or have an ID&#34;)
-    self._distinguished_id = DistinguishedFolderId(id=self.DISTINGUISHED_FOLDER_ID)
+    self._distinguished_id = DistinguishedFolderId(
+        id=self.DISTINGUISHED_FOLDER_ID,
+        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+    )
     return self._distinguished_id</code></pre>
 </details>
 </dd>
@@ -2993,7 +3015,13 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         :return:
         &#34;&#34;&#34;
         try:
-            return cls.resolve(account=root.account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
+            return cls.resolve(
+                account=root.account,
+                folder=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+            )
         except MISSING_FOLDER_ERRORS:
             raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)
 
@@ -3088,6 +3116,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <li><a title="exchangelib.folders.known_folders.DeferredAction" href="known_folders.html#exchangelib.folders.known_folders.DeferredAction">DeferredAction</a></li>
 <li><a title="exchangelib.folders.known_folders.DeletedItems" href="known_folders.html#exchangelib.folders.known_folders.DeletedItems">DeletedItems</a></li>
 <li><a title="exchangelib.folders.known_folders.DlpPolicyEvaluation" href="known_folders.html#exchangelib.folders.known_folders.DlpPolicyEvaluation">DlpPolicyEvaluation</a></li>
+<li><a title="exchangelib.folders.known_folders.EventCheckPoints" href="known_folders.html#exchangelib.folders.known_folders.EventCheckPoints">EventCheckPoints</a></li>
 <li><a title="exchangelib.folders.known_folders.ExchangeSyncData" href="known_folders.html#exchangelib.folders.known_folders.ExchangeSyncData">ExchangeSyncData</a></li>
 <li><a title="exchangelib.folders.known_folders.Files" href="known_folders.html#exchangelib.folders.known_folders.Files">Files</a></li>
 <li><a title="exchangelib.folders.known_folders.FreeBusyCache" href="known_folders.html#exchangelib.folders.known_folders.FreeBusyCache">FreeBusyCache</a></li>
@@ -3196,7 +3225,13 @@ def get_distinguished(cls, root):
     :return:
     &#34;&#34;&#34;
     try:
-        return cls.resolve(account=root.account, folder=DistinguishedFolderId(id=cls.DISTINGUISHED_FOLDER_ID))
+        return cls.resolve(
+            account=root.account,
+            folder=DistinguishedFolderId(
+                id=cls.DISTINGUISHED_FOLDER_ID,
+                mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+            ),
+        )
     except MISSING_FOLDER_ERRORS:
         raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)</code></pre>
 </details>

@@ -35,6 +35,7 @@ A protocol is an endpoint for EWS service connections. It contains all necessary
 Protocols should be accessed through an Account, and are either created from a default Configuration or autodiscovered
 when creating an Account.
 &#34;&#34;&#34;
+
 import abc
 import datetime
 import logging
@@ -160,6 +161,15 @@ class BaseProtocol:
         with self._session_pool_lock:
             self.config._credentials = value
             self.close()
+
+    @property
+    def max_connections(self):
+        return self._session_pool_maxsize
+
+    @max_connections.setter
+    def max_connections(self, value):
+        with self._session_pool_lock:
+            self._session_pool_maxsize = value or self.SESSION_POOLSIZE
 
     @property
     def retry_policy(self):
@@ -938,6 +948,15 @@ class FaultTolerance(RetryPolicy):
             self.close()
 
     @property
+    def max_connections(self):
+        return self._session_pool_maxsize
+
+    @max_connections.setter
+    def max_connections(self, value):
+        with self._session_pool_lock:
+            self._session_pool_maxsize = value or self.SESSION_POOLSIZE
+
+    @property
     def retry_policy(self):
         return self.config.retry_policy
 
@@ -1301,6 +1320,18 @@ def auth_type(self):
 <pre><code class="python">@property
 def credentials(self):
     return self.config.credentials</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.protocol.BaseProtocol.max_connections"><code class="name">var <span class="ident">max_connections</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def max_connections(self):
+    return self._session_pool_maxsize</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.protocol.BaseProtocol.retry_policy"><code class="name">var <span class="ident">retry_policy</span></code></dt>
@@ -2794,6 +2825,7 @@ exposed for use when subclassing the
 <li><code><a title="exchangelib.protocol.BaseProtocol.get_auth_type" href="#exchangelib.protocol.BaseProtocol.get_auth_type">get_auth_type</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.get_session" href="#exchangelib.protocol.BaseProtocol.get_session">get_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.increase_poolsize" href="#exchangelib.protocol.BaseProtocol.increase_poolsize">increase_poolsize</a></code></li>
+<li><code><a title="exchangelib.protocol.BaseProtocol.max_connections" href="#exchangelib.protocol.BaseProtocol.max_connections">max_connections</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.raw_session" href="#exchangelib.protocol.BaseProtocol.raw_session">raw_session</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.refresh_credentials" href="#exchangelib.protocol.BaseProtocol.refresh_credentials">refresh_credentials</a></code></li>
 <li><code><a title="exchangelib.protocol.BaseProtocol.release_session" href="#exchangelib.protocol.BaseProtocol.release_session">release_session</a></code></li>
