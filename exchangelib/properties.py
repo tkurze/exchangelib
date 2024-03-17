@@ -749,6 +749,10 @@ class DistinguishedFolderId(FolderId):
 
     mailbox = MailboxField()
 
+    @classmethod
+    def from_xml(cls, elem, account):
+        return cls(id=elem.text or None)
+
     def clean(self, version=None):
         from .folders import PublicFoldersRoot
 

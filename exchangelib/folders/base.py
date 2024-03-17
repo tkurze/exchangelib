@@ -77,7 +77,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri="folder:FolderId", value_cls=ID_ELEMENT_CLS)
-    _distinguished_id = IdElementField(field_uri="folder:FolderId", value_cls=DistinguishedFolderId)
+    _distinguished_id = IdElementField(field_uri="folder:DistinguishedFolderId", value_cls=DistinguishedFolderId)
     parent_folder_id = EWSElementField(field_uri="folder:ParentFolderId", value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri="folder:FolderClass", is_required_after_save=True)
     name = CharField(field_uri="folder:DisplayName")

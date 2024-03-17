@@ -975,7 +975,6 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml(elem=elem, account=folder.account)
     elif isinstance(folder, Folder):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
-        f._distinguished_id = folder._distinguished_id
     elif isinstance(folder, DistinguishedFolderId):
         # We don't know the root or even account, but we need to attach the folder to something if we want to make
         # future requests with this folder. Use 'account' but make sure to always use the distinguished folder ID going
@@ -991,7 +990,6 @@ def parse_folder_elem(elem, folder, account):
             f = folder_cls.from_xml(elem=elem, account=account)
         else:
             f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
-        f._distinguished_id = folder
     else:
         # 'folder' is a generic FolderId instance. We don't know the root so assume account.root.
         f = Folder.from_xml_with_root(elem=elem, root=account.root)
