@@ -426,7 +426,6 @@ users and OAuth for everything else. Here's one way to set up an app in Azure
 that can access accounts in your organization using impersonation - i.e. access
 to multiple acounts on behalf of those users. First, log into the
 [Microsoft 365 Administration](https://admin.microsoft.com) page. Find the link
-to `Azure Active Directory`.  Find the link
 to `Azure Active Directory`. Select `App registrations` in the menu and then
 `New registration`. Enter an app name and press `Register`:
 
