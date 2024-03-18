@@ -532,7 +532,7 @@ class AllTodoTasks(NonDeletableFolder):
     }
 
 
-class ApplicationData(Folder):
+class ApplicationData(NonDeletableFolder):
     CONTAINER_CLASS = "IPM.ApplicationData"
 
 
@@ -701,9 +701,10 @@ class WorkingSet(NonDeletableFolder):
     }
 
 
-# Folders that do not have a distinguished folder ID but return 'ErrorDeleteDistinguishedFolder' when we try to delete
-# them. I can't find any official docs listing these folders.
+# Folders that do not have a distinguished folder ID but return 'ErrorDeleteDistinguishedFolder' or
+# 'ErrorCannotDeleteObject' when we try to delete them. I can't find any official docs listing these folders.
 NON_DELETABLE_FOLDERS = [
+    ApplicationData,
     AllTodoTasks,
     Audits,
     CalendarLogging,
@@ -810,7 +811,6 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 
 # Folders that do not have a distinguished ID but have their own container class
 MISC_FOLDERS = [
-    ApplicationData,
     CrawlerData,
     EventCheckPoints,
     FolderMemberships,

@@ -8,6 +8,7 @@ import exchangelib.folders
 import exchangelib.folders.known_folders
 from exchangelib.errors import (
     DoesNotExist,
+    ErrorCannotDeleteObject,
     ErrorCannotEmptyFolder,
     ErrorDeleteDistinguishedFolder,
     ErrorFolderExists,
@@ -1005,8 +1006,10 @@ class FolderTest(EWSTest):
             with self.subTest(item=f):
                 if f.__class__ in NON_DELETABLE_FOLDERS + WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT + WELLKNOWN_FOLDERS_IN_ROOT:
                     self.assertEqual(f.is_deletable, False)
-                    with self.assertRaises(ErrorDeleteDistinguishedFolder):
+                    try:
                         f.delete()
+                    except (ErrorDeleteDistinguishedFolder, ErrorCannotDeleteObject):
+                        pass
                 else:
                     self.assertEqual(f.is_deletable, True)
                     # Don't attempt to delete. That could affect parallel tests

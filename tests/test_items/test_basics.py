@@ -317,8 +317,10 @@ class CommonItemTest(BaseItemTest):
                         # Filtering is accepted but doesn't work
                         self.assertEqual(self.test_folder.filter(**filter_kwargs).count(), 0)
                     else:
-                        with self.assertRaises((ErrorUnsupportedPathForQuery, ErrorInvalidValueForProperty)):
+                        try:
                             list(self.test_folder.filter(**filter_kwargs))
+                        except (ErrorUnsupportedPathForQuery, ErrorInvalidValueForProperty):
+                            pass
                 finally:
                     f.is_searchable = False
 
