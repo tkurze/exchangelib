@@ -529,7 +529,10 @@ class QuerySet(SearchableMixIn):
             raise DoesNotExist()
         if len(items) != 1:
             raise MultipleObjectsReturned()
-        return items[0]
+        item = items[0]
+        if isinstance(item, Exception):
+            raise item
+        return item
 
     def count(self, page_size=1000):
         """Get the query count, with as little effort as possible
