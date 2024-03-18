@@ -1008,7 +1008,7 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.is_deletable, False)
                     try:
                         f.delete()
-                    except (ErrorDeleteDistinguishedFolder, ErrorCannotDeleteObject):
+                    except (ErrorDeleteDistinguishedFolder, ErrorCannotDeleteObject, ErrorItemNotFound):
                         pass
                 else:
                     self.assertEqual(f.is_deletable, True)
