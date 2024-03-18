@@ -1,8 +1,11 @@
 from contextlib import suppress
+from inspect import isclass
 from unittest.mock import Mock
 
 import requests_mock
 
+import exchangelib.folders
+import exchangelib.folders.known_folders
 from exchangelib.errors import (
     DoesNotExist,
     ErrorCannotEmptyFolder,
@@ -18,11 +21,14 @@ from exchangelib.errors import (
 )
 from exchangelib.extended_properties import ExtendedProperty
 from exchangelib.folders import (
-    NON_DELETABLE_FOLDERS,
     SHALLOW,
+    AllCategorizedItems,
     AllContacts,
     AllItems,
+    AllPersonMetadata,
+    AllTodoTasks,
     ApplicationData,
+    BaseFolder,
     Birthdays,
     Calendar,
     CommonViews,
@@ -36,13 +42,16 @@ from exchangelib.folders import (
     DlpPolicyEvaluation,
     Drafts,
     EventCheckPoints,
+    ExternalContacts,
     Favorites,
     Files,
     Folder,
     FolderCollection,
+    FolderMemberships,
     FolderQuerySet,
     FreeBusyCache,
     Friends,
+    FromFavoriteSenders,
     GALContacts,
     GraphAnalytics,
     IMContactList,
@@ -52,6 +61,7 @@ from exchangelib.folders import (
     Messages,
     MyContacts,
     MyContactsExtended,
+    NonDeletableFolder,
     Notes,
     OrganizationalContacts,
     Outbox,
@@ -62,6 +72,7 @@ from exchangelib.folders import (
     QuickContacts,
     RecipientCache,
     RecoveryPoints,
+    RelevantContacts,
     Reminders,
     RootOfHierarchy,
     RSSFeeds,
@@ -75,7 +86,15 @@ from exchangelib.folders import (
     SyncIssues,
     Tasks,
     ToDoSearch,
+    UserCuratedContacts,
     VoiceMail,
+    WellknownFolder,
+)
+from exchangelib.folders.known_folders import (
+    MISC_FOLDERS,
+    NON_DELETABLE_FOLDERS,
+    WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT,
+    WELLKNOWN_FOLDERS_IN_ROOT,
 )
 from exchangelib.items import Message
 from exchangelib.properties import CalendarPermission, EffectiveRights, InvalidField, Mailbox, PermissionSet, UserId
@@ -499,17 +518,27 @@ class FolderTest(EWSTest):
         # If you get errors here, you probably need to fill out [folder class].LOCALIZED_NAMES for your locale.
         for f in self.account.root.walk():
             with self.subTest(f=f):
+                if f.is_distinguished:
+                    self.assertIsNotNone(f.DISTINGUISHED_FOLDER_ID)
+                else:
+                    self.assertIsNone(f.DISTINGUISHED_FOLDER_ID)
+            with self.subTest(f=f):
                 if isinstance(
                     f,
                     (
                         Messages,
                         DeletedItems,
+                        AllCategorizedItems,
                         AllContacts,
+                        AllPersonMetadata,
                         MyContactsExtended,
                         Sharing,
                         Favorites,
+                        FromFavoriteSenders,
+                        RelevantContacts,
                         SyncIssues,
                         MyContacts,
+                        UserCuratedContacts,
                     ),
                 ):
                     self.assertEqual(f.folder_class, "IPF.Note")
@@ -549,13 +578,13 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.Contact.MOC.ImContactList")
                 elif isinstance(f, QuickContacts):
                     self.assertEqual(f.folder_class, "IPF.Contact.MOC.QuickContacts")
-                elif isinstance(f, Contacts):
+                elif isinstance(f, (Contacts, ExternalContacts)):
                     self.assertEqual(f.folder_class, "IPF.Contact")
                 elif isinstance(f, Birthdays):
                     self.assertEqual(f.folder_class, "IPF.Appointment.Birthday")
                 elif isinstance(f, Calendar):
                     self.assertEqual(f.folder_class, "IPF.Appointment")
-                elif isinstance(f, (Tasks, ToDoSearch)):
+                elif isinstance(f, (Tasks, ToDoSearch, AllTodoTasks, FolderMemberships)):
                     self.assertEqual(f.folder_class, "IPF.Task")
                 elif isinstance(f, Reminders):
                     self.assertEqual(f.folder_class, "Outlook.Reminder")
@@ -973,9 +1002,64 @@ class FolderTest(EWSTest):
 
     def test_non_deletable_folders(self):
         for f in self.account.root.walk():
-            if f.__class__ not in NON_DELETABLE_FOLDERS:
+            with self.subTest(item=f):
+                if f.__class__ in NON_DELETABLE_FOLDERS + WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT + WELLKNOWN_FOLDERS_IN_ROOT:
+                    self.assertEqual(f.is_deletable, False)
+                    with self.assertRaises(ErrorDeleteDistinguishedFolder):
+                        f.delete()
+                else:
+                    self.assertEqual(f.is_deletable, True)
+                    # Don't attempt to delete. That could affect parallel tests
+
+    def test_folder_collections(self):
+        # Test that all custom folders are exposed in the top-level module
+        top_level_classes = [
+            cls
+            for cls in vars(exchangelib.folders).values()
+            if isclass(cls) and issubclass(cls, exchangelib.folders.BaseFolder)
+        ]
+        known_folder_classes = [
+            cls
+            for cls in vars(exchangelib.folders.known_folders).values()
+            if isclass(cls) and issubclass(cls, exchangelib.folders.BaseFolder)
+        ]
+        for cls in known_folder_classes:
+            with self.subTest(item=cls):
+                self.assertIn(cls, top_level_classes)
+
+        # Test that all custom folders are in one of the following folder collections
+        all_cls = NON_DELETABLE_FOLDERS + WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT + WELLKNOWN_FOLDERS_IN_ROOT + MISC_FOLDERS
+        for cls in top_level_classes:
+            if not isclass(cls) or not issubclass(cls, BaseFolder):
                 continue
-            self.assertEqual(f.is_deletable, False)
+            with self.subTest(item=cls):
+                if cls in NON_DELETABLE_FOLDERS + [NonDeletableFolder]:
+                    self.assertTrue(issubclass(cls, NonDeletableFolder))
+                elif cls in WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT + WELLKNOWN_FOLDERS_IN_ROOT + [WellknownFolder, Messages]:
+                    self.assertTrue(issubclass(cls, WellknownFolder))
+                else:
+                    self.assertFalse(issubclass(cls, WellknownFolder))
+                    self.assertFalse(issubclass(cls, NonDeletableFolder))
+            with self.subTest(item=cls):
+                if cls in WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT + WELLKNOWN_FOLDERS_IN_ROOT:
+                    self.assertIsNotNone(cls.DISTINGUISHED_FOLDER_ID)
+                elif cls in (BaseFolder, Folder, WellknownFolder, RootOfHierarchy):
+                    self.assertIsNone(cls.DISTINGUISHED_FOLDER_ID)
+                elif issubclass(cls, RootOfHierarchy):
+                    self.assertIsNotNone(cls.DISTINGUISHED_FOLDER_ID)
+                else:
+                    self.assertIsNone(cls.DISTINGUISHED_FOLDER_ID)
+            with self.subTest(item=cls):
+                if issubclass(cls, RootOfHierarchy) or cls in (
+                    BaseFolder,
+                    Folder,
+                    WellknownFolder,
+                    Messages,
+                    NonDeletableFolder,
+                ):
+                    self.assertNotIn(cls, all_cls)
+                else:
+                    self.assertIn(cls, all_cls)
 
     def test_folder_query_set(self):
         # Create a folder hierarchy and test a folder queryset
