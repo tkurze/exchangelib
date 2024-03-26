@@ -824,7 +824,7 @@ class TimeZoneTransition(EWSElement, metaclass=EWSMeta):
 
     @classmethod
     def from_xml(cls, elem, account):
-        res = super().from_xml(elem, account)
+        res = super().from_xml(elem=elem, account=account)
         # Some parts of EWS use '5' to mean 'last occurrence in month', others use '-1'. Let's settle on '5' because
         # only '5' is accepted in requests.
         if res.occurrence == -1:
@@ -1871,7 +1871,7 @@ class RecurringDayTransition(BaseTransition):
 
     @classmethod
     def from_xml(cls, elem, account):
-        res = super().from_xml(elem, account)
+        res = super().from_xml(elem=elem, account=account)
         # See TimeZoneTransition.from_xml()
         if res.occurrence == -1:
             res.occurrence = 5
@@ -1922,10 +1922,6 @@ class TimeZoneDefinition(EWSElement):
     periods = EWSElementListField(field_uri="Periods", value_cls=Period)
     transitions_groups = EWSElementListField(field_uri="TransitionsGroups", value_cls=TransitionsGroup)
     transitions = TransitionListField(field_uri="Transitions", value_cls=BaseTransition)
-
-    @classmethod
-    def from_xml(cls, elem, account):
-        return super().from_xml(elem, account)
 
     def _get_standard_period(self, transitions_group):
         # Find the first standard period referenced from transitions_group
