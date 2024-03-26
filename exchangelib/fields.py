@@ -1175,6 +1175,19 @@ class MailboxListField(EWSElementListField):
         return super().clean(value, version=version)
 
 
+class AddressListField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import Address
+
+        kwargs["value_cls"] = Address
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        if value is not None:
+            value = [self.value_cls(email_address=s) if isinstance(s, str) else s for s in value]
+        return super().clean(value, version=version)
+
+
 class MemberListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Member

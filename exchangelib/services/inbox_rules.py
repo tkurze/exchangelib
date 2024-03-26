@@ -62,6 +62,20 @@ class UpdateInboxRules(EWSAccountService):
     supported_from = EXCHANGE_2010
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorInvalidOperation,)
 
+    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
+        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
+        return self._get_elements(payload=payload)
+
+    def _get_operation(self, rule):
+        raise NotImplementedError()
+
+    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
+        payload = create_element(f"m:{self.SERVICE_NAME}")
+        add_xml_child(payload, "m:RemoveOutlookRuleBlob", remove_outlook_rule_blob)
+        operations = self._get_operation(rule)
+        set_xml_value(payload, operations, version=self.account.version)
+        return payload
+
 
 class CreateInboxRule(UpdateInboxRules):
     """
@@ -69,16 +83,8 @@ class CreateInboxRule(UpdateInboxRules):
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateinboxrules-operation#updateinboxrules-create-rule-request-example
     """
 
-    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-        return self._get_elements(payload=payload)
-
-    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = create_element(f"m:{self.SERVICE_NAME}")
-        add_xml_child(payload, "m:RemoveOutlookRuleBlob", remove_outlook_rule_blob)
-        operations = Operations(create_rule_operation=CreateRuleOperation(rule=rule))
-        set_xml_value(payload, operations, version=self.account.version)
-        return payload
+    def _get_operation(self, rule):
+        return Operations(create_rule_operation=CreateRuleOperation(rule=rule))
 
 
 class SetInboxRule(UpdateInboxRules):
@@ -87,18 +93,8 @@ class SetInboxRule(UpdateInboxRules):
     https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateinboxrules-operation#updateinboxrules-set-rule-request-example
     """
 
-    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-        return self._get_elements(payload=payload)
-
-    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        if not rule.id:
-            raise ValueError("Rule must have an ID")
-        payload = create_element(f"m:{self.SERVICE_NAME}")
-        add_xml_child(payload, "m:RemoveOutlookRuleBlob", remove_outlook_rule_blob)
-        operations = Operations(set_rule_operation=SetRuleOperation(rule=rule))
-        set_xml_value(payload, operations, version=self.account.version)
-        return payload
+    def _get_operation(self, rule):
+        return Operations(set_rule_operation=SetRuleOperation(rule=rule))
 
 
 class DeleteInboxRule(UpdateInboxRules):
@@ -107,15 +103,5 @@ class DeleteInboxRule(UpdateInboxRules):
     https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateinboxrules-operation#updateinboxrules-delete-rule-request-example
     """
 
-    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-        return self._get_elements(payload=payload)
-
-    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        if not rule.id:
-            raise ValueError("Rule must have an ID")
-        payload = create_element(f"m:{self.SERVICE_NAME}")
-        add_xml_child(payload, "m:RemoveOutlookRuleBlob", remove_outlook_rule_blob)
-        operations = Operations(delete_rule_operation=DeleteRuleOperation(id=rule.id))
-        set_xml_value(payload, operations, version=self.account.version)
-        return payload
+    def _get_operation(self, rule):
+        return Operations(delete_rule_operation=DeleteRuleOperation(id=rule.id))

@@ -20,11 +20,14 @@ from exchangelib.folders import Calendar
 from exchangelib.items import Message
 from exchangelib.properties import (
     Actions,
+    Address,
     Conditions,
+    CopyToFolder,
     DelegatePermissions,
     DelegateUser,
     Exceptions,
     MailTips,
+    MoveToFolder,
     OutOfOffice,
     RecipientAddress,
     Rule,
@@ -35,7 +38,7 @@ from exchangelib.protocol import FaultTolerance, Protocol
 from exchangelib.services import GetDelegate, GetMailTips
 from exchangelib.version import EXCHANGE_2007_SP1, Version
 
-from .common import EWSTest, get_random_string
+from .common import EWSTest, get_random_choice, get_random_email, get_random_int, get_random_string
 
 
 class AccountTest(EWSTest):
@@ -342,13 +345,7 @@ class AccountTest(EWSTest):
         self.assertIsNotNone(a.protocol.auth_type)
         self.assertIsNotNone(a.protocol.retry_policy)
 
-    def test_inbox_rules(self):
-        # Clean up first
-        for rule in self.account.rules:
-            self.account.delete_rule(rule)
-
-        self.assertEqual(len(self.account.rules), 0)
-
+    def test_basic_inbox_rule(self):
         # Create rule
         display_name = get_random_string(16)
         rule = Rule(
@@ -363,14 +360,42 @@ class AccountTest(EWSTest):
         self.account.create_rule(rule=rule)
         self.assertIsNotNone(rule.id)
         self.assertEqual(len(self.account.rules), 1)
-        self.assertEqual(self.account.rules[0].display_name, display_name)
+        self.assertIn(display_name, {r.display_name for r in self.account.rules})
 
         # Update rule
         rule.display_name = get_random_string(16)
         self.account.set_rule(rule=rule)
-        self.assertEqual(len(self.account.rules), 1)
-        self.assertNotEqual(self.account.rules[0].display_name, display_name)
+        self.assertIn(rule.display_name, {r.display_name for r in self.account.rules})
+        self.assertNotIn(display_name, {r.display_name for r in self.account.rules})
 
         # Delete rule
         self.account.delete_rule(rule=rule)
-        self.assertEqual(len(self.account.rules), 0)
+        self.assertNotIn(rule.display_name, {r.display_name for r in self.account.rules})
+
+    def test_all_inbox_rule_actions(self):
+        for action_name, action in {
+            "assign_categories": ["foo", "bar"],
+            "copy_to_folder": CopyToFolder(distinguished_folder_id=self.account.trash.to_id()),
+            "delete": True,  # Cannot be random. False would be a no-op action
+            "forward_as_attachment_to_recipients": [Address(email_address=get_random_email())],
+            "mark_importance": get_random_choice(
+                Actions.mark_importance.supported_choices(version=self.account.version)
+            ),
+            "mark_as_read": True,  # Cannot be random. False would be a no-op action
+            "move_to_folder": MoveToFolder(distinguished_folder_id=self.account.trash.to_id()),
+            "permanent_delete": True,  # Cannot be random. False would be a no-op action
+            "redirect_to_recipients": [Address(email_address=get_random_email())],
+            # TODO: Throws "UnsupportedRule: The operation on this unsupported rule is not allowed."
+            # "send_sms_alert_to_recipients": [Address(email_address=get_random_email())],
+            # TODO: throws "InvalidValue: Id must be non-empty." even though we follow MSDN docs
+            # "server_reply_with_message": Message(folder=self.account.inbox, subject="Foo").save().to_id(),
+            "stop_processing_rules": True,  # Cannot be random. False would be a no-op action
+        }.items():
+            with self.subTest(action_name=action_name, action=action):
+                rule = Rule(
+                    display_name=get_random_string(16),
+                    priority=get_random_int(),
+                    actions=Actions(**{action_name: action}),
+                )
+                self.account.create_rule(rule=rule)
+                self.account.delete_rule(rule=rule)

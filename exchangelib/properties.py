@@ -17,6 +17,7 @@ from .errors import (
 )
 from .fields import (
     WEEKDAY_NAMES,
+    AddressListField,
     AssociatedCalendarItemIdField,
     Base64Field,
     BooleanField,
@@ -2226,10 +2227,9 @@ class CopyToFolder(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copytofolder"""
 
     ELEMENT_NAME = "CopyToFolder"
-    NAMESPACE = MNS
 
-    folder_id = EWSElementField(value_cls=FolderId, field_uri="FolderId")
-    distinguished_folder_id = EWSElementField(value_cls=DistinguishedFolderId, field_uri="DistinguishedFolderId")
+    folder_id = EWSElementField(value_cls=FolderId)
+    distinguished_folder_id = EWSElementField(value_cls=DistinguishedFolderId)
 
 
 class MoveToFolder(CopyToFolder):
@@ -2242,21 +2242,18 @@ class Actions(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/actions"""
 
     ELEMENT_NAME = "Actions"
-    NAMESPACE = TNS
 
     assign_categories = CharListField(field_uri="AssignCategories")
-    copy_to_folder = EWSElementField(value_cls=CopyToFolder, field_uri="CopyToFolder")
+    copy_to_folder = EWSElementField(value_cls=CopyToFolder)
     delete = BooleanField(field_uri="Delete")
-    forward_as_attachment_to_recipients = EWSElementField(
-        value_cls=Mailbox, field_uri="ForwardAsAttachmentToRecipients"
-    )
-    forward_to_recipients = EWSElementField(value_cls=Mailbox, field_uri="ForwardToRecipients")
+    forward_as_attachment_to_recipients = AddressListField(field_uri="ForwardAsAttachmentToRecipients")
+    forward_to_recipients = AddressListField(field_uri="ForwardToRecipients")
     mark_importance = ImportanceField(field_uri="MarkImportance")
     mark_as_read = BooleanField(field_uri="MarkAsRead")
-    move_to_folder = EWSElementField(value_cls=MoveToFolder, field_uri="MoveToFolder")
+    move_to_folder = EWSElementField(value_cls=MoveToFolder)
     permanent_delete = BooleanField(field_uri="PermanentDelete")
-    redirect_to_recipients = EWSElementField(value_cls=Mailbox, field_uri="RedirectToRecipients")
-    send_sms_alert_to_recipients = EWSElementField(value_cls=Mailbox, field_uri="SendSMSAlertToRecipients")
+    redirect_to_recipients = AddressListField(field_uri="RedirectToRecipients")
+    send_sms_alert_to_recipients = AddressListField(field_uri="SendSMSAlertToRecipients")
     server_reply_with_message = EWSElementField(value_cls=ItemId, field_uri="ServerReplyWithMessage")
     stop_processing_rules = BooleanField(field_uri="StopProcessingRules")
 
@@ -2265,17 +2262,16 @@ class Rule(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype"""
 
     ELEMENT_NAME = "Rule"
-    NAMESPACE = TNS
 
     id = CharField(field_uri="RuleId")
-    display_name = CharField(field_uri="DisplayName")
-    priority = IntegerField(field_uri="Priority")
+    display_name = CharField(field_uri="DisplayName", is_required=True)
+    priority = IntegerField(field_uri="Priority", is_required=True)
     is_enabled = BooleanField(field_uri="IsEnabled")
     is_not_supported = BooleanField(field_uri="IsNotSupported")
     is_in_error = BooleanField(field_uri="IsInError")
     conditions = EWSElementField(value_cls=Conditions)
     exceptions = EWSElementField(value_cls=Exceptions)
-    actions = EWSElementField(value_cls=Actions)
+    actions = EWSElementField(value_cls=Actions, is_required=True)
 
 
 class InboxRules(EWSElement):
@@ -2291,7 +2287,6 @@ class CreateRuleOperation(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createruleoperation"""
 
     ELEMENT_NAME = "CreateRuleOperation"
-    NAMESPACE = TNS
 
     rule = EWSElementField(value_cls=Rule)
 
@@ -2300,7 +2295,6 @@ class SetRuleOperation(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setruleoperation"""
 
     ELEMENT_NAME = "SetRuleOperation"
-    NAMESPACE = TNS
 
     rule = EWSElementField(value_cls=Rule)
 
@@ -2309,7 +2303,6 @@ class DeleteRuleOperation(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteruleoperation"""
 
     ELEMENT_NAME = "DeleteRuleOperation"
-    NAMESPACE = TNS
 
     id = CharField(field_uri="RuleId")
 
