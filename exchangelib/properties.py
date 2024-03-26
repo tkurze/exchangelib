@@ -2261,6 +2261,21 @@ class Actions(EWSElement):
 class Rule(EWSElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype"""
 
+    def __init__(self, **kwargs):
+        """Pick out optional 'account' kwarg, and pass the rest to the parent class.
+
+        :param kwargs:
+            'account' is optional but allows calling 'send()' and 'delete()'
+        """
+        from .account import Account
+
+        self.account = kwargs.pop("account", None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise InvalidTypeError("account", self.account, Account)
+        super().__init__(**kwargs)
+
+    __slots__ = ("account",)
+
     ELEMENT_NAME = "Rule"
 
     id = CharField(field_uri="RuleId")
@@ -2272,6 +2287,16 @@ class Rule(EWSElement):
     conditions = EWSElementField(value_cls=Conditions)
     exceptions = EWSElementField(value_cls=Exceptions)
     actions = EWSElementField(value_cls=Actions, is_required=True)
+
+    def save(self):
+        if self.id is None:
+            self.account.create_rule(self)
+        else:
+            self.account.set_rule(self)
+        return self
+
+    def delete(self):
+        self.account.delete_rule(self)
 
 
 class InboxRules(EWSElement):

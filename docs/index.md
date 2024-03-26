@@ -1937,6 +1937,7 @@ print("Rules before creation:", a.rules, "\n")
 
 # Create Rule instance
 rule = Rule(
+    account=a,
     display_name="test_exchangelib_rule",
     priority=1,
     is_enabled=True,
@@ -1946,7 +1947,7 @@ rule = Rule(
 )
 
 # Create rule
-a.create_rule(rule)
+rule.save()
 print("Rule:", rule)
 print("Created rule with ID:", rule.id, "\n")
 
@@ -1956,12 +1957,12 @@ print("Rules after creation:", a.rules, "\n")
 # Modify rule
 print("Modifying rule with ID:", rule.id)
 rule.display_name = "test_exchangelib_rule(modified)"
-a.set_rule(rule)
+rule.save()
 print("Rules after modification:", a.rules, "\n")
 
 # Delete rule
 print("Deleting rule with ID:", rule.id)
-a.delete_rule(rule=rule)
+rule.delete()
 print("Rules after deletion:", a.rules)
 ```
 

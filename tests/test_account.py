@@ -349,6 +349,7 @@ class AccountTest(EWSTest):
         # Create rule
         display_name = get_random_string(16)
         rule = Rule(
+            account=self.account,
             display_name=display_name,
             priority=1,
             is_enabled=True,
@@ -357,19 +358,18 @@ class AccountTest(EWSTest):
             actions=Actions(delete=True),
         )
         self.assertIsNone(rule.id)
-        self.account.create_rule(rule=rule)
+        rule.save()
         self.assertIsNotNone(rule.id)
-        self.assertEqual(len(self.account.rules), 1)
         self.assertIn(display_name, {r.display_name for r in self.account.rules})
 
         # Update rule
         rule.display_name = get_random_string(16)
-        self.account.set_rule(rule=rule)
+        rule.save()
         self.assertIn(rule.display_name, {r.display_name for r in self.account.rules})
         self.assertNotIn(display_name, {r.display_name for r in self.account.rules})
 
         # Delete rule
-        self.account.delete_rule(rule=rule)
+        rule.delete()
         self.assertNotIn(rule.display_name, {r.display_name for r in self.account.rules})
 
     def test_all_inbox_rule_actions(self):
@@ -393,9 +393,9 @@ class AccountTest(EWSTest):
         }.items():
             with self.subTest(action_name=action_name, action=action):
                 rule = Rule(
+                    account=self.account,
                     display_name=get_random_string(16),
                     priority=get_random_int(),
                     actions=Actions(**{action_name: action}),
-                )
-                self.account.create_rule(rule=rule)
-                self.account.delete_rule(rule=rule)
+                ).save()
+                rule.delete()
