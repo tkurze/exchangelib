@@ -2289,6 +2289,12 @@ class Rule(EWSElement):
     exceptions = EWSElementField(value_cls=Exceptions)
     actions = EWSElementField(value_cls=Actions, is_required=True)
 
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = super().from_xml(elem=elem, account=account)
+        res.account = account
+        return res
+
     def save(self):
         if self.id is None:
             self.account.create_rule(self)
@@ -2297,6 +2303,10 @@ class Rule(EWSElement):
         return self
 
     def delete(self):
+        if self.is_enabled is False:
+            # Cannot delete a disabled rule - server throws 'ErrorItemNotFound'
+            self.is_enabled = True
+            self.save()
         self.account.delete_rule(self)
 
 

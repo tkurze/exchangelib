@@ -6,7 +6,7 @@ from cached_property import threaded_cached_property
 from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import ACCESS_TYPES, DELEGATE, IMPERSONATION
-from .errors import ErrorItemNotFound, InvalidEnumValue, InvalidTypeError, ResponseMessageError, UnknownTimeZone
+from .errors import InvalidEnumValue, InvalidTypeError, ResponseMessageError, UnknownTimeZone
 from .ewsdatetime import UTC, EWSTimeZone
 from .fields import FieldPath, TextField
 from .folders import (
@@ -787,16 +787,11 @@ class Account:
     def delete_rule(self, rule: Rule):
         """Delete an Inbox rule.
 
-        :param rule: The rule to delete. Must have ID or 'display_name'.
+        :param rule: The rule to delete. Must have an ID.
         :return: None if success, else raises an error.
         """
         if not rule.id:
-            if not rule.display_name:
-                raise ValueError("Rule must have ID or display_name")
-            try:
-                rule = {i.display_name: i for i in GetInboxRules(account=self).call()}[rule.display_name]
-            except KeyError:
-                raise ErrorItemNotFound(f"No rule with name {rule.display_name!r}")
+            raise ValueError("Rule must have an ID")
         DeleteInboxRule(account=self).get(rule=rule)
         rule.id = None
 

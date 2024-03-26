@@ -161,7 +161,7 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         # Deletes up all deletable items in the test account. Not run in a normal test run
         self.account.root.wipe()
         for rule in self.account.rules:
-            self.account.delete_rule(rule)
+            rule.delete()
 
     def bulk_delete(self, ids):
         # Clean up items and check return values
