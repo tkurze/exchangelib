@@ -3,7 +3,6 @@ from typing import Any, Generator, Optional, Union
 from ..errors import ErrorInvalidOperation
 from ..properties import CreateRuleOperation, DeleteRuleOperation, InboxRules, Operations, Rule, SetRuleOperation
 from ..util import MNS, add_xml_child, create_element, get_xml_attr, set_xml_value
-from ..version import EXCHANGE_2010
 from .common import EWSAccountService
 
 
@@ -15,7 +14,6 @@ class GetInboxRules(EWSAccountService):
     """
 
     SERVICE_NAME = "GetInboxRules"
-    supported_from = EXCHANGE_2010
     element_container_name = InboxRules.response_tag()
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorInvalidOperation,)
 
@@ -59,7 +57,6 @@ class UpdateInboxRules(EWSAccountService):
     """
 
     SERVICE_NAME = "UpdateInboxRules"
-    supported_from = EXCHANGE_2010
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorInvalidOperation,)
 
     def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
