@@ -38,6 +38,7 @@ from .fields import (
     Field,
     FieldPath,
     FlaggedForActionField,
+    FolderActionField,
     FreeBusyStatusField,
     GenericEventListField,
     IdElementField,
@@ -2244,13 +2245,13 @@ class Actions(EWSElement):
     ELEMENT_NAME = "Actions"
 
     assign_categories = CharListField(field_uri="AssignCategories")
-    copy_to_folder = EWSElementField(value_cls=CopyToFolder)
+    copy_to_folder = FolderActionField(value_cls=CopyToFolder)
     delete = BooleanField(field_uri="Delete")
     forward_as_attachment_to_recipients = AddressListField(field_uri="ForwardAsAttachmentToRecipients")
     forward_to_recipients = AddressListField(field_uri="ForwardToRecipients")
     mark_importance = ImportanceField(field_uri="MarkImportance")
     mark_as_read = BooleanField(field_uri="MarkAsRead")
-    move_to_folder = EWSElementField(value_cls=MoveToFolder)
+    move_to_folder = FolderActionField(value_cls=MoveToFolder)
     permanent_delete = BooleanField(field_uri="PermanentDelete")
     redirect_to_recipients = AddressListField(field_uri="RedirectToRecipients")
     send_sms_alert_to_recipients = AddressListField(field_uri="SendSMSAlertToRecipients")

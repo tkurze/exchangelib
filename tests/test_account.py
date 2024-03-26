@@ -22,7 +22,6 @@ from exchangelib.properties import (
     Actions,
     Address,
     Conditions,
-    CopyToFolder,
     DelegatePermissions,
     DelegateUser,
     Exceptions,
@@ -375,7 +374,7 @@ class AccountTest(EWSTest):
     def test_all_inbox_rule_actions(self):
         for action_name, action in {
             "assign_categories": ["foo", "bar"],
-            "copy_to_folder": CopyToFolder(distinguished_folder_id=self.account.trash.to_id()),
+            "copy_to_folder": self.account.trash,
             "delete": True,  # Cannot be random. False would be a no-op action
             "forward_as_attachment_to_recipients": [Address(email_address=get_random_email())],
             "mark_importance": get_random_choice(

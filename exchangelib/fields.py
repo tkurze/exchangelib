@@ -1798,3 +1798,19 @@ class SensitivityField(ChoiceField):
     def __init__(self, *args, **kwargs):
         kwargs["choices"] = SENSITIVITY_CHOICES
         super().__init__(*args, **kwargs)
+
+
+class FolderActionField(EWSElementField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        from .folders import DistinguishedFolderId, Folder
+
+        if isinstance(value, Folder):
+            folder_id = value.to_id()
+            if isinstance(folder_id, DistinguishedFolderId):
+                value = self.value_cls(distinguished_folder_id=folder_id)
+            else:
+                value = self.value_cls(folder_id=folder_id)
+        return super().clean(value, version=version)

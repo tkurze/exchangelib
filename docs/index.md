@@ -1943,7 +1943,10 @@ rule = Rule(
     is_enabled=True,
     conditions=Conditions(contains_sender_strings=["sender_example"]),
     exceptions=Exceptions(),
-    actions=Actions(delete=True),
+    actions=Actions(
+        move_to_folder=a.trash,
+        mark_as_read=True,
+    ),
 )
 
 # Create rule
