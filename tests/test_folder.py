@@ -154,7 +154,7 @@ class FolderTest(EWSTest):
         self.account.root.remove_folder(Folder(id="XXX"))
         # Must be called on a distinguished folder class
         with self.assertRaises(ValueError):
-            RootOfHierarchy.get_distinguished(self.account)
+            RootOfHierarchy.get_distinguished(account=self.account)
         with self.assertRaises(ValueError):
             self.account.root.get_default_folder(Folder)
 

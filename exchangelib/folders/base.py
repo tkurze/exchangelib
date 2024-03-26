@@ -857,18 +857,18 @@ class Folder(BaseFolder):
         return super().deregister(*args, **kwargs)
 
     @classmethod
-    def get_distinguished(cls, root):
+    def get_distinguished(cls, account):
         """Get the distinguished folder for this folder class.
 
-        :param root:
+        :param account:
         :return:
         """
         try:
             return cls.resolve(
-                account=root.account,
+                account=account,
                 folder=DistinguishedFolderId(
                     id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
                 ),
             )
         except MISSING_FOLDER_ERRORS:

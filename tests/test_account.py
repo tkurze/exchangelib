@@ -118,7 +118,7 @@ class AccountTest(EWSTest):
 
         class MockCalendar1(Calendar):
             @classmethod
-            def get_distinguished(cls, root):
+            def get_distinguished(cls, account):
                 raise ErrorAccessDenied("foo")
 
         # Test an indirect folder lookup with FindItem, when we're not allowed to do a GetFolder. We don't get the
@@ -132,7 +132,7 @@ class AccountTest(EWSTest):
 
         class MockCalendar2(Calendar):
             @classmethod
-            def get_distinguished(cls, root):
+            def get_distinguished(cls, account):
                 raise ErrorFolderNotFound("foo")
 
         # Test using the one folder of this folder type

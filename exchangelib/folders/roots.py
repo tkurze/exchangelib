@@ -136,7 +136,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
                     return f
         try:
             log.debug("Requesting distinguished %s folder explicitly", folder_cls)
-            return folder_cls.get_distinguished(root=self)
+            return folder_cls.get_distinguished(account=self.account)
         except ErrorAccessDenied:
             # Maybe we just don't have GetFolder access? Try FindItem instead
             log.debug("Testing default %s folder with FindItem", folder_cls)
