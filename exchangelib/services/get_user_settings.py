@@ -86,6 +86,6 @@ class GetUserSettings(EWSService):
             return container
         # Raise any non-acceptable errors in the container, or return the acceptable exception instance
         try:
-            raise self._get_exception(code=res.error_code, text=res.error_message, msg_xml=None)
+            raise self._get_exception(code=res.error_code, text=res.error_message)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e

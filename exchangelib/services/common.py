@@ -590,6 +590,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
         msg_text = get_xml_attr(message, f"{{{MNS}}}MessageText")
         msg_xml = message.find(f"{{{MNS}}}MessageXml")
+        rule_errors = message.find(f"{{{MNS}}}RuleOperationErrors")
         if response_class == "Warning":
             try:
                 raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
@@ -603,12 +604,12 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 return container
         # response_class == 'Error', or 'Success' and not 'NoError'
         try:
-            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
+            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml, rule_errors=rule_errors)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e
 
     @staticmethod
-    def _get_exception(code, text, msg_xml):
+    def _get_exception(code, text, msg_xml=None, rule_errors=None):
         """Parse error messages contained in EWS responses and raise as exceptions defined in this package."""
         if not code:
             return TransportError(f"Empty ResponseCode in ResponseMessage (MessageText: {text}, MessageXml: {msg_xml})")
@@ -646,6 +647,13 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 except KeyError:
                     # Inner code is unknown to us. Just append to the original text
                     text += f" (inner error: {inner_code}({inner_text!r}))"
+        if rule_errors is not None:
+            for rule_error in rule_errors.findall(f"{{{TNS}}}RuleOperationError"):
+                for error in rule_error.find(f"{{{TNS}}}ValidationErrors").findall(f"{{{TNS}}}Error"):
+                    field_uri = get_xml_attr(error, f"{{{TNS}}}FieldURI")
+                    error_code = get_xml_attr(error, f"{{{TNS}}}ErrorCode")
+                    error_message = get_xml_attr(error, f"{{{TNS}}}ErrorMessage")
+                    text += f" ({error_code} on field {field_uri}: {error_message})"
         try:
             # Raise the error corresponding to the ResponseCode
             return vars(errors)[code](text)

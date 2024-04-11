@@ -10,6 +10,7 @@ from exchangelib.errors import (
     ErrorAccessDenied,
     ErrorDelegateNoUser,
     ErrorFolderNotFound,
+    ErrorInboxRulesValidationError,
     ErrorInvalidUserSid,
     ErrorNotDelegate,
     UnauthorizedError,
@@ -384,10 +385,6 @@ class AccountTest(EWSTest):
             "move_to_folder": MoveToFolder(distinguished_folder_id=self.account.trash.to_id()),
             "permanent_delete": True,  # Cannot be random. False would be a no-op action
             "redirect_to_recipients": [Address(email_address=get_random_email())],
-            # TODO: Throws "UnsupportedRule: The operation on this unsupported rule is not allowed."
-            # "send_sms_alert_to_recipients": [Address(email_address=get_random_email())],
-            # TODO: throws "InvalidValue: Id must be non-empty." even though we follow MSDN docs
-            # "server_reply_with_message": Message(folder=self.account.inbox, subject="Foo").save().to_id(),
             "stop_processing_rules": True,  # Cannot be random. False would be a no-op action
         }.items():
             with self.subTest(action_name=action_name, action=action):
@@ -398,3 +395,32 @@ class AccountTest(EWSTest):
                     actions=Actions(**{action_name: action}),
                 ).save()
                 rule.delete()
+
+        # TODO: Throws "UnsupportedRule: The operation on this unsupported rule is not allowed."
+        with self.assertRaises(ErrorInboxRulesValidationError) as e:
+            Rule(
+                account=self.account,
+                display_name=get_random_string(16),
+                priority=get_random_int(),
+                actions=Actions(send_sms_alert_to_recipients=[Address(email_address=get_random_email())]),
+            ).save()
+        self.assertEqual(
+            e.exception.args[0],
+            "A validation error occurred while executing the rule operation. (UnsupportedRule on field "
+            "Action:SendSMSAlertToRecipients: The operation on this unsupported rule is not allowed.)",
+        )
+        # TODO: throws "InvalidValue: Id must be non-empty." even though we follow MSDN docs
+        with self.assertRaises(ErrorInboxRulesValidationError) as e:
+            Rule(
+                account=self.account,
+                display_name=get_random_string(16),
+                priority=get_random_int(),
+                actions=Actions(
+                    server_reply_with_message=Message(folder=self.account.inbox, subject="Foo").save().to_id()
+                ),
+            ).save()
+        self.assertEqual(
+            e.exception.args[0],
+            "A validation error occurred while executing the rule operation. (InvalidValue on field "
+            "Action:ServerReplyWithMessage: Id must be non-empty.)",
+        )
