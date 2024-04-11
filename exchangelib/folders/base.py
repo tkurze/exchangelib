@@ -213,6 +213,26 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
                     tree += f"    {node}\n"
         return tree.strip()
 
+    @classmethod
+    def get_distinguished(cls, account):
+        """Get the distinguished folder for this folder class.
+
+        :param account:
+        :return:
+        """
+        if not cls.DISTINGUISHED_FOLDER_ID:
+            raise ValueError(f"Class {cls} must have a DISTINGUISHED_FOLDER_ID value")
+        try:
+            return cls.resolve(
+                account=account,
+                folder=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
+                ),
+            )
+        except MISSING_FOLDER_ERRORS as e:
+            raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r} ({e})")
+
     @property
     def has_distinguished_name(self):
         return self.name and self.DISTINGUISHED_FOLDER_ID and self.name.lower() == self.DISTINGUISHED_FOLDER_ID.lower()
@@ -855,24 +875,6 @@ class Folder(BaseFolder):
         if cls is not Folder:
             raise TypeError("For folders, custom fields must be registered on the Folder class")
         return super().deregister(*args, **kwargs)
-
-    @classmethod
-    def get_distinguished(cls, account):
-        """Get the distinguished folder for this folder class.
-
-        :param account:
-        :return:
-        """
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}")
 
     @property
     def parent(self):

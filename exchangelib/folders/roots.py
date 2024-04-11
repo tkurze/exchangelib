@@ -101,25 +101,6 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             if f.parent.id == folder.id:
                 yield f
 
-    @classmethod
-    def get_distinguished(cls, account):
-        """Get the distinguished folder for this folder class.
-
-        :param account:
-        """
-        if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f"Class {cls} must have a DISTINGUISHED_FOLDER_ID value")
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}")
-
     def get_default_folder(self, folder_cls):
         """Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type 'folder_cls'
