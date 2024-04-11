@@ -34,7 +34,7 @@ from cached_property import threaded_cached_property
 from .autodiscover import Autodiscovery
 from .configuration import Configuration
 from .credentials import ACCESS_TYPES, DELEGATE, IMPERSONATION
-from .errors import ErrorItemNotFound, InvalidEnumValue, InvalidTypeError, ResponseMessageError, UnknownTimeZone
+from .errors import InvalidEnumValue, InvalidTypeError, ResponseMessageError, UnknownTimeZone
 from .ewsdatetime import UTC, EWSTimeZone
 from .fields import FieldPath, TextField
 from .folders import (
@@ -815,16 +815,11 @@ class Account:
     def delete_rule(self, rule: Rule):
         &#34;&#34;&#34;Delete an Inbox rule.
 
-        :param rule: The rule to delete. Must have ID or &#39;display_name&#39;.
+        :param rule: The rule to delete. Must have an ID.
         :return: None if success, else raises an error.
         &#34;&#34;&#34;
         if not rule.id:
-            if not rule.display_name:
-                raise ValueError(&#34;Rule must have ID or display_name&#34;)
-            try:
-                rule = {i.display_name: i for i in GetInboxRules(account=self).call()}[rule.display_name]
-            except KeyError:
-                raise ErrorItemNotFound(f&#34;No rule with name {rule.display_name!r}&#34;)
+            raise ValueError(&#34;Rule must have an ID&#34;)
         DeleteInboxRule(account=self).get(rule=rule)
         rule.id = None
 
@@ -1617,16 +1612,11 @@ assume values to be in the provided timezone. Defaults to the timezone of the ho
     def delete_rule(self, rule: Rule):
         &#34;&#34;&#34;Delete an Inbox rule.
 
-        :param rule: The rule to delete. Must have ID or &#39;display_name&#39;.
+        :param rule: The rule to delete. Must have an ID.
         :return: None if success, else raises an error.
         &#34;&#34;&#34;
         if not rule.id:
-            if not rule.display_name:
-                raise ValueError(&#34;Rule must have ID or display_name&#34;)
-            try:
-                rule = {i.display_name: i for i in GetInboxRules(account=self).call()}[rule.display_name]
-            except KeyError:
-                raise ErrorItemNotFound(f&#34;No rule with name {rule.display_name!r}&#34;)
+            raise ValueError(&#34;Rule must have an ID&#34;)
         DeleteInboxRule(account=self).get(rule=rule)
         rule.id = None
 
@@ -3169,7 +3159,7 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 </code></dt>
 <dd>
 <div class="desc"><p>Delete an Inbox rule.</p>
-<p>:param rule: The rule to delete. Must have ID or 'display_name'.
+<p>:param rule: The rule to delete. Must have an ID.
 :return: None if success, else raises an error.</p></div>
 <details class="source">
 <summary>
@@ -3178,16 +3168,11 @@ specified in SEND_MEETING_INVITATIONS_AND_CANCELLATIONS_CHOICES (Default value =
 <pre><code class="python">def delete_rule(self, rule: Rule):
     &#34;&#34;&#34;Delete an Inbox rule.
 
-    :param rule: The rule to delete. Must have ID or &#39;display_name&#39;.
+    :param rule: The rule to delete. Must have an ID.
     :return: None if success, else raises an error.
     &#34;&#34;&#34;
     if not rule.id:
-        if not rule.display_name:
-            raise ValueError(&#34;Rule must have ID or display_name&#34;)
-        try:
-            rule = {i.display_name: i for i in GetInboxRules(account=self).call()}[rule.display_name]
-        except KeyError:
-            raise ErrorItemNotFound(f&#34;No rule with name {rule.display_name!r}&#34;)
+        raise ValueError(&#34;Rule must have an ID&#34;)
     DeleteInboxRule(account=self).get(rule=rule)
     rule.id = None</code></pre>
 </details>

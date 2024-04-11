@@ -1003,7 +1003,6 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml(elem=elem, account=folder.account)
     elif isinstance(folder, Folder):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
-        f._distinguished_id = folder._distinguished_id
     elif isinstance(folder, DistinguishedFolderId):
         # We don&#39;t know the root or even account, but we need to attach the folder to something if we want to make
         # future requests with this folder. Use &#39;account&#39; but make sure to always use the distinguished folder ID going
@@ -1019,7 +1018,6 @@ def parse_folder_elem(elem, folder, account):
             f = folder_cls.from_xml(elem=elem, account=account)
         else:
             f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
-        f._distinguished_id = folder
     else:
         # &#39;folder&#39; is a generic FolderId instance. We don&#39;t know the root so assume account.root.
         f = Folder.from_xml_with_root(elem=elem, root=account.root)
@@ -1086,7 +1084,6 @@ def parse_folder_elem(elem, folder, account):
         f = folder.from_xml(elem=elem, account=folder.account)
     elif isinstance(folder, Folder):
         f = folder.from_xml_with_root(elem=elem, root=folder.root)
-        f._distinguished_id = folder._distinguished_id
     elif isinstance(folder, DistinguishedFolderId):
         # We don&#39;t know the root or even account, but we need to attach the folder to something if we want to make
         # future requests with this folder. Use &#39;account&#39; but make sure to always use the distinguished folder ID going
@@ -1102,7 +1099,6 @@ def parse_folder_elem(elem, folder, account):
             f = folder_cls.from_xml(elem=elem, account=account)
         else:
             f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
-        f._distinguished_id = folder
     else:
         # &#39;folder&#39; is a generic FolderId instance. We don&#39;t know the root so assume account.root.
         f = Folder.from_xml_with_root(elem=elem, root=account.root)

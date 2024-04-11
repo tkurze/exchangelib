@@ -164,7 +164,7 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
                     return f
         try:
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-            return folder_cls.get_distinguished(root=self)
+            return folder_cls.get_distinguished(account=self.account)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
@@ -929,7 +929,7 @@ def tois(self):
                     return f
         try:
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-            return folder_cls.get_distinguished(root=self)
+            return folder_cls.get_distinguished(account=self.account)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
@@ -1246,7 +1246,7 @@ folder was found, try as best we can to return the default folder of type 'folde
                 return f
     try:
         log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-        return folder_cls.get_distinguished(root=self)
+        return folder_cls.get_distinguished(account=self.account)
     except ErrorAccessDenied:
         # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
         log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)

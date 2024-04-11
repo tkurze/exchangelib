@@ -45,6 +45,7 @@ from .errors import (
 )
 from .fields import (
     WEEKDAY_NAMES,
+    AddressListField,
     AssociatedCalendarItemIdField,
     Base64Field,
     BooleanField,
@@ -65,6 +66,7 @@ from .fields import (
     Field,
     FieldPath,
     FlaggedForActionField,
+    FolderActionField,
     FreeBusyStatusField,
     GenericEventListField,
     IdElementField,
@@ -777,6 +779,10 @@ class DistinguishedFolderId(FolderId):
 
     mailbox = MailboxField()
 
+    @classmethod
+    def from_xml(cls, elem, account):
+        return cls(id=elem.text or None)
+
     def clean(self, version=None):
         from .folders import PublicFoldersRoot
 
@@ -846,7 +852,7 @@ class TimeZoneTransition(EWSElement, metaclass=EWSMeta):
 
     @classmethod
     def from_xml(cls, elem, account):
-        res = super().from_xml(elem, account)
+        res = super().from_xml(elem=elem, account=account)
         # Some parts of EWS use &#39;5&#39; to mean &#39;last occurrence in month&#39;, others use &#39;-1&#39;. Let&#39;s settle on &#39;5&#39; because
         # only &#39;5&#39; is accepted in requests.
         if res.occurrence == -1:
@@ -1893,7 +1899,7 @@ class RecurringDayTransition(BaseTransition):
 
     @classmethod
     def from_xml(cls, elem, account):
-        res = super().from_xml(elem, account)
+        res = super().from_xml(elem=elem, account=account)
         # See TimeZoneTransition.from_xml()
         if res.occurrence == -1:
             res.occurrence = 5
@@ -1944,10 +1950,6 @@ class TimeZoneDefinition(EWSElement):
     periods = EWSElementListField(field_uri=&#34;Periods&#34;, value_cls=Period)
     transitions_groups = EWSElementListField(field_uri=&#34;TransitionsGroups&#34;, value_cls=TransitionsGroup)
     transitions = TransitionListField(field_uri=&#34;Transitions&#34;, value_cls=BaseTransition)
-
-    @classmethod
-    def from_xml(cls, elem, account):
-        return super().from_xml(elem, account)
 
     def _get_standard_period(self, transitions_group):
         # Find the first standard period referenced from transitions_group
@@ -2250,10 +2252,9 @@ class CopyToFolder(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copytofolder&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;CopyToFolder&#34;
-    NAMESPACE = MNS
 
-    folder_id = EWSElementField(value_cls=FolderId, field_uri=&#34;FolderId&#34;)
-    distinguished_folder_id = EWSElementField(value_cls=DistinguishedFolderId, field_uri=&#34;DistinguishedFolderId&#34;)
+    folder_id = EWSElementField(value_cls=FolderId)
+    distinguished_folder_id = EWSElementField(value_cls=DistinguishedFolderId)
 
 
 class MoveToFolder(CopyToFolder):
@@ -2266,21 +2267,18 @@ class Actions(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/actions&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;Actions&#34;
-    NAMESPACE = TNS
 
     assign_categories = CharListField(field_uri=&#34;AssignCategories&#34;)
-    copy_to_folder = EWSElementField(value_cls=CopyToFolder, field_uri=&#34;CopyToFolder&#34;)
+    copy_to_folder = FolderActionField(value_cls=CopyToFolder)
     delete = BooleanField(field_uri=&#34;Delete&#34;)
-    forward_as_attachment_to_recipients = EWSElementField(
-        value_cls=Mailbox, field_uri=&#34;ForwardAsAttachmentToRecipients&#34;
-    )
-    forward_to_recipients = EWSElementField(value_cls=Mailbox, field_uri=&#34;ForwardToRecipients&#34;)
+    forward_as_attachment_to_recipients = AddressListField(field_uri=&#34;ForwardAsAttachmentToRecipients&#34;)
+    forward_to_recipients = AddressListField(field_uri=&#34;ForwardToRecipients&#34;)
     mark_importance = ImportanceField(field_uri=&#34;MarkImportance&#34;)
     mark_as_read = BooleanField(field_uri=&#34;MarkAsRead&#34;)
-    move_to_folder = EWSElementField(value_cls=MoveToFolder, field_uri=&#34;MoveToFolder&#34;)
+    move_to_folder = FolderActionField(value_cls=MoveToFolder)
     permanent_delete = BooleanField(field_uri=&#34;PermanentDelete&#34;)
-    redirect_to_recipients = EWSElementField(value_cls=Mailbox, field_uri=&#34;RedirectToRecipients&#34;)
-    send_sms_alert_to_recipients = EWSElementField(value_cls=Mailbox, field_uri=&#34;SendSMSAlertToRecipients&#34;)
+    redirect_to_recipients = AddressListField(field_uri=&#34;RedirectToRecipients&#34;)
+    send_sms_alert_to_recipients = AddressListField(field_uri=&#34;SendSMSAlertToRecipients&#34;)
     server_reply_with_message = EWSElementField(value_cls=ItemId, field_uri=&#34;ServerReplyWithMessage&#34;)
     stop_processing_rules = BooleanField(field_uri=&#34;StopProcessingRules&#34;)
 
@@ -2288,18 +2286,52 @@ class Actions(EWSElement):
 class Rule(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype&#34;&#34;&#34;
 
+    def __init__(self, **kwargs):
+        &#34;&#34;&#34;Pick out optional &#39;account&#39; kwarg, and pass the rest to the parent class.
+
+        :param kwargs:
+            &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
+        &#34;&#34;&#34;
+        from .account import Account
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
+        super().__init__(**kwargs)
+
+    __slots__ = (&#34;account&#34;,)
+
     ELEMENT_NAME = &#34;Rule&#34;
-    NAMESPACE = TNS
 
     id = CharField(field_uri=&#34;RuleId&#34;)
-    display_name = CharField(field_uri=&#34;DisplayName&#34;)
-    priority = IntegerField(field_uri=&#34;Priority&#34;)
+    display_name = CharField(field_uri=&#34;DisplayName&#34;, is_required=True)
+    priority = IntegerField(field_uri=&#34;Priority&#34;, is_required=True)
     is_enabled = BooleanField(field_uri=&#34;IsEnabled&#34;)
     is_not_supported = BooleanField(field_uri=&#34;IsNotSupported&#34;)
     is_in_error = BooleanField(field_uri=&#34;IsInError&#34;)
     conditions = EWSElementField(value_cls=Conditions)
     exceptions = EWSElementField(value_cls=Exceptions)
-    actions = EWSElementField(value_cls=Actions)
+    actions = EWSElementField(value_cls=Actions, is_required=True)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = super().from_xml(elem=elem, account=account)
+        res.account = account
+        return res
+
+    def save(self):
+        if self.id is None:
+            self.account.create_rule(self)
+        else:
+            self.account.set_rule(self)
+        return self
+
+    def delete(self):
+        if self.is_enabled is False:
+            # Cannot delete a disabled rule - server throws &#39;ErrorItemNotFound&#39;
+            self.is_enabled = True
+            self.save()
+        self.account.delete_rule(self)
 
 
 class InboxRules(EWSElement):
@@ -2315,7 +2347,6 @@ class CreateRuleOperation(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createruleoperation&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;CreateRuleOperation&#34;
-    NAMESPACE = TNS
 
     rule = EWSElementField(value_cls=Rule)
 
@@ -2324,7 +2355,6 @@ class SetRuleOperation(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setruleoperation&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;SetRuleOperation&#34;
-    NAMESPACE = TNS
 
     rule = EWSElementField(value_cls=Rule)
 
@@ -2333,7 +2363,6 @@ class DeleteRuleOperation(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteruleoperation&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;DeleteRuleOperation&#34;
-    NAMESPACE = TNS
 
     id = CharField(field_uri=&#34;RuleId&#34;)
 
@@ -2475,21 +2504,18 @@ class Operations(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/actions&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;Actions&#34;
-    NAMESPACE = TNS
 
     assign_categories = CharListField(field_uri=&#34;AssignCategories&#34;)
-    copy_to_folder = EWSElementField(value_cls=CopyToFolder, field_uri=&#34;CopyToFolder&#34;)
+    copy_to_folder = FolderActionField(value_cls=CopyToFolder)
     delete = BooleanField(field_uri=&#34;Delete&#34;)
-    forward_as_attachment_to_recipients = EWSElementField(
-        value_cls=Mailbox, field_uri=&#34;ForwardAsAttachmentToRecipients&#34;
-    )
-    forward_to_recipients = EWSElementField(value_cls=Mailbox, field_uri=&#34;ForwardToRecipients&#34;)
+    forward_as_attachment_to_recipients = AddressListField(field_uri=&#34;ForwardAsAttachmentToRecipients&#34;)
+    forward_to_recipients = AddressListField(field_uri=&#34;ForwardToRecipients&#34;)
     mark_importance = ImportanceField(field_uri=&#34;MarkImportance&#34;)
     mark_as_read = BooleanField(field_uri=&#34;MarkAsRead&#34;)
-    move_to_folder = EWSElementField(value_cls=MoveToFolder, field_uri=&#34;MoveToFolder&#34;)
+    move_to_folder = FolderActionField(value_cls=MoveToFolder)
     permanent_delete = BooleanField(field_uri=&#34;PermanentDelete&#34;)
-    redirect_to_recipients = EWSElementField(value_cls=Mailbox, field_uri=&#34;RedirectToRecipients&#34;)
-    send_sms_alert_to_recipients = EWSElementField(value_cls=Mailbox, field_uri=&#34;SendSMSAlertToRecipients&#34;)
+    redirect_to_recipients = AddressListField(field_uri=&#34;RedirectToRecipients&#34;)
+    send_sms_alert_to_recipients = AddressListField(field_uri=&#34;SendSMSAlertToRecipients&#34;)
     server_reply_with_message = EWSElementField(value_cls=ItemId, field_uri=&#34;ServerReplyWithMessage&#34;)
     stop_processing_rules = BooleanField(field_uri=&#34;StopProcessingRules&#34;)</code></pre>
 </details>
@@ -2504,10 +2530,6 @@ class Operations(EWSElement):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.Actions.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.Actions.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4322,10 +4344,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/copytofolder&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;CopyToFolder&#34;
-    NAMESPACE = MNS
 
-    folder_id = EWSElementField(value_cls=FolderId, field_uri=&#34;FolderId&#34;)
-    distinguished_folder_id = EWSElementField(value_cls=DistinguishedFolderId, field_uri=&#34;DistinguishedFolderId&#34;)</code></pre>
+    folder_id = EWSElementField(value_cls=FolderId)
+    distinguished_folder_id = EWSElementField(value_cls=DistinguishedFolderId)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4342,10 +4363,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.CopyToFolder.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.CopyToFolder.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4387,7 +4404,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createruleoperation&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;CreateRuleOperation&#34;
-    NAMESPACE = TNS
 
     rule = EWSElementField(value_cls=Rule)</code></pre>
 </details>
@@ -4402,10 +4418,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.CreateRuleOperation.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.CreateRuleOperation.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4731,7 +4743,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/deleteruleoperation&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;DeleteRuleOperation&#34;
-    NAMESPACE = TNS
 
     id = CharField(field_uri=&#34;RuleId&#34;)</code></pre>
 </details>
@@ -4746,10 +4757,6 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.DeleteRuleOperation.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.DeleteRuleOperation.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -4886,6 +4893,10 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 
     mailbox = MailboxField()
 
+    @classmethod
+    def from_xml(cls, elem, account):
+        return cls(id=elem.text or None)
+
     def clean(self, version=None):
         from .folders import PublicFoldersRoot
 
@@ -4910,6 +4921,23 @@ The substitutions are identified by braces ('{' and '}').</p></div>
 <dt id="exchangelib.properties.DistinguishedFolderId.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.properties.DistinguishedFolderId.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    return cls(id=elem.text or None)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
@@ -9122,7 +9150,7 @@ def response_tag(cls):
 
     @classmethod
     def from_xml(cls, elem, account):
-        res = super().from_xml(elem, account)
+        res = super().from_xml(elem=elem, account=account)
         # See TimeZoneTransition.from_xml()
         if res.occurrence == -1:
             res.occurrence = 5
@@ -9157,7 +9185,7 @@ def response_tag(cls):
 </summary>
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
-    res = super().from_xml(elem, account)
+    res = super().from_xml(elem=elem, account=account)
     # See TimeZoneTransition.from_xml()
     if res.occurrence == -1:
         res.occurrence = 5
@@ -9756,7 +9784,10 @@ def response_tag(cls):
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype</a></p></div>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype</a></p>
+<p>Pick out optional 'account' kwarg, and pass the rest to the parent class.</p>
+<p>:param kwargs:
+'account' is optional but allows calling 'send()' and 'delete()'</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -9764,18 +9795,52 @@ def response_tag(cls):
 <pre><code class="python">class Rule(EWSElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/rule-ruletype&#34;&#34;&#34;
 
+    def __init__(self, **kwargs):
+        &#34;&#34;&#34;Pick out optional &#39;account&#39; kwarg, and pass the rest to the parent class.
+
+        :param kwargs:
+            &#39;account&#39; is optional but allows calling &#39;send()&#39; and &#39;delete()&#39;
+        &#34;&#34;&#34;
+        from .account import Account
+
+        self.account = kwargs.pop(&#34;account&#34;, None)
+        if self.account is not None and not isinstance(self.account, Account):
+            raise InvalidTypeError(&#34;account&#34;, self.account, Account)
+        super().__init__(**kwargs)
+
+    __slots__ = (&#34;account&#34;,)
+
     ELEMENT_NAME = &#34;Rule&#34;
-    NAMESPACE = TNS
 
     id = CharField(field_uri=&#34;RuleId&#34;)
-    display_name = CharField(field_uri=&#34;DisplayName&#34;)
-    priority = IntegerField(field_uri=&#34;Priority&#34;)
+    display_name = CharField(field_uri=&#34;DisplayName&#34;, is_required=True)
+    priority = IntegerField(field_uri=&#34;Priority&#34;, is_required=True)
     is_enabled = BooleanField(field_uri=&#34;IsEnabled&#34;)
     is_not_supported = BooleanField(field_uri=&#34;IsNotSupported&#34;)
     is_in_error = BooleanField(field_uri=&#34;IsInError&#34;)
     conditions = EWSElementField(value_cls=Conditions)
     exceptions = EWSElementField(value_cls=Exceptions)
-    actions = EWSElementField(value_cls=Actions)</code></pre>
+    actions = EWSElementField(value_cls=Actions, is_required=True)
+
+    @classmethod
+    def from_xml(cls, elem, account):
+        res = super().from_xml(elem=elem, account=account)
+        res.account = account
+        return res
+
+    def save(self):
+        if self.id is None:
+            self.account.create_rule(self)
+        else:
+            self.account.set_rule(self)
+        return self
+
+    def delete(self):
+        if self.is_enabled is False:
+            # Cannot delete a disabled rule - server throws &#39;ErrorItemNotFound&#39;
+            self.is_enabled = True
+            self.save()
+        self.account.delete_rule(self)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -9791,13 +9856,32 @@ def response_tag(cls):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.properties.Rule.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="exchangelib.properties.Rule.from_xml"><code class="name flex">
+<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
+</code></dt>
 <dd>
 <div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_xml(cls, elem, account):
+    res = super().from_xml(elem=elem, account=account)
+    res.account = account
+    return res</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="exchangelib.properties.Rule.account"><code class="name">var <span class="ident">account</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="exchangelib.properties.Rule.actions"><code class="name">var <span class="ident">actions</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -9833,6 +9917,43 @@ def response_tag(cls):
 <dt id="exchangelib.properties.Rule.priority"><code class="name">var <span class="ident">priority</span></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.properties.Rule.delete"><code class="name flex">
+<span>def <span class="ident">delete</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete(self):
+    if self.is_enabled is False:
+        # Cannot delete a disabled rule - server throws &#39;ErrorItemNotFound&#39;
+        self.is_enabled = True
+        self.save()
+    self.account.delete_rule(self)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.properties.Rule.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self):
+    if self.id is None:
+        self.account.create_rule(self)
+    else:
+        self.account.set_rule(self)
+    return self</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -9990,7 +10111,6 @@ def response_tag(cls):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/setruleoperation&#34;&#34;&#34;
 
     ELEMENT_NAME = &#34;SetRuleOperation&#34;
-    NAMESPACE = TNS
 
     rule = EWSElementField(value_cls=Rule)</code></pre>
 </details>
@@ -10005,10 +10125,6 @@ def response_tag(cls):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.properties.SetRuleOperation.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.properties.SetRuleOperation.NAMESPACE"><code class="name">var <span class="ident">NAMESPACE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -10563,10 +10679,6 @@ Protocol.get_timezones(return_full_timezone_data=True)
     transitions_groups = EWSElementListField(field_uri=&#34;TransitionsGroups&#34;, value_cls=TransitionsGroup)
     transitions = TransitionListField(field_uri=&#34;Transitions&#34;, value_cls=BaseTransition)
 
-    @classmethod
-    def from_xml(cls, elem, account):
-        return super().from_xml(elem, account)
-
     def _get_standard_period(self, transitions_group):
         # Find the first standard period referenced from transitions_group
         standard_periods_map = {p.id: p for p in self.periods if p.name == &#34;Standard&#34;}
@@ -10642,23 +10754,6 @@ Protocol.get_timezones(return_full_timezone_data=True)
 <dt id="exchangelib.properties.TimeZoneDefinition.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="exchangelib.properties.TimeZoneDefinition.from_xml"><code class="name flex">
-<span>def <span class="ident">from_xml</span></span>(<span>elem, account)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def from_xml(cls, elem, account):
-    return super().from_xml(elem, account)</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
@@ -10769,7 +10864,7 @@ def from_xml(cls, elem, account):
 
     @classmethod
     def from_xml(cls, elem, account):
-        res = super().from_xml(elem, account)
+        res = super().from_xml(elem=elem, account=account)
         # Some parts of EWS use &#39;5&#39; to mean &#39;last occurrence in month&#39;, others use &#39;-1&#39;. Let&#39;s settle on &#39;5&#39; because
         # only &#39;5&#39; is accepted in requests.
         if res.occurrence == -1:
@@ -10811,7 +10906,7 @@ def from_xml(cls, elem, account):
 </summary>
 <pre><code class="python">@classmethod
 def from_xml(cls, elem, account):
-    res = super().from_xml(elem, account)
+    res = super().from_xml(elem=elem, account=account)
     # Some parts of EWS use &#39;5&#39; to mean &#39;last occurrence in month&#39;, others use &#39;-1&#39;. Let&#39;s settle on &#39;5&#39; because
     # only &#39;5&#39; is accepted in requests.
     if res.occurrence == -1:
@@ -12070,7 +12165,6 @@ def version(self):
 <ul class="">
 <li><code><a title="exchangelib.properties.Actions.ELEMENT_NAME" href="#exchangelib.properties.Actions.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.Actions.FIELDS" href="#exchangelib.properties.Actions.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.Actions.NAMESPACE" href="#exchangelib.properties.Actions.NAMESPACE">NAMESPACE</a></code></li>
 <li><code><a title="exchangelib.properties.Actions.assign_categories" href="#exchangelib.properties.Actions.assign_categories">assign_categories</a></code></li>
 <li><code><a title="exchangelib.properties.Actions.copy_to_folder" href="#exchangelib.properties.Actions.copy_to_folder">copy_to_folder</a></code></li>
 <li><code><a title="exchangelib.properties.Actions.delete" href="#exchangelib.properties.Actions.delete">delete</a></code></li>
@@ -12348,7 +12442,6 @@ def version(self):
 <ul class="">
 <li><code><a title="exchangelib.properties.CopyToFolder.ELEMENT_NAME" href="#exchangelib.properties.CopyToFolder.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.CopyToFolder.FIELDS" href="#exchangelib.properties.CopyToFolder.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.CopyToFolder.NAMESPACE" href="#exchangelib.properties.CopyToFolder.NAMESPACE">NAMESPACE</a></code></li>
 <li><code><a title="exchangelib.properties.CopyToFolder.distinguished_folder_id" href="#exchangelib.properties.CopyToFolder.distinguished_folder_id">distinguished_folder_id</a></code></li>
 <li><code><a title="exchangelib.properties.CopyToFolder.folder_id" href="#exchangelib.properties.CopyToFolder.folder_id">folder_id</a></code></li>
 </ul>
@@ -12358,7 +12451,6 @@ def version(self):
 <ul class="">
 <li><code><a title="exchangelib.properties.CreateRuleOperation.ELEMENT_NAME" href="#exchangelib.properties.CreateRuleOperation.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.CreateRuleOperation.FIELDS" href="#exchangelib.properties.CreateRuleOperation.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.CreateRuleOperation.NAMESPACE" href="#exchangelib.properties.CreateRuleOperation.NAMESPACE">NAMESPACE</a></code></li>
 <li><code><a title="exchangelib.properties.CreateRuleOperation.rule" href="#exchangelib.properties.CreateRuleOperation.rule">rule</a></code></li>
 </ul>
 </li>
@@ -12411,7 +12503,6 @@ def version(self):
 <ul class="">
 <li><code><a title="exchangelib.properties.DeleteRuleOperation.ELEMENT_NAME" href="#exchangelib.properties.DeleteRuleOperation.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.DeleteRuleOperation.FIELDS" href="#exchangelib.properties.DeleteRuleOperation.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.DeleteRuleOperation.NAMESPACE" href="#exchangelib.properties.DeleteRuleOperation.NAMESPACE">NAMESPACE</a></code></li>
 <li><code><a title="exchangelib.properties.DeleteRuleOperation.id" href="#exchangelib.properties.DeleteRuleOperation.id">id</a></code></li>
 </ul>
 </li>
@@ -12436,6 +12527,7 @@ def version(self):
 <li><code><a title="exchangelib.properties.DistinguishedFolderId.ELEMENT_NAME" href="#exchangelib.properties.DistinguishedFolderId.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.DistinguishedFolderId.FIELDS" href="#exchangelib.properties.DistinguishedFolderId.FIELDS">FIELDS</a></code></li>
 <li><code><a title="exchangelib.properties.DistinguishedFolderId.clean" href="#exchangelib.properties.DistinguishedFolderId.clean">clean</a></code></li>
+<li><code><a title="exchangelib.properties.DistinguishedFolderId.from_xml" href="#exchangelib.properties.DistinguishedFolderId.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.properties.DistinguishedFolderId.mailbox" href="#exchangelib.properties.DistinguishedFolderId.mailbox">mailbox</a></code></li>
 </ul>
 </li>
@@ -13047,16 +13139,19 @@ def version(self):
 <ul class="two-column">
 <li><code><a title="exchangelib.properties.Rule.ELEMENT_NAME" href="#exchangelib.properties.Rule.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.FIELDS" href="#exchangelib.properties.Rule.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.Rule.NAMESPACE" href="#exchangelib.properties.Rule.NAMESPACE">NAMESPACE</a></code></li>
+<li><code><a title="exchangelib.properties.Rule.account" href="#exchangelib.properties.Rule.account">account</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.actions" href="#exchangelib.properties.Rule.actions">actions</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.conditions" href="#exchangelib.properties.Rule.conditions">conditions</a></code></li>
+<li><code><a title="exchangelib.properties.Rule.delete" href="#exchangelib.properties.Rule.delete">delete</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.display_name" href="#exchangelib.properties.Rule.display_name">display_name</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.exceptions" href="#exchangelib.properties.Rule.exceptions">exceptions</a></code></li>
+<li><code><a title="exchangelib.properties.Rule.from_xml" href="#exchangelib.properties.Rule.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.id" href="#exchangelib.properties.Rule.id">id</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.is_enabled" href="#exchangelib.properties.Rule.is_enabled">is_enabled</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.is_in_error" href="#exchangelib.properties.Rule.is_in_error">is_in_error</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.is_not_supported" href="#exchangelib.properties.Rule.is_not_supported">is_not_supported</a></code></li>
 <li><code><a title="exchangelib.properties.Rule.priority" href="#exchangelib.properties.Rule.priority">priority</a></code></li>
+<li><code><a title="exchangelib.properties.Rule.save" href="#exchangelib.properties.Rule.save">save</a></code></li>
 </ul>
 </li>
 <li>
@@ -13085,7 +13180,6 @@ def version(self):
 <ul class="">
 <li><code><a title="exchangelib.properties.SetRuleOperation.ELEMENT_NAME" href="#exchangelib.properties.SetRuleOperation.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.SetRuleOperation.FIELDS" href="#exchangelib.properties.SetRuleOperation.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.SetRuleOperation.NAMESPACE" href="#exchangelib.properties.SetRuleOperation.NAMESPACE">NAMESPACE</a></code></li>
 <li><code><a title="exchangelib.properties.SetRuleOperation.rule" href="#exchangelib.properties.SetRuleOperation.rule">rule</a></code></li>
 </ul>
 </li>
@@ -13151,7 +13245,6 @@ def version(self):
 <ul class="two-column">
 <li><code><a title="exchangelib.properties.TimeZoneDefinition.ELEMENT_NAME" href="#exchangelib.properties.TimeZoneDefinition.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZoneDefinition.FIELDS" href="#exchangelib.properties.TimeZoneDefinition.FIELDS">FIELDS</a></code></li>
-<li><code><a title="exchangelib.properties.TimeZoneDefinition.from_xml" href="#exchangelib.properties.TimeZoneDefinition.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZoneDefinition.get_std_and_dst" href="#exchangelib.properties.TimeZoneDefinition.get_std_and_dst">get_std_and_dst</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZoneDefinition.id" href="#exchangelib.properties.TimeZoneDefinition.id">id</a></code></li>
 <li><code><a title="exchangelib.properties.TimeZoneDefinition.name" href="#exchangelib.properties.TimeZoneDefinition.name">name</a></code></li>

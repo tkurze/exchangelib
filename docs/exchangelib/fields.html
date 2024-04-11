@@ -1203,6 +1203,19 @@ class MailboxListField(EWSElementListField):
         return super().clean(value, version=version)
 
 
+class AddressListField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import Address
+
+        kwargs[&#34;value_cls&#34;] = Address
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        if value is not None:
+            value = [self.value_cls(email_address=s) if isinstance(s, str) else s for s in value]
+        return super().clean(value, version=version)
+
+
 class MemberListField(EWSElementListField):
     def __init__(self, *args, **kwargs):
         from .properties import Member
@@ -1812,7 +1825,23 @@ class SensitivityField(ChoiceField):
 
     def __init__(self, *args, **kwargs):
         kwargs[&#34;choices&#34;] = SENSITIVITY_CHOICES
-        super().__init__(*args, **kwargs)</code></pre>
+        super().__init__(*args, **kwargs)
+
+
+class FolderActionField(EWSElementField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        from .folders import DistinguishedFolderId, Folder
+
+        if isinstance(value, Folder):
+            folder_id = value.to_id()
+            if isinstance(folder_id, DistinguishedFolderId):
+                value = self.value_cls(distinguished_folder_id=folder_id)
+            else:
+                value = self.value_cls(folder_id=folder_id)
+        return super().clean(value, version=version)</code></pre>
 </details>
 </section>
 <section>
@@ -1928,6 +1957,64 @@ label and SubField object.</p></div>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="exchangelib.fields.AddressListField"><code class="flex name class">
+<span>class <span class="ident">AddressListField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Like EWSElementField, but for lists of EWSElement objects.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AddressListField(EWSElementListField):
+    def __init__(self, *args, **kwargs):
+        from .properties import Address
+
+        kwargs[&#34;value_cls&#34;] = Address
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        if value is not None:
+            value = [self.value_cls(email_address=s) if isinstance(s, str) else s for s in value]
+        return super().clean(value, version=version)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.AddressListField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    if value is not None:
+        value = [self.value_cls(email_address=s) if isinstance(s, str) else s for s in value]
+    return super().clean(value, version=version)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.fields.EWSElementListField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.EWSElementListField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.fields.AppointmentStateField"><code class="flex name class">
 <span>class <span class="ident">AppointmentStateField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -3308,6 +3395,7 @@ dict(one=1, two=2)</p></div>
 <li><a title="exchangelib.fields.BodyContentAttributedValueField" href="#exchangelib.fields.BodyContentAttributedValueField">BodyContentAttributedValueField</a></li>
 <li><a title="exchangelib.fields.EWSElementListField" href="#exchangelib.fields.EWSElementListField">EWSElementListField</a></li>
 <li><a title="exchangelib.fields.EffectiveRightsField" href="#exchangelib.fields.EffectiveRightsField">EffectiveRightsField</a></li>
+<li><a title="exchangelib.fields.FolderActionField" href="#exchangelib.fields.FolderActionField">FolderActionField</a></li>
 <li><a title="exchangelib.fields.GenericEventListField" href="#exchangelib.fields.GenericEventListField">GenericEventListField</a></li>
 <li><a title="exchangelib.fields.IdElementField" href="#exchangelib.fields.IdElementField">IdElementField</a></li>
 <li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
@@ -3372,6 +3460,7 @@ def value_cls(self):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="exchangelib.fields.AddressListField" href="#exchangelib.fields.AddressListField">AddressListField</a></li>
 <li><a title="exchangelib.fields.AttachmentField" href="#exchangelib.fields.AttachmentField">AttachmentField</a></li>
 <li><a title="exchangelib.fields.AttendeesField" href="#exchangelib.fields.AttendeesField">AttendeesField</a></li>
 <li><a title="exchangelib.fields.EmailAddressAttributedValueField" href="#exchangelib.fields.EmailAddressAttributedValueField">EmailAddressAttributedValueField</a></li>
@@ -4747,6 +4836,72 @@ or exception to apply.</p></div>
 <li><code><a title="exchangelib.fields.ChoiceField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.ChoiceField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.fields.ChoiceField.value_cls" href="#exchangelib.fields.TextField.value_cls">value_cls</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.fields.FolderActionField"><code class="flex name class">
+<span>class <span class="ident">FolderActionField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A generic field for any EWSElement object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FolderActionField(EWSElementField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        from .folders import DistinguishedFolderId, Folder
+
+        if isinstance(value, Folder):
+            folder_id = value.to_id()
+            if isinstance(folder_id, DistinguishedFolderId):
+                value = self.value_cls(distinguished_folder_id=folder_id)
+            else:
+                value = self.value_cls(folder_id=folder_id)
+        return super().clean(value, version=version)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.FolderActionField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    from .folders import DistinguishedFolderId, Folder
+
+    if isinstance(value, Folder):
+        folder_id = value.to_id()
+        if isinstance(folder_id, DistinguishedFolderId):
+            value = self.value_cls(distinguished_folder_id=folder_id)
+        else:
+            value = self.value_cls(folder_id=folder_id)
+    return super().clean(value, version=version)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.fields.EWSElementField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.EWSElementField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7223,6 +7378,12 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="exchangelib.fields.AddressListField" href="#exchangelib.fields.AddressListField">AddressListField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.AddressListField.clean" href="#exchangelib.fields.AddressListField.clean">clean</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.AppointmentStateField" href="#exchangelib.fields.AppointmentStateField">AppointmentStateField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.AppointmentStateField.CANCELLED" href="#exchangelib.fields.AppointmentStateField.CANCELLED">CANCELLED</a></code></li>
@@ -7447,6 +7608,12 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.FlaggedForActionField" href="#exchangelib.fields.FlaggedForActionField">FlaggedForActionField</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.FolderActionField" href="#exchangelib.fields.FolderActionField">FolderActionField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.FolderActionField.clean" href="#exchangelib.fields.FolderActionField.clean">clean</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.FreeBusyStatusField" href="#exchangelib.fields.FreeBusyStatusField">FreeBusyStatusField</a></code></h4>

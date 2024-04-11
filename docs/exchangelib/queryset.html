@@ -557,7 +557,10 @@ class QuerySet(SearchableMixIn):
             raise DoesNotExist()
         if len(items) != 1:
             raise MultipleObjectsReturned()
-        return items[0]
+        item = items[0]
+        if isinstance(item, Exception):
+            raise item
+        return item
 
     def count(self, page_size=1000):
         &#34;&#34;&#34;Get the query count, with as little effort as possible
@@ -1222,7 +1225,10 @@ chaining to build up complex queries.</p>
             raise DoesNotExist()
         if len(items) != 1:
             raise MultipleObjectsReturned()
-        return items[0]
+        item = items[0]
+        if isinstance(item, Exception):
+            raise item
+        return item
 
     def count(self, page_size=1000):
         &#34;&#34;&#34;Get the query count, with as little effort as possible
@@ -1563,7 +1569,10 @@ to fetch and move per request. We're only fetching the IDs, so keep it high.</p>
         raise DoesNotExist()
     if len(items) != 1:
         raise MultipleObjectsReturned()
-    return items[0]</code></pre>
+    item = items[0]
+    if isinstance(item, Exception):
+        raise item
+    return item</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.queryset.QuerySet.mark_as_junk"><code class="name flex">

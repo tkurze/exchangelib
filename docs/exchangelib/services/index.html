@@ -908,16 +908,8 @@ input list.</p>
     https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateinboxrules-operation#updateinboxrules-create-rule-request-example
     &#34;&#34;&#34;
 
-    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-        return self._get_elements(payload=payload)
-
-    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
-        add_xml_child(payload, &#34;m:RemoveOutlookRuleBlob&#34;, remove_outlook_rule_blob)
-        operations = Operations(create_rule_operation=CreateRuleOperation(rule=rule))
-        set_xml_value(payload, operations, version=self.account.version)
-        return payload</code></pre>
+    def _get_operation(self, rule):
+        return Operations(create_rule_operation=CreateRuleOperation(rule=rule))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -926,40 +918,6 @@ input list.</p>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 <li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.services.CreateInboxRule.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, rule: <a title="exchangelib.properties.Rule" href="../properties.html#exchangelib.properties.Rule">Rule</a>, remove_outlook_rule_blob: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-    payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-    return self._get_elements(payload=payload)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.services.CreateInboxRule.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, rule: <a title="exchangelib.properties.Rule" href="../properties.html#exchangelib.properties.Rule">Rule</a>, remove_outlook_rule_blob: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
-    add_xml_child(payload, &#34;m:RemoveOutlookRuleBlob&#34;, remove_outlook_rule_blob)
-    operations = Operations(create_rule_operation=CreateRuleOperation(rule=rule))
-    set_xml_value(payload, operations, version=self.account.version)
-    return payload</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.inbox_rules.UpdateInboxRules" href="inbox_rules.html#exchangelib.services.inbox_rules.UpdateInboxRules">UpdateInboxRules</a></b></code>:
@@ -1490,18 +1448,8 @@ invitation accepts (see
     https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateinboxrules-operation#updateinboxrules-delete-rule-request-example
     &#34;&#34;&#34;
 
-    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-        return self._get_elements(payload=payload)
-
-    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        if not rule.id:
-            raise ValueError(&#34;Rule must have an ID&#34;)
-        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
-        add_xml_child(payload, &#34;m:RemoveOutlookRuleBlob&#34;, remove_outlook_rule_blob)
-        operations = Operations(delete_rule_operation=DeleteRuleOperation(id=rule.id))
-        set_xml_value(payload, operations, version=self.account.version)
-        return payload</code></pre>
+    def _get_operation(self, rule):
+        return Operations(delete_rule_operation=DeleteRuleOperation(id=rule.id))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1510,42 +1458,6 @@ invitation accepts (see
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 <li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.services.DeleteInboxRule.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, rule: <a title="exchangelib.properties.Rule" href="../properties.html#exchangelib.properties.Rule">Rule</a>, remove_outlook_rule_blob: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-    payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-    return self._get_elements(payload=payload)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.services.DeleteInboxRule.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, rule: <a title="exchangelib.properties.Rule" href="../properties.html#exchangelib.properties.Rule">Rule</a>, remove_outlook_rule_blob: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-    if not rule.id:
-        raise ValueError(&#34;Rule must have an ID&#34;)
-    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
-    add_xml_child(payload, &#34;m:RemoveOutlookRuleBlob&#34;, remove_outlook_rule_blob)
-    operations = Operations(delete_rule_operation=DeleteRuleOperation(id=rule.id))
-    set_xml_value(payload, operations, version=self.account.version)
-    return payload</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.inbox_rules.UpdateInboxRules" href="inbox_rules.html#exchangelib.services.inbox_rules.UpdateInboxRules">UpdateInboxRules</a></b></code>:
@@ -4154,9 +4066,11 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
     SERVICE_NAME = &#34;GetFolder&#34;
     element_container_name = f&#34;{{{MNS}}}Folders&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
+        ErrorAccessDenied,
         ErrorFolderNotFound,
         ErrorNoPublicFolderReplicaAvailable,
         ErrorInvalidOperation,
+        ErrorItemNotFound,
     )
 
     def __init__(self, *args, **kwargs):
@@ -4313,7 +4227,6 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
     &#34;&#34;&#34;
 
     SERVICE_NAME = &#34;GetInboxRules&#34;
-    supported_from = EXCHANGE_2010
     element_container_name = InboxRules.response_tag()
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (ErrorInvalidOperation,)
 
@@ -4357,10 +4270,6 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.services.GetInboxRules.element_container_name"><code class="name">var <span class="ident">element_container_name</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.services.GetInboxRules.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -6688,18 +6597,8 @@ push notifications.</p></div>
     https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/updateinboxrules-operation#updateinboxrules-set-rule-request-example
     &#34;&#34;&#34;
 
-    def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-        return self._get_elements(payload=payload)
-
-    def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-        if not rule.id:
-            raise ValueError(&#34;Rule must have an ID&#34;)
-        payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
-        add_xml_child(payload, &#34;m:RemoveOutlookRuleBlob&#34;, remove_outlook_rule_blob)
-        operations = Operations(set_rule_operation=SetRuleOperation(rule=rule))
-        set_xml_value(payload, operations, version=self.account.version)
-        return payload</code></pre>
+    def _get_operation(self, rule):
+        return Operations(set_rule_operation=SetRuleOperation(rule=rule))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6708,42 +6607,6 @@ push notifications.</p></div>
 <li><a title="exchangelib.services.common.EWSService" href="common.html#exchangelib.services.common.EWSService">EWSService</a></li>
 <li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.services.SetInboxRule.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, rule: <a title="exchangelib.properties.Rule" href="../properties.html#exchangelib.properties.Rule">Rule</a>, remove_outlook_rule_blob: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def call(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-    payload = self.get_payload(rule=rule, remove_outlook_rule_blob=remove_outlook_rule_blob)
-    return self._get_elements(payload=payload)</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.services.SetInboxRule.get_payload"><code class="name flex">
-<span>def <span class="ident">get_payload</span></span>(<span>self, rule: <a title="exchangelib.properties.Rule" href="../properties.html#exchangelib.properties.Rule">Rule</a>, remove_outlook_rule_blob: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_payload(self, rule: Rule, remove_outlook_rule_blob: bool = True):
-    if not rule.id:
-        raise ValueError(&#34;Rule must have an ID&#34;)
-    payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
-    add_xml_child(payload, &#34;m:RemoveOutlookRuleBlob&#34;, remove_outlook_rule_blob)
-    operations = Operations(set_rule_operation=SetRuleOperation(rule=rule))
-    set_xml_value(payload, operations, version=self.account.version)
-    return payload</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="exchangelib.services.inbox_rules.UpdateInboxRules" href="inbox_rules.html#exchangelib.services.inbox_rules.UpdateInboxRules">UpdateInboxRules</a></b></code>:
@@ -8295,10 +8158,6 @@ call.</p>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.CreateInboxRule" href="#exchangelib.services.CreateInboxRule">CreateInboxRule</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.services.CreateInboxRule.call" href="#exchangelib.services.CreateInboxRule.call">call</a></code></li>
-<li><code><a title="exchangelib.services.CreateInboxRule.get_payload" href="#exchangelib.services.CreateInboxRule.get_payload">get_payload</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.CreateItem" href="#exchangelib.services.CreateItem">CreateItem</a></code></h4>
@@ -8337,10 +8196,6 @@ call.</p>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.DeleteInboxRule" href="#exchangelib.services.DeleteInboxRule">DeleteInboxRule</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.services.DeleteInboxRule.call" href="#exchangelib.services.DeleteInboxRule.call">call</a></code></li>
-<li><code><a title="exchangelib.services.DeleteInboxRule.get_payload" href="#exchangelib.services.DeleteInboxRule.get_payload">get_payload</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.DeleteItem" href="#exchangelib.services.DeleteItem">DeleteItem</a></code></h4>
@@ -8486,7 +8341,6 @@ call.</p>
 <li><code><a title="exchangelib.services.GetInboxRules.call" href="#exchangelib.services.GetInboxRules.call">call</a></code></li>
 <li><code><a title="exchangelib.services.GetInboxRules.element_container_name" href="#exchangelib.services.GetInboxRules.element_container_name">element_container_name</a></code></li>
 <li><code><a title="exchangelib.services.GetInboxRules.get_payload" href="#exchangelib.services.GetInboxRules.get_payload">get_payload</a></code></li>
-<li><code><a title="exchangelib.services.GetInboxRules.supported_from" href="#exchangelib.services.GetInboxRules.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -8665,10 +8519,6 @@ call.</p>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.SetInboxRule" href="#exchangelib.services.SetInboxRule">SetInboxRule</a></code></h4>
-<ul class="">
-<li><code><a title="exchangelib.services.SetInboxRule.call" href="#exchangelib.services.SetInboxRule.call">call</a></code></li>
-<li><code><a title="exchangelib.services.SetInboxRule.get_payload" href="#exchangelib.services.SetInboxRule.get_payload">get_payload</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.services.SetUserOofSettings" href="#exchangelib.services.SetUserOofSettings">SetUserOofSettings</a></code></h4>

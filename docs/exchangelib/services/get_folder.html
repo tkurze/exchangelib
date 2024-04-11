@@ -26,7 +26,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from ..errors import ErrorFolderNotFound, ErrorInvalidOperation, ErrorNoPublicFolderReplicaAvailable
+<pre><code class="python">from ..errors import (
+    ErrorAccessDenied,
+    ErrorFolderNotFound,
+    ErrorInvalidOperation,
+    ErrorItemNotFound,
+    ErrorNoPublicFolderReplicaAvailable,
+)
 from ..util import MNS, create_element
 from .common import EWSAccountService, folder_ids_element, parse_folder_elem, shape_element
 
@@ -37,9 +43,11 @@ class GetFolder(EWSAccountService):
     SERVICE_NAME = &#34;GetFolder&#34;
     element_container_name = f&#34;{{{MNS}}}Folders&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
+        ErrorAccessDenied,
         ErrorFolderNotFound,
         ErrorNoPublicFolderReplicaAvailable,
         ErrorInvalidOperation,
+        ErrorItemNotFound,
     )
 
     def __init__(self, *args, **kwargs):
@@ -110,9 +118,11 @@ class GetFolder(EWSAccountService):
     SERVICE_NAME = &#34;GetFolder&#34;
     element_container_name = f&#34;{{{MNS}}}Folders&#34;
     ERRORS_TO_CATCH_IN_RESPONSE = EWSAccountService.ERRORS_TO_CATCH_IN_RESPONSE + (
+        ErrorAccessDenied,
         ErrorFolderNotFound,
         ErrorNoPublicFolderReplicaAvailable,
         ErrorInvalidOperation,
+        ErrorItemNotFound,
     )
 
     def __init__(self, *args, **kwargs):

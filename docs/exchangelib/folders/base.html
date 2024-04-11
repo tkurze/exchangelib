@@ -105,7 +105,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=ID_ELEMENT_CLS)
-    _distinguished_id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=DistinguishedFolderId)
+    _distinguished_id = IdElementField(field_uri=&#34;folder:DistinguishedFolderId&#34;, value_cls=DistinguishedFolderId)
     parent_folder_id = EWSElementField(field_uri=&#34;folder:ParentFolderId&#34;, value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri=&#34;folder:FolderClass&#34;, is_required_after_save=True)
     name = CharField(field_uri=&#34;folder:DisplayName&#34;)
@@ -249,7 +249,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     def localized_names(cls, locale):
         # Return localized names for a specific locale. If no locale-specific names exist, return the default names,
         # if any.
-        return tuple(s.lower() for s in cls.LOCALIZED_NAMES.get(locale, cls.LOCALIZED_NAMES.get(None, [])))
+        return tuple(s.lower() for s in cls.LOCALIZED_NAMES.get(locale, cls.LOCALIZED_NAMES.get(None, [cls.__name__])))
 
     @staticmethod
     def folder_cls_from_container_class(container_class):
@@ -885,18 +885,18 @@ class Folder(BaseFolder):
         return super().deregister(*args, **kwargs)
 
     @classmethod
-    def get_distinguished(cls, root):
+    def get_distinguished(cls, account):
         &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
-        :param root:
+        :param account:
         :return:
         &#34;&#34;&#34;
         try:
             return cls.resolve(
-                account=root.account,
+                account=account,
                 folder=DistinguishedFolderId(
                     id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
                 ),
             )
         except MISSING_FOLDER_ERRORS:
@@ -1008,7 +1008,7 @@ class Folder(BaseFolder):
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=ID_ELEMENT_CLS)
-    _distinguished_id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=DistinguishedFolderId)
+    _distinguished_id = IdElementField(field_uri=&#34;folder:DistinguishedFolderId&#34;, value_cls=DistinguishedFolderId)
     parent_folder_id = EWSElementField(field_uri=&#34;folder:ParentFolderId&#34;, value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri=&#34;folder:FolderClass&#34;, is_required_after_save=True)
     name = CharField(field_uri=&#34;folder:DisplayName&#34;)
@@ -1152,7 +1152,7 @@ class Folder(BaseFolder):
     def localized_names(cls, locale):
         # Return localized names for a specific locale. If no locale-specific names exist, return the default names,
         # if any.
-        return tuple(s.lower() for s in cls.LOCALIZED_NAMES.get(locale, cls.LOCALIZED_NAMES.get(None, [])))
+        return tuple(s.lower() for s in cls.LOCALIZED_NAMES.get(locale, cls.LOCALIZED_NAMES.get(None, [cls.__name__])))
 
     @staticmethod
     def folder_cls_from_container_class(container_class):
@@ -1941,7 +1941,7 @@ def item_model_from_tag(cls, tag):
 def localized_names(cls, locale):
     # Return localized names for a specific locale. If no locale-specific names exist, return the default names,
     # if any.
-    return tuple(s.lower() for s in cls.LOCALIZED_NAMES.get(locale, cls.LOCALIZED_NAMES.get(None, [])))</code></pre>
+    return tuple(s.lower() for s in cls.LOCALIZED_NAMES.get(locale, cls.LOCALIZED_NAMES.get(None, [cls.__name__])))</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.folders.base.BaseFolder.resolve"><code class="name flex">
@@ -3008,18 +3008,18 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         return super().deregister(*args, **kwargs)
 
     @classmethod
-    def get_distinguished(cls, root):
+    def get_distinguished(cls, account):
         &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
-        :param root:
+        :param account:
         :return:
         &#34;&#34;&#34;
         try:
             return cls.resolve(
-                account=root.account,
+                account=account,
                 folder=DistinguishedFolderId(
                     id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
                 ),
             )
         except MISSING_FOLDER_ERRORS:
@@ -3102,50 +3102,16 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="exchangelib.folders.known_folders.AllItems" href="known_folders.html#exchangelib.folders.known_folders.AllItems">AllItems</a></li>
-<li><a title="exchangelib.folders.known_folders.ApplicationData" href="known_folders.html#exchangelib.folders.known_folders.ApplicationData">ApplicationData</a></li>
-<li><a title="exchangelib.folders.known_folders.Audits" href="known_folders.html#exchangelib.folders.known_folders.Audits">Audits</a></li>
 <li><a title="exchangelib.folders.known_folders.Birthdays" href="known_folders.html#exchangelib.folders.known_folders.Birthdays">Birthdays</a></li>
-<li><a title="exchangelib.folders.known_folders.Calendar" href="known_folders.html#exchangelib.folders.known_folders.Calendar">Calendar</a></li>
-<li><a title="exchangelib.folders.known_folders.CalendarLogging" href="known_folders.html#exchangelib.folders.known_folders.CalendarLogging">CalendarLogging</a></li>
-<li><a title="exchangelib.folders.known_folders.CommonViews" href="known_folders.html#exchangelib.folders.known_folders.CommonViews">CommonViews</a></li>
-<li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
-<li><a title="exchangelib.folders.known_folders.ConversationSettings" href="known_folders.html#exchangelib.folders.known_folders.ConversationSettings">ConversationSettings</a></li>
 <li><a title="exchangelib.folders.known_folders.CrawlerData" href="known_folders.html#exchangelib.folders.known_folders.CrawlerData">CrawlerData</a></li>
-<li><a title="exchangelib.folders.known_folders.DefaultFoldersChangeHistory" href="known_folders.html#exchangelib.folders.known_folders.DefaultFoldersChangeHistory">DefaultFoldersChangeHistory</a></li>
-<li><a title="exchangelib.folders.known_folders.DeferredAction" href="known_folders.html#exchangelib.folders.known_folders.DeferredAction">DeferredAction</a></li>
-<li><a title="exchangelib.folders.known_folders.DeletedItems" href="known_folders.html#exchangelib.folders.known_folders.DeletedItems">DeletedItems</a></li>
-<li><a title="exchangelib.folders.known_folders.DlpPolicyEvaluation" href="known_folders.html#exchangelib.folders.known_folders.DlpPolicyEvaluation">DlpPolicyEvaluation</a></li>
 <li><a title="exchangelib.folders.known_folders.EventCheckPoints" href="known_folders.html#exchangelib.folders.known_folders.EventCheckPoints">EventCheckPoints</a></li>
-<li><a title="exchangelib.folders.known_folders.ExchangeSyncData" href="known_folders.html#exchangelib.folders.known_folders.ExchangeSyncData">ExchangeSyncData</a></li>
-<li><a title="exchangelib.folders.known_folders.Files" href="known_folders.html#exchangelib.folders.known_folders.Files">Files</a></li>
+<li><a title="exchangelib.folders.known_folders.FolderMemberships" href="known_folders.html#exchangelib.folders.known_folders.FolderMemberships">FolderMemberships</a></li>
 <li><a title="exchangelib.folders.known_folders.FreeBusyCache" href="known_folders.html#exchangelib.folders.known_folders.FreeBusyCache">FreeBusyCache</a></li>
-<li><a title="exchangelib.folders.known_folders.FreebusyData" href="known_folders.html#exchangelib.folders.known_folders.FreebusyData">FreebusyData</a></li>
-<li><a title="exchangelib.folders.known_folders.GraphAnalytics" href="known_folders.html#exchangelib.folders.known_folders.GraphAnalytics">GraphAnalytics</a></li>
-<li><a title="exchangelib.folders.known_folders.Location" href="known_folders.html#exchangelib.folders.known_folders.Location">Location</a></li>
-<li><a title="exchangelib.folders.known_folders.MailboxAssociations" href="known_folders.html#exchangelib.folders.known_folders.MailboxAssociations">MailboxAssociations</a></li>
-<li><a title="exchangelib.folders.known_folders.Messages" href="known_folders.html#exchangelib.folders.known_folders.Messages">Messages</a></li>
-<li><a title="exchangelib.folders.known_folders.ParkedMessages" href="known_folders.html#exchangelib.folders.known_folders.ParkedMessages">ParkedMessages</a></li>
-<li><a title="exchangelib.folders.known_folders.PassThroughSearchResults" href="known_folders.html#exchangelib.folders.known_folders.PassThroughSearchResults">PassThroughSearchResults</a></li>
-<li><a title="exchangelib.folders.known_folders.PdpProfileV2Secured" href="known_folders.html#exchangelib.folders.known_folders.PdpProfileV2Secured">PdpProfileV2Secured</a></li>
-<li><a title="exchangelib.folders.known_folders.RSSFeeds" href="known_folders.html#exchangelib.folders.known_folders.RSSFeeds">RSSFeeds</a></li>
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolder" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolder">NonDeletableFolder</a></li>
 <li><a title="exchangelib.folders.known_folders.RecoveryPoints" href="known_folders.html#exchangelib.folders.known_folders.RecoveryPoints">RecoveryPoints</a></li>
-<li><a title="exchangelib.folders.known_folders.Reminders" href="known_folders.html#exchangelib.folders.known_folders.Reminders">Reminders</a></li>
-<li><a title="exchangelib.folders.known_folders.Schedule" href="known_folders.html#exchangelib.folders.known_folders.Schedule">Schedule</a></li>
-<li><a title="exchangelib.folders.known_folders.Sharing" href="known_folders.html#exchangelib.folders.known_folders.Sharing">Sharing</a></li>
-<li><a title="exchangelib.folders.known_folders.Shortcuts" href="known_folders.html#exchangelib.folders.known_folders.Shortcuts">Shortcuts</a></li>
-<li><a title="exchangelib.folders.known_folders.Signal" href="known_folders.html#exchangelib.folders.known_folders.Signal">Signal</a></li>
 <li><a title="exchangelib.folders.known_folders.SkypeTeamsMessages" href="known_folders.html#exchangelib.folders.known_folders.SkypeTeamsMessages">SkypeTeamsMessages</a></li>
-<li><a title="exchangelib.folders.known_folders.SmsAndChatsSync" href="known_folders.html#exchangelib.folders.known_folders.SmsAndChatsSync">SmsAndChatsSync</a></li>
-<li><a title="exchangelib.folders.known_folders.SpoolerQueue" href="known_folders.html#exchangelib.folders.known_folders.SpoolerQueue">SpoolerQueue</a></li>
 <li><a title="exchangelib.folders.known_folders.SwssItems" href="known_folders.html#exchangelib.folders.known_folders.SwssItems">SwssItems</a></li>
-<li><a title="exchangelib.folders.known_folders.System" href="known_folders.html#exchangelib.folders.known_folders.System">System</a></li>
-<li><a title="exchangelib.folders.known_folders.System1" href="known_folders.html#exchangelib.folders.known_folders.System1">System1</a></li>
-<li><a title="exchangelib.folders.known_folders.Tasks" href="known_folders.html#exchangelib.folders.known_folders.Tasks">Tasks</a></li>
-<li><a title="exchangelib.folders.known_folders.TemporarySaves" href="known_folders.html#exchangelib.folders.known_folders.TemporarySaves">TemporarySaves</a></li>
-<li><a title="exchangelib.folders.known_folders.Views" href="known_folders.html#exchangelib.folders.known_folders.Views">Views</a></li>
 <li><a title="exchangelib.folders.known_folders.WellknownFolder" href="known_folders.html#exchangelib.folders.known_folders.WellknownFolder">WellknownFolder</a></li>
-<li><a title="exchangelib.folders.known_folders.WorkingSet" href="known_folders.html#exchangelib.folders.known_folders.WorkingSet">WorkingSet</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -3207,29 +3173,29 @@ def from_xml_with_root(cls, elem, root):
 </details>
 </dd>
 <dt id="exchangelib.folders.base.Folder.get_distinguished"><code class="name flex">
-<span>def <span class="ident">get_distinguished</span></span>(<span>root)</span>
+<span>def <span class="ident">get_distinguished</span></span>(<span>account)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the distinguished folder for this folder class.</p>
-<p>:param root:
+<p>:param account:
 :return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def get_distinguished(cls, root):
+def get_distinguished(cls, account):
     &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
-    :param root:
+    :param account:
     :return:
     &#34;&#34;&#34;
     try:
         return cls.resolve(
-            account=root.account,
+            account=account,
             folder=DistinguishedFolderId(
                 id=cls.DISTINGUISHED_FOLDER_ID,
-                mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                mailbox=Mailbox(email_address=account.primary_smtp_address),
             ),
         )
     except MISSING_FOLDER_ERRORS:
