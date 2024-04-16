@@ -38,18 +38,9 @@ from ..errors import (
     SOAPError,
     TransportError,
 )
-from ..folders import ArchiveRoot, BaseFolder, Folder, PublicFoldersRoot, Root, RootOfHierarchy
+from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
-from ..properties import (
-    BaseItemId,
-    DistinguishedFolderId,
-    ExceptionFieldURI,
-    ExtendedFieldURI,
-    FieldURI,
-    FolderId,
-    IndexedFieldURI,
-    ItemId,
-)
+from ..properties import BaseItemId, ExceptionFieldURI, ExtendedFieldURI, FieldURI, FolderId, IndexedFieldURI, ItemId
 from ..transport import DEFAULT_ENCODING
 from ..util import (
     ENS,
@@ -978,27 +969,9 @@ def attachment_ids_element(items, version, tag="m:AttachmentIds"):
     return _ids_element(items, AttachmentId, version, tag)
 
 
-def parse_folder_elem(elem, folder, account):
+def parse_folder_elem(elem, folder):
     if isinstance(folder, RootOfHierarchy):
-        f = folder.from_xml(elem=elem, account=folder.account)
-    elif isinstance(folder, Folder):
-        f = folder.from_xml_with_root(elem=elem, root=folder.root)
-    elif isinstance(folder, DistinguishedFolderId):
-        # We don't know the root or even account, but we need to attach the folder to something if we want to make
-        # future requests with this folder. Use 'account' but make sure to always use the distinguished folder ID going
-        # forward, instead of referencing anything connected to 'account'.
-        roots = (Root, ArchiveRoot, PublicFoldersRoot)
-        for cls in roots + tuple(chain(*(r.WELLKNOWN_FOLDERS for r in roots))):
-            if cls.DISTINGUISHED_FOLDER_ID == folder.id:
-                folder_cls = cls
-                break
-        else:
-            raise ValueError(f"Unknown distinguished folder ID: {folder.id}")
-        if folder_cls in roots:
-            f = folder_cls.from_xml(elem=elem, account=account)
-        else:
-            f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
-    else:
-        # 'folder' is a generic FolderId instance. We don't know the root so assume account.root.
-        f = Folder.from_xml_with_root(elem=elem, root=account.root)
-    return f
+        return folder.from_xml(elem=elem, account=folder.account)
+    if isinstance(folder, Folder):
+        return folder.from_xml_with_root(elem=elem, root=folder.root)
+    raise ValueError(f"Unsupported folder class: {folder}")

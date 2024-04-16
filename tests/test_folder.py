@@ -282,9 +282,10 @@ class FolderTest(EWSTest):
             ],
         )
         # Test top-level .children
-        self.assertListEqual(
-            [f.name for f in self.account.public_folders_root.children], ["Sample Contacts", "Sample Folder"]
-        )
+        children = list(self.account.public_folders_root.children)
+        self.assertListEqual([f.name for f in children], ["Sample Contacts", "Sample Folder"])
+        for f in children:
+            self.assertIsInstance(f.root, PublicFoldersRoot)
 
         find_public_subfolder1_children_xml = b"""\
 <?xml version="1.0" ?>
@@ -379,11 +380,12 @@ class FolderTest(EWSTest):
         # Test .get_children() on subfolders
         f_1 = self.account.public_folders_root / "Sample Contacts"
         f_2 = self.account.public_folders_root / "Sample Folder"
-        self.assertListEqual(
-            [f.name for f in self.account.public_folders_root.get_children(f_1)],
-            ["Sample Subfolder1", "Sample Subfolder2"],
-        )
-        self.assertListEqual([f.name for f in self.account.public_folders_root.get_children(f_2)], [])
+        f_1_children = list(self.account.public_folders_root.get_children(f_1))
+        self.assertListEqual([f.name for f in f_1_children], ["Sample Subfolder1", "Sample Subfolder2"])
+        for f in f_1_children:
+            self.assertIsInstance(f.root, PublicFoldersRoot)
+        f_2_children = list(self.account.public_folders_root.get_children(f_2))
+        self.assertListEqual([f.name for f in f_2_children], [])
 
     def test_invalid_deletefolder_args(self):
         with self.assertRaises(ValueError) as e:
@@ -481,39 +483,19 @@ class FolderTest(EWSTest):
         folders = list(FolderCollection(account=self.account, folders=[self.account.root]).get_folders())
         self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
 
-        # Test that GetFolder can handle FolderId instances
-        folders = list(
-            FolderCollection(
-                account=self.account,
-                folders=[
-                    DistinguishedFolderId(
-                        id=Inbox.DISTINGUISHED_FOLDER_ID,
-                        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
-                    )
-                ],
-            ).get_folders()
-        )
-        self.assertEqual(len(folders), 1, sorted(f.name for f in folders))
-
-    def test_get_folders_with_distinguished_id(self):
-        # Test that we return an Inbox instance and not a generic Messages or Folder instance when we call GetFolder
-        # with a DistinguishedFolderId instance with an ID of Inbox.DISTINGUISHED_FOLDER_ID.
-        inbox_folder_id = DistinguishedFolderId(
-            id=Inbox.DISTINGUISHED_FOLDER_ID,
-            mailbox=Mailbox(email_address=self.account.primary_smtp_address),
-        )
-        inbox = list(
-            GetFolder(account=self.account).call(
-                folders=[inbox_folder_id],
-                shape="IdOnly",
-                additional_fields=[],
+        # Test that GetFolder cannot handle FolderId instances
+        with self.assertRaises(ValueError):
+            list(
+                FolderCollection(
+                    account=self.account,
+                    folders=[
+                        DistinguishedFolderId(
+                            id=Inbox.DISTINGUISHED_FOLDER_ID,
+                            mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                        )
+                    ],
+                ).get_folders()
             )
-        )[0]
-        self.assertIsInstance(inbox, Inbox)
-
-        # Test via SingleFolderQuerySet
-        inbox = SingleFolderQuerySet(account=self.account, folder=inbox_folder_id).resolve()
-        self.assertIsInstance(inbox, Inbox)
 
     def test_folder_grouping(self):
         # If you get errors here, you probably need to fill out [folder class].LOCALIZED_NAMES for your locale.

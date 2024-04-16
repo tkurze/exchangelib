@@ -214,22 +214,11 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         return tree.strip()
 
     @classmethod
-    def get_distinguished(cls, account):
-        """Get the distinguished folder for this folder class.
-
-        :param account:
-        :return:
-        """
+    def _get_distinguished(cls, folder):
         if not cls.DISTINGUISHED_FOLDER_ID:
             raise ValueError(f"Class {cls} must have a DISTINGUISHED_FOLDER_ID value")
         try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
+            return cls.resolve(account=folder.account, folder=folder)
         except MISSING_FOLDER_ERRORS as e:
             raise ErrorFolderNotFound(f"Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r} ({e})")
 
@@ -901,6 +890,23 @@ class Folder(BaseFolder):
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
             raise InvalidTypeError("root", self.root, RootOfHierarchy)
+
+    @classmethod
+    def get_distinguished(cls, root):
+        """Get the distinguished folder for this folder class.
+
+        :param root:
+        :return:
+        """
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+                root=root,
+            )
+        )
 
     @classmethod
     def from_xml_with_root(cls, elem, root):

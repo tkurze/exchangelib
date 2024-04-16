@@ -31,7 +31,7 @@ class CreateFolder(EWSAccountService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     def get_payload(self, folders, parent_folder):
         payload = create_element(f"m:{self.SERVICE_NAME}")

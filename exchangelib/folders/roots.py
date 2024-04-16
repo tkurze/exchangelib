@@ -117,16 +117,16 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
                     return f
         try:
             log.debug("Requesting distinguished %s folder explicitly", folder_cls)
-            return folder_cls.get_distinguished(account=self.account)
+            return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don't have GetFolder access? Try FindItem instead
             log.debug("Testing default %s folder with FindItem", folder_cls)
             fld = folder_cls(
-                root=self,
                 _distinguished_id=DistinguishedFolderId(
                     id=folder_cls.DISTINGUISHED_FOLDER_ID,
                     mailbox=Mailbox(email_address=self.account.primary_smtp_address),
                 ),
+                root=self,
             )
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
@@ -134,6 +134,23 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             # The Exchange server does not return a distinguished folder of this type
             pass
         raise ErrorFolderNotFound(f"No usable default {folder_cls} folders")
+
+    @classmethod
+    def get_distinguished(cls, account):
+        """Get the distinguished folder for this folder class.
+
+        :param account:
+        :return:
+        """
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
+                ),
+                account=account,
+            )
+        )
 
     @property
     def _folders_map(self):
@@ -145,9 +162,12 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                cls(
+                    _distinguished_id=DistinguishedFolderId(
+                        id=cls.DISTINGUISHED_FOLDER_ID,
+                        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                    ),
+                    root=self,
                 )
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)

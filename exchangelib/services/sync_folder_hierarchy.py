@@ -86,7 +86,7 @@ class SyncFolderHierarchy(SyncFolder):
             # We can't find() the element because we don't know which tag to look for. The change element can
             # contain multiple folder types, each with their own tag.
             folder_elem = elem[0]
-            folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
+            folder = parse_folder_elem(elem=folder_elem, folder=self.folder)
         return change_type, folder
 
     def get_payload(self, folder, shape, additional_fields, sync_state):
