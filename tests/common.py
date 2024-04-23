@@ -245,31 +245,28 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
         if isinstance(field, EmailAddressesField):
             addrs = []
             for label in EmailAddress.get_field_by_fieldname("label").supported_choices(version=self.account.version):
-                addr = EmailAddress(email=get_random_email())
-                addr.label = label
-                addrs.append(addr)
+                addrs.append(EmailAddress(email=get_random_email(), label=label))
             return addrs
         if isinstance(field, PhysicalAddressField):
             addrs = []
             for label in PhysicalAddress.get_field_by_fieldname("label").supported_choices(
                 version=self.account.version
             ):
-                addr = PhysicalAddress(
-                    street=get_random_string(32),
-                    city=get_random_string(32),
-                    state=get_random_string(32),
-                    country=get_random_string(32),
-                    zipcode=get_random_string(8),
+                addrs.append(
+                    PhysicalAddress(
+                        street=get_random_string(32),
+                        city=get_random_string(32),
+                        state=get_random_string(32),
+                        country=get_random_string(32),
+                        zipcode=get_random_string(8),
+                        label=label,
+                    )
                 )
-                addr.label = label
-                addrs.append(addr)
             return addrs
         if isinstance(field, PhoneNumberField):
             pns = []
             for label in PhoneNumber.get_field_by_fieldname("label").supported_choices(version=self.account.version):
-                pn = PhoneNumber(phone_number=get_random_string(16))
-                pn.label = label
-                pns.append(pn)
+                pns.append(PhoneNumber(phone_number=get_random_string(16), label=label))
             return pns
         if isinstance(field, EWSElementField):
             if field.value_cls == Recurrence:
