@@ -33,6 +33,16 @@ class EmailAddress(SingleFieldIndexedElement):
     email = EmailSubField(is_required=True)
 
 
+class ImAddress(SingleFieldIndexedElement):
+    """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-imaddress"""
+
+    ELEMENT_NAME = "Entry"
+    LABEL_CHOICES = ("ImAddress1", "ImAddress2", "ImAddress3")
+
+    label = LabelField(field_uri="Key", choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    im_address = SubField(is_required=True)
+
+
 class PhoneNumber(SingleFieldIndexedElement):
     """MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber"""
 

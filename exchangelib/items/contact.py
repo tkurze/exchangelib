@@ -16,6 +16,7 @@ from ..fields import (
     EWSElementField,
     EWSElementListField,
     IdElementField,
+    ImAddressField,
     MailboxField,
     MailboxListField,
     MemberListField,
@@ -86,7 +87,7 @@ class Contact(Item):
     )
     department = TextField(field_uri="contacts:Department")
     generation = TextField(field_uri="contacts:Generation")
-    im_addresses = CharField(field_uri="contacts:ImAddresses", is_read_only=True)
+    im_addresses = ImAddressField(field_uri="contacts:ImAddress")
     job_title = TextField(field_uri="contacts:JobTitle")
     manager = TextField(field_uri="contacts:Manager")
     mileage = TextField(field_uri="contacts:Mileage")

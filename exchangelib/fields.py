@@ -1378,6 +1378,16 @@ class EmailAddressesField(IndexedField):
         super().__init__(*args, **kwargs)
 
 
+class ImAddressField(IndexedField):
+    PARENT_ELEMENT_NAME = "ImAddresses"
+
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import ImAddress
+
+        kwargs["value_cls"] = ImAddress
+        super().__init__(*args, **kwargs)
+
+
 class PhoneNumberField(IndexedField):
     PARENT_ELEMENT_NAME = "PhoneNumbers"
 

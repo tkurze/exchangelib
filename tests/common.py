@@ -40,6 +40,7 @@ from exchangelib.fields import (
     EmailAddressField,
     EWSElementField,
     ExtendedPropertyField,
+    ImAddressField,
     IntegerField,
     MailboxField,
     MailboxListField,
@@ -52,7 +53,7 @@ from exchangelib.fields import (
     TimeZoneField,
     URIField,
 )
-from exchangelib.indexed_properties import EmailAddress, PhoneNumber, PhysicalAddress
+from exchangelib.indexed_properties import EmailAddress, ImAddress, PhoneNumber, PhysicalAddress
 from exchangelib.properties import (
     Attendee,
     CompleteName,
@@ -246,6 +247,11 @@ class EWSTest(TimedTestCase, metaclass=abc.ABCMeta):
             addrs = []
             for label in EmailAddress.get_field_by_fieldname("label").supported_choices(version=self.account.version):
                 addrs.append(EmailAddress(email=get_random_email(), label=label))
+            return addrs
+        if isinstance(field, ImAddressField):
+            addrs = []
+            for label in ImAddress.get_field_by_fieldname("label").supported_choices(version=self.account.version):
+                addrs.append(ImAddress(im_address=get_random_email(), label=label))
             return addrs
         if isinstance(field, PhysicalAddressField):
             addrs = []

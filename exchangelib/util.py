@@ -184,7 +184,7 @@ def get_xml_attrs(tree, name):
 
 def value_to_xml_text(value):
     from .ewsdatetime import EWSDate, EWSDateTime, EWSTimeZone
-    from .indexed_properties import EmailAddress, PhoneNumber
+    from .indexed_properties import EmailAddress, ImAddress, PhoneNumber
     from .properties import AssociatedCalendarItemId, Attendee, ConversationId, Mailbox
 
     # We can't just create a map and look up with type(value) because we want to support subtypes
@@ -208,6 +208,8 @@ def value_to_xml_text(value):
         return value.phone_number
     if isinstance(value, EmailAddress):
         return value.email
+    if isinstance(value, ImAddress):
+        return value.im_address
     if isinstance(value, Mailbox):
         return value.email_address
     if isinstance(value, Attendee):
