@@ -327,6 +327,11 @@ class PublicFoldersRoot(RootOfHierarchy):
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self._distinguished_id:
+            self._distinguished_id.mailbox = None  # See DistinguishedFolderId.clean()
+
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
         # subfolders. To traverse public folders at arbitrary depth, we need to get child folders on demand.

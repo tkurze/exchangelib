@@ -762,6 +762,8 @@ class DistinguishedFolderId(FolderId):
         if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
             # Avoid "ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root" from EWS
             self.mailbox = None
+        elif not self.mailbox:
+            raise ValueError(f"DistinguishedFolderId {self.id} must have a mailbox")
 
 
 class TimeWindow(EWSElement):
