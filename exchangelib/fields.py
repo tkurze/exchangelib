@@ -1330,6 +1330,9 @@ class NamedSubField(SubField):
 class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
     """A base class for all indexed fields."""
 
+    is_list = True
+    is_complex = True
+
     PARENT_ELEMENT_NAME = None
 
     def __init__(self, *args, **kwargs):
@@ -1346,14 +1349,26 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
     def response_tag(self):
         return f"{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}"
 
+    def clean(self, value, version=None):
+        if value is not None:
+            default_labels = self.value_cls.LABEL_CHOICES
+            if len(value) > len(default_labels):
+                raise ValueError(f"This field can handle at most {len(default_labels)} values (value: {value})")
+            tmp = []
+            value_cls_fields = [f.name for f in self.value_cls.FIELDS]
+            for s, default_label in zip(value, default_labels):
+                if not isinstance(s, str):
+                    tmp.append(s)
+                    continue
+                tmp.append(self.value_cls(**dict(zip(value_cls_fields, (default_label, s)))))
+            value = tmp
+        return super().clean(value, version=version)
+
     def __hash__(self):
         return hash(self.field_uri)
 
 
 class EmailAddressesField(IndexedField):
-    is_list = True
-    is_complex = True
-
     PARENT_ELEMENT_NAME = "EmailAddresses"
 
     def __init__(self, *args, **kwargs):
@@ -1362,25 +1377,8 @@ class EmailAddressesField(IndexedField):
         kwargs["value_cls"] = EmailAddress
         super().__init__(*args, **kwargs)
 
-    def clean(self, value, version=None):
-        if value is not None:
-            default_labels = self.value_cls.LABEL_CHOICES
-            if len(value) > len(default_labels):
-                raise ValueError(f"This field can handle at most {len(default_labels)} values (value: {value})")
-            tmp = []
-            for s, default_label in zip(value, default_labels):
-                if not isinstance(s, str):
-                    tmp.append(s)
-                    continue
-                tmp.append(self.value_cls(email=s, label=default_label))
-            value = tmp
-        return super().clean(value, version=version)
-
 
 class PhoneNumberField(IndexedField):
-    is_list = True
-    is_complex = True
-
     PARENT_ELEMENT_NAME = "PhoneNumbers"
 
     def __init__(self, *args, **kwargs):
