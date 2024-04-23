@@ -709,7 +709,7 @@ class FolderTest(EWSTest):
         folder = Folder()
         with self.assertRaises(ValueError):
             folder.refresh()  # Must have root folder
-        folder.root = self.account.root
+        folder._root = self.account.root
         with self.assertRaises(ValueError):
             folder.refresh()  # Must have an id
 

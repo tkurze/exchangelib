@@ -833,7 +833,7 @@ class Folder(BaseFolder):
                 if parent.root != self.root:
                     raise ValueError("'parent.root' must match 'root'")
             else:
-                self.root = parent.root
+                self._root = parent.root
             if "parent_folder_id" in kwargs and parent.id != kwargs["parent_folder_id"]:
                 raise ValueError("'parent_folder_id' must match 'parent' ID")
             kwargs["parent_folder_id"] = ParentFolderId(id=parent.id, changekey=parent.changekey)
@@ -848,10 +848,6 @@ class Folder(BaseFolder):
     @property
     def root(self):
         return self._root
-
-    @root.setter
-    def root(self, value):
-        self._root = value
 
     @classmethod
     def register(cls, *args, **kwargs):
@@ -881,7 +877,7 @@ class Folder(BaseFolder):
         else:
             if not isinstance(value, BaseFolder):
                 raise InvalidTypeError("value", value, BaseFolder)
-            self.root = value.root
+            self._root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
