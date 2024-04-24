@@ -1355,12 +1355,12 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
             if len(value) > len(default_labels):
                 raise ValueError(f"This field can handle at most {len(default_labels)} values (value: {value})")
             tmp = []
-            value_cls_fields = [f.name for f in self.value_cls.FIELDS]
+            value_field_name = self.value_cls.value_field(version=version).name
             for s, default_label in zip(value, default_labels):
                 if not isinstance(s, str):
                     tmp.append(s)
                     continue
-                tmp.append(self.value_cls(**dict(zip(value_cls_fields, (default_label, s)))))
+                tmp.append(self.value_cls(**{"label": default_label, value_field_name: s})
             value = tmp
         return super().clean(value, version=version)
 
