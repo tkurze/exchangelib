@@ -1349,6 +1349,20 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
     def response_tag(self):
         return f"{{{self.namespace}}}{self.PARENT_ELEMENT_NAME}"
 
+    def __hash__(self):
+        return hash(self.field_uri)
+
+
+class SingleFieldIndexedField(IndexedField):
+    """A base class for all single-field indexed fields."""
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import SingleFieldIndexedElement
+
+        value_cls = kwargs["value_cls"]
+        if not issubclass(value_cls, SingleFieldIndexedElement):
+            raise TypeError(f"'value_cls' {value_cls!r} must be a subclass of type {SingleFieldIndexedElement}")
+        super().__init__(*args, **kwargs)
+
     def clean(self, value, version=None):
         if value is not None:
             default_labels = self.value_cls.LABEL_CHOICES
@@ -1364,11 +1378,8 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
             value = tmp
         return super().clean(value, version=version)
 
-    def __hash__(self):
-        return hash(self.field_uri)
 
-
-class EmailAddressesField(IndexedField):
+class EmailAddressesField(SingleFieldIndexedField):
     PARENT_ELEMENT_NAME = "EmailAddresses"
 
     def __init__(self, *args, **kwargs):
@@ -1378,7 +1389,7 @@ class EmailAddressesField(IndexedField):
         super().__init__(*args, **kwargs)
 
 
-class ImAddressField(IndexedField):
+class ImAddressField(SingleFieldIndexedField):
     PARENT_ELEMENT_NAME = "ImAddresses"
 
     def __init__(self, *args, **kwargs):
@@ -1388,7 +1399,7 @@ class ImAddressField(IndexedField):
         super().__init__(*args, **kwargs)
 
 
-class PhoneNumberField(IndexedField):
+class PhoneNumberField(SingleFieldIndexedField):
     PARENT_ELEMENT_NAME = "PhoneNumbers"
 
     def __init__(self, *args, **kwargs):
