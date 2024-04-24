@@ -1360,7 +1360,7 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
                 if not isinstance(s, str):
                     tmp.append(s)
                     continue
-                tmp.append(self.value_cls(**{"label": default_label, value_field_name: s})
+                tmp.append(self.value_cls(**{"label": default_label, value_field_name: s}))
             value = tmp
         return super().clean(value, version=version)
 
