@@ -1355,6 +1355,7 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
 
 class SingleFieldIndexedField(IndexedField):
     """A base class for all single-field indexed fields."""
+
     def __init__(self, *args, **kwargs):
         from .indexed_properties import SingleFieldIndexedElement
 
